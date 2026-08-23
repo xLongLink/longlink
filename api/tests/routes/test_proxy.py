@@ -1,36 +1,53 @@
 import httpx2
+import pytest
 from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
+from typing import TypedDict
 from pathlib import Path
-from factories import create_application, create_organization, create_ready_infrastructure
+from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 
 
+class ForwardedRequest(TypedDict):
+    """Represent request fields captured by the proxy transport fake."""
+
+    method: str
+    url: str
+    content: bytes
+    headers: dict[str, str]
+
+
+class ProxyCapture(TypedDict, total=False):
+    """Represent values observed by the proxy transport fakes."""
+
+    close_count: int
+    client_identity: str
+    client_kwargs: dict[str, object]
+    request: ForwardedRequest
+
+
 def fake_ssl_context(
     tls: object,
     *,
     expected_ca_certificate: str | None = None,
-    captured: dict[str, object] | None = None,
 ) -> Callable[..., object]:
-    """Build one fake SSL context factory with optional CA verification and capture."""
+    """Build one fake SSL context factory with optional CA verification."""
 
     def create(*, cadata: str) -> object:
         """Return the supplied TLS context after applying the requested assertions."""
 
-        # Verify and capture the per-compute trust anchor when the test needs it.
+        # Verify the per-compute trust anchor when the test needs it.
         if expected_ca_certificate is not None:
             assert cadata == expected_ca_certificate
-        if captured is not None:
-            captured["cadata"] = cadata
         return tls
 
     return create
@@ -57,7 +74,18 @@ async def set_application_running(application_id: UUID) -> None:
         await session.commit()
 
 
-async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
+async def create_running_application(user: User) -> tuple[Application, Infrastructure]:
+    """Create one Application with the running state required for gateway tests."""
+
+    # Arrange an assignable gateway target and its running Application.
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(user, infrastructure=infrastructure)
+    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    await set_application_running(application.id)
+    return application, infrastructure
+
+
+async def test_application_proxy_forwards_safe_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
@@ -66,12 +94,9 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
-    remote_infrastructure = await create_ready_infrastructure(name="Remote testing")
-    organization = await create_organization(user, infrastructure=remote_infrastructure)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(app.id)
+    app, remote_infrastructure = await create_running_application(user)
     registry = remote_infrastructure.compute
-    captured: dict[str, object] = {}
+    captured: ProxyCapture = {}
 
     class FakeTLS:
         """Capture the Platform client identity loaded into the TLS context."""
@@ -101,6 +126,8 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         async def aclose(self) -> None:
             """Close the fake response."""
 
+            captured["close_count"] = captured.get("close_count", 0) + 1
+
     class ForwardingProxyClient(FakeProxyClient):
         """Fake upstream HTTP client for application proxy requests."""
 
@@ -125,12 +152,13 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
                 "content": content,
                 "headers": request.headers,
             }
-            response = FakeProxyResponse()
-            response.headers = {**response.headers, "content-type": captured.get("response_content_type", "text/plain")}
             assert stream
-            return response
+            return FakeProxyResponse()
 
-    monkeypatch.setattr("src.adapters.gateway.ssl.create_default_context", fake_ssl_context(tls, captured=captured))
+    monkeypatch.setattr(
+        "src.adapters.gateway.ssl.create_default_context",
+        fake_ssl_context(tls, expected_ca_certificate=registry.gateway_certificate),
+    )
     monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", ForwardingProxyClient)
     client = clients[0]
 
@@ -159,32 +187,164 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert captured["cadata"] == registry.gateway_certificate
-    assert isinstance(captured["client_kwargs"], dict)
-    assert captured["client_kwargs"]["follow_redirects"] is False
-    assert captured["client_identity"] == registry.gateway_client_identity
-    forwarded = captured["request"]
-    assert isinstance(forwarded, dict)
+    assert captured.get("close_count") == 1
+    assert captured.get("client_kwargs", {}).get("follow_redirects") is False
+    assert captured.get("client_identity") == registry.gateway_client_identity
+    forwarded = captured.get("request")
+    assert forwarded is not None
     assert forwarded["method"] == "POST"
     assert forwarded["url"] == "https://gateway.example/anything?answer=42"
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
-    assert isinstance(headers, dict)
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
-    assert "accept" not in headers
-    assert "accept-language" not in headers
-    assert "authorization" not in headers
-    assert "cookie" not in headers
-    assert "x-custom-feature" not in headers
-    assert "x-forwarded-for" not in headers
+    assert {"accept", "accept-language", "authorization", "cookie", "x-custom-feature", "x-forwarded-for"}.isdisjoint(headers)
 
-    # Active documents must not cross the authenticated proxy boundary.
-    captured["response_content_type"] = "image/svg+xml; charset=utf-8"
-    root_response = await client.get(f"/api/v1/applications/{app.id}/proxy")
-    assert root_response.status_code == 502
-    assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
+
+async def test_application_proxy_streams_response_without_upstream_content_type(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep proxy safety headers when the gateway omits a content type."""
+
+    # Arrange
+    application, _ = await create_running_application(users[0])
+    close_count = 0
+
+    class FakeProxyResponse:
+        """Represent an upstream response without a content type."""
+
+        status_code = 201
+        headers: dict[str, str] = {}
+
+        async def aiter_bytes(self):
+            """Yield the upstream response body."""
+
+            yield b"proxied"
+
+    class FakeGatewayResponse:
+        """Track cleanup of the gateway response."""
+
+        response = FakeProxyResponse()
+
+        async def aclose(self) -> None:
+            """Record gateway resource cleanup."""
+
+            nonlocal close_count
+            close_count += 1
+
+    async def gateway_request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Return the untyped upstream response."""
+
+        return FakeGatewayResponse()
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", gateway_request)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+
+    # Assert
+    assert response.status_code == 201
+    assert response.content == b"proxied"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert "content-type" not in response.headers
+    assert close_count == 1
+
+
+@pytest.mark.parametrize("content_type", ["image/svg+xml; charset=utf-8", "application/json, text/html; charset=utf-8"])
+async def test_application_proxy_rejects_active_content(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+    content_type: str,
+) -> None:
+    """Reject active upstream documents and close their gateway resources."""
+
+    # Arrange
+    application, _ = await create_running_application(users[0])
+    closed = False
+
+    class FakeProxyResponse:
+        """Represent an active document returned by the upstream application."""
+
+        status_code = 200
+        headers = {"content-type": content_type}
+
+    class FakeGatewayResponse:
+        """Close the rejected upstream response without streaming it."""
+
+        response = FakeProxyResponse()
+
+        async def aclose(self) -> None:
+            """Record gateway cleanup."""
+
+            nonlocal closed
+            closed = True
+
+    async def fake_gateway_request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Return the rejected upstream response at the gateway boundary."""
+
+        return FakeGatewayResponse()
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Application proxy returned an unsupported content type"}
+    assert closed
+
+
+async def test_application_proxy_closes_gateway_response_when_upstream_stream_fails(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Release gateway resources when an upstream response fails mid-stream."""
+
+    # Arrange
+    application, _ = await create_running_application(users[0])
+    close_count = 0
+
+    class FakeProxyResponse:
+        """Produce one chunk before simulating an upstream stream failure."""
+
+        status_code = 200
+        headers = {"content-type": "text/plain"}
+
+        async def aiter_bytes(self):
+            """Fail after streaming an initial response chunk."""
+
+            yield b"partial"
+            raise RuntimeError("upstream interrupted")
+
+    class FakeGatewayResponse:
+        """Track cleanup of the failed upstream response."""
+
+        response = FakeProxyResponse()
+
+        async def aclose(self) -> None:
+            """Record the proxy resource release."""
+
+            nonlocal close_count
+            close_count += 1
+
+    async def fake_gateway_request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Return the failing upstream response at the gateway boundary."""
+
+        return FakeGatewayResponse()
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="upstream interrupted"):
+        await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+    assert close_count == 1
 
 
 async def test_application_proxy_rejects_oversized_request_body(
@@ -196,10 +356,7 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     # Prepare a running Application and a client that consumes its request stream.
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(app.id)
+    app, infrastructure = await create_running_application(owner)
 
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
@@ -243,12 +400,8 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 
     # Prepare a running Application with incomplete gateway TLS state.
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(app.id)
-    Session = await get_session()
-    async with Session() as session:
+    app, infrastructure = await create_running_application(owner)
+    async with session_scope() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
         registry.gateway_certificate = None
@@ -273,9 +426,8 @@ async def test_application_proxy_allows_organization_read_members(
     owner = users[0]
     user = users[1]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
-    Session = await get_session()
-    async with Session() as session:
+    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=user.id,
@@ -302,7 +454,7 @@ async def test_application_proxy_rejects_cross_organization_access(
     # Create an Application owned by a separate Organization.
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
+    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
@@ -321,10 +473,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
     # Prepare a running Application and a gateway client that fails transport.
     user = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(user, infrastructure=infrastructure)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(app.id)
+    app, _ = await create_running_application(user)
 
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
@@ -353,33 +502,49 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     assert response.json() == {"detail": "Application proxy request failed"}
 
 
+@pytest.mark.parametrize(
+    ("method", "expected_detail"),
+    [
+        pytest.param("PATCH", "Organization write access required", id="patch"),
+        pytest.param("POST", "Organization write access required", id="post"),
+        pytest.param("PUT", "Organization write access required", id="put"),
+        pytest.param("DELETE", "Organization maintain access required", id="delete"),
+    ],
+)
 async def test_application_proxy_enforces_method_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    method: str,
+    expected_detail: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject mutating proxy requests when the runtime role is read-only."""
 
     # Restrict the caller to Organization read access.
     user = users[0]
-    organization = await create_organization(user)
-    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(app.id)
+    app, _ = await create_running_application(user)
 
-    Session = await get_session()
-    async with Session() as session:
-        organization_membership = await session.get(UserOrganization, (user.id, organization.id))
+    async with session_scope() as session:
+        organization_membership = await session.get(UserOrganization, (user.id, app.organization_id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.read
         await session.commit()
 
     client = clients[0]
 
-    # Attempt a mutating Application proxy request.
-    response = await client.post(f"/api/v1/applications/{app.id}/proxy/api/tasks")
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if an unauthorized request reaches the gateway boundary."""
 
-    # Verify the HTTP method requires Organization write access.
+        raise AssertionError("Gateway client must not be constructed")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+
+    # Attempt a mutating Application proxy request.
+    response = await client.request(method, f"/api/v1/applications/{app.id}/proxy/api/tasks")
+
+    # Verify the HTTP method requires its Organization role before reaching the gateway.
     assert response.status_code == 403
-    assert response.json() == {"detail": "Organization write access required"}
+    assert response.json() == {"detail": expected_detail}
 
 
 async def test_application_proxy_shows_loading_when_app_is_not_ready(
@@ -391,7 +556,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     # Prepare an Application whose reconciliation is still pending.
     owner = users[0]
     organization = await create_organization(owner)
-    app = await create_application(organization, owner)
+    app = await create_application(organization)
     client = clients[0]
 
     # Request runtime content before the Application is ready.

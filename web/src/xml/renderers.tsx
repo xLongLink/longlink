@@ -2,13 +2,32 @@ import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
 import { XML_LAYOUT_GAP } from './constants';
 import { isValtioProxy } from './core/state';
-import { XmlErrorBoundary } from './core/errors';
 import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { setupContext, XmlContext } from './core/context';
 import { isSafePropertyName } from './expressions/resolve';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+
+/** Keeps XML rendering failures scoped to the XML surface. */
+class XmlErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+    state: { error: Error | null } = { error: null };
+
+    /** Stores the thrown error so the XML area can render the message. */
+    static getDerivedStateFromError(error: Error) {
+        return { error };
+    }
+
+    /** Renders the XML error message or the protected XML subtree. */
+    render() {
+        // Render the captured XML error instead of children.
+        if (this.state.error) {
+            return <Banner status="error" title={this.state.error.message || 'XML rendering failed'} />;
+        }
+
+        return this.props.children;
+    }
+}
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
@@ -127,13 +146,19 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 /** Finds and validates State and Query declarations in document order. */
 function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
     const setupNodes: ASTNode[] = [];
+    const setupIds = new Set<string>();
 
     function walk(currentNodes: ASTNode[]): void {
         // Validate setup declarations before checking descendants.
         for (const node of currentNodes) {
             // Collect setup declarations outside loop-local scope.
             if (node.name === 'State' || node.name === 'Query') {
-                validateSetupNode(node);
+                const id = validateSetupNode(node);
+                if (setupIds.has(id)) {
+                    throw new Error(`Duplicate State or Query id "${id}"`);
+                }
+
+                setupIds.add(id);
                 setupNodes.push(node);
                 continue;
             }
@@ -150,13 +175,15 @@ function getSetupNodes(nodes: ASTNode[]): ASTNode[] {
 }
 
 /** Validates a single setup-only runtime declaration. */
-function validateSetupNode(node: ASTNode): void {
+function validateSetupNode(node: ASTNode): string {
     // Setup declarations require a static safe key.
-    if (!node.params.id) throw new Error(`${node.name} requires a string id`);
+    const idAttribute = node.params.id;
+    if (!idAttribute) throw new Error(`${node.name} requires a string id`);
 
-    if (node.params.id.kind !== 'text') throw new Error(`${node.name} id must be literal text`);
+    if (idAttribute.kind !== 'text') throw new Error(`${node.name} id must be literal text`);
 
-    if (!node.params.id.value.trim() || !isSafePropertyName(node.params.id.value.trim())) {
+    const id = idAttribute.value.trim();
+    if (!id || !isSafePropertyName(id)) {
         throw new Error(`${node.name} id must be a safe property name`);
     }
 
@@ -181,4 +208,6 @@ function validateSetupNode(node: ASTNode): void {
         // Keep Query declarations leaf-only.
         if (node.children.length > 0) throw new Error('Query cannot have children');
     }
+
+    return id;
 }

@@ -38,20 +38,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def available(session: AsyncSession) -> UUID | None:
-    """Return the ID of the least-used ready compute registry."""
-
-    # Order ready compute registries by their active Organization assignment count.
-    assignments = (
-        select(func.count(Organization.id))
-        .where(Organization.compute_id == ComputeRegistry.id, Organization.deleted_at.is_(None))
-        .scalar_subquery()
-    )
-    return await session.scalar(
-        select(ComputeRegistry.id).where(ComputeRegistry.status == Status.running).order_by(assignments, ComputeRegistry.name).limit(1)
-    )
-
-
 async def create(session: AsyncSession, name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
     """Register one compute target."""
 

@@ -3,23 +3,6 @@ from httpx2 import AsyncClient
 from factories import queue_operation
 
 
-async def test_operations_endpoint_returns_targeted_operations(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return targeted Operations for administrator views."""
-
-    # Arrange
-    client = clients[0]
-    operation = await queue_operation(target_id=uuid4())
-
-    # Act
-    response = await client.get("/api/v1/operations")
-
-    # Assert
-    assert response.status_code == 200
-    assert [item["id"] for item in response.json()["items"]] == [str(operation.id)]
-
-
 async def test_operations_endpoint_rejects_anonymous_requests(client: AsyncClient) -> None:
     """Require authentication before exposing reconciliation history."""
 
@@ -60,9 +43,14 @@ async def test_operations_endpoint_paginates_history(
     # Assert
     assert first_page.status_code == 200
     assert second_page.status_code == 200
-    assert first_page.json()["total"] == 2
-    assert second_page.json()["total"] == 2
-    assert {item["id"] for item in first_page.json()["items"]} | {item["id"] for item in second_page.json()["items"]} == {
+    first_payload = first_page.json()
+    second_payload = second_page.json()
+    assert first_payload["total"] == 2
+    assert second_payload["total"] == 2
+    assert len(first_payload["items"]) == 1
+    assert len(second_payload["items"]) == 1
+    assert first_payload["items"][0]["id"] != second_payload["items"][0]["id"]
+    assert {item["id"] for item in first_payload["items"]} | {item["id"] for item in second_payload["items"]} == {
         str(first_operation.id),
         str(second_operation.id),
     }

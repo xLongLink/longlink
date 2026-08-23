@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from longlink import context as runtime_context
 from sqlmodel import Field
 from contextlib import contextmanager
-from collections.abc import Iterator, AsyncIterator
+from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
 from longlink.database import audit
 from fastapi.testclient import TestClient
@@ -41,8 +41,24 @@ async def _audit_engine(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[None]:
         await engine.dispose()
 
 
+@pytest.fixture
+def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
+    """Remove temporary SQLModel tables after an audit test completes."""
+
+    # Track every temporary table even when the test fails before its assertions.
+    table_names: list[str] = []
+    yield table_names.append
+
+    metadata = database_base.database_metadata
+    for table_name in table_names:
+        metadata.remove(metadata.tables[table_name])
+
+
 @pytest.mark.usefixtures("_audit_engine")
-async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_audit_hook_persists_fields_and_converts_soft_deletes(
+    monkeypatch: pytest.MonkeyPatch,
+    audit_model_cleanup: Callable[[str], None],
+) -> None:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
     # Define one isolated mapped table for the real SQLite lifecycle.
@@ -56,64 +72,126 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
         id: int | None = Field(default=None, primary_key=True)
         name: str
 
+    audit_model_cleanup(AuditLifecycleItem.__tablename__)
+
     # Supply one stable timestamp for each audited flush.
     created_at = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
     updated_at = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
-    deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
-    audit_times = iter((created_at, updated_at, deleted_at))
+    soft_deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
+    deleted_at = datetime(2026, 7, 14, 13, 0, tzinfo=UTC)
+    audit_times = iter((created_at, updated_at, soft_deleted_at, deleted_at))
 
     # Bind this test's clock, users, and isolated engine.
     monkeypatch.setattr(audit, "utcnow", lambda: next(audit_times))
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
-    deleter_id = UUID("00000000-0000-0000-0000-000000000004")
-    try:
-        # Insert through AsyncSession so the registered sync before_flush listener runs.
-        async with database_base.session() as session:
-            item = AuditLifecycleItem(name="draft")
-            with identity_context(creator_id):
-                session.add(item)
-                await session.commit()
+    soft_deleter_id = UUID("00000000-0000-0000-0000-000000000004")
+    deleter_id = UUID("00000000-0000-0000-0000-000000000005")
+    # Insert through AsyncSession so the registered sync before_flush listener runs.
+    async with database_base.session() as session:
+        item = AuditLifecycleItem(name="draft")
+        with identity_context(creator_id):
+            session.add(item)
+            await session.commit()
 
-            assert item.id is not None
-            assert item.updated_at == created_at
-            assert item.updated_id == creator_id
-            item_id = item.id
+        assert item.id is not None
+        item_id = item.id
 
-            # Update the persisted row with a second audit identity.
-            with identity_context(updater_id):
-                item.name = "reviewed"
-                await session.commit()
+        # Update the persisted row with a second audit identity.
+        with identity_context(updater_id):
+            item.name = "reviewed"
+            await session.commit()
 
-            assert item.updated_at == updated_at
-            assert item.updated_id == updater_id
+        # Persist a caller-requested soft delete with the acting identity.
+        with identity_context(soft_deleter_id):
+            item.deleted_at = soft_deleted_at
+            await session.commit()
 
-        # Delete the reloaded row and commit the listener's soft-delete conversion.
-        async with database_base.session() as session:
-            item = await session.get(AuditLifecycleItem, item_id)
-            assert item is not None
+        # Assert the explicit soft delete before hard-delete conversion overwrites it.
+        assert (item.updated_at, item.deleted_at, item.updated_id, item.deleted_id) == (
+            soft_deleted_at,
+            soft_deleted_at,
+            soft_deleter_id,
+            soft_deleter_id,
+        )
 
-            with identity_context(deleter_id):
-                await session.delete(item)
-                await session.commit()
+    # Delete the reloaded row and commit the listener's soft-delete conversion.
+    async with database_base.session() as session:
+        item = await session.get(AuditLifecycleItem, item_id)
+        assert item is not None
 
-        # Reload after deletion to prove the row and all persisted audit values remain.
-        async with database_base.session() as session:
-            item = await session.get(AuditLifecycleItem, item_id)
-            assert item is not None
-            assert (
-                item.name,
-                item.created_at,
-                item.updated_at,
-                item.deleted_at,
-                item.created_id,
-                item.updated_id,
-                item.deleted_id,
-            ) == ("reviewed", created_at, deleted_at, deleted_at, creator_id, deleter_id, deleter_id)
-    finally:
-        # Release test metadata and engine resources.
-        metadata = database_base.database_metadata
-        metadata.remove(metadata.tables[AuditLifecycleItem.__tablename__])
+        with identity_context(deleter_id):
+            await session.delete(item)
+            await session.commit()
+
+    # Reload after deletion to prove the row and all persisted audit values remain.
+    async with database_base.session() as session:
+        item = await session.get(AuditLifecycleItem, item_id)
+        assert item is not None
+        assert (
+            item.name,
+            item.created_at,
+            item.updated_at,
+            item.deleted_at,
+            item.created_id,
+            item.updated_id,
+            item.deleted_id,
+        ) == ("reviewed", created_at, deleted_at, deleted_at, creator_id, deleter_id, deleter_id)
+
+
+@pytest.mark.usefixtures("_audit_engine")
+async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
+    audit_model_cleanup: Callable[[str], None],
+) -> None:
+    """Keep caller-provided audit fields when an unchanged row is committed."""
+
+    # Arrange
+    class ExplicitAuditItem(database_base.AuditTable, table=True):
+        """Temporary SDK table used to verify explicit audit values."""
+
+        # Table metadata
+        __tablename__: ClassVar[str] = "explicit_audit_items"
+
+        # Item fields
+        id: int | None = Field(default=None, primary_key=True)
+        name: str
+
+    audit_model_cleanup(ExplicitAuditItem.__tablename__)
+    created_at = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
+    updated_at = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
+    creator_id = UUID("00000000-0000-0000-0000-000000000002")
+    updater_id = UUID("00000000-0000-0000-0000-000000000003")
+
+    async with database_base.session() as session:
+        item = ExplicitAuditItem(
+            name="draft",
+            created_at=created_at,
+            updated_at=updated_at,
+            created_id=creator_id,
+            updated_id=updater_id,
+        )
+        session.add(item)
+        await session.commit()
+        assert item.id is not None
+        item_id = item.id
+
+    # Act
+    async with database_base.session() as session:
+        item = await session.get(ExplicitAuditItem, item_id)
+        assert item is not None
+        item.name = "draft"
+        await session.commit()
+
+    # Assert
+    async with database_base.session() as session:
+        item = await session.get(ExplicitAuditItem, item_id)
+        assert item is not None
+        assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
+            created_at,
+            updated_at,
+            creator_id,
+            updater_id,
+        )
 
 
 def create_audit_application() -> FastAPI:
@@ -152,6 +230,18 @@ def test_audit_middleware_binds_x_user_id_header(
 
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
+    assert runtime_context._current_identity.get() is None
+
+
+def test_audit_middleware_treats_missing_identity_header_as_anonymous() -> None:
+    """Leave requests without a Platform identity header anonymous."""
+
+    # Act
+    with TestClient(create_audit_application()) as client:
+        response = client.get("/")
+
+    # Assert
+    assert response.json() == {"user_id": None}
     assert runtime_context._current_identity.get() is None
 
 

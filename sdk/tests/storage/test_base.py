@@ -1,4 +1,5 @@
 import pytest
+from typing import Literal
 from pydantic import ValidationError
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
@@ -24,10 +25,8 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_ENV", "production")
     for name, value in PRODUCTION_SETTINGS.items():
         monkeypatch.setenv(name, value)
-    for name, value in {"LONGLINK_STORAGE_BUCKET": bucket, "LONGLINK_STORAGE_PREFIX": prefix}.items():
-        monkeypatch.delenv(name, raising=False)
-        if value:
-            monkeypatch.setenv(name, value)
+    monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", bucket)
+    monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
 
 
 @pytest.mark.parametrize(
@@ -94,6 +93,76 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
         "path": "acme/applications/dashboard",
         "filesystem": backing_filesystem,
     }
+
+
+def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require a bucket before constructing a scoped storage prefix."""
+
+    # Arrange
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", lambda *_args, **_kwargs: pytest.fail("filesystem was constructed"))
+    settings = Envs(ENV="testing", STORAGE_PREFIX="generated")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Storage prefixes require a bucket"):
+        storage_base.create_fs(settings)
+
+
+@pytest.mark.parametrize(
+    ("environment", "expected_protocol"),
+    [
+        pytest.param("testing", "memory", id="testing"),
+        pytest.param("development", "file", id="development"),
+    ],
+)
+def test_nonproduction_storage_selects_local_filesystem(
+    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"], expected_protocol: str
+) -> None:
+    """Use memory storage for tests and local files for development."""
+
+    # Arrange
+    filesystem = object()
+    protocols: list[str] = []
+
+    def create_filesystem(protocol: str) -> object:
+        """Record the requested non-production storage backend."""
+
+        protocols.append(protocol)
+        return filesystem
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
+
+    # Act
+    result = storage_base.create_fs(Envs(ENV=environment))
+
+    # Assert
+    assert result is filesystem
+    assert protocols == [expected_protocol]
+
+
+@pytest.mark.parametrize("environment", ["testing", "development"])
+def test_nonproduction_storage_scopes_configured_bucket_prefix(
+    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"]
+) -> None:
+    """Scope local storage to the configured bucket and prefix."""
+
+    # Arrange
+    filesystem = object()
+    scoped_filesystem = object()
+    captured: dict[str, object] = {}
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", lambda protocol: filesystem)
+    monkeypatch.setattr(
+        storage_base,
+        "DirFileSystem",
+        lambda path, fs: captured.update({"path": path, "filesystem": fs}) or scoped_filesystem,
+    )
+
+    # Act
+    result = storage_base.create_fs(Envs(ENV=environment, STORAGE_BUCKET="acme", STORAGE_PREFIX="applications/dashboard"))
+
+    # Assert
+    assert result is scoped_filesystem
+    assert captured == {"path": "acme/applications/dashboard", "filesystem": filesystem}
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

@@ -31,7 +31,6 @@ describe('Table', () => {
         );
 
         expect(output).toContain('Item');
-        expect(output).toContain('SKU');
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
     });

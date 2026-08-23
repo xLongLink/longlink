@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
+from collections.abc import Sequence
 from src.models.types import DatabaseSSLMode
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,7 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[DatabaseRegistry], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[DatabaseRegistry], int]:
     """Return one ordered page of database registries."""
 
     # Load only the fields exposed by the administrator response.
@@ -34,19 +35,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
 
     # Count every registered database target.
     count_result = await session.execute(select(func.count()).select_from(DatabaseRegistry))
-    return list(result.all()), count_result.scalar_one()
-
-
-async def available(session: AsyncSession) -> UUID | None:
-    """Return the ID of the least-used database registry."""
-
-    # Order database registries by their active Organization assignment count.
-    assignments = (
-        select(func.count(Organization.id))
-        .where(Organization.database_id == DatabaseRegistry.id, Organization.deleted_at.is_(None))
-        .scalar_subquery()
-    )
-    return await session.scalar(select(DatabaseRegistry.id).order_by(assignments, DatabaseRegistry.name).limit(1))
+    return result.all(), count_result.scalar_one()
 
 
 async def create(

@@ -1,28 +1,41 @@
 import pytest
+import logging
 from pytest import MonkeyPatch
 from fastapi import FastAPI
 from pathlib import Path
+from longlink import app as longlink_app
 from pydantic import ValidationError
 from longlink.app import LongLink
+from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
+
+
+def create_runtime_client(follow_redirects: bool = True) -> TestClient:
+    """Build an SDK runtime client from the current generated Application source tree."""
+
+    # Register the generated page catalog before serving requests.
+    app = FastAPI()
+    LongLink(app)
+    return TestClient(app, follow_redirects=follow_redirects)
 
 
 def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
     """Serve SDK runtime endpoints and the embedded frontend."""
 
     # Initialize the development runtime and its in-process client.
-    app = FastAPI()
-    LongLink(app)
-    client = TestClient(app)
+    client = create_runtime_client()
 
     # Exercise runtime metadata and frontend fallback routes.
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+    health_response = client.get("/health")
     # Verify each runtime route.
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
     assert "text/html" in frontend_route_response.headers["content-type"]
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
 
 
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
@@ -37,12 +50,40 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
         LongLink(FastAPI())
 
 
+def test_startup_rejects_a_missing_application_pages_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    """Require the generated Application page directory during startup."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act and assert
+    with pytest.raises(ValueError, match=f"Application source directory is required: {tmp_path / 'src' / 'pages'}"):
+        LongLink(FastAPI())
+
+
+def test_production_startup_installs_one_access_filter(application_source: Path, monkeypatch: MonkeyPatch) -> None:
+    """Avoid duplicate Uvicorn access filtering across Application instances."""
+
+    # Arrange
+    access_logger = logging.getLogger("uvicorn.access")
+    monkeypatch.setattr(longlink_app, "Envs", lambda: type("Settings", (), {"ENV": "production"})())
+    monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
+    monkeypatch.setattr(access_logger, "filters", [])
+
+    # Act
+    LongLink(FastAPI())
+    LongLink(FastAPI())
+
+    # Assert
+    assert len([item for item in access_logger.filters if isinstance(item, ApiAccessFilter)]) == 1
+
+
 @pytest.mark.parametrize(
     ("relative_path", "content", "expected_metadata"),
     [
         pytest.param(
             "index.xml",
-            '<longlink>Home</longlink>',
+            "<longlink>Home</longlink>",
             {"tab": "index", "route": ""},
             id="index",
         ),
@@ -54,7 +95,7 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink>Users</longlink>',
+            "<longlink>Users</longlink>",
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
@@ -80,32 +121,108 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     page_path.write_text(content, encoding="utf-8")
 
     # Start LongLink and request the registered page and page catalog.
-    app = FastAPI()
-    LongLink(app)
-    client = TestClient(app)
+    client = create_runtime_client()
     page_path_without_suffix = relative_path.removesuffix(".xml")
     response = client.get(f"/pages/{page_path_without_suffix}")
     pages_response = client.get("/pages.json")
 
     # Verify content and metadata came from the default page tree.
     assert response.status_code == 200
+    assert "application/xml" in response.headers["content-type"]
     assert response.text == content
     pages = pages_response.json()
     page = next(item for item in pages if item["path"] == f"pages/{page_path_without_suffix}")
     assert {key: page[key] for key in expected_metadata} == expected_metadata
 
 
+def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path) -> None:
+    """Normalize whitespace-only XML page metadata out of the public catalog."""
+
+    # Arrange
+    (application_source / "pages" / "dashboard.xml").write_text(
+        '<longlink name="  " icon="\t">Dashboard</longlink>',
+        encoding="utf-8",
+    )
+    client = create_runtime_client()
+
+    # Act
+    response = client.get("/pages.json")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == [{"path": "pages/dashboard", "route": "dashboard", "tab": "dashboard"}]
+
+
+def test_xml_page_catalog_and_root_redirect_use_deterministic_path_order(application_source: Path) -> None:
+    """Use lexical page paths for catalog output and the startup destination."""
+
+    # Arrange
+    nested_directory = application_source / "pages" / "admin"
+    nested_directory.mkdir()
+    (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
+    (application_source / "pages" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
+    client = create_runtime_client(follow_redirects=False)
+
+    # Act
+    catalog_response = client.get("/pages.json")
+    root_response = client.get("/")
+
+    # Assert
+    assert catalog_response.json() == [
+        {"path": "pages/admin/alpha", "route": "admin/alpha", "tab": "admin/alpha"},
+        {"path": "pages/zebra", "route": "zebra", "tab": "zebra"},
+    ]
+    assert root_response.status_code == 307
+    assert root_response.headers["location"] == "/admin/alpha"
+
+
+@pytest.mark.parametrize("pages", [("dashboard.xml",), ("index.xml", "dashboard.xml")])
+def test_root_redirects_to_static_page_when_catalog_has_optional_index(application_source: Path, pages: tuple[str, ...]) -> None:
+    """Redirect root to a selectable static page rather than the index endpoint."""
+
+    # Arrange
+    for page in pages:
+        (application_source / "pages" / page).write_text("<longlink>Page</longlink>", encoding="utf-8")
+    client = create_runtime_client(follow_redirects=False)
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 307
+    assert response.headers["location"] == "/dashboard"
+
+
+def test_root_does_not_redirect_when_only_dynamic_pages_exist(application_source: Path) -> None:
+    """Leave the frontend responsible for a catalog without a static page."""
+
+    # Arrange
+    page_path = application_source / "pages" / "issues" / "[issue].xml"
+    page_path.parent.mkdir()
+    page_path.write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    client = create_runtime_client(follow_redirects=False)
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 200
+
+
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
     """Validate SDK XML pages against the bundled schema before registering routes."""
 
-    # Create an invalid page in the default Application page directory.
-    page_path = application_source / "pages" / "broken.xml"
-    page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text("<unknown />", encoding="utf-8")
+    # Create a valid page alongside an invalid catalog entry.
+    (application_source / "pages" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
+    (application_source / "pages" / "broken.xml").write_text("<unknown />", encoding="utf-8")
+    app = FastAPI()
 
-    # Start registration and require schema validation to fail immediately.
+    # Reject the complete catalog before registering valid page endpoints.
     with pytest.raises(ValueError, match="XML is invalid"):
-        LongLink(FastAPI())
+        LongLink(app)
+
+    # Assert
+    assert not any(getattr(route, "path", None) == "/pages/valid" for route in app.router.routes)
 
 
 def test_application_route_collision_with_page_endpoint_is_rejected(
@@ -115,7 +232,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
 
     # Create a page whose endpoint is already owned by the Application.
     (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink>Dashboard</longlink>',
+        "<longlink>Dashboard</longlink>",
         encoding="utf-8",
     )
     app = FastAPI()
@@ -129,3 +246,31 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
+
+
+def test_duplicate_dynamic_browser_routes_are_rejected(application_source: Path) -> None:
+    """Reject distinct parameter names that create the same browser route shape."""
+
+    # Arrange
+    issues_directory = application_source / "pages" / "issues"
+    issues_directory.mkdir()
+    (issues_directory / "[id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    (issues_directory / "[issue_id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Browser route 'issues/:issue_id' is already registered"):
+        LongLink(FastAPI())
+
+
+def test_duplicate_static_browser_routes_are_rejected(application_source: Path) -> None:
+    """Reject nested index pages that resolve to the same browser route."""
+
+    # Arrange
+    (application_source / "pages" / "index.xml").write_text("<longlink>Home</longlink>", encoding="utf-8")
+    nested_index = application_source / "pages" / "index" / "index.xml"
+    nested_index.parent.mkdir()
+    nested_index.write_text("<longlink>Nested home</longlink>", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Browser route '' is already registered"):
+        LongLink(FastAPI())

@@ -18,6 +18,7 @@ export function coerceXmlBoolean(value: unknown): boolean {
 export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
     const value = resolveXmlValue(props, name, ctx);
     const target = resolveBindableTarget(props[name], value, ctx);
+    const reactiveValue = isReactiveValue(props[name], ctx);
     let currentValue: unknown = '';
 
     if (target?.key) {
@@ -29,7 +30,7 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
     const [localValue, setLocalValue] = useState(() => coerce(value));
 
     return {
-        value: target ? coerce(currentValue) : localValue,
+        value: target ? coerce(currentValue) : reactiveValue ? coerce(value) : localValue,
         setValue: (nextValue: T) => {
             if (!target) {
                 setLocalValue(nextValue);
@@ -42,6 +43,13 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
             }
         },
     };
+}
+
+/** Returns whether a read-only path resolves from reactive State. */
+function isReactiveValue(attribute: ASTProps[string] | undefined, ctx: Scope): boolean {
+    if (attribute?.kind !== 'path' || attribute.isBinding) return false;
+
+    return isValtioProxy(resolvePath(ctx, [attribute.parts[0], ...attribute.parts.slice(1, -1)]));
 }
 
 /** Resolves a writable state target from a raw XML binding expression. */

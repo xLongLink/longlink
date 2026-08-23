@@ -1,4 +1,5 @@
 import pytest
+from datetime import UTC, datetime
 from sqlmodel import select
 from factories import create_organization
 from src.errors import ConflictError
@@ -8,6 +9,7 @@ from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
+from src.database.models.organizations import Organization
 
 
 async def test_create_stores_canonical_invitation_email(
@@ -98,3 +100,99 @@ async def test_accept_creates_membership_and_consumes_invitation(users: tuple[Us
     assert invitation is None
     assert membership is not None
     assert membership.role == OrganizationRoles.write
+
+
+async def test_accept_restores_deleted_membership_with_invited_role(users: tuple[User, User, User]) -> None:
+    """Restore a deleted membership using the accepted invitation role."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=invitee.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.read,
+                deleted_at=datetime.now(UTC),
+                deleted_id=owner.id,
+            )
+        )
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.admin)
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        await session.commit()
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+
+    # Assert
+    assert changed_organization_ids == {organization.id}
+    assert membership is not None
+    assert membership.role == OrganizationRoles.admin
+    assert membership.deleted_at is None
+    assert membership.deleted_id is None
+
+
+async def test_accept_preserves_active_membership_role(users: tuple[User, User, User]) -> None:
+    """Consume an invitation without changing an active membership role."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=invitee.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.read,
+            )
+        )
+        session.add(
+            OrganizationInvitation(
+                organization_id=organization.id,
+                email=invitee.email,
+                role=OrganizationRoles.admin,
+            )
+        )
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        await session.commit()
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+
+    # Assert
+    assert changed_organization_ids == set()
+    assert membership is not None
+    assert membership.role == OrganizationRoles.read
+    assert invitation is None
+
+
+async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple[User, User, User]) -> None:
+    """Keep invitations untouched when their organization has been deleted."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        organization_row = await session.get(Organization, organization.id)
+        assert organization_row is not None
+        organization_row.deleted_at = datetime.now(UTC)
+        organization_row.deleted_id = owner.id
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+
+    # Assert
+    assert changed_organization_ids == set()
+    assert membership is None
+    assert invitation is not None

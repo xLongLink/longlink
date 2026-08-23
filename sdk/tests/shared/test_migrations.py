@@ -2,11 +2,194 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
+from alembic.config import Config
 from longlink.shared import audit as shared_audit
+from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
+from sqlalchemy.dialects import postgresql
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.shared.migrations import migrate_database
+from longlink.shared.migrations import migrate_database, migration_config
+
+
+@pytest.mark.parametrize("database_url", ["postgresql://db/longlink", "sqlite+aiosqlite:///:memory:"])
+def test_migration_config_rejects_non_asyncpg_postgresql_urls(database_url: str) -> None:
+    """Reject shared migration URLs that cannot use the asyncpg driver."""
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Shared migrations require a postgresql\\+asyncpg database URL"):
+        migration_config(database_url)
+
+
+def test_migration_config_preserves_percent_encoded_credentials() -> None:
+    """Build a usable Alembic configuration for a valid asyncpg URL."""
+
+    # Arrange
+    database_url = "postgresql+asyncpg://control:se%25cret@db/longlink"
+
+    # Act
+    config = migration_config(database_url)
+
+    # Assert
+    script_location = config.get_main_option("script_location")
+    assert script_location is not None
+    assert script_location.endswith("longlink/shared/alembic")
+    assert config.get_main_option("sqlalchemy.url") == database_url
+
+
+async def test_migrate_database_upgrades_shared_schema_to_head(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the shared Alembic upgrade through the asynchronous migration entrypoint."""
+
+    # Arrange
+    captured: dict[str, Config | str] = {}
+
+    def upgrade(config: Config, target: str) -> None:
+        """Capture the Alembic configuration submitted for upgrade."""
+
+        captured["config"] = config
+        captured["target"] = target
+
+    monkeypatch.setattr(shared_migrations.command, "upgrade", upgrade)
+
+    # Act
+    await migrate_database("postgresql+asyncpg://control:secret@db/longlink")
+
+    # Assert
+    config = captured["config"]
+    assert isinstance(config, Config)
+    assert config.get_main_option("sqlalchemy.url") == "postgresql+asyncpg://control:secret@db/longlink"
+    assert captured["target"] == "head"
+
+
+async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat empty shared audit synchronization as a no-op."""
+
+    # Arrange
+    def fail_to_create_engine(*_args: object, **_kwargs: object) -> None:
+        """Fail if an empty synchronization attempts database access."""
+
+        pytest.fail("empty shared audit synchronization must not create an engine")
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", fail_to_create_engine)
+
+    # Act
+    await shared_audit.sync("postgresql+asyncpg://db/longlink", [])
+
+
+async def test_shared_audit_sync_upserts_rows_and_disposes_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Upsert shared audit rows through a short-lived database engine."""
+
+    # Arrange
+    executed: dict[str, object] = {}
+    disposed = False
+    user = Audit(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Owner User",
+        email="owner@example.com",
+        role="owner",
+        created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+        updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+    )
+
+    class Connection:
+        """Capture the PostgreSQL upsert submitted by synchronization."""
+
+        async def __aenter__(self) -> "Connection":
+            """Enter the fake transaction context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake transaction context."""
+
+        async def execute(self, statement: object, parameters: list[dict[str, object]]) -> None:
+            """Capture the statement and row payload."""
+
+            executed["statement"] = statement
+            executed["parameters"] = parameters
+
+    class Engine:
+        """Provide one transactional connection and disposal tracking."""
+
+        def begin(self) -> Connection:
+            """Return the fake transaction context."""
+
+            return Connection()
+
+        async def dispose(self) -> None:
+            """Record operation-scoped engine disposal."""
+
+            nonlocal disposed
+            disposed = True
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", lambda *_args, **_kwargs: Engine())
+
+    # Act
+    await shared_audit.sync("postgresql+asyncpg://db/longlink", [user])
+
+    # Assert
+    statement = executed["statement"]
+    assert getattr(statement, "table").name == "audit"
+    compiled = str(getattr(statement, "compile")(dialect=postgresql.dialect()))
+    assert "ON CONFLICT (id) DO UPDATE" in compiled
+    assert "created_at = excluded.created_at" not in compiled
+    assert "updated_at = excluded.updated_at" in compiled
+    assert "deleted_at = excluded.deleted_at" in compiled
+    assert executed["parameters"] == [user.model_dump()]
+    assert disposed is True
+
+
+async def test_shared_audit_sync_disposes_engine_when_upsert_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Dispose the operation-scoped engine when shared audit synchronization fails."""
+
+    # Arrange
+    disposed = False
+    user = Audit(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Owner User",
+        email="owner@example.com",
+        role="owner",
+        created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+        updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+    )
+
+    class Connection:
+        """Raise when the shared-audit upsert reaches the database boundary."""
+
+        async def __aenter__(self) -> "Connection":
+            """Enter the fake transaction context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake transaction context."""
+
+        async def execute(self, _statement: object, _parameters: list[dict[str, object]]) -> None:
+            """Simulate a database failure during the upsert."""
+
+            raise RuntimeError("database unavailable")
+
+    class Engine:
+        """Provide a failing transaction and disposal tracking."""
+
+        def begin(self) -> Connection:
+            """Return the fake transaction context."""
+
+            return Connection()
+
+        async def dispose(self) -> None:
+            """Record operation-scoped engine disposal."""
+
+            nonlocal disposed
+            disposed = True
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", lambda *_args, **_kwargs: Engine())
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        await shared_audit.sync("postgresql+asyncpg://db/longlink", [user])
+
+    assert disposed is True
 
 
 @pytest.mark.integration

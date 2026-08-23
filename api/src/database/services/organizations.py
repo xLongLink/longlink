@@ -1,4 +1,5 @@
 from uuid import UUID
+from src.utils import names
 from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
@@ -302,10 +303,62 @@ async def update_member_role(
     return True
 
 
+async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
+    """Create an Organization on the least-assigned available infrastructure."""
+
+    # Lock the selected Compute until the Organization assignment is committed.
+    compute_assignments = (
+        select(func.count(Organization.id))
+        .where(Organization.compute_id == ComputeRegistry.id, Organization.deleted_at.is_(None))
+        .scalar_subquery()
+    )
+    compute_id = await session.scalar(
+        select(ComputeRegistry.id)
+        .where(ComputeRegistry.status == Status.running)
+        .order_by(compute_assignments, ComputeRegistry.name)
+        .limit(1)
+        .with_for_update()
+    )
+    if compute_id is None:
+        raise UnavailableError("No ready compute registry available")
+
+    # Lock the selected Database until the Organization assignment is committed.
+    database_assignments = (
+        select(func.count(Organization.id))
+        .where(Organization.database_id == DatabaseRegistry.id, Organization.deleted_at.is_(None))
+        .scalar_subquery()
+    )
+    database_id = await session.scalar(
+        select(DatabaseRegistry.id).order_by(database_assignments, DatabaseRegistry.name).limit(1).with_for_update()
+    )
+    if database_id is None:
+        raise UnavailableError("No database registry available")
+
+    # Lock the selected Storage until the Organization assignment is committed.
+    storage_assignments = (
+        select(func.count(Organization.id))
+        .where(Organization.storage_id == StorageRegistry.id, Organization.deleted_at.is_(None))
+        .scalar_subquery()
+    )
+    storage_id = await session.scalar(
+        select(StorageRegistry.id).order_by(storage_assignments, StorageRegistry.name).limit(1).with_for_update()
+    )
+    if storage_id is None:
+        raise UnavailableError("No storage registry available")
+
+    return await create(
+        session,
+        name,
+        user,
+        compute_id=compute_id,
+        storage_id=storage_id,
+        database_id=database_id,
+    )
+
+
 async def create(
     session: AsyncSession,
     name: str,
-    slug: str,
     user: User,
     *,
     compute_id: UUID,
@@ -335,7 +388,7 @@ async def create(
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(
         name=name,
-        slug=slug,
+        slug=names.slugify(name),
         compute_id=compute_id,
         database_id=database_id,
         storage_id=storage_id,

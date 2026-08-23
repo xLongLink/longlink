@@ -23,13 +23,9 @@ describe('resolve', () => {
         expect(resolveValue(ctx, 'hidden')).toBeUndefined();
     });
 
-    it('blocks unsafe prototype path segments', () => {
+    it.each(['__proto__', 'constructor', 'prototype'])('blocks unsafe prototype path segment: %s', (part) => {
         const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
 
-        expect(['__proto__', 'constructor', 'prototype'].map((part) => resolvePath(ctx, ['user', part]))).toEqual([
-            undefined,
-            undefined,
-            undefined,
-        ]);
+        expect(resolvePath(ctx, ['user', part])).toBeUndefined();
     });
 });

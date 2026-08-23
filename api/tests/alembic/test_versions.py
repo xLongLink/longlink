@@ -31,7 +31,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
     # Start the supported database backend with a password that requires URL escaping.
     password = "sec@ret"
     encoded_password = "sec%40ret"
-    container = start_postgres("longlink", password, "longlink", 5432)
+    container = start_postgres("longlink", password, "longlink")
 
     engine = None
     try:

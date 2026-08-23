@@ -74,7 +74,7 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     # Arrange
     owner = users[0]
     active_organization = await create_organization(owner)
-    deleted_organization = await create_organization(owner, name="deleted", slug="deleted")
+    deleted_organization = await create_organization(owner, name="deleted")
     async with session_scope() as session:
         await organizations.soft_delete(session, deleted_organization.id, owner)
         await session.commit()

@@ -190,16 +190,15 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     assert claimed.id == older_operation.id
 
 
-async def test_operations_service_claim_serializes_active_and_expires_lost_work() -> None:
-    """Globally serialize active work and make expired claimed Operations terminal."""
+async def test_operations_service_claim_serializes_active_work() -> None:
+    """Allow only one active operation at a time."""
 
     # Seed active and waiting work.
     await queue(target_id=uuid4())
     waiting = await queue(target_id=uuid4())
 
-    # Exercise serialization and terminal states.
+    # Exercise global operation serialization.
     active_claim = await claim_operation()
-    second_active_claim = await claim_operation()
     assert active_claim is not None
     await complete_operation(active_claim.id)
     waiting_claim = await claim_operation()
@@ -207,9 +206,20 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     await complete_operation(waiting_claim.id)
     finished_claim = await claim_operation()
 
+    # Verify only eligible waiting work was claimed.
+    assert waiting_claim.id == waiting.id
+    assert finished_claim is None
+
+
+async def test_operations_service_claim_expires_lost_work() -> None:
+    """Make an expired claimed operation terminal before searching for new work."""
+
+    # Seed and claim work that its worker will abandon.
     expired = await queue(target_id=uuid4())
     expired_claim = await claim_operation()
     assert expired_claim is not None
+
+    # Expire the worker lease before the next claim attempt.
     async with session_scope() as session:
         row = await session.get(Operation, expired.id)
         assert row is not None
@@ -218,10 +228,7 @@ async def test_operations_service_claim_serializes_active_and_expires_lost_work(
     replacement_claim = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
 
-    # Verify only eligible waiting work was claimed.
-    assert second_active_claim is None
-    assert waiting_claim.id == waiting.id
-    assert finished_claim is None
+    # Verify the lost work cannot be reclaimed.
     assert replacement_claim is None
     assert expired_row.status == OperationStatus.failed
     assert expired_row.lease_expires_at is None

@@ -80,7 +80,7 @@ export function resolveNavigationUrl(baseUrl: string, path: string): string {
 }
 
 /** Resolves an application destination with an optional browser-link fallback. */
-export function resolveControlUrl(navigationBaseUrl: string, requestBaseUrl: string, to: string, href = ''): string {
+export function resolveControlUrl(navigationBaseUrl: string, requestBaseUrl: string, to: string, href: string): string {
     return resolveNavigationUrl(navigationBaseUrl, to) || resolveAnchorUrl(requestBaseUrl, href);
 }
 

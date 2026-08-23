@@ -12,6 +12,27 @@ Return a numeric list of cleanup options:
 4. Confidence: High, Medium, or Low.
 5. Whether it affects any shared contract or requires updating call sites.
 
+_Focus only on the test cases. Do not change production code_
+
+## LongLink Coverage
+
+Run coverage from the repository root:
+
+```bash
+make api:test  # API: main.py and src
+make sdk:test  # SDK: longlink
+make test      # Both packages
+```
+
+Coverage is CLI-only. Each command prints branch coverage, a `TOTAL` percentage, and the uncovered lines. Do not create or commit HTML coverage reports.
+
+To improve coverage:
+
+1. Run the relevant coverage command and identify an uncovered production behavior.
+2. Add the smallest test at the lowest suitable level that verifies that behavior.
+3. Rerun the relevant coverage command and confirm the new test passes and covers the intended lines or branch.
+
+After completing the task, return the coverage to the user.
 
 ## Testing
 

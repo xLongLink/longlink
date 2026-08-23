@@ -1,4 +1,6 @@
+import click
 import pytest
+import subprocess
 from pathlib import Path
 from longlink.cli import build
 from click.testing import CliRunner
@@ -21,6 +23,25 @@ def build_project(tmp_path: Path) -> Path:
     return root
 
 
+@pytest.fixture
+def docker_build(monkeypatch: pytest.MonkeyPatch) -> tuple[list[list[str]], list[Path]]:
+    """Replace Docker discovery and project metadata with deterministic values."""
+
+    # Keep Docker invocations and generated contexts observable to build-command tests.
+    commands: list[list[str]] = []
+    contexts: list[Path] = []
+
+    def build_app(build_context: Path) -> tuple[str, str]:
+        """Record the generated context and return fixed project metadata."""
+
+        contexts.append(build_context)
+        return "0.1.0", "Demo App"
+
+    monkeypatch.setattr(build, "build_app", build_app)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    return commands, contexts
+
+
 def test_build_reports_missing_project_file_before_docker() -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -35,6 +56,34 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         assert result.exit_code == 1
         assert f"Project file not found: {Path.cwd() / 'pyproject.toml'}" in result.output
         assert "Docker is required" not in result.output
+
+
+def test_build_reports_missing_docker_after_preparing_project(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require Docker only after the project build context is prepared."""
+
+    # Arrange
+    runner = CliRunner()
+    monkeypatch.setattr(build, "build_app", lambda _context: ("0.1.0", "demo"))
+    monkeypatch.setattr(build.shutil, "which", lambda _command: None)
+    monkeypatch.setattr(build.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("Docker must not run when unavailable"))
+
+    # Act
+    result = runner.invoke(build.build_command)
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker is required to build images" in result.output
+
+
+def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
+    """Reject malformed project metadata before preparing a Docker build."""
+
+    # Arrange
+    tmp_path.joinpath("pyproject.toml").write_text("[project\nname = 'demo'", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(click.ClickException, match="Invalid project file"):
+        build.read_pyproject(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -92,6 +141,42 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
+@pytest.mark.parametrize(
+    ("project_config", "module_path", "module_source", "message"),
+    [
+        pytest.param("", None, None, r"\[tool\.longlink\]\.environment", id="missing-config"),
+        pytest.param(
+            '[tool.longlink]\nenvironment = "invalid"\n',
+            None,
+            None,
+            r"\[tool\.longlink\]\.environment",
+            id="invalid-import",
+        ),
+        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
+        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', "src/envs.py", "class Other:\n    pass\n", "Environment model must define Env", id="missing-class"),
+    ],
+)
+def test_read_env_spec_rejects_invalid_environment_model_configuration(
+    tmp_path: Path,
+    project_config: str,
+    module_path: str | None,
+    module_source: str | None,
+    message: str,
+) -> None:
+    """Reject environment model configuration before Docker build preparation."""
+
+    # Arrange
+    (tmp_path / "pyproject.toml").write_text(project_config, encoding="utf-8")
+    if module_path is not None and module_source is not None:
+        path = tmp_path / module_path
+        path.parent.mkdir(parents=True)
+        path.write_text(module_source, encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(click.ClickException, match=message):
+        build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
+
+
 def test_build_app_generates_dockerignore_from_project_gitignore(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Use the project's Git ignore policy for the Docker build context."""
 
@@ -107,6 +192,33 @@ def test_build_app_generates_dockerignore_from_project_gitignore(build_project: 
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
         ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
     )
+
+
+def test_build_app_generates_dockerfile_with_runtime_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Generate Docker build instructions with application metadata and environment labels."""
+
+    # Arrange
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo application"\n\n'
+        '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        encoding="utf-8",
+    )
+    build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    # Act
+    version, name = build.build_app(build_context)
+
+    # Assert
+    dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
+    assert (version, name) == ("0.1.0", "demo")
+    assert "pyproject.toml" in dockerfile
+    assert "WORKDIR /workspace" in dockerfile
+    assert "uv sync --locked --no-dev --no-install-local" in dockerfile
+    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
+    assert "LABEL longlink.environments=" in dockerfile
+    assert "API_KEY" in dockerfile
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,24 +238,100 @@ def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, mon
     assert not (build_context / "linked-secret.txt").exists()
 
 
-def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build_project: Path) -> None:
+    """Include valid transitive sibling uv path projects in the Docker context."""
+
+    # Arrange
+    dependency = build_project.parent / "shared"
+    dependency.mkdir()
+    transitive_dependency = build_project.parent / "common"
+    transitive_dependency.mkdir()
+    transitive_dependency.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "common"\nversion = "0.1.0"\n', encoding="utf-8"
+    )
+    dependency.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "shared"\nversion = "0.1.0"\n\n[tool.uv.sources]\ncommon = { path = "../common" }\n',
+        encoding="utf-8",
+    )
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nshared = { path = "../shared" }\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+    # Assert
+    assert source_root == build_project.parent
+    assert workdir == "/workspace/app"
+    assert dependencies == [transitive_dependency, dependency]
+
+
+def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) -> None:
+    """Keep the application directory as context when a uv source is not a project."""
+
+    # Arrange
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nmissing = { path = "/" }\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+    # Assert
+    assert source_root == build_project
+    assert workdir == "/workspace"
+    assert dependencies == []
+
+
+@pytest.mark.parametrize(
+    ("app_name", "version", "registry", "expected"),
+    [
+        pytest.param("Demo App", "0.1.0", None, "demo-app:0.1.0", id="default"),
+        pytest.param("Demo App", "dev", "ghcr.io/acme-org", "ghcr.io/acme-org/demo-app:dev", id="ghcr"),
+        pytest.param("Demo App", "dev", "localhost:15000/team", "localhost:15000/team/demo-app:dev", id="localhost"),
+    ],
+)
+def test_resolve_image_tag_returns_valid_image_references(app_name: str, version: str, registry: str | None, expected: str) -> None:
+    """Build supported Docker image references from project metadata."""
+
+    assert build.resolve_image_tag(app_name, version, registry) == expected
+
+
+@pytest.mark.parametrize(
+    ("app_name", "version", "registry", "message"),
+    [
+        pytest.param("Demo/App", "dev", None, "Invalid Docker image name", id="invalid-name"),
+        pytest.param("demo", "-dev", None, "Invalid Docker image tag", id="invalid-tag"),
+        pytest.param("demo", "dev", "localhost:0", "Docker registry port is invalid", id="port-below-range"),
+        pytest.param("demo", "dev", "localhost:65536", "Docker registry port is invalid", id="port-above-range"),
+        pytest.param("demo", "dev", "ghcr.io", "Docker registry must be ghcr.io/<owner> or localhost", id="missing-ghcr-owner"),
+        pytest.param("demo", "dev", "localhost:15000/team/invalid?", "Invalid Docker image path", id="invalid-namespace"),
+    ],
+)
+def test_resolve_image_tag_rejects_invalid_image_references(
+    app_name: str,
+    version: str,
+    registry: str | None,
+    message: str,
+) -> None:
+    """Reject image reference values outside the supported Docker boundary."""
+
+    with pytest.raises(click.ClickException, match=message):
+        build.resolve_image_tag(app_name, version, registry)
+
+
+def test_build_command_builds_pushes_and_reports_image(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Build a Docker image in a temporary context, push it, and report image details."""
 
     # Arrange
-    commands: list[list[str]] = []
-    temporary_context: Path | None = None
+    commands, contexts = docker_build
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path) -> tuple[str, str]:
-        """Create fake Docker artifacts for the build command."""
-
-        nonlocal temporary_context
-        temporary_context = build_context
-        return "0.1.0", "Demo App"
-
     # Replace Docker boundaries with deterministic local fakes.
-    monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
@@ -151,7 +339,8 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
     # Assert
     assert result.exit_code == 0
-    assert temporary_context is not None
+    assert len(contexts) == 1
+    temporary_context = contexts[0]
     assert commands == [
         [
             "/usr/bin/docker",
@@ -166,6 +355,33 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     ]
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
+
+
+def test_build_command_reports_docker_build_failure_without_pushing(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Translate a failed Docker build into a CLI error before a push starts."""
+
+    # Arrange
+    commands, _contexts = docker_build
+    runner = CliRunner()
+
+    def fail_build(command: list[str], check: bool) -> None:
+        """Record and fail the Docker build command."""
+
+        commands.append(command)
+        raise subprocess.CalledProcessError(23, command)
+
+    monkeypatch.setattr(build.subprocess, "run", fail_build)
+
+    # Act
+    result = runner.invoke(build.build_command, ["--push"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker command failed with exit code 23" in result.output
+    assert len(commands) == 1
+    assert commands[0][1] == "build"
 
 
 def test_render_image_labels_writes_oci_and_longlink_labels() -> None:

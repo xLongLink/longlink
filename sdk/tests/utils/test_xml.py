@@ -98,8 +98,6 @@ INVALID_FRAGMENTS = [
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
 ]
 
-VALID_DOCUMENTS = [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS]
-INVALID_DOCUMENTS = [f"<longlink>{content}</longlink>" for _, content in INVALID_FRAGMENTS]
 
 def test_xml_validation_rejects_malformed_entity() -> None:
     """Reject malformed entity declarations through the secure parser."""
@@ -109,7 +107,18 @@ def test_xml_validation_rejects_malformed_entity() -> None:
         validate_xml('<!ENTITY hidden "value"><longlink>&hidden;</longlink>')
 
 
-@pytest.mark.parametrize("content", VALID_DOCUMENTS, ids=[case[0] for case in VALID_FRAGMENTS])
+@pytest.mark.parametrize("content", ['<!DOCTYPE longlink><longlink />', '<longlink><![CDATA[content]]></longlink>'])
+def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
+    """Reject markup that the web runtime parser cannot support."""
+
+    # Act
+    with pytest.raises(ValueError, match="XML DOCTYPE and CDATA constructs are not supported"):
+        validate_xml(content)
+
+
+@pytest.mark.parametrize(
+    "content", [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS]
+)
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the application page schema."""
 
@@ -117,10 +126,12 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
     validate_xml(content)
 
 
-@pytest.mark.parametrize("content", INVALID_DOCUMENTS, ids=[case[0] for case in INVALID_FRAGMENTS])
+@pytest.mark.parametrize(
+    "content", [f"<longlink>{content}</longlink>" for _, content in INVALID_FRAGMENTS], ids=[case[0] for case in INVALID_FRAGMENTS]
+)
 def test_root_schema_rejects_invalid_fragments(content: str) -> None:
     """Reject representative invalid XML fragments through the application page schema."""
 
     # Require schema validation to reject the fragment.
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="XML is invalid"):
         validate_xml(content)

@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from collections.abc import Callable, Awaitable, AsyncIterator
+from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.database import session
 from starlette.responses import Response
 from longlink.shared.models import Audit
@@ -21,7 +21,7 @@ class Context:
     database: AsyncSession
 
 
-async def data(request: Request) -> AsyncIterator[Context]:
+async def data(request: Request) -> AsyncGenerator[Context]:
     """Yield the request context for a FastAPI dependency."""
 
     # Open one database session and resolve the authenticated shared user for this request.

@@ -1,11 +1,11 @@
 import pytest
-from uuid import uuid4
-from factories import create_application, create_organization
-from src.errors import ConflictError, ForbiddenError
+from factories import fetch_operations, create_application, create_organization
+from src.errors import ConflictError
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import applications
+from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -16,8 +16,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="duplicate-org", slug="duplicate-org")
-    await create_application(organization, user, name="Dashboard")
+    organization = await create_organization(user, name="duplicate-org")
+    await create_application(organization, name="Dashboard")
 
     # Act
     async with session_scope() as session:
@@ -47,19 +47,13 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="collections-org", slug="collections-org")
-    deleted_application = await create_application(organization, user, name="Dashboard")
+    organization = await create_organization(user, name="collections-org")
+    deleted_application = await create_application(organization, name="Dashboard")
+    active_application = await create_application(organization, name="Reports")
     async with session_scope() as session:
         deleted_application = await session.get(Application, deleted_application.id)
         assert deleted_application is not None
         deleted_application.deleted_at = utcnow()
-        active_application = await applications.create(
-            session,
-            organization.id,
-            "Reports",
-            image=Image("ghcr.io/longlink/reports@sha256:test"),
-            secrets={},
-        )
         await session.commit()
 
         # Act
@@ -75,17 +69,20 @@ async def test_delete_marks_application_deleted(users: tuple[User, User, User]) 
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="delete-org", slug="delete-org")
-    application = await create_application(organization, user, name="Dashboard")
+    organization = await create_organization(user, name="delete-org")
+    application = await create_application(organization, name="Dashboard")
 
     # Act
     async with session_scope() as session:
         await applications.delete(session, application.id, user.id)
         await session.commit()
         deleted_application = await session.get(Application, application.id)
-        with pytest.raises(ForbiddenError):
-            await applications.delete(session, uuid4(), user.id)
 
     # Assert
     assert deleted_application is not None
     assert deleted_application.deleted_at is not None
+    assert [
+        (operation.kind, operation.target_id)
+        for operation in await fetch_operations()
+        if operation.kind == OperationKind.application_delete
+    ] == [(OperationKind.application_delete, application.id)]

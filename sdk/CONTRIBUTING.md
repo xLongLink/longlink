@@ -23,7 +23,7 @@ Before working locally:
 ```bash
 uv sync --group dev    # Create the development environment
 uv run ruff check --select I --fix .  # Format imports
-uv run pytest tests    # Run tests
+uv run pytest --cov --cov-report=term-missing  # Run tests with branch coverage
 ```
 
 ## Docker Labels

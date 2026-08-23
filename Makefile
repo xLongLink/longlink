@@ -1,4 +1,4 @@
-.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install ty api\:ty sdk\:ty
+.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
@@ -50,6 +50,20 @@ web\:format: web\:install
 
 # Run API and SDK ty checks.
 ty: api\:ty sdk\:ty
+
+
+# Run API and SDK tests with coverage.
+test: api\:test sdk\:test
+
+
+# Run API tests with coverage.
+api\:test: api\:install
+	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
+
+
+# Run SDK tests with coverage.
+sdk\:test: sdk\:install
+	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
 
 
 # Run API ty checks.

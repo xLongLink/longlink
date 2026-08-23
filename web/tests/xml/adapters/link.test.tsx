@@ -7,7 +7,6 @@ describe('Link', () => {
     it('renders app navigation', () => {
         const navigationContext = createContext();
         navigationContext.services.navigationBaseUrl = '/orgs/acme/apps/tracker';
-        navigationContext.services.requestBaseUrl = '/api/applications/app-1/proxy';
         const navigationOutput = renderXmlToMarkup(parseXML('<Link to="/issues/123">Issue</Link>'), navigationContext);
 
         expect(navigationOutput).toContain('href="/orgs/acme/apps/tracker/issues/123"');

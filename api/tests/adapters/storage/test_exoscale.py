@@ -259,3 +259,212 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
     with pytest.raises(RuntimeError, match="key generation failed"):
         await storage.credentials("dashboard", "acme", "apps/dashboard/")
     assert calls == ["list-api-keys", "list-api-keys"]
+
+
+async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove every destructive S3 resource type before deleting a bucket."""
+
+    # Provide one page of each resource type followed by its empty terminal page.
+    calls: list[tuple[str, object]] = []
+
+    class Client:
+        def __init__(self) -> None:
+            """Initialize terminal listing state."""
+
+            self.uploads = False
+            self.objects = False
+            self.versions = False
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
+            """Return one incomplete upload then completion."""
+
+            if self.uploads:
+                return {"Uploads": []}
+            self.uploads = True
+            return {"Uploads": [{"Key": "apps/dashboard/a", "UploadId": "upload"}]}
+
+        async def abort_multipart_upload(self, **kwargs: object) -> None:
+            """Record upload aborts."""
+
+            calls.append(("abort", kwargs))
+
+        async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+            """Return one current object then completion."""
+
+            if self.objects:
+                return {"Contents": []}
+            self.objects = True
+            return {"Contents": [{"Key": "apps/dashboard/a"}]}
+
+        async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
+            """Return one version and marker then completion."""
+
+            if self.versions:
+                return {"Versions": [], "DeleteMarkers": []}
+            self.versions = True
+            return {
+                "Versions": [{"Key": "apps/dashboard/a", "VersionId": "version"}],
+                "DeleteMarkers": [{"Key": "apps/dashboard/b", "VersionId": "marker"}],
+            }
+
+        async def delete_objects(self, **kwargs: object) -> dict[str, object]:
+            """Record successful bulk deletion."""
+
+            calls.append(("delete", kwargs["Delete"]))
+            return {}
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    # Delete only the requested Application prefix across all S3 resource types.
+    await storage.delete_prefix("acme", "apps/dashboard/")
+    assert calls == [
+        ("abort", {"Bucket": "acme", "Key": "apps/dashboard/a", "UploadId": "upload"}),
+        ("delete", {"Objects": [{"Key": "apps/dashboard/a"}], "Quiet": True}),
+        (
+            "delete",
+            {"Objects": [{"Key": "apps/dashboard/a", "VersionId": "version"}, {"Key": "apps/dashboard/b", "VersionId": "marker"}], "Quiet": True},
+        ),
+    ]
+
+
+async def test_exoscale_delete_prefix_rejects_partial_object_deletions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail cleanup when S3 reports an individual object deletion failure."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Client:
+        """Return one current object whose deletion fails after a successful response."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
+            """Return no incomplete uploads."""
+
+            calls.append("uploads")
+            return {"Uploads": []}
+
+        async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+            """Return one current object."""
+
+            calls.append("objects")
+            return {"Contents": [{"Key": "apps/dashboard/a"}]}
+
+        async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
+            """Fail if cleanup advances past the failed object deletion."""
+
+            raise AssertionError("Cleanup must stop after a partial deletion failure")
+
+        async def delete_objects(self, **kwargs: object) -> dict[str, object]:
+            """Report an individual deletion failure through an otherwise successful response."""
+
+            calls.append("delete")
+            return {"Errors": [{"Key": "apps/dashboard/a", "Code": "AccessDenied"}]}
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="apps/dashboard/a: AccessDenied"):
+        await storage.delete_prefix("acme", "apps/dashboard/")
+    assert calls == ["uploads", "objects", "delete"]
+
+
+async def test_exoscale_delete_tolerates_absent_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat a bucket removed by an earlier cleanup attempt as deleted."""
+
+    # Simulate the terminal absent-bucket response from the provider.
+    class Client:
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def delete_bucket(self, Bucket: str) -> None:
+            """Report the already-removed bucket."""
+
+            raise ClientError({"Error": {"Code": "NoSuchBucket"}, "ResponseMetadata": {"HTTPStatusCode": 404}}, "DeleteBucket")
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+
+    async def delete_prefix(bucket: str, prefix: str) -> None:
+        """Skip already-completed object cleanup."""
+
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+    monkeypatch.setattr(storage, "delete_prefix", delete_prefix)
+
+    # The idempotent bucket deletion path must not expose a missing bucket.
+    await storage.delete("acme")
+
+
+@pytest.mark.parametrize(
+    ("api_keys", "roles", "expected"),
+    [
+        pytest.param([], [], False, id="absent"),
+        pytest.param([{"name": "longlink-dashboard"}], [], True, id="api-key"),
+        pytest.param([], [{"name": "longlink-dashboard"}], True, id="iam-role"),
+    ],
+)
+async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
+    monkeypatch: pytest.MonkeyPatch,
+    api_keys: list[dict[str, str]],
+    roles: list[dict[str, str]],
+    expected: bool,
+) -> None:
+    """Treat either generated credential resource as remaining Application state."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Client:
+        """Return deterministic credential inventories."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept Exoscale client configuration."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake API client context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake API client context."""
+
+        async def list_api_keys(self) -> dict[str, list[dict[str, str]]]:
+            """Return generated API key inventory."""
+
+            calls.append("api-keys")
+            return {"api-keys": api_keys}
+
+        async def list_iam_roles(self) -> dict[str, list[dict[str, str]]]:
+            """Return generated IAM role inventory."""
+
+            calls.append("iam-roles")
+            return {"iam-roles": roles}
+
+    monkeypatch.setattr(exoscale, "AsyncClient", Client)
+
+    # Act
+    exists = await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").credentials_exist("dashboard")
+
+    # Assert
+    assert exists is expected
+    assert calls == ["api-keys", "iam-roles"]

@@ -70,13 +70,13 @@ async def fetch_operations() -> Sequence[Operation]:
         return result.all()
 
 
-async def create_compute(name: str = "Local compute") -> ComputeRegistry:
+async def create_compute() -> ComputeRegistry:
     """Create one minimal Compute registry without queueing reconciliation."""
 
     # Operation tests need a persisted Compute target without registry service side effects.
     async with session_scope() as session:
         compute = ComputeRegistry(
-            name=name,
+            name="Local compute",
             kubeconfig={"apiVersion": "v1", "clusters": []},
         )
         session.add(compute)
@@ -84,14 +84,14 @@ async def create_compute(name: str = "Local compute") -> ComputeRegistry:
         return compute
 
 
-async def create_ready_infrastructure(name: str = "Local testing") -> Infrastructure:
+async def create_ready_infrastructure() -> Infrastructure:
     """Create independent registries with a ready compute target and no provider side effects."""
 
     # Test setup persists the exact assignable registry shape while avoiding provider side effects.
     async with session_scope() as session:
         suffix = uuid4().hex[:8]
         compute = ComputeRegistry(
-            name=f"{name} compute {suffix}",
+            name=f"Local testing compute {suffix}",
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             gateway_certificate="test-certificate",
@@ -99,7 +99,7 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             status=Status.running,
         )
         database = DatabaseRegistry(
-            name=f"{name} database {suffix}",
+            name=f"Local testing database {suffix}",
             host="database.example",
             port=5432,
             username="admin",
@@ -107,7 +107,7 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
             sslmode=DatabaseSSLMode.disable,
         )
         storage = StorageRegistry(
-            name=f"{name} storage {suffix}",
+            name=f"Local testing storage {suffix}",
             endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
@@ -120,7 +120,6 @@ async def create_ready_infrastructure(name: str = "Local testing") -> Infrastruc
 async def create_organization(
     owner: User,
     name: str = "acme",
-    slug: str = "acme",
     infrastructure: Infrastructure | None = None,
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
@@ -132,7 +131,6 @@ async def create_organization(
         organization = await organizations.create(
             session,
             name,
-            slug,
             owner,
             compute_id=infrastructure.compute.id,
             storage_id=infrastructure.storage.id,
@@ -144,7 +142,6 @@ async def create_organization(
 
 async def create_application(
     organization: Organization,
-    owner: User,
     name: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
     secrets: dict[str, str] | None = None,

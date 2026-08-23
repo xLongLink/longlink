@@ -1,5 +1,6 @@
 import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
+import { parseXML as parseDocument } from '@/xml';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {
@@ -63,26 +64,26 @@ describe('parseXML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
     });
 
-    it('rejects unsupported XML constructs', () => {
-        const unsupportedXml = [
-            '<!DOCTYPE longlink><longlink />',
-            '<!ENTITY hidden "value"><longlink />',
-            '<longlink><![CDATA[hidden]]></longlink>',
-        ];
-
-        for (const xml of unsupportedXml) {
-            expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
-        }
+    it('rejects an empty document', () => {
+        expect(() => parseDocument('')).toThrow('XML is invalid');
     });
 
-    it('rejects styling and event handler attributes on XML nodes', () => {
-        const cases = [
-            { name: 'className', expected: 'className is not supported in XML' },
-            { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
-        ];
+    it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {
+        expect(() => parseDocument(xml)).toThrow('XML pages must contain exactly one longlink root');
+    });
 
-        for (const testCase of cases) {
-            expect(() => parseXML(`<Button ${testCase.name}="value" />`)).toThrow(testCase.expected);
-        }
+    it.each([
+        '<!DOCTYPE longlink><longlink />',
+        '<!ENTITY hidden "value"><longlink />',
+        '<longlink><![CDATA[hidden]]></longlink>',
+    ])('rejects unsupported XML construct: %s', (xml) => {
+        expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
+    });
+
+    it.each([
+        ['className', 'className is not supported in XML'],
+        ['onClick', 'Event handler attribute "onClick" is not supported in XML'],
+    ])('rejects unsupported XML attribute: %s', (name, expected) => {
+        expect(() => parseXML(`<Button ${name}="value" />`)).toThrow(expected);
     });
 });

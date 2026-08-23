@@ -1,15 +1,14 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
-from src.utils import mail, names, roles
+from src.utils import mail, roles
 from sqlalchemy import select
-from src.errors import UnavailableError
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
-from src.database.services import compute, storage, database, invitations, organizations
+from src.database.services import storage, database, invitations, organizations
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
@@ -250,26 +249,7 @@ async def create_organization(
 ):
     """Create Organization desired state and queue infrastructure creation."""
 
-    # Resolve the least-used ready infrastructure registries.
-    compute_id = await compute.available(session)
-    if compute_id is None:
-        raise UnavailableError("No ready compute registry available")
-    database_id = await database.available(session)
-    if database_id is None:
-        raise UnavailableError("No database registry available")
-    storage_id = await storage.available(session)
-    if storage_id is None:
-        raise UnavailableError("No storage registry available")
-
-    # Persist the Organization with its selected infrastructure registries.
-    organization = await organizations.create(
-        session,
-        payload.name,
-        names.slugify(payload.name),
-        user,
-        compute_id=compute_id,
-        storage_id=storage_id,
-        database_id=database_id,
-    )
+    # Persist the Organization with transactionally selected infrastructure registries.
+    organization = await organizations.create_default(session, payload.name, user)
     await session.commit()
     return organization

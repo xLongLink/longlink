@@ -73,9 +73,6 @@ async def test_metadata_fetches_digest_image_references(
         description="Demo app",
         environments=[EnvironmentMetadata(name="API_KEY", required=True)],
     ).model_dump(mode="json")
-    assert images.missing_envs(image_metadata, {}) == ["API_KEY"]
-    assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]
-    assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
         "token": {
             "url": "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull",
@@ -90,3 +87,153 @@ async def test_metadata_fetches_digest_image_references(
             "authorization": "Bearer pull-token",
         },
     }
+
+
+async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject mutable image tags when GHCR omits the resolved manifest digest."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a manifest without a digest while forbidding blob inspection."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
+        raise AssertionError("Mutable images must not fetch config blobs")
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(
+        images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
+    )
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is None
+
+
+@pytest.mark.parametrize(
+    ("responses", "expected_paths"),
+    [
+        pytest.param([httpx2.Response(503)], ["/token"], id="failed-token"),
+        pytest.param([httpx2.Response(200, json=[])], ["/token"], id="invalid-token"),
+        pytest.param(
+            [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="failed-manifest",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(
+                    200,
+                    json={"config": {"digest": "invalid"}},
+                    headers={"Docker-Content-Digest": "sha256:deadbeef"},
+                ),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="invalid-config",
+        ),
+    ],
+)
+async def test_metadata_stops_when_registry_responses_are_invalid(
+    monkeypatch: pytest.MonkeyPatch, responses: list[httpx2.Response], expected_paths: list[str]
+) -> None:
+    """Return no metadata without requesting later registry resources after invalid responses."""
+
+    # Arrange
+    requested_paths: list[str] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return the configured invalid registry response."""
+
+        requested_paths.append(request.url.path)
+        return responses.pop(0)
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(
+        images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
+    )
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is None
+    assert requested_paths == expected_paths
+
+
+async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return immutable metadata when the registry resolves a mutable tag."""
+
+    # Arrange
+    resolved_digest = "sha256:deadbeef"
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a resolved manifest and its LongLink metadata config."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": resolved_digest},
+            )
+        return httpx2.Response(200, json={"config": {"Labels": {}}})
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(
+        images.httpx2,
+        "AsyncClient",
+        lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs),
+    )
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.image == Image(f"ghcr.io/longlink/dashboard@{resolved_digest}")
+
+
+@pytest.mark.parametrize(
+    ("envs", "expected_missing"),
+    [
+        pytest.param({}, ["API_KEY"], id="missing"),
+        pytest.param({"API_KEY": " "}, ["API_KEY"], id="blank"),
+        pytest.param({"API_KEY": "configured"}, [], id="configured"),
+    ],
+)
+def test_missing_envs_returns_required_unconfigured_values(envs: dict[str, str], expected_missing: list[str]) -> None:
+    """Return required environment names whose supplied values are blank or absent."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, envs)
+
+    # Assert
+    assert missing == expected_missing
+
+
+def test_missing_envs_rejects_user_values_for_reserved_runtime_names() -> None:
+    """Keep Platform-owned runtime requirements unavailable to user input."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[EnvironmentMetadata(name="LONGLINK_DATABASE_PASSWORD", required=True)],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, {"LONGLINK_DATABASE_PASSWORD": "configured"})
+
+    # Assert
+    assert missing == ["LONGLINK_DATABASE_PASSWORD"]
