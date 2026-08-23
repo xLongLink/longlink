@@ -202,18 +202,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
         await session.commit()
 
 
-def main() -> None:
-    """Seed either local example data or cloud infrastructure from a synchronous entrypoint."""
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cloud", action="store_true", help="register cloud infrastructure without local example data")
-    arguments = parser.parse_args()
-    if arguments.cloud:
-        asyncio.run(seed_cloud(CloudSeedSettings()))
-    else:
-        asyncio.run(seed_local_development(SeedSettings()))
-
-
 class CloudSeedSettings(SeedSettings):
     """Define the infrastructure connections registered by a cloud deployment."""
 
@@ -231,6 +219,18 @@ async def seed_cloud(settings: CloudSeedSettings) -> None:
         database_name="cloud database",
         storage_name="cloud storage",
     )
+
+
+def main() -> None:
+    """Seed either local example data or cloud infrastructure from a synchronous entrypoint."""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cloud", action="store_true", help="register cloud infrastructure without local example data")
+    arguments = parser.parse_args()
+    if arguments.cloud:
+        asyncio.run(seed_cloud(CloudSeedSettings()))
+    else:
+        asyncio.run(seed_local_development(SeedSettings()))
 
 
 if __name__ == "__main__":

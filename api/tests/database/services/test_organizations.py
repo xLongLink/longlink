@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlmodel import col
 from factories import fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
-from src.errors import ConflictError, NotFoundError, UnavailableError
+from src.errors import ConflictError, NotFoundError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.statuses import Status

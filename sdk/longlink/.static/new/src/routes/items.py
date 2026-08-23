@@ -36,7 +36,7 @@ async def item_get_endpoint(item_id: int) -> Item:
 
 
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
-async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(data)):
+async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> list[ItemAttachmentRead]:
     """Return files attached to one catalog item."""
 
     # Validate the item before accessing its attachment storage.
@@ -50,10 +50,10 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
 
     # Derive display names from the generated storage ids.
     return [
-        {
-            "id": (attachment_id := PurePosixPath(path).name),
-            "name": attachment_id.split("-", 1)[-1],
-        }
+        ItemAttachmentRead(
+            id=(attachment_id := PurePosixPath(path).name),
+            name=attachment_id.split("-", 1)[-1],
+        )
         for path in entries
     ]
 
@@ -61,7 +61,7 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
 async def item_attachments_post_endpoint(
     item_id: int, file: UploadFile, ctx: Context = Depends(data)
-):
+) -> ItemAttachmentRead:
     """Upload one file attachment for a catalog item."""
 
     # Validate the item before accepting attachment content.
@@ -86,7 +86,7 @@ async def item_attachments_post_endpoint(
     finally:
         await file.close()
 
-    return {"id": file_id, "name": file_name}
+    return ItemAttachmentRead(id=file_id, name=file_name)
 
 
 async def _require_item(item_id: int) -> Item:

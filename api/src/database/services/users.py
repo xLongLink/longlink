@@ -27,7 +27,7 @@ async def active(session: AsyncSession, user_id: UUID) -> User | None:
     )
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[list[User], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[User], int]:
     """Return one ordered page of Platform users for administrators."""
 
     # Preserve the existing administrator list visibility, including tombstoned users.
@@ -36,7 +36,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[lis
 
     # Count every Platform user visible in the administrator list.
     count_result = await session.execute(select(func.count()).select_from(User))
-    return list(result.all()), count_result.scalar_one()
+    return result.all(), count_result.scalar_one()
 
 
 async def by_email(session: AsyncSession, email: Email) -> User | None:

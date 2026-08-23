@@ -72,13 +72,13 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         pytest.param(
             Envs(ENV="testing"),
             "sqlite+aiosqlite:///:memory:",
-            {"pool_pre_ping": True, "pool_recycle": 20, "connect_args": {}},
+            {"pool_pre_ping": True, "pool_recycle": 20},
             id="testing",
         ),
         pytest.param(
             Envs(ENV="development"),
             "sqlite+aiosqlite:///./dev.db",
-            {"pool_pre_ping": True, "pool_recycle": 20, "connect_args": {}},
+            {"pool_pre_ping": True, "pool_recycle": 20},
             id="development",
         ),
         pytest.param(
