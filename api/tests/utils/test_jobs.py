@@ -96,6 +96,70 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     assert transitions == [operation.id]
 
 
+async def test_execute_persists_timeout_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Persist a timed-out handler as a failed claimed Operation."""
+
+    # Arrange
+    operation = leased_operation()
+
+    @asynccontextmanager
+    async def expired_timeout(_seconds: int):
+        """Raise the worker timeout after one handler execution."""
+
+        yield
+        raise TimeoutError
+
+    async def complete_handler(_target_id: UUID) -> None:
+        """Complete before the configured worker timeout expires."""
+
+    async def fail(_session: object, operation_id: UUID) -> Operation:
+        """Record the terminal timeout transition."""
+
+        assert operation_id == operation.id
+        operation.failed = True
+        operation.finished_at = utcnow()
+        return operation
+
+    monkeypatch.setattr(operation_worker.asyncio, "timeout", expired_timeout)
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
+    monkeypatch.setattr(operation_worker.operations, "fail", fail)
+
+    # Act
+    result = await operation_worker.execute(operation)
+
+    # Assert
+    assert result.status == OperationStatus.failed
+
+
+async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Contain an unexpected handler exception and release its Operation lease."""
+
+    # Arrange
+    operation = leased_operation()
+
+    async def failing_handler(_target_id: UUID) -> None:
+        """Raise an unexpected worker failure."""
+
+        raise RuntimeError("provider unavailable")
+
+    async def fail(_session: object, operation_id: UUID) -> Operation:
+        """Record the terminal unexpected-error transition."""
+
+        assert operation_id == operation.id
+        operation.failed = True
+        operation.finished_at = utcnow()
+        return operation
+
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
+    monkeypatch.setattr(operation_worker.operations, "fail", fail)
+
+    # Act
+    result = await operation_worker.execute(operation)
+
+    # Assert
+    assert result.status == OperationStatus.failed
+
+
 async def test_execute_rejects_operation_without_a_worker_lease() -> None:
     """Reject an Operation before it reaches its handler without a live lease."""
 

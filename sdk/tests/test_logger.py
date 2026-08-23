@@ -44,51 +44,44 @@ def test_color_formatter_restores_info_record_level_name() -> None:
     assert record.levelname == "INFO"
 
 
-def test_configure_logger_reuses_existing_handler() -> None:
+def test_configure_logger_reuses_existing_handler(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply logger policy without adding a duplicate existing handler."""
 
     # Arrange
     logger = logging.getLogger("longlink.tests.existing-handler")
     handler = logging.StreamHandler()
-    logger.addHandler(handler)
+    monkeypatch.setattr(logger, "handlers", [handler])
+    monkeypatch.setattr(logger, "level", logging.NOTSET)
+    monkeypatch.setattr(logger, "propagate", True)
 
-    try:
-        # Act
-        configured = configure_logger(logger.name)
+    # Act
+    configured = configure_logger(logger.name)
 
-        # Assert
-        assert configured is logger
-        assert logger.handlers == [handler]
-        assert logger.level == logging.INFO
-        assert logger.propagate is False
-    finally:
-        # Restore global logging state for independent test execution.
-        logger.removeHandler(handler)
-        logger.setLevel(logging.NOTSET)
-        logger.propagate = True
+    # Assert
+    assert configured is logger
+    assert logger.handlers == [handler]
+    assert logger.level == logging.INFO
+    assert logger.propagate is False
 
 
-def test_configure_logger_adds_configured_handler_when_logger_has_none() -> None:
+def test_configure_logger_adds_configured_handler_when_logger_has_none(monkeypatch: pytest.MonkeyPatch) -> None:
     """Install one formatted stream handler for an otherwise unconfigured logger."""
 
     # Arrange
     logger = logging.getLogger("longlink.tests.missing-handler")
+    monkeypatch.setattr(logger, "handlers", [])
+    monkeypatch.setattr(logger, "level", logging.NOTSET)
+    monkeypatch.setattr(logger, "propagate", True)
 
-    try:
-        # Act
-        configured = configure_logger(logger.name)
-        repeated = configure_logger(logger.name)
+    # Act
+    configured = configure_logger(logger.name)
+    repeated = configure_logger(logger.name)
 
-        # Assert
-        assert configured is logger
-        assert repeated is logger
-        assert len(logger.handlers) == 1
-        assert isinstance(logger.handlers[0], logging.StreamHandler)
-        assert isinstance(logger.handlers[0].formatter, ColorFormatter)
-        assert logger.level == logging.INFO
-        assert logger.propagate is False
-    finally:
-        # Restore global logging state for independent test execution.
-        logger.removeHandler(logger.handlers[0])
-        logger.setLevel(logging.NOTSET)
-        logger.propagate = True
+    # Assert
+    assert configured is logger
+    assert repeated is logger
+    assert len(logger.handlers) == 1
+    assert isinstance(logger.handlers[0], logging.StreamHandler)
+    assert isinstance(logger.handlers[0].formatter, ColorFormatter)
+    assert logger.level == logging.INFO
+    assert logger.propagate is False

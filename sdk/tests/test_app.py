@@ -248,29 +248,34 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
         LongLink(app)
 
 
-def test_duplicate_dynamic_browser_routes_are_rejected(application_source: Path) -> None:
-    """Reject distinct parameter names that create the same browser route shape."""
+@pytest.mark.parametrize(
+    ("first_page", "second_page", "message"),
+    [
+        pytest.param(
+            "issues/[id].xml",
+            "issues/[issue_id].xml",
+            "Browser route 'issues/:issue_id' is already registered",
+            id="dynamic",
+        ),
+        pytest.param("index.xml", "index/index.xml", "Browser route '' is already registered", id="static"),
+    ],
+)
+def test_duplicate_browser_routes_are_rejected(
+    application_source: Path,
+    first_page: str,
+    second_page: str,
+    message: str,
+) -> None:
+    """Reject distinct page files that resolve to one browser route."""
 
     # Arrange
-    issues_directory = application_source / "pages" / "issues"
-    issues_directory.mkdir()
-    (issues_directory / "[id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
-    (issues_directory / "[issue_id].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    first_path = application_source / "pages" / first_page
+    second_path = application_source / "pages" / second_page
+    first_path.parent.mkdir(parents=True, exist_ok=True)
+    second_path.parent.mkdir(parents=True, exist_ok=True)
+    first_path.write_text("<longlink>First</longlink>", encoding="utf-8")
+    second_path.write_text("<longlink>Second</longlink>", encoding="utf-8")
 
     # Act and assert
-    with pytest.raises(ValueError, match="Browser route 'issues/:issue_id' is already registered"):
-        LongLink(FastAPI())
-
-
-def test_duplicate_static_browser_routes_are_rejected(application_source: Path) -> None:
-    """Reject nested index pages that resolve to the same browser route."""
-
-    # Arrange
-    (application_source / "pages" / "index.xml").write_text("<longlink>Home</longlink>", encoding="utf-8")
-    nested_index = application_source / "pages" / "index" / "index.xml"
-    nested_index.parent.mkdir()
-    nested_index.write_text("<longlink>Nested home</longlink>", encoding="utf-8")
-
-    # Act and assert
-    with pytest.raises(ValueError, match="Browser route '' is already registered"):
+    with pytest.raises(ValueError, match=message):
         LongLink(FastAPI())

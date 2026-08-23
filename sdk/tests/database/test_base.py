@@ -3,6 +3,7 @@ import asyncio
 from typing import ClassVar
 from sqlmodel import Field
 from longlink.database import base as database_base
+from longlink.database import urls as database_urls
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
@@ -71,6 +72,38 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     finally:
         # Remove the temporary table from shared metadata.
         database_base.database_metadata.remove(table)
+
+
+@pytest.mark.parametrize(
+    ("database_url", "schema", "ssl", "expected"),
+    [
+        pytest.param("sqlite+aiosqlite:///:memory:", None, None, {}, id="sqlite"),
+        pytest.param(
+            "postgresql+asyncpg://app:secret@db/longlink",
+            None,
+            None,
+            {"server_settings": {"timezone": "UTC"}},
+            id="postgresql-defaults",
+        ),
+        pytest.param(
+            "postgresql+asyncpg://app:secret@db/longlink",
+            "application",
+            "require",
+            {"server_settings": {"timezone": "UTC", "search_path": '"application", shared'}, "ssl": "require"},
+            id="postgresql-schema-and-ssl",
+        ),
+    ],
+)
+def test_connect_args_returns_driver_specific_settings(
+    database_url: str, schema: str | None, ssl: str | None, expected: dict[str, object]
+) -> None:
+    """Return only the connection settings supported by each database driver."""
+
+    # Act
+    result = database_urls.connect_args(database_url, schema=schema, ssl=ssl)
+
+    # Assert
+    assert result == expected
 
 
 @pytest.mark.parametrize(

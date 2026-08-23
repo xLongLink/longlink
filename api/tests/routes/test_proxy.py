@@ -333,50 +333,27 @@ async def test_application_proxy_closes_gateway_response_when_upstream_stream_fa
 async def test_application_proxy_rejects_oversized_request_body(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject request bodies larger than the configured proxy limit."""
 
-    # Prepare a running Application and a client that consumes its request stream.
-    owner = users[0]
-    app, infrastructure = await create_running_application(owner)
+    # Arrange a running Application and consume its guarded request stream at the gateway boundary.
+    app, _infrastructure = await create_running_application(users[0])
 
-    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
+    async def request(*_args: object, content, **_kwargs: object) -> None:
+        """Consume the request body so the route's size guard executes."""
 
-    class OversizedProxyClient:
-        """Consume the request body through the proxy size guard."""
+        async for _chunk in content:
+            pass
+        raise AssertionError("oversized request must not reach the gateway")
 
-        def __init__(self, **_kwargs: object) -> None:
-            """Accept gateway client construction options."""
-
-        async def aclose(self) -> None:
-            """Close the fake client."""
-
-        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
-            """Build one fake streaming request."""
-
-            return SimpleNamespace(content=content)
-
-        async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
-            """Consume the content so the route enforces the body limit."""
-
-            # Consume the fake stream so the route's byte limit executes.
-            async for _chunk in request.content:
-                pass
-            raise AssertionError("oversized request should fail before upstream send completes")
-
-    monkeypatch.setattr(
-        "src.adapters.gateway.ssl.create_default_context",
-        fake_ssl_context(tls, expected_ca_certificate=infrastructure.compute.gateway_certificate),
-    )
-    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", OversizedProxyClient)
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
-    client = clients[0]
 
-    # Proxy a body one byte beyond the test limit.
-    response = await client.post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
+    # Act
+    response = await clients[0].post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
-    # Verify the request is rejected before upstream delivery completes.
+    # Assert
     assert response.status_code == 413
     assert response.json() == {"detail": "Application proxy request body is too large"}
 
@@ -470,19 +447,43 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 async def test_application_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow app proxy access inherited from Organization read membership."""
 
     # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
-    organization = await create_organization(owner)
-    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    app, _infrastructure = await create_running_application(owner)
+    called = False
+
+    class FakeProxyResponse:
+        """Return one successful proxied document."""
+
+        status_code = 200
+        headers = {"content-type": "application/json"}
+
+        async def aiter_bytes(self):
+            """Yield the proxied document."""
+
+            yield b"{}"
+
+    def close() -> None:
+        """Record gateway cleanup."""
+
+    async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Record the authorized gateway request."""
+
+        nonlocal called
+        called = True
+        return FakeGatewayResponse(FakeProxyResponse(), close)
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
     async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=user.id,
-                organization_id=organization.id,
+                organization_id=app.organization_id,
                 role=OrganizationRoles.read,
             )
         )
@@ -492,8 +493,10 @@ async def test_application_proxy_allows_organization_read_members(
     # Request the Application through the member's Organization access.
     response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
-    # Verify access succeeds and reaches the loading-state response.
-    assert response.status_code == 503
+    # Verify read access reaches the configured compute gateway.
+    assert response.status_code == 200
+    assert response.json() == {}
+    assert called
 
 
 async def test_application_proxy_rejects_cross_organization_access(

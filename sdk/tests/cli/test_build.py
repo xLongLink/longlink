@@ -225,7 +225,9 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert (version, name) == ("0.1.0", "demo")
-    assert "pyproject.toml" in dockerfile
+    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
+    assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
+    assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
@@ -355,6 +357,24 @@ def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) ->
     assert dependencies == []
 
 
+def test_resolve_docker_paths_ignores_malformed_uv_sources(build_project: Path) -> None:
+    """Ignore malformed uv source metadata without expanding the Docker context."""
+
+    # Arrange
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv]\nsources = []\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+    # Assert
+    assert source_root == build_project
+    assert workdir == "/workspace"
+    assert dependencies == []
+
+
 @pytest.mark.parametrize(
     ("app_name", "version", "registry", "expected"),
     [
@@ -392,10 +412,26 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         build.resolve_image_tag(app_name, version, registry)
 
 
-def test_build_command_builds_pushes_and_reports_image(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("arguments", "expected_commands", "expected_push_output"),
+    [
+        pytest.param(
+            ["--push"],
+            [["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"]],
+            True,
+            id="push",
+        ),
+        pytest.param([], [], False, id="local-only"),
+    ],
+)
+def test_build_command_reports_built_image(
+    docker_build: tuple[list[list[str]], list[Path]],
+    monkeypatch: pytest.MonkeyPatch,
+    arguments: list[str],
+    expected_commands: list[list[str]],
+    expected_push_output: bool,
 ) -> None:
-    """Build a Docker image in a temporary context, push it, and report image details."""
+    """Build an image locally and optionally publish it."""
 
     # Arrange
     commands, contexts = docker_build
@@ -405,7 +441,7 @@ def test_build_command_builds_pushes_and_reports_image(
     monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
-    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])
+    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", *arguments])
 
     # Assert
     assert result.exit_code == 0
@@ -420,42 +456,10 @@ def test_build_command_builds_pushes_and_reports_image(
             "-t",
             "localhost:15000/demo-app:dev",
             str(temporary_context),
-        ],
-        ["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"],
-    ]
-    assert "- Built image: localhost:15000/demo-app:dev" in result.output
-    assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
-
-
-def test_build_command_does_not_push_without_flag(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Build an image locally without publishing it by default."""
-
-    # Arrange
-    commands, contexts = docker_build
-    runner = CliRunner()
-    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
-
-    # Act
-    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000"])
-
-    # Assert
-    assert result.exit_code == 0
-    temporary_context, = contexts
-    assert commands == [
-        [
-            "/usr/bin/docker",
-            "build",
-            "-f",
-            str(temporary_context / "Dockerfile"),
-            "-t",
-            "localhost:15000/demo-app:dev",
-            str(temporary_context),
         ]
-    ]
+    ] + expected_commands
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
-    assert "- Pushed image:" not in result.output
+    assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output
 
 
 def test_build_command_reports_docker_build_failure_without_pushing(

@@ -1,5 +1,6 @@
 import pytest
 from uuid import UUID
+from conftest import FakeKubernetes
 from src.kubernetes import applications
 
 pytestmark = pytest.mark.no_db
@@ -28,14 +29,6 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             assert conditions == ["condition=Complete", "condition=Failed"]
             self.raw["status"] = {"failed": 1}
 
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
-
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
 
@@ -60,7 +53,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Application migrations failed"):
-        await applications.Applications(Kubernetes()).apply(  # type: ignore[arg-type]
+        await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
             UUID("00000000-0000-4000-8000-000000000001"),
             "acme",
             "ghcr.io/longlink/dashboard:latest",
@@ -100,14 +93,6 @@ async def test_application_apply_waits_for_deployment_and_route_readiness(monkey
             """Accept the migration terminal conditions."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
-
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
 
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
@@ -155,7 +140,7 @@ async def test_application_apply_waits_for_deployment_and_route_readiness(monkey
     monkeypatch.setattr(applications, "apply", apply)
 
     # Act
-    await applications.Applications(Kubernetes()).apply(  # type: ignore[arg-type]
+    await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
         "ghcr.io/longlink/dashboard:latest",
@@ -196,14 +181,6 @@ async def test_application_apply_reports_quota_admission_failure(monkeypatch: py
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before the rollout failure."""
 
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
-
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
 
@@ -239,7 +216,7 @@ async def test_application_apply_reports_quota_admission_failure(monkeypatch: py
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Kubernetes Application capacity exhausted"):
-        await applications.Applications(Kubernetes()).apply(  # type: ignore[arg-type]
+        await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
             UUID("00000000-0000-4000-8000-000000000001"),
             "acme",
             "ghcr.io/longlink/dashboard:latest",
@@ -270,18 +247,10 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
             assert tail_lines == 200
             yield "migration failed"
 
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
-
     monkeypatch.setattr(applications, "Pod", PodResource)
 
     # Act
-    logs = await applications.Applications(Kubernetes()).logs(  # type: ignore[arg-type]
+    logs = await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
     )
@@ -366,14 +335,6 @@ async def test_application_delete_removes_resources_before_waiting_for_pods(monk
             phase = "Running" if pod_checks == 1 else "Failed"
             yield type("Pod", (), {"raw": {"status": {"phase": phase}}})()
 
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
-
     async def sleep(delay: float) -> None:
         """Record polling without delaying the test."""
 
@@ -394,7 +355,7 @@ async def test_application_delete_removes_resources_before_waiting_for_pods(monk
     monkeypatch.setattr(applications.asyncio, "sleep", sleep)
 
     # Act
-    await applications.Applications(Kubernetes()).delete(  # type: ignore[arg-type]
+    await applications.Applications(FakeKubernetes()).delete(  # type: ignore[arg-type]
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
     )
@@ -419,14 +380,6 @@ async def test_application_delete_skips_cleanup_when_namespace_is_absent(monkeyp
 
             return False
 
-    class Kubernetes:
-        """Provide an opaque Kubernetes API client."""
-
-        async def api(self) -> object:
-            """Return the fake API client."""
-
-            return object()
-
     class Resource:
         """Fail if cleanup inspects resources for a missing Namespace."""
 
@@ -442,7 +395,7 @@ async def test_application_delete_skips_cleanup_when_namespace_is_absent(monkeyp
     monkeypatch.setattr(applications, "Deployment", Resource)
 
     # Act
-    await applications.Applications(Kubernetes()).delete(  # type: ignore[arg-type]
+    await applications.Applications(FakeKubernetes()).delete(  # type: ignore[arg-type]
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
     )

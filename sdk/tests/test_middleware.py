@@ -38,6 +38,7 @@ def request_response(app: FastAPI, path: str, headers: dict[str, str]) -> HttpxR
         pytest.param("GZip", True, id="case-insensitive"),
         pytest.param("gzip;q=invalid", False, id="invalid-quality"),
         pytest.param("gzip;q=1.1", False, id="out-of-range-quality"),
+        pytest.param("gzip; level=6", True, id="non-quality-parameter"),
         pytest.param("*;q=0", False, id="zero-wildcard-quality"),
     ],
 )
@@ -121,7 +122,9 @@ def test_frontend_middleware_preserves_compressed_asset_representation() -> None
     ("path", "media_type", "status_code", "expected_cache_control"),
     [
         pytest.param("/dashboard", "text/html", 200, "no-cache", id="html"),
+        pytest.param("/dashboard", "text/html", 206, "no-cache", id="partial-html"),
         pytest.param("/assets/app-abcdef12.js", "text/javascript", 200, "public, max-age=31536000, immutable", id="hashed-asset"),
+        pytest.param("/assets/app-abcdef12.js", "text/javascript", 304, "public, max-age=31536000, immutable", id="not-modified-asset"),
         pytest.param("/assets/app.js", "text/javascript", 200, "no-cache", id="unhashed-asset"),
         pytest.param("/assets/missing.js", "text/javascript", 404, "no-store", id="missing-asset"),
         pytest.param("/favicon.ico", "image/x-icon", 200, "public, max-age=86400", id="favicon"),
@@ -147,8 +150,7 @@ def test_frontend_middleware_applies_default_cache_policy(
     install_frontend_middleware(app)
 
     # Act
-    with TestClient(app) as client:
-        response = client.get(path)
+    response = request_response(app, path, {})
 
     # Assert
     assert response.status_code == status_code

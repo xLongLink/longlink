@@ -8,27 +8,21 @@ from starlette.requests import Request
 
 
 @pytest.mark.parametrize(
-    ("identity", "expected_user", "expected_lookups"),
+    "identity",
     [
-        pytest.param(
-            UUID("00000000-0000-0000-0000-000000000001"),
-            object(),
-            [(context.Audit, UUID("00000000-0000-0000-0000-000000000001"))],
-            id="authenticated",
-        ),
-        pytest.param(None, None, [], id="anonymous"),
+        pytest.param(UUID("00000000-0000-0000-0000-000000000001"), id="authenticated"),
+        pytest.param(None, id="anonymous"),
     ],
 )
 async def test_data_resolves_request_services(
     monkeypatch: pytest.MonkeyPatch,
     identity: UUID | None,
-    expected_user: object | None,
-    expected_lookups: list[tuple[object, UUID]],
 ) -> None:
     """Yield request services and look up an audit user only for authenticated requests."""
 
     # Arrange
     storage = object()
+    user = object() if identity is not None else None
     session_closed = False
 
     class Database:
@@ -43,7 +37,7 @@ async def test_data_resolves_request_services(
             """Record an audit lookup and return the configured result."""
 
             self.lookups.append((model, user_id))
-            return expected_user
+            return user
 
     database = Database()
     app = FastAPI()
@@ -68,9 +62,9 @@ async def test_data_resolves_request_services(
         value = await anext(values)
 
         # Assert
-        assert value.user is expected_user
+        assert value.user is user
         assert value.storage is storage
         assert value.database is database
-        assert database.lookups == expected_lookups
+        assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
 
     assert session_closed

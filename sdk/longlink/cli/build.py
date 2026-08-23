@@ -308,9 +308,11 @@ def build_app(build_context: Path) -> tuple[str, str]:
     build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
-    dependency_source = workdir.removeprefix("/workspace/")
-    if dependency_source:
+    dependency_source = root.relative_to(source_root).as_posix()
+    if dependency_source != ".":
         dependency_source += "/"
+    else:
+        dependency_source = ""
     local_dependency_manifests = "\n".join(
         f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
         f"/workspace/{source_path.relative_to(source_root).as_posix()}/"

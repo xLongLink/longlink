@@ -177,14 +177,16 @@ async def test_operations_service_claim_serializes_active_work() -> None:
 
     active_claim = await claim_operation()
     assert active_claim is not None
+    assert await claim_operation() is None
+
     await complete_operation(active_claim.id)
     waiting_claim = await claim_operation()
     assert waiting_claim is not None
+
     await complete_operation(waiting_claim.id)
-    finished_claim = await claim_operation()
 
     assert waiting_claim.id == waiting.id
-    assert finished_claim is None
+    assert await claim_operation() is None
 
 
 async def test_operations_service_claim_expires_lost_work() -> None:

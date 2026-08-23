@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRuntime } from '@/components/Application';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
 const navigation = vi.hoisted(() => ({ destination: '' }));
 
@@ -130,10 +130,10 @@ describe('ApplicationRuntime', () => {
         });
 
         // Act
-        const dynamicOutput = await renderRuntime('/issues/42');
+        const output = await renderRuntime('/issues/42');
 
         // Assert
-        await waitFor(() => expect(dynamicOutput.textContent).toContain('42'));
+        await waitFor(() => expect(output.textContent).toContain('42'));
     });
 
     it('rejects unmatched routes', async () => {
@@ -144,10 +144,10 @@ describe('ApplicationRuntime', () => {
         });
 
         // Act
-        const unmatchedOutput = await renderRuntime('/missing');
+        const output = await renderRuntime('/missing');
 
         // Assert
-        await waitFor(() => expect(unmatchedOutput.textContent).toContain("We can't find that page"));
+        await waitFor(() => expect(output.textContent).toContain("We can't find that page"));
     });
 
     it('navigates same-origin XML destinations through the client router', async () => {
@@ -230,15 +230,8 @@ async function waitFor(assertion: () => void): Promise<void> {
 /** Exposes the memory-router location for assertions. */
 function Location({ tabs }: { tabs: string }) {
     const location = useLocation();
-    const { '*': routePath } = useParams();
 
-    return (
-        <output
-            data-path={`${location.pathname}${location.search}${location.hash}`}
-            data-route-path={routePath}
-            data-tabs={tabs}
-        />
-    );
+    return <output data-path={`${location.pathname}${location.search}${location.hash}`} data-tabs={tabs} />;
 }
 
 /** Creates a minimal manifest page. */

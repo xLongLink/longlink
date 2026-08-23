@@ -29,6 +29,15 @@ from src.database.models.base import PlatformModel
 from src.database.models.users import User
 
 
+class FakeKubernetes:
+    """Provide an opaque Kubernetes API client."""
+
+    async def api(self) -> object:
+        """Return the fake API client used by resource fakes."""
+
+        return object()
+
+
 @pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""

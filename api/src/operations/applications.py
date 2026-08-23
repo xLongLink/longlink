@@ -11,26 +11,6 @@ from src.adapters.storage.exoscale import Exoscale
 from src.database.models.applications import Application
 
 
-def _providers(infrastructure: organizations.Infrastructure) -> tuple[Postgres, Exoscale]:
-    """Create database and object-storage clients for one Organization infrastructure assignment."""
-
-    # Build clients from immutable Organization infrastructure assignments.
-    return (
-        Postgres(
-            infrastructure.database.host,
-            infrastructure.database.port,
-            infrastructure.database.username,
-            infrastructure.database.password,
-            infrastructure.database.sslmode,
-        ),
-        Exoscale(
-            infrastructure.storage.endpoint_url,
-            infrastructure.storage.access_key_id,
-            infrastructure.storage.secret_access_key,
-        ),
-    )
-
-
 async def create(application_id: UUID) -> None:
     """Converge one Application lifecycle target or running workload."""
 
@@ -48,8 +28,19 @@ async def create(application_id: UUID) -> None:
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
-        # Resolve the Application's immutable provider assignments.
-        db, object_storage = _providers(infrastructure)
+        # Build providers from the Application's immutable infrastructure assignments.
+        db = Postgres(
+            infrastructure.database.host,
+            infrastructure.database.port,
+            infrastructure.database.username,
+            infrastructure.database.password,
+            infrastructure.database.sslmode,
+        )
+        object_storage = Exoscale(
+            infrastructure.storage.endpoint_url,
+            infrastructure.storage.access_key_id,
+            infrastructure.storage.secret_access_key,
+        )
 
         # Generate fresh credentials for the initial creation attempt.
         bucket = organization.id.hex
@@ -125,7 +116,18 @@ async def delete(application_id: UUID) -> None:
     await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
-    db, object_storage = _providers(infrastructure)
+    db = Postgres(
+        infrastructure.database.host,
+        infrastructure.database.port,
+        infrastructure.database.username,
+        infrastructure.database.password,
+        infrastructure.database.sslmode,
+    )
+    object_storage = Exoscale(
+        infrastructure.storage.endpoint_url,
+        infrastructure.storage.access_key_id,
+        infrastructure.storage.secret_access_key,
+    )
     await db.delete_schema(organization.id, application.id)
     await object_storage.revoke(application.id.hex)
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")

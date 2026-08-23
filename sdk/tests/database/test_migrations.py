@@ -63,6 +63,32 @@ def test_migration_loader_discovers_nested_database_models(
     assert table_name in database_metadata.tables
 
 
+def test_migration_loader_skips_already_imported_models(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Avoid executing model modules that the application already loaded."""
+
+    # Arrange
+    _, write_model = isolated_model
+    module_name = "src.database.models.catalog.inventory"
+    write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
+    sys.modules[module_name] = object()  # type: ignore[assignment]
+
+    def unexpected_spec(*_args: object, **_kwargs: object) -> object:
+        """Fail if an existing module is loaded again."""
+
+        raise AssertionError("loaded model must not be imported again")
+
+    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", unexpected_spec)
+
+    # Act
+    database_migrations.load_application_models()
+
+    # Assert
+    assert sys.modules[module_name] is not None
+
+
 def test_migration_loader_removes_failed_model_import_before_retry(
     isolated_model: tuple[Path, Callable[[str, str], None]],
 ) -> None:
@@ -158,31 +184,15 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
     assert directives == (original_directives if expected_migration_created else [])
 
 
-def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path, monkeypatch) -> None:
-    """Fail production startup before Alembic upgrades without application revisions."""
-
-    # Emulate a production runtime without a committed migrations directory.
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
-
-    monkeypatch.setattr(
-        database_migrations.command,
-        "upgrade",
-        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
-    )
-
-    # Reject missing revisions without handing control to Alembic.
-    with pytest.raises(RuntimeError, match="require migrations"):
-        database_migrations.apply_migrations()
-
-
-def test_production_migrations_rejects_only_init_file_before_upgrade(tmp_path, monkeypatch) -> None:
-    """Fail production startup when the migrations directory has no revision files."""
+@pytest.mark.parametrize("has_init_file", [False, True])
+def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path, monkeypatch, has_init_file: bool) -> None:
+    """Fail production startup without committed application revisions."""
 
     # Arrange
-    migrations_path = tmp_path / "migrations"
-    migrations_path.mkdir()
-    migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
+    if has_init_file:
+        migrations_path = tmp_path / "migrations"
+        migrations_path.mkdir()
+        migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
     monkeypatch.setattr(

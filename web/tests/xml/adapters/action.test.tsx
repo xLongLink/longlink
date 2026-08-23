@@ -164,7 +164,6 @@ describe('Action', () => {
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
 
         // Act
-        // An unsafe destination leaves the Action with no navigation to perform.
         const button = await renderAction(
             '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button to="javascript:alert(1)">Save</Button></Action>',
             ctx,

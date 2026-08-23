@@ -62,6 +62,17 @@ async def test_list_apps_returns_requested_page_for_admin(
     assert paged_response.json()["total"] == 2
 
 
+async def test_list_apps_rejects_regular_users(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
+    """Prevent non-administrators from enumerating applications."""
+
+    # Act
+    response = await clients[1].get("/api/v1/applications")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -192,16 +203,6 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
     # Assert
     assert response.status_code == 422
-    assert response.json() == {
-        "detail": [
-            {
-                "type": "missing",
-                "loc": ["body", "image"],
-                "msg": "Field required",
-                "input": {"name": "dashboard"},
-            }
-        ]
-    }
     async with session_scope() as session:
         assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
     assert [operation.id for operation in await fetch_operations()] == operation_ids

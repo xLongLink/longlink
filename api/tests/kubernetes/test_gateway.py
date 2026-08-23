@@ -1,21 +1,13 @@
 import pytest
 import ipaddress
 from uuid import UUID
+from conftest import FakeKubernetes
 from cryptography import x509
 from src.kubernetes import gateway
 from cryptography.x509.oid import ExtendedKeyUsageOID
 from src.kubernetes.gateway import generate_gateway_tls
 
 pytestmark = pytest.mark.no_db
-
-
-class FakeKubernetes:
-    """Provide an opaque Kubernetes API client."""
-
-    async def api(self) -> object:
-        """Return the fake API client used by resource fakes."""
-
-        return object()
 
 
 def test_gateway_tls_covers_the_compute_address() -> None:
@@ -171,12 +163,6 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
         async def refresh(self) -> None:
             """Keep the ready resource state."""
 
-    class Kubernetes:
-        async def api(self) -> object:
-            """Return an opaque Kubernetes API client."""
-
-            return object()
-
     async def install(self: gateway.Gateway) -> None:
         """Skip controller installation for readiness testing."""
 
@@ -196,4 +182,4 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
     monkeypatch.setattr(gateway, "apply", apply)
 
     # All readiness conditions produce the externally reachable Gateway endpoint.
-    assert await gateway.Gateway(Kubernetes()).apply() == "192.0.2.1"  # type: ignore[arg-type]
+    assert await gateway.Gateway(FakeKubernetes()).apply() == "192.0.2.1"  # type: ignore[arg-type]

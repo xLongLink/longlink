@@ -190,6 +190,26 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert deletion.target_id == organization.id
 
 
+async def test_delete_organization_rejects_tombstone_retry_from_another_user(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Only the user who created an Organization tombstone may retry its cleanup."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    first_response = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+
+    # Act
+    retry_response = await clients[1].delete(f"/api/v1/organizations/{organization.id}")
+
+    # Assert
+    assert first_response.status_code == 202
+    assert retry_response.status_code == 403
+    assert retry_response.json() == {"detail": "Access required"}
+
+
 async def test_delete_organization_requires_owner_or_platform_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

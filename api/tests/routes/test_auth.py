@@ -1,5 +1,6 @@
 import pytest
 from httpx2 import AsyncClient
+from main import app
 from conftest import TEST_PASSWORD, create_client, authenticated_cookies
 from sqlmodel import col, select
 from factories import create_organization
@@ -12,6 +13,7 @@ from src.database.session import get_session, session_scope
 from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src import auth
 from src.database.models.invitations import OrganizationInvitation
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
@@ -88,6 +90,36 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     assert response.status_code == 400
     assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
     assert client.cookies.get("longlink_auth") is None
+
+
+@pytest.mark.no_db
+async def test_malformed_browser_session_is_rejected_before_database_lookup(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject malformed browser credentials without opening an identity lookup."""
+
+    # Arrange
+    async def get_session():
+        """Provide an unused dependency session for the rejected credential."""
+
+        yield object()
+
+    async def unexpected_active(*_args: object) -> object:
+        """Fail if malformed credentials reach the user database query."""
+
+        raise AssertionError("malformed credentials must not query users")
+
+    monkeypatch.setattr(app, "dependency_overrides", {auth.get_session: get_session})
+    monkeypatch.setattr(auth.user_service, "active", unexpected_active)
+    client.cookies.set("longlink_auth", "invalid", domain="testserver.local", path="/")
+
+    # Act
+    response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 async def test_registration_setup_rejects_missing_verification_cookie(client: AsyncClient) -> None:
