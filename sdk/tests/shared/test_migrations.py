@@ -2,8 +2,11 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
+from alembic.config import Config
 from longlink.shared import audit as shared_audit
+from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
+from sqlalchemy.dialects import postgresql
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
@@ -32,6 +35,30 @@ def test_migration_config_preserves_percent_encoded_credentials() -> None:
     assert script_location is not None
     assert script_location.endswith("longlink/shared/alembic")
     assert config.get_main_option("sqlalchemy.url") == database_url
+
+
+async def test_migrate_database_upgrades_shared_schema_to_head(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the shared Alembic upgrade through the asynchronous migration entrypoint."""
+
+    # Arrange
+    captured: dict[str, Config | str] = {}
+
+    def upgrade(config: Config, target: str) -> None:
+        """Capture the Alembic configuration submitted for upgrade."""
+
+        captured["config"] = config
+        captured["target"] = target
+
+    monkeypatch.setattr(shared_migrations.command, "upgrade", upgrade)
+
+    # Act
+    await migrate_database("postgresql+asyncpg://control:secret@db/longlink")
+
+    # Assert
+    config = captured["config"]
+    assert isinstance(config, Config)
+    assert config.get_main_option("sqlalchemy.url") == "postgresql+asyncpg://control:secret@db/longlink"
+    assert captured["target"] == "head"
 
 
 async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -103,7 +130,65 @@ async def test_shared_audit_sync_upserts_rows_and_disposes_engine(monkeypatch: p
     # Assert
     statement = executed["statement"]
     assert getattr(statement, "table").name == "audit"
+    compiled = str(getattr(statement, "compile")(dialect=postgresql.dialect()))
+    assert "ON CONFLICT (id) DO UPDATE" in compiled
+    assert "created_at = excluded.created_at" not in compiled
+    assert "updated_at = excluded.updated_at" in compiled
+    assert "deleted_at = excluded.deleted_at" in compiled
     assert executed["parameters"] == [user.model_dump()]
+    assert disposed is True
+
+
+async def test_shared_audit_sync_disposes_engine_when_upsert_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Dispose the operation-scoped engine when shared audit synchronization fails."""
+
+    # Arrange
+    disposed = False
+    user = Audit(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Owner User",
+        email="owner@example.com",
+        role="owner",
+        created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+        updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+    )
+
+    class Connection:
+        """Raise when the shared-audit upsert reaches the database boundary."""
+
+        async def __aenter__(self) -> "Connection":
+            """Enter the fake transaction context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake transaction context."""
+
+        async def execute(self, _statement: object, _parameters: list[dict[str, object]]) -> None:
+            """Simulate a database failure during the upsert."""
+
+            raise RuntimeError("database unavailable")
+
+    class Engine:
+        """Provide a failing transaction and disposal tracking."""
+
+        def begin(self) -> Connection:
+            """Return the fake transaction context."""
+
+            return Connection()
+
+        async def dispose(self) -> None:
+            """Record operation-scoped engine disposal."""
+
+            nonlocal disposed
+            disposed = True
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", lambda *_args, **_kwargs: Engine())
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        await shared_audit.sync("postgresql+asyncpg://db/longlink", [user])
+
     assert disposed is True
 
 

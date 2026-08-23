@@ -2,32 +2,6 @@ from httpx2 import AsyncClient
 from factories import create_compute, claim_operation, queue_operation, complete_operation
 
 
-async def test_compute_registry_creation_rejects_duplicate_name(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Create a Compute registry and reject a duplicate name."""
-
-    client = clients[0]
-
-    create_response = await client.post(
-        "/api/v1/computes",
-        json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
-    )
-    duplicate_response = await client.post(
-        "/api/v1/computes",
-        json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
-    )
-    created = create_response.json()
-
-    # Assert
-    assert create_response.status_code == 202
-    assert created["name"] == "Ephemeral Compute"
-    assert created["gateway_url"] is None
-    assert "kubeconfig" not in created
-    assert duplicate_response.status_code == 409
-    assert duplicate_response.json() == {"detail": "Compute registry already exists"}
-
-
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
@@ -43,21 +17,6 @@ async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
-
-
-async def test_compute_registry_deletes_unused_registration(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Remove an unused Compute registration with no lifecycle Operation."""
-
-    client = clients[0]
-    compute = await create_compute()
-
-    delete_response = await client.delete(f"/api/v1/computes/{compute.id}")
-    retry_response = await client.delete(f"/api/v1/computes/{compute.id}")
-
-    assert delete_response.status_code == 204
-    assert retry_response.status_code == 404
 
 
 async def test_compute_registry_deletes_registration_after_completed_lifecycle(

@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
 from src.database.models.users import User
@@ -105,54 +106,88 @@ async def test_registry_endpoints_return_registered_backend(
     )
 
 
-async def test_storage_registry_list_returns_ordered_page_and_total(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+@pytest.mark.parametrize(
+    ("path", "expected_detail"),
+    [
+        pytest.param("computes", "Compute registry not found", id="compute"),
+        pytest.param("databases", "Database registry not found", id="database"),
+        pytest.param("storages", "Storage registry not found", id="storage"),
+    ],
+)
+async def test_registry_endpoint_returns_resource_specific_not_found_error(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, expected_detail: str
 ) -> None:
-    """Return an ordered storage registry page without provider credentials."""
-
-    # Arrange
-    alpha_response = await clients[0].post(
-        "/api/v1/storages",
-        json={
-            "name": "Alpha Storage",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "access_key_id": "alpha-key",
-            "secret_access_key": "alpha-secret",
-        },
-    )
-    beta_response = await clients[0].post(
-        "/api/v1/storages",
-        json={
-            "name": "Beta Storage",
-            "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            "access_key_id": "beta-key",
-            "secret_access_key": "beta-secret",
-        },
-    )
-    assert alpha_response.status_code == 201
-    assert beta_response.status_code == 201
-    beta_id = beta_response.json()["id"]
+    """Return the resource-specific error when an administrator requests an unknown registry."""
 
     # Act
-    response = await clients[0].get("/api/v1/storages?page=2&page_size=1")
+    response = await clients[0].get(f"/api/v1/{path}/{uuid4()}")
 
     # Assert
-    assert response.status_code == 200
-    assert response.json() == {
-        "items": [
-            {
-                "id": beta_id,
-                "name": "Beta Storage",
-                "endpoint_url": "https://sos-ch-gva-2.exo.io",
-            }
-        ],
-        "total": 2,
-    }
+    assert response.status_code == 404
+    assert response.json() == {"detail": expected_detail}
 
 
 @pytest.mark.parametrize(
-    ("path", "payload", "secret_fields", "duplicate_error"),
+    ("path", "payload", "expected_item", "create_status"),
     [
+        pytest.param(
+            "computes",
+            {"kubeconfig": "apiVersion: v1\nclusters: []\n"},
+            {"gateway_url": None, "status": "creating"},
+            202,
+            id="compute",
+        ),
+        pytest.param(
+            "databases",
+            {"host": "database.example", "port": 5432, "username": "admin", "password": "secret", "sslmode": "disable"},
+            {"host": "database.example", "port": 5432, "sslmode": "disable", "username": "admin"},
+            201,
+            id="database",
+        ),
+        pytest.param(
+            "storages",
+            {"endpoint_url": "https://sos-ch-gva-2.exo.io", "access_key_id": "key", "secret_access_key": "secret"},
+            {"endpoint_url": "https://sos-ch-gva-2.exo.io"},
+            201,
+            id="storage",
+        ),
+    ],
+)
+async def test_registry_list_returns_ordered_page_and_total(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    path: str,
+    payload: dict[str, object],
+    expected_item: dict[str, object],
+    create_status: int,
+) -> None:
+    """Return an ordered registry page without credentials."""
+
+    # Arrange
+    alpha_response = await clients[0].post(f"/api/v1/{path}", json=payload | {"name": "Alpha Registry"})
+    beta_response = await clients[0].post(f"/api/v1/{path}", json=payload | {"name": "Beta Registry"})
+    assert alpha_response.status_code == create_status
+    assert beta_response.status_code == create_status
+    beta_id = beta_response.json()["id"]
+
+    # Act
+    response = await clients[0].get(f"/api/v1/{path}?page=2&page_size=1")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"items": [{"id": beta_id, "name": "Beta Registry"} | expected_item], "total": 2}
+
+
+@pytest.mark.parametrize(
+    ("path", "payload", "secret_fields", "duplicate_error", "create_status"),
+    [
+        pytest.param(
+            "computes",
+            {"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+            ["kubeconfig"],
+            "Compute registry already exists",
+            202,
+            id="compute",
+        ),
         pytest.param(
             "databases",
             {
@@ -165,6 +200,7 @@ async def test_storage_registry_list_returns_ordered_page_and_total(
             },
             ["password"],
             "Database registry already exists",
+            201,
             id="database",
         ),
         pytest.param(
@@ -177,33 +213,49 @@ async def test_storage_registry_list_returns_ordered_page_and_total(
             },
             ["access_key_id", "secret_access_key"],
             "Storage registry already exists",
+            201,
             id="storage",
         ),
     ],
 )
-async def test_registry_create_duplicate_and_delete(
+async def test_registry_creation_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     path: str,
-    payload: dict[str, str | int],
+    payload: dict[str, object],
     secret_fields: list[str],
     duplicate_error: str,
+    create_status: int,
 ) -> None:
-    """Create, reject duplicate registration, and delete each unassigned registry type."""
+    """Create each registry type and reject a duplicate name."""
 
     create_response = await clients[0].post(f"/api/v1/{path}", json=payload)
     duplicate_response = await clients[0].post(f"/api/v1/{path}", json=payload)
     created = create_response.json()
-    registry_id = created["id"]
-    delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
-    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
 
-    assert create_response.status_code == 201
+    assert create_response.status_code == create_status
     assert created["name"] == payload["name"]
     assert all(field not in created and str(payload[field]) not in create_response.text for field in secret_fields)
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": duplicate_error}
+
+
+@pytest.mark.parametrize(("path", "registry"), [("databases", "database"), ("storages", "storage")])
+async def test_registry_deletes_unused_registration(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
+) -> None:
+    """Delete an unassigned registry and reject a repeated deletion."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    registry_id = getattr(infrastructure, registry).id
+
+    # Act
+    delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+    repeat_delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+
+    # Assert
     assert delete_response.status_code == 204
-    assert get_response.status_code == 404
+    assert repeat_delete_response.status_code == 404
 
 
 @pytest.mark.parametrize(

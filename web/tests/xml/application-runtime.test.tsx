@@ -6,38 +6,34 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRuntime } from '@/components/Application';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+const { apiRequest } = vi.hoisted(() => ({ apiRequest: vi.fn() }));
+
+vi.mock('@/lib/api', () => ({ api: apiRequest }));
+
 describe('ApplicationRuntime XML integration', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        vi.unstubAllGlobals();
-
         if (root) {
-            const renderedRoot = root;
-            await act(async () => renderedRoot.unmount());
+            await act(async () => root.unmount());
         }
         root = undefined;
+        apiRequest.mockReset();
     });
 
     it('fetches, initializes, and renders a manifest-defined XML page', async () => {
         // Arrange
-        const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-            const url = input instanceof Request ? input.url : String(input);
-
+        apiRequest.mockImplementation((url: string, options?: RequestInit) => {
             if (url.endsWith('/pages.json')) {
-                return new Response(JSON.stringify([{ name: 'home', path: 'home.xml', route: 'home', tab: 'home' }]), {
-                    headers: { 'Content-Type': 'application/json' },
-                });
+                return { json: async () => [{ name: 'home', path: 'home.xml', route: 'home', tab: 'home' }] };
             }
 
-            return new Response(
-                '<longlink><State id="page" title="Welcome" /><Heading level="1">${page.title}</Heading></longlink>',
-                {
-                    headers: { 'Content-Type': 'application/xml' },
-                }
-            );
+            expect(options?.headers).toEqual({ Accept: 'application/xml' });
+            return {
+                text: async () =>
+                    '<longlink><State id="page" title="Welcome" /><Heading level="1">${page.title}</Heading></longlink>',
+            };
         });
-        vi.stubGlobal('fetch', fetchRequest);
         const container = document.createElement('div');
         const renderedRoot = createRoot(container);
         root = renderedRoot;
@@ -61,7 +57,8 @@ describe('ApplicationRuntime XML integration', () => {
         });
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledTimes(2)));
+        await act(async () => vi.waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(2)));
         await act(async () => vi.waitFor(() => expect(container.textContent).toContain('Welcome')));
+        expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/pages.json', '/home.xml']);
     });
 });

@@ -288,3 +288,161 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
 
     # Assert
     assert logs == ["Migration logs:", "migration failed"]
+
+
+async def test_application_delete_removes_resources_before_waiting_for_pods(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Delete Application resources once and wait for non-terminal Pods to exit."""
+
+    # Arrange
+    deleted: list[str] = []
+    resource_checks = 0
+    job_checks = 0
+    pod_checks = 0
+    sleeps: list[float] = []
+
+    class NamespaceResource:
+        """Keep the Organization Namespace available for Application cleanup."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Keep the Namespace present until Application cleanup completes."""
+
+            return True
+
+    class Resource:
+        """Expose an Application resource until its initial cleanup poll."""
+
+        def __init__(self, kind: str) -> None:
+            """Store the resource kind used to record deletion."""
+
+            self.kind = kind
+            self.metadata: dict[str, object] = {}
+
+        async def exists(self) -> bool:
+            """Report resources absent after their deletion request."""
+
+            nonlocal resource_checks
+            resource_checks += 1
+            return resource_checks <= 4
+
+        async def refresh(self) -> None:
+            """Keep the fake resource metadata unchanged."""
+
+        async def delete(self) -> None:
+            """Record the resource cleanup request."""
+
+            deleted.append(self.kind)
+
+    class JobResource:
+        """Expose one retained migration Job during the initial cleanup poll."""
+
+        metadata: dict[str, object] = {}
+
+        async def delete(self) -> None:
+            """Record migration Job cleanup."""
+
+            deleted.append("Job")
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the retained migration Job only once."""
+
+            nonlocal job_checks
+            job_checks += 1
+            if job_checks == 1:
+                yield cls()
+
+    class PodResource:
+        """Expose a running Pod followed by a terminal Pod."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the current Application Pod state."""
+
+            nonlocal pod_checks
+            pod_checks += 1
+            phase = "Running" if pod_checks == 1 else "Failed"
+            yield type("Pod", (), {"raw": {"status": {"phase": phase}}})()
+
+    class Kubernetes:
+        """Provide an opaque Kubernetes API client."""
+
+        async def api(self) -> object:
+            """Return the fake API client."""
+
+            return object()
+
+    async def sleep(delay: float) -> None:
+        """Record polling without delaying the test."""
+
+        sleeps.append(delay)
+
+    def resource(kind: str):
+        """Create a fake Kubernetes resource constructor."""
+
+        return lambda *_args, **_kwargs: Resource(kind)
+
+    monkeypatch.setattr(applications, "Namespace", NamespaceResource)
+    monkeypatch.setattr(applications, "Deployment", resource("Deployment"))
+    monkeypatch.setattr(applications, "Service", resource("Service"))
+    monkeypatch.setattr(applications, "Secret", resource("Secret"))
+    monkeypatch.setattr(applications, "HTTPRouteResource", resource("HTTPRoute"))
+    monkeypatch.setattr(applications, "Job", JobResource)
+    monkeypatch.setattr(applications, "Pod", PodResource)
+    monkeypatch.setattr(applications.asyncio, "sleep", sleep)
+
+    # Act
+    await applications.Applications(Kubernetes()).delete(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "acme",
+    )
+
+    # Assert
+    assert deleted == ["Deployment", "Service", "Secret", "HTTPRoute", "Job"]
+    assert sleeps == [5, 5]
+
+
+async def test_application_delete_skips_cleanup_when_namespace_is_absent(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stop before looking up Application resources in a deleted Namespace."""
+
+    # Arrange
+    class NamespaceResource:
+        """Report an already deleted Organization Namespace."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Report the missing Namespace."""
+
+            return False
+
+    class Kubernetes:
+        """Provide an opaque Kubernetes API client."""
+
+        async def api(self) -> object:
+            """Return the fake API client."""
+
+            return object()
+
+    class Resource:
+        """Fail if cleanup inspects resources for a missing Namespace."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept resource construction before the Namespace presence check."""
+
+        async def exists(self) -> bool:
+            """Reject resource inspection after Namespace deletion."""
+
+            raise AssertionError("Application resources must not be inspected after namespace deletion")
+
+    monkeypatch.setattr(applications, "Namespace", NamespaceResource)
+    monkeypatch.setattr(applications, "Deployment", Resource)
+
+    # Act
+    await applications.Applications(Kubernetes()).delete(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "acme",
+    )

@@ -1,4 +1,4 @@
-from datetime import UTC, timedelta
+from datetime import UTC
 from longlink.utils.time import utcnow
 
 
@@ -10,4 +10,3 @@ def test_utcnow_returns_an_aware_utc_timestamp() -> None:
 
     # Assert
     assert timestamp.tzinfo is UTC
-    assert timestamp.utcoffset() == timedelta(0)

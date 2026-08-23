@@ -1,7 +1,6 @@
 import pytest
-from main import app
-from httpx2 import AsyncClient, ASGITransport
-from conftest import TEST_PASSWORD, authenticated_cookies
+from httpx2 import AsyncClient
+from conftest import TEST_PASSWORD, create_client, authenticated_cookies
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import token
@@ -199,6 +198,34 @@ async def test_registration_completion_creates_authenticated_account(
     assert authenticated_login.status_code == 204
 
 
+async def test_password_login_rejects_wrong_password_and_unknown_email_without_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+) -> None:
+    """Keep failed password login responses indistinguishable and unauthenticated."""
+
+    # Arrange
+    email = users[0].email
+
+    # Act
+    wrong_password_response = await client.post(
+        "/api/v1/auth/password/login",
+        json={"email": email, "password": "wrong-password"},
+    )
+    unknown_email_response = await client.post(
+        "/api/v1/auth/password/login",
+        json={"email": "missing@example.com", "password": TEST_PASSWORD},
+    )
+
+    # Assert
+    assert wrong_password_response.status_code == 400
+    assert unknown_email_response.status_code == 400
+    assert wrong_password_response.json() == unknown_email_response.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert "set-cookie" not in wrong_password_response.headers
+    assert "set-cookie" not in unknown_email_response.headers
+    assert client.cookies.get("longlink_auth") is None
+
+
 async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
@@ -286,7 +313,7 @@ async def test_registration_completion_rejects_duplicate_account(
     assert first_completion.status_code == 201
 
     # Act
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as repeat_client:
+    async with create_client() as repeat_client:
         repeat_verify_response = await repeat_client.post("/api/v1/auth/verify", json={"token": verification_token})
         repeat_response = await repeat_client.post(
             "/api/v1/auth/register/complete",

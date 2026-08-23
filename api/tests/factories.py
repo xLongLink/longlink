@@ -120,7 +120,6 @@ async def create_ready_infrastructure() -> Infrastructure:
 async def create_organization(
     owner: User,
     name: str = "acme",
-    slug: str = "acme",
     infrastructure: Infrastructure | None = None,
 ) -> Organization:
     """Create one Organization with the specified or independent ready infrastructure."""
@@ -132,7 +131,6 @@ async def create_organization(
         organization = await organizations.create(
             session,
             name,
-            slug,
             owner,
             compute_id=infrastructure.compute.id,
             storage_id=infrastructure.storage.id,

@@ -4,6 +4,27 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
+async def test_inspect_image_requires_authentication_before_metadata_inspection(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject anonymous image inspection without reaching the image metadata adapter."""
+
+    # Arrange
+    async def unexpected_metadata(_image: Image) -> None:
+        """Fail if unauthenticated requests reach image inspection."""
+
+        raise AssertionError("metadata inspection should require authentication")
+
+    monkeypatch.setattr("src.routes.v1.image.images.metadata", unexpected_metadata)
+
+    # Act
+    response = await client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
 async def test_inspect_image_returns_404_when_metadata_missing(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID
-from factories import create_compute, claim_operation, queue_operation, create_organization, create_ready_infrastructure
+from factories import create_compute, claim_operation, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
@@ -8,7 +8,6 @@ from src.database.session import session_scope
 from src.database.services import compute
 from src.models.operations import OperationStatus
 from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
-from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 
 
@@ -148,19 +147,3 @@ async def test_record_success_rejects_stale_compute_lifecycle_writer() -> None:
     assert persisted.gateway_url is None
     assert persisted.gateway_certificate is None
     assert persisted.gateway_client_identity is None
-
-
-async def test_available_compute_selects_the_least_assigned_ready_registry(users: tuple[User, User, User]) -> None:
-    """Select an unassigned ready Compute ahead of a ready Compute in use."""
-
-    # Arrange
-    assigned = await create_ready_infrastructure()
-    available = await create_ready_infrastructure()
-    await create_organization(users[0], name="assigned", slug="assigned", infrastructure=assigned)
-
-    # Act
-    async with session_scope() as session:
-        selected = await compute.available(session)
-
-    # Assert
-    assert selected == available.compute.id

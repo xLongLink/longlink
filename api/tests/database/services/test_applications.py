@@ -16,7 +16,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="duplicate-org", slug="duplicate-org")
+    organization = await create_organization(user, name="duplicate-org")
     await create_application(organization, name="Dashboard")
 
     # Act
@@ -47,7 +47,7 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="collections-org", slug="collections-org")
+    organization = await create_organization(user, name="collections-org")
     deleted_application = await create_application(organization, name="Dashboard")
     active_application = await create_application(organization, name="Reports")
     async with session_scope() as session:
@@ -69,7 +69,7 @@ async def test_delete_marks_application_deleted(users: tuple[User, User, User]) 
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="delete-org", slug="delete-org")
+    organization = await create_organization(user, name="delete-org")
     application = await create_application(organization, name="Dashboard")
 
     # Act
@@ -81,6 +81,8 @@ async def test_delete_marks_application_deleted(users: tuple[User, User, User]) 
     # Assert
     assert deleted_application is not None
     assert deleted_application.deleted_at is not None
-    assert [(operation.kind, operation.target_id) for operation in await fetch_operations() if operation.kind == OperationKind.application_delete] == [
-        (OperationKind.application_delete, application.id)
-    ]
+    assert [
+        (operation.kind, operation.target_id)
+        for operation in await fetch_operations()
+        if operation.kind == OperationKind.application_delete
+    ] == [(OperationKind.application_delete, application.id)]

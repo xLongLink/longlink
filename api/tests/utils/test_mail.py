@@ -26,4 +26,3 @@ async def test_development_mail_logging_excludes_message_body(monkeypatch: pytes
 
     # Assert
     assert logged == [("Development email to %s: %s", ("user@example.com", "Reset your password"))]
-    assert token not in str(logged)

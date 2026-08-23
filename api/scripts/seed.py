@@ -179,7 +179,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             organization = await organizations.create(
                 session,
                 "Development",
-                "development",
                 administrator,
                 compute_id=compute_registry.id,
                 storage_id=storage_registry.id,

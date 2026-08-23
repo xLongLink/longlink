@@ -58,6 +58,34 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         assert "Docker is required" not in result.output
 
 
+def test_build_reports_missing_docker_after_preparing_project(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require Docker only after the project build context is prepared."""
+
+    # Arrange
+    runner = CliRunner()
+    monkeypatch.setattr(build, "build_app", lambda _context: ("0.1.0", "demo"))
+    monkeypatch.setattr(build.shutil, "which", lambda _command: None)
+    monkeypatch.setattr(build.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("Docker must not run when unavailable"))
+
+    # Act
+    result = runner.invoke(build.build_command)
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker is required to build images" in result.output
+
+
+def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
+    """Reject malformed project metadata before preparing a Docker build."""
+
+    # Arrange
+    tmp_path.joinpath("pyproject.toml").write_text("[project\nname = 'demo'", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(click.ClickException, match="Invalid project file"):
+        build.read_pyproject(tmp_path)
+
+
 @pytest.mark.parametrize(
     ("module_path", "project_config", "module_source", "expected_spec"),
     [
@@ -164,6 +192,33 @@ def test_build_app_generates_dockerignore_from_project_gitignore(build_project: 
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
         ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
     )
+
+
+def test_build_app_generates_dockerfile_with_runtime_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Generate Docker build instructions with application metadata and environment labels."""
+
+    # Arrange
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo application"\n\n'
+        '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        encoding="utf-8",
+    )
+    build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    # Act
+    version, name = build.build_app(build_context)
+
+    # Assert
+    dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
+    assert (version, name) == ("0.1.0", "demo")
+    assert "pyproject.toml" in dockerfile
+    assert "WORKDIR /workspace" in dockerfile
+    assert "uv sync --locked --no-dev --no-install-local" in dockerfile
+    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
+    assert "LABEL longlink.environments=" in dockerfile
+    assert "API_KEY" in dockerfile
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:

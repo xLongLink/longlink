@@ -114,6 +114,54 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
     assert image_metadata is None
 
 
+@pytest.mark.parametrize(
+    ("scenario", "expected_paths"),
+    [
+        pytest.param("failed-token", ["/token"], id="failed-token"),
+        pytest.param("invalid-token", ["/token"], id="invalid-token"),
+        pytest.param("failed-manifest", ["/token", "/v2/longlink/dashboard/manifests/latest"], id="failed-manifest"),
+        pytest.param("invalid-config", ["/token", "/v2/longlink/dashboard/manifests/latest"], id="invalid-config"),
+    ],
+)
+async def test_metadata_stops_when_registry_responses_are_invalid(
+    monkeypatch: pytest.MonkeyPatch, scenario: str, expected_paths: list[str]
+) -> None:
+    """Return no metadata without requesting later registry resources after invalid responses."""
+
+    # Arrange
+    requested_paths: list[str] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return the configured invalid registry response."""
+
+        requested_paths.append(request.url.path)
+        if request.url.path == "/token":
+            if scenario == "failed-token":
+                return httpx2.Response(503)
+            if scenario == "invalid-token":
+                return httpx2.Response(200, json=[])
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if scenario == "failed-manifest":
+            return httpx2.Response(503)
+        return httpx2.Response(
+            200,
+            json={"config": {"digest": "invalid"}},
+            headers={"Docker-Content-Digest": "sha256:deadbeef"},
+        )
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(
+        images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
+    )
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is None
+    assert requested_paths == expected_paths
+
+
 async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
     """Return immutable metadata when the registry resolves a mutable tag."""
 

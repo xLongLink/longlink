@@ -145,6 +145,8 @@ async def test_update_organization_rejects_write_member(
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
+    original_updated_at = organization.updated_at
+    original_updated_id = organization.updated_id
     async with session_scope() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
@@ -155,6 +157,12 @@ async def test_update_organization_rejects_write_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        unchanged = await session.get(Organization, organization.id)
+    assert unchanged is not None
+    assert unchanged.avatar == organization.avatar
+    assert unchanged.updated_at == original_updated_at
+    assert unchanged.updated_id == original_updated_id
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -192,7 +200,7 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     # Arrange
     platform_admin, org_admin = users[0], users[1]
     owned_organization = await create_organization(platform_admin)
-    admin_owned_organization = await create_organization(org_admin, name="globex", slug="globex")
+    admin_owned_organization = await create_organization(org_admin, name="globex")
     async with session_scope() as session:
         session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
         await session.commit()
@@ -220,7 +228,7 @@ async def test_other_organization_user_cannot_delete_application(
     # Create isolated organizations owned by different users.
     target_owner, other_owner, _ = users
     target_organization = await create_organization(target_owner)
-    await create_organization(other_owner, name="globex", slug="globex")
+    await create_organization(other_owner, name="globex")
     target_application = await create_application(target_organization)
     operation_ids = [operation.id for operation in await fetch_operations()]
     client = clients[1]
@@ -408,8 +416,8 @@ async def test_list_organizations_returns_stable_page_and_active_total(
 
     # Arrange
     owner = users[0]
-    await create_organization(owner, name="acme", slug="acme")
-    organization = await create_organization(owner, name="globex", slug="globex")
+    await create_organization(owner, name="acme")
+    organization = await create_organization(owner, name="globex")
     client = clients[0]
 
     # Act
@@ -490,7 +498,7 @@ async def test_organization_member_creates_organization_invitation(
     assert response.status_code == 204
     async with session_scope() as session:
         invitations_list = await organizations.invitations(session, organization.id)
-    assert [item.email for item in invitations_list] == [invitee.email]
+    assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
     assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
     assert captured_mail[0][3] is not None

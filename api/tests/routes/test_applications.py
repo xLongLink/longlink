@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import create_application, create_organization
+from factories import fetch_operations, create_application, create_organization
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -45,7 +45,7 @@ async def test_list_apps_returns_requested_page_for_admin(
     # Arrange
     user = users[0]
     acme = await create_organization(user)
-    globex = await create_organization(user, name="globex", slug="globex")
+    globex = await create_organization(user, name="globex")
     dashboard = await create_application(acme)
     console = await create_application(globex, name="console")
 
@@ -150,6 +150,7 @@ async def test_create_app_rejects_invalid_image_metadata(
         return metadata
 
     monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    operation_ids = [operation.id for operation in await fetch_operations()]
 
     # Act
     response = await clients[0].post(
@@ -162,6 +163,7 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
 async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
@@ -174,6 +176,7 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
     # Arrange
     organization = await create_organization(users[0])
     await create_application(organization, name="Dashboard")
+    operation_ids = [operation.id for operation in await fetch_operations()]
 
     async def inspect_image(_image: Image) -> LongLinkMetadata:
         """Return valid immutable image metadata."""
@@ -192,16 +195,8 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
     assert response.json() == {"detail": "Application slug already exists"}
     async with session_scope() as session:
         applications = (await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))).all()
-        assert len(applications) == 1
-        operations = (
-            await session.scalars(
-                select(Operation).where(
-                    col(Operation.kind) == OperationKind.application_create,
-                    col(Operation.target_id) == applications[0].id,
-                )
-            )
-        ).all()
-    assert len(operations) == 1
+    assert len(applications) == 1
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
 async def test_application_responses_do_not_expose_environment_secrets(

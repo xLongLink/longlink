@@ -43,16 +43,18 @@ describe('Action', () => {
 
     it('sends the configured request method and JSON payload before navigating', async () => {
         const ctx = createContext();
+        const events: string[] = [];
         let requestBody = '';
         let requestMethod = '';
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
             const request = input as Request;
             requestBody = await request.clone().text();
             requestMethod = request.method;
+            events.push('request-complete');
 
             return new Response('{}', { status: 201 });
         });
-        ctx.services.navigate = vi.fn();
+        ctx.services.navigate = vi.fn(() => events.push('navigate'));
         vi.stubGlobal('fetch', fetchRequest);
 
         const button = await renderAction(
@@ -68,6 +70,7 @@ describe('Action', () => {
         expect(requestMethod).toBe('PATCH');
         expect(JSON.parse(requestBody)).toEqual({ name: 'Ada' });
         expect(ctx.services.navigate).toHaveBeenCalledWith('/orders');
+        expect(events).toEqual(['request-complete', 'navigate']);
     });
 
     it('serializes Request form values as multipart entries', async () => {

@@ -7,6 +7,7 @@ from longlink.logger import ColorFormatter, ApiAccessFilter, configure_logger
     ("args", "expected"),
     [
         pytest.param(("127.0.0.1", "GET", "/api/items"), True, id="api-read"),
+        pytest.param(("127.0.0.1", "GET", "/api/items?limit=1"), True, id="api-read-with-query"),
         pytest.param(("127.0.0.1", "GET", "/assets/app.js"), False, id="frontend-read"),
         pytest.param(("127.0.0.1", "POST", "/submit"), True, id="mutation"),
         pytest.param({"path": "/assets/app.js"}, True, id="mapping-arguments"),
@@ -63,5 +64,31 @@ def test_configure_logger_reuses_existing_handler() -> None:
     finally:
         # Restore global logging state for independent test execution.
         logger.removeHandler(handler)
+        logger.setLevel(logging.NOTSET)
+        logger.propagate = True
+
+
+def test_configure_logger_adds_configured_handler_when_logger_has_none() -> None:
+    """Install one formatted stream handler for an otherwise unconfigured logger."""
+
+    # Arrange
+    logger = logging.getLogger("longlink.tests.missing-handler")
+
+    try:
+        # Act
+        configured = configure_logger(logger.name)
+        repeated = configure_logger(logger.name)
+
+        # Assert
+        assert configured is logger
+        assert repeated is logger
+        assert len(logger.handlers) == 1
+        assert isinstance(logger.handlers[0], logging.StreamHandler)
+        assert isinstance(logger.handlers[0].formatter, ColorFormatter)
+        assert logger.level == logging.INFO
+        assert logger.propagate is False
+    finally:
+        # Restore global logging state for independent test execution.
+        logger.removeHandler(logger.handlers[0])
         logger.setLevel(logging.NOTSET)
         logger.propagate = True

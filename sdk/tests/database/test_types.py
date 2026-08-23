@@ -13,9 +13,10 @@ from sqlalchemy.engine.default import DefaultDialect
             id="aware-value",
         ),
         pytest.param(datetime(2026, 8, 22, 10), datetime(2026, 8, 22, 10, tzinfo=UTC), id="naive-value"),
+        pytest.param(None, None, id="null-value"),
     ],
 )
-def test_utc_datetime_normalizes_database_results_to_utc(value: datetime, expected: datetime) -> None:
+def test_utc_datetime_normalizes_database_results_to_utc(value: datetime | None, expected: datetime | None) -> None:
     """Return database values as timezone-aware UTC datetimes."""
 
     # Act
@@ -23,6 +24,8 @@ def test_utc_datetime_normalizes_database_results_to_utc(value: datetime, expect
 
     # Assert
     assert result == expected
+    if result is not None:
+        assert result.tzinfo is UTC
 
 
 def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
@@ -36,6 +39,8 @@ def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
 
     # Assert
     assert result == datetime(2026, 8, 22, 10, tzinfo=UTC)
+    assert result is not None
+    assert result.tzinfo is UTC
 
 
 def test_utc_datetime_rejects_naive_values_before_writing() -> None:

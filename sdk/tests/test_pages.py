@@ -13,7 +13,6 @@ from longlink.pages import page_stem_route
 def test_page_stem_route_converts_filesystem_routes(page_stem: str, route: str) -> None:
     """Convert valid filesystem page stems into browser routes."""
 
-    # Assert
     assert page_stem_route(page_stem) == route
 
 

@@ -14,6 +14,13 @@ describe('resolveNavigationUrl', () => {
         expect(resolveNavigationUrl('/api', '../items')).toBe('/api/items');
         expect(resolveNavigationUrl('/api/applications/123/proxy/', '../../me')).toBe('/api/applications/123/proxy/me');
     });
+
+    it.each(['javascript:alert(1)', 'https://evil.example/items', '//evil.example/items', '\\evil.example/items'])(
+        'drops unsafe navigation destinations: %s',
+        (path) => {
+            expect(resolveNavigationUrl('/api', path)).toBe('');
+        }
+    );
 });
 
 describe('resolveRequestUrl', () => {

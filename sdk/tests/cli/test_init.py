@@ -40,6 +40,10 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], expected_p
         assert result.exit_code == 0
         for path in expected_paths:
             assert (target / path).exists()
+        assert "LongLink(app)" in (target / "main.py").read_text(encoding="utf-8")
+        pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
+        assert "[tool.longlink]" in pyproject
+        assert 'environment = "src.envs:Env"' in pyproject
 
 
 def test_init_refuses_existing_folder() -> None:

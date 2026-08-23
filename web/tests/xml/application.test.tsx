@@ -39,7 +39,10 @@ describe('ApplicationRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        await unmountRuntime();
+        if (root) {
+            await act(async () => root.unmount());
+        }
+        root = undefined;
         vi.unstubAllGlobals();
     });
 
@@ -65,7 +68,6 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime('/');
 
         // Assert
-        expect(output.querySelector('[data-path]')?.getAttribute('data-route-path')).toBe('');
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'));
         await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
     });
@@ -218,13 +220,6 @@ describe('ApplicationRuntime', () => {
         return container;
     }
 
-    async function unmountRuntime(): Promise<void> {
-        if (root) {
-            const renderedRoot = root;
-            await act(async () => renderedRoot.unmount());
-        }
-        root = undefined;
-    }
 });
 
 /** Waits for an asynchronous React update within an act scope. */

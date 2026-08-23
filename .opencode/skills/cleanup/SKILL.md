@@ -13,11 +13,7 @@ Return a numeric list of cleanup options:
 5. Confidence: High, Medium, or Low.
 6. Whether it affects any shared contract or requires updating call sites.
 
-## Targets
-
-Chose a file, a module or a feature and focus the cleanup effort on it. Avoid spreading the cleanup across multiple unrelated areas.
-Chose between `api`, `web`, or `sdk`.
-Indicate that feature or module was chosen in the cleanup report. The code in in MVP so there is no need for backwards compatibility or deprecation paths. Even if a change in API is required, a task can be defined as High if brings a clear improvement in maintainability, readability, or performance.
+Focus on `web`, `sdk` and `api`.
 
 ### 0. Project conventions
 

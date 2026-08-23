@@ -34,18 +34,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def available(session: AsyncSession) -> UUID | None:
-    """Return the ID of the least-used storage registry."""
-
-    # Order storage registries by their active Organization assignment count.
-    assignments = (
-        select(func.count(Organization.id))
-        .where(Organization.storage_id == StorageRegistry.id, Organization.deleted_at.is_(None))
-        .scalar_subquery()
-    )
-    return await session.scalar(select(StorageRegistry.id).order_by(assignments, StorageRegistry.name).limit(1))
-
-
 async def create(session: AsyncSession, name: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> StorageRegistry:
     """Register one Exoscale SOS backend."""
 

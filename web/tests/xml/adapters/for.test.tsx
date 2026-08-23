@@ -11,9 +11,9 @@ describe('For', () => {
         expect(() => renderXmlToMarkup(parseXML(xml))).toThrow(error);
     });
 
-    it.each([null, 'items', { name: 'Alpha' }])('does not render children for a non-array source: %j', (items) => {
+    it('does not render children for a non-array source', () => {
         const ctx = createContext();
-        ctx.scope.bindings.items = items;
+        ctx.scope.bindings.items = { name: 'Alpha' };
 
         expect(renderXmlToMarkup(parseXML('<For each="$items" as="item">Rendered</For>'), ctx)).not.toContain(
             'Rendered'

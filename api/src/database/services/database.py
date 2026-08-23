@@ -38,18 +38,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def available(session: AsyncSession) -> UUID | None:
-    """Return the ID of the least-used database registry."""
-
-    # Order database registries by their active Organization assignment count.
-    assignments = (
-        select(func.count(Organization.id))
-        .where(Organization.database_id == DatabaseRegistry.id, Organization.deleted_at.is_(None))
-        .scalar_subquery()
-    )
-    return await session.scalar(select(DatabaseRegistry.id).order_by(assignments, DatabaseRegistry.name).limit(1))
-
-
 async def create(
     session: AsyncSession, name: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode
 ) -> DatabaseRegistry:

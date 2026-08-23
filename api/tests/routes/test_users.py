@@ -48,8 +48,8 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
     # Arrange
     user = users[0]
-    active = await create_organization(user, name="active", slug="active")
-    deleted = await create_organization(user, name="deleted", slug="deleted")
+    active = await create_organization(user, name="active")
+    deleted = await create_organization(user, name="deleted")
     async with session_scope() as session:
         await organization_service.soft_delete(session, deleted.id, user)
         await session.commit()
@@ -81,6 +81,7 @@ async def test_list_users_returns_administrator_page_and_total(
     assert payload["items"][0]["name"] == "Platform Administrator"
     assert payload["total"] == 3
 
+
 async def test_patch_me_syncs_every_active_organization_after_profile_change(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -90,8 +91,8 @@ async def test_patch_me_syncs_every_active_organization_after_profile_change(
 
     # Arrange
     user = users[0]
-    first_organization = await create_organization(user, name="acme", slug="acme")
-    second_organization = await create_organization(user, name="globex", slug="globex")
+    first_organization = await create_organization(user, name="acme")
+    second_organization = await create_organization(user, name="globex")
     synchronized_organization_ids = []
 
     async def sync_users(_session: object, organization_id: object) -> None:
