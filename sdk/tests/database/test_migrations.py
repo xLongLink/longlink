@@ -1,6 +1,6 @@
 import sys
 import pytest
-from types import SimpleNamespace
+from types import ModuleType, SimpleNamespace
 from pathlib import Path
 from alembic.config import Config
 from collections.abc import Callable, Generator
@@ -73,7 +73,7 @@ def test_migration_loader_skips_already_imported_models(
     _, write_model = isolated_model
     module_name = "src.database.models.catalog.inventory"
     write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
-    sys.modules[module_name] = object()  # type: ignore[assignment]
+    sys.modules[module_name] = ModuleType(module_name)
 
     def unexpected_spec(*_args: object, **_kwargs: object) -> object:
         """Fail if an existing module is loaded again."""
@@ -84,9 +84,6 @@ def test_migration_loader_skips_already_imported_models(
 
     # Act
     database_migrations.load_application_models()
-
-    # Assert
-    assert sys.modules[module_name] is not None
 
 
 def test_migration_loader_removes_failed_model_import_before_retry(

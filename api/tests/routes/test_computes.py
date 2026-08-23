@@ -1,6 +1,27 @@
 from uuid import uuid4
 from httpx2 import AsyncClient
-from factories import create_compute, claim_operation, queue_operation, complete_operation
+from factories import create_compute, claim_operation, queue_operation, fetch_operations, complete_operation
+from src.models.operations import OperationKind
+
+
+async def test_compute_registry_creation_queues_lifecycle_operation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Queue one Compute creation operation when registering a Compute."""
+
+    # Arrange
+    payload = {"name": "Queued Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"}
+
+    # Act
+    response = await clients[0].post("/api/v1/computes", json=payload)
+
+    # Assert
+    assert response.status_code == 202
+    operations = await fetch_operations()
+    assert len(operations) == 1
+    assert operations[0].kind == OperationKind.compute_create
+    assert str(operations[0].target_id) == response.json()["id"]
+    assert operations[0].finished_at is None
 
 
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(

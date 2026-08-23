@@ -339,30 +339,19 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     assert dependencies == [transitive_dependency, dependency]
 
 
-def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) -> None:
-    """Keep the application directory as context when a uv source is not a project."""
+@pytest.mark.parametrize(
+    "sources",
+    [
+        pytest.param('[tool.uv.sources]\nmissing = { path = "/" }\n', id="nonproject-path"),
+        pytest.param("[tool.uv]\nsources = []\n", id="malformed-table"),
+    ],
+)
+def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, sources: str) -> None:
+    """Keep the application directory as context for unusable uv source metadata."""
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nmissing = { path = "/" }\n',
-        encoding="utf-8",
-    )
-
-    # Act
-    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
-
-    # Assert
-    assert source_root == build_project
-    assert workdir == "/workspace"
-    assert dependencies == []
-
-
-def test_resolve_docker_paths_ignores_malformed_uv_sources(build_project: Path) -> None:
-    """Ignore malformed uv source metadata without expanding the Docker context."""
-
-    # Arrange
-    build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv]\nsources = []\n',
+        f'[project]\nname = "demo"\nversion = "0.1.0"\n\n{sources}',
         encoding="utf-8",
     )
 
@@ -487,3 +476,30 @@ def test_build_command_reports_docker_build_failure_without_pushing(
     assert "Docker command failed with exit code 23" in result.output
     assert len(commands) == 1
     assert commands[0][1] == "build"
+
+
+def test_build_command_reports_docker_push_failure(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Translate a failed Docker push into a CLI error after building the image."""
+
+    # Arrange
+    commands, _contexts = docker_build
+    runner = CliRunner()
+
+    def fail_push(command: list[str], check: bool) -> None:
+        """Record Docker commands and fail only the push command."""
+
+        commands.append(command)
+        if command[1] == "push":
+            raise subprocess.CalledProcessError(24, command)
+
+    monkeypatch.setattr(build.subprocess, "run", fail_push)
+
+    # Act
+    result = runner.invoke(build.build_command, ["--push"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker command failed with exit code 24" in result.output
+    assert [command[1] for command in commands] == ["build", "push"]

@@ -73,7 +73,6 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                             href="/docs"
                             label="Documentation"
                             onClickCapture={() => setIsOpen(false)}
-                            rel="noopener noreferrer"
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
                             target="_blank"
                         />

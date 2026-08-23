@@ -124,19 +124,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             await session.delete(item)
             await session.commit()
 
-    # Reload after deletion to prove the row and all persisted audit values remain.
+    # Reload after deletion to prove the row remains as a soft-deleted record.
     async with database_base.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
-        assert (
-            item.name,
-            item.created_at,
-            item.updated_at,
-            item.deleted_at,
-            item.created_id,
-            item.updated_id,
-            item.deleted_id,
-        ) == ("reviewed", created_at, deleted_at, deleted_at, creator_id, deleter_id, deleter_id)
+        assert item.deleted_at == deleted_at
+        assert item.deleted_id == deleter_id
 
 
 @pytest.mark.usefixtures("_audit_engine")

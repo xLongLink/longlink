@@ -30,7 +30,6 @@ export function Footer() {
                                             href="https://www.linkedin.com/company/longlink"
                                             label="LinkedIn"
                                             target="_blank"
-                                            rel="noopener noreferrer"
                                         >
                                             <LinkedIn aria-hidden="true" className="size-4" />
                                         </Link>
@@ -43,7 +42,6 @@ export function Footer() {
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
                                             target="_blank"
-                                            rel="noopener noreferrer"
                                         >
                                             <GitHub aria-hidden="true" className="size-4" />
                                         </Link>
@@ -56,7 +54,6 @@ export function Footer() {
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
                                             target="_blank"
-                                            rel="noopener noreferrer"
                                         >
                                             <Package aria-hidden="true" size={16} />
                                         </Link>

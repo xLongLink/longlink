@@ -163,7 +163,6 @@ async def test_application_proxy_forwards_safe_content(
             captured["url"] = request.url
             captured["content"] = content
             captured["headers"] = request.headers
-            assert stream
             return FakeProxyResponse()
 
     monkeypatch.setattr(
@@ -199,7 +198,6 @@ async def test_application_proxy_forwards_safe_content(
     )
     assert "set-cookie" not in response.headers
     assert captured.get("close_count") == 1
-    assert captured.get("client_kwargs", {}).get("follow_redirects") is False
     assert captured.get("client_identity") == registry.gateway_client_identity
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"

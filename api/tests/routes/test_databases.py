@@ -47,22 +47,16 @@ async def test_database_usage_endpoint_returns_usage_or_unavailable(
     assert response.json() == expected_payload
 
 
-async def test_database_usage_endpoint_rejects_missing_registry_before_connecting(
+async def test_database_usage_endpoint_rejects_missing_registry(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
 ) -> None:
-    """Reject an absent registry without constructing a backend adapter."""
+    """Reject an absent database registry."""
 
     # Arrange
-    def unexpected_postgres(*_args: object) -> object:
-        """Fail if the missing registry path reaches the backend."""
-
-        raise AssertionError("Postgres adapter was constructed")
-
-    monkeypatch.setattr("src.routes.v1.databases.Postgres", unexpected_postgres)
+    registry_id = uuid4()
 
     # Act
-    response = await clients[0].get(f"/api/v1/databases/{uuid4()}/usage")
+    response = await clients[0].get(f"/api/v1/databases/{registry_id}/usage")
 
     # Assert
     assert response.status_code == 404

@@ -3,8 +3,8 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRuntime } from '@/components/Application';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const navigation = vi.hoisted(() => ({ destination: '' }));
 
@@ -27,13 +27,6 @@ vi.mock('@/xml', async (importOriginal) => {
         ),
     };
 });
-
-type Page = {
-    path: string;
-    route: string;
-    tab: string;
-    name: string;
-};
 
 describe('ApplicationRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -235,7 +228,7 @@ function Location({ tabs }: { tabs: string }) {
 }
 
 /** Creates a minimal manifest page. */
-function page(tab: string, route: string, path = `${tab}.xml`): Page {
+function page(tab: string, route: string, path = `${tab}.xml`) {
     return { name: tab, path, route, tab };
 }
 
@@ -249,7 +242,7 @@ function stubFetch(response: (url: string) => Response): void {
 }
 
 /** Creates a JSON fetch response. */
-function jsonResponse(body: Page[]): Response {
+function jsonResponse(body: unknown): Response {
     return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
 }
 

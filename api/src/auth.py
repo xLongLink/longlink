@@ -1,7 +1,7 @@
 import jwt
 import hmac
 from uuid import UUID
-from fastapi import Cookie, Depends, HTTPException
+from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import token
 from src.database import session as database
 from collections.abc import AsyncIterator
@@ -21,6 +21,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 
 async def authuser(
+    request: Request,
     credential: str | None = Cookie(default=None, alias="longlink_auth"),
     session: AsyncSession = Depends(get_session),
 ) -> User:
@@ -41,6 +42,8 @@ async def authuser(
     if user is None or not hmac.compare_digest(fingerprint, token.password_fingerprint(user.password)):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
+    # Mark validated browser sessions so response middleware can prevent sensitive caching.
+    request.state.authenticated = True
     return user
 
 

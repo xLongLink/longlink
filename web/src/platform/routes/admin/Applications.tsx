@@ -16,17 +16,13 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 
-const statusVariants = {
-    creating: 'info',
-    running: 'neutral',
-} satisfies Record<Status, ComponentProps<typeof Badge>['variant']>;
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const statusLabels: Record<Status, string> = {
-        creating: 'Creating',
-        running: 'Running',
-    };
     const {
         items: applications,
         error,
@@ -82,7 +78,7 @@ export default function AdminApplications() {
                     )}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="status" header="Status" width={pixel(128)}>
-                    {(app) => <Badge label={statusLabels[app.status]} variant={statusVariants[app.status]} />}
+                    {(app) => <Badge {...statusPresentation[app.status]} />}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="image_desired" header="Image" width={proportional(2)}>
                     {(app) => <Text type="supporting">{app.image_desired}</Text>}

@@ -13,7 +13,6 @@ const toast = vi.fn();
 vi.mock('@/lib/hooks/use-toast', () => ({ useToast: () => toast }));
 
 describe('Action', () => {
-    let container: HTMLDivElement | undefined;
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
@@ -24,7 +23,6 @@ describe('Action', () => {
             const renderedRoot = root;
             await act(async () => renderedRoot.unmount());
         }
-        container = undefined;
         root = undefined;
     });
 
@@ -251,7 +249,7 @@ describe('Action', () => {
         closeDialog: (() => void) | null = null
     ) {
         const ast = parseXML(`<longlink>${xml}</longlink>`)[0];
-        container = document.createElement('div');
+        const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 

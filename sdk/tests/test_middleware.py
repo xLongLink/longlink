@@ -1,9 +1,11 @@
+import gzip
 import pytest
 from httpx2 import Response as HttpxResponse
 from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.testclient import TestClient
-from longlink.middleware import accepts_gzip, install_frontend_middleware
+from longlink.middleware import FrontendMiddleware, accepts_gzip, install_frontend_middleware
+from starlette.types import Message, Receive, Scope, Send
 
 
 def create_text_app(headers: dict[str, str], path: str = "/text", media_type: str = "text/plain") -> FastAPI:
@@ -102,20 +104,62 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     assert response.headers["cache-control"] == "private"
 
 
-def test_frontend_middleware_preserves_compressed_asset_representation() -> None:
-    """Avoid varying or weakening pre-compressed assets when gzip is accepted."""
+def test_frontend_middleware_preserves_precompressed_text_representation() -> None:
+    """Avoid double compression while retaining cache negotiation for encoded text."""
 
     # Arrange
-    app = create_text_app({"etag": '"image-v1"'}, path="/assets/logo.png", media_type="image/png")
+    app = FastAPI()
+
+    @app.get("/text")
+    def get_text() -> Response:
+        """Return a pre-compressed text representation."""
+
+        return Response(
+            gzip.compress(b"x" * 1000),
+            media_type="text/plain",
+            headers={"content-encoding": "gzip", "etag": '"text-v1"'},
+        )
+
+    install_frontend_middleware(app)
 
     # Act
-    response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
+    response = request_response(app, "/text", {"accept-encoding": "gzip"})
 
     # Assert
     assert response.status_code == 200
-    assert "content-encoding" not in response.headers
-    assert "vary" not in response.headers
-    assert response.headers["etag"] == '"image-v1"'
+    assert response.content == b"x" * 1000
+    assert response.headers["content-encoding"] == "gzip"
+    assert response.headers["etag"] == 'W/"text-v1"'
+    assert response.headers["vary"] == "Accept-Encoding"
+
+
+async def test_frontend_middleware_passes_websocket_scopes_through_unchanged() -> None:
+    """Leave non-HTTP ASGI scopes outside frontend response policy handling."""
+
+    # Arrange
+    received_scopes: list[Scope] = []
+
+    async def application(scope: Scope, _receive: Receive, _send: Send) -> None:
+        """Record the scope received by the wrapped ASGI application."""
+
+        received_scopes.append(scope)
+
+    scope: Scope = {"type": "websocket", "path": "/events", "headers": []}
+    middleware = FrontendMiddleware(application)
+
+    async def receive() -> Message:
+        """Provide one unused WebSocket receive callable."""
+
+        return {"type": "websocket.disconnect"}
+
+    async def send(_message: Message) -> None:
+        """Provide one unused WebSocket send callable."""
+
+    # Act
+    await middleware(scope, receive, send)
+
+    # Assert
+    assert received_scopes == [scope]
 
 
 @pytest.mark.parametrize(
