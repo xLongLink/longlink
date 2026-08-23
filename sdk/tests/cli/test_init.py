@@ -9,13 +9,14 @@ from longlink.cli.init import init_command
     [
         pytest.param(
             ["--folder", "sample-app"],
-            ["pyproject.toml", "main.py", "src", "tests/test_app.py"],
+            ["pyproject.toml", "uv.lock", "main.py", "src", "tests/test_app.py"],
             id="default",
         ),
         pytest.param(
             ["--folder", "sample-app", "--ci", "github"],
             [
                 "pyproject.toml",
+                "uv.lock",
                 "main.py",
                 "src",
                 "tests/test_app.py",

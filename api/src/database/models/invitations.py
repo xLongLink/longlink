@@ -30,4 +30,4 @@ class OrganizationInvitation(PlatformModel, table=True):
     )
 
     # Timing
-    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)

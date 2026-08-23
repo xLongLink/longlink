@@ -53,10 +53,23 @@ longlink dev
 
 <br />
 
-## Principles
+## Solutions
 
-- Usage must be intuitive. Anything unclear is a bug.
-- Build on standards. Anything that drift is a bug.
+SDG 9, ISO 9001, ISO 22301, ISO 31000, ISO 37301, ISO 37000
+
+| Principle                        |                                                                            |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| **Ownership & accountability**   | Every process has clear owners, roles and responsibilities                 |
+| **Process orientation**          | Activities are structured, documented and consistently executed            |
+| **Risk-based management**        | Risks are identified, assessed, treated and monitored                      |
+| **Compliance**                   | Legal, regulatory and internal obligations are identified and controlled   |
+| **Resilience**                   | Critical processes can continue or recover after disruption                |
+| **Evidence-based decisions**     | Decisions rely on data, KPIs and reliable information                      |
+| **Controlled change**            | Changes are assessed, approved, implemented and reviewed                   |
+| **Monitoring & assurance**       | Controls and processes are regularly tested and reviewed                   |
+| **Corrective action**            | Problems and non-conformities are addressed systematically                 |
+| **Continual improvement**        | Processes are continuously optimized based on evidence and lessons learned |
+| **Stakeholder / customer value** | Processes ultimately support organizational and stakeholder objectives     |
 
 <br />
 

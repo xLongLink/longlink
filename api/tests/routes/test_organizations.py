@@ -4,7 +4,6 @@ from httpx2 import AsyncClient
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
-from collections.abc import Callable
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -292,16 +291,11 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status", "expected_payload"),
+    ("usage", "expected_status", "expected_usage"),
     [
-        pytest.param(4096, 200, lambda organization: {"bucket_name": organization.id.hex, "space_used": 4096}, id="available"),
-        pytest.param(None, 200, lambda _organization: None, id="not-provisioned"),
-        pytest.param(
-            RuntimeError("storage offline"),
-            503,
-            lambda _organization: {"detail": "Storage resources unavailable"},
-            id="backend-unavailable",
-        ),
+        pytest.param(4096, 200, 4096, id="available"),
+        pytest.param(None, 200, None, id="not-provisioned"),
+        pytest.param(RuntimeError("storage offline"), 503, None, id="backend-unavailable"),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
@@ -310,7 +304,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     users: tuple[User, User, User],
     usage: int | None | Exception,
     expected_status: int,
-    expected_payload: Callable[[Organization], dict[str, str | int] | None],
+    expected_usage: int | None,
 ) -> None:
     """Return storage usage or translate a backend failure."""
 
@@ -337,7 +331,11 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
     # Assert
     assert response.status_code == expected_status
-    assert response.json() == expected_payload(organization)
+    if expected_status == 200:
+        expected_payload = None if expected_usage is None else {"bucket_name": organization.id.hex, "space_used": expected_usage}
+    else:
+        expected_payload = {"detail": "Storage resources unavailable"}
+    assert response.json() == expected_payload
 
 
 @pytest.mark.parametrize("resource", ("database", "storage"))
@@ -632,6 +630,36 @@ async def test_update_organization_member_changes_role(
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     assert synchronized_organizations == [organization.id]
+
+
+async def test_update_organization_member_returns_not_found_for_non_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Return the public missing-member error without synchronizing users."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    async def unexpected_sync(_session: object, _organization_id: UUID) -> None:
+        """Fail if a rejected membership update reaches runtime synchronization."""
+
+        raise AssertionError("missing members must not synchronize users")
+
+    monkeypatch.setattr(organizations, "sync_users", unexpected_sync)
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}/members/{users[2].id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization member not found"}
+    async with session_scope() as session:
+        assert [membership.user_id for membership in await organizations.members(session, organization.id)] == [users[0].id]
 
 
 async def test_update_organization_member_rejects_demoting_last_owner(

@@ -212,36 +212,25 @@ def create_audit_application() -> FastAPI:
 
 
 @pytest.mark.parametrize(
-    ("header_value", "expected_user_id"),
+    ("headers", "expected_user_id"),
     [
-        ("00000000-0000-0000-0000-000000000005", "00000000-0000-0000-0000-000000000005"),
-        ("invalid", None),
+        ({"x-user-id": "00000000-0000-0000-0000-000000000005"}, "00000000-0000-0000-0000-000000000005"),
+        ({"x-user-id": "invalid"}, None),
+        ({}, None),
     ],
 )
 def test_audit_middleware_binds_x_user_id_header(
-    header_value: str,
+    headers: dict[str, str],
     expected_user_id: str | None,
 ) -> None:
-    """Bind valid audit user headers and ignore malformed values."""
+    """Bind valid audit user headers and treat missing or malformed values as anonymous."""
 
     # Send the candidate audit identity through the HTTP boundary.
     with TestClient(create_audit_application()) as client:
-        response = client.get("/", headers={"x-user-id": header_value})
+        response = client.get("/", headers=headers)
 
     # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
-    assert runtime_context._current_identity.get() is None
-
-
-def test_audit_middleware_treats_missing_identity_header_as_anonymous() -> None:
-    """Leave requests without a Platform identity header anonymous."""
-
-    # Act
-    with TestClient(create_audit_application()) as client:
-        response = client.get("/")
-
-    # Assert
-    assert response.json() == {"user_id": None}
     assert runtime_context._current_identity.get() is None
 
 

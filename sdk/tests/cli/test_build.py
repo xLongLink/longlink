@@ -141,6 +141,34 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
+def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
+    """Ignore dynamic aliases and descriptions without executing application code."""
+
+    # Arrange
+    envs_path = tmp_path / "src" / "envs.py"
+    envs_path.parent.mkdir()
+    envs_path.write_text(
+        "from pydantic import BaseModel, Field\n"
+        "\n"
+        "ALIAS = 'DYNAMIC_TOKEN'\n"
+        "DESCRIPTION = 'Dynamic description'\n"
+        "\n"
+        "class Env(BaseModel):\n"
+        "    TOKEN: str = Field(..., validation_alias=ALIAS, description=DESCRIPTION)\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
+
+    # Assert
+    assert env_spec == [{"name": "TOKEN", "required": True}]
+
+
 @pytest.mark.parametrize(
     ("project_config", "module_path", "module_source", "message"),
     [
@@ -177,25 +205,8 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
         build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
 
-def test_build_app_generates_dockerignore_from_project_gitignore(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Use the project's Git ignore policy for the Docker build context."""
-
-    # Arrange
-    build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
-    build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
-
-    # Act
-    build.build_app(build_context)
-
-    # Assert
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
-    )
-
-
-def test_build_app_generates_dockerfile_with_runtime_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Generate Docker build instructions with application metadata and environment labels."""
+def test_build_app_generates_docker_artifacts_from_project_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
@@ -204,6 +215,7 @@ def test_build_app_generates_dockerfile_with_runtime_metadata(build_project: Pat
         encoding="utf-8",
     )
     build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
+    build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
@@ -216,9 +228,67 @@ def test_build_app_generates_dockerfile_with_runtime_metadata(build_project: Pat
     assert "pyproject.toml" in dockerfile
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
-    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
-    assert "LABEL longlink.environments=" in dockerfile
-    assert "API_KEY" in dockerfile
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
+        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("project_data", "message"),
+    [
+        pytest.param("", "[project] metadata is required", id="missing-project"),
+        pytest.param("[project]\nname = 'demo'\n", "[project].version is required", id="missing-version"),
+        pytest.param("[project]\nname = '  '\nversion = '0.1.0'\n", "[project].name is required", id="blank-name"),
+        pytest.param(
+            "[project]\nname = 'demo'\nversion = '0.1.0'\ndescription = 1\n",
+            "[project].description must be a string",
+            id="invalid-description",
+        ),
+    ],
+)
+def test_build_app_rejects_invalid_project_metadata_before_generating_artifacts(
+    build_project: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    project_data: str,
+    message: str,
+) -> None:
+    """Reject incomplete project metadata before creating Docker artifacts."""
+
+    # Arrange
+    build_project.joinpath("pyproject.toml").write_text(project_data, encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    # Act and assert
+    with pytest.raises(click.ClickException) as error:
+        build.build_app(build_context)
+    assert str(error.value) == message
+    assert not build_context.exists()
+
+
+def test_build_app_uses_fallback_sdk_version_when_package_is_not_installed(
+    build_project: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Use a stable SDK version while building directly from an editable source tree."""
+
+    # Arrange
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    def missing_package_version(_package: str) -> str:
+        """Emulate an SDK distribution unavailable to package metadata."""
+
+        raise build.PackageNotFoundError
+
+    monkeypatch.setattr(build, "package_version", missing_package_version)
+
+    # Act
+    build.build_app(build_context)
+
+    # Assert
+    dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
+    assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
 
 
 def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
