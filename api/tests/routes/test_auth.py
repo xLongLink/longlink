@@ -226,6 +226,33 @@ async def test_password_login_rejects_wrong_password_and_unknown_email_without_s
     assert client.cookies.get("longlink_auth") is None
 
 
+async def test_password_login_rejects_deleted_account_with_correct_password_without_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+) -> None:
+    """Reject a deleted account even when its password remains valid."""
+
+    # Arrange
+    user = users[0]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+
+    # Act
+    response = await client.post(
+        "/api/v1/auth/password/login",
+        json={"email": user.email, "password": TEST_PASSWORD},
+    )
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert "set-cookie" not in response.headers
+    assert client.cookies.get("longlink_auth") is None
+
+
 async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
@@ -494,6 +521,37 @@ async def test_authenticated_logout_rejects_cross_origin_request(
 
     # Reject CSRF logout attempts without expiring the caller's authenticated session.
     assert response.status_code == 403
+    assert "set-cookie" not in response.headers
+    assert profile_response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    ("public_origin", "origin"),
+    [
+        pytest.param("http://localhost:5173", "http://127.0.0.1:5173", id="localhost-public"),
+        pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
+    ],
+)
+async def test_authenticated_logout_rejects_alternate_local_origin_in_production(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+    public_origin: str,
+    origin: str,
+) -> None:
+    """Reject local development origins when production permits only its public origin."""
+
+    # Arrange
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
+    client = clients[0]
+
+    # Act
+    response = await client.post("/api/v1/auth/logout", headers={"origin": origin})
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
     assert "set-cookie" not in response.headers
     assert profile_response.status_code == 200
 

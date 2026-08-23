@@ -15,7 +15,6 @@ from src.database.models.organizations import Organization
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:
     """Return compute creation operations ordered by creation time descending."""
 
-    # Seed two operations with explicit creation timestamps.
     older_operation = await queue(target_id=uuid4())
     newer_operation = await queue(target_id=uuid4())
 
@@ -25,18 +24,15 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
         older_row.created_at = utcnow() - timedelta(days=1)
         await session.commit()
 
-    # Verify operations are returned newest first.
     assert [operation.id for operation in await fetch_operations()] == [newer_operation.id, older_operation.id]
 
 
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
     """Coalesce unfinished work by target and create successors after completion."""
 
-    # Seed duplicate and independent resource lifecycle targets.
     first_application_id = uuid4()
     organization_id = uuid4()
 
-    # Create duplicate and independent work for one compute.
     application = await queue(
         kind=OperationKind.application_create,
         target_id=first_application_id,
@@ -51,7 +47,6 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     )
     fetched = await fetch_operations()
 
-    # Verify coalescing is scoped to each operation kind and target.
     assert duplicate.id == application.id
     assert len(fetched) == 2
     assert {(item.kind, item.target_id) for item in fetched} == {
@@ -59,7 +54,6 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
         (OperationKind.organization_create, organization_id),
     }
 
-    # Completed work no longer coalesces with a later desired-state request.
     claimed = await claim_operation()
     assert claimed is not None
     assert claimed.id == application.id
@@ -123,7 +117,6 @@ async def test_operations_service_schedules_all_active_application_creation_once
 async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
     """Queue only parent cleanup when an Organization and its Applications are deleted."""
 
-    # Arrange
     infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
         organization = Organization(
@@ -147,13 +140,11 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
         session.add(application)
         await session.commit()
 
-    # Act
     async with session_scope() as session:
         await operations.schedule_reconciliation(session)
         await session.commit()
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
-    # Assert
     assert scheduled == {
         (OperationKind.compute_create, infrastructure.compute.id),
         (OperationKind.organization_delete, organization.id),
@@ -163,7 +154,6 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
     """Claim the oldest available compute creation first."""
 
-    # Seed two operations with explicit creation order.
     older_operation = await queue(target_id=uuid4())
     await queue(target_id=uuid4())
 
@@ -173,10 +163,8 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
         older_row.created_at = utcnow() - timedelta(days=1)
         await session.commit()
 
-    # Claim the next globally available operation.
     claimed = await claim_operation()
 
-    # Verify the oldest operation receives an active lease.
     assert claimed is not None
     assert claimed.id == older_operation.id
 
@@ -184,11 +172,9 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
 async def test_operations_service_claim_serializes_active_work() -> None:
     """Allow only one active operation at a time."""
 
-    # Seed active and waiting work.
     await queue(target_id=uuid4())
     waiting = await queue(target_id=uuid4())
 
-    # Exercise global operation serialization.
     active_claim = await claim_operation()
     assert active_claim is not None
     await complete_operation(active_claim.id)
@@ -197,7 +183,6 @@ async def test_operations_service_claim_serializes_active_work() -> None:
     await complete_operation(waiting_claim.id)
     finished_claim = await claim_operation()
 
-    # Verify only eligible waiting work was claimed.
     assert waiting_claim.id == waiting.id
     assert finished_claim is None
 

@@ -632,6 +632,52 @@ async def test_update_organization_member_changes_role(
     assert synchronized_organizations == [organization.id]
 
 
+async def test_update_organization_member_skips_unchanged_role_synchronization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Avoid persistence and runtime synchronization for an unchanged member role."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+    async with session_scope() as session:
+        original = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
+        original_updated_at = original.updated_at
+        original_updated_id = original.updated_id
+
+    async def unexpected_sync(_session: object, _organization_id: UUID) -> None:
+        """Fail if an unchanged member role reaches runtime synchronization."""
+
+        raise AssertionError("unchanged member role must not synchronize users")
+
+    monkeypatch.setattr(organizations, "sync_users", unexpected_sync)
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}/members/{member.id}",
+        json={"role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
+    assert unchanged.role == OrganizationRoles.write
+    assert unchanged.updated_at == original_updated_at
+    assert unchanged.updated_id == original_updated_id
+
+
 async def test_update_organization_member_returns_not_found_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

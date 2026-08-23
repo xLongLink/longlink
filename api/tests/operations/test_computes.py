@@ -120,6 +120,137 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     assert refreshed.status == Status.creating
 
 
+async def test_create_running_compute_rejects_endpoint_change_without_rotating_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep published mTLS credentials when the Gateway endpoint changes."""
+
+    # Arrange
+    registry = await create_compute()
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.gateway_url = "https://192.0.2.1"
+        persisted.gateway_certificate = "certificate"
+        persisted.gateway_client_identity = "client-certificate\nclient-private-key"
+        await session.commit()
+
+    class Gateway:
+        """Return a different published endpoint."""
+
+        async def apply(self, tls: GatewayTLS | None = None) -> str:
+            """Publish an endpoint that differs from the persisted value."""
+
+            assert tls is None
+            return "192.0.2.2"
+
+        async def replace_tls(self, tls: GatewayTLS) -> None:
+            """Reject unexpected credential rotation."""
+
+            raise AssertionError("TLS must not rotate")
+
+    class Kubernetes:
+        """Expose the endpoint-changing Gateway."""
+
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Validate the selected compute registry."""
+
+            assert kubeconfig == registry.kubeconfig
+            self.gateway = Gateway()
+
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+
+    # Act
+    reason = await compute_operations.create(registry.id)
+
+    # Assert
+    assert reason == "Gateway endpoint changed and requires explicit credential rotation"
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
+    assert persisted.gateway_url == "https://192.0.2.1"
+    assert persisted.gateway_certificate == "certificate"
+    assert persisted.gateway_client_identity == "client-certificate\nclient-private-key"
+
+
+async def test_create_missing_compute_skips_gateway_reconciliation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat a removed Compute as an already completed reconciliation target."""
+
+    # Arrange
+    registry = await create_compute()
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+        assert persisted is not None
+        await session.delete(persisted)
+        await session.commit()
+
+    class Kubernetes:
+        """Reject provider construction for a removed Compute."""
+
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Reject unexpected provider construction."""
+
+            raise AssertionError("Kubernetes must not be constructed")
+
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+
+    # Act
+    reason = await compute_operations.create(registry.id)
+
+    # Assert
+    assert reason is None
+
+
+async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Do not publish Gateway credentials after the Compute lifecycle changes."""
+
+    # Arrange
+    registry = await create_compute()
+
+    class Gateway:
+        """Change the Compute lifecycle after Gateway provisioning."""
+
+        async def apply(self, tls: GatewayTLS | None = None) -> str:
+            """Record a concurrent lifecycle change before publication."""
+
+            assert tls is not None
+            async with session_scope() as session:
+                persisted = await session.get(ComputeRegistry, registry.id)
+                assert persisted is not None
+                persisted.status = Status.running
+                await session.commit()
+            return "192.0.2.1"
+
+        async def replace_tls(self, tls: GatewayTLS) -> None:
+            """Accept endpoint-bound TLS before publication is rejected."""
+
+    class Kubernetes:
+        """Expose the lifecycle-changing Gateway."""
+
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Validate the selected compute registry."""
+
+            assert kubeconfig == registry.kubeconfig
+            self.gateway = Gateway()
+
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+
+    # Act
+    reason = await compute_operations.create(registry.id)
+
+    # Assert
+    assert reason == "Compute gateway state was not recorded"
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
+    assert persisted.gateway_url is None
+    assert persisted.gateway_certificate is None
+    assert persisted.gateway_client_identity is None
+
+
 async def test_record_success_rejects_stale_compute_lifecycle_writer() -> None:
     """Preserve unpublished gateway state when its expected lifecycle has changed."""
 

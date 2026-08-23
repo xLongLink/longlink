@@ -166,6 +166,47 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
+async def test_create_app_validates_payload_before_checking_organization_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an invalid request body before inspecting membership or image metadata."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if invalid input reaches remote image inspection."""
+
+        raise AssertionError("invalid application payload must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
+
+    # Act
+    response = await clients[1].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={"name": "dashboard"},
+    )
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "missing",
+                "loc": ["body", "image"],
+                "msg": "Field required",
+                "input": {"name": "dashboard"},
+            }
+        ]
+    }
+    async with session_scope() as session:
+        assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
+
+
 async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
