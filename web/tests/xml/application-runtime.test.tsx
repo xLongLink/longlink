@@ -14,8 +14,9 @@ describe('ApplicationRuntime XML integration', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        if (root) {
-            await act(async () => root.unmount());
+        const renderedRoot = root;
+        if (renderedRoot) {
+            await act(async () => renderedRoot.unmount());
         }
         root = undefined;
         apiRequest.mockReset();
