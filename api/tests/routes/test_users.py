@@ -80,25 +80,6 @@ async def test_list_users_returns_admin_user_summaries(
     assert {item["id"] for item in payload["items"]} == {str(user.id) for user in users}
     assert payload["total"] == 3
 
-
-async def test_patch_me_updates_authenticated_user_profile(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Update the authenticated user's mutable profile fields."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = await client.patch("/api/v1/me", json={"name": "Updated User"})
-
-    # Assert
-    assert response.status_code == 200
-
-    assert response.json()["name"] == "Updated User"
-
-
 async def test_patch_me_syncs_every_active_organization_after_profile_change(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

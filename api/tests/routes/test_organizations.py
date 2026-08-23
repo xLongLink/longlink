@@ -311,11 +311,11 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status", "expected_payload"),
+    ("usage", "expected_status", "expected_usage", "expected_error"),
     [
-        pytest.param(4096, 200, {"space_used": 4096}, id="available"),
-        pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(RuntimeError("storage offline"), 503, {"detail": "Storage resources unavailable"}, id="backend-unavailable"),
+        pytest.param(4096, 200, 4096, None, id="available"),
+        pytest.param(None, 200, None, None, id="not-provisioned"),
+        pytest.param(RuntimeError("storage offline"), 503, None, {"detail": "Storage resources unavailable"}, id="backend-unavailable"),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
@@ -324,7 +324,8 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     users: tuple[User, User, User],
     usage: int | None | Exception,
     expected_status: int,
-    expected_payload: dict[str, str | int] | None,
+    expected_usage: int | None,
+    expected_error: dict[str, str] | None,
 ) -> None:
     """Return storage usage or translate a backend failure."""
 
@@ -359,9 +360,10 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
     # Assert
     assert response.status_code == expected_status
-    if expected_payload is not None and "space_used" in expected_payload:
-        expected_payload = {"bucket_name": organization.id.hex, "space_used": expected_payload["space_used"]}
-    assert response.json() == expected_payload
+    if expected_usage is not None:
+        assert response.json() == {"bucket_name": organization.id.hex, "space_used": expected_usage}
+    else:
+        assert response.json() == expected_error
 
 
 @pytest.mark.parametrize("resource", ("database", "storage"))
@@ -578,6 +580,30 @@ async def test_update_organization_member_changes_role(
         updated_members = await organizations.members(session, organization.id)
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
+
+
+async def test_update_organization_member_rejects_demoting_last_owner(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Keep an organization owner when it has no other owners."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}/members/{owner.id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Organization must have at least one owner"}
+    async with session_scope() as session:
+        membership = next(item for item in await organizations.members(session, organization.id) if item.user_id == owner.id)
+    assert membership.role == OrganizationRoles.owner
 
 
 async def test_update_organization_member_rejects_owner_escalation_from_admin(

@@ -1,10 +1,11 @@
 import pytest
-from factories import create_application, create_organization
+from factories import fetch_operations, create_application, create_organization
 from src.errors import ConflictError
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import applications
+from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -80,3 +81,6 @@ async def test_delete_marks_application_deleted(users: tuple[User, User, User]) 
     # Assert
     assert deleted_application is not None
     assert deleted_application.deleted_at is not None
+    assert [(operation.kind, operation.target_id) for operation in await fetch_operations() if operation.kind == OperationKind.application_delete] == [
+        (OperationKind.application_delete, application.id)
+    ]

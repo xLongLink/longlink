@@ -1,9 +1,10 @@
 import pytest
 from uuid import UUID
+from typing import cast
 from fastapi import FastAPI
 from longlink import context
 from contextlib import asynccontextmanager
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 from starlette.requests import Request
 
 
@@ -16,13 +17,6 @@ def create_request(storage: object, identity: UUID | None) -> Request:
     request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
     request.state.longlink_identity = identity
     return request
-
-
-@asynccontextmanager
-async def fake_session(database: object) -> AsyncIterator[object]:
-    """Yield one fake request-scoped database session."""
-
-    yield database
 
 
 @pytest.mark.parametrize(
@@ -47,6 +41,7 @@ async def test_data_resolves_request_services(
 
     # Arrange
     storage = object()
+    session_closed = False
 
     class Database:
         """Record audit-user lookups for the request."""
@@ -64,15 +59,30 @@ async def test_data_resolves_request_services(
 
     database = Database()
 
+    @asynccontextmanager
+    async def fake_session(database: object) -> AsyncIterator[object]:
+        """Yield one fake request-scoped database session and record cleanup."""
+
+        nonlocal session_closed
+        try:
+            yield database
+        finally:
+            session_closed = True
+
     request = create_request(storage, identity)
     monkeypatch.setattr(context, "session", lambda: fake_session(database))
 
     # Act
     values = context.data(request)
-    value = await anext(values)
+    try:
+        value = await anext(values)
 
-    # Assert
-    assert value.user is expected_user
-    assert value.storage is storage
-    assert value.database is database
-    assert database.lookups == expected_lookups
+        # Assert
+        assert value.user is expected_user
+        assert value.storage is storage
+        assert value.database is database
+        assert database.lookups == expected_lookups
+    finally:
+        await cast(AsyncGenerator[object, None], values).aclose()
+
+    assert session_closed

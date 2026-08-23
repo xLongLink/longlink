@@ -9,7 +9,7 @@ from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
+from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
@@ -306,8 +306,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     organization = await create_organization(owner, infrastructure=infrastructure)
     app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         registry = await session.get(ComputeRegistry, infrastructure.compute.id)
         assert registry is not None
         registry.gateway_certificate = None
@@ -333,8 +332,7 @@ async def test_application_proxy_allows_organization_read_members(
     user = users[1]
     organization = await create_organization(owner)
     app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=user.id,
@@ -424,8 +422,7 @@ async def test_application_proxy_enforces_method_role(
     app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
     await set_application_running(app.id)
 
-    Session = await get_session()
-    async with Session() as session:
+    async with session_scope() as session:
         organization_membership = await session.get(UserOrganization, (user.id, organization.id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.read

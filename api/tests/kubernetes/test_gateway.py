@@ -57,6 +57,13 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
 
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
 
+    def unexpected_http_client(**_kwargs: object) -> object:
+        """Fail when the accepted controller path attempts a manifest request."""
+
+        raise AssertionError("Accepted GatewayClass must not fetch a manifest")
+
+    monkeypatch.setattr(gateway.httpx2, "AsyncClient", unexpected_http_client)
+
     # The accepted terminal state returns before any network manifest fetch.
     await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
@@ -140,12 +147,6 @@ async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: p
 
             deleted.append(True)
 
-    class Kubernetes:
-        async def api(self) -> object:
-            """Return an opaque Kubernetes API client."""
-
-            return object()
-
     async def sleep(delay: float) -> None:
         """Avoid waiting in the polling test."""
 
@@ -153,7 +154,7 @@ async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: p
     monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
 
     # The absent terminal state completes without a second delete request.
-    await gateway.Gateway(Kubernetes()).delete()  # type: ignore[arg-type]
+    await gateway.Gateway(FakeKubernetes()).delete()  # type: ignore[arg-type]
     assert deleted == [True]
 
 

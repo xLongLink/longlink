@@ -72,8 +72,13 @@ describe('Action', () => {
 
     it('serializes Request form values as multipart entries', async () => {
         const ctx = createContext();
-        const append = vi.spyOn(FormData.prototype, 'append');
-        const fetchRequest = vi.fn(async () => new Response('{}', { status: 201 }));
+        let formEntries: [string, string][] = [];
+        const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
+            const formData = await (input as Request).formData();
+            formEntries = Array.from(formData.entries()) as [string, string][];
+
+            return new Response('{}', { status: 201 });
+        });
         vi.stubGlobal('fetch', fetchRequest);
 
         const button = await renderAction(
@@ -92,11 +97,12 @@ describe('Action', () => {
             await vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledOnce());
         });
 
-        expect(append).toHaveBeenCalledTimes(4);
-        expect(append).toHaveBeenNthCalledWith(1, 'name', 'Ada');
-        expect(append).toHaveBeenNthCalledWith(2, 'tags', 'new');
-        expect(append).toHaveBeenNthCalledWith(3, 'tags', 'priority');
-        expect(append).toHaveBeenNthCalledWith(4, 'metadata', '{"source":"web"}');
+        expect(formEntries).toEqual([
+            ['name', 'Ada'],
+            ['tags', 'new'],
+            ['tags', 'priority'],
+            ['metadata', '{"source":"web"}'],
+        ]);
     });
 
     it.each([
@@ -137,6 +143,48 @@ describe('Action', () => {
         expect(ctx.services.navigate).not.toHaveBeenCalled();
         expect(closeDialog).not.toHaveBeenCalled();
         expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: 'Denied', type: 'error' }));
+    });
+
+    it('closes the dialog after a successful request', async () => {
+        const ctx = createContext();
+        const closeDialog = vi.fn();
+        vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
+
+        const button = await renderAction(
+            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button to="javascript:alert(1)">Save</Button></Action>',
+            ctx,
+            closeDialog
+        );
+
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
+        });
+
+        expect(toast).toHaveBeenCalledWith({ body: 'Request completed with status 201' });
+        expect(closeDialog).toHaveBeenCalledOnce();
+    });
+
+    it('does not navigate or close when a request is rejected', async () => {
+        const ctx = createContext();
+        const closeDialog = vi.fn();
+        ctx.services.navigate = vi.fn();
+        vi.stubGlobal('fetch', async () => Promise.reject(new Error('Network unavailable')));
+
+        const button = await renderAction(
+            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link to="/orders">Save</Link></Action>',
+            ctx,
+            closeDialog
+        );
+
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
+        });
+
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
+        expect(closeDialog).not.toHaveBeenCalled();
+        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: 'Network unavailable', type: 'error' }));
     });
 
     it.each([

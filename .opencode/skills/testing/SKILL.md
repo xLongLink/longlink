@@ -12,7 +12,7 @@ Return a numeric list of cleanup options:
 4. Confidence: High, Medium, or Low.
 5. Whether it affects any shared contract or requires updating call sites.
 
-*Focus only on the test cases. Do not change production code*
+_Focus only on the test cases. Do not change production code_
 
 ## LongLink Coverage
 

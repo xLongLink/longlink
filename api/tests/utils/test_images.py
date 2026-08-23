@@ -73,9 +73,6 @@ async def test_metadata_fetches_digest_image_references(
         description="Demo app",
         environments=[EnvironmentMetadata(name="API_KEY", required=True)],
     ).model_dump(mode="json")
-    assert images.missing_envs(image_metadata, {}) == ["API_KEY"]
-    assert images.missing_envs(image_metadata, {"API_KEY": " "}) == ["API_KEY"]
-    assert images.missing_envs(image_metadata, {"API_KEY": "configured"}) == []
     assert captured == {
         "token": {
             "url": "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull",
@@ -90,3 +87,27 @@ async def test_metadata_fetches_digest_image_references(
             "authorization": "Bearer pull-token",
         },
     }
+
+
+@pytest.mark.parametrize(
+    ("envs", "expected_missing"),
+    [
+        pytest.param({}, ["API_KEY"], id="missing"),
+        pytest.param({"API_KEY": " "}, ["API_KEY"], id="blank"),
+        pytest.param({"API_KEY": "configured"}, [], id="configured"),
+    ],
+)
+def test_missing_envs_returns_required_unconfigured_values(envs: dict[str, str], expected_missing: list[str]) -> None:
+    """Return required environment names whose supplied values are blank or absent."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, envs)
+
+    # Assert
+    assert missing == expected_missing

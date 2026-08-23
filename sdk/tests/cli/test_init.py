@@ -14,7 +14,14 @@ from longlink.cli.init import init_command
         ),
         pytest.param(
             ["--folder", "sample-app", "--ci", "github"],
-            [".github/workflows/release.yml", ".github/workflows/tests.yml"],
+            [
+                "pyproject.toml",
+                "main.py",
+                "src",
+                "tests/test_app.py",
+                ".github/workflows/release.yml",
+                ".github/workflows/tests.yml",
+            ],
             id="github-ci",
         ),
     ],

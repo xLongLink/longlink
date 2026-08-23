@@ -133,5 +133,5 @@ def test_root_schema_rejects_invalid_fragments(content: str) -> None:
     """Reject representative invalid XML fragments through the application page schema."""
 
     # Require schema validation to reject the fragment.
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="XML is invalid"):
         validate_xml(content)

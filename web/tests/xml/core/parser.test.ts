@@ -1,4 +1,5 @@
 import { parseXML } from '@/xml/core/parser';
+import { parseXML as parseDocument } from '@/xml';
 import { describe, expect, it } from 'vitest';
 
 describe('parseXML', () => {
@@ -61,6 +62,14 @@ describe('parseXML', () => {
 
     it('rejects malformed XML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
+    });
+
+    it('rejects an empty document', () => {
+        expect(() => parseDocument('')).toThrow('XML is invalid');
+    });
+
+    it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {
+        expect(() => parseDocument(xml)).toThrow('XML pages must contain exactly one longlink root');
     });
 
     it.each([

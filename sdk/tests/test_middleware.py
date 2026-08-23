@@ -48,6 +48,24 @@ def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> 
     assert response.headers["etag"] == 'W/"text-v1"'
 
 
+def test_frontend_middleware_varies_identity_responses_by_encoding() -> None:
+    """Keep an identity response cache-distinct from its gzip representation."""
+
+    # Arrange
+    app = create_text_app({"etag": '"text-v1"'})
+
+    # Act
+    with TestClient(app) as client:
+        response = client.get("/text", headers={"accept-encoding": "identity"})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.content == b"x" * 1000
+    assert "content-encoding" not in response.headers
+    assert response.headers["etag"] == 'W/"text-v1"'
+    assert response.headers["vary"] == "Accept-Encoding"
+
+
 def test_frontend_middleware_preserves_existing_vary_header_when_compressing() -> None:
     """Append encoding negotiation without discarding route-specific Vary values."""
 

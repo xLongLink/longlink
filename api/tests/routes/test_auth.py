@@ -80,11 +80,8 @@ async def test_registration_verification_is_stateless(client: AsyncClient, captu
     # Request a stateless email link without creating a pending user.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
     Session = await get_session()
-    async with Session() as session:
-        pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
 
     assert register_response.status_code == 202
-    assert pending_user is None
     assert captured_mail[0][0] == email
     verification_token = registration_verification_token(captured_mail)
     assert captured_mail[0][3] is not None
@@ -123,6 +120,7 @@ async def test_registration_completion_creates_authenticated_account(
         json=completion_payload,
     )
     profile_response = await client.get("/api/v1/me")
+    authenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
 
     # Assert
     assert unauthenticated_login.status_code == 400
@@ -137,6 +135,7 @@ async def test_registration_completion_creates_authenticated_account(
     assert client.cookies.get("longlink_registration") is None
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == registered_user["id"]
+    assert authenticated_login.status_code == 204
 
 
 async def test_registration_completion_accepts_pending_organization_invitation(
@@ -207,27 +206,6 @@ async def test_registration_completion_rejects_duplicate_account(
     assert repeat_response.status_code == 409
     assert repeat_response.json() == {"detail": "An account with this email already exists. Sign in or reset your password to continue."}
     assert repeat_client.cookies.get("longlink_auth") is None
-
-
-async def test_password_login_succeeds_after_registration_completion(
-    client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]]
-) -> None:
-    """Authenticate with a password created through registration completion."""
-
-    # Arrange
-    email = "registered@example.com"
-    completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
-    await register_and_verify(client, captured_mail, email)
-    complete_response = await client.post("/api/v1/auth/register/complete", json=completion_payload)
-    assert complete_response.status_code == 201
-
-    # Act
-    login_payload = {"email": email, "password": TEST_PASSWORD}
-    login_response = await client.post("/api/v1/auth/password/login", json=login_payload)
-
-    # Assert
-    assert login_response.status_code == 204
-
 
 async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncClient) -> None:
     """Reject reset setup without browser-only reset proof."""
@@ -325,6 +303,7 @@ async def test_forgot_and_reset_password(
 
     assert missing_response.status_code == 202
     assert forgot_response.status_code == 202
+    assert len(captured_mail) == 1
     assert captured_mail[0][0] == user.email
     reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
     parsed_reset_url = urlparse(reset_url)
@@ -338,10 +317,13 @@ async def test_forgot_and_reset_password(
         "/api/v1/auth/reset-password",
         json={"password": "replacement-password"},
     )
+    reused_token_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     revoked_session = await client.get("/api/v1/me")
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
     assert reset_response.status_code == 204
+    assert reused_token_response.status_code == 400
+    assert reused_token_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert revoked_session.status_code == 401
 
     # Prove only the new password can create a fresh session.

@@ -1,5 +1,6 @@
-import pytest
 import urllib.parse
+import ssl
+import pytest
 from src.utils import urls
 
 pytestmark = pytest.mark.no_db
@@ -60,3 +61,42 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
     # TLS values are consumed by the adapter and non-TLS query options remain in the URL.
     assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink?charset=utf8mb4"
     assert connection.connect_args == {"init_command": "SET time_zone = '+00:00'"}
+
+
+@pytest.mark.parametrize(
+    ("query", "message"),
+    [
+        pytest.param("ssl_version=TLSv1", "unsupported TLS parameters", id="unsupported-tls-option"),
+        pytest.param("ssl-mode=INVALID", "invalid ssl-mode", id="invalid-mode"),
+        pytest.param("ssl_ca=first&ssl_ca=second", "one ssl_ca value", id="duplicate-ca"),
+        pytest.param("ssl_key=key.pem", "requires ssl_cert", id="key-without-certificate"),
+        pytest.param("ssl-mode=VERIFY_CA&ssl_check_hostname=true", "conflicts with ssl-mode", id="conflicting-hostname-policy"),
+        pytest.param("ssl-mode=DISABLED&ssl_cert=cert.pem", "cannot include certificates", id="disabled-with-certificate"),
+    ],
+)
+def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, message: str) -> None:
+    """Reject unsupported or contradictory MySQL TLS options."""
+
+    # Arrange
+    database_url = f"mysql+aiomysql://control:secret@db:3306/longlink?{query}"
+
+    # Act and assert
+    with pytest.raises(ValueError, match=message):
+        urls.database(database_url)
+
+
+def test_mysql_database_url_builds_required_tls_context() -> None:
+    """Build a non-verifying SSL context for MySQL's REQUIRED mode."""
+
+    # Arrange
+    database_url = "mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=REQUIRED"
+
+    # Act
+    connection = urls.database(database_url)
+
+    # Assert
+    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
+    assert connection.connect_args["init_command"] == "SET time_zone = '+00:00'"
+    assert isinstance(connection.connect_args["ssl"], ssl.SSLContext)
+    assert connection.connect_args["ssl"].check_hostname is False
+    assert connection.connect_args["ssl"].verify_mode == ssl.CERT_NONE
