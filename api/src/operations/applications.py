@@ -1,6 +1,6 @@
 import secrets
-import sqlalchemy
 from uuid import UUID
+from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -131,5 +131,5 @@ async def delete(application_id: UUID) -> None:
     await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
     async with session_scope() as session:
         # The delete statement locks the tombstone while making completed cleanup idempotent.
-        await session.execute(sqlalchemy.delete(Application).where(Application.id == application.id))
+        await session.execute(sql_delete(Application).where(Application.id == application.id))
         await session.commit()

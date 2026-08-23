@@ -18,19 +18,20 @@ def isolated_model(tmp_path, monkeypatch) -> Generator[tuple[Path, Callable[[str
     model_path = root / "inventory.py"
     root.mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
-    table_names: set[str] = set()
+    tracked_table_name: str | None = None
 
     def write(table_name: str, source: str) -> None:
         """Write a model source file and track its metadata table for cleanup."""
 
-        table_names.add(table_name)
+        nonlocal tracked_table_name
+        tracked_table_name = table_name
         model_path.write_text(source, encoding="utf-8")
 
     yield model_path, write
 
     # Remove temporary metadata and module state even if model discovery fails.
-    for table_name in table_names:
-        table = database_metadata.tables.get(table_name)
+    if tracked_table_name is not None:
+        table = database_metadata.tables.get(tracked_table_name)
         if table is not None:
             database_metadata.remove(table)
     sys.modules.pop("src.database.models.catalog.inventory", None)
@@ -175,42 +176,38 @@ def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path,
         database_migrations.apply_migrations()
 
 
-def test_production_migrations_upgrade_committed_application_revision(tmp_path, monkeypatch) -> None:
-    """Apply production migrations when the Application includes a revision."""
+def test_production_migrations_rejects_only_init_file_before_upgrade(tmp_path, monkeypatch) -> None:
+    """Fail production startup when the migrations directory has no revision files."""
 
     # Arrange
     migrations_path = tmp_path / "migrations"
     migrations_path.mkdir()
-    migrations_path.joinpath("001_initial.py").write_text("", encoding="utf-8")
-    captured: dict[str, Config | str] = {}
+    migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
+    monkeypatch.setattr(
+        database_migrations.command,
+        "upgrade",
+        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
+    )
 
-    def upgrade(config: Config, target: str) -> None:
-        """Capture Alembic's configured migration location and revision target."""
-
-        captured["config"] = config
-        captured["target"] = target
-
-    monkeypatch.setattr(database_migrations.command, "upgrade", upgrade)
-
-    # Act
-    database_migrations.apply_migrations()
-
-    # Assert
-    config = captured["config"]
-    assert isinstance(config, Config)
-    assert captured["target"] == "head"
-    assert config.get_main_option("version_locations") == str(migrations_path)
+    # Act and assert
+    with pytest.raises(RuntimeError, match="require migrations"):
+        database_migrations.apply_migrations()
 
 
-def test_development_migrations_create_directory_and_upgrade_head(tmp_path, monkeypatch) -> None:
-    """Create local migration storage and apply the latest revision in development."""
+@pytest.mark.parametrize(("environment", "committed_revision"), [("production", True), ("development", False)])
+def test_migrations_upgrade_head_when_revisions_are_available_or_development(tmp_path, monkeypatch, environment: str, committed_revision: bool) -> None:
+    """Apply revisions in production with a committed file and initialize development storage."""
 
     # Arrange
+    migrations_path = tmp_path / "migrations"
+    if committed_revision:
+        migrations_path.mkdir()
+        migrations_path.joinpath("001_initial.py").write_text("", encoding="utf-8")
     captured: dict[str, Config | str] = {}
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="development"))
+    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV=environment))
 
     def upgrade(config: Config, target: str) -> None:
         """Capture the Alembic configuration and revision target."""
@@ -226,7 +223,7 @@ def test_development_migrations_create_directory_and_upgrade_head(tmp_path, monk
     # Assert
     config = captured["config"]
     assert isinstance(config, Config)
-    assert (tmp_path / "migrations").is_dir()
+    assert migrations_path.is_dir()
     assert captured["target"] == "head"
     assert config.get_main_option("script_location") == str(database_migrations.CURRENT_FILE.parent)
-    assert config.get_main_option("version_locations") == str(tmp_path / "migrations")
+    assert config.get_main_option("version_locations") == str(migrations_path)

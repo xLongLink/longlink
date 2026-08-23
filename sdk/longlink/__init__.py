@@ -1,4 +1,3 @@
-from . import database
 from .app import LongLink
 from .context import Context, data
 from .utils.settings import Envs

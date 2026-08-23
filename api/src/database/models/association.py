@@ -21,8 +21,8 @@ class UserOrganization(PlatformModel, table=True):
     __tablename__: ClassVar[str] = "user_organizations"
 
     # Identifier
-    user_id: UUID = Field(default=None, primary_key=True, foreign_key="users.id")
-    organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id", ondelete="CASCADE")
+    user_id: UUID = Field(primary_key=True, foreign_key="users.id")
+    organization_id: UUID = Field(primary_key=True, foreign_key="organizations.id", ondelete="CASCADE")
 
     # State
     role: OrganizationRoles = Field(
@@ -30,11 +30,11 @@ class UserOrganization(PlatformModel, table=True):
     )
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Relationships

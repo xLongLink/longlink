@@ -97,12 +97,14 @@ def apply_migrations() -> None:
     """Apply all pending Alembic migrations."""
 
     # Production images must include committed application migrations.
+    environment = Envs().ENV
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
-    if Envs().ENV == "production" and (
+    if environment == "production" and (
         not migrations_path.is_dir() or not any(path.name != "__init__.py" for path in migrations_path.glob("*.py"))
     ):
         raise RuntimeError(f"Production applications require migrations in {migrations_path}")
-    migrations_path.mkdir(exist_ok=True)
+    if environment != "production":
+        migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to apply revisions from the application directory.
     cfg = Config()

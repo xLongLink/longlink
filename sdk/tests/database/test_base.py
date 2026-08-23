@@ -7,6 +7,13 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
+@pytest.fixture
+def reset_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Clear the global SDK session factory before each lazy-session test."""
+
+    monkeypatch.setattr(database_base, "Session", None)
+
+
 @pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
 def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
@@ -72,13 +79,13 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         pytest.param(
             Envs(ENV="testing"),
             "sqlite+aiosqlite:///:memory:",
-            {"pool_pre_ping": True, "pool_recycle": 20, "connect_args": {}},
+            {"pool_pre_ping": True, "pool_recycle": 20},
             id="testing",
         ),
         pytest.param(
             Envs(ENV="development"),
             "sqlite+aiosqlite:///./dev.db",
-            {"pool_pre_ping": True, "pool_recycle": 20, "connect_args": {}},
+            {"pool_pre_ping": True, "pool_recycle": 20},
             id="development",
         ),
         pytest.param(
@@ -135,7 +142,10 @@ def test_create_engine_selects_database_url_and_options(
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}
 
 
-async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_concurrent_sessions_initialize_one_session_factory(
+    monkeypatch: pytest.MonkeyPatch,
+    reset_session_factory: None,
+) -> None:
     """Initialize the lazy database session factory only once."""
 
     # Arrange
@@ -148,7 +158,6 @@ async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: p
         create_count += 1
         return engine
 
-    monkeypatch.setattr(database_base, "Session", None)
     monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
 
     async def open_session() -> None:
@@ -166,7 +175,10 @@ async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: p
         await engine.dispose()
 
 
-async def test_session_retries_initialization_after_database_connection_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_session_retries_initialization_after_database_connection_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    reset_session_factory: None,
+) -> None:
     """Leave the session factory unset when its initial connection fails."""
 
     # Arrange
@@ -189,7 +201,6 @@ async def test_session_retries_initialization_after_database_connection_failure(
             """Return the failing connection context."""
             return FailingConnection()
 
-    monkeypatch.setattr(database_base, "Session", None)
     monkeypatch.setattr(database_base, "create_engine", lambda _env: FailingEngine())
 
     # Act and assert

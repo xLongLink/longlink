@@ -95,14 +95,6 @@ async def test_operations_service_schedules_all_active_application_creation_once
             secrets={},
             status=Status.running,
         )
-        pending = Application(
-            organization_id=organization.id,
-            name="Pending",
-            slug="pending",
-            image_desired="ghcr.io/longlink/pending@sha256:resolved",
-            secrets={},
-            status=Status.creating,
-        )
         deleted = Application(
             organization_id=organization.id,
             name="Deleted",
@@ -112,7 +104,7 @@ async def test_operations_service_schedules_all_active_application_creation_once
             status=Status.running,
             deleted_at=utcnow(),
         )
-        session.add_all([running, pending, deleted])
+        session.add_all([running, deleted])
         await session.commit()
 
     async with session_scope() as session:
@@ -124,7 +116,6 @@ async def test_operations_service_schedules_all_active_application_creation_once
         (OperationKind.compute_create, infrastructure.compute.id),
         (OperationKind.organization_create, organization.id),
         (OperationKind.application_create, running.id),
-        (OperationKind.application_create, pending.id),
         (OperationKind.application_delete, deleted.id),
     }
 

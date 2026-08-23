@@ -218,8 +218,9 @@ async def test_application_responses_do_not_expose_environment_secrets(
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
     list_applications = list_response.json()["items"]
-    for response_applications in (list_applications, organization_response.json()["applications"]):
-        assert all("secrets" not in item and "envs" not in item for item in response_applications)
+    organization_applications = organization_response.json()["applications"]
+    assert all("secrets" not in item and "envs" not in item for item in list_applications)
+    assert all("secrets" not in item and "envs" not in item for item in organization_applications)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
     assert str(application.id) in {item["id"] for item in list_applications}
@@ -255,6 +256,53 @@ async def test_create_app_returns_403_for_regular_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+
+
+async def test_create_app_allows_maintainer_and_queues_reconciliation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Allow maintainers to create applications and queue their deployment."""
+
+    # Arrange
+    owner, maintainer = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=maintainer.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.maintain,
+            )
+        )
+        await session.commit()
+
+    async def inspect_image(_image: Image) -> LongLinkMetadata:
+        """Return deployable image metadata without a registry request."""
+
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[])
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+
+    # Act
+    response = await clients[1].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        application = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
+        assert application is not None
+        operation = await session.scalar(
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.application_create,
+                col(Operation.target_id) == application.id,
+            )
+        )
+    assert operation is not None
 
 
 async def test_get_app_logs_returns_pod_logs(

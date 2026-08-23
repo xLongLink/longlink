@@ -20,35 +20,27 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-async def current_optional_user(
+async def authuser(
     credential: str | None = Cookie(default=None, alias="longlink_auth"),
     session: AsyncSession = Depends(get_session),
-) -> User | None:
-    """Return the active user for one valid optional browser session."""
+) -> User:
+    """Return the authenticated user with current LongLink resource access."""
 
-    # Anonymous requests have no signed browser credential to resolve.
+    # Convert missing, expired, and invalidated sessions into one stable authentication error.
     if credential is None:
-        return None
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     # Reject malformed, expired, and wrongly scoped browser credentials before querying the Platform database.
     try:
         user_id, fingerprint = token.auth_token_claims(credential)
     except jwt.PyJWTError:
-        return None
+        raise HTTPException(status_code=401, detail="Not authenticated") from None
 
     # Resolve only the active local identity; scoped dependencies load resource access on demand.
     user = await user_service.active(session, user_id)
     if user is None or not hmac.compare_digest(fingerprint, token.password_fingerprint(user.password)):
-        return None
-    return user
-
-
-def authuser(user: User | None = Depends(current_optional_user)) -> User:
-    """Return the authenticated user with current LongLink resource access."""
-
-    # Convert missing, expired, and invalidated sessions into one stable authentication error.
-    if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+
     return user
 
 

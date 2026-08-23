@@ -336,6 +336,63 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
     ]
 
 
+async def test_exoscale_delete_prefix_tolerates_concurrently_removed_upload(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Continue cleanup when an incomplete upload disappears before aborting it."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Client:
+        """Return one vanished upload followed by empty storage listings."""
+
+        def __init__(self) -> None:
+            """Initialize the upload listing state."""
+
+            self.upload_listed = False
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
+            """Return one incomplete upload before its terminal page."""
+
+            if self.upload_listed:
+                return {"Uploads": []}
+            self.upload_listed = True
+            return {"Uploads": [{"Key": "apps/dashboard/a", "UploadId": "upload"}]}
+
+        async def abort_multipart_upload(self, **kwargs: object) -> None:
+            """Report that another worker already removed the upload."""
+
+            raise ClientError({"Error": {"Code": "NoSuchUpload"}}, "AbortMultipartUpload")
+
+        async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+            """Record current-object cleanup and return its terminal page."""
+
+            calls.append("objects")
+            return {"Contents": []}
+
+        async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
+            """Record version cleanup and return its terminal page."""
+
+            calls.append("versions")
+            return {"Versions": [], "DeleteMarkers": []}
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    # Act
+    await storage.delete_prefix("acme", "apps/dashboard/")
+
+    # Assert
+    assert calls == ["objects", "versions"]
+
+
 async def test_exoscale_delete_prefix_rejects_partial_object_deletions(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail cleanup when S3 reports an individual object deletion failure."""
 
