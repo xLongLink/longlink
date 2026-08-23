@@ -115,16 +115,31 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
 
 
 @pytest.mark.parametrize(
-    ("scenario", "expected_paths"),
+    ("responses", "expected_paths"),
     [
-        pytest.param("failed-token", ["/token"], id="failed-token"),
-        pytest.param("invalid-token", ["/token"], id="invalid-token"),
-        pytest.param("failed-manifest", ["/token", "/v2/longlink/dashboard/manifests/latest"], id="failed-manifest"),
-        pytest.param("invalid-config", ["/token", "/v2/longlink/dashboard/manifests/latest"], id="invalid-config"),
+        pytest.param([httpx2.Response(503)], ["/token"], id="failed-token"),
+        pytest.param([httpx2.Response(200, json=[])], ["/token"], id="invalid-token"),
+        pytest.param(
+            [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="failed-manifest",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(
+                    200,
+                    json={"config": {"digest": "invalid"}},
+                    headers={"Docker-Content-Digest": "sha256:deadbeef"},
+                ),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="invalid-config",
+        ),
     ],
 )
 async def test_metadata_stops_when_registry_responses_are_invalid(
-    monkeypatch: pytest.MonkeyPatch, scenario: str, expected_paths: list[str]
+    monkeypatch: pytest.MonkeyPatch, responses: list[httpx2.Response], expected_paths: list[str]
 ) -> None:
     """Return no metadata without requesting later registry resources after invalid responses."""
 
@@ -135,19 +150,7 @@ async def test_metadata_stops_when_registry_responses_are_invalid(
         """Return the configured invalid registry response."""
 
         requested_paths.append(request.url.path)
-        if request.url.path == "/token":
-            if scenario == "failed-token":
-                return httpx2.Response(503)
-            if scenario == "invalid-token":
-                return httpx2.Response(200, json=[])
-            return httpx2.Response(200, json={"token": "pull-token"})
-        if scenario == "failed-manifest":
-            return httpx2.Response(503)
-        return httpx2.Response(
-            200,
-            json={"config": {"digest": "invalid"}},
-            headers={"Docker-Content-Digest": "sha256:deadbeef"},
-        )
+        return responses.pop(0)
 
     async_client = httpx2.AsyncClient
     monkeypatch.setattr(

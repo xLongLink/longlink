@@ -6,10 +6,7 @@ def test_cli_help_lists_all_supported_commands() -> None:
     """Expose every supported SDK command through the public entrypoint."""
 
     # Arrange
-    runner = CliRunner()
-
-    # Act
-    result = runner.invoke(main, ["--help"])
+    result = CliRunner().invoke(main, ["--help"])
 
     # Assert
     assert result.exit_code == 0

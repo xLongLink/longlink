@@ -57,8 +57,9 @@ describe('ApplicationRuntime XML integration', () => {
         });
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(2)));
+        await act(async () =>
+            vi.waitFor(() => expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/pages.json', '/home.xml']))
+        );
         await act(async () => vi.waitFor(() => expect(container.textContent).toContain('Welcome')));
-        expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/pages.json', '/home.xml']);
     });
 });

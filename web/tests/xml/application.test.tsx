@@ -219,7 +219,6 @@ describe('ApplicationRuntime', () => {
 
         return container;
     }
-
 });
 
 /** Waits for an asynchronous React update within an act scope. */

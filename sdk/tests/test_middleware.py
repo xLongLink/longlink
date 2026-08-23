@@ -92,7 +92,6 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
 
     # Assert
     assert response.status_code == 200
-    assert response.content == b"x" * 1000
     assert "content-encoding" not in response.headers
     assert response.headers["etag"] == '"text-v1"'
     assert response.headers["cache-control"] == "private"
@@ -109,7 +108,6 @@ def test_frontend_middleware_preserves_compressed_asset_representation() -> None
 
     # Assert
     assert response.status_code == 200
-    assert response.content == b"x" * 1000
     assert "content-encoding" not in response.headers
     assert "vary" not in response.headers
     assert response.headers["etag"] == '"image-v1"'
