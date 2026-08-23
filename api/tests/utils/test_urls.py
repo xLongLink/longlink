@@ -1,6 +1,6 @@
-import urllib.parse
 import ssl
 import pytest
+import urllib.parse
 from src.utils import urls
 
 pytestmark = pytest.mark.no_db

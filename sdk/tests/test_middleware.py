@@ -47,36 +47,23 @@ def test_accepts_gzip_interprets_encoding_quality_values(header: str, expected: 
     assert accepts_gzip(header) is expected
 
 
-def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> None:
-    """Compress eligible text responses and vary their weak validator by encoding."""
+@pytest.mark.parametrize(
+    ("accept_encoding", "expected_content_encoding"),
+    [pytest.param("gzip", "gzip", id="gzip"), pytest.param("identity", None, id="identity")],
+)
+def test_frontend_middleware_varies_eligible_text_representations(accept_encoding: str, expected_content_encoding: str | None) -> None:
+    """Keep gzip and identity text representations separately cacheable."""
 
     # Arrange
     app = create_text_app({"etag": '"text-v1"'})
 
     # Act
-    response = request_response(app, "/text", {"accept-encoding": "gzip"})
+    response = request_response(app, "/text", {"accept-encoding": accept_encoding})
 
     # Assert
     assert response.status_code == 200
     assert response.content == b"x" * 1000
-    assert response.headers["content-encoding"] == "gzip"
-    assert response.headers["etag"] == 'W/"text-v1"'
-    assert response.headers["vary"] == "Accept-Encoding"
-
-
-def test_frontend_middleware_varies_identity_responses_by_encoding() -> None:
-    """Keep an identity response cache-distinct from its gzip representation."""
-
-    # Arrange
-    app = create_text_app({"etag": '"text-v1"'})
-
-    # Act
-    response = request_response(app, "/text", {"accept-encoding": "identity"})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.content == b"x" * 1000
-    assert "content-encoding" not in response.headers
+    assert response.headers.get("content-encoding") == expected_content_encoding
     assert response.headers["etag"] == 'W/"text-v1"'
     assert response.headers["vary"] == "Accept-Encoding"
 

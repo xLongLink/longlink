@@ -98,9 +98,11 @@ async def test_registry_endpoints_return_registered_backend(
     assert payload["name"] == backend.name
     assert {field: payload[field] for field in expected_fields} == expected_fields
     assert all(field not in payload for field in secret_fields)
-    for secret_field in secret_fields:
-        assert str(getattr(backend, secret_field)) not in list_response.text
-        assert str(getattr(backend, secret_field)) not in get_response.text
+    assert all(
+        str(getattr(backend, secret_field)) not in response.text
+        for secret_field in secret_fields
+        for response in (list_response, get_response)
+    )
 
 
 async def test_storage_registry_list_returns_ordered_page_and_total(

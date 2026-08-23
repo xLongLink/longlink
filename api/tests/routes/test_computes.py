@@ -1,4 +1,3 @@
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_compute, claim_operation, queue_operation, complete_operation
 
@@ -35,18 +34,13 @@ async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     """Retain a Compute registry while its lifecycle operation is pending."""
 
     # Arrange
-    create_response = await clients[0].post(
-        "/api/v1/computes",
-        json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
-    )
-    registry_id = UUID(create_response.json()["id"])
-    await queue_operation(target_id=registry_id)
+    compute = await create_compute()
+    await queue_operation(target_id=compute.id)
 
     # Act
-    response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
+    response = await clients[0].delete(f"/api/v1/computes/{compute.id}")
 
     # Assert
-    assert create_response.status_code == 202
     assert response.status_code == 409
     assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
 
