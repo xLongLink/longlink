@@ -78,7 +78,7 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
 
     # Execute the real worker transition around the failing deletion handler.
-    failed = await execute(claimed, application_operations.delete)
+    failed = await execute(claimed)
 
     # The failed operation retains its tombstone and never reaches provider cleanup.
     assert failed.status == OperationStatus.failed

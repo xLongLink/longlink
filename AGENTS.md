@@ -31,6 +31,7 @@ longlink/
 
 - Avoid renaming imports.
 - Channel YAGNI and KISS principle.
+- Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
 - Inline single use constants.
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.

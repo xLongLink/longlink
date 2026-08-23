@@ -1,7 +1,7 @@
 import asyncio
 from uuid import UUID
 from src.logger import logger
-from src.operations import OperationHandler, handlers
+from src.operations import handlers
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from longlink.utils.time import utcnow
@@ -46,13 +46,15 @@ async def _finish_transition(
     return updated
 
 
-async def execute(operation: Operation, handler: OperationHandler) -> Operation:
+async def execute(operation: Operation) -> Operation:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry a live worker lock.
     if operation.lease_expires_at is None or operation.lease_expires_at <= utcnow():
         raise ValueError("Operation must be claimed before execution")
 
+    # Dispatch each operation through its registered lifecycle handler.
+    handler = handlers[operation.kind]
     logger.info("Running %s operation %s", operation.kind, operation.id)
 
     # Bound one complete handler execution under its worker lease.
@@ -109,6 +111,6 @@ async def run_operation_scheduler() -> None:
 
         # Execute and release one claimed operation before locking more work.
         try:
-            await execute(operation, handlers[operation.kind])
+            await execute(operation)
         except Exception:
             logger.exception("Operation scheduler failed for %s", operation.id)

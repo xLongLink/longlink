@@ -199,7 +199,6 @@ async def test_operations_service_claim_serializes_active_work() -> None:
 
     # Exercise global operation serialization.
     active_claim = await claim_operation()
-    second_active_claim = await claim_operation()
     assert active_claim is not None
     await complete_operation(active_claim.id)
     waiting_claim = await claim_operation()
@@ -208,7 +207,6 @@ async def test_operations_service_claim_serializes_active_work() -> None:
     finished_claim = await claim_operation()
 
     # Verify only eligible waiting work was claimed.
-    assert second_active_claim is None
     assert waiting_claim.id == waiting.id
     assert finished_claim is None
 

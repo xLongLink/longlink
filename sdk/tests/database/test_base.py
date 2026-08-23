@@ -30,7 +30,7 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
 
     # Act and assert
     with pytest.raises(ValueError, match="DATABASE_SCHEMA must be a valid PostgreSQL identifier"):
-        Envs(**settings)
+        Envs.model_validate(settings)
 
 
 def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:

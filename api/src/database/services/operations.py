@@ -80,7 +80,6 @@ async def enqueue(
             Operation.finished_at.is_(None),
             Operation.lease_expires_at.is_(None),
         )
-        .with_for_update()
     )
     if operation is None:
         operation = Operation(

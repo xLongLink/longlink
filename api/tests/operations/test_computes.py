@@ -68,13 +68,13 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     claimed = await claim_operation()
     assert claimed is not None
 
-    completed = await execute(claimed, compute_operations.create)
+    completed = await execute(claimed)
 
     # Reconcile the Compute again after a deployment schedules another pass.
     await queue_operation(target_id=compute_registry.id)
     recreated_claim = await claim_operation()
     assert recreated_claim is not None
-    recreated = await execute(recreated_claim, compute_operations.create)
+    recreated = await execute(recreated_claim)
 
     assert completed.status == OperationStatus.completed
     assert recreated.status == OperationStatus.completed
@@ -111,7 +111,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     claimed = await claim_operation()
     assert claimed is not None
 
-    failed = await execute(claimed, compute_operations.create)
+    failed = await execute(claimed)
 
     assert failed.status == OperationStatus.failed
     async with session_scope() as session:

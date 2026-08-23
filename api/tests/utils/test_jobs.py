@@ -35,6 +35,8 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
         assert target_id == operation.target_id
 
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
+
     async def fake_complete(session, operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""
 
@@ -47,7 +49,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
 
     # Act
-    execution = asyncio.create_task(operation_worker.execute(operation, complete_handler))
+    execution = asyncio.create_task(operation_worker.execute(operation))
     await started.wait()
     execution.cancel()
     await asyncio.sleep(0)
@@ -85,7 +87,9 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 
     # Act
-    result = await operation_worker.execute(operation, failing_handler)
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, failing_handler)
+
+    result = await operation_worker.execute(operation)
 
     # Assert
     assert result.status == OperationStatus.failed
@@ -101,14 +105,9 @@ async def test_execute_rejects_operation_without_a_worker_lease() -> None:
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
     )
 
-    async def unexpected_handler(_target_id: UUID) -> str | None:
-        """Fail if an unclaimed Operation reaches its handler."""
-
-        raise AssertionError("unclaimed operations must not run handlers")
-
     # Act and assert
     with pytest.raises(ValueError, match="Operation must be claimed before execution"):
-        await operation_worker.execute(operation, unexpected_handler)
+        await operation_worker.execute(operation)
 
 
 async def test_scheduler_recovers_from_polling_failure_and_executes_next_operation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -140,7 +139,7 @@ async def test_scheduler_recovers_from_polling_failure_and_executes_next_operati
             raise result
         return result
 
-    async def execute(claimed: Operation, _handler: object) -> Operation:
+    async def execute(claimed: Operation) -> Operation:
         """Record the operation dispatched by the scheduler."""
 
         executed.append(claimed)
