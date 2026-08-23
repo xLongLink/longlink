@@ -3,6 +3,7 @@ from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import case, func, select, update
 from src.logger import logger
+from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind
@@ -81,12 +82,26 @@ async def enqueue(
             Operation.lease_expires_at.is_(None),
         )
     )
-    if operation is None:
-        operation = Operation(
-            kind=kind,
-            target_id=target_id,
+    if operation is not None:
+        return operation
+
+    # Let the partial unique index serialize concurrent creation of the same unleased work.
+    try:
+        async with session.begin_nested():
+            operation = Operation(kind=kind, target_id=target_id)
+            session.add(operation)
+            await session.flush()
+    except IntegrityError:
+        operation = await session.scalar(
+            select(Operation).where(
+                Operation.kind == kind,
+                Operation.target_id == target_id,
+                Operation.finished_at.is_(None),
+                Operation.lease_expires_at.is_(None),
+            )
         )
-        session.add(operation)
+        if operation is None:
+            raise
     return operation
 
 

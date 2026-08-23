@@ -230,11 +230,22 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
         url = "postgresql+asyncpg://database"
 
+        def __init__(self) -> None:
+            """Track cleanup after a failed verification connection."""
+
+            self.disposed = False
+
         def connect(self) -> FailingConnection:
             """Return the failing connection context."""
             return FailingConnection()
 
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: FailingEngine())
+        async def dispose(self) -> None:
+            """Record release of the failed engine."""
+
+            self.disposed = True
+
+    engine = FailingEngine()
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
 
     # Act and assert
     with pytest.raises(ConnectionError, match="database unavailable"):
@@ -243,3 +254,4 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
     # Assert
     assert database_base.Session is None
+    assert engine.disposed

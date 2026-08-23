@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Index, Column
+from sqlalchemy import Enum, Index, Column, text
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
@@ -20,6 +20,14 @@ class Operation(PlatformModel, table=True):
             "target_id",
             "finished_at",
             "lease_expires_at",
+        ),
+        Index(
+            "uq_operations_unleased_target",
+            "kind",
+            "target_id",
+            unique=True,
+            postgresql_where=text("finished_at IS NULL AND lease_expires_at IS NULL"),
+            sqlite_where=text("finished_at IS NULL AND lease_expires_at IS NULL"),
         ),
     )
 

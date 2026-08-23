@@ -1,6 +1,7 @@
 import pytest
-from httpx2 import AsyncClient
+from src import auth
 from main import app
+from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client, authenticated_cookies
 from sqlmodel import col, select
 from factories import create_organization
@@ -13,7 +14,6 @@ from src.database.session import get_session, session_scope
 from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
-from src import auth
 from src.database.models.invitations import OrganizationInvitation
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
@@ -535,6 +535,29 @@ async def test_forgot_password_does_not_send_mail_to_deleted_account(
 
     # Act
     response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
+
+    # Assert
+    assert response.status_code == 202
+    assert captured_mail == []
+
+
+async def test_registration_request_does_not_send_mail_to_deleted_account(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+) -> None:
+    """Keep deleted accounts indistinguishable from missing registration recipients."""
+
+    # Arrange
+    user = users[0]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+
+    # Act
+    response = await client.post("/api/v1/auth/register", json={"email": user.email})
 
     # Assert
     assert response.status_code == 202

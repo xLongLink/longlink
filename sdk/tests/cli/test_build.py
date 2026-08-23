@@ -231,7 +231,7 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
+        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
     )
 
 
@@ -337,6 +337,33 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     assert source_root == build_project.parent
     assert workdir == "/workspace/app"
     assert dependencies == [transitive_dependency, dependency]
+
+
+def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep application secrets excluded when local dependencies widen the Docker context."""
+
+    # Arrange
+    dependency = build_project.parent / "shared"
+    dependency.mkdir()
+    dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
+        '[tool.uv.sources]\nshared = { path = "../shared" }\n',
+        encoding="utf-8",
+    )
+    build_project.joinpath(".gitignore").write_text(".env\n", encoding="utf-8")
+    build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    # Act
+    build.build_app(build_context)
+
+    # Assert
+    assert build_context.joinpath("app", ".env").is_file()
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
+        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
+    )
 
 
 @pytest.mark.parametrize(

@@ -251,6 +251,28 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
+def context_ignore_rules(source: Path | None, root: Path, source_root: Path) -> str:
+    """Return Docker ignore rules relative to the generated build context."""
+
+    # Preserve repository-root rules and scope application-local rules to their copied directory.
+    rules = source.read_text(encoding="utf-8") if source is not None else ""
+    if source is None or source.parent == source_root:
+        return rules
+    relative_root = root.relative_to(source_root).as_posix()
+    rewritten_rules = []
+
+    # Prefix patterns so application rules retain their original directory boundary.
+    for rule in rules.splitlines():
+        if not rule or rule.startswith("#"):
+            rewritten_rules.append(rule)
+            continue
+        negated = rule.startswith("!")
+        pattern = rule[1:] if negated else rule
+        rewritten_rules.append(f"{'!' if negated else ''}{relative_root}/{pattern.lstrip('/')}")
+
+    return "\n".join(rewritten_rules)
+
+
 def build_app(build_context: Path) -> tuple[str, str]:
     """Create Docker build artifacts for the current app."""
 
@@ -302,10 +324,12 @@ def build_app(build_context: Path) -> tuple[str, str]:
         ignore=ignore_out_of_tree_symlinks,
     )
 
-    # Apply the closest repository ignore rules when Docker uploads the context.
+    # Scope application-local ignore rules to the expanded Docker context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
-    rules = source.read_text(encoding="utf-8") if source is not None else ""
-    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n", encoding="utf-8")
+    rules = context_ignore_rules(source, root, source_root)
+    build_context.joinpath(".dockerignore").write_text(
+        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n", encoding="utf-8"
+    )
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = root.relative_to(source_root).as_posix()

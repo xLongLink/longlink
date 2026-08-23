@@ -104,6 +104,23 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     assert response.headers["cache-control"] == "private"
 
 
+def test_frontend_middleware_preserves_incompressible_asset_representation() -> None:
+    """Keep incompressible assets out of encoding negotiation."""
+
+    # Arrange
+    app = create_text_app({"etag": '"image-v1"'}, path="/assets/logo.png", media_type="image/png")
+
+    # Act
+    response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.content == b"x" * 1000
+    assert "content-encoding" not in response.headers
+    assert "vary" not in response.headers
+    assert response.headers["etag"] == '"image-v1"'
+
+
 def test_frontend_middleware_preserves_precompressed_text_representation() -> None:
     """Avoid double compression while retaining cache negotiation for encoded text."""
 

@@ -52,6 +52,24 @@ async def test_platform_user_cannot_delete_administrator_registries(
     assert get_response.status_code == 200
 
 
+@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("databases", "database"), ("storages", "storage")])
+async def test_platform_user_cannot_read_administrator_registry_details(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
+) -> None:
+    """Reject registered backend detail reads from non-administrators."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    backend = getattr(infrastructure, registry)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/{path}/{backend.id}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 @pytest.mark.parametrize(
     ("path", "registry", "expected_fields", "secret_fields"),
     [

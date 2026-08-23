@@ -201,6 +201,12 @@ def create_audit_application() -> FastAPI:
         user_id = runtime_context._current_identity.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
+    @app.get("/failure")
+    async def fail() -> None:
+        """Raise after middleware has bound an audit identity."""
+
+        raise RuntimeError("handler failed")
+
     return app
 
 
@@ -242,3 +248,18 @@ async def test_audit_middleware_isolates_concurrent_request_identities() -> None
     # Each handler observes only its own request identity.
     assert first_response.json() == {"user_id": first_id}
     assert second_response.json() == {"user_id": second_id}
+
+
+def test_audit_middleware_clears_identity_after_handler_failure() -> None:
+    """Restore the ambient audit identity when a route raises an exception."""
+
+    # Arrange
+    user_id = "00000000-0000-0000-0000-000000000008"
+
+    # Act
+    with TestClient(create_audit_application()) as client:
+        with pytest.raises(RuntimeError, match="handler failed"):
+            client.get("/failure", headers={"x-user-id": user_id})
+
+    # Assert
+    assert runtime_context._current_identity.get() is None

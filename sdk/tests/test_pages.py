@@ -23,6 +23,7 @@ def test_page_stem_route_converts_filesystem_routes(page_stem: str, route: str) 
         pytest.param("issues/[]", "cannot be empty", id="empty-parameter"),
         pytest.param("issues/[issue-id]", "valid identifier names", id="invalid-parameter"),
         pytest.param(":settings", "cannot contain route parameters", id="static-parameter"),
+        pytest.param("issues/{id}", "cannot contain route parameters", id="brace-parameter"),
         pytest.param("files/*", "cannot contain route parameters", id="wildcard"),
     ],
 )

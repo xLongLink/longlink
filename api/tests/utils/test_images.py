@@ -119,6 +119,31 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
 
 
 @pytest.mark.parametrize(
+    "headers",
+    [
+        pytest.param({"Content-Length": str(images.IMAGE_METADATA_MAX_BYTES + 1)}, id="declared-oversize"),
+        pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
+    ],
+)
+async def test_metadata_rejects_invalid_manifest_response_sizes(
+    monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]
+) -> None:
+    """Reject oversized or invalid manifest bodies before decoding them."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return authentication followed by an invalidly sized manifest."""
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        return httpx2.Response(200, content=b"{}", headers=headers)
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act and assert
+    assert await images.metadata(Image("ghcr.io/longlink/dashboard:latest")) is None
+
+
+@pytest.mark.parametrize(
     ("responses", "expected_paths"),
     [
         pytest.param([httpx2.Response(503)], ["/token"], id="failed-token"),
