@@ -4,16 +4,49 @@ from factories import create_organization, create_ready_infrastructure
 from src.database.models.users import User
 
 
-@pytest.mark.parametrize("path", ["computes", "databases", "storages", "users"])
-async def test_platform_user_cannot_access_administrator_collections(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str
+@pytest.mark.parametrize(
+    ("method", "path", "payload"),
+    [
+        pytest.param("GET", "computes", None, id="list-computes"),
+        pytest.param("GET", "databases", None, id="list-databases"),
+        pytest.param("GET", "storages", None, id="list-storages"),
+        pytest.param("GET", "users", None, id="list-users"),
+        pytest.param("POST", "computes", {}, id="create-compute"),
+        pytest.param("POST", "databases", {}, id="create-database"),
+        pytest.param("POST", "storages", {}, id="create-storage"),
+    ],
+)
+async def test_platform_user_cannot_access_administrator_registries(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], method: str, path: str, payload: dict[str, object] | None
 ) -> None:
-    """Reject Platform users from every administrator collection."""
+    """Reject registry collection reads and creation before payload validation."""
 
-    response = await clients[1].get(f"/api/v1/{path}")
+    # Act
+    response = await clients[1].request(method, f"/api/v1/{path}", json=payload)
 
+    # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+
+
+@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("databases", "database"), ("storages", "storage")])
+async def test_platform_user_cannot_delete_administrator_registries(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
+) -> None:
+    """Reject registry deletion without modifying the registered backend."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    backend = getattr(infrastructure, registry)
+
+    # Act
+    response = await clients[1].delete(f"/api/v1/{path}/{backend.id}")
+    get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+    assert get_response.status_code == 200
 
 
 @pytest.mark.parametrize(

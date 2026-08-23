@@ -89,6 +89,29 @@ async def test_metadata_fetches_digest_image_references(
     }
 
 
+async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject mutable image tags when GHCR omits the resolved manifest digest."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a manifest without a digest while forbidding blob inspection."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
+        raise AssertionError("Mutable images must not fetch config blobs")
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs))
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is None
+
+
 @pytest.mark.parametrize(
     ("envs", "expected_missing"),
     [
@@ -111,3 +134,19 @@ def test_missing_envs_returns_required_unconfigured_values(envs: dict[str, str],
 
     # Assert
     assert missing == expected_missing
+
+
+def test_missing_envs_rejects_user_values_for_reserved_runtime_names() -> None:
+    """Keep Platform-owned runtime requirements unavailable to user input."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[EnvironmentMetadata(name="LONGLINK_DATABASE_PASSWORD", required=True)],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, {"LONGLINK_DATABASE_PASSWORD": "configured"})
+
+    # Assert
+    assert missing == ["LONGLINK_DATABASE_PASSWORD"]

@@ -23,6 +23,25 @@ def build_project(tmp_path: Path) -> Path:
     return root
 
 
+@pytest.fixture
+def docker_build(monkeypatch: pytest.MonkeyPatch) -> tuple[list[list[str]], list[Path]]:
+    """Replace Docker discovery and project metadata with deterministic values."""
+
+    # Keep Docker invocations and generated contexts observable to build-command tests.
+    commands: list[list[str]] = []
+    contexts: list[Path] = []
+
+    def build_app(build_context: Path) -> tuple[str, str]:
+        """Record the generated context and return fixed project metadata."""
+
+        contexts.append(build_context)
+        return "0.1.0", "Demo App"
+
+    monkeypatch.setattr(build, "build_app", build_app)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    return commands, contexts
+
+
 def test_build_reports_missing_project_file_before_docker() -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
@@ -222,9 +241,7 @@ def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) ->
 def test_resolve_image_tag_returns_valid_image_references(app_name: str, version: str, registry: str | None, expected: str) -> None:
     """Build supported Docker image references from project metadata."""
 
-    image_tag = build.resolve_image_tag(app_name, version, registry)
-
-    assert image_tag == expected
+    assert build.resolve_image_tag(app_name, version, registry) == expected
 
 
 @pytest.mark.parametrize(
@@ -250,24 +267,16 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         build.resolve_image_tag(app_name, version, registry)
 
 
-def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_command_builds_pushes_and_reports_image(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Build a Docker image in a temporary context, push it, and report image details."""
 
     # Arrange
-    commands: list[list[str]] = []
-    temporary_context: Path | None = None
+    commands, contexts = docker_build
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path) -> tuple[str, str]:
-        """Create fake Docker artifacts for the build command."""
-
-        nonlocal temporary_context
-        temporary_context = build_context
-        return "0.1.0", "Demo App"
-
     # Replace Docker boundaries with deterministic local fakes.
-    monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
@@ -275,7 +284,8 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
 
     # Assert
     assert result.exit_code == 0
-    assert temporary_context is not None
+    assert len(contexts) == 1
+    temporary_context = contexts[0]
     assert commands == [
         [
             "/usr/bin/docker",
@@ -292,17 +302,14 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.Monke
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
 
 
-def test_build_command_reports_docker_build_failure_without_pushing(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_command_reports_docker_build_failure_without_pushing(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Translate a failed Docker build into a CLI error before a push starts."""
 
     # Arrange
-    commands: list[list[str]] = []
+    commands, _contexts = docker_build
     runner = CliRunner()
-
-    def fake_build_app(_build_context: Path) -> tuple[str, str]:
-        """Return deterministic project metadata without writing Docker artifacts."""
-
-        return "0.1.0", "Demo App"
 
     def fail_build(command: list[str], check: bool) -> None:
         """Record and fail the Docker build command."""
@@ -310,8 +317,6 @@ def test_build_command_reports_docker_build_failure_without_pushing(monkeypatch:
         commands.append(command)
         raise subprocess.CalledProcessError(23, command)
 
-    monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     monkeypatch.setattr(build.subprocess, "run", fail_build)
 
     # Act

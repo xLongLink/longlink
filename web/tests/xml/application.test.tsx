@@ -119,7 +119,7 @@ describe('ApplicationRuntime', () => {
         }
     );
 
-    it('renders dynamic route parameters and rejects unmatched routes', async () => {
+    it('renders dynamic route parameters', async () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/pages.json')) return jsonResponse([page('issue', '/issues/:issueId')]);
@@ -131,9 +131,19 @@ describe('ApplicationRuntime', () => {
 
         // Assert
         await waitFor(() => expect(dynamicOutput.textContent).toContain('42'));
+    });
 
-        await unmountRuntime();
+    it('rejects unmatched routes', async () => {
+        // Arrange
+        stubFetch((url) => {
+            if (url.endsWith('/pages.json')) return jsonResponse([page('issue', '/issues/:issueId')]);
+            return xmlResponse('<longlink />');
+        });
+
+        // Act
         const unmatchedOutput = await renderRuntime('/missing');
+
+        // Assert
         await waitFor(() => expect(unmatchedOutput.textContent).toContain("We can't find that page"));
     });
 

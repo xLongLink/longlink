@@ -13,11 +13,8 @@ from longlink.pages import page_stem_route
 def test_page_stem_route_converts_filesystem_routes(page_stem: str, route: str) -> None:
     """Convert valid filesystem page stems into browser routes."""
 
-    # Act
-    result = page_stem_route(page_stem)
-
     # Assert
-    assert result == route
+    assert page_stem_route(page_stem) == route
 
 
 @pytest.mark.parametrize(

@@ -60,9 +60,14 @@ async def test_operations_endpoint_paginates_history(
     # Assert
     assert first_page.status_code == 200
     assert second_page.status_code == 200
-    assert first_page.json()["total"] == 2
-    assert second_page.json()["total"] == 2
-    assert {item["id"] for item in first_page.json()["items"]} | {item["id"] for item in second_page.json()["items"]} == {
+    first_payload = first_page.json()
+    second_payload = second_page.json()
+    assert first_payload["total"] == 2
+    assert second_payload["total"] == 2
+    assert len(first_payload["items"]) == 1
+    assert len(second_payload["items"]) == 1
+    assert first_payload["items"][0]["id"] != second_payload["items"][0]["id"]
+    assert {item["id"] for item in first_payload["items"]} | {item["id"] for item in second_payload["items"]} == {
         str(first_operation.id),
         str(second_operation.id),
     }

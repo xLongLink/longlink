@@ -36,35 +36,6 @@ class FakeCompute:
         return self.outcome
 
 
-async def test_list_apps_without_organization_returns_all_apps_for_admin(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return all applications when an admin does not filter by organization."""
-
-    # Arrange
-    user = users[0]
-    acme = await create_organization(user)
-    globex = await create_organization(user, name="globex", slug="globex")
-    dashboard = await create_application(acme)
-    console = await create_application(
-        globex,
-        name="console",
-        image="ghcr.io/longlink/console:latest",
-    )
-    # Act
-    response = await clients[0].get("/api/v1/applications")
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert {item["id"] for item in payload["items"]} == {
-        str(dashboard.id),
-        str(console.id),
-    }
-    assert payload["total"] == 2
-
-
 async def test_list_apps_returns_requested_page_for_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -75,17 +46,20 @@ async def test_list_apps_returns_requested_page_for_admin(
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex", slug="globex")
-    await create_application(acme)
+    dashboard = await create_application(acme)
     console = await create_application(globex, name="console")
 
     # Act
-    response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
+    unpaged_response = await clients[0].get("/api/v1/applications")
+    paged_response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
 
     # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [item["id"] for item in payload["items"]] == [str(console.id)]
-    assert payload["total"] == 2
+    assert unpaged_response.status_code == 200
+    assert {item["id"] for item in unpaged_response.json()["items"]} == {str(dashboard.id), str(console.id)}
+    assert unpaged_response.json()["total"] == 2
+    assert paged_response.status_code == 200
+    assert [item["id"] for item in paged_response.json()["items"]] == [str(console.id)]
+    assert paged_response.json()["total"] == 2
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
@@ -272,38 +246,30 @@ async def test_get_app_logs_returns_pod_logs(
     assert captured["namespace"] == organization.id.hex
 
 
-async def test_app_logs_require_maintainer_access(
+@pytest.mark.parametrize(
+    ("role", "expected_detail"),
+    [
+        pytest.param(None, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
+    ],
+)
+async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    role: OrganizationRoles | None,
+    expected_detail: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject log access for regular organization members."""
+    """Reject non-members and write members before reaching the compute cluster."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     app = await create_application(organization)
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
-        await session.commit()
-
-    # Act
-    response = await clients[1].get(f"/api/v1/applications/{app.id}/logs")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
-
-
-async def test_app_logs_require_organization_membership(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject log access before constructing a Kubernetes client for non-members."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    application = await create_application(organization)
+    if role is not None:
+        async with session_scope() as session:
+            session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=role))
+            await session.commit()
 
     def unexpected_kubernetes(*_args: object) -> object:
         """Fail if authorization reaches the external cluster boundary."""
@@ -313,11 +279,11 @@ async def test_app_logs_require_organization_membership(
     monkeypatch.setattr("src.routes.v1.applications.Kubernetes", unexpected_kubernetes)
 
     # Act
-    response = await clients[1].get(f"/api/v1/applications/{application.id}/logs")
+    response = await clients[1].get(f"/api/v1/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Access required"}
+    assert response.json() == {"detail": expected_detail}
 
 
 async def test_app_logs_return_unavailable_when_backend_fails(
@@ -358,10 +324,52 @@ async def test_delete_application_soft_deletes_and_queues_reconciliation(
     # Assert
     assert response.status_code == 204
     async with session_scope() as session:
+        deleted_application = await session.get(Application, app.id)
         operation = await session.scalar(
             select(Operation).where(
                 col(Operation.kind) == OperationKind.application_delete,
                 col(Operation.target_id) == app.id,
             )
         )
+        assert deleted_application is not None
+        assert deleted_application.deleted_at is not None
         assert operation is not None
+
+
+async def test_delete_application_rejects_write_member_without_mutating_application(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject write members from deleting an Application or queueing cleanup."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    app = await create_application(organization)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
+    # Act
+    response = await clients[1].delete(f"/api/v1/applications/{app.id}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        application = await session.get(Application, app.id)
+        operation = await session.scalar(
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.application_delete,
+                col(Operation.target_id) == app.id,
+            )
+        )
+        assert application is not None
+        assert application.deleted_at is None
+        assert operation is None

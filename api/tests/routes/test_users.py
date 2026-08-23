@@ -63,21 +63,22 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     assert [item["organization"]["id"] for item in response.json()] == [str(active.id)]
 
 
-async def test_list_users_returns_admin_user_summaries(
+async def test_list_users_returns_administrator_page_and_total(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return all user summaries from the `/api/users` admin route."""
+    """Return a bounded administrator page with the full visible-user total."""
 
     client = clients[0]
 
     # Act
-    response = await client.get("/api/v1/users")
+    response = await client.get("/api/v1/users?page=2&page_size=1")
 
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert {item["id"] for item in payload["items"]} == {str(user.id) for user in users}
+    assert len(payload["items"]) == 1
+    assert payload["items"][0]["name"] == "Platform Administrator"
     assert payload["total"] == 3
 
 async def test_patch_me_syncs_every_active_organization_after_profile_change(

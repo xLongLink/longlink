@@ -123,11 +123,20 @@ describe('Action', () => {
         expect(fetchRequest).not.toHaveBeenCalled();
     });
 
-    it('does not navigate or close when a request fails', async () => {
+    it.each([
+        {
+            error: 'Denied',
+            fetch: async () => new Response(JSON.stringify({ detail: 'Denied' }), { status: 403 }),
+        },
+        {
+            error: 'Network unavailable',
+            fetch: async () => Promise.reject(new Error('Network unavailable')),
+        },
+    ])('does not navigate or close when a request fails: $error', async ({ error, fetch }) => {
         const ctx = createContext();
         const closeDialog = vi.fn();
         ctx.services.navigate = vi.fn();
-        vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ detail: 'Denied' }), { status: 403 }));
+        vi.stubGlobal('fetch', fetch);
 
         const button = await renderAction(
             '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link to="/orders">Save</Link></Action>',
@@ -142,14 +151,17 @@ describe('Action', () => {
 
         expect(ctx.services.navigate).not.toHaveBeenCalled();
         expect(closeDialog).not.toHaveBeenCalled();
-        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: 'Denied', type: 'error' }));
+        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
     });
 
     it('closes the dialog after a successful request', async () => {
+        // Arrange
         const ctx = createContext();
         const closeDialog = vi.fn();
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
 
+        // Act
+        // An unsafe destination leaves the Action with no navigation to perform.
         const button = await renderAction(
             '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button to="javascript:alert(1)">Save</Button></Action>',
             ctx,
@@ -161,30 +173,9 @@ describe('Action', () => {
             await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
         });
 
+        // Assert
         expect(toast).toHaveBeenCalledWith({ body: 'Request completed with status 201' });
         expect(closeDialog).toHaveBeenCalledOnce();
-    });
-
-    it('does not navigate or close when a request is rejected', async () => {
-        const ctx = createContext();
-        const closeDialog = vi.fn();
-        ctx.services.navigate = vi.fn();
-        vi.stubGlobal('fetch', async () => Promise.reject(new Error('Network unavailable')));
-
-        const button = await renderAction(
-            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link to="/orders">Save</Link></Action>',
-            ctx,
-            closeDialog
-        );
-
-        await act(async () => {
-            button.click();
-            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
-        });
-
-        expect(ctx.services.navigate).not.toHaveBeenCalled();
-        expect(closeDialog).not.toHaveBeenCalled();
-        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: 'Network unavailable', type: 'error' }));
     });
 
     it.each([

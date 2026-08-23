@@ -336,6 +336,55 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
     ]
 
 
+async def test_exoscale_delete_prefix_rejects_partial_object_deletions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail cleanup when S3 reports an individual object deletion failure."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Client:
+        """Return one current object whose deletion fails after a successful response."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake S3 client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake S3 client context."""
+
+        async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
+            """Return no incomplete uploads."""
+
+            calls.append("uploads")
+            return {"Uploads": []}
+
+        async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
+            """Return one current object."""
+
+            calls.append("objects")
+            return {"Contents": [{"Key": "apps/dashboard/a"}]}
+
+        async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
+            """Fail if cleanup advances past the failed object deletion."""
+
+            raise AssertionError("Cleanup must stop after a partial deletion failure")
+
+        async def delete_objects(self, **kwargs: object) -> dict[str, object]:
+            """Report an individual deletion failure through an otherwise successful response."""
+
+            calls.append("delete")
+            return {"Errors": [{"Key": "apps/dashboard/a", "Code": "AccessDenied"}]}
+
+    storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="apps/dashboard/a: AccessDenied"):
+        await storage.delete_prefix("acme", "apps/dashboard/")
+    assert calls == ["uploads", "objects", "delete"]
+
+
 async def test_exoscale_delete_tolerates_absent_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
     """Treat a bucket removed by an earlier cleanup attempt as deleted."""
 

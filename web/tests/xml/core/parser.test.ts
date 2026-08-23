@@ -1,6 +1,6 @@
 import { parseXML } from '@/xml/core/parser';
-import { parseXML as parseDocument } from '@/xml';
 import { describe, expect, it } from 'vitest';
+import { parseXML as parseDocument } from '@/xml';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {

@@ -19,7 +19,9 @@ describe('evaluate', () => {
     it('parses object literals wrapped in `${...}`', () => {
         const ctx: Scope = { bindings: { value: 5 } };
 
-        expect(evaluate(compileAttribute('${{ next: value + 1 }}'), ctx)).toEqual({ next: 6 });
+        expect(evaluate(compileAttribute('${{ next: value + 1 }}'), ctx)).toEqual({
+            next: 6,
+        });
     });
 
     it('evaluates wrapped expressions containing brace characters in strings', () => {
@@ -29,7 +31,9 @@ describe('evaluate', () => {
     });
 
     it('resolves nested value expression', () => {
-        const ctx: Scope = { bindings: { form: { value: 'draft', placeholder: 'Name' } } };
+        const ctx: Scope = {
+            bindings: { form: { value: 'draft', placeholder: 'Name' } },
+        };
 
         expect(evaluate(compileAttribute('${form.value}'), ctx)).toBe('draft');
     });
@@ -58,17 +62,14 @@ describe('evaluate', () => {
         expect(() => evaluate(compileAttribute('${{ ...value }}'), ctx)).toThrow('Object spread not allowed');
     });
 
-    it('rejects unknown optional calls', () => {
-        const ctx: Scope = { bindings: {} };
+    it.each(['${unknown?.()}', '${Array.isArray(value)}', '${Math.floor(value)}'])(
+        'rejects non-whitelisted calls: %s',
+        (value) => {
+            const ctx: Scope = { bindings: { value: 1 } };
 
-        expect(() => evaluate(compileAttribute('${unknown?.()}'), ctx)).toThrow('Function call not allowed');
-    });
-
-    it.each(['${Array.isArray(value)}', '${Math.floor(value)}'])('rejects removed static helpers: %s', (value) => {
-        const ctx: Scope = { bindings: { value: 1 } };
-
-        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Function call not allowed');
-    });
+            expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Function call not allowed');
+        }
+    );
 
     it('allows optional calls to whitelisted helpers', () => {
         const ctx: Scope = { bindings: {} };

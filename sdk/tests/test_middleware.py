@@ -1,32 +1,48 @@
 import pytest
+from httpx2 import Response as HttpxResponse
 from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.testclient import TestClient
 from longlink.middleware import accepts_gzip, install_frontend_middleware
 
 
-def create_text_app(headers: dict[str, str]) -> FastAPI:
+def create_text_app(headers: dict[str, str], path: str = "/text", media_type: str = "text/plain") -> FastAPI:
     """Create a frontend application serving one eligible text response."""
 
     # Configure the response representation used by compression tests.
     app = FastAPI()
 
-    @app.get("/text")
+    @app.get(path)
     def get_text() -> Response:
         """Return a compressible text representation."""
 
-        return Response("x" * 1000, media_type="text/plain", headers=headers)
+        return Response("x" * 1000, media_type=media_type, headers=headers)
 
     install_frontend_middleware(app)
     return app
 
 
+def request_response(app: FastAPI, path: str, headers: dict[str, str]) -> HttpxResponse:
+    """Request one generated frontend response with a closed test client."""
+
+    # Ensure each response is fully consumed before closing the in-process client.
+    with TestClient(app) as client:
+        return client.get(path, headers=headers)
+
+
 @pytest.mark.parametrize(
     ("header", "expected"),
-    [("gzip;q=0, *;q=1", False), ("br;q=1, *;q=1", True)],
+    [
+        ("gzip;q=0, *;q=1", False),
+        ("br;q=1, *;q=1", True),
+        pytest.param("GZip", True, id="case-insensitive"),
+        pytest.param("gzip;q=invalid", False, id="invalid-quality"),
+        pytest.param("gzip;q=1.1", False, id="out-of-range-quality"),
+        pytest.param("*;q=0", False, id="zero-wildcard-quality"),
+    ],
 )
-def test_accepts_gzip_respects_explicit_and_wildcard_quality_values(header: str, expected: bool) -> None:
-    """Honor gzip's explicit quality value before a wildcard fallback."""
+def test_accepts_gzip_interprets_encoding_quality_values(header: str, expected: bool) -> None:
+    """Honor valid gzip and wildcard quality values while rejecting invalid values."""
 
     assert accepts_gzip(header) is expected
 
@@ -38,8 +54,7 @@ def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> 
     app = create_text_app({"etag": '"text-v1"'})
 
     # Act
-    with TestClient(app) as client:
-        response = client.get("/text", headers={"accept-encoding": "gzip"})
+    response = request_response(app, "/text", {"accept-encoding": "gzip"})
 
     # Assert
     assert response.status_code == 200
@@ -55,8 +70,7 @@ def test_frontend_middleware_varies_identity_responses_by_encoding() -> None:
     app = create_text_app({"etag": '"text-v1"'})
 
     # Act
-    with TestClient(app) as client:
-        response = client.get("/text", headers={"accept-encoding": "identity"})
+    response = request_response(app, "/text", {"accept-encoding": "identity"})
 
     # Assert
     assert response.status_code == 200
@@ -73,8 +87,7 @@ def test_frontend_middleware_preserves_existing_vary_header_when_compressing() -
     app = create_text_app({"vary": "Origin"})
 
     # Act
-    with TestClient(app) as client:
-        response = client.get("/text", headers={"accept-encoding": "gzip"})
+    response = request_response(app, "/text", {"accept-encoding": "gzip"})
 
     # Assert
     assert response.headers["vary"] == "Origin, Accept-Encoding"
@@ -87,8 +100,7 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     app = create_text_app({"cache-control": "private", "etag": '"text-v1"'})
 
     # Act
-    with TestClient(app) as client:
-        response = client.get("/text", headers={"accept-encoding": "gzip", "range": "bytes=0-99"})
+    response = request_response(app, "/text", {"accept-encoding": "gzip", "range": "bytes=0-99"})
 
     # Assert
     assert response.status_code == 200
@@ -96,6 +108,23 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     assert "content-encoding" not in response.headers
     assert response.headers["etag"] == '"text-v1"'
     assert response.headers["cache-control"] == "private"
+
+
+def test_frontend_middleware_preserves_compressed_asset_representation() -> None:
+    """Avoid varying or weakening pre-compressed assets when gzip is accepted."""
+
+    # Arrange
+    app = create_text_app({"etag": '"image-v1"'}, path="/assets/logo.png", media_type="image/png")
+
+    # Act
+    response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.content == b"x" * 1000
+    assert "content-encoding" not in response.headers
+    assert "vary" not in response.headers
+    assert response.headers["etag"] == '"image-v1"'
 
 
 @pytest.mark.parametrize(

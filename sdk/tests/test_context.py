@@ -1,22 +1,10 @@
 import pytest
 from uuid import UUID
-from typing import cast
 from fastapi import FastAPI
 from longlink import context
-from contextlib import asynccontextmanager
-from collections.abc import AsyncGenerator, AsyncIterator
+from contextlib import aclosing, asynccontextmanager
+from collections.abc import AsyncIterator
 from starlette.requests import Request
-
-
-def create_request(storage: object, identity: UUID | None) -> Request:
-    """Build one SDK request with runtime storage and Platform identity."""
-
-    # Attach the runtime services and trusted identity used by the dependency.
-    app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage})()
-    request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
-    request.state.longlink_identity = identity
-    return request
 
 
 @pytest.mark.parametrize(
@@ -58,6 +46,10 @@ async def test_data_resolves_request_services(
             return expected_user
 
     database = Database()
+    app = FastAPI()
+    app.state.longlink = type("Runtime", (), {"storage": storage})()
+    request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
+    request.state.longlink_identity = identity
 
     @asynccontextmanager
     async def fake_session(database: object) -> AsyncIterator[object]:
@@ -69,12 +61,10 @@ async def test_data_resolves_request_services(
         finally:
             session_closed = True
 
-    request = create_request(storage, identity)
     monkeypatch.setattr(context, "session", lambda: fake_session(database))
 
     # Act
-    values = context.data(request)
-    try:
+    async with aclosing(context.data(request)) as values:
         value = await anext(values)
 
         # Assert
@@ -82,7 +72,5 @@ async def test_data_resolves_request_services(
         assert value.storage is storage
         assert value.database is database
         assert database.lookups == expected_lookups
-    finally:
-        await cast(AsyncGenerator[object, None], values).aclose()
 
     assert session_closed

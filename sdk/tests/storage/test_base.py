@@ -1,4 +1,5 @@
 import pytest
+from typing import Literal
 from pydantic import ValidationError
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
@@ -104,6 +105,38 @@ def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) 
     # Act and assert
     with pytest.raises(ValueError, match="Storage prefixes require a bucket"):
         storage_base.create_fs(settings)
+
+
+@pytest.mark.parametrize(
+    ("environment", "expected_protocol"),
+    [
+        pytest.param("testing", "memory", id="testing"),
+        pytest.param("development", "file", id="development"),
+    ],
+)
+def test_nonproduction_storage_selects_local_filesystem(
+    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"], expected_protocol: str
+) -> None:
+    """Use memory storage for tests and local files for development."""
+
+    # Arrange
+    filesystem = object()
+    protocols: list[str] = []
+
+    def create_filesystem(protocol: str) -> object:
+        """Record the requested non-production storage backend."""
+
+        protocols.append(protocol)
+        return filesystem
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
+
+    # Act
+    result = storage_base.create_fs(Envs(ENV=environment))
+
+    # Assert
+    assert result is filesystem
+    assert protocols == [expected_protocol]
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

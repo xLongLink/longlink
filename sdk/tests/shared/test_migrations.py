@@ -18,6 +18,22 @@ def test_migration_config_rejects_non_asyncpg_postgresql_urls(database_url: str)
         migration_config(database_url)
 
 
+def test_migration_config_preserves_percent_encoded_credentials() -> None:
+    """Build a usable Alembic configuration for a valid asyncpg URL."""
+
+    # Arrange
+    database_url = "postgresql+asyncpg://control:se%25cret@db/longlink"
+
+    # Act
+    config = migration_config(database_url)
+
+    # Assert
+    script_location = config.get_main_option("script_location")
+    assert script_location is not None
+    assert script_location.endswith("longlink/shared/alembic")
+    assert config.get_main_option("sqlalchemy.url") == database_url
+
+
 async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: pytest.MonkeyPatch) -> None:
     """Treat empty shared audit synchronization as a no-op."""
 

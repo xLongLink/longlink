@@ -1,7 +1,6 @@
-from types import SimpleNamespace
 import pytest
-from src.kubernetes.utils import deployment_is_ready
-
+from types import SimpleNamespace
+from src.kubernetes.utils import apply, deployment_is_ready
 
 READY_STATUS = {
     "observedGeneration": 3,
@@ -45,3 +44,45 @@ def test_deployment_is_ready_requires_current_replicas(
 
     # Assert
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ("exists", "expected_calls"),
+    [
+        pytest.param(False, [("create", None)], id="missing"),
+        pytest.param(True, [("patch", {"metadata": {"name": "dashboard"}})], id="existing"),
+    ],
+)
+async def test_apply_creates_missing_resources_and_repairs_existing_ones(
+    exists: bool, expected_calls: list[tuple[str, object | None]]
+) -> None:
+    """Create absent resources and patch existing resources with their desired manifest."""
+
+    # Arrange
+    calls: list[tuple[str, object | None]] = []
+
+    class Resource:
+        """Record Kubernetes resource mutation requests."""
+
+        raw = {"metadata": {"name": "dashboard"}}
+
+        async def exists(self) -> bool:
+            """Return the configured resource state."""
+
+            return exists
+
+        async def create(self) -> None:
+            """Record resource creation."""
+
+            calls.append(("create", None))
+
+        async def patch(self, manifest: object) -> None:
+            """Record a drift-repair manifest."""
+
+            calls.append(("patch", manifest))
+
+    # Act
+    await apply(Resource())  # type: ignore[arg-type]
+
+    # Assert
+    assert calls == expected_calls

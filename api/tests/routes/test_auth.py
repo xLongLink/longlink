@@ -4,6 +4,7 @@ from httpx2 import AsyncClient, ASGITransport
 from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from factories import create_organization
+from src.utils import token
 from urllib.parse import parse_qs, urlparse
 from src.environments import env
 from src.models.roles import OrganizationRoles
@@ -11,6 +12,7 @@ from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
 from src.database.services import invitations
 from src.database.models.users import User
+from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 
 
@@ -46,6 +48,21 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
     return parse_qs(urlparse(reset_url).fragment)["token"][0]
 
 
+def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+    """Record Organization membership projections without a database adapter."""
+
+    # Replace the external projection boundary with an observable local sink.
+    synchronized_organization_ids: list[object] = []
+
+    async def sync_users(_session: object, organization_id: object) -> None:
+        """Record one requested Organization projection."""
+
+        synchronized_organization_ids.append(organization_id)
+
+    monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
+    return synchronized_organization_ids
+
+
 async def test_registration_request_does_not_enumerate_existing_accounts(
     client: AsyncClient, users: tuple[User, User, User], captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:
@@ -72,11 +89,19 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     assert client.cookies.get("longlink_auth") is None
 
 
-async def test_registration_verification_is_stateless(client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]]) -> None:
+async def test_registration_verification_is_stateless(
+    client: AsyncClient,
+    captured_mail: list[tuple[str, str, str, str | None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Verify email ownership without creating an account or browser session."""
 
     # Arrange
     email = "registered@example.com"
+
+    # Render the browser credential with its production security policy.
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+
     # Request a stateless email link without creating a pending user.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
     Session = await get_session()
@@ -99,6 +124,14 @@ async def test_registration_verification_is_stateless(client: AsyncClient, captu
     assert verify_response.json() == {"email": email}
     assert verified_pending_user is None
     assert client.cookies.get("longlink_auth") is None
+    assert verify_response.headers["cache-control"] == "no-store"
+    cookie = verify_response.headers["set-cookie"]
+    assert "longlink_registration=" in cookie
+    assert "HttpOnly" in cookie
+    assert f"Max-Age={token.EMAIL_TOKEN_LIFETIME_SECONDS}" in cookie
+    assert "Path=/api/v1/auth/register" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Secure" in cookie
 
 
 async def test_registration_completion_creates_authenticated_account(
@@ -152,14 +185,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     async with session_scope() as session:
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
-    synchronized_organization_ids: list[object] = []
-
-    async def sync_users(_session: object, organization_id: object) -> None:
-        """Record organization membership projection."""
-
-        synchronized_organization_ids.append(organization_id)
-
-    monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
+    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
     await register_and_verify(client, captured_mail, email)
 
     # Act
@@ -180,6 +206,43 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     assert invitation is None
     assert synchronized_organization_ids == [organization.id]
     assert client.cookies.get("longlink_auth") is not None
+
+
+async def test_password_login_accepts_pending_organization_invitation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Accept pending Organization access when an existing user signs in."""
+
+    # Arrange
+    owner, invited_user, _ = users
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
+        await session.commit()
+    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
+
+    # Act
+    response = await clients[1].post(
+        "/api/v1/auth/password/login",
+        json={"email": invited_user.email, "password": TEST_PASSWORD},
+    )
+    async with session_scope() as session:
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        membership = await session.scalar(
+            select(UserOrganization).where(
+                UserOrganization.organization_id == organization.id,
+                UserOrganization.user_id == invited_user.id,
+            )
+        )
+
+    # Assert
+    assert response.status_code == 204
+    assert invitation is None
+    assert membership is not None
+    assert membership.role == OrganizationRoles.write
+    assert synchronized_organization_ids == [organization.id]
 
 
 async def test_registration_completion_rejects_duplicate_account(

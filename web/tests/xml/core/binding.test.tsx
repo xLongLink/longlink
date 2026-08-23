@@ -97,4 +97,23 @@ describe('useBindableValue', () => {
 
         expect(output.textContent).not.toContain('Loaded child');
     });
+
+    it('rejects an invalid Query setup before fetching', async () => {
+        // Arrange
+        const ctx = createContext();
+        const ast = parseXML('<longlink><Query id="records" /></longlink>')[0];
+        const fetchImpl = vi.fn();
+        container = document.createElement('div');
+        root = createRoot(container);
+        vi.stubGlobal('fetch', fetchImpl);
+
+        // Act
+        await act(async () => {
+            root?.render(<RenderXML ast={ast} ctx={ctx} />);
+        });
+
+        // Assert
+        expect(container.textContent).toContain('Query requires a string path');
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
 });
