@@ -15,6 +15,8 @@ from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 
+INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
+
 
 def registration_verification_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
     """Extract the registration token from captured verification mail."""
@@ -85,7 +87,33 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
 
     # Assert
     assert response.status_code == 400
-    assert response.json() == {"detail": "This registration link is invalid or expired. Request a new link to continue."}
+    assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
+    assert client.cookies.get("longlink_auth") is None
+
+
+async def test_registration_setup_rejects_missing_verification_cookie(client: AsyncClient) -> None:
+    """Require verified browser registration state before exposing setup details."""
+
+    # Act
+    response = await client.get("/api/v1/auth/register/setup")
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
+
+
+async def test_registration_completion_rejects_missing_verification_cookie(client: AsyncClient) -> None:
+    """Prevent account creation without verified browser registration state."""
+
+    # Act
+    response = await client.post(
+        "/api/v1/auth/register/complete",
+        json={"name": "Registered User", "password": TEST_PASSWORD},
+    )
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
     assert client.cookies.get("longlink_auth") is None
 
 
@@ -404,6 +432,29 @@ async def test_forgot_and_reset_password(
     assert new_login.status_code == 204
 
 
+async def test_forgot_password_does_not_send_mail_to_deleted_account(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+) -> None:
+    """Keep deleted accounts indistinguishable from missing reset recipients."""
+
+    # Arrange
+    user = users[0]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+
+    # Act
+    response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
+
+    # Assert
+    assert response.status_code == 202
+    assert captured_mail == []
+
+
 async def test_authenticated_logout_rejects_cross_origin_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
@@ -420,16 +471,17 @@ async def test_authenticated_logout_rejects_cross_origin_request(
     assert profile_response.status_code == 200
 
 
-async def test_authenticated_logout_clears_browser_session(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+@pytest.mark.parametrize("headers", [{}, {"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
+async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str]
 ) -> None:
-    """Allow a same-origin browser session to be removed."""
+    """Clear browser sessions requested without or from trusted local origins."""
 
     # Arrange
     client = clients[0]
 
     # Act
-    response = await client.post("/api/v1/auth/logout")
+    response = await client.post("/api/v1/auth/logout", headers=headers)
     profile_response = await client.get("/api/v1/me")
 
     # Assert

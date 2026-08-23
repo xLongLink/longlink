@@ -76,6 +76,12 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
             id="testing",
         ),
         pytest.param(
+            Envs(ENV="development"),
+            "sqlite+aiosqlite:///./dev.db",
+            {"pool_pre_ping": True, "pool_recycle": 20, "connect_args": {}},
+            id="development",
+        ),
+        pytest.param(
             Envs(
                 ENV="production",
                 DATABASE_HOST="db",
@@ -158,3 +164,38 @@ async def test_concurrent_sessions_initialize_one_session_factory(monkeypatch: p
         assert create_count == 1
     finally:
         await engine.dispose()
+
+
+async def test_session_retries_initialization_after_database_connection_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Leave the session factory unset when its initial connection fails."""
+
+    # Arrange
+    class FailingConnection:
+        """Raise the configured database error while entering the connection context."""
+
+        async def __aenter__(self) -> None:
+            """Fail before a database connection is exposed."""
+            raise ConnectionError("database unavailable")
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Complete the failed context-manager protocol."""
+
+    class FailingEngine:
+        """Provide a non-SQLite engine whose verification connection fails."""
+
+        url = "postgresql+asyncpg://database"
+
+        def connect(self) -> FailingConnection:
+            """Return the failing connection context."""
+            return FailingConnection()
+
+    monkeypatch.setattr(database_base, "Session", None)
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: FailingEngine())
+
+    # Act and assert
+    with pytest.raises(ConnectionError, match="database unavailable"):
+        async with database_base.session():
+            pass
+
+    # Assert
+    assert database_base.Session is None

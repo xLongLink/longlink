@@ -526,6 +526,34 @@ async def test_reinviting_email_replaces_pending_organization_role(
     assert [item[0] for item in captured_mail] == [invitee.email, invitee.email]
 
 
+async def test_create_organization_invitation_rejects_active_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+) -> None:
+    """Reject invitations for users who already have active organization access."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/invitations",
+        json={"email": member.email, "role": "read"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "User is already a member"}
+    async with session_scope() as session:
+        assert await organizations.invitations(session, organization.id) == []
+    assert captured_mail == []
+
+
 async def test_create_organization_invitation_rejects_role_above_caller(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

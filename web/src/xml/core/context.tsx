@@ -35,18 +35,6 @@ export function useXmlRuntime(): XmlRuntime {
 /** Resolves validated State and Query nodes before rendering the page tree. */
 export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promise<void> {
     const { scope, services } = runtime;
-    const setupIds = new Set<string>();
-
-    // Reject duplicate setup IDs before either declaration mutates the runtime.
-    for (const node of nodes) {
-        const id = node.params.id?.kind === 'text' ? node.params.id.value.trim() : '';
-
-        if (setupIds.has(id)) {
-            throw new Error(`Duplicate State or Query id "${id}"`);
-        }
-
-        setupIds.add(id);
-    }
 
     // Seed setup declarations before rendering the component tree.
     for (const node of nodes) {

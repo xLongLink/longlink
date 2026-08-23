@@ -103,6 +103,51 @@ async def test_registry_endpoints_return_registered_backend(
         assert str(getattr(backend, secret_field)) not in get_response.text
 
 
+async def test_storage_registry_list_returns_ordered_page_and_total(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return an ordered storage registry page without provider credentials."""
+
+    # Arrange
+    alpha_response = await clients[0].post(
+        "/api/v1/storages",
+        json={
+            "name": "Alpha Storage",
+            "endpoint_url": "https://sos-ch-gva-2.exo.io",
+            "access_key_id": "alpha-key",
+            "secret_access_key": "alpha-secret",
+        },
+    )
+    beta_response = await clients[0].post(
+        "/api/v1/storages",
+        json={
+            "name": "Beta Storage",
+            "endpoint_url": "https://sos-ch-gva-2.exo.io",
+            "access_key_id": "beta-key",
+            "secret_access_key": "beta-secret",
+        },
+    )
+    assert alpha_response.status_code == 201
+    assert beta_response.status_code == 201
+    beta_id = beta_response.json()["id"]
+
+    # Act
+    response = await clients[0].get("/api/v1/storages?page=2&page_size=1")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [
+            {
+                "id": beta_id,
+                "name": "Beta Storage",
+                "endpoint_url": "https://sos-ch-gva-2.exo.io",
+            }
+        ],
+        "total": 2,
+    }
+
+
 @pytest.mark.parametrize(
     ("path", "payload", "secret_fields", "duplicate_error"),
     [

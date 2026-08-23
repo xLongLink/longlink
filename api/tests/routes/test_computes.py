@@ -1,11 +1,12 @@
+from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_compute, claim_operation, queue_operation, complete_operation
 
 
-async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifecycle_is_pending(
+async def test_compute_registry_creation_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one Compute registry, reject a duplicate, and retain its pending lifecycle target."""
+    """Create a Compute registry and reject a duplicate name."""
 
     client = clients[0]
 
@@ -18,19 +19,36 @@ async def test_compute_registry_create_duplicate_and_blocks_deletion_while_lifec
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     created = create_response.json()
-    registry_id = created["id"]
-    delete_response = await client.delete(f"/api/v1/computes/{registry_id}")
-    get_response = await client.get(f"/api/v1/computes/{registry_id}")
 
+    # Assert
     assert create_response.status_code == 202
     assert created["name"] == "Ephemeral Compute"
     assert created["gateway_url"] is None
     assert "kubeconfig" not in created
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
-    assert delete_response.status_code == 409
-    assert delete_response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
-    assert get_response.status_code == 200
+
+
+async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Retain a Compute registry while its lifecycle operation is pending."""
+
+    # Arrange
+    create_response = await clients[0].post(
+        "/api/v1/computes",
+        json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+    )
+    registry_id = UUID(create_response.json()["id"])
+    await queue_operation(target_id=registry_id)
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
+
+    # Assert
+    assert create_response.status_code == 202
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
 
 
 async def test_compute_registry_deletes_unused_registration(

@@ -108,3 +108,26 @@ async def test_patch_me_syncs_every_active_organization_after_profile_change(
     assert response.status_code == 200
     assert response.json()["name"] == "Updated User"
     assert set(synchronized_organization_ids) == {first_organization.id, second_organization.id}
+
+
+async def test_patch_me_skips_organization_sync_when_profile_is_unchanged(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Avoid synchronizing organizations when no persisted profile field changes."""
+
+    # Arrange
+    async def sync_users(*_args: object) -> None:
+        """Fail if an unchanged profile triggers synchronization."""
+
+        pytest.fail("unchanged profile must not synchronize organizations")
+
+    monkeypatch.setattr("src.routes.v1.users.organizations.sync_users", sync_users)
+
+    # Act
+    response = await clients[0].patch("/api/v1/me", json={"name": users[0].name})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["name"] == "Platform Administrator"

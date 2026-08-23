@@ -50,6 +50,17 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
         LongLink(FastAPI())
 
 
+def test_startup_rejects_a_missing_application_pages_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    """Require the generated Application page directory during startup."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+
+    # Act and assert
+    with pytest.raises(ValueError, match=f"Application source directory is required: {tmp_path / 'src' / 'pages'}"):
+        LongLink(FastAPI())
+
+
 def test_production_startup_installs_one_access_filter(application_source: Path, monkeypatch: MonkeyPatch) -> None:
     """Avoid duplicate Uvicorn access filtering across Application instances."""
 
@@ -72,7 +83,7 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
     [
         pytest.param(
             "index.xml",
-            '<longlink>Home</longlink>',
+            "<longlink>Home</longlink>",
             {"tab": "index", "route": ""},
             id="index",
         ),
@@ -84,7 +95,7 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
         ),
         pytest.param(
             "admin/users.xml",
-            '<longlink>Users</longlink>',
+            "<longlink>Users</longlink>",
             {"tab": "admin/users", "route": "admin/users"},
             id="nested",
         ),
@@ -142,27 +153,36 @@ def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path)
     assert response.json() == [{"path": "pages/dashboard", "route": "dashboard", "tab": "dashboard"}]
 
 
-def test_root_redirects_to_first_static_page(application_source: Path) -> None:
-    """Redirect the application root to the first static XML page."""
+def test_xml_page_catalog_and_root_redirect_use_deterministic_path_order(application_source: Path) -> None:
+    """Use lexical page paths for catalog output and the startup destination."""
 
     # Arrange
-    (application_source / "pages" / "dashboard.xml").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    nested_directory = application_source / "pages" / "admin"
+    nested_directory.mkdir()
+    (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
+    (application_source / "pages" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
     client = create_runtime_client(follow_redirects=False)
 
     # Act
-    response = client.get("/")
+    catalog_response = client.get("/pages.json")
+    root_response = client.get("/")
 
     # Assert
-    assert response.status_code == 307
-    assert response.headers["location"] == "/dashboard"
+    assert catalog_response.json() == [
+        {"path": "pages/admin/alpha", "route": "admin/alpha", "tab": "admin/alpha"},
+        {"path": "pages/zebra", "route": "zebra", "tab": "zebra"},
+    ]
+    assert root_response.status_code == 307
+    assert root_response.headers["location"] == "/admin/alpha"
 
 
-def test_root_ignores_index_page_when_static_page_exists(application_source: Path) -> None:
-    """Redirect root to a selectable static page instead of the index endpoint."""
+@pytest.mark.parametrize("pages", [("dashboard.xml",), ("index.xml", "dashboard.xml")])
+def test_root_redirects_to_static_page_when_catalog_has_optional_index(application_source: Path, pages: tuple[str, ...]) -> None:
+    """Redirect root to a selectable static page rather than the index endpoint."""
 
     # Arrange
-    (application_source / "pages" / "index.xml").write_text("<longlink>Home</longlink>", encoding="utf-8")
-    (application_source / "pages" / "dashboard.xml").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    for page in pages:
+        (application_source / "pages" / page).write_text("<longlink>Page</longlink>", encoding="utf-8")
     client = create_runtime_client(follow_redirects=False)
 
     # Act
@@ -212,7 +232,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
 
     # Create a page whose endpoint is already owned by the Application.
     (application_source / "pages" / "dashboard.xml").write_text(
-        '<longlink>Dashboard</longlink>',
+        "<longlink>Dashboard</longlink>",
         encoding="utf-8",
     )
     app = FastAPI()
@@ -239,4 +259,18 @@ def test_duplicate_dynamic_browser_routes_are_rejected(application_source: Path)
 
     # Act and assert
     with pytest.raises(ValueError, match="Browser route 'issues/:issue_id' is already registered"):
+        LongLink(FastAPI())
+
+
+def test_duplicate_static_browser_routes_are_rejected(application_source: Path) -> None:
+    """Reject nested index pages that resolve to the same browser route."""
+
+    # Arrange
+    (application_source / "pages" / "index.xml").write_text("<longlink>Home</longlink>", encoding="utf-8")
+    nested_index = application_source / "pages" / "index" / "index.xml"
+    nested_index.parent.mkdir()
+    nested_index.write_text("<longlink>Nested home</longlink>", encoding="utf-8")
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Browser route '' is already registered"):
         LongLink(FastAPI())

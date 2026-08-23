@@ -28,6 +28,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     operation = leased_operation()
     started = asyncio.Event()
     release = asyncio.Event()
+    completed_operation_ids: list[UUID] = []
 
     async def complete_handler(target_id: UUID) -> str | None:
         """Complete one claimed Operation."""
@@ -40,6 +41,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
         assert operation_id == operation.id
         started.set()
         await release.wait()
+        completed_operation_ids.append(operation_id)
         return operation
 
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
@@ -56,6 +58,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     # Assert
     with pytest.raises(asyncio.CancelledError):
         await execution
+    assert completed_operation_ids == [operation.id]
 
 
 async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.MonkeyPatch) -> None:

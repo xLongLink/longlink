@@ -103,13 +103,49 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
         raise AssertionError("Mutable images must not fetch config blobs")
 
     async_client = httpx2.AsyncClient
-    monkeypatch.setattr(images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs))
+    monkeypatch.setattr(
+        images.httpx2, "AsyncClient", lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs)
+    )
 
     # Act
     image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
 
     # Assert
     assert image_metadata is None
+
+
+async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return immutable metadata when the registry resolves a mutable tag."""
+
+    # Arrange
+    resolved_digest = "sha256:deadbeef"
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a resolved manifest and its LongLink metadata config."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": resolved_digest},
+            )
+        return httpx2.Response(200, json={"config": {"Labels": {}}})
+
+    async_client = httpx2.AsyncClient
+    monkeypatch.setattr(
+        images.httpx2,
+        "AsyncClient",
+        lambda *args, **kwargs: async_client(*args, transport=httpx2.MockTransport(respond), **kwargs),
+    )
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.image == Image(f"ghcr.io/longlink/dashboard@{resolved_digest}")
 
 
 @pytest.mark.parametrize(

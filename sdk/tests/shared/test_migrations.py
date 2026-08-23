@@ -49,6 +49,64 @@ async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: py
     await shared_audit.sync("postgresql+asyncpg://db/longlink", [])
 
 
+async def test_shared_audit_sync_upserts_rows_and_disposes_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Upsert shared audit rows through a short-lived database engine."""
+
+    # Arrange
+    executed: dict[str, object] = {}
+    disposed = False
+    user = Audit(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Owner User",
+        email="owner@example.com",
+        role="owner",
+        created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+        updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
+    )
+
+    class Connection:
+        """Capture the PostgreSQL upsert submitted by synchronization."""
+
+        async def __aenter__(self) -> "Connection":
+            """Enter the fake transaction context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the fake transaction context."""
+
+        async def execute(self, statement: object, parameters: list[dict[str, object]]) -> None:
+            """Capture the statement and row payload."""
+
+            executed["statement"] = statement
+            executed["parameters"] = parameters
+
+    class Engine:
+        """Provide one transactional connection and disposal tracking."""
+
+        def begin(self) -> Connection:
+            """Return the fake transaction context."""
+
+            return Connection()
+
+        async def dispose(self) -> None:
+            """Record operation-scoped engine disposal."""
+
+            nonlocal disposed
+            disposed = True
+
+    monkeypatch.setattr(shared_audit, "create_async_engine", lambda *_args, **_kwargs: Engine())
+
+    # Act
+    await shared_audit.sync("postgresql+asyncpg://db/longlink", [user])
+
+    # Assert
+    statement = executed["statement"]
+    assert getattr(statement, "table").name == "audit"
+    assert executed["parameters"] == [user.model_dump()]
+    assert disposed is True
+
+
 @pytest.mark.integration
 async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: URL) -> None:
     """Migrate shared tables into the isolated PostgreSQL shared schema."""

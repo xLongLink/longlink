@@ -61,6 +61,7 @@ def test_frontend_middleware_compresses_and_weakens_eligible_text_response() -> 
     assert response.content == b"x" * 1000
     assert response.headers["content-encoding"] == "gzip"
     assert response.headers["etag"] == 'W/"text-v1"'
+    assert response.headers["vary"] == "Accept-Encoding"
 
 
 def test_frontend_middleware_varies_identity_responses_by_encoding() -> None:

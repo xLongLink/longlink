@@ -164,6 +164,46 @@ async def test_create_app_rejects_invalid_image_metadata(
         assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
 
 
+async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject duplicate Application slugs without adding a lifecycle operation."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    await create_application(organization, name="Dashboard")
+
+    async def inspect_image(_image: Image) -> LongLinkMetadata:
+        """Return valid immutable image metadata."""
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Application slug already exists"}
+    async with session_scope() as session:
+        applications = (await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))).all()
+        assert len(applications) == 1
+        operations = (
+            await session.scalars(
+                select(Operation).where(
+                    col(Operation.kind) == OperationKind.application_create,
+                    col(Operation.target_id) == applications[0].id,
+                )
+            )
+        ).all()
+    assert len(operations) == 1
+
+
 async def test_application_responses_do_not_expose_environment_secrets(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

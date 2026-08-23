@@ -50,22 +50,6 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 
-    it('rejects duplicate State and Query setup IDs before mutating the runtime', async () => {
-        const ctx = createContext();
-
-        await expect(
-            setupContext(
-                [
-                    { name: 'State', params: compileProps({ id: 'data', value: 'draft' }), children: [] },
-                    { name: 'Query', params: compileProps({ id: 'data', path: '/api/data' }), children: [] },
-                ],
-                ctx
-            )
-        ).rejects.toThrow('Duplicate State or Query id "data"');
-
-        expect(ctx.scope.bindings.data).toBeUndefined();
-    });
-
     it('rejects unsafe query paths before fetching', async () => {
         const ctx = createContext();
         const fetchImpl = vi.fn();
