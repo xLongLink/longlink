@@ -17,22 +17,16 @@ from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 
 
-class ForwardedRequest(TypedDict):
-    """Represent request fields captured by the proxy transport fake."""
-
-    method: str
-    url: str
-    content: bytes
-    headers: dict[str, str]
-
-
 class ProxyCapture(TypedDict, total=False):
     """Represent values observed by the proxy transport fakes."""
 
     close_count: int
     client_identity: str
     client_kwargs: dict[str, object]
-    request: ForwardedRequest
+    method: str
+    url: str
+    content: bytes
+    headers: dict[str, str]
 
 
 def fake_ssl_context(
@@ -165,12 +159,10 @@ async def test_application_proxy_forwards_safe_content(
 
             # Drain the forwarded request stream into the captured gateway request.
             content = b"".join([chunk async for chunk in request.content])
-            captured["request"] = {
-                "method": request.method,
-                "url": request.url,
-                "content": content,
-                "headers": request.headers,
-            }
+            captured["method"] = request.method
+            captured["url"] = request.url
+            captured["content"] = content
+            captured["headers"] = request.headers
             assert stream
             return FakeProxyResponse()
 
@@ -209,12 +201,11 @@ async def test_application_proxy_forwards_safe_content(
     assert captured.get("close_count") == 1
     assert captured.get("client_kwargs", {}).get("follow_redirects") is False
     assert captured.get("client_identity") == registry.gateway_client_identity
-    forwarded = captured.get("request")
-    assert forwarded is not None
-    assert forwarded["method"] == "POST"
-    assert forwarded["url"] == "https://gateway.example/anything?answer=42"
-    assert forwarded["content"] == b"payload"
-    headers = forwarded["headers"]
+    assert captured.get("method") == "POST"
+    assert captured.get("url") == "https://gateway.example/anything?answer=42"
+    assert captured.get("content") == b"payload"
+    headers = captured.get("headers")
+    assert headers is not None
     assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"

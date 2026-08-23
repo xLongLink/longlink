@@ -21,8 +21,8 @@ class UserOrganization(PlatformModel, table=True):
     __tablename__: ClassVar[str] = "user_organizations"
 
     # Identifier
-    user_id: UUID = Field(default=None, primary_key=True, foreign_key="users.id")
-    organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id", ondelete="CASCADE")
+    user_id: UUID = Field(primary_key=True, foreign_key="users.id")
+    organization_id: UUID = Field(primary_key=True, foreign_key="organizations.id", ondelete="CASCADE")
 
     # State
     role: OrganizationRoles = Field(

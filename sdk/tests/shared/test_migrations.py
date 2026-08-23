@@ -111,6 +111,17 @@ def test_migration_config_preserves_percent_encoded_credentials() -> None:
     assert config.get_main_option("sqlalchemy.url") == database_url
 
 
+def test_migration_config_rejects_missing_packaged_resources(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject SDK installations that omit shared Alembic resources."""
+
+    # Arrange
+    monkeypatch.setattr(shared_migrations, "files", lambda _package: tmp_path)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="could not be located"):
+        shared_migrations.migration_config("postgresql+asyncpg://control:secret@db/longlink")
+
+
 async def test_migrate_database_upgrades_shared_schema_to_head(monkeypatch: pytest.MonkeyPatch) -> None:
     """Run the shared Alembic upgrade through the asynchronous migration entrypoint."""
 
@@ -226,7 +237,11 @@ async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: UR
 
 
 @pytest.mark.integration
-async def test_shared_user_sync_updates_one_postgresql_row(postgresql_url: URL, postgres_engine: AsyncEngine) -> None:
+async def test_shared_user_sync_updates_one_postgresql_row(
+    postgresql_url: URL,
+    postgres_engine: AsyncEngine,
+    audit_user: Audit,
+) -> None:
     """Synchronize active and deactivated users into one shared PostgreSQL row."""
 
     # Prepare the shared schema through the public migration entrypoint.
@@ -239,17 +254,9 @@ async def test_shared_user_sync_updates_one_postgresql_row(postgresql_url: URL, 
         )
 
     # Insert one active control-plane user through the public synchronization entrypoint.
-    user_id = UUID("00000000-0000-0000-0000-000000000001")
-    created_at = datetime(2026, 7, 6, 8, tzinfo=UTC)
-    active_user = Audit(
-        id=user_id,
-        name="Owner User",
-        email="owner@example.com",
-        avatar="",
-        role="owner",
-        created_at=created_at,
-        updated_at=created_at,
-    )
+    user_id = audit_user.id
+    created_at = audit_user.created_at
+    active_user = audit_user.model_copy(update={"avatar": ""})
     await shared_audit.sync(postgresql_url, [active_user])
 
     # Upsert changed mutable fields and an explicit control-plane deactivation.

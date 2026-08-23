@@ -176,6 +176,26 @@ def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path,
         database_migrations.apply_migrations()
 
 
+def test_production_migrations_rejects_only_init_file_before_upgrade(tmp_path, monkeypatch) -> None:
+    """Fail production startup when the migrations directory has no revision files."""
+
+    # Arrange
+    migrations_path = tmp_path / "migrations"
+    migrations_path.mkdir()
+    migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
+    monkeypatch.setattr(
+        database_migrations.command,
+        "upgrade",
+        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
+    )
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="require migrations"):
+        database_migrations.apply_migrations()
+
+
 @pytest.mark.parametrize(("environment", "committed_revision"), [("production", True), ("development", False)])
 def test_migrations_upgrade_head_when_revisions_are_available_or_development(tmp_path, monkeypatch, environment: str, committed_revision: bool) -> None:
     """Apply revisions in production with a committed file and initialize development storage."""

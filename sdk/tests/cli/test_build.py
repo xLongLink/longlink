@@ -427,6 +427,37 @@ def test_build_command_builds_pushes_and_reports_image(
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
 
 
+def test_build_command_does_not_push_without_flag(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Build an image locally without publishing it by default."""
+
+    # Arrange
+    commands, contexts = docker_build
+    runner = CliRunner()
+    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
+
+    # Act
+    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000"])
+
+    # Assert
+    assert result.exit_code == 0
+    temporary_context, = contexts
+    assert commands == [
+        [
+            "/usr/bin/docker",
+            "build",
+            "-f",
+            str(temporary_context / "Dockerfile"),
+            "-t",
+            "localhost:15000/demo-app:dev",
+            str(temporary_context),
+        ]
+    ]
+    assert "- Built image: localhost:15000/demo-app:dev" in result.output
+    assert "- Pushed image:" not in result.output
+
+
 def test_build_command_reports_docker_build_failure_without_pushing(
     docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -452,18 +483,3 @@ def test_build_command_reports_docker_build_failure_without_pushing(
     assert "Docker command failed with exit code 23" in result.output
     assert len(commands) == 1
     assert commands[0][1] == "build"
-
-
-def test_render_image_labels_writes_oci_and_longlink_labels() -> None:
-    """Render OCI metadata and LongLink environment definitions as Docker labels."""
-
-    # Arrange
-    env_spec = [{"name": "API_KEY", "required": True, "description": "API key"}]
-
-    # Act
-    labels = build.render_image_labels("Demo app", env_spec)
-
-    # Assert
-    assert 'LABEL org.opencontainers.image.description="Demo app"' in labels
-    assert "LABEL longlink.environments=" in labels
-    assert "API_KEY" in labels

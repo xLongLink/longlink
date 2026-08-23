@@ -108,42 +108,7 @@ export const stoneIconRegistry: IconRegistry = Object.fromEntries(
     ])
 ) as IconRegistry;
 
-export const ICON_NAMES = [
-    'activity',
-    'arrow-right',
-    'banknote',
-    'bell',
-    'box',
-    'boxes',
-    'building-2',
-    'check',
-    'clipboard-list',
-    'container',
-    'cpu',
-    'database',
-    'download',
-    'hard-drive',
-    'layers',
-    'layout-dashboard',
-    'layout-grid',
-    'link',
-    'list',
-    'list-check',
-    'map-pin',
-    'plus',
-    'rocket',
-    'rotate-ccw',
-    'settings-2',
-    'shield-check',
-    'sliders-horizontal',
-    'timer',
-    'users',
-    'x',
-] as const;
-
-const iconNameSet = new Set<string>(ICON_NAMES);
-
-const iconComponents: Record<(typeof ICON_NAMES)[number], LucideIcon> = {
+const iconComponents: Record<string, LucideIcon> = {
     activity: Activity,
     'arrow-right': ArrowRight,
     banknote: Banknote,
@@ -181,12 +146,7 @@ export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps
     return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
 }
 
-/** Returns whether a string is a supported application icon slug. */
-export function isIconName(name: string): name is (typeof ICON_NAMES)[number] {
-    return iconNameSet.has(name);
-}
-
 /** Resolves supported application icon names to Lucide components. */
 export function getIconComponent(name: string): LucideIcon | undefined {
-    return isIconName(name) ? iconComponents[name] : undefined;
+    return iconComponents[name];
 }
