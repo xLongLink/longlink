@@ -1,11 +1,11 @@
 import sys
 import pytest
+import alembic
 import sqlite3
 import importlib.util
 from types import ModuleType, SimpleNamespace
 from pathlib import Path
 from contextlib import closing, nullcontext
-import alembic
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations

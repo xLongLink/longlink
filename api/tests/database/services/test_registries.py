@@ -2,11 +2,11 @@ import pytest
 from uuid import UUID, uuid4
 from factories import queue_operation, create_organization, create_ready_infrastructure
 from src.errors import ConflictError
-from collections.abc import Callable, Awaitable, Sequence
+from collections.abc import Callable, Sequence, Awaitable
+from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
 from src.database.services import compute, storage, database
 from src.models.operations import OperationKind
-from src.models.types import DatabaseSSLMode
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
