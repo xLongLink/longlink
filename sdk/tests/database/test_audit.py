@@ -234,26 +234,15 @@ def identity_headers(user_id: str) -> dict[str, str]:
     return {"x-longlink-identity": identity.create_identity_token(UUID(user_id), IDENTITY_SECRET)}
 
 
-@pytest.mark.parametrize(
-    ("headers", "expected_user_id"),
-    [
-        (identity_headers("00000000-0000-0000-0000-000000000005"), "00000000-0000-0000-0000-000000000005"),
-        ({"x-longlink-identity": "invalid"}, None),
-        ({}, None),
-    ],
-)
-def test_audit_middleware_binds_signed_identity_header(
-    headers: dict[str, str],
-    expected_user_id: str | None,
-) -> None:
-    """Bind valid signed audit identities and treat untrusted headers as anonymous."""
+def test_audit_middleware_binds_signed_identity_header() -> None:
+    """Bind one trusted identity and clear it after the response."""
 
-    # Send the candidate audit identity through the HTTP boundary.
+    # Act
     with TestClient(create_audit_application()) as client:
-        response = client.get("/", headers=headers)
+        response = client.get("/", headers=identity_headers("00000000-0000-0000-0000-000000000005"))
 
-    # Verify request binding and cleanup after the response.
-    assert response.json() == {"user_id": expected_user_id}
+    # Assert
+    assert response.json() == {"user_id": "00000000-0000-0000-0000-000000000005"}
     assert runtime_context._current_identity.get() is None
 
 

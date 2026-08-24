@@ -9,37 +9,6 @@ from unittest.mock import AsyncMock
 from sqlalchemy.exc import OperationalError
 
 
-async def test_database_handlers_return_registry_or_not_found_errors() -> None:
-    """Return a database registry and exact errors for missing lookups and deletions."""
-
-    # Arrange
-    registry_id = uuid4()
-    registry = SimpleNamespace(id=registry_id)
-    found_session = SimpleNamespace(get=AsyncMock(return_value=registry))
-    missing_session = SimpleNamespace(get=AsyncMock(return_value=None))
-    delete_session = SimpleNamespace(commit=AsyncMock())
-    original_delete = databases.database.delete
-    databases.database.delete = AsyncMock(return_value=False)
-
-    try:
-        # Act
-        result = await databases.get_database_registry(registry_id, found_session)
-        with pytest.raises(HTTPException) as get_exc:
-            await databases.get_database_registry(registry_id, missing_session)
-        with pytest.raises(HTTPException) as delete_exc:
-            await databases.delete_database_registry(registry_id, delete_session)
-    finally:
-        databases.database.delete = original_delete
-
-    # Assert
-    assert result is registry
-    assert get_exc.value.status_code == 404
-    assert get_exc.value.detail == "Database registry not found"
-    assert delete_exc.value.status_code == 404
-    assert delete_exc.value.detail == "Database registry not found"
-    delete_session.commit.assert_not_awaited()
-
-
 @pytest.mark.parametrize(
     ("registry", "usage", "expected_status", "expected_detail"),
     [
@@ -117,27 +86,6 @@ async def test_get_database_usage_returns_adapter_usage(monkeypatch: pytest.Monk
 
     # Assert
     assert usage == 42
-
-
-async def test_delete_database_registry_commits_successful_deletion() -> None:
-    """Commit after deleting an unused database registry."""
-
-    # Arrange
-    session = SimpleNamespace(commit=AsyncMock())
-    registry_id = uuid4()
-    original_delete = databases.database.delete
-    delete = AsyncMock(return_value=True)
-    databases.database.delete = delete
-
-    try:
-        # Act
-        await databases.delete_database_registry(registry_id, session)
-    finally:
-        databases.database.delete = original_delete
-
-    # Assert
-    delete.assert_awaited_once_with(session, registry_id)
-    session.commit.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

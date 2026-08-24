@@ -1,6 +1,6 @@
 import pytest
-from src.models.roles import OrganizationRoles
 from src.utils.roles import atleast
+from src.models.roles import OrganizationRoles
 
 
 @pytest.mark.parametrize(

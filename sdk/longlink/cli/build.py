@@ -239,7 +239,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
                     # Include only project directories; invalid paths must not expand the Docker context.
                     if resolved_source_path != Path(resolved_source_path.anchor) and (resolved_source_path / "pyproject.toml").is_file():
-                        if not resolved_source_path.is_relative_to(workspace_root):
+                        if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
                             raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
                         pending_paths.append(resolved_source_path)
 

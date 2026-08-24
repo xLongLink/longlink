@@ -1,9 +1,9 @@
 import pytest
 from httpx2 import AsyncClient
-from factories import create_ready_infrastructure
 from sqlmodel import select
-from src.database.models.organizations import Organization
+from factories import create_ready_infrastructure
 from src.database.session import session_scope
+from src.database.models.organizations import Organization
 
 
 @pytest.mark.parametrize("origin", ["", "https://attacker.example"])

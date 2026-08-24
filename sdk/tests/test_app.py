@@ -213,10 +213,17 @@ def test_invalid_xml_page_fails_during_registration(application_source: Path) ->
     assert not any(getattr(route, "path", None) == "/pages/valid" for route in app.router.routes)
 
 
-@pytest.mark.parametrize("route", ["/pages/dashboard", "/pages/{page}"])
+@pytest.mark.parametrize(
+    ("route", "expected_dashboard_routes"),
+    [
+        pytest.param("/pages/dashboard", 1, id="static-route"),
+        pytest.param("/pages/{page}", 0, id="dynamic-route"),
+    ],
+)
 def test_application_routes_colliding_with_page_endpoints_are_rejected(
     application_source: Path,
     route: str,
+    expected_dashboard_routes: int,
 ) -> None:
     """Reject page endpoints that would overlap an Application-owned route."""
 
@@ -236,7 +243,9 @@ def test_application_routes_colliding_with_page_endpoints_are_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
-    assert not any(getattr(item, "path", None) == "/pages/dashboard" for item in app.router.routes)
+
+    # Assert LongLink did not register the colliding page endpoint.
+    assert sum(getattr(item, "path", None) == "/pages/dashboard" for item in app.router.routes) == expected_dashboard_routes
 
 
 @pytest.mark.parametrize(
