@@ -111,7 +111,7 @@ export function ApplicationRuntime({
 
     let content: ReactNode;
 
-    if (!error && registeredPages && routePath && !activeRouteMatch) {
+    if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {
         content = (

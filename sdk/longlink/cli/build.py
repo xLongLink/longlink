@@ -93,7 +93,47 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
             continue
 
         field_name = statement.target.id
-        field_info = resolve_field_info(statement.value)
+        field_info: dict[str, object] = {"required": statement.value is None}
+
+        # Inspect pydantic Field calls for metadata.
+        if isinstance(statement.value, ast.Call) and isinstance(statement.value.func, ast.Name) and statement.value.func.id == "Field":
+            field_info["required"] = True
+
+            # Positional Field defaults use ellipsis for required values and any other value as optional.
+            if statement.value.args:
+                first_argument = statement.value.args[0]
+                field_info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
+
+            # Inspect Field keyword arguments.
+            for keyword in statement.value.keywords:
+                # Use explicit aliases as environment names.
+                if keyword.arg == "validation_alias":
+                    # Safely evaluate static alias expressions.
+                    try:
+                        alias = ast.literal_eval(keyword.value)
+                    except (ValueError, SyntaxError):
+                        alias = None
+
+                    # Store string aliases only.
+                    if isinstance(alias, str):
+                        field_info["env_name"] = alias
+
+                # Capture static descriptions.
+                elif keyword.arg == "description":
+                    # Safely evaluate static descriptions.
+                    try:
+                        description = ast.literal_eval(keyword.value)
+                    except (ValueError, SyntaxError):
+                        description = None
+
+                    # Store string descriptions only.
+                    if isinstance(description, str):
+                        field_info["description"] = description
+
+                # Defaults and factories make the field optional.
+                elif keyword.arg in ("default", "default_factory"):
+                    field_info["required"] = False
+
         env_entry: dict[str, object] = {
             "name": field_info.get("env_name") or field_name,
             "required": bool(field_info.get("required", False)),
@@ -121,57 +161,6 @@ def read_pyproject(root: Path) -> dict[str, object]:
         return tomllib.loads(pyproject.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
         raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
-
-
-def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
-    """Extract label metadata from a pydantic-style `Field(...)` call or default value."""
-
-    # Missing values indicate required fields.
-    if value is None:
-        return {"required": True}
-
-    # Inspect pydantic Field calls for metadata.
-    if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
-        info: dict[str, object] = {"required": True}
-
-        # Positional Field defaults use ellipsis for required values and any other value as optional.
-        if value.args:
-            first_argument = value.args[0]
-            info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
-
-        # Inspect Field keyword arguments.
-        for keyword in value.keywords:
-            # Use explicit aliases as environment names.
-            if keyword.arg == "validation_alias":
-                # Safely evaluate static alias expressions.
-                try:
-                    alias = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    alias = None
-
-                # Store string aliases only.
-                if isinstance(alias, str):
-                    info["env_name"] = alias
-
-            # Capture static descriptions.
-            elif keyword.arg == "description":
-                # Safely evaluate static descriptions.
-                try:
-                    description = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    description = None
-
-                # Store string descriptions only.
-                if isinstance(description, str):
-                    info["description"] = description
-
-            # Defaults and factories make the field optional.
-            elif keyword.arg in ("default", "default_factory"):
-                info["required"] = False
-
-        return info
-
-    return {"required": False}
 
 
 def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:

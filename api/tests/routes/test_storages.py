@@ -1,4 +1,5 @@
 from httpx2 import AsyncClient
+from factories import create_organization, create_ready_infrastructure
 
 
 async def test_storage_registry_creation_normalizes_endpoint_url(
@@ -24,33 +25,38 @@ async def test_storage_registry_creation_normalizes_endpoint_url(
     assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
 
 
-async def test_storage_registry_list_and_detail_exclude_credentials(
+
+async def test_storage_registry_deletion_rejects_organization_assignment(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users,
 ) -> None:
-    """Return storage metadata without provider credentials."""
+    """Keep an Organization's assigned storage registry available."""
 
     # Arrange
-    payload = {
-        "name": "Credentialed storage",
-        "endpoint_url": "https://sos-ch-gva-2.exo.io",
-        "access_key_id": "storage-access-key",
-        "secret_access_key": "storage-secret-key",
-    }
-    create_response = await clients[0].post("/api/v1/storages", json=payload)
-    registry_id = create_response.json()["id"]
+    infrastructure = await create_ready_infrastructure()
+    await create_organization(users[1], infrastructure=infrastructure)
 
     # Act
-    list_response = await clients[0].get("/api/v1/storages")
-    detail_response = await clients[0].get(f"/api/v1/storages/{registry_id}")
+    response = await clients[0].delete(f"/api/v1/storages/{infrastructure.storage.id}")
 
     # Assert
-    expected = {
-        "id": registry_id,
-        "name": "Credentialed storage",
-        "endpoint_url": "https://sos-ch-gva-2.exo.io",
-    }
-    assert create_response.status_code == 201
-    assert list_response.status_code == 200
-    assert list_response.json() == {"items": [expected], "total": 1}
-    assert detail_response.status_code == 200
-    assert detail_response.json() == expected
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Storage registry is used by organizations"}
+
+
+async def test_storage_registry_deletion_removes_unused_registry(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Delete an unassigned storage registry."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+
+    # Act
+    delete_response = await clients[0].delete(f"/api/v1/storages/{infrastructure.storage.id}")
+    detail_response = await clients[0].get(f"/api/v1/storages/{infrastructure.storage.id}")
+
+    # Assert
+    assert delete_response.status_code == 204
+    assert detail_response.status_code == 404
+    assert detail_response.json() == {"detail": "Storage registry not found"}

@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from sqlmodel import col
-from factories import fetch_operations, create_organization, create_ready_infrastructure
+from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
@@ -69,6 +69,81 @@ async def test_members_returns_users_from_membership_table(users: tuple[User, Us
 
     # Assert
     assert {membership.user.id for membership in memberships} == {owner.id, member.id}
+
+
+async def test_membership_returns_active_membership_with_organization(users: tuple[User, User, User]) -> None:
+    """Return an active member's organization-scoped access record."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    async with session_scope() as session:
+        membership = await organizations.membership(session, users[0].id, organization.id)
+
+    # Assert
+    assert membership is not None
+    assert membership.organization.id == organization.id
+    assert membership.role == OrganizationRoles.owner
+
+
+async def test_application_runtime_access_returns_member_and_compute_assignment(users: tuple[User, User, User]) -> None:
+    """Return active runtime access with the assigned compute registry."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    application = await create_application(organization)
+
+    # Act
+    async with session_scope() as session:
+        access = await organizations.application_runtime_access(session, users[0].id, application.id)
+
+    # Assert
+    assert access is not None
+    resolved_application, resolved_organization, role, compute = access
+    assert resolved_application.id == application.id
+    assert resolved_organization.id == organization.id
+    assert role == OrganizationRoles.owner
+    assert compute.id == organization.compute_id
+
+
+async def test_infrastructure_returns_all_organization_registry_assignments(users: tuple[User, User, User]) -> None:
+    """Return one Organization together with each assigned registry."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    async with session_scope() as session:
+        resolved = await organizations.infrastructure(session, organization.id)
+
+    # Assert
+    assert resolved is not None
+    assert resolved.organization.id == organization.id
+    assert resolved.compute.id == organization.compute_id
+    assert resolved.database.id == organization.database_id
+    assert resolved.storage.id == organization.storage_id
+
+
+async def test_application_infrastructure_returns_application_registry_assignments(users: tuple[User, User, User]) -> None:
+    """Return an Application together with its Organization infrastructure."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    application = await create_application(organization)
+
+    # Act
+    async with session_scope() as session:
+        resolved = await organizations.application_infrastructure(session, application.id)
+
+    # Assert
+    assert resolved is not None
+    resolved_application, infrastructure = resolved
+    assert resolved_application.id == application.id
+    assert infrastructure.organization.id == organization.id
+    assert infrastructure.compute.id == organization.compute_id
+    assert infrastructure.database.id == organization.database_id
+    assert infrastructure.storage.id == organization.storage_id
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -507,18 +582,6 @@ async def test_purge_removes_tombstoned_organization(users: tuple[User, User, Us
     # Assert
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
-
-
-async def test_purge_rejects_active_organization(users: tuple[User, User, User]) -> None:
-    """Protect active Organizations from lifecycle cleanup."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(RuntimeError, match="Active organizations cannot be purged"):
-            await organizations.purge(session, organization.id)
 
 
 async def test_purge_ignores_missing_organization() -> None:

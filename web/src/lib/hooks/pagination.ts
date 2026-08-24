@@ -13,7 +13,7 @@ export function usePaginate<T extends Record<string, unknown>>(
 ) {
     const [page, setPage] = useState(1);
     const query = useQuery({
-        queryKey: ['api', path, page, PAGE_SIZE],
+        queryKey: ['api', path, page],
         queryFn: async ({ signal }) =>
             schema.parse(await api(`${path}?page=${page}&page_size=${PAGE_SIZE}`, { signal }).json()),
         refetchInterval,

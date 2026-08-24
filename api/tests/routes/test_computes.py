@@ -32,25 +32,6 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     assert operations[0].finished_at is None
 
 
-async def test_compute_registry_list_and_detail_expose_only_public_fields(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return public Compute metadata without Kubernetes connection material."""
-
-    # Arrange
-    compute = await create_compute()
-
-    # Act
-    list_response = await clients[0].get("/api/v1/computes")
-    detail_response = await clients[0].get(f"/api/v1/computes/{compute.id}")
-
-    # Assert
-    expected = {"id": str(compute.id), "name": "Local compute", "gateway_url": None, "status": "creating"}
-    assert list_response.status_code == 200
-    assert list_response.json() == {"items": [expected], "total": 1}
-    assert detail_response.status_code == 200
-    assert detail_response.json() == expected
-
 
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],

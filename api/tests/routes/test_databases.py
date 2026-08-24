@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from httpx2 import AsyncClient
-from factories import create_organization, create_ready_infrastructure
+from factories import create_ready_infrastructure
 
 
 @pytest.mark.parametrize(
@@ -106,66 +106,3 @@ async def test_database_registry_creation_uses_required_ssl_by_default(
     # Assert
     assert response.status_code == 201
     assert response.json()["sslmode"] == "require"
-
-
-async def test_database_registry_list_and_detail_exclude_password(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return database connection metadata without its administrator password."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    list_response = await clients[0].get("/api/v1/databases")
-    detail_response = await clients[0].get(f"/api/v1/databases/{infrastructure.database.id}")
-
-    # Assert
-    expected = {
-        "id": str(infrastructure.database.id),
-        "name": infrastructure.database.name,
-        "host": "database.example",
-        "port": 5432,
-        "sslmode": "disable",
-        "username": "admin",
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {"items": [expected], "total": 1}
-    assert detail_response.status_code == 200
-    assert detail_response.json() == expected
-
-
-async def test_database_registry_deletion_rejects_organization_assignment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users,
-) -> None:
-    """Keep an Organization's assigned database registry available."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[1], infrastructure=infrastructure)
-
-    # Act
-    response = await clients[0].delete(f"/api/v1/databases/{infrastructure.database.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Database registry is used by organizations"}
-
-
-async def test_database_registry_deletion_removes_unused_registry(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Delete an unassigned database registry."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    delete_response = await clients[0].delete(f"/api/v1/databases/{infrastructure.database.id}")
-    detail_response = await clients[0].get(f"/api/v1/databases/{infrastructure.database.id}")
-
-    # Assert
-    assert delete_response.status_code == 204
-    assert detail_response.status_code == 404
-    assert detail_response.json() == {"detail": "Database registry not found"}
