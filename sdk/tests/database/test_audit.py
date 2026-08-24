@@ -1,14 +1,12 @@
-import hmac
 import pytest
 import asyncio
 import pytest_asyncio
-from time import time
 from uuid import UUID
 from typing import ClassVar
 from fastapi import FastAPI
-from hashlib import sha256
 from datetime import UTC, datetime
 from longlink import context as runtime_context
+from longlink import identity
 from sqlmodel import Field
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
@@ -202,7 +200,7 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         )
 
 
-IDENTITY_SECRET = "test-identity-secret"
+IDENTITY_SECRET = "test-identity-secret-01234567890"
 
 
 def create_audit_application() -> FastAPI:
@@ -231,22 +229,15 @@ def create_audit_application() -> FastAPI:
 def identity_headers(user_id: str) -> dict[str, str]:
     """Build one current Platform identity assertion for middleware tests."""
 
-    # Match the Platform's HMAC assertion contract.
-    timestamp = str(int(time()))
-    signature = hmac.new(IDENTITY_SECRET.encode("utf-8"), f"{user_id}.{timestamp}".encode("ascii"), sha256).hexdigest()
-    return {
-        "x-longlink-user-id": user_id,
-        "x-longlink-user-timestamp": timestamp,
-        "x-longlink-user-signature": signature,
-    }
+    # Use the same token constructor that the Platform gateway calls.
+    return {"x-longlink-identity": identity.create_identity_token(UUID(user_id), IDENTITY_SECRET)}
 
 
 @pytest.mark.parametrize(
     ("headers", "expected_user_id"),
     [
         (identity_headers("00000000-0000-0000-0000-000000000005"), "00000000-0000-0000-0000-000000000005"),
-        ({"x-longlink-user-id": "00000000-0000-0000-0000-000000000005"}, None),
-        ({"x-longlink-user-id": "invalid"}, None),
+        ({"x-longlink-identity": "invalid"}, None),
         ({}, None),
     ],
 )

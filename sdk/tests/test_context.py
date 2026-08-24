@@ -1,28 +1,19 @@
-import hmac
 import pytest
-from time import time
 from uuid import UUID
-from fastapi import Depends, FastAPI
-from hashlib import sha256
-from longlink import context
+from fastapi import Depends, FastAPI, Request
+from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 
-IDENTITY_SECRET = "test-identity-secret"
+IDENTITY_SECRET = "test-identity-secret-01234567890"
 
 
 def identity_headers(user_id: UUID) -> dict[str, str]:
     """Build one current Platform identity assertion for context tests."""
 
-    # Match the Platform HMAC contract used by the request middleware.
-    timestamp = str(int(time()))
-    signature = hmac.new(IDENTITY_SECRET.encode("utf-8"), f"{user_id}.{timestamp}".encode("ascii"), sha256).hexdigest()
-    return {
-        "x-longlink-user-id": str(user_id),
-        "x-longlink-user-timestamp": timestamp,
-        "x-longlink-user-signature": signature,
-    }
+    # Use the shared token constructor used by the Platform gateway.
+    return {"x-longlink-identity": identity.create_identity_token(user_id, IDENTITY_SECRET)}
 
 
 @pytest.mark.parametrize(
@@ -91,3 +82,29 @@ def test_data_resolves_request_services(
     assert response.json() == {"user_matches": True, "storage_matches": True}
     assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
     assert session_closed
+
+
+def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
+    """Ignore a malformed Platform identity token."""
+
+    # Arrange
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def get_identity(request: Request) -> dict[str, bool]:
+        """Expose whether the middleware accepted the supplied identity."""
+
+        return {"authenticated": request.state.longlink_identity is not None}
+
+    client = TestClient(app)
+
+    # Act
+    response = client.get(
+        "/",
+        headers={"x-longlink-identity": "invalid-token"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False}

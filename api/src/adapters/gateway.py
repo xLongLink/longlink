@@ -1,10 +1,8 @@
 import ssl
-import hmac
 import httpx2
 import tempfile
-from time import time
 from uuid import UUID
-from hashlib import sha256
+from longlink import identity
 from dataclasses import dataclass
 from collections.abc import AsyncIterator
 
@@ -54,23 +52,19 @@ class GatewayClient:
         url = f"{self._url}/{path}"
         if query:
             url = f"{url}?{query}"
-        timestamp = str(int(time()))
-        identity = f"{user_id}.{timestamp}"
         headers = {
             "x-longlink-application-id": str(application_id),
-            "x-longlink-user-id": str(user_id),
-            "x-longlink-user-timestamp": timestamp,
-            "x-longlink-user-signature": hmac.new(self._identity_secret.encode("utf-8"), identity.encode("ascii"), sha256).hexdigest(),
+            "x-longlink-identity": identity.create_identity_token(user_id, self._identity_secret),
         }
         if content_type is not None:
             headers["content-type"] = content_type
 
         # Authenticate the Platform using its client identity and trust only this Gateway CA.
         tls = ssl.create_default_context(cadata=self._ca_certificate)
-        with tempfile.NamedTemporaryFile(mode="w") as identity:
-            identity.write(self._client_identity)
-            identity.flush()
-            tls.load_cert_chain(identity.name)
+        with tempfile.NamedTemporaryFile(mode="w") as identity_file:
+            identity_file.write(self._client_identity)
+            identity_file.flush()
+            tls.load_cert_chain(identity_file.name)
         client = httpx2.AsyncClient(
             follow_redirects=False,
             timeout=300.0,

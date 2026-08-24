@@ -279,15 +279,15 @@ async def test_application_responses_do_not_expose_environment_secrets(
     organization = await create_organization(owner)
     await create_application(organization, secrets={"API_KEY": "runtime-secret"})
 
-    # Read the administrator list and Organization detail response surfaces.
+    # Read the administrator list and Organization application response surfaces.
     list_response = await clients[0].get("/api/v1/applications")
-    organization_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    organization_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/applications")
 
     # Response models must omit both the secret field and its raw value.
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
     list_applications = list_response.json()["items"]
-    organization_applications = organization_response.json()["applications"]
+    organization_applications = organization_response.json()
     assert all("secrets" not in item and "envs" not in item for item in list_applications)
     assert all("secrets" not in item and "envs" not in item for item in organization_applications)
     assert "runtime-secret" not in list_response.text

@@ -335,7 +335,7 @@ export type OrganizationCreate = {
 /**
  * OrganizationDetails
  *
- * Represent an Organization with its members and Application access.
+ * Represent an Organization with its member access.
  */
 export type OrganizationDetails = {
     organization: OrganizationSummary;
@@ -347,10 +347,6 @@ export type OrganizationDetails = {
      * Invitations
      */
     invitations: Array<OrganizationInvitationResponse>;
-    /**
-     * Applications
-     */
-    applications: Array<OrganizationApplicationSummary>;
 };
 
 /**

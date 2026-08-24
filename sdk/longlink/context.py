@@ -1,8 +1,7 @@
-import hmac
-from time import time
+import jwt
 from uuid import UUID
 from fastapi import FastAPI, Request
-from hashlib import sha256
+from longlink import identity
 from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
@@ -42,24 +41,10 @@ def install_context_middleware(app: FastAPI, identity_secret: str | None = None)
         """Attach request identity before application routes run."""
 
         # Verify the Platform-signed user assertion before making it available to application code.
-        raw_user_id = request.headers.get("x-longlink-user-id")
-        timestamp = request.headers.get("x-longlink-user-timestamp")
-        signature = request.headers.get("x-longlink-user-signature")
+        token = request.headers.get("x-longlink-identity")
         try:
-            issued_at = int(timestamp) if timestamp is not None else 0
-            identity = f"{raw_user_id}.{issued_at}"
-            expected_signature = (
-                hmac.new(identity_secret.encode("utf-8"), identity.encode("ascii"), sha256).hexdigest() if identity_secret else ""
-            )
-            user_id = (
-                UUID(raw_user_id)
-                if raw_user_id is not None
-                and identity_secret
-                and abs(int(time()) - issued_at) <= 300
-                and hmac.compare_digest(signature or "", expected_signature)
-                else None
-            )
-        except (TypeError, UnicodeEncodeError, ValueError):
+            user_id = identity.identity_token_user(token or "", identity_secret or "")
+        except jwt.PyJWTError:
             user_id = None
 
         # Keep the request identity available to both FastAPI and database audit hooks.

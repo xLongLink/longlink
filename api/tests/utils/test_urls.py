@@ -98,3 +98,33 @@ def test_mysql_database_url_builds_required_tls_context() -> None:
     assert isinstance(connection.connect_args["ssl"], ssl.SSLContext)
     assert connection.connect_args["ssl"].check_hostname is False
     assert connection.connect_args["ssl"].verify_mode == ssl.CERT_NONE
+
+
+def test_mysql_database_url_builds_verifying_ca_tls_context() -> None:
+    """Require certificate validation for MySQL VERIFY_CA connections."""
+
+    # Act
+    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA")
+
+    # Assert
+    context = connection.connect_args["ssl"]
+    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
+    assert isinstance(context, ssl.SSLContext)
+    assert context.check_hostname is False
+    assert context.verify_mode == ssl.CERT_REQUIRED
+
+
+@pytest.mark.parametrize(
+    ("query", "message"),
+    [
+        pytest.param("sslmode=require", "lowercase ssl parameter", id="libpq-sslmode"),
+        pytest.param("SSL=require", "lowercase ssl parameter", id="uppercase-ssl"),
+        pytest.param("ssl=invalid", "invalid SSL mode", id="invalid-mode"),
+    ],
+)
+def test_postgresql_database_url_rejects_unsupported_ssl_options(query: str, message: str) -> None:
+    """Reject PostgreSQL TLS query options outside the asyncpg boundary."""
+
+    # Act and assert
+    with pytest.raises(ValueError, match=message):
+        urls.database(f"postgresql+asyncpg://control:secret@db:5432/longlink?{query}")

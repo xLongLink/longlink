@@ -24,8 +24,8 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
-import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { useOrganization, useOrganizationApplications, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import {
     zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
     zOrganizationStorageUsageResponse,
@@ -45,11 +45,17 @@ export default function OrganizationSettings() {
         organization: organizationDetails,
         members,
         invitations,
-        applications,
         role: organizationRole,
-        isLoading,
-        error,
+        isLoading: isOrganizationLoading,
+        error: organizationError,
     } = useOrganization(organization);
+    const {
+        applications,
+        isLoading: isApplicationsLoading,
+        error: applicationsError,
+    } = useOrganizationApplications(organization);
+    const isLoading = isOrganizationLoading || isApplicationsLoading;
+    const error = organizationError ?? applicationsError;
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';

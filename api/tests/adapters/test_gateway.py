@@ -1,9 +1,7 @@
-import hmac
 import pytest
 import asyncio
 from uuid import uuid4
 from typing import cast
-from hashlib import sha256
 from src.adapters import gateway
 from collections.abc import AsyncIterator
 
@@ -80,7 +78,7 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
 
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: TLS())
-    client = gateway.GatewayClient("https://gateway.example", "", "", "identity-secret")
+    client = gateway.GatewayClient("https://gateway.example", "", "", "identity-secret-012345678901234567")
 
     # Cancellation must propagate after the owning client has closed.
     with pytest.raises(asyncio.CancelledError):
@@ -142,8 +140,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
     tls = TLS()
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: tls)
-    monkeypatch.setattr(gateway, "time", lambda: 1_700_000_000)
-    client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity", "identity-secret")
+    monkeypatch.setattr(gateway.identity, "create_identity_token", lambda user_id, secret: "identity-token")
+    client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity", "identity-secret-012345678901234567")
     request_content = content()
 
     # Act
@@ -168,9 +166,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         "content": request_content,
         "headers": {
             "x-longlink-application-id": str(application_id),
-            "x-longlink-user-id": str(user_id),
-            "x-longlink-user-timestamp": "1700000000",
-            "x-longlink-user-signature": hmac.new(b"identity-secret", f"{user_id}.1700000000".encode("ascii"), sha256).hexdigest(),
+            "x-longlink-identity": "identity-token",
             "content-type": "application/json",
         },
     }

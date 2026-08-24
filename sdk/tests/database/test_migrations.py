@@ -1,9 +1,11 @@
 import sys
 import pytest
 import sqlite3
+import importlib.util
 from types import ModuleType, SimpleNamespace
 from pathlib import Path
-from contextlib import closing
+from contextlib import closing, nullcontext
+import alembic
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
@@ -284,3 +286,46 @@ def test_apply_migrations_initializes_the_application_version_table(tmp_path: Pa
     with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
         table = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'alembic_version'").fetchone()
     assert table == ("alembic_version",)
+
+
+def test_migration_environment_configures_offline_execution(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Configure Alembic offline execution without opening a database connection."""
+
+    # Arrange
+    calls: list[tuple[str, object]] = []
+    context = SimpleNamespace(
+        is_offline_mode=lambda: True,
+        configure=lambda **kwargs: calls.append(("configure", kwargs)),
+        begin_transaction=nullcontext,
+        run_migrations=lambda: calls.append(("run_migrations", None)),
+    )
+    module_name = "tests.database.offline_migration_environment"
+    environment_path = database_migrations.CURRENT_FILE.parent / "env.py"
+    specification = importlib.util.spec_from_file_location(module_name, environment_path)
+    assert specification is not None
+    assert specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(alembic, "context", context)
+    monkeypatch.setitem(sys.modules, module_name, module)
+
+    # Act
+    specification.loader.exec_module(module)
+
+    # Assert
+    assert calls == [
+        (
+            "configure",
+            {
+                "connection": None,
+                "url": str(module.engine.url),
+                "literal_binds": True,
+                "target_metadata": database_metadata,
+                "include_object": database_migrations.include_object,
+                "compare_type": True,
+                "render_as_batch": True,
+                "version_table_schema": None,
+            },
+        ),
+        ("run_migrations", None),
+    ]

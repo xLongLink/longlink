@@ -3009,24 +3009,16 @@
             },
             "type": "array",
             "title": "Invitations"
-          },
-          "applications": {
-            "items": {
-              "$ref": "#/components/schemas/OrganizationApplicationSummary"
-            },
-            "type": "array",
-            "title": "Applications"
           }
         },
         "type": "object",
         "required": [
           "organization",
           "members",
-          "invitations",
-          "applications"
+          "invitations"
         ],
         "title": "OrganizationDetails",
-        "description": "Represent an Organization with its members and Application access."
+        "description": "Represent an Organization with its member access."
       },
       "OrganizationIdentity": {
         "properties": {

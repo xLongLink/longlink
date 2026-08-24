@@ -23,12 +23,9 @@ function useOrganizationMembership(organizationSlug: string) {
     return { membership, organizationId, isUserLoading, notFoundError };
 }
 
-/** Invalidates cached data that contains an organization's applications. */
+/** Invalidates cached organization application collections. */
 function invalidateOrganizationApplicationQueries(queryClient: QueryClient, organizationId: string) {
     return Promise.all([
-        queryClient.invalidateQueries({
-            queryKey: ['api', `/api/v1/organizations/${organizationId}`],
-        }),
         queryClient.invalidateQueries({
             queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
         }),
@@ -36,7 +33,7 @@ function invalidateOrganizationApplicationQueries(queryClient: QueryClient, orga
     ]);
 }
 
-/** Fetches organization details and related collections for the current workspace. */
+/** Fetches organization details and people-management data for the current workspace. */
 export function useOrganization(organizationSlug: string) {
     const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
 
@@ -51,13 +48,12 @@ export function useOrganization(organizationSlug: string) {
     });
 
     const error: (Error & { status?: number }) | null = organizationQuery.error ?? notFoundError;
-    const { organization, members = [], invitations = [], applications = [] } = organizationQuery.data ?? {};
+    const { organization, members = [], invitations = [] } = organizationQuery.data ?? {};
 
     return {
         organization,
         members,
         invitations,
-        applications,
         role: membership?.role ?? null,
         isLoading: isUserLoading || organizationQuery.isLoading,
         error,
@@ -77,7 +73,8 @@ export function useOrganizationApplications(organizationSlug: string) {
                       zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse.parse(
                           await api(applicationsPath, { signal }).json()
                       ),
-        refetchInterval: 5000,
+        refetchInterval: (query) =>
+            query.state.data?.some((application) => application.status === 'creating') ? 5000 : false,
         retry: false,
     });
     const error: (Error & { status?: number }) | null = applicationsQuery.error ?? notFoundError;

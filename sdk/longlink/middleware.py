@@ -1,5 +1,4 @@
 import re
-from fastapi import FastAPI
 from starlette.types import Send, Scope, ASGIApp, Message, Receive
 from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.gzip import GZipMiddleware

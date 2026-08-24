@@ -58,7 +58,6 @@ async def get_organization(
         "invitations": await organizations.invitations(session, organization.id)
         if roles.atleast(membership.role, OrganizationRoles.maintain)
         else [],
-        "applications": await organizations.applications(session, organization.id),
     }
 
 

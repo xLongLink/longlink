@@ -133,3 +133,17 @@ async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> N
     async with session_scope() as session:
         persisted = await session.get(ComputeRegistry, compute_id)
     assert persisted is not None
+
+
+async def test_create_rejects_duplicate_compute_names() -> None:
+    """Translate duplicate Compute names into the stable domain conflict."""
+
+    # Arrange
+    async with session_scope() as session:
+        await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="^Compute registry already exists$"):
+            await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})

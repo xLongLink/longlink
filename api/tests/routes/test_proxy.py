@@ -86,7 +86,7 @@ async def create_running_application(user: User) -> tuple[Application, Infrastru
         assert persisted_application is not None
         persisted_application.secrets = {
             **persisted_application.secrets,
-            "LONGLINK_IDENTITY_SECRET": "test-identity-secret",
+            "LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890",
         }
         persisted_application.status = Status.running
         await session.commit()

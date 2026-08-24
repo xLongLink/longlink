@@ -28,14 +28,21 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     assert await images.metadata(Image("registry.example.com/longlink/dashboard:latest")) is None
 
 
+@pytest.mark.parametrize(
+    "manifest_headers",
+    [
+        pytest.param({"Docker-Content-Digest": "sha256:deadbeef"}, id="digest-header"),
+        pytest.param({}, id="digest-reference-fallback"),
+    ],
+)
 async def test_metadata_fetches_digest_image_references(
     monkeypatch: pytest.MonkeyPatch,
+    manifest_headers: dict[str, str],
 ) -> None:
     """Inspect public GHCR digest-pinned image references."""
 
     # Arrange
     image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
-    manifest_digest = "sha256:deadbeef"
     captured: dict[str, object] = {}
 
     def respond(request: httpx2.Request) -> httpx2.Response:
@@ -53,7 +60,7 @@ async def test_metadata_fetches_digest_image_references(
             return httpx2.Response(
                 200,
                 json={"config": {"digest": "sha256:config"}},
-                headers={"Docker-Content-Digest": manifest_digest},
+                headers=manifest_headers,
             )
         captured["blob"] = {"url": str(request.url), "authorization": request.headers["Authorization"]}
         return httpx2.Response(

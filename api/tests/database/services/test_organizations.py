@@ -406,6 +406,36 @@ async def test_create_default_rejects_missing_storage_registry(users: tuple[User
             await organizations.create_default(session, "acme", users[0])
 
 
+@pytest.mark.parametrize(
+    ("registry", "error"),
+    [
+        pytest.param("compute", "No compute registry available", id="compute"),
+        pytest.param("database", "No database registry available", id="database"),
+        pytest.param("storage", "No storage registry available", id="storage"),
+    ],
+)
+async def test_create_rejects_missing_assigned_infrastructure(
+    users: tuple[User, User, User],
+    registry: str,
+    error: str,
+) -> None:
+    """Reject direct Organization creation when any assigned registry is absent."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    assignments = {
+        "compute_id": infrastructure.compute.id,
+        "database_id": infrastructure.database.id,
+        "storage_id": infrastructure.storage.id,
+    }
+    assignments[f"{registry}_id"] = uuid4()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(UnavailableError, match=error):
+            await organizations.create(session, "acme", users[0], **assignments)
+
+
 async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
     """Tombstone applications while retaining Organization memberships until purge."""
 

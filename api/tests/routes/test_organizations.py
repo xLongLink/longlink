@@ -105,7 +105,6 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert payload["applications"][0]["id"] == str(application.id)
     assert applications_response.status_code == 200
     assert applications_response.headers["cache-control"] == "no-store"
     applications_payload = applications_response.json()
