@@ -152,7 +152,7 @@ function PlatformFlowDiagram() {
     );
 }
 
-export const metadata = {
+const metadata = {
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Index.tsx',

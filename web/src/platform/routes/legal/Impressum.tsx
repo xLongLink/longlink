@@ -4,7 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },

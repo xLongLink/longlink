@@ -75,7 +75,6 @@ export default defineConfig(({ mode }) => {
             port: devServerPort,
             proxy: {
                 '/api': 'http://localhost:8000',
-                '/logo.svg': 'http://localhost:8000',
             },
         },
 

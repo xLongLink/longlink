@@ -6,7 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },

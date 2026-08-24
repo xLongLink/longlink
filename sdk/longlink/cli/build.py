@@ -111,7 +111,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
                     # Safely evaluate static alias expressions.
                     try:
                         alias = ast.literal_eval(keyword.value)
-                    except (ValueError, SyntaxError):
+                    except ValueError:
                         alias = None
 
                     # Store string aliases only.
@@ -123,7 +123,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
                     # Safely evaluate static descriptions.
                     try:
                         description = ast.literal_eval(keyword.value)
-                    except (ValueError, SyntaxError):
+                    except ValueError:
                         description = None
 
                     # Store string descriptions only.
@@ -185,7 +185,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         candidate_pyproject = candidate / "pyproject.toml"
         if not candidate_pyproject.is_file():
             continue
-        candidate_data = read_pyproject(candidate)
+        candidate_data = pyproject_data if candidate == root else read_pyproject(candidate)
         tool_data = candidate_data.get("tool")
         uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
         if isinstance(uv_data, dict) and isinstance(uv_data.get("workspace"), dict):

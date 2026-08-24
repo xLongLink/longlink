@@ -111,3 +111,8 @@ def apply_migrations() -> None:
     cfg.set_main_option("version_locations", str(migrations_path))
 
     command.upgrade(cfg, "head")
+
+
+if __name__ == "__main__":
+    # Kubernetes runs this module directly before starting an Application workload.
+    apply_migrations()
