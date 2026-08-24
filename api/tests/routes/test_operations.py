@@ -1,9 +1,35 @@
 from uuid import uuid4
+from types import SimpleNamespace
 from httpx2 import AsyncClient
 from datetime import timedelta
 from factories import queue_operation
+from src.routes.v1 import operations as operation_routes
+from unittest.mock import AsyncMock
 from src.database.session import session_scope
+from src.models.pagination import Pagination
 from src.database.models.operations import Operation
+
+
+async def test_list_operations_delegates_pagination_to_operation_service() -> None:
+    """Return the reconciliation page supplied by the persistence service."""
+
+    # Arrange
+    session = SimpleNamespace()
+    pagination = Pagination()
+    items = [SimpleNamespace(id=uuid4())]
+    original_fetch_page = operation_routes.operations.fetch_page
+    fetch_page = AsyncMock(return_value=(items, 1))
+    operation_routes.operations.fetch_page = fetch_page
+
+    try:
+        # Act
+        page = await operation_routes.list_operations(pagination, session)
+    finally:
+        operation_routes.operations.fetch_page = original_fetch_page
+
+    # Assert
+    assert page == {"items": items, "total": 1}
+    fetch_page.assert_awaited_once_with(session, pagination)
 
 
 async def test_operations_endpoint_rejects_anonymous_requests(client: AsyncClient) -> None:

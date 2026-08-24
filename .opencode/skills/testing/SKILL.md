@@ -24,16 +24,6 @@ make sdk:test  # SDK: longlink
 make test      # Both packages
 ```
 
-Coverage is CLI-only. Each command prints branch coverage, a `TOTAL` percentage, and the uncovered lines. Do not create or commit HTML coverage reports.
-
-To improve coverage:
-
-1. Run the relevant coverage command and identify an uncovered production behavior.
-2. Add the smallest test at the lowest suitable level that verifies that behavior.
-3. Rerun the relevant coverage command and confirm the new test passes and covers the intended lines or branch.
-
-After completing the task, return the coverage to the user.
-
 ## Testing
 
 Test observable behavior and important boundaries. Use the lowest test level that provides confidence:

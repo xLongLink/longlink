@@ -68,6 +68,7 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
         pytest.param("ssl-mode=INVALID", "invalid ssl-mode", id="invalid-mode"),
         pytest.param("ssl_ca=first&ssl_ca=second", "one ssl_ca value", id="duplicate-ca"),
         pytest.param("ssl_key=key.pem", "requires ssl_cert", id="key-without-certificate"),
+        pytest.param("ssl_check_hostname=yes", "invalid ssl_check_hostname", id="invalid-hostname-policy"),
         pytest.param("ssl-mode=VERIFY_CA&ssl_check_hostname=true", "conflicts with ssl-mode", id="conflicting-hostname-policy"),
         pytest.param("ssl-mode=DISABLED&ssl_cert=cert.pem", "cannot include certificates", id="disabled-with-certificate"),
     ],
@@ -112,6 +113,36 @@ def test_mysql_database_url_builds_verifying_ca_tls_context() -> None:
     assert isinstance(context, ssl.SSLContext)
     assert context.check_hostname is False
     assert context.verify_mode == ssl.CERT_REQUIRED
+
+
+def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Load the configured MySQL client certificate into the TLS context."""
+
+    # Arrange
+    loaded_certificates: list[tuple[str, str | None]] = []
+
+    class Context:
+        """Record client identity loading without requiring certificate files."""
+
+        check_hostname = False
+
+        def load_cert_chain(self, certfile: str, keyfile: str | None = None) -> None:
+            """Capture the configured certificate paths."""
+
+            loaded_certificates.append((certfile, keyfile))
+
+    monkeypatch.setattr(urls.ssl, "create_default_context", lambda **_kwargs: Context())
+
+    # Act
+    connection = urls.database(
+        "mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA&ssl_cert=cert.pem&ssl_key=key.pem"
+    )
+
+    # Assert
+    context = connection.connect_args["ssl"]
+    assert isinstance(context, Context)
+    assert context.check_hostname is False
+    assert loaded_certificates == [("cert.pem", "key.pem")]
 
 
 @pytest.mark.parametrize(

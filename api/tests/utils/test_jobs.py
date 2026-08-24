@@ -92,6 +92,34 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     assert completed_operation_ids == [operation.id]
 
 
+async def test_finish_transition_preserves_cancellation_when_terminal_persistence_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Propagate cancellation when its protected terminal transition also fails."""
+
+    # Arrange
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def fail(_session: object, _operation_id: UUID) -> Operation:
+        """Fail only after cancellation reaches the protected transition."""
+
+        started.set()
+        await release.wait()
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(operation_worker.operations, "fail", fail)
+
+    # Act
+    transition = asyncio.create_task(operation_worker._finish_transition(operation_worker.operations.fail, UUID(int=1)))
+    await started.wait()
+    transition.cancel()
+    await asyncio.sleep(0)
+    release.set()
+
+    # Assert
+    with pytest.raises(asyncio.CancelledError):
+        await transition
+
+
 async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Persist a handler failure as the one claimed Operation's terminal outcome."""
 
@@ -171,6 +199,30 @@ async def test_execute_persists_unexpected_handler_error_as_terminal_failure(mon
 
     # Assert
     assert result.status == OperationStatus.failed
+
+
+async def test_execute_logs_terminal_transition_failure_during_handler_cancellation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Preserve handler cancellation when recording its failure also fails."""
+
+    # Arrange
+    operation = leased_operation()
+
+    async def cancelled_handler(_target_id: UUID) -> None:
+        """Model worker shutdown while the handler is executing."""
+
+        raise asyncio.CancelledError
+
+    async def fail(_session: object, _operation_id: UUID) -> Operation:
+        """Model a database failure while recording cancellation."""
+
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)
+    monkeypatch.setattr(operation_worker.operations, "fail", fail)
+
+    # Act and assert
+    with pytest.raises(asyncio.CancelledError):
+        await operation_worker.execute(operation)
 
 
 async def test_execute_rejects_operation_without_a_worker_lease() -> None:

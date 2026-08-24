@@ -76,6 +76,32 @@ async def test_operations_service_enqueue_uses_concurrently_created_operation(mo
     assert operation is concurrent_operation
 
 
+async def test_operations_service_enqueue_reraises_unresolved_insert_conflict(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Expose an insert conflict when no competing Operation can be recovered."""
+
+    # Arrange
+    conflict = IntegrityError("INSERT", {}, Exception("unique constraint"))
+
+    async def return_no_operation(_statement: object) -> None:
+        """Model an unavailable competing Operation after the insert conflict."""
+
+        return None
+
+    async def raise_unique_conflict() -> None:
+        """Model an insert conflict without a visible winning transaction."""
+
+        raise conflict
+
+    # Act and assert
+    async with session_scope() as session:
+        monkeypatch.setattr(session, "scalar", return_no_operation)
+        monkeypatch.setattr(session, "flush", raise_unique_conflict)
+        with pytest.raises(IntegrityError) as error:
+            await operations.enqueue(session, kind=OperationKind.compute_create, target_id=uuid4())
+
+    assert error.value is conflict
+
+
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
     """Coalesce unfinished work by target and create successors after completion."""
 

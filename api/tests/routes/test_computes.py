@@ -1,5 +1,8 @@
+import pytest
 from uuid import uuid4
+from types import SimpleNamespace
 from httpx2 import AsyncClient
+from fastapi import HTTPException
 from factories import (
     create_compute,
     claim_operation,
@@ -9,7 +12,105 @@ from factories import (
     create_organization,
     create_ready_infrastructure,
 )
+from src.routes.v1 import computes
+from unittest.mock import AsyncMock
+from src.models.computes import ComputeRegistryCreate
 from src.models.operations import OperationKind
+from src.models.pagination import Pagination
+
+
+async def test_compute_handlers_delegate_creation_and_listing() -> None:
+    """Create and list Compute registries through their persistence service."""
+
+    # Arrange
+    session = SimpleNamespace(commit=AsyncMock())
+    registry = SimpleNamespace(id=uuid4())
+    payload = ComputeRegistryCreate(name="Compute", kubeconfig="apiVersion: v1\nclusters: []\n")
+    pagination = Pagination()
+    original_create = computes.compute.create
+    original_fetch_page = computes.compute.fetch_page
+    create = AsyncMock(return_value=registry)
+    fetch_page = AsyncMock(return_value=([registry], 1))
+    computes.compute.create = create
+    computes.compute.fetch_page = fetch_page
+
+    try:
+        # Act
+        created = await computes.create_compute_registry(payload, session)
+        page = await computes.list_compute_registries(pagination, session)
+    finally:
+        computes.compute.create = original_create
+        computes.compute.fetch_page = original_fetch_page
+
+    # Assert
+    assert created is registry
+    assert page == {"items": [registry], "total": 1}
+    create.assert_awaited_once_with(session, payload.name, payload.kubeconfig)
+    fetch_page.assert_awaited_once_with(session, pagination)
+    session.commit.assert_awaited_once()
+
+
+async def test_get_compute_registry_returns_registry_or_not_found_error() -> None:
+    """Return the selected Compute registry or its exact missing-registry error."""
+
+    # Arrange
+    registry_id = uuid4()
+    registry = SimpleNamespace(id=registry_id)
+    found_session = SimpleNamespace(get=AsyncMock(return_value=registry))
+    missing_session = SimpleNamespace(get=AsyncMock(return_value=None))
+
+    # Act
+    result = await computes.get_compute_registry(registry_id, found_session)
+    with pytest.raises(HTTPException) as exc:
+        await computes.get_compute_registry(registry_id, missing_session)
+
+    # Assert
+    assert result is registry
+    assert exc.value.status_code == 404
+    assert exc.value.detail == "Compute registry not found"
+
+
+async def test_delete_compute_registry_returns_not_found_error() -> None:
+    """Return the exact error when deleting a missing Compute registry."""
+
+    # Arrange
+    session = SimpleNamespace(commit=AsyncMock())
+    registry_id = uuid4()
+    original_delete = computes.compute.delete
+    computes.compute.delete = AsyncMock(return_value=False)
+
+    try:
+        # Act
+        with pytest.raises(HTTPException) as exc:
+            await computes.delete_compute_registry(registry_id, session)
+    finally:
+        computes.compute.delete = original_delete
+
+    # Assert
+    assert exc.value.status_code == 404
+    assert exc.value.detail == "Compute registry not found"
+    session.commit.assert_not_awaited()
+
+
+async def test_delete_compute_registry_commits_successful_deletion() -> None:
+    """Commit after deleting an unused Compute registry."""
+
+    # Arrange
+    session = SimpleNamespace(commit=AsyncMock())
+    registry_id = uuid4()
+    original_delete = computes.compute.delete
+    delete = AsyncMock(return_value=True)
+    computes.compute.delete = delete
+
+    try:
+        # Act
+        await computes.delete_compute_registry(registry_id, session)
+    finally:
+        computes.compute.delete = original_delete
+
+    # Assert
+    delete.assert_awaited_once_with(session, registry_id)
+    session.commit.assert_awaited_once()
 
 
 async def test_compute_registry_creation_queues_lifecycle_operation(

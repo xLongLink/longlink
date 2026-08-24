@@ -31,6 +31,7 @@ def test_image_parses_valid_reference(reference: str, tag_or_digest: str) -> Non
         pytest.param("g" * 256, "too long", id="too-long"),
         pytest.param("https://ghcr.io/longlink/dashboard:latest", "must not be a URL", id="url"),
         pytest.param("ghcr.io/longlink/dashboard:la test", "invalid characters", id="whitespace"),
+        pytest.param("dashboard:latest", "registry host is required", id="missing-registry"),
         pytest.param("longlink/dashboard", "tag or digest is required", id="missing-tag"),
         pytest.param("ghcr.io/longlink/dashboard@sha256", "digest is invalid", id="invalid-digest"),
         pytest.param("user@ghcr.io/longlink/dashboard:latest", "registry is invalid", id="registry-credentials"),

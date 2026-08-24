@@ -7,6 +7,23 @@ from src.models.roles import OrganizationRoles
 pytestmark = pytest.mark.no_db
 
 
+def test_render_mjml_template_rejects_compilation_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Expose MJML compiler errors instead of delivering incomplete email HTML."""
+
+    # Arrange
+    class Result:
+        """Represent a failed MJML compilation."""
+
+        errors = ["invalid markup"]
+        html = ""
+
+    monkeypatch.setattr(mail, "mjml_to_html", lambda _source: Result())
+
+    # Act and assert
+    with pytest.raises(ValueError, match=r"Failed to render MJML template password_reset.mjml: \['invalid markup'\]"):
+        mail.render_mjml_template("password_reset.mjml", reset_url="https://example.com/reset")
+
+
 async def test_development_mail_logging_excludes_message_body(monkeypatch: pytest.MonkeyPatch) -> None:
     """Log development mail metadata without exposing bearer credentials."""
 

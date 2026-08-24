@@ -1,6 +1,8 @@
+import runpy
 import pytest
 from src import release
 from contextlib import asynccontextmanager
+from collections.abc import Coroutine
 
 pytestmark = pytest.mark.no_db
 
@@ -73,3 +75,24 @@ async def test_schedule_reconciliation_does_not_commit_after_scheduling_error(mo
         await release.schedule_reconciliation()
 
     assert events == []
+
+
+def test_release_module_runs_reconciliation_when_executed_as_a_script(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the reconciliation coroutine through the module script entry point."""
+
+    # Arrange
+    scheduled: list[object] = []
+
+    def run(coroutine: Coroutine[object, object, object]) -> None:
+        """Capture and close the entry-point coroutine without database work."""
+
+        scheduled.append(coroutine)
+        coroutine.close()
+
+    monkeypatch.setattr(release.asyncio, "run", run)
+
+    # Act
+    runpy.run_path(release.__file__, run_name="__main__")
+
+    # Assert
+    assert len(scheduled) == 1

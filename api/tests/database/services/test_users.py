@@ -129,6 +129,26 @@ async def test_ensure_administrator_uses_concurrently_created_configured_user(mo
     assert concurrent_administrator.administrator is True
 
 
+async def test_ensure_administrator_propagates_unresolved_concurrent_creation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Propagate the insert conflict when no concurrent administrator can be read."""
+
+    # Arrange
+    async def no_administrator(_statement: object) -> None:
+        """Model both administrator reads returning no configured account."""
+
+    async def raise_unique_conflict() -> None:
+        """Model a competing Platform replica winning the insert race."""
+
+        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
+
+    # Act and assert
+    async with session_scope() as session:
+        monkeypatch.setattr(session, "scalar", no_administrator)
+        monkeypatch.setattr(session, "flush", raise_unique_conflict)
+        with pytest.raises(IntegrityError):
+            await user_service.ensure_administrator(session)
+
+
 async def test_user_service_returns_active_accounts_and_all_administrator_records(
     users: tuple[User, User, User],
 ) -> None:

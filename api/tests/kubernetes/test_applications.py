@@ -439,6 +439,31 @@ async def test_application_logs_reports_unavailable_when_no_pod_exists(monkeypat
         )
 
 
+async def test_application_logs_ignores_terminal_application_pods(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report unavailable logs when only terminal non-migration Pods remain."""
+
+    # Arrange
+    class PodResource:
+        """Represent a completed Application Pod."""
+
+        raw = {"status": {"phase": "Succeeded"}}
+        metadata = {"labels": {"longlink.io/component": "application"}}
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the completed Application Pod."""
+
+            yield cls()
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Application logs unavailable"):
+        await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+        )
+
+
 async def test_application_logs_translates_kubernetes_api_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     """Hide Kubernetes transport errors behind the Application logs contract."""
 
@@ -607,3 +632,77 @@ async def test_application_delete_skips_cleanup_when_namespace_is_absent(monkeyp
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
     )
+
+
+async def test_application_delete_does_not_repeat_deletions_for_terminating_resources(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Wait for Kubernetes to finish resources that already have deletion timestamps."""
+
+    # Arrange
+    deleted: list[str] = []
+    namespace_checks = 0
+    sleeps: list[float] = []
+
+    class NamespaceResource:
+        """Keep the Namespace present for one cleanup poll."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Report the Namespace as present until cleanup has been rechecked."""
+
+            nonlocal namespace_checks
+            namespace_checks += 1
+            return namespace_checks == 1
+
+    class Resource:
+        """Represent a terminating Kubernetes resource."""
+
+        metadata = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Keep the resource visible during the cleanup poll."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the terminating metadata unchanged."""
+
+        async def delete(self) -> None:
+            """Record an invalid duplicate deletion request."""
+
+            deleted.append("resource")
+
+    class JobResource(Resource):
+        """Represent a terminating migration Job."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the retained terminating Job."""
+
+            yield cls()
+
+    async def sleep(delay: float) -> None:
+        """Record the cleanup retry without waiting."""
+
+        sleeps.append(delay)
+
+    monkeypatch.setattr(applications, "Namespace", NamespaceResource)
+    monkeypatch.setattr(applications, "Deployment", Resource)
+    monkeypatch.setattr(applications, "Service", Resource)
+    monkeypatch.setattr(applications, "Secret", Resource)
+    monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(applications, "Job", JobResource)
+    monkeypatch.setattr(applications.asyncio, "sleep", sleep)
+
+    # Act
+    await applications.Applications(FakeKubernetes()).delete(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"), "acme"
+    )
+
+    # Assert
+    assert deleted == []
+    assert sleeps == [5]

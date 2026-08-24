@@ -91,7 +91,7 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
         nonlocal scalar_calls
         scalar_calls += 1
-        return None if scalar_calls == 1 else concurrent_invitation
+        return None if scalar_calls < 3 else concurrent_invitation
 
     async def raise_unique_conflict() -> None:
         """Model the competing transaction winning the insert race."""
@@ -106,6 +106,28 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
     # Assert
     assert concurrent_invitation.role == OrganizationRoles.admin
+
+
+async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report a conflict when the winning concurrent invitation cannot be read."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    async def no_invitation(_statement: object) -> None:
+        """Model both reads completing before the competing insert is visible."""
+
+    async def raise_unique_conflict() -> None:
+        """Model a competing transaction winning the invitation insert race."""
+
+        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
+
+    # Act and assert
+    async with session_scope() as session:
+        monkeypatch.setattr(session, "scalar", no_invitation)
+        monkeypatch.setattr(session, "flush", raise_unique_conflict)
+        with pytest.raises(ConflictError, match="^Invitation could not be created$"):
+            await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
 
 
 async def test_accept_creates_membership_and_consumes_invitation(users: tuple[User, User, User]) -> None:

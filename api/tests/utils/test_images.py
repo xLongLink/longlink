@@ -190,6 +190,7 @@ async def test_bounded_json_decodes_metadata_within_limit() -> None:
     [
         pytest.param([httpx2.Response(503)], ["/token"], id="failed-token"),
         pytest.param([httpx2.Response(200, json=[])], ["/token"], id="invalid-token"),
+        pytest.param([httpx2.Response(200, json={"token": ""})], ["/token"], id="empty-token"),
         pytest.param(
             [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
@@ -206,6 +207,27 @@ async def test_bounded_json_decodes_metadata_within_limit() -> None:
             ],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
             id="invalid-config",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(200, json={}, headers={"Docker-Content-Digest": "sha256:deadbeef"}),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="missing-manifest-config",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(
+                    200,
+                    json={"config": {"digest": "sha256:config"}},
+                    headers={"Docker-Content-Digest": "sha256:deadbeef"},
+                ),
+                httpx2.Response(503),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest", "/v2/longlink/dashboard/blobs/sha256:config"],
+            id="failed-config-blob",
         ),
     ],
 )
@@ -260,6 +282,34 @@ async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.Monk
     # Assert
     assert image_metadata is not None
     assert image_metadata.image == Image(f"ghcr.io/longlink/dashboard@{resolved_digest}")
+
+
+async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return digest metadata when an image config does not define labels."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a valid GHCR metadata sequence with unlabeled config data."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": "sha256:deadbeef"},
+            )
+        return httpx2.Response(200, json={"config": {}})
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.description is None
+    assert image_metadata.environments == []
 
 
 @pytest.mark.parametrize(

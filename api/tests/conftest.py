@@ -21,6 +21,7 @@ os.environ.setdefault("ENCRYPTION_KEY", "longlink-test-encryption-key-that-is-lo
 # Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
 
+from main import app
 from src.utils import mail, token
 from src.database import session
 from src.environments import env
@@ -99,9 +100,6 @@ def create_client(user: User | None = None) -> AsyncClient:
 
     cookies = authenticated_cookies(user) if user is not None else None
     headers = {"origin": env.PUBLIC_URL.rstrip("/")}
-
-    # Import the application after pytest-cov starts so HTTP route execution is attributed correctly.
-    from main import app
 
     return AsyncClient(
         transport=ASGITransport(app=app),

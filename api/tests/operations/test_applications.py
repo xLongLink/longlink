@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 from factories import (
     claim_operation,
     complete_operation,
@@ -301,6 +302,71 @@ async def test_application_creation_skips_removed_application_provider_construct
     assert result is None
 
 
+async def test_application_creation_skips_missing_application_without_constructing_providers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Treat a missing Application as an already completed lifecycle target."""
+
+    # Arrange
+    def unexpected_provider(*_args: object) -> object:
+        """Reject provider construction for an absent target."""
+
+        raise AssertionError("providers must not be constructed")
+
+    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+
+    # Act and assert
+    assert await application_operations.create(uuid4()) is None
+
+
+async def test_application_creation_reuses_complete_runtime_secrets_for_running_application(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Apply running Applications without rotating their complete runtime contract."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    application = await create_application(
+        organization,
+        secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "persisted-secret"},
+    )
+    async with session_scope() as session:
+        persisted = await session.get(Application, application.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        await session.commit()
+    applied: list[dict[str, str]] = []
+
+    class Kubernetes:
+        """Capture Application reconciliation without contacting Kubernetes."""
+
+        def __init__(self, *_args: object) -> None:
+            """Expose the Application lifecycle client."""
+
+            self.applications = self
+
+        async def apply(self, _application_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+            """Capture the persisted runtime contract."""
+
+            applied.append(secrets)
+
+    monkeypatch.setattr(application_operations, "Kubernetes", Kubernetes)
+
+    # Act
+    await application_operations.create(application.id)
+
+    # Assert
+    assert applied == [application.secrets]
+    async with session_scope() as session:
+        persisted = await session.get(Application, application.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
+    assert persisted.secrets["LONGLINK_IDENTITY_SECRET"] == "persisted-secret"
+
+
 async def test_application_creation_skips_deployment_when_deleted_before_credential_persistence(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -362,3 +428,22 @@ async def test_application_creation_skips_deployment_when_deleted_before_credent
 
     # Assert
     assert result is None
+
+
+async def test_application_deletion_skips_missing_application_without_constructing_providers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Treat a missing Application tombstone as completed cleanup."""
+
+    # Arrange
+    def unexpected_provider(*_args: object) -> object:
+        """Reject provider construction for an absent cleanup target."""
+
+        raise AssertionError("providers must not be constructed")
+
+    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+
+    # Act and assert
+    assert await application_operations.delete(uuid4()) is None

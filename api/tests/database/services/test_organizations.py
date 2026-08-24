@@ -388,6 +388,38 @@ async def test_update_member_role_persists_owner_authorized_change(users: tuple[
     assert membership.role == OrganizationRoles.maintain
 
 
+async def test_update_member_role_allows_demoting_an_owner_when_another_owner_remains(
+    users: tuple[User, User, User],
+) -> None:
+    """Allow an owner demotion while preserving a separate active owner."""
+
+    # Arrange
+    owner, second_owner = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=second_owner.id, organization_id=organization.id, role=OrganizationRoles.owner))
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed = await organizations.update_member_role(
+            session,
+            organization.id,
+            second_owner.id,
+            OrganizationRoles.maintain,
+            owner,
+            OrganizationRoles.owner,
+        )
+        await session.commit()
+
+    # Assert
+    assert changed is True
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (second_owner.id, organization.id))
+    assert membership is not None
+    assert membership.role == OrganizationRoles.maintain
+
+
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
     """Create Organizations queued behind their creating compute target."""
 
@@ -557,6 +589,21 @@ async def test_update_returns_none_for_missing_organization(users: tuple[User, U
 
     # Assert
     assert updated is None
+
+
+async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tuple[User, User, User]) -> None:
+    """Return the locked Organization without changing its audit actor for an identical avatar."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    async with session_scope() as session:
+        updated = await organizations.update(session, organization.id, organization.avatar, users[1])
+
+    # Assert
+    assert updated is not None
+    assert updated.updated_id == users[0].id
 
 
 async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:

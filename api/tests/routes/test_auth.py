@@ -2,11 +2,16 @@ import pytest
 from src import auth
 from main import app
 from httpx2 import AsyncClient
+from pwdlib import PasswordHash
+from fastapi import Response, HTTPException, BackgroundTasks
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import token
 from urllib.parse import parse_qs, urlparse
+from src.routes.v1 import auth as auth_routes
+from sqlalchemy.exc import IntegrityError
+from src.models.auth import TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -702,3 +707,366 @@ async def test_deleted_user_cannot_use_existing_browser_session(
     # Assert
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
+
+
+@pytest.mark.no_db
+async def test_password_login_rejects_unknown_email_directly() -> None:
+    """Reject an unknown email with the stable login error."""
+
+    # Arrange
+    class Session:
+        """Provide the unused session dependency."""
+
+    async def by_email(_session: object, _email: str) -> None:
+        """Return no matching account."""
+
+        return None
+
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+
+    try:
+        # Act
+        with pytest.raises(HTTPException) as exc:
+            await auth_routes.password_login(PasswordLogin(email="missing@example.com", password=TEST_PASSWORD), Response(), Session())
+
+        # Assert
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "LOGIN_BAD_CREDENTIALS"
+    finally:
+        monkeypatch.undo()
+
+
+@pytest.mark.no_db
+async def test_password_login_rejects_invalid_password_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject an incorrect password with the stable login error."""
+
+    # Arrange
+    class User:
+        """Provide an active local account."""
+
+        password = PasswordHash.recommended().hash(TEST_PASSWORD)
+        deleted_at = None
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the active account."""
+
+        return User()
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth_routes.password_login(PasswordLogin(email="member@example.com", password="wrong-password"), Response(), object())
+
+    # Assert
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "LOGIN_BAD_CREDENTIALS"
+
+
+@pytest.mark.no_db
+async def test_password_login_issues_session_and_synchronizes_invitations_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit accepted invitations before setting the browser session."""
+
+    # Arrange
+    class Session:
+        """Record the login persistence commit."""
+
+        committed = False
+
+        async def commit(self) -> None:
+            """Record the completed login transaction."""
+
+            self.committed = True
+
+    class User:
+        """Provide an active local account."""
+
+        password = PasswordHash.recommended().hash(TEST_PASSWORD)
+        deleted_at = None
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the active account."""
+
+        return User()
+
+    async def accept(_session: object, _user: User) -> list[str]:
+        """Accept one pending Organization invitation."""
+
+        return ["organization-id"]
+
+    synchronized_ids: list[str] = []
+
+    async def sync_users(_session: object, organization_id: str) -> None:
+        """Record the requested Organization projection."""
+
+        synchronized_ids.append(organization_id)
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    monkeypatch.setattr(auth_routes.invitations, "accept", accept)
+    monkeypatch.setattr(auth_routes.organizations, "sync_users", sync_users)
+    monkeypatch.setattr(auth_routes.token, "create_auth_token", lambda _user: "credential")
+    session = Session()
+    response = Response()
+
+    # Act
+    await auth_routes.password_login(PasswordLogin(email="member@example.com", password=TEST_PASSWORD), response, session)
+
+    # Assert
+    assert session.committed is True
+    assert synchronized_ids == ["organization-id"]
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_auth=credential" in response.headers["set-cookie"]
+
+
+@pytest.mark.no_db
+async def test_logout_rejects_untrusted_origin_directly() -> None:
+    """Reject an untrusted origin before deleting the session cookie."""
+
+    # Arrange
+    response = Response()
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth_routes.logout(response, "https://attacker.example")
+
+    # Assert
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Origin required"
+    assert "set-cookie" not in response.headers
+
+
+@pytest.mark.no_db
+async def test_password_reset_request_queues_mail_for_active_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Queue reset delivery only for an active account."""
+
+    # Arrange
+    class User:
+        """Provide the reset recipient identity."""
+
+        email = "member@example.com"
+        deleted_at = None
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the active account."""
+
+        return User()
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    monkeypatch.setattr(auth_routes.token, "create_password_reset_token", lambda _user: "reset-token")
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_password_reset("member@example.com", tasks, object())
+
+    # Assert
+    assert len(tasks.tasks) == 1
+    assert tasks.tasks[0].args == ("member@example.com", "reset-token")
+
+
+@pytest.mark.no_db
+async def test_password_reset_request_ignores_deleted_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Avoid reset delivery for a deleted account."""
+
+    # Arrange
+    class User:
+        """Provide an inactive account."""
+
+        deleted_at = object()
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the deleted account."""
+
+        return User()
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_password_reset("member@example.com", tasks, object())
+
+    # Assert
+    assert tasks.tasks == []
+
+
+@pytest.mark.no_db
+async def test_password_reset_handlers_set_private_response_state_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set reset cookie state and cache controls after token validation."""
+
+    # Arrange
+    async def password_reset_user(_session: object, credential: str) -> object:
+        """Accept the provided reset credential."""
+
+        assert credential == "reset-token"
+        return object()
+
+    monkeypatch.setattr(auth_routes.token, "password_reset_user", password_reset_user)
+    verify_response = Response()
+    setup_response = Response()
+
+    # Act
+    await auth_routes.verify_password_reset_token(TokenPayload(token="reset-token"), verify_response, object())
+    await auth_routes.get_password_reset_setup(setup_response, "reset-token", object())
+
+    # Assert
+    assert verify_response.headers["cache-control"] == "no-store"
+    assert "longlink_password_reset=reset-token" in verify_response.headers["set-cookie"]
+    assert setup_response.headers["cache-control"] == "no-store"
+
+
+@pytest.mark.no_db
+async def test_reset_password_replaces_credential_and_clears_proof_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit the replacement password before clearing reset proof."""
+
+    # Arrange
+    class Session:
+        """Record the password replacement commit."""
+
+        committed = False
+
+        async def commit(self) -> None:
+            """Record the completed password transaction."""
+
+            self.committed = True
+
+    class User:
+        """Provide mutable password state."""
+
+        password = "old-password"
+
+    user = User()
+
+    async def password_reset_user(_session: object, _credential: str) -> User:
+        """Resolve the account from reset proof."""
+
+        return user
+
+    monkeypatch.setattr(auth_routes.token, "password_reset_user", password_reset_user)
+    session = Session()
+    response = Response()
+
+    # Act
+    await auth_routes.reset_password(PasswordResetComplete(password="replacement-password"), response, "reset-token", session)
+
+    # Assert
+    assert session.committed is True
+    assert PasswordHash.recommended().verify("replacement-password", user.password)
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_password_reset=" in response.headers["set-cookie"]
+
+
+@pytest.mark.no_db
+async def test_registration_request_skips_existing_email_and_queues_new_email_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Avoid existing accounts while queueing verification for new email addresses."""
+
+    # Arrange
+    existing = object()
+
+    async def by_email(_session: object, email: str) -> object | None:
+        """Distinguish the existing and new email addresses."""
+
+        return existing if email == "existing@example.com" else None
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    monkeypatch.setattr(auth_routes.token, "create_registration_token", lambda email: f"token:{email}")
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_registration("existing@example.com", tasks, object())
+    await auth_routes.request_registration("new@example.com", tasks, object())
+
+    # Assert
+    assert len(tasks.tasks) == 1
+    assert tasks.tasks[0].args == ("new@example.com", "token:new@example.com")
+
+
+@pytest.mark.no_db
+async def test_registration_completion_rolls_back_duplicate_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Rollback a uniqueness race and return the stable conflict error."""
+
+    # Arrange
+    class Session:
+        """Record the failed registration rollback."""
+
+        rolled_back = False
+
+        async def rollback(self) -> None:
+            """Record transaction rollback."""
+
+            self.rolled_back = True
+
+    async def register(*_args: object) -> object:
+        """Raise the database uniqueness failure."""
+
+        raise IntegrityError("INSERT", {}, Exception("duplicate"))
+
+    monkeypatch.setattr(auth_routes.token, "registration_claims", lambda _credential: "member@example.com")
+    monkeypatch.setattr(auth_routes.users, "register", register)
+    session = Session()
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth_routes.complete_registration(
+            RegistrationComplete(name="Member", password=TEST_PASSWORD), Response(), "registration-token", session
+        )
+
+    # Assert
+    assert session.rolled_back is True
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "An account with this email already exists. Sign in or reset your password to continue."
+
+
+@pytest.mark.no_db
+async def test_registration_completion_authenticates_and_synchronizes_invitations_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Create the verified account before publishing browser authentication."""
+
+    # Arrange
+    class Session:
+        """Record the successful registration commit."""
+
+        committed = False
+
+        async def commit(self) -> None:
+            """Record the completed registration transaction."""
+
+            self.committed = True
+
+    user = object()
+
+    async def register(_session: object, _name: str, _email: str, _password: str) -> object:
+        """Return the newly persisted account."""
+
+        return user
+
+    async def accept(_session: object, _user: object) -> list[str]:
+        """Accept one pending Organization invitation."""
+
+        return ["organization-id"]
+
+    synchronized_ids: list[str] = []
+
+    async def sync_users(_session: object, organization_id: str) -> None:
+        """Record the requested Organization projection."""
+
+        synchronized_ids.append(organization_id)
+
+    monkeypatch.setattr(auth_routes.token, "registration_claims", lambda _credential: "member@example.com")
+    monkeypatch.setattr(auth_routes.users, "register", register)
+    monkeypatch.setattr(auth_routes.invitations, "accept", accept)
+    monkeypatch.setattr(auth_routes.organizations, "sync_users", sync_users)
+    monkeypatch.setattr(auth_routes.token, "create_auth_token", lambda _user: "credential")
+    session = Session()
+    response = Response()
+
+    # Act
+    result = await auth_routes.complete_registration(
+        RegistrationComplete(name="Member", password=TEST_PASSWORD), response, "registration-token", session
+    )
+
+    # Assert
+    assert result is user
+    assert session.committed is True
+    assert synchronized_ids == ["organization-id"]
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_auth=credential" in response.headers["set-cookie"]
+    assert any("longlink_registration=" in header for header in response.headers.getlist("set-cookie"))
