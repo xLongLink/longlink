@@ -41,13 +41,10 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     owner = users[0]
     organization = await create_organization(owner)
 
-    # Act
+    # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError) as exc:
+        with pytest.raises(ConflictError, match="^User is already a member$"):
             await invitations.create(session, organization.id, owner.email, OrganizationRoles.write)
-
-    # Assert
-    assert str(exc.value) == "User is already a member"
 
 
 async def test_create_replaces_existing_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:

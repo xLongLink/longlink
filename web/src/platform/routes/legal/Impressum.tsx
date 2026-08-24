@@ -5,7 +5,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
 export const metadata = {
-    path: '/impressum',
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },

@@ -9,7 +9,6 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 export const metadata = {
-    path: '/docs/sdk/storage',
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

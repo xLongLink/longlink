@@ -100,9 +100,3 @@ class FrontendMiddleware:
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
         application = self.gzip if compression_candidate and accepts_gzip(request_headers.get("accept-encoding", "")) else self.app
         await application(scope, receive, send_with_headers)
-
-
-def install_frontend_middleware(app: FastAPI) -> None:
-    """Install safe compression and cache policies for embedded frontend bundles."""
-
-    app.add_middleware(FrontendMiddleware)

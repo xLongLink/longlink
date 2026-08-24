@@ -2,9 +2,9 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from containers import start_postgres
-from collections.abc import AsyncIterator
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL

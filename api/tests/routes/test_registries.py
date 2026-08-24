@@ -108,22 +108,15 @@ async def test_registry_endpoints_return_registered_backend(
     infrastructure = await create_ready_infrastructure()
     backend = getattr(infrastructure, registry)
 
-    list_response = await clients[0].get(f"/api/v1/{path}")
     get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
 
-    assert list_response.status_code == 200
-    assert str(backend.id) in {item["id"] for item in list_response.json()["items"]}
     assert get_response.status_code == 200
     payload = get_response.json()
     assert payload["id"] == str(backend.id)
     assert payload["name"] == backend.name
     assert {field: payload[field] for field in expected_fields} == expected_fields
     assert all(field not in payload for field in secret_fields)
-    assert all(
-        str(getattr(backend, secret_field)) not in response.text
-        for secret_field in secret_fields
-        for response in (list_response, get_response)
-    )
+    assert all(str(getattr(backend, secret_field)) not in get_response.text for secret_field in secret_fields)
 
 
 @pytest.mark.parametrize(

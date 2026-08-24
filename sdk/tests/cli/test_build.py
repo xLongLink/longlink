@@ -319,7 +319,7 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     transitive_dependency = build_project.parent / "common"
     transitive_dependency.mkdir()
     transitive_dependency.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "common"\nversion = "0.1.0"\n', encoding="utf-8"
+        '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../app" }\n', encoding="utf-8"
     )
     dependency.joinpath("pyproject.toml").write_text(
         '[project]\nname = "shared"\nversion = "0.1.0"\n\n[tool.uv.sources]\ncommon = { path = "../common" }\n',

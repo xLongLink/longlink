@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import timedelta
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Awaitable
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation

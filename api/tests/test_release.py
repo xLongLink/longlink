@@ -1,6 +1,6 @@
 import pytest
-from contextlib import asynccontextmanager
 from src import release
+from contextlib import asynccontextmanager
 
 pytestmark = pytest.mark.no_db
 

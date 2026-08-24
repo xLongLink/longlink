@@ -2,7 +2,6 @@ import pytest
 from pydantic import ValidationError
 from src.environments import Env
 
-
 pytestmark = pytest.mark.no_db
 
 ENVIRONMENT_SETTINGS = {

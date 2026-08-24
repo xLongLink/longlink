@@ -6,7 +6,6 @@ import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
 export const metadata = {
-    path: '/terms',
     toc: [
         { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
         {

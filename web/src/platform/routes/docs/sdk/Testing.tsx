@@ -6,7 +6,6 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 export const metadata = {
-    path: '/docs/sdk/testing',
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

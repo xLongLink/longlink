@@ -1,7 +1,9 @@
 import sys
 import pytest
+import sqlite3
 from types import ModuleType, SimpleNamespace
 from pathlib import Path
+from contextlib import closing
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
@@ -98,6 +100,24 @@ def test_migration_loader_skips_already_imported_models(
 
     # Act
     database_migrations.load_application_models()
+
+
+def test_migration_loader_skips_models_without_an_import_spec(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Skip model files that Python cannot load as modules."""
+
+    # Arrange
+    _, write_model = isolated_model
+    write_model("unloadable_inventory", "table_name = 'unloadable_inventory'\n")
+    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", lambda *_args: None)
+
+    # Act
+    database_migrations.load_application_models()
+
+    # Assert
+    assert "src.database.models.catalog.inventory" not in sys.modules
 
 
 def test_migration_loader_removes_failed_model_import_before_retry(
@@ -248,3 +268,19 @@ def test_migrations_upgrade_head_when_revisions_are_available_or_development(tmp
     assert captured["target"] == "head"
     assert config.get_main_option("script_location") == str(database_migrations.CURRENT_FILE.parent)
     assert config.get_main_option("version_locations") == str(migrations_path)
+
+
+def test_apply_migrations_initializes_the_application_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the packaged Alembic environment against a development Application database."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+
+    # Act
+    database_migrations.apply_migrations()
+
+    # Assert
+    with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
+        table = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'alembic_version'").fetchone()
+    assert table == ("alembic_version",)

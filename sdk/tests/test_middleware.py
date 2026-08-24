@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.types import Send, Scope, Message, Receive
 from fastapi.responses import Response
 from fastapi.testclient import TestClient
-from longlink.middleware import FrontendMiddleware, accepts_gzip, install_frontend_middleware
+from longlink.middleware import FrontendMiddleware, accepts_gzip
 
 
 def create_text_app(headers: dict[str, str], path: str = "/text", media_type: str = "text/plain") -> FastAPI:
@@ -20,7 +20,7 @@ def create_text_app(headers: dict[str, str], path: str = "/text", media_type: st
 
         return Response("x" * 1000, media_type=media_type, headers=headers)
 
-    install_frontend_middleware(app)
+    app.add_middleware(FrontendMiddleware)
     return app
 
 
@@ -138,7 +138,7 @@ def test_frontend_middleware_preserves_precompressed_text_representation() -> No
             headers={"content-encoding": "gzip", "etag": '"text-v1"'},
         )
 
-    install_frontend_middleware(app)
+    app.add_middleware(FrontendMiddleware)
 
     # Act
     response = request_response(app, "/text", {"accept-encoding": "gzip"})
@@ -209,7 +209,7 @@ def test_frontend_middleware_applies_default_cache_policy(
 
         return Response("content", media_type=media_type, status_code=status_code)
 
-    install_frontend_middleware(app)
+    app.add_middleware(FrontendMiddleware)
 
     # Act
     response = request_response(app, path, {})

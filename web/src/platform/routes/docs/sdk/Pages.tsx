@@ -70,7 +70,6 @@ function SummaryCard({
 }
 
 export const metadata = {
-    path: '/docs/sdk/pages',
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
