@@ -61,3 +61,50 @@ async def test_database_usage_endpoint_rejects_missing_registry(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Database registry not found"}
+
+
+async def test_database_registry_list_paginates_without_exposing_password(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return one ordered registry page without its administrator password."""
+
+    # Arrange
+    alpha_payload = {
+        "name": "Alpha database",
+        "host": "alpha.example",
+        "port": 5432,
+        "username": "administrator",
+        "password": "alpha-password",
+        "sslmode": "require",
+    }
+    bravo_payload = {
+        "name": "Bravo database",
+        "host": "bravo.example",
+        "port": 5432,
+        "username": "administrator",
+        "password": "bravo-password",
+        "sslmode": "require",
+    }
+    alpha_response = await clients[0].post("/api/v1/databases", json=alpha_payload)
+    bravo_response = await clients[0].post("/api/v1/databases", json=bravo_payload)
+
+    # Act
+    response = await clients[0].get("/api/v1/databases?page_size=1")
+
+    # Assert
+    assert alpha_response.status_code == 201
+    assert bravo_response.status_code == 201
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [
+            {
+                "id": alpha_response.json()["id"],
+                "name": "Alpha database",
+                "host": "alpha.example",
+                "port": 5432,
+                "sslmode": "require",
+                "username": "administrator",
+            }
+        ],
+        "total": 2,
+    }

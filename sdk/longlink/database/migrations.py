@@ -7,7 +7,6 @@ from alembic.operations.ops import MigrationScript
 from longlink.utils.settings import Envs
 
 CURRENT_FILE = Path(__file__).resolve()
-MIGRATIONS_DIRECTORY = "migrations"
 
 
 def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
@@ -58,7 +57,7 @@ def make_migrations() -> bool:
     load_application_models()
 
     # Prepare the application migration directory for local revision generation.
-    migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
+    migrations_path = Path.cwd() / "migrations"
     migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to generate revisions in the application directory.
@@ -98,7 +97,7 @@ def apply_migrations() -> None:
 
     # Production images must include committed application migrations.
     environment = Envs().ENV
-    migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
+    migrations_path = Path.cwd() / "migrations"
     if environment == "production" and (
         not migrations_path.is_dir() or not any(path.name != "__init__.py" for path in migrations_path.glob("*.py"))
     ):

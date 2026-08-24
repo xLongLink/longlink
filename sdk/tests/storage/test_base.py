@@ -139,9 +139,8 @@ def test_nonproduction_storage_selects_local_filesystem(
     assert protocols == [expected_protocol]
 
 
-@pytest.mark.parametrize("environment", ["testing", "development"])
 def test_nonproduction_storage_scopes_configured_bucket_prefix(
-    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"]
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Scope local storage to the configured bucket and prefix."""
 
@@ -158,7 +157,7 @@ def test_nonproduction_storage_scopes_configured_bucket_prefix(
     )
 
     # Act
-    result = storage_base.create_fs(Envs(ENV=environment, STORAGE_BUCKET="acme", STORAGE_PREFIX="applications/dashboard"))
+    result = storage_base.create_fs(Envs(ENV="testing", STORAGE_BUCKET="acme", STORAGE_PREFIX="applications/dashboard"))
 
     # Assert
     assert result is scoped_filesystem

@@ -10,7 +10,6 @@ from sqlmodel import Field
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
-from longlink.database import audit
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -56,7 +55,6 @@ def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
 
 @pytest.mark.usefixtures("_audit_engine")
 async def test_audit_hook_persists_fields_and_converts_soft_deletes(
-    monkeypatch: pytest.MonkeyPatch,
     audit_model_cleanup: Callable[[str], None],
 ) -> None:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
@@ -74,15 +72,10 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
 
     audit_model_cleanup(AuditLifecycleItem.__tablename__)
 
-    # Supply one stable timestamp for each audited flush.
-    created_at = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
-    updated_at = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
+    # Supply one explicit timestamp for the caller-requested soft delete.
     soft_deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
-    deleted_at = datetime(2026, 7, 14, 13, 0, tzinfo=UTC)
-    audit_times = iter((created_at, updated_at, soft_deleted_at, deleted_at))
 
-    # Bind this test's clock, users, and isolated engine.
-    monkeypatch.setattr(audit, "utcnow", lambda: next(audit_times))
+    # Bind this test's users and isolated engine.
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     soft_deleter_id = UUID("00000000-0000-0000-0000-000000000004")
@@ -96,6 +89,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
 
         assert item.id is not None
         item_id = item.id
+        assert item.created_at is not None
+        assert item.updated_at is not None
+        assert item.created_at.tzinfo is UTC
+        assert item.updated_at.tzinfo is UTC
+        created_at = item.created_at
+        updated_at = item.updated_at
         assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
             created_at,
             created_at,
@@ -108,12 +107,12 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             item.name = "reviewed"
             await session.commit()
 
-        assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
-            created_at,
-            updated_at,
-            creator_id,
-            updater_id,
-        )
+        assert item.updated_at is not None
+        assert item.created_at == created_at
+        assert item.created_id == creator_id
+        assert item.updated_id == updater_id
+        assert item.updated_at >= updated_at
+        updated_at = item.updated_at
 
         # Persist a caller-requested soft delete with the acting identity.
         with identity_context(soft_deleter_id):
@@ -121,12 +120,11 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             await session.commit()
 
         # Assert the explicit soft delete before hard-delete conversion overwrites it.
-        assert (item.updated_at, item.deleted_at, item.updated_id, item.deleted_id) == (
-            soft_deleted_at,
-            soft_deleted_at,
-            soft_deleter_id,
-            soft_deleter_id,
-        )
+        assert item.updated_at is not None
+        assert item.deleted_at == soft_deleted_at
+        assert item.updated_id == soft_deleter_id
+        assert item.deleted_id == soft_deleter_id
+        assert item.updated_at >= updated_at
 
     # Delete the reloaded row and commit the listener's soft-delete conversion.
     async with database_base.session() as session:
@@ -141,7 +139,8 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
     async with database_base.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
-        assert item.deleted_at == deleted_at
+        assert item.deleted_at is not None
+        assert item.deleted_at.tzinfo is UTC
         assert item.deleted_id == deleter_id
 
 

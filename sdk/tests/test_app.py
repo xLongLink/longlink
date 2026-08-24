@@ -237,6 +237,11 @@ def test_duplicate_browser_routes_are_rejected(
     first_path.write_text("<longlink>First</longlink>", encoding="utf-8")
     second_path.write_text("<longlink>Second</longlink>", encoding="utf-8")
 
+    app = FastAPI()
+
     # Act and assert
     with pytest.raises(ValueError, match=message):
-        LongLink(FastAPI())
+        LongLink(app)
+
+    # Assert
+    assert not any(getattr(route, "path", "").startswith("/pages/") for route in app.router.routes)

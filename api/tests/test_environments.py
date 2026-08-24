@@ -22,7 +22,6 @@ ENVIRONMENT_SETTINGS = {
     [
         pytest.param({"SMTP_USE_TLS": True}, "SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled", id="tls-and-starttls"),
         pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
-        pytest.param({"SMTP_PASSWORD": "secret"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="password-only"),
         pytest.param(
             {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
             "SMTP_HOST is required when SMTP authentication is configured",

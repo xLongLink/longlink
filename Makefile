@@ -57,12 +57,12 @@ test: api\:test sdk\:test
 
 # Run API tests with coverage.
 api\:test: api\:install
-	coverage_file="$${TMPDIR:-/tmp}/longlink-api-coverage.$$$$"; trap 'rm -f "$$coverage_file"' EXIT; cd api && COVERAGE_FILE="$$coverage_file" uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
+	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 
 
 # Run SDK tests with coverage.
 sdk\:test: sdk\:install
-	coverage_file="$${TMPDIR:-/tmp}/longlink-sdk-coverage.$$$$"; trap 'rm -f "$$coverage_file"' EXIT; cd sdk && COVERAGE_FILE="$$coverage_file" uv run --locked --group dev pytest --cov --cov-report=term-missing
+	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
 
 
 # Run API ty checks.

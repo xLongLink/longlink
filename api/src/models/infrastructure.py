@@ -70,26 +70,3 @@ class DatabaseConfiguration(BaseModel):
         ):
             raise ValueError("Database host is invalid")
         return value
-
-
-class StorageConfiguration(BaseModel):
-    """Object-storage connection configuration for one registry."""
-
-    # Connection
-    endpoint_url: str = Field(min_length=1, max_length=255)
-
-    # Credentials
-    access_key_id: str = Field(min_length=1, max_length=255)
-    secret_access_key: str = Field(min_length=1, max_length=255)
-
-    @field_validator("endpoint_url")
-    @classmethod
-    def validate_endpoint_url(cls, endpoint_url: str) -> str:
-        """Validate one Exoscale SOS endpoint."""
-
-        # Normalize and validate the provider endpoint before persistence.
-        value = endpoint_url.strip().rstrip("/")
-
-        # Storage registries currently support only zone-specific Exoscale SOS endpoints.
-        exoscale_zone(value)
-        return value

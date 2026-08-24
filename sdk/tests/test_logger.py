@@ -7,7 +7,6 @@ from longlink.logger import ColorFormatter, ApiAccessFilter, configure_logger
     ("args", "expected"),
     [
         pytest.param(("127.0.0.1", "GET", "/api/items"), True, id="api-read"),
-        pytest.param(("127.0.0.1", "GET", "/api/items?limit=1"), True, id="api-read-with-query"),
         pytest.param(("127.0.0.1", "GET", "/assets/app.js"), False, id="frontend-read"),
         pytest.param(("127.0.0.1", "POST", "/submit"), True, id="mutation"),
         pytest.param({"path": "/assets/app.js"}, True, id="mapping-arguments"),

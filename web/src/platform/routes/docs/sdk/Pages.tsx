@@ -42,9 +42,14 @@ function SummaryCard({
     children: React.ReactNode;
     name: string;
     padding?: 0 | 3;
-    path: string;
+    path?: string;
 }) {
     const component = componentDocumentation.find((candidate) => candidate.name === name);
+    const destination = component === undefined ? path : `/docs/sdk/pages/${component.slug}`;
+
+    if (destination === undefined) {
+        throw new Error(`Missing documentation route for ${name}`);
+    }
 
     return (
         <Stack className="relative" gap={2}>
@@ -63,7 +68,7 @@ function SummaryCard({
             <RouterLink
                 aria-label={`Open ${name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={component ? `/docs/sdk/pages/${component.slug}` : path}
+                to={destination}
             />
         </Stack>
     );
@@ -128,14 +133,14 @@ export default function DocsArticleRoute() {
                         Action
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Button" path="/docs/sdk/pages/button">
+                        <SummaryCard name="Button">
                             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                                 <Button label="Save" size="sm" variant="primary" />
                                 <Button label="Edit" size="sm" variant="secondary" />
                                 <Button label="View" size="sm" variant="ghost" />
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="Link" path="/docs/sdk/pages/link">
+                        <SummaryCard name="Link">
                             <Link href="/docs/sdk/pages/link" type="inherit" hasUnderline>
                                 Docs
                             </Link>
@@ -147,26 +152,26 @@ export default function DocsArticleRoute() {
                         Content
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Avatar" path="/docs/sdk/pages/avatar">
+                        <SummaryCard name="Avatar">
                             <Avatar name="Ada Lovelace" size="lg" />
                         </SummaryCard>
-                        <SummaryCard name="Heading" path="/docs/sdk/pages/heading">
+                        <SummaryCard name="Heading">
                             <Heading className="mt-0" level={3}>
                                 Orders
                             </Heading>
                         </SummaryCard>
-                        <SummaryCard name="Text" path="/docs/sdk/pages/text">
+                        <SummaryCard name="Text">
                             <Text>
                                 Normal <b>bold</b> and <i>italic</i> text.
                             </Text>
                         </SummaryCard>
-                        <SummaryCard name="Icon" path="/docs/sdk/pages/icon">
+                        <SummaryCard name="Icon">
                             <Info aria-hidden="true" className="text-accent" size={20} />
                         </SummaryCard>
-                        <SummaryCard name="Badge" path="/docs/sdk/pages/badge">
+                        <SummaryCard name="Badge">
                             <Badge label="Open" variant="info" />
                         </SummaryCard>
-                        <SummaryCard name="Divider" path="/docs/sdk/pages/divider">
+                        <SummaryCard name="Divider">
                             <Stack justify="center" minHeight={150} width="100%">
                                 <Divider label="Or" />
                             </Stack>
@@ -178,10 +183,10 @@ export default function DocsArticleRoute() {
                         Form
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="CheckboxInput" path="/docs/sdk/pages/checkbox-input">
+                        <SummaryCard name="CheckboxInput">
                             <CheckboxInput label="Approved" size="sm" value onChange={noop} />
                         </SummaryCard>
-                        <SummaryCard name="FileInput" path="/docs/sdk/pages/file-input">
+                        <SummaryCard name="FileInput">
                             <Stack width={140}>
                                 <FileInput
                                     accept=".pdf"
@@ -194,7 +199,7 @@ export default function DocsArticleRoute() {
                                 />
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="NumberInput" path="/docs/sdk/pages/number-input">
+                        <SummaryCard name="NumberInput">
                             <NumberInput
                                 isLabelHidden
                                 label="Quantity"
@@ -206,7 +211,7 @@ export default function DocsArticleRoute() {
                                 onChange={noop}
                             />
                         </SummaryCard>
-                        <SummaryCard name="RadioList" path="/docs/sdk/pages/radio-list">
+                        <SummaryCard name="RadioList">
                             <Stack width={170}>
                                 <RadioList
                                     label="Plan"
@@ -221,7 +226,7 @@ export default function DocsArticleRoute() {
                                 </RadioList>
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="Selector" path="/docs/sdk/pages/selector">
+                        <SummaryCard name="Selector">
                             <Selector
                                 label="Status"
                                 options={[
@@ -235,15 +240,15 @@ export default function DocsArticleRoute() {
                                 isLabelHidden
                             />
                         </SummaryCard>
-                        <SummaryCard name="Slider" path="/docs/sdk/pages/slider">
+                        <SummaryCard name="Slider">
                             <Stack width={150}>
                                 <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="Switch" path="/docs/sdk/pages/switch">
+                        <SummaryCard name="Switch">
                             <Switch label="Enabled" size="sm" value onChange={noop} />
                         </SummaryCard>
-                        <SummaryCard name="TextArea" path="/docs/sdk/pages/text-area">
+                        <SummaryCard name="TextArea">
                             <Stack width={150}>
                                 <TextArea
                                     isLabelHidden
@@ -255,7 +260,7 @@ export default function DocsArticleRoute() {
                                 />
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="TextInput" path="/docs/sdk/pages/text-input">
+                        <SummaryCard name="TextInput">
                             <TextInput
                                 isLabelHidden
                                 label="Name"
@@ -272,12 +277,12 @@ export default function DocsArticleRoute() {
                         Layout
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Card" path="/docs/sdk/pages/card">
+                        <SummaryCard name="Card">
                             <Card elevation="low" padding={3}>
                                 Lorem ipsum dolor sit amet.
                             </Card>
                         </SummaryCard>
-                        <SummaryCard name="Grid" path="/docs/sdk/pages/grid">
+                        <SummaryCard name="Grid">
                             <Grid columns={2} gap={2} justify="center">
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
@@ -285,7 +290,7 @@ export default function DocsArticleRoute() {
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Grid>
                         </SummaryCard>
-                        <SummaryCard name="Menu" padding={3} path="/docs/sdk/pages/menu">
+                        <SummaryCard name="Menu" padding={3}>
                             <Menu>
                                 <MenuSection title="Settings">
                                     <MenuItem label="General" />
@@ -293,20 +298,20 @@ export default function DocsArticleRoute() {
                                 </MenuSection>
                             </Menu>
                         </SummaryCard>
-                        <SummaryCard name="Stack" path="/docs/sdk/pages/stack">
+                        <SummaryCard name="Stack">
                             <Stack align="center" gap={2} width="100%">
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                                 <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Stack>
                         </SummaryCard>
-                        <SummaryCard name="Tabs" path="/docs/sdk/pages/tabs">
+                        <SummaryCard name="Tabs">
                             <Tabs>
                                 <Tab label="Overview" value="overview" />
                                 <Tab label="Activity" value="activity" />
                             </Tabs>
                         </SummaryCard>
-                        <SummaryCard name="Dialog" path="/docs/sdk/pages/dialog">
+                        <SummaryCard name="Dialog">
                             <Dialog
                                 aria-label="Dialog preview"
                                 isInline
@@ -340,7 +345,7 @@ export default function DocsArticleRoute() {
                                 </Layout>
                             </Dialog>
                         </SummaryCard>
-                        <SummaryCard name="Table" path="/docs/sdk/pages/table">
+                        <SummaryCard name="Table">
                             <Stack width={170}>
                                 <Table data={[{ item: 'Order', status: 'Open' }]} density="compact">
                                     <TableColumn field="item" header="Item" />

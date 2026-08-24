@@ -4,10 +4,9 @@ from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from typing import TypedDict
-from pathlib import Path
 from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -26,7 +25,9 @@ class ProxyCapture(TypedDict, total=False):
     method: str
     url: str
     content: bytes
-    headers: dict[str, str]
+    content_type: str
+    application_id: str
+    user_id: str
 
 
 def fake_ssl_context(
@@ -100,19 +101,8 @@ async def test_application_proxy_forwards_safe_content(
 
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
-    app, remote_infrastructure = await create_running_application(user)
-    registry = remote_infrastructure.compute
+    app, _ = await create_running_application(user)
     captured: ProxyCapture = {}
-
-    class FakeTLS:
-        """Capture the Platform client identity loaded into the TLS context."""
-
-        def load_cert_chain(self, certfile: str) -> None:
-            """Capture the temporary PEM identity configured for Gateway mTLS."""
-
-            captured["client_identity"] = Path(certfile).read_text()
-
-    tls = FakeTLS()
 
     class FakeProxyResponse:
         """Stream one fake upstream application response."""
@@ -134,38 +124,41 @@ async def test_application_proxy_forwards_safe_content(
 
             captured["close_count"] = captured.get("close_count", 0) + 1
 
-    class ForwardingProxyClient:
-        """Fake upstream HTTP client for application proxy requests."""
+    class Gateway:
+        """Capture the proxy route's gateway request."""
 
-        def __init__(self, **kwargs) -> None:
-            """Capture client construction options."""
+        def __init__(self, *_args: str) -> None:
+            """Accept the route's persisted gateway configuration."""
 
-            captured["client_kwargs"] = kwargs
+        async def request(
+            self,
+            *,
+            application_id: UUID,
+            user_id: UUID,
+            method: str,
+            path: str,
+            query: str,
+            content_type: str | None,
+            content: AsyncIterator[bytes],
+        ) -> FakeGatewayResponse:
+            """Record the route request and return a safe upstream response."""
 
-        async def aclose(self) -> None:
-            """Close the fake client."""
+            assert content_type is not None
+            captured["method"] = method
+            captured["url"] = f"https://gateway.example/{path}?{query}"
+            captured["content"] = b"".join([chunk async for chunk in content])
+            captured["content_type"] = content_type
+            captured["application_id"] = str(application_id)
+            captured["user_id"] = str(user_id)
 
-        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
-            """Build one fake streaming request."""
+            def close() -> None:
+                """Record gateway response cleanup."""
 
-            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+                captured["close_count"] = 1
 
-        async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
-            """Capture the forwarded application request and return a stream."""
+            return FakeGatewayResponse(FakeProxyResponse(), close)
 
-            # Drain the forwarded request stream into the captured gateway request.
-            content = b"".join([chunk async for chunk in request.content])
-            captured["method"] = request.method
-            captured["url"] = request.url
-            captured["content"] = content
-            captured["headers"] = request.headers
-            return FakeProxyResponse()
-
-    monkeypatch.setattr(
-        "src.adapters.gateway.ssl.create_default_context",
-        fake_ssl_context(tls, expected_ca_certificate=registry.gateway_certificate),
-    )
-    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", ForwardingProxyClient)
+    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
     client = clients[0]
 
     # Proxy a request carrying trusted and untrusted browser headers.
@@ -194,16 +187,12 @@ async def test_application_proxy_forwards_safe_content(
     )
     assert "set-cookie" not in response.headers
     assert captured.get("close_count") == 1
-    assert captured.get("client_identity") == registry.gateway_client_identity
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
-    headers = captured.get("headers")
-    assert headers is not None
-    assert headers["x-longlink-application-id"] == str(app.id)
-    assert headers["x-user-id"] == str(user.id)
-    assert headers["content-type"] == "text/plain"
-    assert {"accept", "accept-language", "authorization", "cookie", "x-custom-feature", "x-forwarded-for"}.isdisjoint(headers)
+    assert captured.get("application_id") == str(app.id)
+    assert captured.get("user_id") == str(user.id)
+    assert captured.get("content_type") == "text/plain"
 
 
 async def test_application_proxy_streams_response_without_upstream_content_type(

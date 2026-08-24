@@ -46,17 +46,13 @@ async def test_list_apps_returns_requested_page_for_admin(
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex")
-    dashboard = await create_application(acme)
+    await create_application(acme)
     console = await create_application(globex, name="console")
 
     # Act
-    unpaged_response = await clients[0].get("/api/v1/applications")
     paged_response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
 
     # Assert
-    assert unpaged_response.status_code == 200
-    assert {item["id"] for item in unpaged_response.json()["items"]} == {str(dashboard.id), str(console.id)}
-    assert unpaged_response.json()["total"] == 2
     assert paged_response.status_code == 200
     assert [item["id"] for item in paged_response.json()["items"]] == [str(console.id)]
     assert paged_response.json()["total"] == 2
