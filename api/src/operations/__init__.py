@@ -3,9 +3,7 @@ from uuid import UUID
 from collections.abc import Callable, Awaitable
 from src.models.operations import OperationKind
 
-OperationHandler = Callable[[UUID], Awaitable[str | None]]
-
-handlers: dict[OperationKind, OperationHandler] = {
+handlers: dict[OperationKind, Callable[[UUID], Awaitable[str | None]]] = {
     OperationKind.compute_create: computes.create,
     OperationKind.application_create: applications.create,
     OperationKind.application_delete: applications.delete,

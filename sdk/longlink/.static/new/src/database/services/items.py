@@ -19,9 +19,8 @@ async def create_item(session: AsyncSession, name: str, price: float) -> Item:
     # Build the item from the validated route values.
     item = Item(name=name, price=price)
 
-    # Persist and refresh the item so it includes its generated id.
+    # Persist the item so it includes its generated id.
     session.add(item)
     await session.commit()
-    await session.refresh(item)
 
     return item

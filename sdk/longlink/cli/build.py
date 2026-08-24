@@ -163,19 +163,6 @@ def read_pyproject(root: Path) -> dict[str, object]:
         raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
 
 
-def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
-    """Render OCI and LongLink image labels for a Dockerfile."""
-
-    # Render standard OCI metadata and LongLink-specific runtime metadata.
-    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={json.dumps(description)}"]
-
-    # Include environment requirements only when declared.
-    if environments:
-        rendered_labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
-
-    return "\n".join(rendered_labels)
-
-
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
@@ -303,11 +290,11 @@ def build_app(build_context: Path) -> tuple[str, str]:
     except PackageNotFoundError:
         sdk_version = "0.0.0"
 
-    # Render image metadata labels.
-    labels = render_image_labels(
-        project_description,
-        read_env_spec(root, pyproject_data),
-    )
+    # Render standard OCI metadata and LongLink-specific runtime metadata.
+    labels = [] if project_description is None else [f"LABEL org.opencontainers.image.description={json.dumps(project_description)}"]
+    environments = read_env_spec(root, pyproject_data)
+    if environments:
+        labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
         """Return symlinks that resolve outside the source root."""
@@ -351,7 +338,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
             dependency_source=dependency_source,
             local_dependency_manifests=local_dependency_manifests,
             workdir=workdir,
-            labels=labels,
+            labels="\n".join(labels),
             sdk_version=json.dumps(sdk_version),
         ),
         encoding="utf-8",

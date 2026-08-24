@@ -117,7 +117,7 @@ class LongLink:
             page_route = page_stem_route(path_without_suffix)
             relative_route = page_route.removeprefix("/")
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
-            tab = relative_route.split("/:", 1)[0] or relative_route.removeprefix(":") or "index"
+            tab = relative_route.split("/:", 1)[0] or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:
