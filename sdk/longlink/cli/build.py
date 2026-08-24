@@ -331,7 +331,9 @@ def build_app(build_context: Path) -> tuple[str, str]:
     # Scope application-local ignore rules to the expanded Docker context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = context_ignore_rules(source, root, source_root)
-    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n", encoding="utf-8")
+    build_context.joinpath(".dockerignore").write_text(
+        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n", encoding="utf-8"
+    )
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = root.relative_to(source_root).as_posix()

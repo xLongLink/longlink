@@ -27,8 +27,8 @@ spec:
                   image: $image
                   command:
                       - python
-                      - -m
-                      - longlink.database.migrations
+                      - -c
+                      - from longlink.database.migrations import apply_migrations; apply_migrations()
                   resources:
                       requests:
                           cpu: 100m

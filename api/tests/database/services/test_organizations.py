@@ -511,6 +511,54 @@ async def test_create_rejects_missing_assigned_infrastructure(
             await organizations.create(session, "acme", users[0], **assignments)
 
 
+async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:
+    """Reject duplicate Organization names without persisting a second membership."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    await create_organization(users[0], infrastructure=infrastructure)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="Organization already exists"):
+            await organizations.create(
+                session,
+                "acme",
+                users[0],
+                compute_id=infrastructure.compute.id,
+                database_id=infrastructure.database.id,
+                storage_id=infrastructure.storage.id,
+            )
+
+
+async def test_update_persists_changed_organization_avatar(users: tuple[User, User, User]) -> None:
+    """Persist changed mutable Organization metadata with its actor."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    async with session_scope() as session:
+        updated = await organizations.update(session, organization.id, "https://example.com/avatar.png", users[0])
+        await session.commit()
+
+    # Assert
+    assert updated is not None
+    assert updated.avatar == "https://example.com/avatar.png"
+    assert updated.updated_id == users[0].id
+
+
+async def test_update_returns_none_for_missing_organization(users: tuple[User, User, User]) -> None:
+    """Treat updates to missing Organizations as absent resources."""
+
+    # Act
+    async with session_scope() as session:
+        updated = await organizations.update(session, uuid4(), "https://example.com/avatar.png", users[0])
+
+    # Assert
+    assert updated is None
+
+
 async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
     """Tombstone applications while retaining Organization memberships until purge."""
 

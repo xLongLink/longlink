@@ -46,6 +46,36 @@ app = FastAPI(
 )
 
 
+AUTHENTICATION_COOKIES = frozenset(
+    {
+        "longlink_auth",
+        "longlink_password_reset",
+        "longlink_registration",
+    }
+)
+UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+@app.middleware("http")
+async def prevent_cross_origin_authenticated_writes(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    """Reject unsafe requests that use browser-only authentication cookies from untrusted origins."""
+
+    # Cookie-authenticated browser writes must originate from the configured frontend.
+    if request.method in UNSAFE_METHODS and AUTHENTICATION_COOKIES.intersection(request.cookies):
+        public_origin = env.PUBLIC_URL.rstrip("/")
+        trusted_origins = {public_origin}
+        if env.DEVELOPMENT:
+            trusted_origins.add(public_origin.replace("://localhost", "://127.0.0.1"))
+            trusted_origins.add(public_origin.replace("://127.0.0.1", "://localhost"))
+        if request.headers.get("origin") not in trusted_origins:
+            return JSONResponse(status_code=403, content={"detail": "Origin required"})
+
+    return await call_next(request)
+
+
 @app.exception_handler(ServiceError)
 async def service_error_response(_request: Request, error: ServiceError):
     """Return expected service failures as API responses."""

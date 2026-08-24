@@ -5,6 +5,7 @@ from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
+from botocore.exceptions import ClientError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
@@ -268,7 +269,6 @@ async def test_other_organization_user_cannot_delete_application(
     [
         pytest.param(3584, 200, 3584, id="available"),
         pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database resources unavailable"}, id="backend-unavailable"),
     ],
 )
 async def test_organization_database_usage_returns_usage_or_unavailable(
@@ -279,7 +279,7 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
     expected_status: int,
     expected_payload: int | None | dict[str, str],
 ) -> None:
-    """Return database usage or translate a backend failure."""
+    """Return database usage when the adapter can inspect it."""
 
     # Arrange
     owner = users[0]
@@ -315,7 +315,12 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
     [
         pytest.param(4096, 200, 4096, id="available"),
         pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(RuntimeError("storage offline"), 503, None, id="backend-unavailable"),
+        pytest.param(
+            ClientError({"Error": {"Code": "InternalError"}, "ResponseMetadata": {"HTTPStatusCode": 500}}, "ListObjectsV2"),
+            503,
+            None,
+            id="backend-unavailable",
+        ),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(

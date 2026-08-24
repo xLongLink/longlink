@@ -13,14 +13,6 @@ async def list_items() -> list[Item]:
         return result.all()
 
 
-async def get_item(item_id: int) -> Item | None:
-    """Return one catalog item."""
-
-    # Retrieve the item by its primary key.
-    async with database.session() as session:
-        return await session.get(Item, item_id)
-
-
 async def create_item(name: str, price: float) -> Item:
     """Persist and return a catalog item."""
 

@@ -232,6 +232,88 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
     ]
 
 
+async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report the manifest resource when applying it exceeds the controller timeout."""
+
+    # Arrange
+    class GatewayClass:
+        """Report that the controller still needs installation."""
+
+        def __init__(self, _name: str, api: object) -> None:
+            """Accept the Kubernetes API client."""
+
+        async def exists(self) -> bool:
+            """Report no existing GatewayClass."""
+
+            return False
+
+    class Response:
+        """Return a deterministic verified manifest."""
+
+        content = b"verified manifest"
+
+        def raise_for_status(self) -> None:
+            """Report a successful transport response."""
+
+    class HttpClient:
+        """Provide the verified manifest through the HTTP boundary."""
+
+        def __init__(self, **_kwargs: object) -> None:
+            """Accept client configuration."""
+
+        async def __aenter__(self) -> "HttpClient":
+            """Enter the HTTP client context."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the HTTP client context."""
+
+        async def get(self, _url: str) -> Response:
+            """Return the verified manifest."""
+
+            return Response()
+
+    class Digest:
+        """Return the pinned checksum for the deterministic manifest."""
+
+        def hexdigest(self) -> str:
+            """Return the expected Envoy Gateway manifest checksum."""
+
+            return "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781"
+
+    class Resource:
+        """Expose one parsed manifest resource."""
+
+        raw = {"kind": "Deployment", "metadata": {"name": "envoy-gateway"}}
+
+    async def objects_from_files(_path: str, *, api: object) -> list[Resource]:
+        """Return the controller resource that times out during application."""
+
+        return [Resource()]
+
+    async def apply(resource: Resource) -> None:
+        """Simulate a Kubernetes apply timeout."""
+
+        raise TimeoutError
+
+    def sha256(manifest: bytes) -> Digest:
+        """Verify the expected deterministic manifest bytes."""
+
+        assert manifest == b"verified manifest"
+        return Digest()
+
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
+    monkeypatch.setattr(gateway.hashlib, "sha256", sha256)
+    monkeypatch.setattr(gateway, "objects_from_files", objects_from_files)
+    monkeypatch.setattr(gateway, "apply", apply)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Timed out applying Envoy Gateway Deployment/envoy-gateway"):
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+
+
 async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: pytest.MonkeyPatch) -> None:
     """Issue GatewayClass deletion once and stop when its terminal absence is observed."""
 

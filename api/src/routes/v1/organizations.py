@@ -5,6 +5,7 @@ from src.utils import mail, roles
 from sqlalchemy import select
 from src.logger import logger
 from src.models.roles import OrganizationRoles
+from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
@@ -110,14 +111,9 @@ async def get_organization_database_usage(
     registry = await session.get(DatabaseRegistry, membership.organization.database_id)
 
     # Inspect the exact Organization database and return its physical size when available.
-    try:
-        usage = await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).database_usage(
-            membership.organization.id.hex
-        )
-    except Exception as exc:
-        logger.exception("Failed to inspect database usage for organization '%s': %r", membership.organization.slug, exc)
-        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
-    return usage
+    return await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).database_usage(
+        membership.organization.id.hex
+    )
 
 
 @router.get(
@@ -145,7 +141,7 @@ async def get_organization_storage_usage(
             registry.access_key_id,
             registry.secret_access_key,
         ).usage(bucket_name)
-    except Exception as exc:
+    except (BotoCoreError, ClientError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,

@@ -236,7 +236,7 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
+        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n"
     )
 
 
@@ -390,7 +390,7 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
     # Assert
     assert build_context.joinpath("app", ".env").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
+        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n"
     )
 
 

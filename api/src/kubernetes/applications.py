@@ -44,7 +44,11 @@ class Applications:
 
         # Render workload resources before the first cluster mutation.
         revision = hashlib.sha256(
-            json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
+            json.dumps(
+                {"image": image, "migration_runner": "apply-migrations-v1", "secrets": secrets},
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
         ).hexdigest()
         migration, deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),

@@ -259,6 +259,40 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
     assert logs == ["Migration logs:", "migration failed"]
 
 
+async def test_application_logs_returns_running_application_pod_logs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return recent logs from a running Application Pod before migration fallback."""
+
+    # Arrange
+    class PodResource:
+        """Represent a running Application Pod."""
+
+        raw = {"status": {"phase": "Running"}}
+        metadata = {"labels": {"longlink.io/component": "application"}}
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the running Application Pod."""
+
+            yield cls()
+
+        async def logs(self, *, tail_lines: int):
+            """Yield recent Application output."""
+
+            assert tail_lines == 200
+            yield "application started"
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act
+    logs = await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "acme",
+    )
+
+    # Assert
+    assert logs == ["application started"]
+
+
 async def test_application_delete_removes_resources_before_waiting_for_pods(monkeypatch: pytest.MonkeyPatch) -> None:
     """Delete Application resources once and wait for non-terminal Pods to exit."""
 

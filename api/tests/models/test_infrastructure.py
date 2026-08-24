@@ -19,7 +19,7 @@ def test_database_configuration_accepts_plain_hosts() -> None:
     assert payload.host == "database.example"
 
 
-@pytest.mark.parametrize("host", ["https://database.example", "database.example:5432", "db example"])
+@pytest.mark.parametrize("host", ["https://database.example", "database.example:5432", "database.example:invalid", "db example"])
 def test_database_configuration_rejects_embedded_connection_parts(host: str) -> None:
     """Reject database hosts that include URL, port, or whitespace data."""
 

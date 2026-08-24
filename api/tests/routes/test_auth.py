@@ -210,6 +210,7 @@ async def test_registration_completion_creates_authenticated_account(
     complete_response = await client.post(
         "/api/v1/auth/register/complete",
         json=completion_payload,
+        headers={"Origin": env.PUBLIC_URL},
     )
     profile_response = await client.get("/api/v1/me")
     authenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
@@ -304,7 +305,11 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     await register_and_verify(client, captured_mail, email)
 
     # Act
-    response = await client.post("/api/v1/auth/register/complete", json={"name": "Invited User", "password": TEST_PASSWORD})
+    response = await client.post(
+        "/api/v1/auth/register/complete",
+        json={"name": "Invited User", "password": TEST_PASSWORD},
+        headers={"Origin": env.PUBLIC_URL},
+    )
     organizations_response = await client.get("/api/v1/me/organizations")
     async with session_scope() as session:
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
@@ -369,7 +374,11 @@ async def test_registration_completion_rejects_duplicate_account(
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
     verification_token = await register_and_verify(client, captured_mail, email)
-    first_completion = await client.post("/api/v1/auth/register/complete", json=completion_payload)
+    first_completion = await client.post(
+        "/api/v1/auth/register/complete",
+        json=completion_payload,
+        headers={"Origin": env.PUBLIC_URL},
+    )
     assert first_completion.status_code == 201
 
     # Act
@@ -378,6 +387,7 @@ async def test_registration_completion_rejects_duplicate_account(
         repeat_response = await repeat_client.post(
             "/api/v1/auth/register/complete",
             json=completion_payload,
+            headers={"Origin": env.PUBLIC_URL},
         )
 
     assert repeat_verify_response.status_code == 200
@@ -492,6 +502,7 @@ async def test_forgot_and_reset_password(
     reset_response = await client.post(
         "/api/v1/auth/reset-password",
         json={"password": "replacement-password"},
+        headers={"Origin": env.PUBLIC_URL},
     )
     reused_token_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     revoked_session = await client.get("/api/v1/me")
@@ -595,7 +606,7 @@ async def test_authenticated_logout_rejects_alternate_local_origin_in_production
     assert profile_response.status_code == 200
 
 
-@pytest.mark.parametrize("headers", [{}, {"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
+@pytest.mark.parametrize("headers", [{"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
 async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str]
 ) -> None:

@@ -8,6 +8,7 @@ from src.schemas.items import (
 )
 from src.database.services import items
 from src.database.models.items import Item
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/api")
 
@@ -29,10 +30,10 @@ async def items_post_endpoint(payload: ItemCreate) -> Item:
 
 
 @router.get("/items/{item_id}", response_model=Item)
-async def item_get_endpoint(item_id: int) -> Item:
+async def item_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> Item:
     """Return one catalog item for a dynamic XML detail page."""
 
-    return await _require_item(item_id)
+    return await _require_item(item_id, ctx.database)
 
 
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
@@ -40,7 +41,7 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
     """Return files attached to one catalog item."""
 
     # Validate the item before accessing its attachment storage.
-    await _require_item(item_id)
+    await _require_item(item_id, ctx.database)
 
     # Treat an item without a storage directory as having no attachments.
     try:
@@ -65,7 +66,7 @@ async def item_attachments_post_endpoint(
     """Upload one file attachment for a catalog item."""
 
     # Validate the item before accepting attachment content.
-    await _require_item(item_id)
+    await _require_item(item_id, ctx.database)
 
     # Keep the uploaded basename beneath the item-specific storage directory.
     file_name = (
@@ -89,11 +90,11 @@ async def item_attachments_post_endpoint(
     return ItemAttachmentRead(id=file_id, name=file_name)
 
 
-async def _require_item(item_id: int) -> Item:
+async def _require_item(item_id: int, session: AsyncSession) -> Item:
     """Return one catalog item or raise a 404 response."""
 
     # Retrieve the item and translate a missing record into an API error.
-    item = await items.get_item(item_id)
+    item = await session.get(Item, item_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
 

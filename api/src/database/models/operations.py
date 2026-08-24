@@ -1,8 +1,9 @@
+import sqlalchemy
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Index, Column, text
+from sqlalchemy import Enum, Index, Column, Computed
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
@@ -24,10 +25,8 @@ class Operation(PlatformModel, table=True):
         Index(
             "uq_operations_unleased_target",
             "kind",
-            "target_id",
+            "unleased_target_id",
             unique=True,
-            postgresql_where=text("finished_at IS NULL AND lease_expires_at IS NULL"),
-            sqlite_where=text("finished_at IS NULL AND lease_expires_at IS NULL"),
         ),
     )
 
@@ -56,6 +55,15 @@ class Operation(PlatformModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     finished_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    unleased_target_id: UUID | None = Field(
+        default=None,
+        sa_column=Column(
+            "unleased_target_id",
+            sqlalchemy.Uuid(),
+            Computed("CASE WHEN finished_at IS NULL AND lease_expires_at IS NULL THEN target_id ELSE NULL END"),
+            nullable=True,
+        ),
+    )
 
     @property
     def status(self) -> OperationStatus:

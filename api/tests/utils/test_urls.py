@@ -128,3 +128,27 @@ def test_postgresql_database_url_rejects_unsupported_ssl_options(query: str, mes
     # Act and assert
     with pytest.raises(ValueError, match=message):
         urls.database(f"postgresql+asyncpg://control:secret@db:5432/longlink?{query}")
+
+
+@pytest.mark.parametrize(
+    ("query", "message"),
+    [
+        pytest.param("ssl_cert=first&ssl_cert=second", "one ssl_cert value", id="duplicate-certificate"),
+        pytest.param("ssl_key=first&ssl_key=second&ssl_cert=certificate", "one ssl_key value", id="duplicate-key"),
+        pytest.param("ssl-mode=REQUIRED&ssl_ca=ca.pem", "requires VERIFY_CA or VERIFY_IDENTITY", id="unverified-ca"),
+    ],
+)
+def test_mysql_database_url_rejects_invalid_client_tls_configuration(query: str, message: str) -> None:
+    """Reject ambiguous or ineffective MySQL client TLS settings."""
+
+    # Act and assert
+    with pytest.raises(ValueError, match=message):
+        urls.database(f"mysql+aiomysql://control:secret@db:3306/longlink?{query}")
+
+
+def test_database_url_rejects_unsupported_driver() -> None:
+    """Require one Platform-supported asynchronous database driver."""
+
+    # Act and assert
+    with pytest.raises(ValueError, match=r"sqlite\+aiosqlite, mysql\+aiomysql, or postgresql\+asyncpg"):
+        urls.database("postgresql://control:secret@db:5432/longlink")

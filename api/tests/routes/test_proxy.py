@@ -191,6 +191,36 @@ async def test_application_proxy_forwards_safe_content(
     assert captured.get("content_type") == "text/plain"
 
 
+@pytest.mark.parametrize("origin", ["", "https://attacker.example"])
+async def test_application_proxy_rejects_untrusted_origin_before_gateway_request(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    origin: str,
+) -> None:
+    """Reject missing and foreign origins before an authenticated write reaches the gateway."""
+
+    # Arrange a running Application and fail if CSRF protection is bypassed.
+    application, _ = await create_running_application(users[0])
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail when an untrusted browser request reaches the compute boundary."""
+
+        raise AssertionError("Gateway client must not be constructed")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/applications/{application.id}/proxy/tasks",
+        headers={"origin": origin},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
+
+
 async def test_application_proxy_streams_response_without_upstream_content_type(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

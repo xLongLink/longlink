@@ -22,7 +22,7 @@ type MenuMarkerProps = {
 };
 type MenuEntry =
     | { item: ReactElement<MenuMarkerProps>; kind: 'item' }
-    | { kind: 'subsection'; subSection: ReactElement<MenuMarkerProps> };
+    | { items: ReactElement<MenuMarkerProps>[]; kind: 'subsection'; subSection: ReactElement<MenuMarkerProps> };
 
 /** Converts a menu label into its hash navigation target. */
 function menuItemHref(label: string): string {
@@ -55,7 +55,13 @@ export function Menu({ children }: MenuProps) {
                 }
 
                 if (isMenuSubSection(child)) {
-                    return [{ kind: 'subsection' as const, subSection: child }];
+                    return [
+                        {
+                            items: Children.toArray(child.props.children).filter(isMenuItem),
+                            kind: 'subsection' as const,
+                            subSection: child,
+                        },
+                    ];
                 }
 
                 return [];
@@ -63,11 +69,7 @@ export function Menu({ children }: MenuProps) {
             section,
         }));
     const items = sections.flatMap(({ entries }) =>
-        entries.flatMap((entry) =>
-            entry.kind === 'subsection'
-                ? Children.toArray(entry.subSection.props.children).filter(isMenuItem)
-                : [entry.item]
-        )
+        entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry.item]))
     );
     const activeItem = items.find((item) => menuItemHref(item.props.label) === hash) ?? items[0];
 
@@ -81,9 +83,6 @@ export function Menu({ children }: MenuProps) {
                             <AstryxSideNavSection {...section.props} key={section.props.title}>
                                 {entries.map((entry) => {
                                     if (entry.kind === 'subsection') {
-                                        const items = Children.toArray(entry.subSection.props.children).filter(
-                                            isMenuItem
-                                        );
                                         const { icon, label } = entry.subSection.props;
 
                                         return (
@@ -93,7 +92,7 @@ export function Menu({ children }: MenuProps) {
                                                 key={label}
                                                 label={label}
                                             >
-                                                {items.map((item) => (
+                                                {entry.items.map((item) => (
                                                     <AstryxSideNavItem
                                                         href={menuItemHref(item.props.label)}
                                                         icon={

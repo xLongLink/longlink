@@ -99,8 +99,15 @@ def create_client(user: User | None = None) -> AsyncClient:
     """Build an in-process API client with optional authentication cookies."""
 
     cookies = authenticated_cookies(user) if user is not None else None
+    headers = {"origin": env.PUBLIC_URL.rstrip("/")}
 
-    return AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", cookies=cookies, follow_redirects=True)
+    return AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+        cookies=cookies,
+        headers=headers,
+        follow_redirects=True,
+    )
 
 
 @pytest.fixture(scope="session")

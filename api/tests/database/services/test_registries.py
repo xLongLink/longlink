@@ -2,10 +2,12 @@ import pytest
 from uuid import UUID, uuid4
 from factories import queue_operation, create_organization, create_ready_infrastructure
 from src.errors import ConflictError
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Awaitable, Sequence
 from src.database.session import session_scope
 from src.database.services import compute, storage, database
 from src.models.operations import OperationKind
+from src.models.types import DatabaseSSLMode
+from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -13,6 +15,8 @@ from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 
 DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[bool]]
+Registry = ComputeRegistry | DatabaseRegistry | StorageRegistry
+FetchRegistry = Callable[[AsyncSession, Pagination], Awaitable[tuple[Sequence[Registry], int]]]
 
 
 @pytest.mark.parametrize(
@@ -147,3 +151,83 @@ async def test_create_rejects_duplicate_compute_names() -> None:
     async with session_scope() as session:
         with pytest.raises(ConflictError, match="^Compute registry already exists$"):
             await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})
+
+
+async def test_create_rejects_duplicate_database_names() -> None:
+    """Translate duplicate Database names into the stable domain conflict."""
+
+    # Arrange
+    async with session_scope() as session:
+        await database.create(
+            session,
+            "Duplicate Database",
+            "database.example",
+            5432,
+            "admin",
+            "database-secret",
+            DatabaseSSLMode.disable,
+        )
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="^Database registry already exists$"):
+            await database.create(
+                session,
+                "Duplicate Database",
+                "database.example",
+                5432,
+                "admin",
+                "database-secret",
+                DatabaseSSLMode.disable,
+            )
+
+
+async def test_create_rejects_duplicate_storage_names() -> None:
+    """Translate duplicate Storage names into the stable domain conflict."""
+
+    # Arrange
+    async with session_scope() as session:
+        await storage.create(
+            session,
+            "Duplicate Storage",
+            "https://sos-ch-gva-2.exo.io",
+            "storage-access-key",
+            "storage-secret-key",
+        )
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="^Storage registry already exists$"):
+            await storage.create(
+                session,
+                "Duplicate Storage",
+                "https://sos-ch-gva-2.exo.io",
+                "storage-access-key",
+                "storage-secret-key",
+            )
+
+
+@pytest.mark.parametrize(
+    ("fetch", "registry"),
+    [
+        pytest.param(compute.fetch_page, "compute", id="compute"),
+        pytest.param(database.fetch_page, "database", id="database"),
+        pytest.param(storage.fetch_page, "storage", id="storage"),
+    ],
+)
+async def test_fetch_page_returns_persisted_registry_and_total(fetch: FetchRegistry, registry: str) -> None:
+    """Return each persisted registry type and its collection total."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    expected = getattr(infrastructure, registry)
+
+    # Act
+    async with session_scope() as session:
+        registries, total = await fetch(session, Pagination())
+
+    # Assert
+    assert [item.id for item in registries] == [expected.id]
+    assert total == 1
