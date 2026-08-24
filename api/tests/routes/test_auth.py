@@ -2,11 +2,16 @@ import pytest
 from src import auth
 from main import app
 from httpx2 import AsyncClient
+from pwdlib import PasswordHash
+from fastapi import Response, HTTPException, BackgroundTasks
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import token
 from urllib.parse import parse_qs, urlparse
+from src.routes.v1 import auth as auth_routes
+from sqlalchemy.exc import IntegrityError
+from src.models.auth import TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
@@ -210,6 +215,7 @@ async def test_registration_completion_creates_authenticated_account(
     complete_response = await client.post(
         "/api/v1/auth/register/complete",
         json=completion_payload,
+        headers={"Origin": env.PUBLIC_URL},
     )
     profile_response = await client.get("/api/v1/me")
     authenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
@@ -219,6 +225,7 @@ async def test_registration_completion_creates_authenticated_account(
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert restored_setup.status_code == 200
     assert restored_setup.json() == {"email": email}
+    assert restored_setup.headers["cache-control"] == "no-store"
     assert complete_response.status_code == 201
     registered_user = complete_response.json()
     assert registered_user["name"] == "Registered User"
@@ -303,7 +310,11 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     await register_and_verify(client, captured_mail, email)
 
     # Act
-    response = await client.post("/api/v1/auth/register/complete", json={"name": "Invited User", "password": TEST_PASSWORD})
+    response = await client.post(
+        "/api/v1/auth/register/complete",
+        json={"name": "Invited User", "password": TEST_PASSWORD},
+        headers={"Origin": env.PUBLIC_URL},
+    )
     organizations_response = await client.get("/api/v1/me/organizations")
     async with session_scope() as session:
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
@@ -368,7 +379,11 @@ async def test_registration_completion_rejects_duplicate_account(
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
     verification_token = await register_and_verify(client, captured_mail, email)
-    first_completion = await client.post("/api/v1/auth/register/complete", json=completion_payload)
+    first_completion = await client.post(
+        "/api/v1/auth/register/complete",
+        json=completion_payload,
+        headers={"Origin": env.PUBLIC_URL},
+    )
     assert first_completion.status_code == 201
 
     # Act
@@ -377,6 +392,7 @@ async def test_registration_completion_rejects_duplicate_account(
         repeat_response = await repeat_client.post(
             "/api/v1/auth/register/complete",
             json=completion_payload,
+            headers={"Origin": env.PUBLIC_URL},
         )
 
     assert repeat_verify_response.status_code == 200
@@ -491,12 +507,19 @@ async def test_forgot_and_reset_password(
     reset_response = await client.post(
         "/api/v1/auth/reset-password",
         json={"password": "replacement-password"},
+        headers={"Origin": env.PUBLIC_URL},
     )
     reused_token_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
     revoked_session = await client.get("/api/v1/me")
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
+    assert setup_response.headers["cache-control"] == "no-store"
     assert reset_response.status_code == 204
+    assert reset_response.headers["cache-control"] == "no-store"
+    reset_cookie = reset_response.headers["set-cookie"]
+    assert "longlink_password_reset=" in reset_cookie
+    assert "Max-Age=0" in reset_cookie
+    assert "Path=/api/v1/auth/reset-password" in reset_cookie
     assert reused_token_response.status_code == 400
     assert reused_token_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert revoked_session.status_code == 401
@@ -588,7 +611,7 @@ async def test_authenticated_logout_rejects_alternate_local_origin_in_production
     assert profile_response.status_code == 200
 
 
-@pytest.mark.parametrize("headers", [{}, {"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
+@pytest.mark.parametrize("headers", [{"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
 async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str]
 ) -> None:
@@ -609,6 +632,30 @@ async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
     assert "Path=/" in response.headers["set-cookie"]
     assert "SameSite=lax" in response.headers["set-cookie"]
     assert profile_response.status_code == 401
+
+
+async def test_authenticated_logout_uses_secure_cookie_policy_in_production(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clear the browser session with the production cookie security attributes."""
+
+    # Arrange
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
+
+    # Act
+    response = await clients[0].post("/api/v1/auth/logout", headers={"origin": "https://platform.example"})
+
+    # Assert
+    assert response.status_code == 204
+    cookie = response.headers["set-cookie"]
+    assert "longlink_auth=" in cookie
+    assert "HttpOnly" in cookie
+    assert "Max-Age=0" in cookie
+    assert "Path=/" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Secure" in cookie
 
 
 async def test_password_login_sets_production_session_security_and_cache_attributes(
@@ -660,3 +707,239 @@ async def test_deleted_user_cannot_use_existing_browser_session(
     # Assert
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
+
+
+@pytest.mark.no_db
+async def test_password_reset_request_queues_mail_for_active_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Queue reset delivery only for an active account."""
+
+    # Arrange
+    class User:
+        """Provide the reset recipient identity."""
+
+        email = "member@example.com"
+        deleted_at = None
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the active account."""
+
+        return User()
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    monkeypatch.setattr(auth_routes.token, "create_password_reset_token", lambda _user: "reset-token")
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_password_reset("member@example.com", tasks, object())
+
+    # Assert
+    assert len(tasks.tasks) == 1
+    assert tasks.tasks[0].args == ("member@example.com", "reset-token")
+
+
+@pytest.mark.no_db
+async def test_password_reset_request_ignores_deleted_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Avoid reset delivery for a deleted account."""
+
+    # Arrange
+    class User:
+        """Provide an inactive account."""
+
+        deleted_at = object()
+
+    async def by_email(_session: object, _email: str) -> User:
+        """Return the deleted account."""
+
+        return User()
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_password_reset("member@example.com", tasks, object())
+
+    # Assert
+    assert tasks.tasks == []
+
+
+@pytest.mark.no_db
+async def test_password_reset_handlers_set_private_response_state_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set reset cookie state and cache controls after token validation."""
+
+    # Arrange
+    async def password_reset_user(_session: object, credential: str) -> object:
+        """Accept the provided reset credential."""
+
+        assert credential == "reset-token"
+        return object()
+
+    monkeypatch.setattr(auth_routes.token, "password_reset_user", password_reset_user)
+    verify_response = Response()
+    setup_response = Response()
+
+    # Act
+    await auth_routes.verify_password_reset_token(TokenPayload(token="reset-token"), verify_response, object())
+    await auth_routes.get_password_reset_setup(setup_response, "reset-token", object())
+
+    # Assert
+    assert verify_response.headers["cache-control"] == "no-store"
+    assert "longlink_password_reset=reset-token" in verify_response.headers["set-cookie"]
+    assert setup_response.headers["cache-control"] == "no-store"
+
+
+@pytest.mark.no_db
+async def test_reset_password_replaces_credential_and_clears_proof_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit the replacement password before clearing reset proof."""
+
+    # Arrange
+    class Session:
+        """Record the password replacement commit."""
+
+        committed = False
+
+        async def commit(self) -> None:
+            """Record the completed password transaction."""
+
+            self.committed = True
+
+    class User:
+        """Provide mutable password state."""
+
+        password = "old-password"
+
+    user = User()
+
+    async def password_reset_user(_session: object, _credential: str) -> User:
+        """Resolve the account from reset proof."""
+
+        return user
+
+    monkeypatch.setattr(auth_routes.token, "password_reset_user", password_reset_user)
+    session = Session()
+    response = Response()
+
+    # Act
+    await auth_routes.reset_password(PasswordResetComplete(password="replacement-password"), response, "reset-token", session)
+
+    # Assert
+    assert session.committed is True
+    assert PasswordHash.recommended().verify("replacement-password", user.password)
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_password_reset=" in response.headers["set-cookie"]
+
+
+@pytest.mark.no_db
+async def test_registration_request_skips_existing_email_and_queues_new_email_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Avoid existing accounts while queueing verification for new email addresses."""
+
+    # Arrange
+    existing = object()
+
+    async def by_email(_session: object, email: str) -> object | None:
+        """Distinguish the existing and new email addresses."""
+
+        return existing if email == "existing@example.com" else None
+
+    monkeypatch.setattr(auth_routes.users, "by_email", by_email)
+    monkeypatch.setattr(auth_routes.token, "create_registration_token", lambda email: f"token:{email}")
+    tasks = BackgroundTasks()
+
+    # Act
+    await auth_routes.request_registration("existing@example.com", tasks, object())
+    await auth_routes.request_registration("new@example.com", tasks, object())
+
+    # Assert
+    assert len(tasks.tasks) == 1
+    assert tasks.tasks[0].args == ("new@example.com", "token:new@example.com")
+
+
+@pytest.mark.no_db
+async def test_registration_completion_rolls_back_duplicate_account_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Rollback a uniqueness race and return the stable conflict error."""
+
+    # Arrange
+    class Session:
+        """Record the failed registration rollback."""
+
+        rolled_back = False
+
+        async def rollback(self) -> None:
+            """Record transaction rollback."""
+
+            self.rolled_back = True
+
+    async def register(*_args: object) -> object:
+        """Raise the database uniqueness failure."""
+
+        raise IntegrityError("INSERT", {}, Exception("duplicate"))
+
+    monkeypatch.setattr(auth_routes.token, "registration_claims", lambda _credential: "member@example.com")
+    monkeypatch.setattr(auth_routes.users, "register", register)
+    session = Session()
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth_routes.complete_registration(
+            RegistrationComplete(name="Member", password=TEST_PASSWORD), Response(), "registration-token", session
+        )
+
+    # Assert
+    assert session.rolled_back is True
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "An account with this email already exists. Sign in or reset your password to continue."
+
+
+@pytest.mark.no_db
+async def test_registration_completion_authenticates_and_synchronizes_invitations_directly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Create the verified account before publishing browser authentication."""
+
+    # Arrange
+    class Session:
+        """Record the successful registration commit."""
+
+        committed = False
+
+        async def commit(self) -> None:
+            """Record the completed registration transaction."""
+
+            self.committed = True
+
+    user = object()
+
+    async def register(_session: object, _name: str, _email: str, _password: str) -> object:
+        """Return the newly persisted account."""
+
+        return user
+
+    async def accept(_session: object, _user: object) -> list[str]:
+        """Accept one pending Organization invitation."""
+
+        return ["organization-id"]
+
+    synchronized_ids: list[str] = []
+
+    async def sync_users(_session: object, organization_id: str) -> None:
+        """Record the requested Organization projection."""
+
+        synchronized_ids.append(organization_id)
+
+    monkeypatch.setattr(auth_routes.token, "registration_claims", lambda _credential: "member@example.com")
+    monkeypatch.setattr(auth_routes.users, "register", register)
+    monkeypatch.setattr(auth_routes.invitations, "accept", accept)
+    monkeypatch.setattr(auth_routes.organizations, "sync_users", sync_users)
+    monkeypatch.setattr(auth_routes.token, "create_auth_token", lambda _user: "credential")
+    session = Session()
+    response = Response()
+
+    # Act
+    result = await auth_routes.complete_registration(
+        RegistrationComplete(name="Member", password=TEST_PASSWORD), response, "registration-token", session
+    )
+
+    # Assert
+    assert result is user
+    assert session.committed is True
+    assert synchronized_ids == ["organization-id"]
+    assert response.headers["cache-control"] == "no-store"
+    assert "longlink_auth=credential" in response.headers["set-cookie"]
+    assert any("longlink_registration=" in header for header in response.headers.getlist("set-cookie"))

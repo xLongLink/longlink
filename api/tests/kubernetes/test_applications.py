@@ -225,6 +225,129 @@ async def test_application_apply_reports_quota_admission_failure(monkeypatch: py
     assert applied == ["Secret", "Job", "Service", "HTTPRoute", "Deployment"]
 
 
+async def test_application_apply_reports_disappeared_deployment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stop rollout polling when the Application Deployment disappears."""
+
+    # Arrange
+    class Resource:
+        """Represent a Kubernetes resource without reaching a cluster."""
+
+        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
+            """Keep the resource manifest."""
+
+            self.raw = raw
+
+        async def exists(self) -> bool:
+            """Report that the Deployment disappeared before rollout completed."""
+
+            return False
+
+        async def refresh(self) -> None:
+            """Reject refreshes after the missing Deployment check."""
+
+            raise AssertionError("A missing Deployment must not be refreshed")
+
+    class MigrationJob(Resource):
+        """Report a completed migration Job."""
+
+        async def wait(self, _conditions: list[str]) -> None:
+            """Complete the migration before rollout polling."""
+
+    async def apply(_resource: Resource) -> None:
+        """Accept a resource without contacting Kubernetes."""
+
+    monkeypatch.setattr(
+        applications.templates,
+        "readyml_list",
+        lambda *_args, **_kwargs: ({"kind": "Job"}, {"kind": "Deployment"}, {"kind": "Service"}, {"kind": "HTTPRoute"}),
+    )
+    monkeypatch.setattr(applications, "Secret", Resource)
+    monkeypatch.setattr(applications, "Job", MigrationJob)
+    monkeypatch.setattr(applications, "Service", Resource)
+    monkeypatch.setattr(applications, "Deployment", Resource)
+    monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(applications, "apply", apply)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Kubernetes Application Deployment disappeared during rollout"):
+        await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
+            UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}
+        )
+
+
+async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Retry rollout polling until the Deployment becomes ready."""
+
+    # Arrange
+    deployment_manifest = {"kind": "Deployment", "metadata": {"generation": 1}, "spec": {"replicas": 1}, "status": {}}
+    sleeps: list[float] = []
+
+    class Resource:
+        """Represent a Kubernetes resource without reaching a cluster."""
+
+        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
+            """Expose the resource fields queried during rollout."""
+
+            self.raw = raw
+            self.metadata = raw.get("metadata", {})
+            self.spec = raw.get("spec", {})
+
+        async def exists(self) -> bool:
+            """Keep the Deployment present during rollout."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep resource state current between polling attempts."""
+
+    class MigrationJob(Resource):
+        """Report a completed migration Job."""
+
+        async def wait(self, _conditions: list[str]) -> None:
+            """Complete the migration before rollout polling."""
+
+    async def apply(_resource: Resource) -> None:
+        """Accept a resource without contacting Kubernetes."""
+
+    async def sleep(delay: float) -> None:
+        """Make the Deployment ready for the next rollout poll."""
+
+        sleeps.append(delay)
+        deployment_manifest["status"] = {
+            "observedGeneration": 1,
+            "replicas": 1,
+            "updatedReplicas": 1,
+            "readyReplicas": 1,
+            "availableReplicas": 1,
+        }
+
+    monkeypatch.setattr(
+        applications.templates,
+        "readyml_list",
+        lambda *_args, **_kwargs: (
+            {"kind": "Job"},
+            deployment_manifest,
+            {"kind": "Service"},
+            {"kind": "HTTPRoute", "status": {"parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]}},
+        ),
+    )
+    monkeypatch.setattr(applications, "Secret", Resource)
+    monkeypatch.setattr(applications, "Job", MigrationJob)
+    monkeypatch.setattr(applications, "Service", Resource)
+    monkeypatch.setattr(applications, "Deployment", Resource)
+    monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(applications, "apply", apply)
+    monkeypatch.setattr(applications.asyncio, "sleep", sleep)
+
+    # Act
+    await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}
+    )
+
+    # Assert
+    assert sleeps == [5]
+
+
 async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytest.MonkeyPatch) -> None:
     """Return migration logs when no running Application Pod is available."""
 
@@ -257,6 +380,116 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
 
     # Assert
     assert logs == ["Migration logs:", "migration failed"]
+
+
+async def test_application_logs_returns_running_application_pod_logs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return recent logs from a running Application Pod before migration fallback."""
+
+    # Arrange
+    class PodResource:
+        """Represent a running Application Pod."""
+
+        raw = {"status": {"phase": "Running"}}
+        metadata = {"labels": {"longlink.io/component": "application"}}
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the running Application Pod."""
+
+            yield cls()
+
+        async def logs(self, *, tail_lines: int):
+            """Yield recent Application output."""
+
+            assert tail_lines == 200
+            yield "application started"
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act
+    logs = await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "acme",
+    )
+
+    # Assert
+    assert logs == ["application started"]
+
+
+async def test_application_logs_reports_unavailable_when_no_pod_exists(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report unavailable logs when no running or failed migration Pod exists."""
+
+    # Arrange
+    class PodResource:
+        """Return no Application Pods from Kubernetes."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield no matching Pods."""
+
+            if False:
+                yield cls()
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Application logs unavailable"):
+        await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+        )
+
+
+async def test_application_logs_ignores_terminal_application_pods(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report unavailable logs when only terminal non-migration Pods remain."""
+
+    # Arrange
+    class PodResource:
+        """Represent a completed Application Pod."""
+
+        raw = {"status": {"phase": "Succeeded"}}
+        metadata = {"labels": {"longlink.io/component": "application"}}
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the completed Application Pod."""
+
+            yield cls()
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Application logs unavailable"):
+        await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+        )
+
+
+async def test_application_logs_translates_kubernetes_api_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hide Kubernetes transport errors behind the Application logs contract."""
+
+    # Arrange
+    class KubernetesError(Exception):
+        """Represent a Kubernetes API failure."""
+
+    class PodResource:
+        """Fail while listing Application Pods."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Raise the Kubernetes API failure."""
+
+            raise KubernetesError("connection failed")
+            yield cls()
+
+    monkeypatch.setattr(applications, "APITimeoutError", KubernetesError)
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Application logs unavailable") as error:
+        await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+        )
+    assert isinstance(error.value.__cause__, KubernetesError)
 
 
 async def test_application_delete_removes_resources_before_waiting_for_pods(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -399,3 +632,77 @@ async def test_application_delete_skips_cleanup_when_namespace_is_absent(monkeyp
         UUID("00000000-0000-4000-8000-000000000001"),
         "acme",
     )
+
+
+async def test_application_delete_does_not_repeat_deletions_for_terminating_resources(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Wait for Kubernetes to finish resources that already have deletion timestamps."""
+
+    # Arrange
+    deleted: list[str] = []
+    namespace_checks = 0
+    sleeps: list[float] = []
+
+    class NamespaceResource:
+        """Keep the Namespace present for one cleanup poll."""
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Report the Namespace as present until cleanup has been rechecked."""
+
+            nonlocal namespace_checks
+            namespace_checks += 1
+            return namespace_checks == 1
+
+    class Resource:
+        """Represent a terminating Kubernetes resource."""
+
+        metadata = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
+
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the Kubernetes resource constructor arguments."""
+
+        async def exists(self) -> bool:
+            """Keep the resource visible during the cleanup poll."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the terminating metadata unchanged."""
+
+        async def delete(self) -> None:
+            """Record an invalid duplicate deletion request."""
+
+            deleted.append("resource")
+
+    class JobResource(Resource):
+        """Represent a terminating migration Job."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the retained terminating Job."""
+
+            yield cls()
+
+    async def sleep(delay: float) -> None:
+        """Record the cleanup retry without waiting."""
+
+        sleeps.append(delay)
+
+    monkeypatch.setattr(applications, "Namespace", NamespaceResource)
+    monkeypatch.setattr(applications, "Deployment", Resource)
+    monkeypatch.setattr(applications, "Service", Resource)
+    monkeypatch.setattr(applications, "Secret", Resource)
+    monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(applications, "Job", JobResource)
+    monkeypatch.setattr(applications.asyncio, "sleep", sleep)
+
+    # Act
+    await applications.Applications(FakeKubernetes()).delete(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"), "acme"
+    )
+
+    # Assert
+    assert deleted == []
+    assert sleeps == [5]

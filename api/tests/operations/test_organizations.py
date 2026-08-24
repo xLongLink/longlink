@@ -216,6 +216,23 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
     assert calls == []
 
 
+async def test_delete_skips_missing_organization_without_external_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat a missing Organization tombstone as completed cleanup."""
+
+    # Arrange
+    def unexpected_provider(*_args: object) -> object:
+        """Reject provider construction for an absent cleanup target."""
+
+        raise AssertionError("providers must not be constructed")
+
+    monkeypatch.setattr(organization_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(organization_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(organization_operations, "Kubernetes", unexpected_provider)
+
+    # Act and assert
+    assert await organization_operations.delete(uuid4()) is None
+
+
 async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep provider data intact when Kubernetes namespace deletion fails."""
 

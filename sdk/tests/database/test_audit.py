@@ -6,12 +6,14 @@ from typing import ClassVar
 from fastapi import FastAPI
 from datetime import UTC, datetime
 from longlink import context as runtime_context
+from longlink import identity
 from sqlmodel import Field
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
+from longlink.utils.settings import Envs
 
 
 @contextmanager
@@ -27,17 +29,17 @@ def identity_context(user_id: UUID) -> Iterator[None]:
 
 
 @pytest_asyncio.fixture
-async def _audit_engine(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[None]:
+async def _audit_engine(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[database_base.Database]:
     """Bind an isolated SQLite engine to the SDK session lifecycle."""
 
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
-    monkeypatch.setattr(database_base, "Session", None)
+    database = database_base.Database(Envs(ENV="testing"))
 
     try:
-        yield
+        yield database
     finally:
-        await engine.dispose()
+        await database.dispose()
 
 
 @pytest.fixture
@@ -53,9 +55,9 @@ def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
         metadata.remove(metadata.tables[table_name])
 
 
-@pytest.mark.usefixtures("_audit_engine")
 async def test_audit_hook_persists_fields_and_converts_soft_deletes(
     audit_model_cleanup: Callable[[str], None],
+    _audit_engine: database_base.Database,
 ) -> None:
     """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
 
@@ -81,7 +83,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
     soft_deleter_id = UUID("00000000-0000-0000-0000-000000000004")
     deleter_id = UUID("00000000-0000-0000-0000-000000000005")
     # Insert through AsyncSession so the registered sync before_flush listener runs.
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = AuditLifecycleItem(name="draft")
         with identity_context(creator_id):
             session.add(item)
@@ -127,7 +129,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
         assert item.updated_at >= updated_at
 
     # Delete the reloaded row and commit the listener's soft-delete conversion.
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
 
@@ -136,7 +138,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             await session.commit()
 
     # Reload after deletion to prove the row remains as a soft-deleted record.
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
         assert item.deleted_at is not None
@@ -144,9 +146,9 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
         assert item.deleted_id == deleter_id
 
 
-@pytest.mark.usefixtures("_audit_engine")
 async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
     audit_model_cleanup: Callable[[str], None],
+    _audit_engine: database_base.Database,
 ) -> None:
     """Keep caller-provided audit fields when an unchanged row is committed."""
 
@@ -167,7 +169,7 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
 
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = ExplicitAuditItem(
             name="draft",
             created_at=created_at,
@@ -181,14 +183,14 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         item_id = item.id
 
     # Act
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = await session.get(ExplicitAuditItem, item_id)
         assert item is not None
         item.name = "draft"
         await session.commit()
 
     # Assert
-    async with database_base.session() as session:
+    async with _audit_engine.session() as session:
         item = await session.get(ExplicitAuditItem, item_id)
         assert item is not None
         assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
@@ -199,11 +201,14 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         )
 
 
+IDENTITY_SECRET = "test-identity-secret-01234567890"
+
+
 def create_audit_application() -> FastAPI:
     """Create an application that exposes the request audit identity."""
 
     app = FastAPI()
-    runtime_context.install_context_middleware(app)
+    runtime_context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
     async def current_user() -> dict[str, str | None]:
@@ -222,26 +227,22 @@ def create_audit_application() -> FastAPI:
     return app
 
 
-@pytest.mark.parametrize(
-    ("headers", "expected_user_id"),
-    [
-        ({"x-user-id": "00000000-0000-0000-0000-000000000005"}, "00000000-0000-0000-0000-000000000005"),
-        ({"x-user-id": "invalid"}, None),
-        ({}, None),
-    ],
-)
-def test_audit_middleware_binds_x_user_id_header(
-    headers: dict[str, str],
-    expected_user_id: str | None,
-) -> None:
-    """Bind valid audit user headers and treat missing or malformed values as anonymous."""
+def identity_headers(user_id: str) -> dict[str, str]:
+    """Build one current Platform identity assertion for middleware tests."""
 
-    # Send the candidate audit identity through the HTTP boundary.
+    # Use the same token constructor that the Platform gateway calls.
+    return {"x-longlink-identity": identity.create_identity_token(UUID(user_id), IDENTITY_SECRET)}
+
+
+def test_audit_middleware_binds_signed_identity_header() -> None:
+    """Bind one trusted identity and clear it after the response."""
+
+    # Act
     with TestClient(create_audit_application()) as client:
-        response = client.get("/", headers=headers)
+        response = client.get("/", headers=identity_headers("00000000-0000-0000-0000-000000000005"))
 
-    # Verify request binding and cleanup after the response.
-    assert response.json() == {"user_id": expected_user_id}
+    # Assert
+    assert response.json() == {"user_id": "00000000-0000-0000-0000-000000000005"}
     assert runtime_context._current_identity.get() is None
 
 
@@ -254,7 +255,7 @@ async def test_audit_middleware_isolates_concurrent_request_identities() -> None
     # Dispatch two requests concurrently, each with a distinct trusted identity.
     with TestClient(create_audit_application()) as client:
         first_response, second_response = await asyncio.gather(
-            *(asyncio.to_thread(client.get, "/", headers={"x-user-id": user_id}) for user_id in (first_id, second_id))
+            *(asyncio.to_thread(client.get, "/", headers=identity_headers(user_id)) for user_id in (first_id, second_id))
         )
 
     # Each handler observes only its own request identity.
@@ -271,7 +272,7 @@ def test_audit_middleware_clears_identity_after_handler_failure() -> None:
     # Act
     with TestClient(create_audit_application()) as client:
         with pytest.raises(RuntimeError, match="handler failed"):
-            client.get("/failure", headers={"x-user-id": user_id})
+            client.get("/failure", headers=identity_headers(user_id))
 
     # Assert
     assert runtime_context._current_identity.get() is None

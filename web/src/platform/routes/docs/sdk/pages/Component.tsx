@@ -5,7 +5,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { proportional, Table } from '@astryxdesign/core/Table';
-import { componentBySlug, type ComponentDocumentation } from '@/lib/xsd';
+import { componentDocumentation, type ComponentDocumentation } from '@/lib/xsd';
 
 function AttributeTable({ attributes }: { attributes: ComponentDocumentation['attributes'] }) {
     return (
@@ -23,7 +23,8 @@ function AttributeTable({ attributes }: { attributes: ComponentDocumentation['at
 
 /** Renders XSD component documentation from the schema bundled by Vite. */
 export default function DocsArticleRoute() {
-    const component = componentBySlug(useParams().component);
+    const { component: slug } = useParams();
+    const component = componentDocumentation.find((candidate) => candidate.slug === slug);
 
     if (!component) {
         throw new Response('Not found', { status: 404 });

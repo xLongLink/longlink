@@ -24,8 +24,8 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
-import { useOrganization, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { useOrganization, useOrganizationApplications, useUpdateOrganization } from '@/lib/hooks/use-organization';
 import {
     zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
     zOrganizationStorageUsageResponse,
@@ -45,11 +45,17 @@ export default function OrganizationSettings() {
         organization: organizationDetails,
         members,
         invitations,
-        applications,
         role: organizationRole,
-        isLoading,
-        error,
+        isLoading: isOrganizationLoading,
+        error: organizationError,
     } = useOrganization(organization);
+    const {
+        applications,
+        isLoading: isApplicationsLoading,
+        error: applicationsError,
+    } = useOrganizationApplications(organization);
+    const isLoading = isOrganizationLoading || isApplicationsLoading;
+    const error = organizationError ?? applicationsError;
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
@@ -86,7 +92,6 @@ export default function OrganizationSettings() {
                       ),
         retry: false,
     });
-    const databaseResourceError = error ?? databaseError;
     const storagePath =
         hashSection === 'storage' && organizationId ? `/api/v1/organizations/${organizationId}/storage` : null;
     const {
@@ -102,8 +107,6 @@ export default function OrganizationSettings() {
                       zOrganizationStorageUsageResponse.nullable().parse(await api(storagePath, { signal }).json()),
         retry: false,
     });
-    const storageResourceError = error ?? storageError;
-
     /** Saves the Organization avatar URL when focus leaves the setting. */
     async function saveAvatar() {
         setAvatarError(null);
@@ -203,8 +206,10 @@ export default function OrganizationSettings() {
                                         <Heading level={2}>Database</Heading>
                                         <Text type="supporting">Review database usage for this organization.</Text>
                                     </VStack>
-                                    {isLoading || isDatabaseLoading ? null : databaseResourceError ? (
-                                        <Banner status="error" title={databaseResourceError.message} />
+                                    {isLoading || isDatabaseLoading ? null : error ? (
+                                        <Banner status="error" title={error.message} />
+                                    ) : databaseError ? (
+                                        <Banner status="error" title={databaseError.message} />
                                     ) : databaseUsage === null || databaseUsage === undefined ? (
                                         <EmptyState title="No results." isCompact />
                                     ) : (
@@ -243,8 +248,10 @@ export default function OrganizationSettings() {
                                         <Heading level={2}>Storage</Heading>
                                         <Text type="supporting">Review storage usage for this organization.</Text>
                                     </VStack>
-                                    {isLoading || isStorageLoading ? null : storageResourceError ? (
-                                        <Banner status="error" title={storageResourceError.message} />
+                                    {isLoading || isStorageLoading ? null : error ? (
+                                        <Banner status="error" title={error.message} />
+                                    ) : storageError ? (
+                                        <Banner status="error" title={storageError.message} />
                                     ) : storageUsage === null || storageUsage === undefined ? (
                                         <EmptyState title="No storage resources found." isCompact />
                                     ) : (

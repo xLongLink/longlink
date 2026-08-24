@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import ClassVar
 from datetime import datetime
 from pydantic import EmailStr, GetCoreSchemaHandler
 from sqlmodel import Field
@@ -28,8 +27,6 @@ class Audit(Base, table=True):
 
     Applications have read-only access to this shared-schema projection.
     """
-
-    __tablename__: ClassVar[str] = "audit"
 
     # Identifier
     id: UUID = Field(sa_column=Column(Uuid(as_uuid=True), primary_key=True))

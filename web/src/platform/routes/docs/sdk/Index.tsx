@@ -7,7 +7,7 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'application-sdk', label: 'Applications', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },

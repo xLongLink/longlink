@@ -74,7 +74,7 @@ function SummaryCard({
     );
 }
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },

@@ -1,5 +1,6 @@
 import pytest
-from httpx2 import AsyncClient
+from main import app
+from httpx2 import AsyncClient, ASGITransport
 from contextlib import asynccontextmanager
 from src.routes.v1 import health
 
@@ -48,3 +49,35 @@ async def test_readyz_returns_readiness_after_database_query(client: AsyncClient
     # Assert
     assert response.status_code == 200
     assert response.json() == {"ready": True}
+
+
+@pytest.mark.no_db
+async def test_readyz_returns_internal_error_when_database_query_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep replicas unready when the Platform database cannot be queried."""
+
+    # Arrange
+    class Session:
+        """Fail the readiness query without opening a database connection."""
+
+        async def execute(self, _statement: object) -> None:
+            """Simulate an unavailable Platform database."""
+
+            raise RuntimeError("database unavailable")
+
+    @asynccontextmanager
+    async def failing_session_scope():
+        """Yield one session that cannot execute readiness queries."""
+
+        yield Session()
+
+    monkeypatch.setattr(health, "session_scope", failing_session_scope)
+
+    # Act
+    async with AsyncClient(
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://testserver",
+    ) as client:
+        response = await client.get("/api/v1/readyz")
+
+    # Assert
+    assert response.status_code == 500

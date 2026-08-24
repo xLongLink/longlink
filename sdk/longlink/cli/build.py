@@ -93,7 +93,47 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
             continue
 
         field_name = statement.target.id
-        field_info = resolve_field_info(statement.value)
+        field_info: dict[str, object] = {"required": statement.value is None}
+
+        # Inspect pydantic Field calls for metadata.
+        if isinstance(statement.value, ast.Call) and isinstance(statement.value.func, ast.Name) and statement.value.func.id == "Field":
+            field_info["required"] = True
+
+            # Positional Field defaults use ellipsis for required values and any other value as optional.
+            if statement.value.args:
+                first_argument = statement.value.args[0]
+                field_info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
+
+            # Inspect Field keyword arguments.
+            for keyword in statement.value.keywords:
+                # Use explicit aliases as environment names.
+                if keyword.arg == "validation_alias":
+                    # Safely evaluate static alias expressions.
+                    try:
+                        alias = ast.literal_eval(keyword.value)
+                    except ValueError:
+                        alias = None
+
+                    # Store string aliases only.
+                    if isinstance(alias, str):
+                        field_info["env_name"] = alias
+
+                # Capture static descriptions.
+                elif keyword.arg == "description":
+                    # Safely evaluate static descriptions.
+                    try:
+                        description = ast.literal_eval(keyword.value)
+                    except ValueError:
+                        description = None
+
+                    # Store string descriptions only.
+                    if isinstance(description, str):
+                        field_info["description"] = description
+
+                # Defaults and factories make the field optional.
+                elif keyword.arg in ("default", "default_factory"):
+                    field_info["required"] = False
+
         env_entry: dict[str, object] = {
             "name": field_info.get("env_name") or field_name,
             "required": bool(field_info.get("required", False)),
@@ -123,72 +163,21 @@ def read_pyproject(root: Path) -> dict[str, object]:
         raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
 
 
-def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
-    """Extract label metadata from a pydantic-style `Field(...)` call or default value."""
-
-    # Missing values indicate required fields.
-    if value is None:
-        return {"required": True}
-
-    # Inspect pydantic Field calls for metadata.
-    if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
-        info: dict[str, object] = {"required": True}
-
-        # Positional Field defaults use ellipsis for required values and any other value as optional.
-        if value.args:
-            first_argument = value.args[0]
-            info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
-
-        # Inspect Field keyword arguments.
-        for keyword in value.keywords:
-            # Use explicit aliases as environment names.
-            if keyword.arg == "validation_alias":
-                # Safely evaluate static alias expressions.
-                try:
-                    alias = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    alias = None
-
-                # Store string aliases only.
-                if isinstance(alias, str):
-                    info["env_name"] = alias
-
-            # Capture static descriptions.
-            elif keyword.arg == "description":
-                # Safely evaluate static descriptions.
-                try:
-                    description = ast.literal_eval(keyword.value)
-                except (ValueError, SyntaxError):
-                    description = None
-
-                # Store string descriptions only.
-                if isinstance(description, str):
-                    info["description"] = description
-
-            # Defaults and factories make the field optional.
-            elif keyword.arg in ("default", "default_factory"):
-                info["required"] = False
-
-        return info
-
-    return {"required": False}
-
-
-def render_image_labels(description: str | None, environments: Sequence[Mapping[str, object]]) -> str:
-    """Render OCI and LongLink image labels for a Dockerfile."""
-
-    # Render standard OCI metadata and LongLink-specific runtime metadata.
-    rendered_labels = [] if description is None else [f"LABEL org.opencontainers.image.description={json.dumps(description)}"]
-
-    # Include environment requirements only when declared.
-    if environments:
-        rendered_labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
-
-    return "\n".join(rendered_labels)
-
-
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
+
+    # Require an explicit UV workspace before expanding the build context beyond the application root.
+    workspace_root = root
+    for candidate in (root, *root.parents):
+        candidate_pyproject = candidate / "pyproject.toml"
+        if not candidate_pyproject.is_file():
+            continue
+        candidate_data = pyproject_data if candidate == root else read_pyproject(candidate)
+        tool_data = candidate_data.get("tool")
+        uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
+        if isinstance(uv_data, dict) and isinstance(uv_data.get("workspace"), dict):
+            workspace_root = candidate
+            break
 
     # Validate the application root and initialize local dependency traversal.
     pending_paths: list[Path] = [root]
@@ -237,6 +226,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
                     # Include only project directories; invalid paths must not expand the Docker context.
                     if resolved_source_path != Path(resolved_source_path.anchor) and (resolved_source_path / "pyproject.toml").is_file():
+                        if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
+                            raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
                         pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
@@ -299,11 +290,11 @@ def build_app(build_context: Path) -> tuple[str, str]:
     except PackageNotFoundError:
         sdk_version = "0.0.0"
 
-    # Render image metadata labels.
-    labels = render_image_labels(
-        project_description,
-        read_env_spec(root, pyproject_data),
-    )
+    # Render standard OCI metadata and LongLink-specific runtime metadata.
+    labels = [] if project_description is None else [f"LABEL org.opencontainers.image.description={json.dumps(project_description)}"]
+    environments = read_env_spec(root, pyproject_data)
+    if environments:
+        labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
     def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
         """Return symlinks that resolve outside the source root."""
@@ -328,7 +319,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = context_ignore_rules(source, root, source_root)
     build_context.joinpath(".dockerignore").write_text(
-        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n", encoding="utf-8"
+        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n", encoding="utf-8"
     )
 
     # Write the generated Dockerfile into the temporary build context.
@@ -347,7 +338,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
             dependency_source=dependency_source,
             local_dependency_manifests=local_dependency_manifests,
             workdir=workdir,
-            labels=labels,
+            labels="\n".join(labels),
             sdk_version=json.dumps(sdk_version),
         ),
         encoding="utf-8",

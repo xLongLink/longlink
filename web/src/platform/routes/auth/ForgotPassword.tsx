@@ -45,7 +45,7 @@ export default function ForgotPassword() {
                 </Stack>
             ) : (
                 <>
-                    <AuthForm gap={4} onSubmit={() => void form.handleSubmit()}>
+                    <AuthForm gap={4} onSubmit={form.handleSubmit}>
                         <form.Field
                             name="email"
                             children={(field) => (

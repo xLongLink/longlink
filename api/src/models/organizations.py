@@ -4,7 +4,6 @@ from datetime import datetime
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
-from src.models.resources import OrganizationApplicationSummary
 from longlink.shared.models import Email
 
 
@@ -84,7 +83,7 @@ class OrganizationMemberAccessResponse(BaseModel):
 
 
 class OrganizationDetails(BaseModel):
-    """Represent an Organization with its members and Application access."""
+    """Represent an Organization with its member access."""
 
     # Organization
     organization: OrganizationSummary
@@ -92,4 +91,3 @@ class OrganizationDetails(BaseModel):
     # Relationships
     members: list[OrganizationMemberAccessResponse]
     invitations: list[OrganizationInvitationResponse]
-    applications: list[OrganizationApplicationSummary]

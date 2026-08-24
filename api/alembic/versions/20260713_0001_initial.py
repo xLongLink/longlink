@@ -260,12 +260,24 @@ def upgrade() -> None:
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),
+        sa.Column(
+            "unleased_target_id",
+            sa.Uuid(),
+            sa.Computed("CASE WHEN finished_at IS NULL AND lease_expires_at IS NULL THEN target_id ELSE NULL END"),
+            nullable=True,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
         "ix_operations_queue",
         "operations",
         ["kind", "target_id", "finished_at", "lease_expires_at"],
+    )
+    op.create_index(
+        "uq_operations_unleased_target",
+        "operations",
+        ["kind", "unleased_target_id"],
+        unique=True,
     )
 
 

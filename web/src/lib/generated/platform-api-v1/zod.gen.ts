@@ -470,13 +470,12 @@ export const zOrganizationMemberAccessResponse = z.object({
 /**
  * OrganizationDetails
  *
- * Represent an Organization with its members and Application access.
+ * Represent an Organization with its member access.
  */
 export const zOrganizationDetails = z.object({
     organization: zOrganizationSummary,
     members: z.array(zOrganizationMemberAccessResponse),
-    invitations: z.array(zOrganizationInvitationResponse),
-    applications: z.array(zOrganizationApplicationSummary)
+    invitations: z.array(zOrganizationInvitationResponse)
 });
 
 /**

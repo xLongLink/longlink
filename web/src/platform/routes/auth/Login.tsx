@@ -59,7 +59,7 @@ export default function Login() {
     return (
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Sign in with your email and password." />}>
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
+                <AuthForm gap={3} onSubmit={form.handleSubmit}>
                     <form.Field
                         name="email"
                         children={(field) => (

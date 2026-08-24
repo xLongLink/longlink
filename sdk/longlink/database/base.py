@@ -34,10 +34,6 @@ class AuditTable(Base):
     deleted_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
-Session: async_sessionmaker[AsyncSession] | None = None
-_session_initialization_lock = asyncio.Lock()
-
-
 def create_engine(env: Envs) -> AsyncEngine:
     """Create the async SQLModel engine for the current environment."""
 
@@ -83,35 +79,65 @@ def create_engine(env: Envs) -> AsyncEngine:
     return create_async_engine(dburl, **engine_kwargs)
 
 
-@asynccontextmanager
-async def session() -> AsyncGenerator[AsyncSession, None]:
-    """Yield an Application database session."""
-    global Session
+class Database:
+    """Own one Application's lazy database engine and sessions."""
 
-    # Initialize the engine once when concurrent requests arrive before startup completes.
-    if Session is None:
-        async with _session_initialization_lock:
-            if Session is None:
-                engine = create_engine(Envs())
+    def __init__(self, env: Envs) -> None:
+        """Store the Application environment without opening a connection."""
 
-                # Auto-create tables for SQLite only.
-                if str(engine.url).startswith("sqlite+"):
-                    # Create tables through a transactional SQLite connection.
-                    async with engine.begin() as conn:
-                        await conn.run_sync(database_metadata.create_all)
-                else:
-                    # Verify non-SQLite connections before exposing the session factory.
-                    try:
-                        async with engine.connect():
-                            pass
-                    except BaseException:
-                        # Release the failed engine before a later request retries initialization.
-                        await engine.dispose()
-                        raise
+        self._env = env
+        self._engine: AsyncEngine | None = None
+        self._sessions: async_sessionmaker[AsyncSession] | None = None
+        self._initialization_lock = asyncio.Lock()
 
-                # Cache the session factory after the engine connection succeeds.
-                Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async def _session_factory(self) -> async_sessionmaker[AsyncSession]:
+        """Initialize and return the Application session factory."""
 
-    # Open one session from the lazily initialized session factory.
-    async with Session() as session:
-        yield session
+        # Initialize the engine once when concurrent requests arrive before startup completes.
+        if self._sessions is None:
+            async with self._initialization_lock:
+                if self._sessions is None:
+                    engine = create_engine(self._env)
+
+                    # Auto-create tables for SQLite only.
+                    if str(engine.url).startswith("sqlite+"):
+                        async with engine.begin() as conn:
+                            await conn.run_sync(database_metadata.create_all)
+                    else:
+                        # Release failed connections so a later request can retry initialization.
+                        try:
+                            async with engine.connect():
+                                pass
+                        except BaseException:
+                            await engine.dispose()
+                            raise
+
+                    # Publish the initialized engine and factory together.
+                    self._engine = engine
+                    self._sessions = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+        return self._sessions
+
+    @asynccontextmanager
+    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+        """Yield one Application-owned database session."""
+
+        # Open one session from the lazy Application session factory.
+        async with (await self._session_factory())() as session:
+            yield session
+
+    async def dispose(self) -> None:
+        """Release the Application database engine during shutdown."""
+
+        # Detach state before disposal so a later startup can initialize a new engine.
+        async with self._initialization_lock:
+            engine = self._engine
+            self._engine = None
+            self._sessions = None
+
+        if engine is not None:
+            await engine.dispose()
+
+
+# Register shared audit listeners after AuditTable is fully defined.
+from longlink.database import audit

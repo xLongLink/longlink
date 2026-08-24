@@ -181,7 +181,13 @@ def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
             id="invalid-import",
         ),
         pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
-        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', "src/envs.py", "class Other:\n    pass\n", "Environment model must define Env", id="missing-class"),
+        pytest.param(
+            '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+            "src/envs.py",
+            "class Other:\n    pass\n",
+            "Environment model must define Env",
+            id="missing-class",
+        ),
     ],
 )
 def test_read_env_spec_rejects_invalid_environment_model_configuration(
@@ -210,8 +216,7 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo application"\n\n'
-        '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo application"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
         encoding="utf-8",
     )
     build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
@@ -230,9 +235,14 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
-    )
+    dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
+    assert ".env" in dockerignore
+    assert "*.db" in dockerignore
+    assert ".git" in dockerignore
+    assert "Dockerfile" in dockerignore
+    assert ".dockerignore" in dockerignore
+    assert "**/.venv" in dockerignore
+    assert "**/.pytest_cache" in dockerignore
 
 
 @pytest.mark.parametrize(
@@ -318,6 +328,9 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     dependency.mkdir()
     transitive_dependency = build_project.parent / "common"
     transitive_dependency.mkdir()
+    build_project.parent.joinpath("pyproject.toml").write_text(
+        '[tool.uv.workspace]\nmembers = ["app", "shared", "common"]\n', encoding="utf-8"
+    )
     transitive_dependency.joinpath("pyproject.toml").write_text(
         '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../app" }\n', encoding="utf-8"
     )
@@ -339,12 +352,32 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     assert dependencies == [transitive_dependency, dependency]
 
 
+def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build_project: Path) -> None:
+    """Reject a valid local project outside the explicitly declared UV workspace."""
+
+    # Arrange
+    workspace = build_project.parent
+    outside = workspace.parent / "outside"
+    outside.mkdir()
+    outside.joinpath("pyproject.toml").write_text('[project]\nname = "outside"\nversion = "0.1.0"\n', encoding="utf-8")
+    workspace.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["app"]\n', encoding="utf-8")
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\noutside = { path = "../../outside" }\n',
+        encoding="utf-8",
+    )
+
+    # Act and assert
+    with pytest.raises(click.ClickException, match="Local dependency must be inside the UV workspace"):
+        build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+
 def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep application secrets excluded when local dependencies widen the Docker context."""
 
     # Arrange
     dependency = build_project.parent / "shared"
     dependency.mkdir()
+    build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["app", "shared"]\n', encoding="utf-8")
     dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
@@ -362,7 +395,7 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
     # Assert
     assert build_context.joinpath("app", ".env").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
+        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n"
     )
 
 
@@ -495,17 +528,21 @@ def test_build_command_reports_built_image(
     assert result.exit_code == 0
     assert len(contexts) == 1
     temporary_context = contexts[0]
-    assert commands == [
-        [
-            "/usr/bin/docker",
-            "build",
-            "-f",
-            str(temporary_context / "Dockerfile"),
-            "-t",
-            "localhost:15000/demo-app:dev",
-            str(temporary_context),
+    assert (
+        commands
+        == [
+            [
+                "/usr/bin/docker",
+                "build",
+                "-f",
+                str(temporary_context / "Dockerfile"),
+                "-t",
+                "localhost:15000/demo-app:dev",
+                str(temporary_context),
+            ]
         ]
-    ] + expected_commands
+        + expected_commands
+    )
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output
 

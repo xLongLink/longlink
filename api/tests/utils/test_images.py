@@ -28,14 +28,21 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     assert await images.metadata(Image("registry.example.com/longlink/dashboard:latest")) is None
 
 
+@pytest.mark.parametrize(
+    "manifest_headers",
+    [
+        pytest.param({"Docker-Content-Digest": "sha256:deadbeef"}, id="digest-header"),
+        pytest.param({}, id="digest-reference-fallback"),
+    ],
+)
 async def test_metadata_fetches_digest_image_references(
     monkeypatch: pytest.MonkeyPatch,
+    manifest_headers: dict[str, str],
 ) -> None:
     """Inspect public GHCR digest-pinned image references."""
 
     # Arrange
     image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
-    manifest_digest = "sha256:deadbeef"
     captured: dict[str, object] = {}
 
     def respond(request: httpx2.Request) -> httpx2.Response:
@@ -53,7 +60,7 @@ async def test_metadata_fetches_digest_image_references(
             return httpx2.Response(
                 200,
                 json={"config": {"digest": "sha256:config"}},
-                headers={"Docker-Content-Digest": manifest_digest},
+                headers=manifest_headers,
             )
         captured["blob"] = {"url": str(request.url), "authorization": request.headers["Authorization"]}
         return httpx2.Response(
@@ -125,9 +132,7 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
         pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
     ],
 )
-async def test_metadata_rejects_invalid_manifest_response_sizes(
-    monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]
-) -> None:
+async def test_metadata_rejects_invalid_manifest_response_sizes(monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]) -> None:
     """Reject oversized or invalid manifest bodies before decoding them."""
 
     # Arrange
@@ -167,11 +172,25 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
     assert payload is None
 
 
+async def test_bounded_json_decodes_metadata_within_limit() -> None:
+    """Decode a complete registry JSON response within the metadata boundary."""
+
+    # Arrange
+    response = httpx2.Response(200, json={"token": "pull-token"})
+
+    # Act
+    payload = await images.bounded_json(response)
+
+    # Assert
+    assert payload == {"token": "pull-token"}
+
+
 @pytest.mark.parametrize(
     ("responses", "expected_paths"),
     [
         pytest.param([httpx2.Response(503)], ["/token"], id="failed-token"),
         pytest.param([httpx2.Response(200, json=[])], ["/token"], id="invalid-token"),
+        pytest.param([httpx2.Response(200, json={"token": ""})], ["/token"], id="empty-token"),
         pytest.param(
             [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
@@ -188,6 +207,27 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
             ],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
             id="invalid-config",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(200, json={}, headers={"Docker-Content-Digest": "sha256:deadbeef"}),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="missing-manifest-config",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(
+                    200,
+                    json={"config": {"digest": "sha256:config"}},
+                    headers={"Docker-Content-Digest": "sha256:deadbeef"},
+                ),
+                httpx2.Response(503),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest", "/v2/longlink/dashboard/blobs/sha256:config"],
+            id="failed-config-blob",
         ),
     ],
 )
@@ -244,6 +284,34 @@ async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.Monk
     assert image_metadata.image == Image(f"ghcr.io/longlink/dashboard@{resolved_digest}")
 
 
+async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return digest metadata when an image config does not define labels."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a valid GHCR metadata sequence with unlabeled config data."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": "sha256:deadbeef"},
+            )
+        return httpx2.Response(200, json={"config": {}})
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.description is None
+    assert image_metadata.environments == []
+
+
 @pytest.mark.parametrize(
     "config_blob",
     [
@@ -259,9 +327,7 @@ async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.Monk
         ),
     ],
 )
-async def test_metadata_rejects_malformed_config_metadata(
-    monkeypatch: pytest.MonkeyPatch, config_blob: object
-) -> None:
+async def test_metadata_rejects_malformed_config_metadata(monkeypatch: pytest.MonkeyPatch, config_blob: object) -> None:
     """Return no metadata when valid registry responses contain malformed config metadata."""
 
     # Arrange
@@ -331,3 +397,23 @@ def test_missing_envs_rejects_user_values_for_reserved_runtime_names() -> None:
 
     # Assert
     assert missing == ["LONGLINK_DATABASE_PASSWORD"]
+
+
+def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
+    """Return all required unavailable values in deterministic name order."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[
+            EnvironmentMetadata(name="ZEBRA", required=True),
+            EnvironmentMetadata(name="LONGLINK_TOKEN", required=True),
+            EnvironmentMetadata(name="ALPHA", required=False),
+        ],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, {"ZEBRA": "", "LONGLINK_TOKEN": "configured"})
+
+    # Assert
+    assert missing == ["LONGLINK_TOKEN", "ZEBRA"]

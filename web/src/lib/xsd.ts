@@ -1,4 +1,5 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
+import typesSource from '../../../sdk/longlink/.static/xsd/types.xsd?raw';
 
 type Attribute = { name: string; description: string };
 type XsdNode = string | XsdNode[] | { [key: string]: XsdNode };
@@ -26,11 +27,6 @@ const parser = new XMLParser({
     trimValues: false,
 });
 const adapterSources = import.meta.glob<string>('../../../sdk/longlink/.static/xsd/adapters/*.xsd', {
-    eager: true,
-    import: 'default',
-    query: '?raw',
-});
-const typeSources = import.meta.glob<string>('../../../sdk/longlink/.static/xsd/types.xsd', {
     eager: true,
     import: 'default',
     query: '?raw',
@@ -151,23 +147,12 @@ function companionNames(component: ElementDocumentation, elements: Map<string, X
 }
 
 function parseComponents(): ComponentDocumentation[] {
-    const typesSource = Object.entries(typeSources)[0];
-    if (!typesSource || typeof typesSource[1] !== 'string') {
-        throw new Error('Vite did not load the shared XSD types source.');
-    }
-
-    const typesDocument = parseDocument(typesSource[1], typesSource[0]);
+    const typesDocument = parseDocument(typesSource, 'sdk/longlink/.static/xsd/types.xsd');
     const runtimeGroup = nodes(typesDocument, 'xsd:attributeGroup').find(
         (group) => attribute(group, 'name') === 'XmlRuntimeAttributes'
     );
     const runtimeAttributes = attributes(runtimeGroup, []);
-    const documents = Object.entries(adapterSources).map(([path, source]) => {
-        if (typeof source !== 'string') {
-            throw new Error(`Vite did not load ${path} as a raw XSD string.`);
-        }
-
-        return parseDocument(source, path);
-    });
+    const documents = Object.entries(adapterSources).map(([path, source]) => parseDocument(source, path));
     const elements = new Map<string, XsdRecord>();
     const types = new Map<string, XsdRecord>();
 
@@ -224,7 +209,3 @@ function parseComponents(): ComponentDocumentation[] {
 }
 
 export const componentDocumentation = parseComponents();
-
-export function componentBySlug(slug: string | undefined): ComponentDocumentation | undefined {
-    return componentDocumentation.find((component) => component.slug === slug);
-}

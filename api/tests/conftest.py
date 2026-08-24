@@ -70,19 +70,18 @@ async def reset_db(
     monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
     # Clear any cached session engine before binding the test database.
-    session.Session = None
+    monkeypatch.setattr(session, "Session", None)
 
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(PlatformModel.metadata.create_all)
 
-    session.Session = async_sessionmaker(engine, expire_on_commit=False)
+    monkeypatch.setattr(session, "Session", async_sessionmaker(engine, expire_on_commit=False))
 
     try:
         yield
     finally:
-        session.Session = None
         await engine.dispose()
 
 
@@ -99,8 +98,15 @@ def create_client(user: User | None = None) -> AsyncClient:
     """Build an in-process API client with optional authentication cookies."""
 
     cookies = authenticated_cookies(user) if user is not None else None
+    headers = {"origin": env.PUBLIC_URL.rstrip("/")}
 
-    return AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", cookies=cookies, follow_redirects=True)
+    return AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+        cookies=cookies,
+        headers=headers,
+        follow_redirects=True,
+    )
 
 
 @pytest.fixture(scope="session")

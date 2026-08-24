@@ -102,8 +102,7 @@ def apply_migrations() -> None:
         not migrations_path.is_dir() or not any(path.name != "__init__.py" for path in migrations_path.glob("*.py"))
     ):
         raise RuntimeError(f"Production applications require migrations in {migrations_path}")
-    if environment != "production":
-        migrations_path.mkdir(exist_ok=True)
+    migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to apply revisions from the application directory.
     cfg = Config()
@@ -111,3 +110,8 @@ def apply_migrations() -> None:
     cfg.set_main_option("version_locations", str(migrations_path))
 
     command.upgrade(cfg, "head")
+
+
+if __name__ == "__main__":
+    # Kubernetes runs this module directly before starting an Application workload.
+    apply_migrations()

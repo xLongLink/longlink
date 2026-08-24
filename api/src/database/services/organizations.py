@@ -140,8 +140,6 @@ async def purge(session: AsyncSession, organization_id: UUID) -> None:
     organization = await session.get(Organization, organization_id, with_for_update=True)
     if organization is None:
         return
-    if organization.deleted_at is None:
-        raise RuntimeError("Active organizations cannot be purged")
     await session.delete(organization)
 
 
@@ -346,7 +344,7 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if storage_id is None:
         raise UnavailableError("No storage registry available")
 
-    return await create(
+    return await _persist(
         session,
         name,
         user,
@@ -384,6 +382,28 @@ async def create(
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:
         raise UnavailableError("No storage registry available")
+
+
+    return await _persist(
+        session,
+        name,
+        user,
+        compute_id=compute_id,
+        storage_id=storage_id,
+        database_id=database_id,
+    )
+
+
+async def _persist(
+    session: AsyncSession,
+    name: str,
+    user: User,
+    *,
+    compute_id: UUID,
+    storage_id: UUID,
+    database_id: UUID,
+) -> Organization:
+    """Persist an Organization after its infrastructure assignment is locked and validated."""
 
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(

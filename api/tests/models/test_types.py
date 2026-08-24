@@ -1,4 +1,5 @@
 import pytest
+from pydantic import BaseModel
 from src.models.types import Image
 
 pytestmark = pytest.mark.no_db
@@ -30,6 +31,7 @@ def test_image_parses_valid_reference(reference: str, tag_or_digest: str) -> Non
         pytest.param("g" * 256, "too long", id="too-long"),
         pytest.param("https://ghcr.io/longlink/dashboard:latest", "must not be a URL", id="url"),
         pytest.param("ghcr.io/longlink/dashboard:la test", "invalid characters", id="whitespace"),
+        pytest.param("dashboard:latest", "registry host is required", id="missing-registry"),
         pytest.param("longlink/dashboard", "tag or digest is required", id="missing-tag"),
         pytest.param("ghcr.io/longlink/dashboard@sha256", "digest is invalid", id="invalid-digest"),
         pytest.param("user@ghcr.io/longlink/dashboard:latest", "registry is invalid", id="registry-credentials"),
@@ -44,3 +46,34 @@ def test_image_rejects_invalid_references(reference: str, message: str) -> None:
     # The API requires explicit, plain image references.
     with pytest.raises(ValueError, match=message):
         Image(reference)
+
+
+def test_image_normalizes_whitespace_and_preserves_validated_instances() -> None:
+    """Strip boundary whitespace and avoid reparsing an existing Image value."""
+
+    # Arrange
+    reference = Image(" ghcr.io/longlink/dashboard:latest ")
+
+    # Act
+    reused_reference = Image(reference)
+
+    # Assert
+    assert reference == "ghcr.io/longlink/dashboard:latest"
+    assert reused_reference is reference
+
+
+def test_image_validates_and_serializes_as_a_pydantic_string() -> None:
+    """Expose Image fields as validated strings in Pydantic models."""
+
+    # Arrange
+    class ImageModel(BaseModel):
+        """Provide one Pydantic boundary for an image reference."""
+
+        image: Image
+
+    # Act
+    model = ImageModel.model_validate({"image": "ghcr.io/longlink/dashboard:latest"})
+
+    # Assert
+    assert model.image == Image("ghcr.io/longlink/dashboard:latest")
+    assert model.model_dump(mode="json") == {"image": "ghcr.io/longlink/dashboard:latest"}

@@ -38,6 +38,29 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     assert health_response.json() == {"ok": True}
 
 
+def test_longlink_app_serves_runtime_routes_without_embedded_frontend(
+    application_source: Path,
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Keep SDK runtime routes available when package frontend assets are absent."""
+
+    # Arrange
+    monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app)
+
+    # Act
+    pages_response = client.get("/pages.json")
+    frontend_response = client.get("/", headers={"accept": "text/html"})
+
+    # Assert
+    assert pages_response.status_code == 200
+    assert pages_response.json() == []
+    assert frontend_response.status_code == 404
+
+
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
     """Require every Platform-owned runtime setting before production startup."""
 
@@ -66,7 +89,11 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
 
     # Arrange
     access_logger = logging.getLogger("uvicorn.access")
-    monkeypatch.setattr(longlink_app, "Envs", lambda: type("Settings", (), {"ENV": "production"})())
+    monkeypatch.setattr(
+        longlink_app,
+        "Envs",
+        lambda: type("Settings", (), {"ENV": "production", "IDENTITY_SECRET": "identity-secret"})(),
+    )
     monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
     monkeypatch.setattr(access_logger, "filters", [])
 
@@ -186,8 +213,17 @@ def test_invalid_xml_page_fails_during_registration(application_source: Path) ->
     assert not any(getattr(route, "path", None) == "/pages/valid" for route in app.router.routes)
 
 
-def test_application_route_collision_with_page_endpoint_is_rejected(
+@pytest.mark.parametrize(
+    ("route", "expected_dashboard_routes"),
+    [
+        pytest.param("/pages/dashboard", 1, id="static-route"),
+        pytest.param("/pages/{page}", 0, id="dynamic-route"),
+    ],
+)
+def test_application_routes_colliding_with_page_endpoints_are_rejected(
     application_source: Path,
+    route: str,
+    expected_dashboard_routes: int,
 ) -> None:
     """Reject page endpoints that would overlap an Application-owned route."""
 
@@ -198,7 +234,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     )
     app = FastAPI()
 
-    @app.get("/pages/dashboard")
+    @app.get(route)
     async def application_dashboard() -> dict[str, str]:
         """Return the Application dashboard resource."""
 
@@ -207,6 +243,9 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
+
+    # Assert LongLink did not register the colliding page endpoint.
+    assert sum(getattr(item, "path", None) == "/pages/dashboard" for item in app.router.routes) == expected_dashboard_routes
 
 
 @pytest.mark.parametrize(

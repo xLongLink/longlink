@@ -1,14 +1,103 @@
 import pytest
 from uuid import uuid4
+from types import SimpleNamespace
 from httpx2 import AsyncClient
+from fastapi import HTTPException
 from factories import create_ready_infrastructure
+from src.routes.v1 import databases
+from unittest.mock import AsyncMock
+from sqlalchemy.exc import OperationalError
+
+
+@pytest.mark.parametrize(
+    ("registry", "usage", "expected_status", "expected_detail"),
+    [
+        pytest.param(None, None, 404, "Database registry not found", id="missing-registry"),
+        pytest.param(
+            SimpleNamespace(host="database.example", port=5432, username="admin", password="secret", sslmode="require"),
+            OperationalError("SELECT", {}, RuntimeError("database offline")),
+            503,
+            "Database usage unavailable",
+            id="backend-unavailable",
+        ),
+    ],
+)
+async def test_get_database_usage_returns_exact_errors(
+    monkeypatch: pytest.MonkeyPatch,
+    registry: object | None,
+    usage: OperationalError | None,
+    expected_status: int,
+    expected_detail: str,
+) -> None:
+    """Return exact errors for missing registries and unavailable database backends."""
+
+    # Arrange
+    registry_id = uuid4()
+    session = SimpleNamespace(get=AsyncMock(return_value=registry))
+
+    class FakePostgres:
+        """Raise the configured backend failure when usage is requested."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept database connection details."""
+
+        async def usage(self) -> int:
+            """Raise the configured adapter error."""
+
+            assert usage is not None
+            raise usage
+
+    monkeypatch.setattr(databases, "Postgres", FakePostgres)
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await databases.get_database_usage(registry_id, session)
+
+    # Assert
+    assert exc.value.status_code == expected_status
+    assert exc.value.detail == expected_detail
+
+
+async def test_get_database_usage_returns_adapter_usage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return the live usage reported by the configured database adapter."""
+
+    # Arrange
+    registry_id = uuid4()
+    registry = SimpleNamespace(
+        host="database.example", port=5432, username="admin", password="secret", sslmode="require"
+    )
+    session = SimpleNamespace(get=AsyncMock(return_value=registry))
+
+    class FakePostgres:
+        """Return a fixed usage value from the external database boundary."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept database connection details."""
+
+        async def usage(self) -> int:
+            """Return the configured live usage."""
+
+            return 42
+
+    monkeypatch.setattr(databases, "Postgres", FakePostgres)
+
+    # Act
+    usage = await databases.get_database_usage(registry_id, session)
+
+    # Assert
+    assert usage == 42
 
 
 @pytest.mark.parametrize(
     ("usage", "expected_status", "expected_payload"),
     [
         pytest.param(42, 200, 42, id="available"),
-        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database usage unavailable"}, id="backend-unavailable"),
+        pytest.param(
+            OperationalError("SELECT", {}, RuntimeError("database offline")),
+            503,
+            {"detail": "Database usage unavailable"},
+            id="backend-unavailable",
+        ),
     ],
 )
 async def test_database_usage_endpoint_returns_usage_or_unavailable(
@@ -63,49 +152,73 @@ async def test_database_usage_endpoint_rejects_missing_registry(
     assert response.json() == {"detail": "Database registry not found"}
 
 
-async def test_database_registry_list_paginates_without_exposing_password(
+async def test_database_usage_endpoint_rejects_regular_users_before_connecting(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Require administrator access before opening a database adapter."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+
+    def unexpected_postgres(*_args: object) -> object:
+        """Fail if authorization reaches the database boundary."""
+
+        raise AssertionError("Postgres adapter was constructed")
+
+    monkeypatch.setattr("src.routes.v1.databases.Postgres", unexpected_postgres)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/databases/{infrastructure.database.id}/usage")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+async def test_database_registry_creation_uses_required_ssl_by_default(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Return one ordered registry page without its administrator password."""
+    """Use the secure SSL mode when the registry payload omits it."""
 
     # Arrange
     payload = {
+        "name": "Default TLS database",
+        "host": "database.example",
         "port": 5432,
-        "username": "administrator",
-        "sslmode": "require",
+        "username": "admin",
+        "password": "database-secret",
     }
-    alpha_payload = {
-        **payload,
-        "name": "Alpha database",
-        "host": "alpha.example",
-        "password": "alpha-password",
-    }
-    bravo_payload = {
-        **payload,
-        "name": "Bravo database",
-        "host": "bravo.example",
-        "password": "bravo-password",
-    }
-    alpha_response = await clients[0].post("/api/v1/databases", json=alpha_payload)
-    bravo_response = await clients[0].post("/api/v1/databases", json=bravo_payload)
-
     # Act
-    response = await clients[0].get("/api/v1/databases?page_size=1")
+    response = await clients[0].post("/api/v1/databases", json=payload)
 
     # Assert
-    assert alpha_response.status_code == 201
-    assert bravo_response.status_code == 201
-    assert response.status_code == 200
-    assert response.json() == {
-        "items": [
-            {
-                "id": alpha_response.json()["id"],
-                "name": "Alpha database",
-                "host": "alpha.example",
-                "port": 5432,
-                "sslmode": "require",
-                "username": "administrator",
-            }
-        ],
-        "total": 2,
+    assert response.status_code == 201
+    assert response.json()["sslmode"] == "require"
+
+
+async def test_database_registry_list_and_detail_omit_password(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return paginated database metadata without administrator credentials."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+
+    # Act
+    list_response = await clients[0].get("/api/v1/databases")
+    detail_response = await clients[0].get(f"/api/v1/databases/{infrastructure.database.id}")
+
+    # Assert
+    expected_registry = {
+        "id": str(infrastructure.database.id),
+        "name": infrastructure.database.name,
+        "host": "database.example",
+        "port": 5432,
+        "sslmode": "disable",
+        "username": "admin",
     }
+    assert list_response.status_code == 200
+    assert list_response.json() == {"items": [expected_registry], "total": 1}
+    assert detail_response.status_code == 200
+    assert detail_response.json() == expected_registry

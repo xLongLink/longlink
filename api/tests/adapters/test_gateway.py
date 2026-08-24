@@ -78,7 +78,7 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
 
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: TLS())
-    client = gateway.GatewayClient("https://gateway.example", "", "")
+    client = gateway.GatewayClient("https://gateway.example", "", "", "identity-secret-012345678901234567")
 
     # Cancellation must propagate after the owning client has closed.
     with pytest.raises(asyncio.CancelledError):
@@ -140,7 +140,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
     tls = TLS()
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: tls)
-    client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity")
+    monkeypatch.setattr(gateway.identity, "create_identity_token", lambda user_id, secret: "identity-token")
+    client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity", "identity-secret-012345678901234567")
     request_content = content()
 
     # Act
@@ -165,7 +166,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         "content": request_content,
         "headers": {
             "x-longlink-application-id": str(application_id),
-            "x-user-id": str(user_id),
+            "x-longlink-identity": "identity-token",
             "content-type": "application/json",
         },
     }

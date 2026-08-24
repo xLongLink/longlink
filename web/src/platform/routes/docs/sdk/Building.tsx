@@ -6,7 +6,7 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'building', label: 'Building', level: 1 },
         { id: 'metadata', label: 'Metadata', level: 2 },

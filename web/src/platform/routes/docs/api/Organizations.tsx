@@ -29,7 +29,7 @@ const organizationRoles = [
     },
 ];
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },

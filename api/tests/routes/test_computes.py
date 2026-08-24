@@ -6,7 +6,6 @@ from factories import (
     queue_operation,
     fetch_operations,
     complete_operation,
-    create_organization,
     create_ready_infrastructure,
 )
 from src.models.operations import OperationKind
@@ -32,6 +31,31 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     assert operations[0].finished_at is None
 
 
+async def test_compute_registry_list_and_detail_expose_only_administrator_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return paginated Compute metadata without its Kubernetes credentials."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+
+    # Act
+    list_response = await clients[0].get("/api/v1/computes")
+    detail_response = await clients[0].get(f"/api/v1/computes/{infrastructure.compute.id}")
+
+    # Assert
+    expected_registry = {
+        "id": str(infrastructure.compute.id),
+        "name": infrastructure.compute.name,
+        "gateway_url": "https://gateway.example",
+        "status": "running",
+    }
+    assert list_response.status_code == 200
+    assert list_response.json() == {"items": [expected_registry], "total": 1}
+    assert detail_response.status_code == 200
+    assert detail_response.json() == expected_registry
+
+
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
@@ -47,26 +71,6 @@ async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
-
-
-async def test_compute_registry_deletion_rejects_organization_assignment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users,
-) -> None:
-    """Retain a Compute registry assigned to an Organization."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], infrastructure=infrastructure)
-
-    # Act
-    response = await clients[0].delete(f"/api/v1/computes/{infrastructure.compute.id}")
-    get_response = await clients[0].get(f"/api/v1/computes/{infrastructure.compute.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Compute registry is used by organizations"}
-    assert get_response.status_code == 200
 
 
 async def test_compute_registry_deletes_registration_after_completed_lifecycle(

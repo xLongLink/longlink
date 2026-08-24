@@ -73,15 +73,13 @@ async def enqueue(
     """Add one Platform operation to an existing command transaction."""
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
-    operation = await session.scalar(
-        select(Operation)
-        .where(
-            Operation.kind == kind,
-            Operation.target_id == target_id,
-            Operation.finished_at.is_(None),
-            Operation.lease_expires_at.is_(None),
-        )
+    statement = select(Operation).where(
+        Operation.kind == kind,
+        Operation.target_id == target_id,
+        Operation.finished_at.is_(None),
+        Operation.lease_expires_at.is_(None),
     )
+    operation = await session.scalar(statement)
     if operation is not None:
         return operation
 
@@ -92,14 +90,7 @@ async def enqueue(
             session.add(operation)
             await session.flush()
     except IntegrityError:
-        operation = await session.scalar(
-            select(Operation).where(
-                Operation.kind == kind,
-                Operation.target_id == target_id,
-                Operation.finished_at.is_(None),
-                Operation.lease_expires_at.is_(None),
-            )
-        )
+        operation = await session.scalar(statement)
         if operation is None:
             raise
     return operation

@@ -10,12 +10,19 @@ import { isSafePropertyName } from './expressions/resolve';
 import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 /** Keeps XML rendering failures scoped to the XML surface. */
-class XmlErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, { error: Error | null }> {
     state: { error: Error | null } = { error: null };
 
     /** Stores the thrown error so the XML area can render the message. */
     static getDerivedStateFromError(error: Error) {
         return { error };
+    }
+
+    componentDidUpdate(previousProps: Readonly<{ ast: ASTNode; children: ReactNode }>) {
+        // A new document must render independently from a previous document's failure.
+        if (this.props.ast !== previousProps.ast && this.state.error) {
+            this.setState({ error: null });
+        }
     }
 
     /** Renders the XML error message or the protected XML subtree. */
@@ -135,7 +142,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     if (setup.nodes.length && initializedAst.current !== ast) return null;
 
     return (
-        <XmlErrorBoundary>
+        <XmlErrorBoundary ast={ast}>
             <XmlContext.Provider value={ctx}>
                 <Stack gap={XML_LAYOUT_GAP}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>

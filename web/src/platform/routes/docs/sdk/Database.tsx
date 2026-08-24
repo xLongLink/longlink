@@ -8,7 +8,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
-export const metadata = {
+const metadata = {
     toc: [
         { id: 'database', label: 'Database', level: 1 },
         { id: 'basic-usage', label: 'Basic usage', level: 2 },

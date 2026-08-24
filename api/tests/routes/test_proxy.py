@@ -4,6 +4,7 @@ from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from typing import TypedDict
+from fastapi import HTTPException
 from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Awaitable, AsyncIterator
@@ -20,8 +21,6 @@ class ProxyCapture(TypedDict, total=False):
     """Represent values observed by the proxy transport fakes."""
 
     close_count: int
-    client_identity: str
-    client_kwargs: dict[str, object]
     method: str
     url: str
     content: bytes
@@ -86,6 +85,10 @@ async def create_running_application(user: User) -> tuple[Application, Infrastru
     async with session_scope() as session:
         persisted_application = await session.get(Application, application.id)
         assert persisted_application is not None
+        persisted_application.secrets = {
+            **persisted_application.secrets,
+            "LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890",
+        }
         persisted_application.status = Status.running
         await session.commit()
 
@@ -161,18 +164,12 @@ async def test_application_proxy_forwards_safe_content(
     monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
     client = clients[0]
 
-    # Proxy a request carrying trusted and untrusted browser headers.
+    # Proxy a request with a content type and request body.
     response = await client.post(
         f"/api/v1/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
-            "accept": "application/json",
-            "accept-language": "en-US",
-            "authorization": "Bearer user-controlled",
             "content-type": "text/plain",
-            "x-custom-feature": "user-controlled",
-            "x-forwarded-for": "203.0.113.10",
-            "x-user-id": "spoofed",
         },
     )
 
@@ -193,6 +190,40 @@ async def test_application_proxy_forwards_safe_content(
     assert captured.get("application_id") == str(app.id)
     assert captured.get("user_id") == str(user.id)
     assert captured.get("content_type") == "text/plain"
+
+
+@pytest.mark.parametrize("origin", [None, "https://attacker.example"])
+async def test_application_proxy_rejects_untrusted_origin_before_gateway_request(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    origin: str | None,
+) -> None:
+    """Reject missing and foreign origins before an authenticated write reaches the gateway."""
+
+    # Arrange a running Application and fail if CSRF protection is bypassed.
+    application, _ = await create_running_application(users[0])
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail when an untrusted browser request reaches the compute boundary."""
+
+        raise AssertionError("Gateway client must not be constructed")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+
+    # Remove the client's trusted default header for the missing-Origin case.
+    if origin is None:
+        clients[0].headers.pop("origin")
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/applications/{application.id}/proxy/tasks",
+        headers={} if origin is None else {"origin": origin},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
 
 
 async def test_application_proxy_streams_response_without_upstream_content_type(
@@ -489,6 +520,7 @@ async def test_application_proxy_allows_organization_read_members(
 async def test_application_proxy_rejects_cross_organization_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject a tenant's request to another Organization's Application."""
 
@@ -496,6 +528,13 @@ async def test_application_proxy_rejects_cross_organization_access(
     owner = users[0]
     organization = await create_organization(owner)
     application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if an unauthorized request reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
@@ -614,3 +653,214 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     assert response.text == ""
     assert response.headers["content-length"] == "0"
     assert response.headers["cache-control"] == "no-store"
+
+
+async def test_proxy_application_request_directly_rejects_missing_runtime_access(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a direct proxy call when no active application access exists."""
+
+    # Arrange
+    async def runtime_access(*_args: object) -> None:
+        """Return no runtime access for the requested application."""
+
+        return None
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await proxy_routes.proxy_application_request(
+            SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
+            UUID(int=1),
+            user=SimpleNamespace(id=UUID(int=2)),
+            session=SimpleNamespace(),
+        )
+
+    # Assert
+    assert raised.value.status_code == 403
+    assert raised.value.detail == "Access required"
+
+
+async def test_proxy_application_request_directly_enforces_method_role(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a direct request whose Organization role cannot use its HTTP method."""
+
+    # Arrange
+    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
+        """Return read access for a request requiring maintain access."""
+
+        return SimpleNamespace(), SimpleNamespace(), OrganizationRoles.read, SimpleNamespace()
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await proxy_routes.proxy_application_request(
+            SimpleNamespace(method="DELETE", url=SimpleNamespace(query=""), headers={}),
+            UUID(int=1),
+            user=SimpleNamespace(id=UUID(int=2)),
+            session=SimpleNamespace(),
+        )
+
+    # Assert
+    assert raised.value.status_code == 403
+    assert raised.value.detail == "Organization maintain access required"
+
+
+async def test_proxy_application_request_directly_returns_loading_for_creating_application(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Return the loading response directly when the Application is not running."""
+
+    # Arrange
+    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
+        """Return a creating application with otherwise irrelevant gateway state."""
+
+        return SimpleNamespace(status=Status.creating), SimpleNamespace(), OrganizationRoles.read, SimpleNamespace()
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+
+    # Act
+    response = await proxy_routes.proxy_application_request(
+        SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
+        UUID(int=1),
+        user=SimpleNamespace(id=UUID(int=2)),
+        session=SimpleNamespace(),
+    )
+
+    # Assert
+    assert response.status_code == 503
+    assert dict(response.headers) == {"cache-control": "no-store", "content-length": "0"}
+
+
+@pytest.mark.parametrize("missing", ["gateway_url", "gateway_certificate", "gateway_client_identity", "identity_secret"])
+async def test_proxy_application_request_directly_rejects_each_missing_gateway_requirement(
+    monkeypatch: pytest.MonkeyPatch,
+    missing: str,
+) -> None:
+    """Reject direct requests when any required gateway value is absent."""
+
+    # Arrange complete state, then omit one readiness requirement at a time.
+    registry = SimpleNamespace(
+        gateway_url="https://gateway.example",
+        gateway_certificate="certificate",
+        gateway_client_identity="identity",
+    )
+    secrets = {"LONGLINK_IDENTITY_SECRET": "identity-secret"}
+    if missing == "identity_secret":
+        secrets = {}
+    else:
+        setattr(registry, missing, None)
+
+    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
+        """Return a running application with incomplete gateway configuration."""
+
+        return SimpleNamespace(status=Status.running, secrets=secrets), SimpleNamespace(), OrganizationRoles.read, registry
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await proxy_routes.proxy_application_request(
+            SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
+            UUID(int=1),
+            user=SimpleNamespace(id=UUID(int=2)),
+            session=SimpleNamespace(),
+        )
+
+    # Assert
+    assert raised.value.status_code == 503
+    assert raised.value.detail == "Application gateway is not ready"
+
+
+async def test_proxy_application_request_directly_rejects_active_content(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Close and reject a direct gateway response containing an active document."""
+
+    # Arrange
+    closed = False
+
+    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
+        """Return a running application with complete gateway configuration."""
+
+        return (
+            SimpleNamespace(id=UUID(int=1), status=Status.running, secrets={"LONGLINK_IDENTITY_SECRET": "identity-secret"}),
+            SimpleNamespace(),
+            OrganizationRoles.read,
+            SimpleNamespace(gateway_url="https://gateway.example", gateway_certificate="certificate", gateway_client_identity="identity"),
+        )
+
+    class Gateway:
+        """Return an active document from the compute gateway."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the persisted gateway configuration."""
+
+        async def request(self, **_kwargs: object) -> FakeGatewayResponse:
+            """Return an active document with observable cleanup."""
+
+            def close() -> None:
+                """Record gateway response cleanup."""
+
+                nonlocal closed
+                closed = True
+
+            return FakeGatewayResponse(SimpleNamespace(headers={"content-type": "text/html"}), close)
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await proxy_routes.proxy_application_request(
+            SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
+            UUID(int=1),
+            user=SimpleNamespace(id=UUID(int=2)),
+            session=SimpleNamespace(),
+        )
+
+    # Assert
+    assert raised.value.status_code == 502
+    assert raised.value.detail == "Application proxy returned an unsupported content type"
+    assert closed
+
+
+async def test_proxy_application_request_directly_translates_gateway_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Translate a direct gateway transport failure into the public unavailable error."""
+
+    # Arrange
+    application_id = UUID(int=1)
+
+    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
+        """Return a running application with complete gateway configuration."""
+
+        return (
+            SimpleNamespace(id=application_id, status=Status.running, secrets={"LONGLINK_IDENTITY_SECRET": "identity"}),
+            SimpleNamespace(),
+            OrganizationRoles.read,
+            SimpleNamespace(gateway_url="https://gateway.example", gateway_certificate="certificate", gateway_client_identity="identity"),
+        )
+
+    class FailingGateway:
+        """Raise a transport error when the route calls the compute boundary."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the persisted gateway configuration."""
+
+        async def request(self, **_kwargs: object) -> object:
+            """Simulate an unavailable gateway transport."""
+
+            raise httpx2.HTTPError("unavailable")
+
+    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+    monkeypatch.setattr(proxy_routes, "GatewayClient", FailingGateway)
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await proxy_routes.proxy_application_request(
+            SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
+            application_id,
+            user=SimpleNamespace(id=UUID(int=2)),
+            session=SimpleNamespace(),
+        )
+
+    # Assert
+    assert raised.value.status_code == 503
+    assert raised.value.detail == "Application proxy request failed"

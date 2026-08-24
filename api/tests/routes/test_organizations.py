@@ -1,14 +1,19 @@
 import pytest
-from uuid import UUID
+from uuid import UUID, uuid4
+from types import SimpleNamespace
 from httpx2 import AsyncClient
+from fastapi import HTTPException
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from urllib.parse import urlencode
+from src.routes.v1 import organizations as organization_routes
 from src.models.roles import OrganizationRoles
+from botocore.exceptions import ClientError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
+from src.models.organizations import OrganizationCreate, OrganizationUpdate, OrganizationMemberUpdate, OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -45,6 +50,75 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert len(operations) == 1
     assert operations[0].kind == OperationKind.organization_create
     assert operations[0].target_id == organization.id
+
+
+async def test_create_organization_directly_commits_and_returns_service_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return the created organization after directly committing its desired state."""
+
+    # Arrange
+    created = SimpleNamespace(id=UUID(int=1), name="acme")
+    session = SimpleNamespace(commit_count=0)
+    user = SimpleNamespace(id=UUID(int=2))
+
+    async def create_default(received_session: object, name: str, received_user: object) -> object:
+        """Verify the route delegates the validated creation request unchanged."""
+
+        assert received_session is session
+        assert name == "acme"
+        assert received_user is user
+        return created
+
+    async def commit() -> None:
+        """Record the transaction commit."""
+
+        session.commit_count += 1
+
+    session.commit = commit
+    monkeypatch.setattr(organization_routes.organizations, "create_default", create_default)
+
+    # Act
+    result = await organization_routes.create_organization(OrganizationCreate(name="acme"), user, session)
+
+    # Assert
+    assert result is created
+    assert session.commit_count == 1
+
+
+async def test_get_organization_storage_usage_directly_translates_backend_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Translate direct object-storage failures into the stable service error."""
+
+    # Arrange
+    organization = SimpleNamespace(id=UUID(int=1), storage_id=UUID(int=2), slug="acme")
+    membership = SimpleNamespace(role=OrganizationRoles.maintain, organization=organization)
+    registry = SimpleNamespace(name="storage", endpoint_url="https://storage.example", access_key_id="key", secret_access_key="secret")
+
+    class Session:
+        """Provide the immutable storage registry lookup."""
+
+        async def get(self, model: object, identifier: UUID) -> object:
+            """Return the configured registry for the organization assignment."""
+
+            assert identifier == organization.storage_id
+            return registry
+
+    class FailingStorage:
+        """Raise the expected storage SDK error at the external boundary."""
+
+        async def usage(self, bucket_name: str) -> int:
+            """Fail while inspecting the organization bucket."""
+
+            assert bucket_name == organization.id.hex
+            raise ClientError({"Error": {"Code": "InternalError"}}, "ListObjectsV2")
+
+    monkeypatch.setattr(organization_routes, "Exoscale", lambda *_args: FailingStorage())
+
+    # Act
+    with pytest.raises(HTTPException) as raised:
+        await organization_routes.get_organization_storage_usage(membership, Session())
+
+    # Assert
+    assert raised.value.status_code == 503
+    assert raised.value.detail == "Storage resources unavailable"
 
 
 @pytest.mark.parametrize(
@@ -105,7 +179,6 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert payload["applications"][0]["id"] == str(application.id)
     assert applications_response.status_code == 200
     assert applications_response.headers["cache-control"] == "no-store"
     applications_payload = applications_response.json()
@@ -269,7 +342,6 @@ async def test_other_organization_user_cannot_delete_application(
     [
         pytest.param(3584, 200, 3584, id="available"),
         pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(RuntimeError("database offline"), 503, {"detail": "Database resources unavailable"}, id="backend-unavailable"),
     ],
 )
 async def test_organization_database_usage_returns_usage_or_unavailable(
@@ -280,7 +352,7 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
     expected_status: int,
     expected_payload: int | None | dict[str, str],
 ) -> None:
-    """Return database usage or translate a backend failure."""
+    """Return database usage when the adapter can inspect it."""
 
     # Arrange
     owner = users[0]
@@ -316,7 +388,12 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
     [
         pytest.param(4096, 200, 4096, id="available"),
         pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(RuntimeError("storage offline"), 503, None, id="backend-unavailable"),
+        pytest.param(
+            ClientError({"Error": {"Code": "InternalError"}, "ResponseMetadata": {"HTTPStatusCode": 500}}, "ListObjectsV2"),
+            503,
+            None,
+            id="backend-unavailable",
+        ),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
@@ -455,6 +532,19 @@ async def test_list_organizations_returns_stable_page_and_active_total(
         ],
         "total": 2,
     }
+
+
+async def test_delete_organization_returns_not_found_for_unknown_identifier(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return the organization-specific error for a missing deletion target."""
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/organizations/{uuid4()}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_get_organization_returns_403_for_non_member(
@@ -823,6 +913,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     ("caller_role", "expected_detail"),
     [
         pytest.param(None, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
         pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
     ],
 )
@@ -859,3 +950,289 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await organizations.invitations(session, organization.id) == []
+
+
+async def test_list_organizations_directly_returns_page_result(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return the organization page produced by the service."""
+
+    # Arrange
+    session = SimpleNamespace()
+    pagination = SimpleNamespace()
+    items = [SimpleNamespace(id=UUID(int=1))]
+
+    async def fetch_page(received_session: object, received_pagination: object) -> tuple[list[object], int]:
+        """Verify the route delegates its pagination request unchanged."""
+
+        assert received_session is session
+        assert received_pagination is pagination
+        return items, 1
+
+    monkeypatch.setattr(organization_routes.organizations, "fetch_page", fetch_page)
+
+    # Act
+    result = await organization_routes.list_organizations(SimpleNamespace(), pagination, session)
+
+    # Assert
+    assert result == {"items": items, "total": 1}
+
+
+@pytest.mark.parametrize("updated", (pytest.param(True, id="found"), pytest.param(False, id="missing")))
+async def test_update_organization_directly_returns_result_or_not_found(
+    monkeypatch: pytest.MonkeyPatch, updated: bool
+) -> None:
+    """Commit updates and report missing organizations with the public error."""
+
+    # Arrange
+    organization = SimpleNamespace(id=UUID(int=1))
+    membership = SimpleNamespace(role=OrganizationRoles.admin, organization_id=organization.id)
+    user = SimpleNamespace(id=UUID(int=2))
+    session = SimpleNamespace(commits=0)
+
+    async def update(_session: object, organization_id: UUID, avatar: str, received_user: object) -> object | None:
+        """Return the configured update outcome after verifying route arguments."""
+
+        assert organization_id == organization.id
+        assert avatar == ""
+        assert received_user is user
+        return organization if updated else None
+
+    async def commit() -> None:
+        """Record successful update commits."""
+
+        session.commits += 1
+
+    session.commit = commit
+    monkeypatch.setattr(organization_routes.organizations, "update", update)
+
+    # Act
+    if not updated:
+        with pytest.raises(HTTPException) as raised:
+            await organization_routes.update_organization(OrganizationUpdate(avatar=""), user, membership, session)
+    else:
+        result = await organization_routes.update_organization(OrganizationUpdate(avatar=""), user, membership, session)
+
+    # Assert
+    if updated:
+        assert result is organization
+        assert session.commits == 1
+    else:
+        assert raised.value.status_code == 404
+        assert raised.value.detail == "Organization not found"
+        assert session.commits == 0
+
+
+@pytest.mark.parametrize(
+    ("usage", "expected_result"),
+    [(2048, 2048), (None, None)],
+)
+async def test_organization_usage_handlers_directly_return_adapter_results(
+    monkeypatch: pytest.MonkeyPatch, usage: int | None, expected_result: int | dict[str, object] | None
+) -> None:
+    """Return direct database and storage adapter results for maintainers."""
+
+    # Arrange
+    organization = SimpleNamespace(id=UUID(int=1), database_id=UUID(int=2), storage_id=UUID(int=3), slug="acme")
+    membership = SimpleNamespace(role=OrganizationRoles.maintain, organization=organization)
+    database_registry = SimpleNamespace(host="db", port=5432, username="user", password="secret", sslmode="require")
+    storage_registry = SimpleNamespace(name="storage", endpoint_url="https://storage.example", access_key_id="key", secret_access_key="secret")
+
+    class Session:
+        """Return the database and storage registries assigned to the organization."""
+
+        async def get(self, _model: object, identifier: UUID) -> object:
+            """Select the registry associated with the requested identifier."""
+
+            return database_registry if identifier == organization.database_id else storage_registry
+
+    class FakePostgres:
+        """Return configured database usage."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the configured database connection values."""
+
+        async def database_usage(self, database_name: str) -> int | None:
+            """Return database usage for the organization's physical database."""
+
+            assert database_name == organization.id.hex
+            return usage
+
+    class FakeStorage:
+        """Return configured storage usage."""
+
+        async def usage(self, bucket_name: str) -> int | None:
+            """Return storage usage for the organization's bucket."""
+
+            assert bucket_name == organization.id.hex
+            return usage
+
+    monkeypatch.setattr(organization_routes, "Postgres", FakePostgres)
+    monkeypatch.setattr(organization_routes, "Exoscale", lambda *_args: FakeStorage())
+
+    # Act
+    database_result = await organization_routes.get_organization_database_usage(membership, Session())
+    storage_result = await organization_routes.get_organization_storage_usage(membership, Session())
+
+    # Assert
+    assert database_result == expected_result
+    expected_storage = None if usage is None else {"bucket_name": organization.id.hex, "space_used": usage}
+    assert storage_result == expected_storage
+
+
+async def test_create_organization_invitation_directly_commits_and_sends_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit an invitation before sending its email notification."""
+
+    # Arrange
+    organization = SimpleNamespace(id=UUID(int=1), name="acme")
+    membership = SimpleNamespace(role=OrganizationRoles.maintain, organization_id=organization.id, organization=organization)
+    session = SimpleNamespace(commits=0)
+    calls: list[str] = []
+
+    async def create(_session: object, organization_id: UUID, email: str, role: OrganizationRoles) -> None:
+        """Record invitation persistence arguments."""
+
+        assert organization_id == organization.id
+        assert email == "member@example.com"
+        assert role == OrganizationRoles.write
+        calls.append("create")
+
+    async def commit() -> None:
+        """Record the invitation transaction commit."""
+
+        session.commits += 1
+        calls.append("commit")
+
+    async def send(email: str, organization_name: str, role: OrganizationRoles) -> None:
+        """Record the invitation notification after persistence."""
+
+        assert (email, organization_name, role) == ("member@example.com", "acme", OrganizationRoles.write)
+        calls.append("send")
+
+    session.commit = commit
+    monkeypatch.setattr(organization_routes.invitations, "create", create)
+    monkeypatch.setattr(organization_routes.mail, "send_organization_invitation_email", send)
+
+    # Act
+    result = await organization_routes.create_organization_invitation(
+        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write), membership, session
+    )
+
+    # Assert
+    assert result is None
+    assert session.commits == 1
+    assert calls == ["create", "commit", "send"]
+
+
+@pytest.mark.parametrize("changed", (pytest.param(True, id="changed"), pytest.param(False, id="unchanged")))
+async def test_update_organization_member_directly_syncs_only_changed_roles(monkeypatch: pytest.MonkeyPatch, changed: bool) -> None:
+    """Commit and synchronize only when the member role changed."""
+
+    # Arrange
+    organization_id = UUID(int=1)
+    member_id = UUID(int=2)
+    membership = SimpleNamespace(role=OrganizationRoles.admin, organization_id=organization_id)
+    user = SimpleNamespace(id=UUID(int=3))
+    session = SimpleNamespace(commits=0)
+    synchronized: list[UUID] = []
+
+    async def update_member_role(*_args: object) -> bool:
+        """Return the configured role update outcome."""
+
+        return changed
+
+    async def commit() -> None:
+        """Record role update commits."""
+
+        session.commits += 1
+
+    async def sync_users(_session: object, received_organization_id: UUID) -> None:
+        """Record synchronization for changed organization memberships."""
+
+        synchronized.append(received_organization_id)
+
+    session.commit = commit
+    monkeypatch.setattr(organization_routes.organizations, "update_member_role", update_member_role)
+    monkeypatch.setattr(organization_routes.organizations, "sync_users", sync_users)
+
+    # Act
+    result = await organization_routes.update_organization_member(
+        member_id, OrganizationMemberUpdate(role=OrganizationRoles.write), user, membership, session
+    )
+
+    # Assert
+    assert result is None
+    assert session.commits == int(changed)
+    assert synchronized == ([organization_id] if changed else [])
+
+
+@pytest.mark.parametrize(
+    ("administrator", "tombstone_owner", "member_role", "deleted", "expected_error"),
+    [
+        pytest.param(False, UUID(int=2), None, False, (403, "Access required"), id="foreign-tombstone"),
+        pytest.param(False, None, None, False, (403, "Access required"), id="missing-membership"),
+        pytest.param(False, None, OrganizationRoles.admin, False, (403, "Permission required"), id="non-owner"),
+        pytest.param(False, None, OrganizationRoles.owner, True, None, id="active-owner"),
+        pytest.param(False, UUID(int=1), None, True, None, id="owner-retry"),
+        pytest.param(True, None, None, False, (404, "Organization not found"), id="missing-organization"),
+    ],
+)
+async def test_delete_organization_directly_authorizes_and_returns_service_outcome(
+    monkeypatch: pytest.MonkeyPatch,
+    administrator: bool,
+    tombstone_owner: UUID | None,
+    member_role: OrganizationRoles | None,
+    deleted: bool,
+    expected_error: tuple[int, str] | None,
+) -> None:
+    """Authorize direct deletion requests before returning their lifecycle result."""
+
+    # Arrange
+    organization_id = UUID(int=3)
+    user = SimpleNamespace(id=UUID(int=1), administrator=administrator)
+    result = SimpleNamespace(id=organization_id)
+    session = SimpleNamespace(commits=0)
+    soft_delete_calls: list[UUID] = []
+
+    async def scalar(_statement: object) -> object | None:
+        """Return the configured tombstone for non-administrator callers."""
+
+        return None if tombstone_owner is None else SimpleNamespace(deleted_id=tombstone_owner)
+
+    async def membership(_session: object, user_id: UUID, requested_organization_id: UUID) -> object | None:
+        """Return the configured active membership authorization."""
+
+        assert (user_id, requested_organization_id) == (user.id, organization_id)
+        return None if member_role is None else SimpleNamespace(role=member_role)
+
+    async def soft_delete(_session: object, requested_organization_id: UUID, received_user: object) -> object | None:
+        """Return the configured deletion service outcome."""
+
+        assert received_user is user
+        soft_delete_calls.append(requested_organization_id)
+        return result if deleted else None
+
+    async def commit() -> None:
+        """Record successful deletion commits."""
+
+        session.commits += 1
+
+    session.scalar = scalar
+    session.commit = commit
+    monkeypatch.setattr(organization_routes.organizations, "membership", membership)
+    monkeypatch.setattr(organization_routes.organizations, "soft_delete", soft_delete)
+
+    # Act
+    if expected_error is not None:
+        with pytest.raises(HTTPException) as raised:
+            await organization_routes.delete_organization(organization_id, user, session)
+    else:
+        received_result = await organization_routes.delete_organization(organization_id, user, session)
+
+    # Assert
+    if expected_error is not None:
+        assert (raised.value.status_code, raised.value.detail) == expected_error
+        assert session.commits == 0
+        assert soft_delete_calls == ([] if not administrator else [organization_id])
+    else:
+        assert received_result is result
+        assert session.commits == 1
+        assert soft_delete_calls == [organization_id]

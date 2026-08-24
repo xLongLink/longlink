@@ -46,7 +46,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         onSuccess: () => {
             setOpen(false);
             form.reset();
-            void Promise.all(invalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+            return Promise.all(invalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
         },
     });
     const form = useForm({

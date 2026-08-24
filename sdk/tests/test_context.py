@@ -1,10 +1,19 @@
 import pytest
 from uuid import UUID
-from fastapi import Depends, FastAPI
-from longlink import context
-from contextlib import asynccontextmanager
+from fastapi import Depends, FastAPI, Request
+from longlink import context, identity
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
+
+IDENTITY_SECRET = "test-identity-secret-01234567890"
+
+
+def identity_headers(user_id: UUID) -> dict[str, str]:
+    """Build one current Platform identity assertion for context tests."""
+
+    # Use the shared token constructor used by the Platform gateway.
+    return {"x-longlink-identity": identity.create_identity_token(user_id, IDENTITY_SECRET)}
 
 
 @pytest.mark.parametrize(
@@ -16,7 +25,6 @@ from fastapi.testclient import TestClient
     ],
 )
 def test_data_resolves_request_services(
-    monkeypatch: pytest.MonkeyPatch,
     identity: UUID | None,
     user: object | None,
 ) -> None:
@@ -41,9 +49,6 @@ def test_data_resolves_request_services(
             return user
 
     database = Database()
-    app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage})()
-
     @asynccontextmanager
     async def fake_session(database: object) -> AsyncIterator[object]:
         """Yield one fake request-scoped database session and record cleanup."""
@@ -54,8 +59,17 @@ def test_data_resolves_request_services(
         finally:
             session_closed = True
 
-    monkeypatch.setattr(context, "session", lambda: fake_session(database))
-    context.install_context_middleware(app)
+    class DatabaseService:
+        """Provide the configured request database session."""
+
+        def session(self) -> AbstractAsyncContextManager[object]:
+            """Yield the test database session."""
+
+            return fake_session(database)
+
+    app = FastAPI()
+    app.state.longlink = type("Runtime", (), {"storage": storage, "database": DatabaseService()})()
+    context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
     async def get_context(value: context.Context = Depends(context.data)) -> dict[str, bool]:
@@ -66,10 +80,86 @@ def test_data_resolves_request_services(
     client = TestClient(app)
 
     # Act
-    response = client.get("/", headers={} if identity is None else {"x-user-id": str(identity)})
+    response = client.get("/", headers={} if identity is None else identity_headers(identity))
 
     # Assert
     assert response.status_code == 200
     assert response.json() == {"user_matches": True, "storage_matches": True}
     assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
     assert session_closed
+
+
+def test_data_closes_database_session_when_endpoint_fails() -> None:
+    """Close the request database session when a dependent endpoint raises."""
+
+    # Arrange
+    session_closed = False
+
+    class Database:
+        """Provide the minimal lookup behavior required by the dependency."""
+
+        async def get(self, _model: object, _user_id: UUID) -> None:
+            """Return no shared audit user."""
+
+    @asynccontextmanager
+    async def fake_session() -> AsyncIterator[Database]:
+        """Yield a database session and record finalization."""
+
+        nonlocal session_closed
+        try:
+            yield Database()
+        finally:
+            session_closed = True
+
+    class DatabaseService:
+        """Open the configured request database session."""
+
+        def session(self) -> AbstractAsyncContextManager[Database]:
+            """Return the managed fake session."""
+
+            return fake_session()
+
+    app = FastAPI()
+    app.state.longlink = type("Runtime", (), {"storage": object(), "database": DatabaseService()})()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def fail(_value: context.Context = Depends(context.data)) -> None:
+        """Fail after the context dependency opens its session."""
+
+        raise RuntimeError("endpoint failed")
+
+    # Act
+    with TestClient(app) as client:
+        with pytest.raises(RuntimeError) as error:
+            client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
+
+    # Assert
+    assert str(error.value) == "endpoint failed"
+    assert session_closed
+
+
+def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
+    """Ignore a malformed Platform identity token."""
+
+    # Arrange
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def get_identity(request: Request) -> dict[str, bool]:
+        """Expose whether the middleware accepted the supplied identity."""
+
+        return {"authenticated": request.state.longlink_identity is not None}
+
+    client = TestClient(app)
+
+    # Act
+    response = client.get(
+        "/",
+        headers={"x-longlink-identity": "invalid-token"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False}

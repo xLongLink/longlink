@@ -8,20 +8,18 @@ export function PageBreadcrumb({ applicationName }: { applicationName?: string }
     const { pathname } = useLocation();
     const organization = pathname.split('/')[2] ?? '';
     const label = pathname.startsWith('/admin/') ? 'Admin' : startCase(decodeURIComponent(organization));
-    const hasApplicationName = applicationName !== undefined;
-
     return (
         <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/user/organizations">
                 <Wordmark />
             </BreadcrumbItem>
             <BreadcrumbItem
-                href={hasApplicationName ? `/orgs/${organization}` : undefined}
-                isCurrent={!hasApplicationName}
+                href={applicationName !== undefined ? `/orgs/${organization}` : undefined}
+                isCurrent={applicationName === undefined}
             >
                 {label}
             </BreadcrumbItem>
-            {hasApplicationName ? <BreadcrumbItem isCurrent>{applicationName}</BreadcrumbItem> : null}
+            {applicationName !== undefined ? <BreadcrumbItem isCurrent>{applicationName}</BreadcrumbItem> : null}
         </Breadcrumbs>
     );
 }

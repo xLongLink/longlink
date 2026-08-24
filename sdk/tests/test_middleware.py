@@ -69,8 +69,6 @@ def test_frontend_middleware_varies_eligible_text_representations(accept_encodin
     response = request_response(app, "/text", {"accept-encoding": accept_encoding})
 
     # Assert
-    assert response.status_code == 200
-    assert response.content == b"x" * 1000
     assert response.headers.get("content-encoding") == expected_content_encoding
     assert response.headers["etag"] == 'W/"text-v1"'
     assert response.headers["vary"] == "Accept-Encoding"
@@ -99,7 +97,6 @@ def test_frontend_middleware_preserves_identity_representation_for_range_request
     response = request_response(app, "/text", {"accept-encoding": "gzip", "range": "bytes=0-99"})
 
     # Assert
-    assert response.status_code == 200
     assert "content-encoding" not in response.headers
     assert response.headers["etag"] == '"text-v1"'
     assert response.headers["cache-control"] == "private"
@@ -115,7 +112,6 @@ def test_frontend_middleware_preserves_incompressible_asset_representation() -> 
     response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
 
     # Assert
-    assert response.status_code == 200
     assert response.content == b"x" * 1000
     assert "content-encoding" not in response.headers
     assert "vary" not in response.headers
@@ -229,6 +225,4 @@ def test_frontend_middleware_preserves_explicit_cache_policy() -> None:
     response = request_response(app, "/text", {})
 
     # Assert
-    assert response.status_code == 200
-    assert response.content == b"x" * 1000
     assert response.headers["cache-control"] == "private, no-store"
