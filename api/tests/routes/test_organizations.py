@@ -22,11 +22,10 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    client = clients[0]
     infrastructure = await create_ready_infrastructure()
 
     # Act
-    response = await client.post(
+    response = await clients[0].post(
         "/api/v1/organizations",
         json={"name": "acme"},
     )
@@ -99,6 +98,7 @@ async def test_get_organization_returns_member_payload(
 
     # Assert
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
 
     payload = response.json()
     assert payload["organization"]["id"] == str(organization.id)
@@ -107,6 +107,7 @@ async def test_get_organization_returns_member_payload(
     assert payload["members"][0]["role"] == "owner"
     assert payload["applications"][0]["id"] == str(application.id)
     assert applications_response.status_code == 200
+    assert applications_response.headers["cache-control"] == "no-store"
     applications_payload = applications_response.json()
     assert len(applications_payload) == 1
     assert applications_payload[0]["id"] == str(application.id)
@@ -188,6 +189,26 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     recorded_operations = await fetch_operations()
     deletion = next(item for item in recorded_operations if item.kind == OperationKind.organization_delete)
     assert deletion.target_id == organization.id
+
+
+async def test_delete_organization_rejects_tombstone_retry_from_another_user(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Only the user who created an Organization tombstone may retry its cleanup."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    first_response = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+
+    # Act
+    retry_response = await clients[1].delete(f"/api/v1/organizations/{organization.id}")
+
+    # Assert
+    assert first_response.status_code == 202
+    assert retry_response.status_code == 403
+    assert retry_response.json() == {"detail": "Access required"}
 
 
 async def test_delete_organization_requires_owner_or_platform_admin(
@@ -630,6 +651,52 @@ async def test_update_organization_member_changes_role(
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     assert synchronized_organizations == [organization.id]
+
+
+async def test_update_organization_member_skips_unchanged_role_synchronization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Avoid persistence and runtime synchronization for an unchanged member role."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+    async with session_scope() as session:
+        original = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
+        original_updated_at = original.updated_at
+        original_updated_id = original.updated_id
+
+    async def unexpected_sync(_session: object, _organization_id: UUID) -> None:
+        """Fail if an unchanged member role reaches runtime synchronization."""
+
+        raise AssertionError("unchanged member role must not synchronize users")
+
+    monkeypatch.setattr(organizations, "sync_users", unexpected_sync)
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}/members/{member.id}",
+        json={"role": "write"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
+    assert unchanged.role == OrganizationRoles.write
+    assert unchanged.updated_at == original_updated_at
+    assert unchanged.updated_id == original_updated_id
 
 
 async def test_update_organization_member_returns_not_found_for_non_member(

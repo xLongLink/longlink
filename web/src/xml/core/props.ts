@@ -63,14 +63,7 @@ export function resolveXmlProps<T extends z.ZodObject>(
 
     for (const [name, mode] of Object.entries(fields)) {
         // Keep legacy scalar coercion distinct from raw evaluated values.
-        switch (mode) {
-            case 'scalar':
-                values[name] = resolveXml(props, name, ctx);
-                break;
-            case 'raw':
-                values[name] = resolveXmlValue(props, name, ctx);
-                break;
-        }
+        values[name] = mode === 'scalar' ? resolveXml(props, name, ctx) : resolveXmlValue(props, name, ctx);
     }
 
     const result = schema.safeParse(values);

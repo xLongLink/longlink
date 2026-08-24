@@ -30,7 +30,6 @@ export default function DocsArticleRoute() {
     }
 
     const metadata = {
-        path: `/docs/sdk/pages/${component.slug}`,
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },

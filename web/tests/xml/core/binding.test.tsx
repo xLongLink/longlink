@@ -13,8 +13,7 @@ describe('useBindableValue', () => {
 
     afterEach(() => {
         if (root) {
-            const renderedRoot = root;
-            act(() => renderedRoot.unmount());
+            act(() => root?.unmount());
         }
         container?.remove();
         vi.unstubAllGlobals();
@@ -74,6 +73,25 @@ describe('useBindableValue', () => {
         await user.type(input, 'second');
 
         expect((ctx.scope.bindings.form as { value: string }).value).toBe('second');
+    });
+
+    it('rejects unsafe writable binding paths without mutating prototypes', async () => {
+        // Arrange
+        const ctx = createContext();
+        const ast = parseXML(
+            '<longlink><State id="form" value="first" /><TextInput label="Name" value="$form.__proto__" /></longlink>'
+        )[0];
+        container = document.createElement('div');
+        root = createRoot(container);
+
+        // Act
+        await act(async () => {
+            root?.render(<RenderXML ast={ast} ctx={ctx} />);
+        });
+
+        // Assert
+        expect(container.textContent).toContain('XML binding path must use safe property names');
+        expect(Object.prototype).not.toHaveProperty('polluted');
     });
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {

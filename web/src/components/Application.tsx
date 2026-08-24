@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
-import { pageSchema } from '@/xml/pages';
+import { pagesSchema } from '@/xml/pages';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
@@ -31,13 +31,13 @@ export function ApplicationRuntime({
     const navigate = useNavigate();
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
-        queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
+        queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
                 (registeredPages ?? []).map((page) => ({
-                    path: page.route || '/',
+                    path: page.route,
                     page,
                 })),
                 `/${routePath}`
@@ -53,7 +53,7 @@ export function ApplicationRuntime({
         };
     }, [registeredPages, routePath]);
     const staticPages = (registeredPages ?? []).filter((page) => !/(?:^|\/):/.test(page.route));
-    const firstTabPage = staticPages[0];
+    const firstTabPage = staticPages.find((page) => page.route !== '/');
 
     // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
@@ -90,24 +90,19 @@ export function ApplicationRuntime({
         },
         retry: false,
     });
-    const tabs = new Map<string, NavigationTab>();
-
     // Build one static navigation target per runtime tab.
-    for (const page of staticPages) {
-        if (!page.route || tabs.has(page.tab)) {
-            continue;
-        }
-
-        tabs.set(page.tab, {
-            href: resolveNavigationUrl(navigationBaseUrl, page.route),
-            icon: page.icon ? getIconComponent(page.icon) : undefined,
-            label: page.name || startCase(page.tab),
-        });
-    }
+    const tabs = staticPages.map(
+        (page) =>
+            ({
+                href: resolveNavigationUrl(navigationBaseUrl, page.route),
+                icon: page.icon ? getIconComponent(page.icon) : undefined,
+                label: page.name || startCase(page.tab),
+            }) satisfies NavigationTab
+    );
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
-        if (!firstTabPage || routePath || !firstTabPage.route) {
+        if (!firstTabPage || routePath) {
             return;
         }
 
@@ -149,5 +144,5 @@ export function ApplicationRuntime({
         );
     }
 
-    return children({ content, tabs: [...tabs.values()] });
+    return children({ content, tabs });
 }

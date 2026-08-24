@@ -1,7 +1,9 @@
 import sys
 import pytest
-from types import SimpleNamespace
+import sqlite3
+from types import ModuleType, SimpleNamespace
 from pathlib import Path
+from contextlib import closing
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
@@ -61,6 +63,61 @@ def test_migration_loader_discovers_nested_database_models(
     database_migrations.load_application_models()
 
     assert table_name in database_metadata.tables
+
+
+def test_migration_loader_skips_missing_models_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Allow migration commands for Applications without database models."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+    tables = dict(database_metadata.tables)
+
+    # Act
+    database_migrations.load_application_models()
+
+    # Assert
+    assert dict(database_metadata.tables) == tables
+
+
+def test_migration_loader_skips_already_imported_models(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Avoid executing model modules that the application already loaded."""
+
+    # Arrange
+    _, write_model = isolated_model
+    module_name = "src.database.models.catalog.inventory"
+    write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
+    sys.modules[module_name] = ModuleType(module_name)
+
+    def unexpected_spec(*_args: object, **_kwargs: object) -> object:
+        """Fail if an existing module is loaded again."""
+
+        raise AssertionError("loaded model must not be imported again")
+
+    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", unexpected_spec)
+
+    # Act
+    database_migrations.load_application_models()
+
+
+def test_migration_loader_skips_models_without_an_import_spec(
+    isolated_model: tuple[Path, Callable[[str, str], None]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Skip model files that Python cannot load as modules."""
+
+    # Arrange
+    _, write_model = isolated_model
+    write_model("unloadable_inventory", "table_name = 'unloadable_inventory'\n")
+    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", lambda *_args: None)
+
+    # Act
+    database_migrations.load_application_models()
+
+    # Assert
+    assert "src.database.models.catalog.inventory" not in sys.modules
 
 
 def test_migration_loader_removes_failed_model_import_before_retry(
@@ -158,31 +215,15 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
     assert directives == (original_directives if expected_migration_created else [])
 
 
-def test_production_migrations_reject_missing_revisions_before_upgrade(tmp_path, monkeypatch) -> None:
-    """Fail production startup before Alembic upgrades without application revisions."""
-
-    # Emulate a production runtime without a committed migrations directory.
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
-
-    monkeypatch.setattr(
-        database_migrations.command,
-        "upgrade",
-        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
-    )
-
-    # Reject missing revisions without handing control to Alembic.
-    with pytest.raises(RuntimeError, match="require migrations"):
-        database_migrations.apply_migrations()
-
-
-def test_production_migrations_rejects_only_init_file_before_upgrade(tmp_path, monkeypatch) -> None:
-    """Fail production startup when the migrations directory has no revision files."""
+@pytest.mark.parametrize("has_init_file", [False, True])
+def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path, monkeypatch, has_init_file: bool) -> None:
+    """Fail production startup without committed application revisions."""
 
     # Arrange
-    migrations_path = tmp_path / "migrations"
-    migrations_path.mkdir()
-    migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
+    if has_init_file:
+        migrations_path = tmp_path / "migrations"
+        migrations_path.mkdir()
+        migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
     monkeypatch.setattr(
@@ -227,3 +268,19 @@ def test_migrations_upgrade_head_when_revisions_are_available_or_development(tmp
     assert captured["target"] == "head"
     assert config.get_main_option("script_location") == str(database_migrations.CURRENT_FILE.parent)
     assert config.get_main_option("version_locations") == str(migrations_path)
+
+
+def test_apply_migrations_initializes_the_application_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the packaged Alembic environment against a development Application database."""
+
+    # Arrange
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+
+    # Act
+    database_migrations.apply_migrations()
+
+    # Assert
+    with closing(sqlite3.connect(tmp_path / "dev.db")) as connection:
+        table = connection.execute("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'alembic_version'").fetchone()
+    assert table == ("alembic_version",)

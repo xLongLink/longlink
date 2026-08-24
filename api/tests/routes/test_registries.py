@@ -12,6 +12,8 @@ from src.database.models.users import User
         pytest.param("GET", "databases", None, id="list-databases"),
         pytest.param("GET", "storages", None, id="list-storages"),
         pytest.param("GET", "users", None, id="list-users"),
+        pytest.param("GET", "applications", None, id="list-applications"),
+        pytest.param("GET", "organizations", None, id="list-organizations"),
         pytest.param("POST", "computes", {}, id="create-compute"),
         pytest.param("POST", "databases", {}, id="create-database"),
         pytest.param("POST", "storages", {}, id="create-storage"),
@@ -48,6 +50,24 @@ async def test_platform_user_cannot_delete_administrator_registries(
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
     assert get_response.status_code == 200
+
+
+@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("databases", "database"), ("storages", "storage")])
+async def test_platform_user_cannot_read_administrator_registry_details(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
+) -> None:
+    """Reject registered backend detail reads from non-administrators."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    backend = getattr(infrastructure, registry)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/{path}/{backend.id}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
 
 
 @pytest.mark.parametrize(
@@ -88,22 +108,15 @@ async def test_registry_endpoints_return_registered_backend(
     infrastructure = await create_ready_infrastructure()
     backend = getattr(infrastructure, registry)
 
-    list_response = await clients[0].get(f"/api/v1/{path}")
     get_response = await clients[0].get(f"/api/v1/{path}/{backend.id}")
 
-    assert list_response.status_code == 200
-    assert str(backend.id) in {item["id"] for item in list_response.json()["items"]}
     assert get_response.status_code == 200
     payload = get_response.json()
     assert payload["id"] == str(backend.id)
     assert payload["name"] == backend.name
     assert {field: payload[field] for field in expected_fields} == expected_fields
     assert all(field not in payload for field in secret_fields)
-    assert all(
-        str(getattr(backend, secret_field)) not in response.text
-        for secret_field in secret_fields
-        for response in (list_response, get_response)
-    )
+    assert all(str(getattr(backend, secret_field)) not in get_response.text for secret_field in secret_fields)
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,9 @@
 from uuid import uuid4
 from httpx2 import AsyncClient
+from datetime import timedelta
 from factories import queue_operation
+from src.database.session import session_scope
+from src.database.models.operations import Operation
 
 
 async def test_operations_endpoint_rejects_anonymous_requests(client: AsyncClient) -> None:
@@ -33,8 +36,15 @@ async def test_operations_endpoint_paginates_history(
     """Return each reconciliation operation once across paginated history."""
 
     # Arrange
-    first_operation = await queue_operation(target_id=uuid4())
-    second_operation = await queue_operation(target_id=uuid4())
+    older_operation = await queue_operation(target_id=uuid4())
+    newer_operation = await queue_operation(target_id=uuid4())
+
+    # Make the expected descending order independent of factory execution timing.
+    async with session_scope() as session:
+        operation = await session.get(Operation, older_operation.id)
+        assert operation is not None
+        operation.created_at = newer_operation.created_at - timedelta(seconds=1)
+        await session.commit()
 
     # Act
     first_page = await clients[0].get("/api/v1/operations?page=1&page_size=1")
@@ -47,10 +57,5 @@ async def test_operations_endpoint_paginates_history(
     second_payload = second_page.json()
     assert first_payload["total"] == 2
     assert second_payload["total"] == 2
-    assert len(first_payload["items"]) == 1
-    assert len(second_payload["items"]) == 1
-    assert first_payload["items"][0]["id"] != second_payload["items"][0]["id"]
-    assert {item["id"] for item in first_payload["items"]} | {item["id"] for item in second_payload["items"]} == {
-        str(first_operation.id),
-        str(second_operation.id),
-    }
+    assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
+    assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]

@@ -3452,6 +3452,12 @@
       },
       "StorageRegistryCreate": {
         "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Name"
+          },
           "endpoint_url": {
             "type": "string",
             "maxLength": 255,
@@ -3469,20 +3475,14 @@
             "maxLength": 255,
             "minLength": 1,
             "title": "Secret Access Key"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Name"
           }
         },
         "type": "object",
         "required": [
+          "name",
           "endpoint_url",
           "access_key_id",
-          "secret_access_key",
-          "name"
+          "secret_access_key"
         ],
         "title": "StorageRegistryCreate",
         "description": "Validate one storage registry creation payload."

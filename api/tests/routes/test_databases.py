@@ -47,23 +47,65 @@ async def test_database_usage_endpoint_returns_usage_or_unavailable(
     assert response.json() == expected_payload
 
 
-async def test_database_usage_endpoint_rejects_missing_registry_before_connecting(
+async def test_database_usage_endpoint_rejects_missing_registry(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
 ) -> None:
-    """Reject an absent registry without constructing a backend adapter."""
+    """Reject an absent database registry."""
 
     # Arrange
-    def unexpected_postgres(*_args: object) -> object:
-        """Fail if the missing registry path reaches the backend."""
-
-        raise AssertionError("Postgres adapter was constructed")
-
-    monkeypatch.setattr("src.routes.v1.databases.Postgres", unexpected_postgres)
+    registry_id = uuid4()
 
     # Act
-    response = await clients[0].get(f"/api/v1/databases/{uuid4()}/usage")
+    response = await clients[0].get(f"/api/v1/databases/{registry_id}/usage")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Database registry not found"}
+
+
+async def test_database_registry_list_paginates_without_exposing_password(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return one ordered registry page without its administrator password."""
+
+    # Arrange
+    payload = {
+        "port": 5432,
+        "username": "administrator",
+        "sslmode": "require",
+    }
+    alpha_payload = {
+        **payload,
+        "name": "Alpha database",
+        "host": "alpha.example",
+        "password": "alpha-password",
+    }
+    bravo_payload = {
+        **payload,
+        "name": "Bravo database",
+        "host": "bravo.example",
+        "password": "bravo-password",
+    }
+    alpha_response = await clients[0].post("/api/v1/databases", json=alpha_payload)
+    bravo_response = await clients[0].post("/api/v1/databases", json=bravo_payload)
+
+    # Act
+    response = await clients[0].get("/api/v1/databases?page_size=1")
+
+    # Assert
+    assert alpha_response.status_code == 201
+    assert bravo_response.status_code == 201
+    assert response.status_code == 200
+    assert response.json() == {
+        "items": [
+            {
+                "id": alpha_response.json()["id"],
+                "name": "Alpha database",
+                "host": "alpha.example",
+                "port": 5432,
+                "sslmode": "require",
+                "username": "administrator",
+            }
+        ],
+        "total": 2,
+    }

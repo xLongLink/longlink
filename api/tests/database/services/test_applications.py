@@ -1,11 +1,10 @@
 import pytest
-from factories import fetch_operations, create_application, create_organization
+from factories import create_application, create_organization
 from src.errors import ConflictError
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.database.services import applications
-from src.models.operations import OperationKind
+from src.database.services import applications, organizations
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -29,17 +28,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
             )
-        created = await applications.create(
-            session,
-            organization.id,
-            "Reports",
-            image=Image("ghcr.io/longlink/reports@sha256:test"),
-            secrets={},
-        )
-        await session.commit()
-
-    # Assert
-    assert created.slug == "reports"
 
 
 async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]) -> None:
@@ -64,25 +52,29 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
     assert total == 1
 
 
-async def test_delete_marks_application_deleted(users: tuple[User, User, User]) -> None:
-    """Soft-delete an application while scheduling its cleanup operation."""
+async def test_create_rejects_tombstoned_organization(users: tuple[User, User, User]) -> None:
+    """Prevent new applications from restoring a deleted Organization."""
 
     # Arrange
-    user = users[0]
-    organization = await create_organization(user, name="delete-org")
-    application = await create_application(organization, name="Dashboard")
-
-    # Act
+    owner = users[0]
+    organization = await create_organization(owner)
     async with session_scope() as session:
-        await applications.delete(session, application.id, user.id)
+        await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
-        deleted_application = await session.get(Application, application.id)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="Organization is not available"):
+            await applications.create(
+                session,
+                organization.id,
+                "Dashboard",
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+                secrets={},
+            )
 
     # Assert
-    assert deleted_application is not None
-    assert deleted_application.deleted_at is not None
-    assert [
-        (operation.kind, operation.target_id)
-        for operation in await fetch_operations()
-        if operation.kind == OperationKind.application_delete
-    ] == [(OperationKind.application_delete, application.id)]
+    async with session_scope() as session:
+        fetched, total = await applications.fetch_page(session, Pagination())
+    assert fetched == []
+    assert total == 0

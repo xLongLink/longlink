@@ -4,10 +4,9 @@ from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from typing import TypedDict
-from pathlib import Path
 from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -26,7 +25,9 @@ class ProxyCapture(TypedDict, total=False):
     method: str
     url: str
     content: bytes
-    headers: dict[str, str]
+    content_type: str
+    application_id: str
+    user_id: str
 
 
 def fake_ssl_context(
@@ -50,7 +51,7 @@ def fake_ssl_context(
 class FakeGatewayResponse:
     """Represent a gateway response with observable cleanup."""
 
-    def __init__(self, response: object, on_close: Callable[[], None]) -> None:
+    def __init__(self, response: object, on_close: Callable[[], None] = lambda: None) -> None:
         """Store the upstream response and its cleanup callback."""
 
         self.response = response
@@ -73,17 +74,6 @@ def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitab
     return request
 
 
-async def set_application_running(application_id: UUID) -> None:
-    """Persist the running state required by proxy tests."""
-
-    # Set lifecycle state directly because proxy tests do not exercise reconciliation.
-    async with session_scope() as session:
-        application = await session.get(Application, application_id)
-        assert application is not None
-        application.status = Status.running
-        await session.commit()
-
-
 async def create_running_application(user: User) -> tuple[Application, Infrastructure]:
     """Create one Application with the running state required for gateway tests."""
 
@@ -91,7 +81,14 @@ async def create_running_application(user: User) -> tuple[Application, Infrastru
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user, infrastructure=infrastructure)
     application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(application.id)
+
+    # Set lifecycle state directly because proxy tests do not exercise reconciliation.
+    async with session_scope() as session:
+        persisted_application = await session.get(Application, application.id)
+        assert persisted_application is not None
+        persisted_application.status = Status.running
+        await session.commit()
+
     return application, infrastructure
 
 
@@ -104,19 +101,8 @@ async def test_application_proxy_forwards_safe_content(
 
     # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
-    app, remote_infrastructure = await create_running_application(user)
-    registry = remote_infrastructure.compute
+    app, _ = await create_running_application(user)
     captured: ProxyCapture = {}
-
-    class FakeTLS:
-        """Capture the Platform client identity loaded into the TLS context."""
-
-        def load_cert_chain(self, certfile: str) -> None:
-            """Capture the temporary PEM identity configured for Gateway mTLS."""
-
-            captured["client_identity"] = Path(certfile).read_text()
-
-    tls = FakeTLS()
 
     class FakeProxyResponse:
         """Stream one fake upstream application response."""
@@ -138,39 +124,41 @@ async def test_application_proxy_forwards_safe_content(
 
             captured["close_count"] = captured.get("close_count", 0) + 1
 
-    class ForwardingProxyClient:
-        """Fake upstream HTTP client for application proxy requests."""
+    class Gateway:
+        """Capture the proxy route's gateway request."""
 
-        def __init__(self, **kwargs) -> None:
-            """Capture client construction options."""
+        def __init__(self, *_args: str) -> None:
+            """Accept the route's persisted gateway configuration."""
 
-            captured["client_kwargs"] = kwargs
+        async def request(
+            self,
+            *,
+            application_id: UUID,
+            user_id: UUID,
+            method: str,
+            path: str,
+            query: str,
+            content_type: str | None,
+            content: AsyncIterator[bytes],
+        ) -> FakeGatewayResponse:
+            """Record the route request and return a safe upstream response."""
 
-        async def aclose(self) -> None:
-            """Close the fake client."""
+            assert content_type is not None
+            captured["method"] = method
+            captured["url"] = f"https://gateway.example/{path}?{query}"
+            captured["content"] = b"".join([chunk async for chunk in content])
+            captured["content_type"] = content_type
+            captured["application_id"] = str(application_id)
+            captured["user_id"] = str(user_id)
 
-        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
-            """Build one fake streaming request."""
+            def close() -> None:
+                """Record gateway response cleanup."""
 
-            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+                captured["close_count"] = 1
 
-        async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
-            """Capture the forwarded application request and return a stream."""
+            return FakeGatewayResponse(FakeProxyResponse(), close)
 
-            # Drain the forwarded request stream into the captured gateway request.
-            content = b"".join([chunk async for chunk in request.content])
-            captured["method"] = request.method
-            captured["url"] = request.url
-            captured["content"] = content
-            captured["headers"] = request.headers
-            assert stream
-            return FakeProxyResponse()
-
-    monkeypatch.setattr(
-        "src.adapters.gateway.ssl.create_default_context",
-        fake_ssl_context(tls, expected_ca_certificate=registry.gateway_certificate),
-    )
-    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", ForwardingProxyClient)
+    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
     client = clients[0]
 
     # Proxy a request carrying trusted and untrusted browser headers.
@@ -199,17 +187,12 @@ async def test_application_proxy_forwards_safe_content(
     )
     assert "set-cookie" not in response.headers
     assert captured.get("close_count") == 1
-    assert captured.get("client_kwargs", {}).get("follow_redirects") is False
-    assert captured.get("client_identity") == registry.gateway_client_identity
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
-    headers = captured.get("headers")
-    assert headers is not None
-    assert headers["x-longlink-application-id"] == str(app.id)
-    assert headers["x-user-id"] == str(user.id)
-    assert headers["content-type"] == "text/plain"
-    assert {"accept", "accept-language", "authorization", "cookie", "x-custom-feature", "x-forwarded-for"}.isdisjoint(headers)
+    assert captured.get("application_id") == str(app.id)
+    assert captured.get("user_id") == str(user.id)
+    assert captured.get("content_type") == "text/plain"
 
 
 async def test_application_proxy_streams_response_without_upstream_content_type(
@@ -255,7 +238,14 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     assert close_count == 1
 
 
-@pytest.mark.parametrize("content_type", ["image/svg+xml; charset=utf-8", "application/json, text/html; charset=utf-8"])
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        "image/svg+xml; charset=utf-8",
+        "application/xhtml+xml; charset=utf-8",
+        "application/json, text/html; charset=utf-8",
+    ],
+)
 async def test_application_proxy_rejects_active_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -333,50 +323,27 @@ async def test_application_proxy_closes_gateway_response_when_upstream_stream_fa
 async def test_application_proxy_rejects_oversized_request_body(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject request bodies larger than the configured proxy limit."""
 
-    # Prepare a running Application and a client that consumes its request stream.
-    owner = users[0]
-    app, infrastructure = await create_running_application(owner)
+    # Arrange a running Application and consume its guarded request stream at the gateway boundary.
+    app, _infrastructure = await create_running_application(users[0])
 
-    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
+    async def request(*_args: object, content, **_kwargs: object) -> None:
+        """Consume the request body so the route's size guard executes."""
 
-    class OversizedProxyClient:
-        """Consume the request body through the proxy size guard."""
+        async for _chunk in content:
+            pass
+        raise AssertionError("oversized request must not reach the gateway")
 
-        def __init__(self, **_kwargs: object) -> None:
-            """Accept gateway client construction options."""
-
-        async def aclose(self) -> None:
-            """Close the fake client."""
-
-        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
-            """Build one fake streaming request."""
-
-            return SimpleNamespace(content=content)
-
-        async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
-            """Consume the content so the route enforces the body limit."""
-
-            # Consume the fake stream so the route's byte limit executes.
-            async for _chunk in request.content:
-                pass
-            raise AssertionError("oversized request should fail before upstream send completes")
-
-    monkeypatch.setattr(
-        "src.adapters.gateway.ssl.create_default_context",
-        fake_ssl_context(tls, expected_ca_certificate=infrastructure.compute.gateway_certificate),
-    )
-    monkeypatch.setattr("src.adapters.gateway.httpx2.AsyncClient", OversizedProxyClient)
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
-    client = clients[0]
 
-    # Proxy a body one byte beyond the test limit.
-    response = await client.post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
+    # Act
+    response = await clients[0].post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
-    # Verify the request is rejected before upstream delivery completes.
+    # Assert
     assert response.status_code == 413
     assert response.json() == {"detail": "Application proxy request body is too large"}
 
@@ -470,19 +437,40 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 async def test_application_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow app proxy access inherited from Organization read membership."""
 
     # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
-    organization = await create_organization(owner)
-    app = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    app, _infrastructure = await create_running_application(owner)
+    called = False
+
+    class FakeProxyResponse:
+        """Return one successful proxied document."""
+
+        status_code = 200
+        headers = {"content-type": "application/json"}
+
+        async def aiter_bytes(self):
+            """Yield the proxied document."""
+
+            yield b"{}"
+
+    async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
+        """Record the authorized gateway request."""
+
+        nonlocal called
+        called = True
+        return FakeGatewayResponse(FakeProxyResponse())
+
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
     async with session_scope() as session:
         session.add(
             UserOrganization(
                 user_id=user.id,
-                organization_id=organization.id,
+                organization_id=app.organization_id,
                 role=OrganizationRoles.read,
             )
         )
@@ -492,8 +480,10 @@ async def test_application_proxy_allows_organization_read_members(
     # Request the Application through the member's Organization access.
     response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
-    # Verify access succeeds and reaches the loading-state response.
-    assert response.status_code == 503
+    # Verify read access reaches the configured compute gateway.
+    assert response.status_code == 200
+    assert response.json() == {}
+    assert called
 
 
 async def test_application_proxy_rejects_cross_organization_access(

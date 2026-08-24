@@ -23,7 +23,7 @@ export function Auth({ children }: { children: ReactElement }) {
         return (
             <Platform
                 action={
-                    <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
+                    <Link href="/docs" color="secondary" isStandalone target="_blank">
                         Documentation
                     </Link>
                 }

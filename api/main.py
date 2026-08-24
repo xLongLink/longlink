@@ -5,10 +5,11 @@ from pathlib import Path
 from src.utils import jobs
 from src.errors import ServiceError
 from src.routes import v1, branding
-from collections.abc import AsyncGenerator
+from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
-from longlink.middleware import install_frontend_middleware
+from longlink.middleware import FrontendMiddleware
+from starlette.responses import Response
 from src.database.session import session_scope
 from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,7 +53,23 @@ async def service_error_response(_request: Request, error: ServiceError):
     return JSONResponse(status_code=error.status_code, content={"detail": str(error)})
 
 
-install_frontend_middleware(app)
+@app.middleware("http")
+async def prevent_authenticated_response_caching(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
+    """Prevent browser and intermediary caching of authenticated API responses."""
+
+    response = await call_next(request)
+
+    # Authentication dependencies set this only after validating the browser credential.
+    if getattr(request.state, "authenticated", False):
+        response.headers.setdefault("Cache-Control", "no-store")
+
+    return response
+
+
+app.add_middleware(FrontendMiddleware)
 
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)

@@ -6,13 +6,13 @@ from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_stem_route
 from longlink.logger import ApiAccessFilter
-from longlink.routes import root, router
+from longlink.routes import router
 from longlink.context import install_context_middleware
 from fastapi.responses import Response
 from starlette.routing import Match
 from longlink.constants import ROOT
 from longlink.utils.xml import validate_xml
-from longlink.middleware import install_frontend_middleware
+from longlink.middleware import FrontendMiddleware
 from longlink.storage.base import create_fs
 from longlink.utils.settings import Envs
 
@@ -45,7 +45,7 @@ class LongLink:
         storage = create_fs(settings)
 
         # Compress the embedded frontend and apply safe browser cache policies.
-        install_frontend_middleware(app)
+        app.add_middleware(FrontendMiddleware)
 
         # Production containers attach API access filtering here.
         if settings.ENV == "production":
@@ -84,9 +84,6 @@ class LongLink:
             ]
         )
 
-        # Start applications on their first static page instead of an unselected shell.
-        root.install_redirect(app)
-
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
@@ -111,8 +108,9 @@ class LongLink:
             page_icon = (page_root.get("icon") or "").strip() or None
 
             page_route = page_stem_route(path_without_suffix)
-            route_key = "/".join(":" if segment.startswith(":") else segment for segment in page_route.split("/"))
-            tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
+            relative_route = page_route.removeprefix("/")
+            route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
+            tab = relative_route.split("/:", 1)[0] or relative_route.removeprefix(":") or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:

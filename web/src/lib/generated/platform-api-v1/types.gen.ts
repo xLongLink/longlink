@@ -645,6 +645,10 @@ export type Status = 'creating' | 'running';
  */
 export type StorageRegistryCreate = {
     /**
+     * Name
+     */
+    name: string;
+    /**
      * Endpoint Url
      */
     endpoint_url: string;
@@ -656,10 +660,6 @@ export type StorageRegistryCreate = {
      * Secret Access Key
      */
     secret_access_key: string;
-    /**
-     * Name
-     */
-    name: string;
 };
 
 /**

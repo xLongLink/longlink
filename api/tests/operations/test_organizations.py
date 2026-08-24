@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
@@ -126,6 +127,95 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     assert refreshed.status == Status.running
 
 
+async def test_reconcile_skips_missing_organization_without_constructing_providers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Treat a missing Organization as an already completed reconciliation target."""
+
+    # Arrange
+    calls: list[str] = []
+
+    class Provider:
+        """Capture unexpected provider construction."""
+
+        def __init__(self, *args: object) -> None:
+            """Record unexpected provider construction."""
+
+            calls.append("provider")
+
+    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations, "Exoscale", Provider)
+    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
+
+    # Act
+    await organization_operations.reconcile(uuid4())
+
+    # Assert
+    assert calls == []
+
+
+async def test_reconcile_skips_deleted_organization_without_constructing_providers(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Avoid provider work after an Organization has been tombstoned."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.deleted_at = datetime.now(UTC)
+        await session.commit()
+    calls: list[str] = []
+
+    class Provider:
+        """Capture unexpected provider construction."""
+
+        def __init__(self, *args: object) -> None:
+            """Record unexpected provider construction."""
+
+            calls.append("provider")
+
+    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations, "Exoscale", Provider)
+    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
+
+    # Act
+    await organization_operations.reconcile(organization.id)
+
+    # Assert
+    assert calls == []
+
+
+async def test_delete_rejects_active_organization_without_external_cleanup(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject cleanup for an active Organization before constructing providers."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    calls: list[str] = []
+
+    class Provider:
+        """Capture unexpected provider construction."""
+
+        def __init__(self, *args: object) -> None:
+            """Record unexpected provider construction."""
+
+            calls.append("provider")
+
+    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations, "Exoscale", Provider)
+    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
+
+    # Act
+    reason = await organization_operations.delete(organization.id)
+
+    # Assert
+    assert reason == "Active Organizations cannot be deleted by lifecycle cleanup"
+    assert calls == []
+
+
 async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep provider data intact when Kubernetes namespace deletion fails."""
 
@@ -247,21 +337,12 @@ async def test_delete_tears_down_organization_boundaries_in_order(
 
             self.organizations = Organizations()
 
-    original_purge = organization_operations.organizations.purge
-
-    async def purge(session: object, organization_id: object) -> None:
-        """Record and perform final tombstone removal."""
-
-        calls.append("purge")
-        await original_purge(session, organization_id)  # type: ignore[arg-type]
-
     monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.organizations, "purge", purge)
 
-    # Complete cleanup and inspect the irreversible ordering and final purge.
+    # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
-    assert calls == ["namespace", "schema", "revoke", "database", "bucket", "purge"]
+    assert calls == ["namespace", "schema", "revoke", "database", "bucket"]

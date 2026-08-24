@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from longlink.database import urls
 from sqlalchemy.engine import URL
 from longlink.shared.models import Audit
@@ -5,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 
-async def sync(database_url: str | URL, rows: list[Audit]) -> None:
+async def sync(database_url: str | URL, rows: Sequence[Audit]) -> None:
     """Upsert shared audit rows through a control-plane database URL."""
 
     # Empty payloads do not imply deactivation because inactive users are sent explicitly.

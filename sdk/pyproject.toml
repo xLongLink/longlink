@@ -75,7 +75,14 @@ longlink = [".static/**"]
 "longlink.shared" = ["alembic/*.py", "alembic/*.mako", "alembic/versions/*.py"]
 
 [tool.setuptools.exclude-package-data]
-longlink = [".static/new/.venv", ".static/new/.venv/*", ".static/new/.venv/**"]
+longlink = [
+    ".static/new/.venv",
+    ".static/new/.venv/*",
+    ".static/new/.venv/**",
+    ".static/**/__pycache__/**",
+    ".static/**/*.py[cod]",
+    ".static/**/.ruff_cache/**",
+]
 
 [tool.ruff]
 line-length = 140

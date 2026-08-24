@@ -1,11 +1,14 @@
-from main import app
+import pytest
 from fastapi.testclient import TestClient
 
 
-def test_application_serves_health_check() -> None:
+def test_application_serves_health_check(monkeypatch: pytest.MonkeyPatch) -> None:
     """Serve the LongLink runtime health check."""
 
     # Arrange
+    monkeypatch.setenv("LONGLINK_ENV", "testing")
+    from main import app
+
     client = TestClient(app)
 
     # Act

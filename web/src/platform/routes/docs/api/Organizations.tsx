@@ -30,7 +30,6 @@ const organizationRoles = [
 ];
 
 export const metadata = {
-    path: '/docs/api/organizations',
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },

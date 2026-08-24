@@ -9,6 +9,7 @@ from factories import (
 from src.operations import applications as application_operations
 from src.utils.jobs import execute
 from src.models.types import DatabaseSSLMode
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import applications
 from src.models.operations import OperationKind, OperationStatus
@@ -223,6 +224,10 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == "generated-password"
+    async with session_scope() as session:
+        persisted = await session.get(Application, application.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
 
 
 async def test_application_creation_retry_reuses_persisted_runtime_secrets(
@@ -267,3 +272,91 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
 
     # Assert
     assert captured["secrets"] == {"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"}
+
+
+async def test_application_creation_skips_removed_application_provider_construction(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Treat a removed application as an already completed lifecycle target."""
+
+    # Arrange
+    _, application = await create_deleted_application(users[0])
+
+    def unexpected_provider(*_args: object) -> object:
+        """Reject provider construction for a removed application."""
+
+        raise AssertionError("providers must not be constructed")
+
+    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+
+    # Act
+    result = await application_operations.create(application.id)
+
+    # Assert
+    assert result is None
+
+
+async def test_application_creation_skips_deployment_when_deleted_before_credential_persistence(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not deploy credentials after the application is deleted concurrently."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    application = await create_application(organization)
+
+    class Postgres:
+        """Delete the application after its schema credentials are generated."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the configured database connection values."""
+
+        async def schema(self, *_args: object) -> dict[str, object]:
+            """Delete the target before its runtime credentials are persisted."""
+
+            async with session_scope() as session:
+                persisted = await session.get(Application, application.id)
+                assert persisted is not None
+                await session.delete(persisted)
+                await session.commit()
+            return {
+                "host": "database.example",
+                "database_name": "organization",
+                "password": "generated-password",
+                "port": 5432,
+                "sslmode": DatabaseSSLMode.disable,
+                "username": "application",
+            }
+
+    class Storage:
+        """Provide object-storage credentials without contacting storage."""
+
+        region = "ch-gva-2"
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the configured storage connection values."""
+
+        async def credentials(self, *_args: object) -> dict[str, str]:
+            """Return application-scoped object-storage credentials."""
+
+            return {"access_key_id": "application", "secret_access_key": "generated-secret"}
+
+    def unexpected_kubernetes(*_args: object) -> object:
+        """Reject deployment after the concurrent deletion."""
+
+        raise AssertionError("deleted application must not be deployed")
+
+    monkeypatch.setattr(application_operations, "Postgres", Postgres)
+    monkeypatch.setattr(application_operations, "Exoscale", Storage)
+    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_kubernetes)
+
+    # Act
+    result = await application_operations.create(application.id)
+
+    # Assert
+    assert result is None

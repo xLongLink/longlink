@@ -1,6 +1,8 @@
 import pytest
+from src import auth
+from main import app
 from httpx2 import AsyncClient
-from conftest import TEST_PASSWORD, create_client, authenticated_cookies
+from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import token
@@ -88,6 +90,36 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     assert response.status_code == 400
     assert response.json() == {"detail": INVALID_REGISTRATION_LINK}
     assert client.cookies.get("longlink_auth") is None
+
+
+@pytest.mark.no_db
+async def test_malformed_browser_session_is_rejected_before_database_lookup(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject malformed browser credentials without opening an identity lookup."""
+
+    # Arrange
+    async def get_session():
+        """Provide an unused dependency session for the rejected credential."""
+
+        yield object()
+
+    async def unexpected_active(*_args: object) -> object:
+        """Fail if malformed credentials reach the user database query."""
+
+        raise AssertionError("malformed credentials must not query users")
+
+    monkeypatch.setattr(app, "dependency_overrides", {auth.get_session: get_session})
+    monkeypatch.setattr(auth.user_service, "active", unexpected_active)
+    client.cookies.set("longlink_auth", "invalid", domain="testserver.local", path="/")
+
+    # Act
+    response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 async def test_registration_setup_rejects_missing_verification_cookie(client: AsyncClient) -> None:
@@ -226,6 +258,33 @@ async def test_password_login_rejects_wrong_password_and_unknown_email_without_s
     assert client.cookies.get("longlink_auth") is None
 
 
+async def test_password_login_rejects_deleted_account_with_correct_password_without_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+) -> None:
+    """Reject a deleted account even when its password remains valid."""
+
+    # Arrange
+    user = users[0]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+
+    # Act
+    response = await client.post(
+        "/api/v1/auth/password/login",
+        json={"email": user.email, "password": TEST_PASSWORD},
+    )
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert "set-cookie" not in response.headers
+    assert client.cookies.get("longlink_auth") is None
+
+
 async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
@@ -347,7 +406,6 @@ async def test_password_reset_verify_rejects_invalid_token_without_cookie(client
     assert response.status_code == 400
     assert response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert "set-cookie" not in response.headers
-    assert "cache-control" not in response.headers
     assert client.cookies.get("longlink_password_reset") is None
 
 
@@ -410,7 +468,6 @@ async def test_forgot_and_reset_password(
     """Reset a local password with the emailed one-time recovery token."""
 
     user = users[0]
-    client.cookies.update(authenticated_cookies(user))
 
     # Missing and existing accounts receive the same response, while only the account gets mail.
     missing_response = await client.post("/api/v1/auth/forgot-password", json={"email": "missing@example.com"})
@@ -459,12 +516,14 @@ async def test_forgot_and_reset_password(
     assert new_login.status_code == 204
 
 
-async def test_forgot_password_does_not_send_mail_to_deleted_account(
+@pytest.mark.parametrize("endpoint", ["/api/v1/auth/forgot-password", "/api/v1/auth/register"])
+async def test_password_requests_do_not_send_mail_to_deleted_account(
     client: AsyncClient,
     users: tuple[User, User, User],
     captured_mail: list[tuple[str, str, str, str | None]],
+    endpoint: str,
 ) -> None:
-    """Keep deleted accounts indistinguishable from missing reset recipients."""
+    """Keep deleted accounts indistinguishable from missing request recipients."""
 
     # Arrange
     user = users[0]
@@ -475,7 +534,7 @@ async def test_forgot_password_does_not_send_mail_to_deleted_account(
         await session.commit()
 
     # Act
-    response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
+    response = await client.post(endpoint, json={"email": user.email})
 
     # Assert
     assert response.status_code == 202
@@ -494,6 +553,37 @@ async def test_authenticated_logout_rejects_cross_origin_request(
 
     # Reject CSRF logout attempts without expiring the caller's authenticated session.
     assert response.status_code == 403
+    assert "set-cookie" not in response.headers
+    assert profile_response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    ("public_origin", "origin"),
+    [
+        pytest.param("http://localhost:5173", "http://127.0.0.1:5173", id="localhost-public"),
+        pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
+    ],
+)
+async def test_authenticated_logout_rejects_alternate_local_origin_in_production(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+    public_origin: str,
+    origin: str,
+) -> None:
+    """Reject local development origins when production permits only its public origin."""
+
+    # Arrange
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
+    client = clients[0]
+
+    # Act
+    response = await client.post("/api/v1/auth/logout", headers={"origin": origin})
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
     assert "set-cookie" not in response.headers
     assert profile_response.status_code == 200
 

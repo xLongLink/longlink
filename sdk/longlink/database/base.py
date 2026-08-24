@@ -101,8 +101,13 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
                         await conn.run_sync(database_metadata.create_all)
                 else:
                     # Verify non-SQLite connections before exposing the session factory.
-                    async with engine.connect():
-                        pass
+                    try:
+                        async with engine.connect():
+                            pass
+                    except BaseException:
+                        # Release the failed engine before a later request retries initialization.
+                        await engine.dispose()
+                        raise
 
                 # Cache the session factory after the engine connection succeeds.
                 Session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

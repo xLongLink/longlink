@@ -41,6 +41,7 @@ jobs:
                   set -euo pipefail
                   uv sync --locked --project sdk
                   uv run --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
+                  uv lock --project "$RUNNER_TEMP/sample"
 
             - name: Replace sample history
               env:

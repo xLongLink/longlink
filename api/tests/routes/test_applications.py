@@ -46,20 +46,27 @@ async def test_list_apps_returns_requested_page_for_admin(
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex")
-    dashboard = await create_application(acme)
+    await create_application(acme)
     console = await create_application(globex, name="console")
 
     # Act
-    unpaged_response = await clients[0].get("/api/v1/applications")
     paged_response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
 
     # Assert
-    assert unpaged_response.status_code == 200
-    assert {item["id"] for item in unpaged_response.json()["items"]} == {str(dashboard.id), str(console.id)}
-    assert unpaged_response.json()["total"] == 2
     assert paged_response.status_code == 200
     assert [item["id"] for item in paged_response.json()["items"]] == [str(console.id)]
     assert paged_response.json()["total"] == 2
+
+
+async def test_list_apps_rejects_regular_users(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
+    """Prevent non-administrators from enumerating applications."""
+
+    # Act
+    response = await clients[1].get("/api/v1/applications")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
@@ -166,6 +173,33 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
+async def test_create_app_validates_payload_before_checking_organization_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject an invalid request body before inspecting membership or image metadata."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if invalid input reaches remote image inspection."""
+
+        raise AssertionError("invalid application payload must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
+
+    # Act
+    response = await clients[1].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={"name": "dashboard"},
+    )
+
+    # Assert
+    assert response.status_code == 422
+
+
 async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -208,7 +242,7 @@ async def test_application_responses_do_not_expose_environment_secrets(
     # Persist one Application with a value that must remain runtime-only.
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, secrets={"API_KEY": "runtime-secret"})
+    await create_application(organization, secrets={"API_KEY": "runtime-secret"})
 
     # Read the administrator list and Organization detail response surfaces.
     list_response = await clients[0].get("/api/v1/applications")
@@ -223,7 +257,6 @@ async def test_application_responses_do_not_expose_environment_secrets(
     assert all("secrets" not in item and "envs" not in item for item in organization_applications)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
-    assert str(application.id) in {item["id"] for item in list_applications}
 
 
 async def test_create_app_returns_403_for_regular_member(

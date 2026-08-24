@@ -7,7 +7,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 export const metadata = {
-    path: '/docs/sdk/building',
     toc: [
         { id: 'building', label: 'Building', level: 1 },
         { id: 'metadata', label: 'Metadata', level: 2 },

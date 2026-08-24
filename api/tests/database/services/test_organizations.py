@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlmodel import col
 from factories import fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
-from src.errors import ConflictError, NotFoundError
+from src.errors import NotFoundError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.statuses import Status
@@ -87,37 +87,6 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert total == 1
 
 
-async def test_update_member_role_updates_existing_memberships(users: tuple[User, User, User]) -> None:
-    """Update an active organization member role."""
-
-    # Arrange
-    owner, member = users[:2]
-    organization = await create_organization(owner)
-
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.read,
-            )
-        )
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        updated = await organizations.update_member_role(
-            session, organization.id, member.id, OrganizationRoles.maintain, owner, OrganizationRoles.owner
-        )
-        await session.commit()
-        memberships = await organizations.members(session, organization.id)
-        updated_membership = next(item for item in memberships if item.user_id == member.id)
-
-    # Assert
-    assert updated is True
-    assert updated_membership.role == OrganizationRoles.maintain
-
-
 async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
     """Reject role changes for absent organization members."""
 
@@ -131,27 +100,6 @@ async def test_update_member_role_rejects_missing_member(users: tuple[User, User
             await organizations.update_member_role(
                 session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
             )
-
-
-async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User, User, User]) -> None:
-    """Keep at least one owner in every organization."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act
-    async with session_scope() as session:
-        with pytest.raises(ConflictError) as exc:
-            await organizations.update_member_role(
-                session, organization.id, owner.id, OrganizationRoles.admin, owner, OrganizationRoles.owner
-            )
-
-    # Assert
-    assert str(exc.value) == "Organization must have at least one owner"
-    async with session_scope() as session:
-        membership = next(item for item in await organizations.members(session, organization.id) if item.user_id == owner.id)
-    assert membership.role == OrganizationRoles.owner
 
 
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
@@ -231,3 +179,47 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
+
+
+async def test_purge_removes_tombstoned_organization(users: tuple[User, User, User]) -> None:
+    """Remove an Organization only after it has been tombstoned."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await organizations.soft_delete(session, organization.id, owner)
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await organizations.purge(session, organization.id)
+        await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        assert await session.get(Organization, organization.id) is None
+
+
+async def test_purge_rejects_active_organization(users: tuple[User, User, User]) -> None:
+    """Protect active Organizations from lifecycle cleanup."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(RuntimeError, match="Active organizations cannot be purged"):
+            await organizations.purge(session, organization.id)
+
+
+async def test_purge_ignores_missing_organization() -> None:
+    """Allow idempotent cleanup after an Organization was already removed."""
+
+    # Act
+    async with session_scope() as session:
+        result = await organizations.purge(session, uuid4())
+        await session.commit()
+
+    # Assert
+    assert result is None

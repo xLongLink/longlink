@@ -225,11 +225,13 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert (version, name) == ("0.1.0", "demo")
-    assert "pyproject.toml" in dockerfile
+    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
+    assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
+    assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n"
+        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
     )
 
 
@@ -317,7 +319,7 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     transitive_dependency = build_project.parent / "common"
     transitive_dependency.mkdir()
     transitive_dependency.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "common"\nversion = "0.1.0"\n', encoding="utf-8"
+        '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../app" }\n', encoding="utf-8"
     )
     dependency.joinpath("pyproject.toml").write_text(
         '[project]\nname = "shared"\nversion = "0.1.0"\n\n[tool.uv.sources]\ncommon = { path = "../common" }\n',
@@ -337,12 +339,62 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     assert dependencies == [transitive_dependency, dependency]
 
 
-def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) -> None:
-    """Keep the application directory as context when a uv source is not a project."""
+def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep application secrets excluded when local dependencies widen the Docker context."""
+
+    # Arrange
+    dependency = build_project.parent / "shared"
+    dependency.mkdir()
+    dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
+        '[tool.uv.sources]\nshared = { path = "../shared" }\n',
+        encoding="utf-8",
+    )
+    build_project.joinpath(".gitignore").write_text(".env\n", encoding="utf-8")
+    build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    build_context = build_project.parent / "context"
+    monkeypatch.chdir(build_project)
+
+    # Act
+    build.build_app(build_context)
+
+    # Assert
+    assert build_context.joinpath("app", ".env").is_file()
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
+        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n"
+    )
+
+
+def test_context_ignore_rules_scopes_negated_application_patterns(build_project: Path) -> None:
+    """Scope local Docker ignore rules without changing comments or negations."""
+
+    # Arrange
+    source = build_project / ".gitignore"
+    source.write_text("# Keep documentation\n\n/build/\n!/build/README.md\n.env\n", encoding="utf-8")
+
+    # Act
+    rules = build.context_ignore_rules(source, build_project, build_project.parent)
+
+    # Assert
+    assert rules == "# Keep documentation\n\napp/build/\n!app/build/README.md\napp/.env"
+
+
+@pytest.mark.parametrize(
+    "sources",
+    [
+        pytest.param('[tool.uv.sources]\nmissing = { path = "/" }\n', id="nonproject-path"),
+        pytest.param("[tool.uv]\nsources = []\n", id="malformed-table"),
+        pytest.param('[tool.uv.sources]\nunsupported = "workspace"\n', id="unsupported-source"),
+        pytest.param("[tool.uv.sources]\nworkspace = { workspace = true }\n", id="source-without-path"),
+    ],
+)
+def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, sources: str) -> None:
+    """Keep the application directory as context for unusable uv source metadata."""
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nmissing = { path = "/" }\n',
+        f'[project]\nname = "demo"\nversion = "0.1.0"\n\n{sources}',
         encoding="utf-8",
     )
 
@@ -350,9 +402,25 @@ def test_resolve_docker_paths_ignores_nonproject_sources(build_project: Path) ->
     source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
     # Assert
-    assert source_root == build_project
-    assert workdir == "/workspace"
-    assert dependencies == []
+    assert (source_root, workdir, dependencies) == (build_project, "/workspace", [])
+
+
+def test_resolve_docker_paths_ignores_local_directories_without_project_metadata(build_project: Path) -> None:
+    """Exclude local source paths that cannot be installed as uv projects."""
+
+    # Arrange
+    dependency = build_project.parent / "incomplete-dependency"
+    dependency.mkdir()
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nincomplete = { path = "../incomplete-dependency" }\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+    # Assert
+    assert (source_root, workdir, dependencies) == (build_project, "/workspace", [])
 
 
 @pytest.mark.parametrize(
@@ -392,10 +460,26 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         build.resolve_image_tag(app_name, version, registry)
 
 
-def test_build_command_builds_pushes_and_reports_image(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("arguments", "expected_commands", "expected_push_output"),
+    [
+        pytest.param(
+            ["--push"],
+            [["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"]],
+            True,
+            id="push",
+        ),
+        pytest.param([], [], False, id="local-only"),
+    ],
+)
+def test_build_command_reports_built_image(
+    docker_build: tuple[list[list[str]], list[Path]],
+    monkeypatch: pytest.MonkeyPatch,
+    arguments: list[str],
+    expected_commands: list[list[str]],
+    expected_push_output: bool,
 ) -> None:
-    """Build a Docker image in a temporary context, push it, and report image details."""
+    """Build an image locally and optionally publish it."""
 
     # Arrange
     commands, contexts = docker_build
@@ -405,7 +489,7 @@ def test_build_command_builds_pushes_and_reports_image(
     monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
 
     # Act
-    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])
+    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", *arguments])
 
     # Assert
     assert result.exit_code == 0
@@ -420,42 +504,10 @@ def test_build_command_builds_pushes_and_reports_image(
             "-t",
             "localhost:15000/demo-app:dev",
             str(temporary_context),
-        ],
-        ["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"],
-    ]
-    assert "- Built image: localhost:15000/demo-app:dev" in result.output
-    assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
-
-
-def test_build_command_does_not_push_without_flag(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Build an image locally without publishing it by default."""
-
-    # Arrange
-    commands, contexts = docker_build
-    runner = CliRunner()
-    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
-
-    # Act
-    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000"])
-
-    # Assert
-    assert result.exit_code == 0
-    temporary_context, = contexts
-    assert commands == [
-        [
-            "/usr/bin/docker",
-            "build",
-            "-f",
-            str(temporary_context / "Dockerfile"),
-            "-t",
-            "localhost:15000/demo-app:dev",
-            str(temporary_context),
         ]
-    ]
+    ] + expected_commands
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
-    assert "- Pushed image:" not in result.output
+    assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output
 
 
 def test_build_command_reports_docker_build_failure_without_pushing(
@@ -483,3 +535,30 @@ def test_build_command_reports_docker_build_failure_without_pushing(
     assert "Docker command failed with exit code 23" in result.output
     assert len(commands) == 1
     assert commands[0][1] == "build"
+
+
+def test_build_command_reports_docker_push_failure(
+    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Translate a failed Docker push into a CLI error after building the image."""
+
+    # Arrange
+    commands, _contexts = docker_build
+    runner = CliRunner()
+
+    def fail_push(command: list[str], check: bool) -> None:
+        """Record Docker commands and fail only the push command."""
+
+        commands.append(command)
+        if command[1] == "push":
+            raise subprocess.CalledProcessError(24, command)
+
+    monkeypatch.setattr(build.subprocess, "run", fail_push)
+
+    # Act
+    result = runner.invoke(build.build_command, ["--push"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert "Docker command failed with exit code 24" in result.output
+    assert [command[1] for command in commands] == ["build", "push"]

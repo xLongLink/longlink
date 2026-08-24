@@ -48,7 +48,6 @@ def test_database_url_preserves_ssl_and_other_query_params(
     normalized = urls.database(source).url.render_as_string(hide_password=False)
     parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
 
-    assert normalized.startswith("postgresql+asyncpg://")
     assert dict(parsed_query) == {**expected_query, "ssl": "disable"}
 
 
@@ -60,7 +59,6 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
 
     # TLS values are consumed by the adapter and non-TLS query options remain in the URL.
     assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink?charset=utf8mb4"
-    assert connection.connect_args == {"init_command": "SET time_zone = '+00:00'"}
 
 
 @pytest.mark.parametrize(

@@ -23,10 +23,12 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Assert
     assert profile_response.status_code == 200
+    assert profile_response.headers["cache-control"] == "no-store"
     assert profile_response.json()["id"] == str(user.id)
     assert profile_response.json()["administrator"] is True
 
     assert organizations_response.status_code == 200
+    assert organizations_response.headers["cache-control"] == "no-store"
     assert organizations_response.json() == [
         {
             "organization": {
@@ -69,10 +71,8 @@ async def test_list_users_returns_administrator_page_and_total(
 ) -> None:
     """Return a bounded administrator page with the full visible-user total."""
 
-    client = clients[0]
-
     # Act
-    response = await client.get("/api/v1/users?page=2&page_size=1")
+    response = await clients[0].get("/api/v1/users?page=2&page_size=1")
 
     # Assert
     assert response.status_code == 200
