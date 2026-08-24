@@ -179,3 +179,47 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
+
+
+async def test_purge_removes_tombstoned_organization(users: tuple[User, User, User]) -> None:
+    """Remove an Organization only after it has been tombstoned."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await organizations.soft_delete(session, organization.id, owner)
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await organizations.purge(session, organization.id)
+        await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        assert await session.get(Organization, organization.id) is None
+
+
+async def test_purge_rejects_active_organization(users: tuple[User, User, User]) -> None:
+    """Protect active Organizations from lifecycle cleanup."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(RuntimeError, match="Active organizations cannot be purged"):
+            await organizations.purge(session, organization.id)
+
+
+async def test_purge_ignores_missing_organization() -> None:
+    """Allow idempotent cleanup after an Organization was already removed."""
+
+    # Act
+    async with session_scope() as session:
+        result = await organizations.purge(session, uuid4())
+        await session.commit()
+
+    # Assert
+    assert result is None

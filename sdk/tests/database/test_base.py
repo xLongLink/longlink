@@ -215,18 +215,8 @@ async def test_session_retries_initialization_after_database_connection_failure(
     """Leave the session factory unset when its initial connection fails."""
 
     # Arrange
-    class FailingConnection:
-        """Raise the configured database error while entering the connection context."""
-
-        async def __aenter__(self) -> None:
-            """Fail before a database connection is exposed."""
-            raise ConnectionError("database unavailable")
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Complete the failed context-manager protocol."""
-
     class FailingEngine:
-        """Provide a non-SQLite engine whose verification connection fails."""
+        """Provide a non-SQLite engine whose verification context fails to open."""
 
         url = "postgresql+asyncpg://database"
 
@@ -235,9 +225,18 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
             self.disposed = False
 
-        def connect(self) -> FailingConnection:
+        def connect(self) -> "FailingEngine":
             """Return the failing connection context."""
-            return FailingConnection()
+
+            return self
+
+        async def __aenter__(self) -> None:
+            """Fail before a database connection is exposed."""
+
+            raise ConnectionError("database unavailable")
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Complete the failed context-manager protocol."""
 
         async def dispose(self) -> None:
             """Record release of the failed engine."""
@@ -264,3 +263,52 @@ async def test_session_retries_initialization_after_database_connection_failure(
             assert database_session is not None
     finally:
         await retry_engine.dispose()
+
+
+async def test_session_verifies_non_sqlite_connection_before_yielding_session(
+    monkeypatch: pytest.MonkeyPatch,
+    reset_session_factory: None,
+) -> None:
+    """Verify a non-SQLite connection before yielding an Application session."""
+
+    # Arrange
+    class AvailableConnection:
+        """Provide a successful database connection context."""
+
+        async def __aenter__(self) -> None:
+            """Enter the available connection context."""
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the available connection context."""
+
+    class AvailableEngine:
+        """Provide a healthy non-SQLite engine without opening a real connection."""
+
+        url = "postgresql+asyncpg://database"
+
+        def connect(self) -> AvailableConnection:
+            """Return the successful connection context."""
+
+            return AvailableConnection()
+
+    class AvailableSession:
+        """Provide the initialized session through an async context manager."""
+
+        async def __aenter__(self) -> str:
+            """Return the observable application session value."""
+
+            return "session"
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Exit the session context."""
+
+    engine = AvailableEngine()
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
+    monkeypatch.setattr(database_base, "async_sessionmaker", lambda *_args, **_kwargs: AvailableSession)
+
+    # Act
+    async with database_base.session() as database_session:
+        result = database_session
+
+    # Assert
+    assert result == "session"

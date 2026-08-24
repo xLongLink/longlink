@@ -4,7 +4,7 @@ from src.errors import ConflictError
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.database.services import applications
+from src.database.services import applications, organizations
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.applications import Application
@@ -50,3 +50,31 @@ async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
     assert total == 1
+
+
+async def test_create_rejects_tombstoned_organization(users: tuple[User, User, User]) -> None:
+    """Prevent new applications from restoring a deleted Organization."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await organizations.soft_delete(session, organization.id, owner)
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="Organization is not available"):
+            await applications.create(
+                session,
+                organization.id,
+                "Dashboard",
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+                secrets={},
+            )
+
+    # Assert
+    async with session_scope() as session:
+        fetched, total = await applications.fetch_page(session, Pagination())
+    assert fetched == []
+    assert total == 0

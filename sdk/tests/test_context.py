@@ -1,10 +1,10 @@
 import pytest
 from uuid import UUID
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from longlink import context
-from contextlib import aclosing, asynccontextmanager
+from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
-from starlette.requests import Request
+from fastapi.testclient import TestClient
 
 
 @pytest.mark.parametrize(
@@ -15,7 +15,7 @@ from starlette.requests import Request
         pytest.param(None, None, id="anonymous"),
     ],
 )
-async def test_data_resolves_request_services(
+def test_data_resolves_request_services(
     monkeypatch: pytest.MonkeyPatch,
     identity: UUID | None,
     user: object | None,
@@ -43,8 +43,6 @@ async def test_data_resolves_request_services(
     database = Database()
     app = FastAPI()
     app.state.longlink = type("Runtime", (), {"storage": storage})()
-    request = Request({"type": "http", "app": app, "headers": [], "method": "GET", "path": "/", "query_string": b""})
-    request.state.longlink_identity = identity
 
     @asynccontextmanager
     async def fake_session(database: object) -> AsyncIterator[object]:
@@ -57,15 +55,21 @@ async def test_data_resolves_request_services(
             session_closed = True
 
     monkeypatch.setattr(context, "session", lambda: fake_session(database))
+    context.install_context_middleware(app)
+
+    @app.get("/")
+    async def get_context(value: context.Context = Depends(context.data)) -> dict[str, bool]:
+        """Expose dependency values for the request-boundary test."""
+
+        return {"user_matches": value.user is user, "storage_matches": value.storage is storage}
+
+    client = TestClient(app)
 
     # Act
-    async with aclosing(context.data(request)) as values:
-        value = await anext(values)
+    response = client.get("/", headers={} if identity is None else {"x-user-id": str(identity)})
 
-        # Assert
-        assert value.user is user
-        assert value.storage is storage
-        assert value.database is database
-        assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
-
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"user_matches": True, "storage_matches": True}
+    assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
     assert session_closed

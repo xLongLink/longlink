@@ -411,10 +411,10 @@ export const zPageComputeRegistryResponse = z.object({
  * Validate one storage registry creation payload.
  */
 export const zStorageRegistryCreate = z.object({
+    name: z.string().min(1).max(128),
     endpoint_url: z.string().min(1).max(255),
     access_key_id: z.string().min(1).max(255),
-    secret_access_key: z.string().min(1).max(255),
-    name: z.string().min(1).max(128)
+    secret_access_key: z.string().min(1).max(255)
 });
 
 /**

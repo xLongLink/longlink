@@ -385,6 +385,8 @@ def test_context_ignore_rules_scopes_negated_application_patterns(build_project:
     [
         pytest.param('[tool.uv.sources]\nmissing = { path = "/" }\n', id="nonproject-path"),
         pytest.param("[tool.uv]\nsources = []\n", id="malformed-table"),
+        pytest.param('[tool.uv.sources]\nunsupported = "workspace"\n', id="unsupported-source"),
+        pytest.param("[tool.uv.sources]\nworkspace = { workspace = true }\n", id="source-without-path"),
     ],
 )
 def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, sources: str) -> None:
@@ -400,9 +402,25 @@ def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, so
     source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
     # Assert
-    assert source_root == build_project
-    assert workdir == "/workspace"
-    assert dependencies == []
+    assert (source_root, workdir, dependencies) == (build_project, "/workspace", [])
+
+
+def test_resolve_docker_paths_ignores_local_directories_without_project_metadata(build_project: Path) -> None:
+    """Exclude local source paths that cannot be installed as uv projects."""
+
+    # Arrange
+    dependency = build_project.parent / "incomplete-dependency"
+    dependency.mkdir()
+    build_project.joinpath("pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\nincomplete = { path = "../incomplete-dependency" }\n',
+        encoding="utf-8",
+    )
+
+    # Act
+    source_root, workdir, dependencies = build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
+
+    # Assert
+    assert (source_root, workdir, dependencies) == (build_project, "/workspace", [])
 
 
 @pytest.mark.parametrize(

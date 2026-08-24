@@ -8,7 +8,7 @@ from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
-from longlink.middleware import install_frontend_middleware
+from longlink.middleware import FrontendMiddleware
 from starlette.responses import Response
 from src.database.session import session_scope
 from src.database.services import users as user_service
@@ -69,7 +69,7 @@ async def prevent_authenticated_response_caching(
     return response
 
 
-install_frontend_middleware(app)
+app.add_middleware(FrontendMiddleware)
 
 # Register the versioned Platform API after constructing the application.
 app.include_router(v1.router)

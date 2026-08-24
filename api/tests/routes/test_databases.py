@@ -69,21 +69,22 @@ async def test_database_registry_list_paginates_without_exposing_password(
     """Return one ordered registry page without its administrator password."""
 
     # Arrange
-    alpha_payload = {
-        "name": "Alpha database",
-        "host": "alpha.example",
+    payload = {
         "port": 5432,
         "username": "administrator",
-        "password": "alpha-password",
         "sslmode": "require",
     }
+    alpha_payload = {
+        **payload,
+        "name": "Alpha database",
+        "host": "alpha.example",
+        "password": "alpha-password",
+    }
     bravo_payload = {
+        **payload,
         "name": "Bravo database",
         "host": "bravo.example",
-        "port": 5432,
-        "username": "administrator",
         "password": "bravo-password",
-        "sslmode": "require",
     }
     alpha_response = await clients[0].post("/api/v1/databases", json=alpha_payload)
     bravo_response = await clients[0].post("/api/v1/databases", json=bravo_payload)

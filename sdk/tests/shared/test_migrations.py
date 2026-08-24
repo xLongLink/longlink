@@ -1,7 +1,13 @@
+import sys
 import pytest
+import importlib
+import importlib.util
 import pytest_asyncio
 from uuid import UUID
+from types import SimpleNamespace
+from pathlib import Path
 from datetime import UTC, datetime
+from contextlib import nullcontext
 from sqlalchemy import text
 from alembic.config import Config
 from collections.abc import AsyncIterator
@@ -13,6 +19,23 @@ from sqlalchemy.dialects import postgresql
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
+
+
+def load_shared_migration_environment(monkeypatch: pytest.MonkeyPatch, context: object) -> None:
+    """Execute the shared Alembic environment with an isolated context module."""
+
+    # Replace Alembic's runtime proxy before the environment selects its execution mode.
+    import alembic
+
+    module_name = "tests.shared.alembic_environment"
+    environment_path = Path(shared_migrations.__file__).parent / "alembic" / "env.py"
+    specification = importlib.util.spec_from_file_location(module_name, environment_path)
+    assert specification is not None
+    assert specification.loader is not None
+    module = importlib.util.module_from_spec(specification)
+    monkeypatch.setattr(alembic, "context", context)
+    monkeypatch.setitem(sys.modules, module_name, module)
+    specification.loader.exec_module(module)
 
 
 @pytest.fixture
@@ -29,16 +52,22 @@ def audit_user() -> Audit:
     )
 
 
-class FakeAuditConnection:
-    """Capture one audit upsert and optionally emulate a database failure."""
+class FakeAuditEngine:
+    """Provide a short-lived audit transaction, captured upsert, and disposal tracking."""
 
-    def __init__(self, executed: dict[str, object], error: RuntimeError | None) -> None:
-        """Store the observable upsert result and configured failure."""
+    def __init__(self, error: RuntimeError | None = None) -> None:
+        """Initialize observable state for one synchronization attempt."""
 
-        self.executed = executed
         self.error = error
+        self.executed: dict[str, object] = {}
+        self.disposed = False
 
-    async def __aenter__(self) -> "FakeAuditConnection":
+    def begin(self) -> "FakeAuditEngine":
+        """Return the fake transaction context."""
+
+        return self
+
+    async def __aenter__(self) -> "FakeAuditEngine":
         """Enter the fake transaction context."""
 
         return self
@@ -53,22 +82,6 @@ class FakeAuditConnection:
             raise self.error
         self.executed["statement"] = statement
         self.executed["parameters"] = parameters
-
-
-class FakeAuditEngine:
-    """Provide a short-lived audit transaction and disposal tracking."""
-
-    def __init__(self, error: RuntimeError | None = None) -> None:
-        """Initialize observable state for one synchronization attempt."""
-
-        self.error = error
-        self.executed: dict[str, object] = {}
-        self.disposed = False
-
-    def begin(self) -> FakeAuditConnection:
-        """Return a fake transaction connection."""
-
-        return FakeAuditConnection(self.executed, self.error)
 
     async def dispose(self) -> None:
         """Record operation-scoped engine disposal."""
@@ -300,3 +313,66 @@ async def test_shared_user_sync_updates_one_postgresql_row(
         "updated_at": deactivated_at,
         "deleted_at": deactivated_at,
     }
+
+
+def test_shared_migration_environment_configures_offline_schema_bootstrap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Emit shared-schema bootstrap SQL before offline migration output."""
+
+    # Arrange
+    calls: list[object] = []
+    context = SimpleNamespace(
+        config=SimpleNamespace(get_main_option=lambda _option: "postgresql+asyncpg://db/organization"),
+        is_offline_mode=lambda: True,
+        configure=lambda **kwargs: calls.append(("configure", kwargs)),
+        begin_transaction=nullcontext,
+        execute=lambda statement: calls.append(("execute", statement)),
+        run_migrations=lambda: calls.append(("run_migrations",)),
+    )
+
+    # Act
+    load_shared_migration_environment(monkeypatch, context)
+
+    # Assert
+    assert calls == [
+        (
+            "configure",
+            {
+                "url": "postgresql+asyncpg://db/organization",
+                "literal_binds": True,
+                "dialect_opts": {"paramstyle": "named"},
+                "version_table_schema": "shared",
+            },
+        ),
+        ("execute", "CREATE SCHEMA IF NOT EXISTS shared"),
+        ("execute", "SET search_path TO shared"),
+        ("run_migrations",),
+    ]
+
+
+def test_shared_migration_environment_rejects_missing_online_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require the control plane to provide an organization database URL."""
+
+    # Arrange
+    context = SimpleNamespace(
+        config=SimpleNamespace(get_main_option=lambda _option: None),
+        is_offline_mode=lambda: False,
+    )
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Alembic sqlalchemy.url is not configured"):
+        load_shared_migration_environment(monkeypatch, context)
+
+
+def test_initial_shared_migration_downgrade_drops_only_audit_table(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove only the SDK-owned audit table when downgrading the shared schema."""
+
+    # Arrange
+    dropped_tables: list[str] = []
+    revision = importlib.import_module("longlink.shared.alembic.versions.20260713_0001_initial")
+    monkeypatch.setattr(revision.op, "drop_table", dropped_tables.append)
+
+    # Act
+    revision.downgrade()
+
+    # Assert
+    assert dropped_tables == ["audit"]

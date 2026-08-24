@@ -297,3 +297,32 @@ async def test_record_success_rejects_stale_compute_lifecycle_writer() -> None:
     assert persisted.gateway_url is None
     assert persisted.gateway_certificate is None
     assert persisted.gateway_client_identity is None
+
+
+async def test_record_success_publishes_gateway_state_for_current_compute_lifecycle() -> None:
+    """Publish gateway connection material when the Compute lifecycle is current."""
+
+    # Arrange
+    registry = await create_compute()
+
+    # Act
+    async with session_scope() as session:
+        recorded = await compute.record_success(
+            session,
+            registry.id,
+            "https://gateway.example",
+            "certificate",
+            "client-identity",
+            Status.creating,
+        )
+        await session.commit()
+
+    # Assert
+    assert recorded is True
+    async with session_scope() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
+    assert persisted.gateway_url == "https://gateway.example"
+    assert persisted.gateway_certificate == "certificate"
+    assert persisted.gateway_client_identity == "client-identity"

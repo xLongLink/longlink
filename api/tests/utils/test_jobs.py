@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import timedelta
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
-from collections.abc import Callable, Awaitable
+from collections.abc import Callable, Awaitable, AsyncIterator
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
@@ -34,6 +34,20 @@ def failed_transition(operation: Operation) -> Callable[[object, UUID], Awaitabl
         return operation
 
     return fail
+
+
+class SchedulerSession:
+    """Provide the scheduler transaction boundary."""
+
+    async def commit(self) -> None:
+        """Commit a scheduler transaction."""
+
+
+@asynccontextmanager
+async def fake_scheduler_session_scope() -> AsyncIterator[SchedulerSession]:
+    """Yield a disposable scheduler session."""
+
+    yield SchedulerSession()
 
 
 async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -193,29 +207,30 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
         await operation_worker.execute(operation)
 
 
-async def test_scheduler_recovers_from_polling_failure_and_executes_next_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep polling after a claim failure and execute the next leased operation."""
+@pytest.mark.parametrize(
+    ("polling_failure", "execution_failure", "expected_execution_count", "expected_sleep_count"),
+    [
+        pytest.param(RuntimeError("database unavailable"), None, 1, 2, id="polling"),
+        pytest.param(None, RuntimeError("provider unavailable"), 0, 1, id="execution"),
+    ],
+)
+async def test_scheduler_recovers_from_worker_failures(
+    monkeypatch: pytest.MonkeyPatch,
+    polling_failure: RuntimeError | None,
+    execution_failure: RuntimeError | None,
+    expected_execution_count: int,
+    expected_sleep_count: int,
+) -> None:
+    """Continue polling after claim and execution failures."""
 
     # Arrange
     operation = leased_operation()
-    claims = iter((RuntimeError("database unavailable"), operation, None))
+    claims = iter((polling_failure, operation, None) if polling_failure is not None else (operation, None))
     executed: list[Operation] = []
     sleeps = 0
 
-    class Session:
-        """Provide the scheduler transaction boundary."""
-
-        async def commit(self) -> None:
-            """Commit a scheduler transaction."""
-
-    @asynccontextmanager
-    async def fake_session_scope():
-        """Yield a disposable scheduler session."""
-
-        yield Session()
-
-    async def claim(_session: Session) -> Operation | None:
-        """Raise once, then lease one operation, then report an empty queue."""
+    async def claim(_session: SchedulerSession) -> Operation | None:
+        """Raise once when configured, then return queued Operations."""
 
         result = next(claims)
         if isinstance(result, Exception):
@@ -223,8 +238,10 @@ async def test_scheduler_recovers_from_polling_failure_and_executes_next_operati
         return result
 
     async def execute(claimed: Operation) -> Operation:
-        """Record the operation dispatched by the scheduler."""
+        """Record dispatched Operations or simulate an execution failure."""
 
+        if execution_failure is not None:
+            raise execution_failure
         executed.append(claimed)
         return claimed
 
@@ -233,10 +250,10 @@ async def test_scheduler_recovers_from_polling_failure_and_executes_next_operati
 
         nonlocal sleeps
         sleeps += 1
-        if sleeps == 2:
+        if sleeps == expected_sleep_count:
             raise asyncio.CancelledError
 
-    monkeypatch.setattr(operation_worker, "session_scope", fake_session_scope)
+    monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
     monkeypatch.setattr(operation_worker.operations, "claim", claim)
     monkeypatch.setattr(operation_worker, "execute", execute)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
@@ -245,53 +262,5 @@ async def test_scheduler_recovers_from_polling_failure_and_executes_next_operati
     with pytest.raises(asyncio.CancelledError):
         await operation_worker.run_operation_scheduler()
 
-    assert executed == [operation]
-
-
-async def test_scheduler_recovers_from_execution_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Continue polling after execution of a claimed operation fails."""
-
-    # Arrange
-    operation = leased_operation()
-    claims = iter((operation, None))
-    sleeps = 0
-
-    class Session:
-        """Provide the scheduler transaction boundary."""
-
-        async def commit(self) -> None:
-            """Commit a scheduler transaction."""
-
-    @asynccontextmanager
-    async def fake_session_scope():
-        """Yield a disposable scheduler session."""
-
-        yield Session()
-
-    async def claim(_session: Session) -> Operation | None:
-        """Lease an operation once, then report an empty queue."""
-
-        return next(claims)
-
-    async def execute(_operation: Operation) -> Operation:
-        """Simulate an operation execution failure."""
-
-        raise RuntimeError("provider unavailable")
-
-    async def sleep(_delay: float) -> None:
-        """Stop after the scheduler returns to idle polling."""
-
-        nonlocal sleeps
-        sleeps += 1
-        raise asyncio.CancelledError
-
-    monkeypatch.setattr(operation_worker, "session_scope", fake_session_scope)
-    monkeypatch.setattr(operation_worker.operations, "claim", claim)
-    monkeypatch.setattr(operation_worker, "execute", execute)
-    monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
-
-    # Act and assert
-    with pytest.raises(asyncio.CancelledError):
-        await operation_worker.run_operation_scheduler()
-
-    assert sleeps == 1
+    assert len(executed) == expected_execution_count
+    assert sleeps == expected_sleep_count

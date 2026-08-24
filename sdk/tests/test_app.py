@@ -10,13 +10,13 @@ from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
 
 
-def create_runtime_client(follow_redirects: bool = True) -> TestClient:
+def create_runtime_client() -> TestClient:
     """Build an SDK runtime client from the current generated Application source tree."""
 
     # Register the generated page catalog before serving requests.
     app = FastAPI()
     LongLink(app)
-    return TestClient(app, follow_redirects=follow_redirects)
+    return TestClient(app)
 
 
 def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
@@ -102,7 +102,7 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
         pytest.param(
             "issues/[issue].xml",
             '<longlink name="Issue">Issue</longlink>',
-            {"tab": "issues", "route": "/issues/:issue"},
+            {"tab": "issues", "route": "/issues/:issue", "name": "Issue"},
             id="dynamic",
         ),
     ],
@@ -122,16 +122,14 @@ def test_xml_pages_are_registered_from_default_pages_directory(
 
     # Start LongLink and request the registered page and page catalog.
     client = create_runtime_client()
-    page_path_without_suffix = relative_path.removesuffix(".xml")
-    response = client.get(f"/pages/{page_path_without_suffix}")
+    response = client.get(f"/pages/{relative_path.removesuffix('.xml')}")
     pages_response = client.get("/pages.json")
 
     # Verify content and metadata came from the default page tree.
     assert response.status_code == 200
     assert "application/xml" in response.headers["content-type"]
     assert response.text == content
-    page = next(item for item in pages_response.json() if item["path"] == f"pages/{page_path_without_suffix}")
-    assert {key: page[key] for key in expected_metadata} == expected_metadata
+    assert pages_response.json() == [{"path": f"pages/{relative_path.removesuffix('.xml')}", **expected_metadata}]
 
 
 def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path) -> None:
@@ -170,6 +168,8 @@ def test_xml_page_catalog_uses_deterministic_path_order(application_source: Path
         {"path": "pages/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
         {"path": "pages/zebra", "route": "/zebra", "tab": "zebra"},
     ]
+
+
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
     """Validate SDK XML pages against the bundled schema before registering routes."""
 
