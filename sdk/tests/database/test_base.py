@@ -123,6 +123,7 @@ def test_connect_args_returns_driver_specific_settings(
                 DATABASE_NAME="longlink",
                 DATABASE_PORT=5432,
                 DATABASE_SCHEMA="application",
+                DATABASE_SSLMODE="disable",
                 DATABASE_PASSWORD="secret",
                 DATABASE_USERNAME="app",
                 STORAGE_BUCKET="organization",
@@ -137,7 +138,7 @@ def test_connect_args_returns_driver_specific_settings(
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"ssl": "require", "server_settings": {"timezone": "UTC", "search_path": '"application", shared'}},
+                "connect_args": {"ssl": "disable", "server_settings": {"timezone": "UTC", "search_path": '"application", shared'}},
             },
             id="production",
         ),
@@ -176,14 +177,13 @@ async def test_concurrent_sessions_initialize_one_session_factory(
     """Initialize the lazy database session factory only once."""
 
     # Arrange
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     create_count = 0
 
     def counted_create_engine(_env: Envs):
-        """Return the isolated engine while recording initialization attempts."""
+        """Create an isolated engine while recording initialization attempts."""
         nonlocal create_count
         create_count += 1
-        return engine
+        return create_async_engine("sqlite+aiosqlite:///:memory:")
 
     monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
     database = database_base.Database(Envs(ENV="testing"))
@@ -199,6 +199,11 @@ async def test_concurrent_sessions_initialize_one_session_factory(
 
         # Assert
         assert create_count == 1
+
+        # Dispose the cached resources, then verify a later session recreates them.
+        await database.dispose()
+        await open_session()
+        assert create_count == 2
     finally:
         await database.dispose()
 

@@ -89,6 +89,53 @@ def test_data_resolves_request_services(
     assert session_closed
 
 
+def test_data_closes_database_session_when_endpoint_fails() -> None:
+    """Close the request database session when a dependent endpoint raises."""
+
+    # Arrange
+    session_closed = False
+
+    class Database:
+        """Provide the minimal lookup behavior required by the dependency."""
+
+        async def get(self, _model: object, _user_id: UUID) -> None:
+            """Return no shared audit user."""
+
+    @asynccontextmanager
+    async def fake_session() -> AsyncIterator[Database]:
+        """Yield a database session and record finalization."""
+
+        nonlocal session_closed
+        try:
+            yield Database()
+        finally:
+            session_closed = True
+
+    class DatabaseService:
+        """Open the configured request database session."""
+
+        def session(self) -> AbstractAsyncContextManager[Database]:
+            """Return the managed fake session."""
+
+            return fake_session()
+
+    app = FastAPI()
+    app.state.longlink = type("Runtime", (), {"storage": object(), "database": DatabaseService()})()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def fail(_value: context.Context = Depends(context.data)) -> None:
+        """Fail after the context dependency opens its session."""
+
+        raise RuntimeError("endpoint failed")
+
+    # Act and assert
+    with TestClient(app) as client:
+        with pytest.raises(RuntimeError, match="endpoint failed"):
+            client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
+    assert session_closed
+
+
 def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
     """Ignore a malformed Platform identity token."""
 

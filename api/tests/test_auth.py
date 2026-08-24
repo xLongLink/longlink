@@ -54,6 +54,32 @@ async def test_authuser_marks_request_for_valid_identity_directly(monkeypatch: p
     assert request.state.authenticated is True
 
 
+async def test_authuser_rejects_changed_password_fingerprint(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Invalidate browser sessions after the account password changes."""
+
+    # Arrange
+    user = SimpleNamespace(password="changed-password")
+
+    async def active(_session: object, _user_id: object) -> object:
+        """Return the active account with its new password."""
+
+        return user
+
+    monkeypatch.setattr(auth.token, "auth_token_claims", lambda _credential: (uuid4(), "old-fingerprint"))
+    monkeypatch.setattr(auth.token, "password_fingerprint", lambda _password: "new-fingerprint")
+    monkeypatch.setattr(auth.user_service, "active", active)
+    request = Request({"type": "http", "headers": []})
+
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth.authuser(request, "credential", object())
+
+    # Assert
+    assert exc.value.status_code == 401
+    assert exc.value.detail == "Not authenticated"
+    assert not hasattr(request.state, "authenticated")
+
+
 def test_authadmin_rejects_non_administrator_directly() -> None:
     """Require administrator status after authentication."""
 

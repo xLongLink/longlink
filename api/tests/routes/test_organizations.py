@@ -913,6 +913,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     ("caller_role", "expected_detail"),
     [
         pytest.param(None, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
         pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
     ],
 )

@@ -70,19 +70,18 @@ async def reset_db(
     monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
     # Clear any cached session engine before binding the test database.
-    session.Session = None
+    monkeypatch.setattr(session, "Session", None)
 
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(PlatformModel.metadata.create_all)
 
-    session.Session = async_sessionmaker(engine, expire_on_commit=False)
+    monkeypatch.setattr(session, "Session", async_sessionmaker(engine, expire_on_commit=False))
 
     try:
         yield
     finally:
-        session.Session = None
         await engine.dispose()
 
 

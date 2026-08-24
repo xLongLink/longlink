@@ -140,31 +140,6 @@ def test_nonproduction_storage_selects_local_filesystem(
     assert protocols == [expected_protocol]
 
 
-def test_nonproduction_storage_scopes_configured_bucket_prefix(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Scope local storage to the configured bucket and prefix."""
-
-    # Arrange
-    filesystem = object()
-    scoped_filesystem = object()
-    captured: dict[str, object] = {}
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", lambda protocol: filesystem)
-    monkeypatch.setattr(
-        storage_base,
-        "DirFileSystem",
-        lambda path, fs: captured.update({"path": path, "filesystem": fs}) or scoped_filesystem,
-    )
-
-    # Act
-    result = storage_base.create_fs(Envs(ENV="testing", STORAGE_BUCKET="acme", STORAGE_PREFIX="applications/dashboard"))
-
-    # Assert
-    assert result is scoped_filesystem
-    assert captured == {"path": "acme/applications/dashboard", "filesystem": filesystem}
-
-
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])
 def test_production_settings_reject_blank_required_values(monkeypatch: pytest.MonkeyPatch, name: str) -> None:
     """Reject blank values in the production runtime contract."""

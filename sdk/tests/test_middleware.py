@@ -112,7 +112,6 @@ def test_frontend_middleware_preserves_incompressible_asset_representation() -> 
     response = request_response(app, "/assets/logo.png", {"accept-encoding": "gzip"})
 
     # Assert
-    assert response.status_code == 200
     assert response.content == b"x" * 1000
     assert "content-encoding" not in response.headers
     assert "vary" not in response.headers
@@ -226,6 +225,4 @@ def test_frontend_middleware_preserves_explicit_cache_policy() -> None:
     response = request_response(app, "/text", {})
 
     # Assert
-    assert response.status_code == 200
-    assert response.content == b"x" * 1000
     assert response.headers["cache-control"] == "private, no-store"

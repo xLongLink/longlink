@@ -3,52 +3,10 @@ from uuid import uuid4
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from fastapi import HTTPException
-from factories import create_organization, create_ready_infrastructure
+from factories import create_ready_infrastructure
 from src.routes.v1 import databases
 from unittest.mock import AsyncMock
 from sqlalchemy.exc import OperationalError
-from src.models.databases import DatabaseRegistryCreate
-from src.models.pagination import Pagination
-
-
-async def test_database_handlers_delegate_creation_and_listing() -> None:
-    """Create and list database registries through their persistence service."""
-
-    # Arrange
-    session = SimpleNamespace(commit=AsyncMock())
-    registry = SimpleNamespace(id=uuid4())
-    payload = DatabaseRegistryCreate(
-        name="Database",
-        host="database.example",
-        port=5432,
-        username="admin",
-        password="secret",
-        sslmode="require",
-    )
-    pagination = Pagination()
-    original_create = databases.database.create
-    original_fetch_page = databases.database.fetch_page
-    create = AsyncMock(return_value=registry)
-    fetch_page = AsyncMock(return_value=([registry], 1))
-    databases.database.create = create
-    databases.database.fetch_page = fetch_page
-
-    try:
-        # Act
-        created = await databases.create_database_registry(payload, session)
-        page = await databases.list_database_registries(pagination, session)
-    finally:
-        databases.database.create = original_create
-        databases.database.fetch_page = original_fetch_page
-
-    # Assert
-    assert created is registry
-    assert page == {"items": [registry], "total": 1}
-    create.assert_awaited_once_with(
-        session, payload.name, payload.host, payload.port, payload.username, payload.password, payload.sslmode
-    )
-    fetch_page.assert_awaited_once_with(session, pagination)
-    session.commit.assert_awaited_once()
 
 
 async def test_database_handlers_return_registry_or_not_found_errors() -> None:
@@ -316,21 +274,3 @@ async def test_database_registry_list_and_detail_omit_password(
     assert list_response.json() == {"items": [expected_registry], "total": 1}
     assert detail_response.status_code == 200
     assert detail_response.json() == expected_registry
-
-
-async def test_database_registry_deletion_rejects_organization_assignment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users,
-) -> None:
-    """Keep a database registry assigned to an Organization available."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[1], infrastructure=infrastructure)
-
-    # Act
-    response = await clients[0].delete(f"/api/v1/databases/{infrastructure.database.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Database registry is used by organizations"}

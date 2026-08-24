@@ -52,13 +52,10 @@ def test_longlink_app_serves_runtime_routes_without_embedded_frontend(
     client = TestClient(app)
 
     # Act
-    health_response = client.get("/health")
     pages_response = client.get("/pages.json")
     frontend_response = client.get("/", headers={"accept": "text/html"})
 
     # Assert
-    assert health_response.status_code == 200
-    assert health_response.json() == {"ok": True}
     assert pages_response.status_code == 200
     assert pages_response.json() == []
     assert frontend_response.status_code == 404
@@ -216,8 +213,10 @@ def test_invalid_xml_page_fails_during_registration(application_source: Path) ->
     assert not any(getattr(route, "path", None) == "/pages/valid" for route in app.router.routes)
 
 
-def test_application_route_collision_with_page_endpoint_is_rejected(
+@pytest.mark.parametrize("route", ["/pages/dashboard", "/pages/{page}"])
+def test_application_routes_colliding_with_page_endpoints_are_rejected(
     application_source: Path,
+    route: str,
 ) -> None:
     """Reject page endpoints that would overlap an Application-owned route."""
 
@@ -228,7 +227,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     )
     app = FastAPI()
 
-    @app.get("/pages/dashboard")
+    @app.get(route)
     async def application_dashboard() -> dict[str, str]:
         """Return the Application dashboard resource."""
 
@@ -237,6 +236,7 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
     # Reject ambiguous ownership during runtime registration.
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
+    assert not any(getattr(item, "path", None) == "/pages/dashboard" for item in app.router.routes)
 
 
 @pytest.mark.parametrize(

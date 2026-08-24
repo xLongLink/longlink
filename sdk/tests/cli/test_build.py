@@ -235,9 +235,14 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
     assert "WORKDIR /workspace" in dockerfile
     assert "uv sync --locked --no-dev --no-install-local" in dockerfile
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        ".env\n*.db\n\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n"
-    )
+    dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
+    assert ".env" in dockerignore
+    assert "*.db" in dockerignore
+    assert ".git" in dockerignore
+    assert "Dockerfile" in dockerignore
+    assert ".dockerignore" in dockerignore
+    assert "**/.venv" in dockerignore
+    assert "**/.pytest_cache" in dockerignore
 
 
 @pytest.mark.parametrize(

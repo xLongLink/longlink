@@ -192,12 +192,12 @@ async def test_application_proxy_forwards_safe_content(
     assert captured.get("content_type") == "text/plain"
 
 
-@pytest.mark.parametrize("origin", ["", "https://attacker.example"])
+@pytest.mark.parametrize("origin", [None, "https://attacker.example"])
 async def test_application_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
-    origin: str,
+    origin: str | None,
 ) -> None:
     """Reject missing and foreign origins before an authenticated write reaches the gateway."""
 
@@ -211,10 +211,14 @@ async def test_application_proxy_rejects_untrusted_origin_before_gateway_request
 
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
+    # Remove the client's trusted default header for the missing-Origin case.
+    if origin is None:
+        clients[0].headers.pop("origin")
+
     # Act
     response = await clients[0].post(
         f"/api/v1/applications/{application.id}/proxy/tasks",
-        headers={"origin": origin},
+        headers={} if origin is None else {"origin": origin},
     )
 
     # Assert

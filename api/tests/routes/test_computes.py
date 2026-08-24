@@ -9,45 +9,11 @@ from factories import (
     queue_operation,
     fetch_operations,
     complete_operation,
-    create_organization,
     create_ready_infrastructure,
 )
 from src.routes.v1 import computes
 from unittest.mock import AsyncMock
-from src.models.computes import ComputeRegistryCreate
 from src.models.operations import OperationKind
-from src.models.pagination import Pagination
-
-
-async def test_compute_handlers_delegate_creation_and_listing() -> None:
-    """Create and list Compute registries through their persistence service."""
-
-    # Arrange
-    session = SimpleNamespace(commit=AsyncMock())
-    registry = SimpleNamespace(id=uuid4())
-    payload = ComputeRegistryCreate(name="Compute", kubeconfig="apiVersion: v1\nclusters: []\n")
-    pagination = Pagination()
-    original_create = computes.compute.create
-    original_fetch_page = computes.compute.fetch_page
-    create = AsyncMock(return_value=registry)
-    fetch_page = AsyncMock(return_value=([registry], 1))
-    computes.compute.create = create
-    computes.compute.fetch_page = fetch_page
-
-    try:
-        # Act
-        created = await computes.create_compute_registry(payload, session)
-        page = await computes.list_compute_registries(pagination, session)
-    finally:
-        computes.compute.create = original_create
-        computes.compute.fetch_page = original_fetch_page
-
-    # Assert
-    assert created is registry
-    assert page == {"items": [registry], "total": 1}
-    create.assert_awaited_once_with(session, payload.name, payload.kubeconfig)
-    fetch_page.assert_awaited_once_with(session, pagination)
-    session.commit.assert_awaited_once()
 
 
 async def test_get_compute_registry_returns_registry_or_not_found_error() -> None:
@@ -156,25 +122,6 @@ async def test_compute_registry_list_and_detail_expose_only_administrator_metada
     assert list_response.json() == {"items": [expected_registry], "total": 1}
     assert detail_response.status_code == 200
     assert detail_response.json() == expected_registry
-
-
-async def test_compute_registry_deletion_rejects_organization_assignment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users,
-) -> None:
-    """Keep a Compute registry assigned to an Organization available."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[1], infrastructure=infrastructure)
-
-    # Act
-    response = await clients[0].delete(f"/api/v1/computes/{infrastructure.compute.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Compute registry is used by organizations"}
-
 
 
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(

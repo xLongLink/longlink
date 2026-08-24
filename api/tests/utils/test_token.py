@@ -1,5 +1,7 @@
 import jwt
 import pytest
+from uuid import uuid4
+from datetime import timedelta
 from src.utils import token
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -58,6 +60,45 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError, match="Invalid browser session user"):
         token.auth_token_claims(invalid_token)
+
+
+def test_registration_claims_reject_expired_token() -> None:
+    """Reject expired email-ownership proof before registration."""
+
+    # Arrange
+    encoded = jwt.encode(
+        {
+            "email": "member@example.com",
+            "aud": token.REGISTRATION_TOKEN_AUDIENCE,
+            "exp": token.utcnow() - timedelta(seconds=1),
+        },
+        token.env.SESSION_KEY,
+        algorithm=token.JWT_ALGORITHM,
+    )
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
+        token.registration_claims(encoded)
+
+
+def test_auth_token_claims_reject_expired_token() -> None:
+    """Reject expired browser credentials before authentication."""
+
+    # Arrange
+    encoded = jwt.encode(
+        {
+            "sub": str(uuid4()),
+            "password_fingerprint": "fingerprint",
+            "aud": token.AUTH_TOKEN_AUDIENCE,
+            "exp": token.utcnow() - timedelta(seconds=1),
+        },
+        token.env.SESSION_KEY,
+        algorithm=token.JWT_ALGORITHM,
+    )
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
+        token.auth_token_claims(encoded)
 
 
 @pytest.mark.parametrize(
@@ -121,6 +162,27 @@ async def test_password_reset_user_rejects_missing_fingerprint(users: tuple[User
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token claims"):
+            await token.password_reset_user(session, encoded)
+
+
+async def test_password_reset_user_rejects_expired_token(users: tuple[User, User, User]) -> None:
+    """Reject expired recovery credentials before loading an account."""
+
+    # Arrange
+    encoded = jwt.encode(
+        {
+            "sub": str(users[0].id),
+            "password_fingerprint": token.password_fingerprint(users[0].password),
+            "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
+            "exp": token.utcnow() - timedelta(seconds=1),
+        },
+        token.env.SESSION_KEY,
+        algorithm=token.JWT_ALGORITHM,
+    )
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(jwt.InvalidTokenError):
             await token.password_reset_user(session, encoded)
 
 
