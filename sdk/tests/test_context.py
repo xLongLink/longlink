@@ -8,21 +8,22 @@ from starlette.requests import Request
 
 
 @pytest.mark.parametrize(
-    "identity",
+    ("identity", "user"),
     [
-        pytest.param(UUID("00000000-0000-0000-0000-000000000001"), id="authenticated"),
-        pytest.param(None, id="anonymous"),
+        pytest.param(UUID("00000000-0000-0000-0000-000000000001"), object(), id="authenticated"),
+        pytest.param(UUID("00000000-0000-0000-0000-000000000002"), None, id="deleted-user"),
+        pytest.param(None, None, id="anonymous"),
     ],
 )
 async def test_data_resolves_request_services(
     monkeypatch: pytest.MonkeyPatch,
     identity: UUID | None,
+    user: object | None,
 ) -> None:
     """Yield request services and look up an audit user only for authenticated requests."""
 
     # Arrange
     storage = object()
-    user = object() if identity is not None else None
     session_closed = False
 
     class Database:

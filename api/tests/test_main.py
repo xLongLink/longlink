@@ -61,3 +61,40 @@ async def test_lifespan_reconciles_administrator_and_stops_scheduler(monkeypatch
 
     # Assert
     assert events == ["administrator", "commit", "start", "serving", "cancel"]
+
+
+async def test_lifespan_does_not_start_scheduler_when_administrator_reconciliation_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail startup before creating a scheduler when administrator reconciliation fails."""
+
+    # Arrange
+    scheduler_started = False
+
+    @asynccontextmanager
+    async def session_scope():
+        """Yield a session that must not be committed after reconciliation fails."""
+
+        yield object()
+
+    async def ensure_administrator(_session: object) -> None:
+        """Fail administrator reconciliation during startup."""
+
+        raise RuntimeError("administrator unavailable")
+
+    async def scheduler() -> None:
+        """Record an invalid scheduler start."""
+
+        nonlocal scheduler_started
+        scheduler_started = True
+
+    monkeypatch.setattr(main, "session_scope", session_scope)
+    monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
+    monkeypatch.setattr(main.jobs, "run_operation_scheduler", scheduler)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="administrator unavailable"):
+        async with main.lifespan(main.app):
+            pass
+
+    assert scheduler_started is False

@@ -255,3 +255,12 @@ async def test_session_retries_initialization_after_database_connection_failure(
     # Assert
     assert database_base.Session is None
     assert engine.disposed
+
+    # Retry initialization with an available database connection.
+    retry_engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: retry_engine)
+    try:
+        async with database_base.session() as database_session:
+            assert database_session is not None
+    finally:
+        await retry_engine.dispose()

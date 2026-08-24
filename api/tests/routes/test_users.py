@@ -71,10 +71,8 @@ async def test_list_users_returns_administrator_page_and_total(
 ) -> None:
     """Return a bounded administrator page with the full visible-user total."""
 
-    client = clients[0]
-
     # Act
-    response = await client.get("/api/v1/users?page=2&page_size=1")
+    response = await clients[0].get("/api/v1/users?page=2&page_size=1")
 
     # Assert
     assert response.status_code == 200

@@ -84,25 +84,25 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
         pytest.param(
             "index.xml",
             "<longlink>Home</longlink>",
-            {"tab": "index", "route": ""},
+            {"tab": "index", "route": "/"},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
             '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
-            {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
+            {"tab": "dashboard", "route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
             "<longlink>Users</longlink>",
-            {"tab": "admin/users", "route": "admin/users"},
+            {"tab": "admin/users", "route": "/admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
             '<longlink name="Issue">Issue</longlink>',
-            {"tab": "issues", "route": "issues/:issue"},
+            {"tab": "issues", "route": "/issues/:issue"},
             id="dynamic",
         ),
     ],
@@ -130,8 +130,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     assert response.status_code == 200
     assert "application/xml" in response.headers["content-type"]
     assert response.text == content
-    pages = pages_response.json()
-    page = next(item for item in pages if item["path"] == f"pages/{page_path_without_suffix}")
+    page = next(item for item in pages_response.json() if item["path"] == f"pages/{page_path_without_suffix}")
     assert {key: page[key] for key in expected_metadata} == expected_metadata
 
 
@@ -150,7 +149,7 @@ def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path)
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [{"path": "pages/dashboard", "route": "dashboard", "tab": "dashboard"}]
+    assert response.json() == [{"path": "pages/dashboard", "route": "/dashboard", "tab": "dashboard"}]
 
 
 def test_xml_page_catalog_and_root_redirect_use_deterministic_path_order(application_source: Path) -> None:
@@ -169,8 +168,8 @@ def test_xml_page_catalog_and_root_redirect_use_deterministic_path_order(applica
 
     # Assert
     assert catalog_response.json() == [
-        {"path": "pages/admin/alpha", "route": "admin/alpha", "tab": "admin/alpha"},
-        {"path": "pages/zebra", "route": "zebra", "tab": "zebra"},
+        {"path": "pages/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
+        {"path": "pages/zebra", "route": "/zebra", "tab": "zebra"},
     ]
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/admin/alpha"
@@ -254,10 +253,10 @@ def test_application_route_collision_with_page_endpoint_is_rejected(
         pytest.param(
             "issues/[id].xml",
             "issues/[issue_id].xml",
-            "Browser route 'issues/:issue_id' is already registered",
+            "Browser route '/issues/:issue_id' is already registered",
             id="dynamic",
         ),
-        pytest.param("index.xml", "index/index.xml", "Browser route '' is already registered", id="static"),
+        pytest.param("index.xml", "index/index.xml", "Browser route '/' is already registered", id="static"),
     ],
 )
 def test_duplicate_browser_routes_are_rejected(

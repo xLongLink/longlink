@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
-import { pageSchema } from '@/xml/pages';
+import { pagesSchema } from '@/xml/pages';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
@@ -31,13 +31,13 @@ export function ApplicationRuntime({
     const navigate = useNavigate();
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
-        queryFn: async ({ signal }) => pageSchema.array().parse(await api(pagesUrl, { signal }).json()),
+        queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
                 (registeredPages ?? []).map((page) => ({
-                    path: page.route || '/',
+                    path: page.route,
                     page,
                 })),
                 `/${routePath}`
@@ -94,7 +94,7 @@ export function ApplicationRuntime({
 
     // Build one static navigation target per runtime tab.
     for (const page of staticPages) {
-        if (!page.route || tabs.has(page.tab)) {
+        if (tabs.has(page.tab)) {
             continue;
         }
 
@@ -107,7 +107,7 @@ export function ApplicationRuntime({
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
-        if (!firstTabPage || routePath || !firstTabPage.route) {
+        if (!firstTabPage || routePath) {
             return;
         }
 

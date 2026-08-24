@@ -20,8 +20,7 @@ describe('Action', () => {
         toast.mockClear();
 
         if (root) {
-            const renderedRoot = root;
-            await act(async () => renderedRoot.unmount());
+            await act(async () => root?.unmount());
         }
         root = undefined;
     });
@@ -69,6 +68,29 @@ describe('Action', () => {
         expect(JSON.parse(requestBody)).toEqual({ name: 'Ada' });
         expect(ctx.services.navigate).toHaveBeenCalledWith('/orders');
         expect(events).toEqual(['request-complete', 'navigate']);
+    });
+
+    it('prevents default Link navigation until Action effects complete', async () => {
+        // Arrange
+        const ctx = createContext();
+        const fetchRequest = vi.fn(async () => new Response('{}', { status: 201 }));
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+        ctx.services.navigate = vi.fn();
+        vi.stubGlobal('fetch', fetchRequest);
+        const link = await renderAction(
+            '<Action><Request url="/orders" method="POST" /><Link to="/orders">Save</Link></Action>',
+            ctx
+        );
+
+        // Act
+        await act(async () => {
+            link.dispatchEvent(event);
+            await vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledOnce());
+        });
+
+        // Assert
+        expect(event.defaultPrevented).toBe(true);
+        expect(ctx.services.navigate).toHaveBeenCalledWith('/orders');
     });
 
     it('serializes Request form values as multipart entries', async () => {
@@ -223,6 +245,21 @@ describe('Action', () => {
             button.click();
             await vi.waitFor(() => expect((ctx.scope.bindings.form as { value: string }).value).toBe('draft'));
         });
+    });
+
+    it('updates declared State properties through Patch', async () => {
+        // Arrange
+        const ctx = createContext();
+        const button = await renderAction(
+            '<State id="form" value="draft" count="1" untouched="keep" /><Action><Patch state="form" value="${{value: \'published\', count: 2}}" /><Button>Save</Button></Action>',
+            ctx
+        );
+
+        // Act
+        await act(async () => button.click());
+
+        // Assert
+        expect(ctx.scope.bindings.form).toEqual({ value: 'published', count: 2, untouched: 'keep' });
     });
 
     it('does not update undeclared State properties through Patch', async () => {

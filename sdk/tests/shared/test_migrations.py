@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
+from sqlalchemy.sql.dml import Insert
 from sqlalchemy.dialects import postgresql
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -176,8 +177,9 @@ async def test_shared_audit_sync_upserts_rows_and_disposes_engine(
 
     # Assert
     statement = engine.executed["statement"]
-    assert getattr(statement, "table").name == "audit"
-    compiled = str(getattr(statement, "compile")(dialect=postgresql.dialect()))
+    assert isinstance(statement, Insert)
+    assert statement.table.name == "audit"
+    compiled = str(statement.compile(dialect=postgresql.dialect()))
     assert "ON CONFLICT (id) DO UPDATE" in compiled
     assert "created_at = excluded.created_at" not in compiled
     assert "updated_at = excluded.updated_at" in compiled

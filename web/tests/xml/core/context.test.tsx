@@ -50,6 +50,26 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
     });
 
+    it('refetches Query data through its registered setup', async () => {
+        // Arrange
+        const ctx = createContext();
+        const ast = [{ name: 'Query', params: compileProps({ id: 'records', path: '/records' }), children: [] }];
+        const fetchImpl = vi
+            .fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
+            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 2 })));
+        ctx.services.requestBaseUrl = 'http://localhost/proxy';
+        vi.stubGlobal('fetch', fetchImpl);
+
+        // Act
+        await setupContext(ast, ctx);
+        await ctx.services.setups.records();
+
+        // Assert
+        expect(fetchImpl).toHaveBeenCalledTimes(2);
+        expect(ctx.scope.bindings.records).toEqual({ version: 2 });
+    });
+
     it('rejects unsafe query paths before fetching', async () => {
         const ctx = createContext();
         const fetchImpl = vi.fn();

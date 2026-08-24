@@ -32,9 +32,8 @@ describe('ApplicationRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        const renderedRoot = root;
-        if (renderedRoot) {
-            await act(async () => renderedRoot.unmount());
+        if (root) {
+            await act(async () => root?.unmount());
         }
         root = undefined;
         vi.unstubAllGlobals();
@@ -48,7 +47,9 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime();
 
         // Assert
-        await waitFor(() => expect(output.textContent).toContain('Unable to load this application'));
+        await act(async () =>
+            vi.waitFor(() => expect(output.textContent).toContain('Unable to load this application'))
+        );
         expect(output.textContent).toContain('Manifest unavailable');
     });
 
@@ -62,8 +63,12 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime('/');
 
         // Assert
-        await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'));
-        await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
+        await act(async () =>
+            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'))
+        );
+        await act(async () =>
+            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))
+        );
     });
 
     it('renders an empty manifest response', async () => {
@@ -74,7 +79,9 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime();
 
         // Assert
-        await waitFor(() => expect(output.textContent).toContain('Unexpected application response'));
+        await act(async () =>
+            vi.waitFor(() => expect(output.textContent).toContain('Unexpected application response'))
+        );
         expect(output.textContent).toContain('The application did not expose any pages to render.');
     });
 
@@ -89,7 +96,7 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime('/home');
 
         // Assert
-        await waitFor(() => expect(output.textContent).toContain('Unable to load this page'));
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page')));
         expect(output.textContent).toContain('Page unavailable');
     });
 
@@ -109,8 +116,10 @@ describe('ApplicationRuntime', () => {
             const output = await renderRuntime('/home');
 
             // Assert
-            await waitFor(() => expect(output.textContent).toContain('Unable to load this page'));
-            expect(output.textContent).toContain('XML request URL must be app-relative');
+            await act(async () =>
+                vi.waitFor(() => expect(output.textContent).toContain('Unable to load this application'))
+            );
+            expect(output.textContent).toContain('Page path must be app-relative');
             expect(fetchRequest).toHaveBeenCalledOnce();
         }
     );
@@ -126,7 +135,7 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime('/issues/42');
 
         // Assert
-        await waitFor(() => expect(output.textContent).toContain('42'));
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('42')));
     });
 
     it('rejects unmatched routes', async () => {
@@ -140,7 +149,7 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime('/missing');
 
         // Assert
-        await waitFor(() => expect(output.textContent).toContain("We can't find that page"));
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain("We can't find that page")));
     });
 
     it('navigates same-origin XML destinations through the client router', async () => {
@@ -152,13 +161,15 @@ describe('ApplicationRuntime', () => {
         navigation.destination = '/next';
         const output = await renderRuntime('/home');
 
-        await waitFor(() => expect(output.querySelector('button')).not.toBeNull());
+        await act(async () => vi.waitFor(() => expect(output.querySelector('button')).not.toBeNull()));
 
         // Act
         await act(async () => output.querySelector('button')?.click());
 
         // Assert
-        await waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/next'));
+        await act(async () =>
+            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/next'))
+        );
     });
 
     it('assigns external XML destinations to the browser location', async () => {
@@ -172,7 +183,7 @@ describe('ApplicationRuntime', () => {
         navigation.destination = 'https://example.com/next';
         const output = await renderRuntime('/home');
 
-        await waitFor(() => expect(output.querySelector('button')).not.toBeNull());
+        await act(async () => vi.waitFor(() => expect(output.querySelector('button')).not.toBeNull()));
 
         // Act
         await act(async () => output.querySelector('button')?.click());
@@ -214,11 +225,6 @@ describe('ApplicationRuntime', () => {
         return container;
     }
 });
-
-/** Waits for an asynchronous React update within an act scope. */
-async function waitFor(assertion: () => void): Promise<void> {
-    await act(async () => vi.waitFor(assertion));
-}
 
 /** Exposes the memory-router location for assertions. */
 function Location({ tabs }: { tabs: string }) {

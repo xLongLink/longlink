@@ -111,8 +111,9 @@ class LongLink:
             page_icon = (page_root.get("icon") or "").strip() or None
 
             page_route = page_stem_route(path_without_suffix)
-            route_key = "/".join(":" if segment.startswith(":") else segment for segment in page_route.split("/"))
-            tab = page_route.split("/:", 1)[0] or page_route.removeprefix(":") or "index"
+            relative_route = page_route.removeprefix("/")
+            route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
+            tab = relative_route.split("/:", 1)[0] or relative_route.removeprefix(":") or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:

@@ -14,9 +14,8 @@ describe('ApplicationRuntime XML integration', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        const renderedRoot = root;
-        if (renderedRoot) {
-            await act(async () => renderedRoot.unmount());
+        if (root) {
+            await act(async () => root?.unmount());
         }
         root = undefined;
         apiRequest.mockReset();
@@ -26,7 +25,7 @@ describe('ApplicationRuntime XML integration', () => {
         // Arrange
         apiRequest.mockImplementation((url: string, options?: RequestInit) => {
             if (url.endsWith('/pages.json')) {
-                return { json: async () => [{ name: 'home', path: 'home.xml', route: 'home', tab: 'home' }] };
+                return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home', tab: 'home' }] };
             }
 
             expect(options?.headers).toEqual({ Accept: 'application/xml' });

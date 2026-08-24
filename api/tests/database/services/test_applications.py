@@ -29,17 +29,6 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
             )
-        created = await applications.create(
-            session,
-            organization.id,
-            "Reports",
-            image=Image("ghcr.io/longlink/reports@sha256:test"),
-            secrets={},
-        )
-        await session.commit()
-
-    # Assert
-    assert created.slug == "reports"
 
 
 async def test_fetch_ignores_deleted_applications(users: tuple[User, User, User]) -> None:

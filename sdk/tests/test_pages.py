@@ -5,9 +5,9 @@ from longlink.pages import page_stem_route
 @pytest.mark.parametrize(
     ("page_stem", "route"),
     [
-        pytest.param("index", "", id="root-index"),
-        pytest.param("admin/index", "admin", id="nested-index"),
-        pytest.param("issues/[issue]", "issues/:issue", id="dynamic-segment"),
+        pytest.param("index", "/", id="root-index"),
+        pytest.param("admin/index", "/admin", id="nested-index"),
+        pytest.param("issues/[issue]", "/issues/:issue", id="dynamic-segment"),
     ],
 )
 def test_page_stem_route_converts_filesystem_routes(page_stem: str, route: str) -> None:

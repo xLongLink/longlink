@@ -28,11 +28,15 @@ async def test_readyz_returns_readiness_after_database_query(client: AsyncClient
     """Report readiness when the Platform database is available."""
 
     # Arrange
+    statements: list[str] = []
+
     class Session:
         """Accept readiness queries without opening a database connection."""
 
         async def execute(self, statement: object) -> None:
             """Accept the readiness statement."""
+
+            statements.append(str(statement))
 
     @asynccontextmanager
     async def fake_session_scope():
@@ -48,3 +52,4 @@ async def test_readyz_returns_readiness_after_database_query(client: AsyncClient
     # Assert
     assert response.status_code == 200
     assert response.json() == {"ready": True}
+    assert statements == ["SELECT 1"]

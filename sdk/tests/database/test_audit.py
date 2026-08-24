@@ -96,11 +96,24 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
 
         assert item.id is not None
         item_id = item.id
+        assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
+            created_at,
+            created_at,
+            creator_id,
+            creator_id,
+        )
 
         # Update the persisted row with a second audit identity.
         with identity_context(updater_id):
             item.name = "reviewed"
             await session.commit()
+
+        assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
+            created_at,
+            updated_at,
+            creator_id,
+            updater_id,
+        )
 
         # Persist a caller-requested soft delete with the acting identity.
         with identity_context(soft_deleter_id):

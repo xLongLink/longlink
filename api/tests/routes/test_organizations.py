@@ -22,11 +22,10 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    client = clients[0]
     infrastructure = await create_ready_infrastructure()
 
     # Act
-    response = await client.post(
+    response = await clients[0].post(
         "/api/v1/organizations",
         json={"name": "acme"},
     )

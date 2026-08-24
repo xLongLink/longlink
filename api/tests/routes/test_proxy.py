@@ -50,7 +50,7 @@ def fake_ssl_context(
 class FakeGatewayResponse:
     """Represent a gateway response with observable cleanup."""
 
-    def __init__(self, response: object, on_close: Callable[[], None]) -> None:
+    def __init__(self, response: object, on_close: Callable[[], None] = lambda: None) -> None:
         """Store the upstream response and its cleanup callback."""
 
         self.response = response
@@ -466,15 +466,12 @@ async def test_application_proxy_allows_organization_read_members(
 
             yield b"{}"
 
-    def close() -> None:
-        """Record gateway cleanup."""
-
     async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
         """Record the authorized gateway request."""
 
         nonlocal called
         called = True
-        return FakeGatewayResponse(FakeProxyResponse(), close)
+        return FakeGatewayResponse(FakeProxyResponse())
 
     monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
     async with session_scope() as session:

@@ -48,4 +48,4 @@ def page_stem_route(page_stem: str) -> str:
 
         route_segments.append(segment)
 
-    return "/".join(route_segments)
+    return f"/{'/'.join(route_segments)}"

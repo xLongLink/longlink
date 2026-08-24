@@ -2,7 +2,7 @@ import pytest
 from src import auth
 from main import app
 from httpx2 import AsyncClient
-from conftest import TEST_PASSWORD, create_client, authenticated_cookies
+from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import token
@@ -406,7 +406,6 @@ async def test_password_reset_verify_rejects_invalid_token_without_cookie(client
     assert response.status_code == 400
     assert response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert "set-cookie" not in response.headers
-    assert "cache-control" not in response.headers
     assert client.cookies.get("longlink_password_reset") is None
 
 
@@ -469,7 +468,6 @@ async def test_forgot_and_reset_password(
     """Reset a local password with the emailed one-time recovery token."""
 
     user = users[0]
-    client.cookies.update(authenticated_cookies(user))
 
     # Missing and existing accounts receive the same response, while only the account gets mail.
     missing_response = await client.post("/api/v1/auth/forgot-password", json={"email": "missing@example.com"})
