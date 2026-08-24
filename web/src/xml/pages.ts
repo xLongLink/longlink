@@ -24,19 +24,20 @@ function isRoute(route: string): boolean {
         });
 }
 
-/** Returns whether an XML page path remains inside its application request base. */
-function isPagePath(path: string): boolean {
-    try {
-        resolveRequestUrl('/', path);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export const pageSchema = z.object({
+const pageSchema = z.object({
     tab: z.string().trim().min(1),
-    path: z.string().trim().min(1).refine(isPagePath, 'Page path must be app-relative'),
+    path: z
+        .string()
+        .trim()
+        .min(1)
+        .refine((path) => {
+            try {
+                resolveRequestUrl('/', path);
+                return true;
+            } catch {
+                return false;
+            }
+        }, 'Page path must be app-relative'),
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
     route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized application path'),

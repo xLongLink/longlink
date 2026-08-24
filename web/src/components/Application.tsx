@@ -53,7 +53,7 @@ export function ApplicationRuntime({
         };
     }, [registeredPages, routePath]);
     const staticPages = (registeredPages ?? []).filter((page) => !/(?:^|\/):/.test(page.route));
-    const firstTabPage = staticPages[0];
+    const firstTabPage = staticPages.find((page) => page.route !== '/');
 
     // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
     const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
@@ -90,20 +90,15 @@ export function ApplicationRuntime({
         },
         retry: false,
     });
-    const tabs = new Map<string, NavigationTab>();
-
     // Build one static navigation target per runtime tab.
-    for (const page of staticPages) {
-        if (tabs.has(page.tab)) {
-            continue;
-        }
-
-        tabs.set(page.tab, {
-            href: resolveNavigationUrl(navigationBaseUrl, page.route),
-            icon: page.icon ? getIconComponent(page.icon) : undefined,
-            label: page.name || startCase(page.tab),
-        });
-    }
+    const tabs = staticPages.map(
+        (page) =>
+            ({
+                href: resolveNavigationUrl(navigationBaseUrl, page.route),
+                icon: page.icon ? getIconComponent(page.icon) : undefined,
+                label: page.name || startCase(page.tab),
+            }) satisfies NavigationTab
+    );
 
     // Make the first navigable tab explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -149,5 +144,5 @@ export function ApplicationRuntime({
         );
     }
 
-    return children({ content, tabs: [...tabs.values()] });
+    return children({ content, tabs });
 }

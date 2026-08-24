@@ -366,6 +366,20 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
     )
 
 
+def test_context_ignore_rules_scopes_negated_application_patterns(build_project: Path) -> None:
+    """Scope local Docker ignore rules without changing comments or negations."""
+
+    # Arrange
+    source = build_project / ".gitignore"
+    source.write_text("# Keep documentation\n\n/build/\n!/build/README.md\n.env\n", encoding="utf-8")
+
+    # Act
+    rules = build.context_ignore_rules(source, build_project, build_project.parent)
+
+    # Assert
+    assert rules == "# Keep documentation\n\napp/build/\n!app/build/README.md\napp/.env"
+
+
 @pytest.mark.parametrize(
     "sources",
     [

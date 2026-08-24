@@ -50,7 +50,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     assert str(exc.value) == "User is already a member"
 
 
-async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:
+async def test_create_replaces_existing_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace an existing grant when an email is invited again."""
 
     # Arrange
@@ -61,6 +61,8 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
+        refreshed_at = datetime(2026, 8, 24, tzinfo=UTC)
+        monkeypatch.setattr(invitations, "utcnow", lambda: refreshed_at)
 
         # Act
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.admin)
@@ -71,6 +73,7 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
     assert replacement is not None
     assert replacement.id == invitation.id
     assert replacement.role == OrganizationRoles.admin
+    assert replacement.created_at == refreshed_at
 
 
 async def test_accept_creates_membership_and_consumes_invitation(users: tuple[User, User, User]) -> None:

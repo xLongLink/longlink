@@ -2,10 +2,10 @@ import gzip
 import pytest
 from httpx2 import Response as HttpxResponse
 from fastapi import FastAPI
+from starlette.types import Send, Scope, Message, Receive
 from fastapi.responses import Response
 from fastapi.testclient import TestClient
 from longlink.middleware import FrontendMiddleware, accepts_gzip, install_frontend_middleware
-from starlette.types import Message, Receive, Scope, Send
 
 
 def create_text_app(headers: dict[str, str], path: str = "/text", media_type: str = "text/plain") -> FastAPI:
@@ -42,6 +42,7 @@ def request_response(app: FastAPI, path: str, headers: dict[str, str]) -> HttpxR
         pytest.param("gzip;q=1.1", False, id="out-of-range-quality"),
         pytest.param("gzip; level=6", True, id="non-quality-parameter"),
         pytest.param("*;q=0", False, id="zero-wildcard-quality"),
+        pytest.param("", False, id="missing-header"),
     ],
 )
 def test_accepts_gzip_interprets_encoding_quality_values(header: str, expected: bool) -> None:
@@ -216,3 +217,18 @@ def test_frontend_middleware_applies_default_cache_policy(
     # Assert
     assert response.status_code == status_code
     assert response.headers["cache-control"] == expected_cache_control
+
+
+def test_frontend_middleware_preserves_explicit_cache_policy() -> None:
+    """Leave route-owned cache policies unchanged."""
+
+    # Arrange
+    app = create_text_app({"cache-control": "private, no-store"})
+
+    # Act
+    response = request_response(app, "/text", {})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.content == b"x" * 1000
+    assert response.headers["cache-control"] == "private, no-store"

@@ -152,62 +152,24 @@ def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path)
     assert response.json() == [{"path": "pages/dashboard", "route": "/dashboard", "tab": "dashboard"}]
 
 
-def test_xml_page_catalog_and_root_redirect_use_deterministic_path_order(application_source: Path) -> None:
-    """Use lexical page paths for catalog output and the startup destination."""
+def test_xml_page_catalog_uses_deterministic_path_order(application_source: Path) -> None:
+    """Use lexical page paths for catalog output."""
 
     # Arrange
     nested_directory = application_source / "pages" / "admin"
     nested_directory.mkdir()
     (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
     (application_source / "pages" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
-    client = create_runtime_client(follow_redirects=False)
+    client = create_runtime_client()
 
     # Act
     catalog_response = client.get("/pages.json")
-    root_response = client.get("/")
 
     # Assert
     assert catalog_response.json() == [
         {"path": "pages/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
         {"path": "pages/zebra", "route": "/zebra", "tab": "zebra"},
     ]
-    assert root_response.status_code == 307
-    assert root_response.headers["location"] == "/admin/alpha"
-
-
-@pytest.mark.parametrize("pages", [("dashboard.xml",), ("index.xml", "dashboard.xml")])
-def test_root_redirects_to_static_page_when_catalog_has_optional_index(application_source: Path, pages: tuple[str, ...]) -> None:
-    """Redirect root to a selectable static page rather than the index endpoint."""
-
-    # Arrange
-    for page in pages:
-        (application_source / "pages" / page).write_text("<longlink>Page</longlink>", encoding="utf-8")
-    client = create_runtime_client(follow_redirects=False)
-
-    # Act
-    response = client.get("/")
-
-    # Assert
-    assert response.status_code == 307
-    assert response.headers["location"] == "/dashboard"
-
-
-def test_root_does_not_redirect_when_only_dynamic_pages_exist(application_source: Path) -> None:
-    """Leave the frontend responsible for a catalog without a static page."""
-
-    # Arrange
-    page_path = application_source / "pages" / "issues" / "[issue].xml"
-    page_path.parent.mkdir()
-    page_path.write_text("<longlink>Issue</longlink>", encoding="utf-8")
-    client = create_runtime_client(follow_redirects=False)
-
-    # Act
-    response = client.get("/")
-
-    # Assert
-    assert response.status_code == 200
-
-
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
     """Validate SDK XML pages against the bundled schema before registering routes."""
 

@@ -337,21 +337,12 @@ async def test_delete_tears_down_organization_boundaries_in_order(
 
             self.organizations = Organizations()
 
-    original_purge = organization_operations.organizations.purge
-
-    async def purge(session: object, organization_id: object) -> None:
-        """Record and perform final tombstone removal."""
-
-        calls.append("purge")
-        await original_purge(session, organization_id)  # type: ignore[arg-type]
-
     monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.organizations, "purge", purge)
 
-    # Complete cleanup and inspect the irreversible ordering and final purge.
+    # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
-    assert calls == ["namespace", "schema", "revoke", "database", "bucket", "purge"]
+    assert calls == ["namespace", "schema", "revoke", "database", "bucket"]

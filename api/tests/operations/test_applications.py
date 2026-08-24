@@ -9,6 +9,7 @@ from factories import (
 from src.operations import applications as application_operations
 from src.utils.jobs import execute
 from src.models.types import DatabaseSSLMode
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import applications
 from src.models.operations import OperationKind, OperationStatus
@@ -223,6 +224,10 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == "generated-password"
+    async with session_scope() as session:
+        persisted = await session.get(Application, application.id)
+    assert persisted is not None
+    assert persisted.status == Status.running
 
 
 async def test_application_creation_retry_reuses_persisted_runtime_secrets(

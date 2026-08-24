@@ -11,6 +11,25 @@ from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
 from src.database.models.computes import ComputeRegistry
 
 
+@pytest.mark.parametrize(
+    ("address", "expected_url"),
+    [
+        pytest.param("gateway.example", "https://gateway.example", id="hostname"),
+        pytest.param("192.0.2.1", "https://192.0.2.1", id="ipv4"),
+        pytest.param("2001:db8::1", "https://[2001:db8::1]", id="compressed-ipv6"),
+        pytest.param("2001:0db8:0000:0000:0000:0000:0000:0001", "https://[2001:db8::1]", id="expanded-ipv6"),
+    ],
+)
+def test_gateway_url_normalizes_published_addresses(address: str, expected_url: str) -> None:
+    """Return valid HTTPS URLs for controller-published gateway addresses."""
+
+    # Act
+    url = compute_operations.gateway_url(address)
+
+    # Assert
+    assert url == expected_url
+
+
 async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     """Create the shared Envoy Gateway and preserve published access during reconciliation."""
 

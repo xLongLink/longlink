@@ -53,10 +53,12 @@ describe('ApplicationRuntime', () => {
         expect(output.textContent).toContain('Manifest unavailable');
     });
 
-    it('redirects an empty route to the first static tab', async () => {
+    it('redirects an empty route to the first non-index static tab', async () => {
         // Arrange
         stubFetch((url) =>
-            url.endsWith('/pages.json') ? jsonResponse([page('home', '/home')]) : xmlResponse('<Text>Home</Text>')
+            url.endsWith('/pages.json')
+                ? jsonResponse([page('index', '/'), page('home', '/home')])
+                : xmlResponse('<Text>Home</Text>')
         );
 
         // Act
@@ -64,7 +66,7 @@ describe('ApplicationRuntime', () => {
 
         // Assert
         await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'))
+            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/,/home'))
         );
         await act(async () =>
             vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))

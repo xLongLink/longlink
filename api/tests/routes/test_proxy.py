@@ -73,17 +73,6 @@ def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitab
     return request
 
 
-async def set_application_running(application_id: UUID) -> None:
-    """Persist the running state required by proxy tests."""
-
-    # Set lifecycle state directly because proxy tests do not exercise reconciliation.
-    async with session_scope() as session:
-        application = await session.get(Application, application_id)
-        assert application is not None
-        application.status = Status.running
-        await session.commit()
-
-
 async def create_running_application(user: User) -> tuple[Application, Infrastructure]:
     """Create one Application with the running state required for gateway tests."""
 
@@ -91,7 +80,14 @@ async def create_running_application(user: User) -> tuple[Application, Infrastru
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user, infrastructure=infrastructure)
     application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
-    await set_application_running(application.id)
+
+    # Set lifecycle state directly because proxy tests do not exercise reconciliation.
+    async with session_scope() as session:
+        persisted_application = await session.get(Application, application.id)
+        assert persisted_application is not None
+        persisted_application.status = Status.running
+        await session.commit()
+
     return application, infrastructure
 
 
@@ -253,7 +249,14 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     assert close_count == 1
 
 
-@pytest.mark.parametrize("content_type", ["image/svg+xml; charset=utf-8", "application/json, text/html; charset=utf-8"])
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        "image/svg+xml; charset=utf-8",
+        "application/xhtml+xml; charset=utf-8",
+        "application/json, text/html; charset=utf-8",
+    ],
+)
 async def test_application_proxy_rejects_active_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

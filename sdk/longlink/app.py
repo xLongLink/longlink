@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.pages import PageDefinition, page_stem_route
 from longlink.logger import ApiAccessFilter
-from longlink.routes import root, router
+from longlink.routes import router
 from longlink.context import install_context_middleware
 from fastapi.responses import Response
 from starlette.routing import Match
@@ -84,9 +84,6 @@ class LongLink:
             ]
         )
 
-        # Start applications on their first static page instead of an unselected shell.
-        root.install_redirect(app)
-
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
@@ -111,9 +108,8 @@ class LongLink:
             page_icon = (page_root.get("icon") or "").strip() or None
 
             page_route = page_stem_route(path_without_suffix)
-            relative_route = page_route.removeprefix("/")
-            route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
-            tab = relative_route.split("/:", 1)[0] or relative_route.removeprefix(":") or "index"
+            route_key = "/".join(":" if segment.startswith(":") else segment for segment in page_route.removeprefix("/").split("/"))
+            tab = page_route.removeprefix("/").split("/:", 1)[0] or page_route.removeprefix("/").removeprefix(":") or "index"
 
             # Page endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:

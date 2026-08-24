@@ -1,7 +1,7 @@
 import httpx2
 import pytest
 from src.utils import images
-from collections.abc import Callable
+from collections.abc import Callable, AsyncIterator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
@@ -141,6 +141,30 @@ async def test_metadata_rejects_invalid_manifest_response_sizes(
 
     # Act and assert
     assert await images.metadata(Image("ghcr.io/longlink/dashboard:latest")) is None
+
+
+async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> None:
+    """Reject metadata that exceeds the limit without a declared content length."""
+
+    # Arrange
+    class OversizedStream(httpx2.AsyncByteStream):
+        """Yield metadata exceeding the configured in-memory boundary."""
+
+        async def __aiter__(self) -> AsyncIterator[bytes]:
+            """Yield one oversized metadata chunk."""
+
+            yield b"x" * (images.IMAGE_METADATA_MAX_BYTES + 1)
+
+        async def aclose(self) -> None:
+            """Close the in-memory stream."""
+
+    response = httpx2.Response(200, stream=OversizedStream())
+
+    # Act
+    payload = await images.bounded_json(response)
+
+    # Assert
+    assert payload is None
 
 
 @pytest.mark.parametrize(
