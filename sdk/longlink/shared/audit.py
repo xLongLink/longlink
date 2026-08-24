@@ -23,7 +23,7 @@ async def sync(database_url: str | URL, rows: Sequence[Audit]) -> None:
     try:
         async with engine.begin() as conn:
             # Build one PostgreSQL upsert for the SDK-owned shared audit table.
-            statement = postgres_insert(Audit.metadata.tables[Audit.__tablename__])
+            statement = postgres_insert(Audit.metadata.tables["audit"])
             # Preserve creation time while updating the current profile, role, and activation state.
             await conn.execute(
                 statement.on_conflict_do_update(
