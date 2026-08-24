@@ -187,6 +187,49 @@ async def test_execute_rejects_operation_without_a_worker_lease() -> None:
         await operation_worker.execute(operation)
 
 
+async def test_execute_rejects_operation_with_an_expired_worker_lease() -> None:
+    """Reject an Operation whose claim lease has already expired."""
+
+    # Arrange
+    operation = leased_operation()
+    operation.lease_expires_at = utcnow() - timedelta(seconds=1)
+
+    # Act and assert
+    with pytest.raises(ValueError, match="Operation must be claimed before execution"):
+        await operation_worker.execute(operation)
+
+
+async def test_execute_completes_successful_operation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Complete a claimed Operation when its handler reports no failure reason."""
+
+    # Arrange
+    operation = leased_operation()
+    transitions: list[UUID] = []
+
+    async def complete_handler(target_id: UUID) -> None:
+        """Finish the expected target successfully."""
+
+        assert target_id == operation.target_id
+
+    async def complete(_session: object, operation_id: UUID) -> Operation:
+        """Record the terminal success transition."""
+
+        transitions.append(operation_id)
+        operation.finished_at = utcnow()
+        return operation
+
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
+    monkeypatch.setattr(operation_worker.operations, "complete", complete)
+
+    # Act
+    result = await operation_worker.execute(operation)
+
+    # Assert
+    assert result is operation
+    assert result.status == OperationStatus.completed
+    assert transitions == [operation.id]
+
+
 async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject a terminal outcome that could not release the claimed operation lock."""
 

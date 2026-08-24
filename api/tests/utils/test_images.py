@@ -132,9 +132,7 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
         pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
     ],
 )
-async def test_metadata_rejects_invalid_manifest_response_sizes(
-    monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]
-) -> None:
+async def test_metadata_rejects_invalid_manifest_response_sizes(monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]) -> None:
     """Reject oversized or invalid manifest bodies before decoding them."""
 
     # Arrange
@@ -172,6 +170,19 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
 
     # Assert
     assert payload is None
+
+
+async def test_bounded_json_decodes_metadata_within_limit() -> None:
+    """Decode a complete registry JSON response within the metadata boundary."""
+
+    # Arrange
+    response = httpx2.Response(200, json={"token": "pull-token"})
+
+    # Act
+    payload = await images.bounded_json(response)
+
+    # Assert
+    assert payload == {"token": "pull-token"}
 
 
 @pytest.mark.parametrize(
@@ -266,9 +277,7 @@ async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.Monk
         ),
     ],
 )
-async def test_metadata_rejects_malformed_config_metadata(
-    monkeypatch: pytest.MonkeyPatch, config_blob: object
-) -> None:
+async def test_metadata_rejects_malformed_config_metadata(monkeypatch: pytest.MonkeyPatch, config_blob: object) -> None:
     """Return no metadata when valid registry responses contain malformed config metadata."""
 
     # Arrange
@@ -338,3 +347,23 @@ def test_missing_envs_rejects_user_values_for_reserved_runtime_names() -> None:
 
     # Assert
     assert missing == ["LONGLINK_DATABASE_PASSWORD"]
+
+
+def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
+    """Return all required unavailable values in deterministic name order."""
+
+    # Arrange
+    metadata = LongLinkMetadata(
+        image=Image("ghcr.io/longlink/dashboard:latest"),
+        environments=[
+            EnvironmentMetadata(name="ZEBRA", required=True),
+            EnvironmentMetadata(name="LONGLINK_TOKEN", required=True),
+            EnvironmentMetadata(name="ALPHA", required=False),
+        ],
+    )
+
+    # Act
+    missing = images.missing_envs(metadata, {"ZEBRA": "", "LONGLINK_TOKEN": "configured"})
+
+    # Assert
+    assert missing == ["LONGLINK_TOKEN", "ZEBRA"]

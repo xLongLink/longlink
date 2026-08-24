@@ -2,6 +2,7 @@ from uuid import uuid4
 from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context, data
+from collections.abc import Sequence
 from src.schemas.items import (
     ItemCreate,
     ItemAttachmentRead,
@@ -16,17 +17,17 @@ ATTACHMENTS_DIRECTORY = "item-attachments"
 
 
 @router.get("/items", response_model=list[Item])
-async def items_get_endpoint() -> list[Item]:
+async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
     """Return catalog items."""
 
-    return await items.list_items()
+    return await items.list_items(ctx.database)
 
 
 @router.post("/items", response_model=Item)
-async def items_post_endpoint(payload: ItemCreate) -> Item:
+async def items_post_endpoint(payload: ItemCreate, ctx: Context = Depends(data)) -> Item:
     """Create a catalog item."""
 
-    return await items.create_item(name=payload.name, price=payload.price)
+    return await items.create_item(ctx.database, name=payload.name, price=payload.price)
 
 
 @router.get("/items/{item_id}", response_model=Item)

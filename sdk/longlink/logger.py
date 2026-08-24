@@ -12,19 +12,12 @@ class ColorFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """Render INFO logs with a green level label."""
 
-        original_levelname = record.levelname
-
-        # Temporarily rewrite the level name so the parent formatter can colorize INFO output.
+        # Color a private record copy so handlers sharing this record see its original level name.
         if record.levelno == logging.INFO:
+            record = copy.copy(record)
             record.levelname = "\x1b[32mINFO\x1b[0m"
 
-        # Delegate formatting after any temporary level-name rewrite.
-        try:
-            return super().format(record)
-
-        # Restore the original level label even if formatting raises.
-        finally:
-            record.levelname = original_levelname
+        return super().format(record)
 
 
 class ApiAccessFilter(logging.Filter):

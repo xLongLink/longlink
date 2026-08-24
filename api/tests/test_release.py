@@ -38,3 +38,38 @@ async def test_schedule_reconciliation_commits_scheduled_work(monkeypatch: pytes
 
     # Assert
     assert events == ["schedule", "commit"]
+
+
+async def test_schedule_reconciliation_does_not_commit_after_scheduling_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Propagate scheduling failures without committing a partial transaction."""
+
+    # Arrange
+    events: list[str] = []
+
+    class Session:
+        """Record whether the failed transaction is committed."""
+
+        async def commit(self) -> None:
+            """Record an unexpected partial commit."""
+
+            events.append("commit")
+
+    @asynccontextmanager
+    async def session_scope():
+        """Yield the reconciliation session."""
+
+        yield Session()
+
+    async def schedule_reconciliation(_session: Session) -> None:
+        """Simulate a scheduling failure."""
+
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(release, "session_scope", session_scope)
+    monkeypatch.setattr(release.operations, "schedule_reconciliation", schedule_reconciliation)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        await release.schedule_reconciliation()
+
+    assert events == []

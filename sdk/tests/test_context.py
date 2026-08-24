@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID
 from fastapi import Depends, FastAPI, Request
 from longlink import context, identity
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 
@@ -25,7 +25,6 @@ def identity_headers(user_id: UUID) -> dict[str, str]:
     ],
 )
 def test_data_resolves_request_services(
-    monkeypatch: pytest.MonkeyPatch,
     identity: UUID | None,
     user: object | None,
 ) -> None:
@@ -50,9 +49,6 @@ def test_data_resolves_request_services(
             return user
 
     database = Database()
-    app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage})()
-
     @asynccontextmanager
     async def fake_session(database: object) -> AsyncIterator[object]:
         """Yield one fake request-scoped database session and record cleanup."""
@@ -63,7 +59,16 @@ def test_data_resolves_request_services(
         finally:
             session_closed = True
 
-    monkeypatch.setattr(context, "session", lambda: fake_session(database))
+    class DatabaseService:
+        """Provide the configured request database session."""
+
+        def session(self) -> AbstractAsyncContextManager[object]:
+            """Yield the test database session."""
+
+            return fake_session(database)
+
+    app = FastAPI()
+    app.state.longlink = type("Runtime", (), {"storage": storage, "database": DatabaseService()})()
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")

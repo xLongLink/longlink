@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from containers import start_postgres
 from sqlalchemy import text
+from src.adapters import postgres
 from sqlalchemy.exc import SQLAlchemyError
 from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
@@ -58,6 +59,7 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
         updated_at=datetime(2026, 7, 1, tzinfo=UTC),
     )
     shared_schema_url = adapter.url(organization_id.hex, search_path="shared").render_as_string(hide_password=False)
+    await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
     await shared_audit.sync(shared_schema_url, [active_user])
     runtime_password = "stable-runtime-password"
@@ -122,6 +124,44 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
     assert len(runtime_connection["username"]) <= 63
     assert shared_user == {"email": "owner@example.com", "role": "owner"}
     assert deleted_at is not None
+
+
+@pytest.mark.integration
+async def test_postgres_adapter_removes_runtime_identity_and_tolerates_repeated_schema_cleanup(
+    postgres_adapter: tuple[Postgres, UUID, UUID],
+) -> None:
+    """Remove runtime roles and schemas without requiring the role to remain present."""
+
+    # Arrange
+    adapter, organization_id, application_id = postgres_adapter
+    await adapter.prepare_organization_database(organization_id)
+    await adapter.schema(organization_id, application_id, "stable-runtime-password")
+
+    # Act
+    exists_before_cleanup = await adapter.application_runtime_identity_exists(organization_id, application_id)
+    await adapter.delete_schema(organization_id, application_id)
+    exists_after_cleanup = await adapter.application_runtime_identity_exists(organization_id, application_id)
+    await adapter.delete_schema(organization_id, application_id)
+
+    # Assert
+    assert exists_before_cleanup is True
+    assert exists_after_cleanup is False
+
+
+@pytest.mark.integration
+async def test_postgres_adapter_rejects_schema_provisioning_without_string_literal_support(
+    postgres_adapter: tuple[Postgres, UUID, UUID], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Fail before composing a role password when the active dialect cannot quote strings."""
+
+    # Arrange
+    adapter, organization_id, application_id = postgres_adapter
+    await adapter.prepare_organization_database(organization_id)
+    monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
+
+    # Act and assert
+    with pytest.raises(ValueError, match="^PostgreSQL string literal processing is unavailable$"):
+        await adapter.schema(organization_id, application_id, "stable-runtime-password")
 
 
 @pytest.mark.integration

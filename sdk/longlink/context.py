@@ -6,7 +6,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from collections.abc import Callable, Awaitable, AsyncGenerator
-from longlink.database import session
 from starlette.responses import Response
 from longlink.shared.models import Audit
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -26,8 +25,8 @@ class Context:
 async def data(request: Request) -> AsyncGenerator[Context]:
     """Yield the request context for a FastAPI dependency."""
 
-    # Open one database session and resolve the authenticated shared user for this request.
-    async with session() as database:
+    # Open one Application-owned database session and resolve the authenticated shared user for this request.
+    async with request.app.state.longlink.database.session() as database:
         user_id = request.state.longlink_identity
         user = await database.get(Audit, user_id) if user_id is not None else None
         yield Context(user=user, storage=request.app.state.longlink.storage, database=database)

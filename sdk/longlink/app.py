@@ -14,6 +14,7 @@ from longlink.constants import ROOT
 from longlink.utils.xml import validate_xml
 from longlink.middleware import FrontendMiddleware
 from longlink.storage.base import create_fs
+from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
@@ -29,6 +30,7 @@ class RuntimeState:
 
     pages: list[PageDefinition]
     storage: AbstractFileSystem
+    database: Database
 
 
 class LongLink:
@@ -43,6 +45,7 @@ class LongLink:
         # Resolve the runtime environment and initialize application storage.
         settings = Envs()
         storage = create_fs(settings)
+        database = Database(settings)
 
         # Compress the embedded frontend and apply safe browser cache policies.
         app.add_middleware(FrontendMiddleware)
@@ -69,7 +72,10 @@ class LongLink:
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory, application_routes)
-        app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage)
+        app.state.longlink = RuntimeState(
+            pages=[definition for definition, _ in discovered_pages], storage=storage, database=database
+        )
+        app.router.on_shutdown.append(database.dispose)
 
         # Pages are registered once before the frontend mount is installed.
         app.router.routes.extend(

@@ -8,13 +8,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
-@pytest.fixture
-def reset_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Clear the global SDK session factory before each lazy-session test."""
-
-    monkeypatch.setattr(database_base, "Session", None)
-
-
 @pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
 def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
@@ -179,7 +172,6 @@ def test_create_engine_selects_database_url_and_options(
 
 async def test_concurrent_sessions_initialize_one_session_factory(
     monkeypatch: pytest.MonkeyPatch,
-    reset_session_factory: None,
 ) -> None:
     """Initialize the lazy database session factory only once."""
 
@@ -194,10 +186,11 @@ async def test_concurrent_sessions_initialize_one_session_factory(
         return engine
 
     monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
+    database = database_base.Database(Envs(ENV="testing"))
 
     async def open_session() -> None:
         """Open and close one SDK-managed database session."""
-        async with database_base.session():
+        async with database.session():
             pass
 
     try:
@@ -207,12 +200,11 @@ async def test_concurrent_sessions_initialize_one_session_factory(
         # Assert
         assert create_count == 1
     finally:
-        await engine.dispose()
+        await database.dispose()
 
 
 async def test_session_retries_initialization_after_database_connection_failure(
     monkeypatch: pytest.MonkeyPatch,
-    reset_session_factory: None,
 ) -> None:
     """Leave the session factory unset when its initial connection fails."""
 
@@ -247,29 +239,29 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
     engine = FailingEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
+    database = database_base.Database(Envs(ENV="testing"))
 
     # Act and assert
     with pytest.raises(ConnectionError, match="database unavailable"):
-        async with database_base.session():
+        async with database.session():
             pass
 
     # Assert
-    assert database_base.Session is None
+    assert database._sessions is None
     assert engine.disposed
 
     # Retry initialization with an available database connection.
     retry_engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     monkeypatch.setattr(database_base, "create_engine", lambda _env: retry_engine)
     try:
-        async with database_base.session() as database_session:
+        async with database.session() as database_session:
             assert database_session is not None
     finally:
-        await retry_engine.dispose()
+        await database.dispose()
 
 
 async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     monkeypatch: pytest.MonkeyPatch,
-    reset_session_factory: None,
 ) -> None:
     """Verify a non-SQLite connection before yielding an Application session."""
 
@@ -290,6 +282,9 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
         async def __aexit__(self, *_args: object) -> None:
             """Exit the available connection context."""
 
+        async def dispose(self) -> None:
+            """Release the fake engine."""
+
     class AvailableSession:
         """Provide the initialized session through an async context manager."""
 
@@ -304,10 +299,12 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     engine = AvailableEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     monkeypatch.setattr(database_base, "async_sessionmaker", lambda *_args, **_kwargs: AvailableSession)
+    database = database_base.Database(Envs(ENV="testing"))
 
     # Act
-    async with database_base.session() as database_session:
+    async with database.session() as database_session:
         result = database_session
 
     # Assert
     assert result == "session"
+    await database.dispose()

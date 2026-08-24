@@ -75,20 +75,99 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
     await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 
-async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject a controller manifest that does not match its pinned checksum."""
+async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Propagate GatewayClass API errors other than an absent resource."""
 
     # Arrange
+    class Response:
+        """Expose the HTTP status from a Kubernetes API error."""
+
+        def __init__(self, status_code: int) -> None:
+            """Store the failed HTTP status."""
+
+            self.status_code = status_code
+
+    class KubernetesError(Exception):
+        """Represent a Kubernetes API error with an HTTP response."""
+
+        def __init__(self, status_code: int) -> None:
+            """Store the response status used by controller installation."""
+
+            self.response = Response(status_code)
+
     class GatewayClass:
-        """Report that the controller is not installed."""
+        """Fail while checking whether the GatewayClass exists."""
 
         def __init__(self, _name: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
         async def exists(self) -> bool:
-            """Report no existing GatewayClass."""
+            """Report an unexpected Kubernetes API failure."""
 
-            return False
+            raise KubernetesError(500)
+
+    monkeypatch.setattr(gateway, "ServerError", KubernetesError)
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+
+    # Act and assert
+    with pytest.raises(KubernetesError) as error:
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+    assert error.value.response.status_code == 500
+
+
+async def test_gateway_install_fetches_manifest_after_gateway_class_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Install the controller when the GatewayClass lookup returns HTTP 404."""
+
+    # Arrange
+    class KubernetesError(Exception):
+        """Represent a Kubernetes API error with an HTTP response."""
+
+        response = type("Response", (), {"status_code": 404})()
+
+    class GatewayClass:
+        """Report that the GatewayClass does not exist."""
+
+        def __init__(self, _name: str, api: object) -> None:
+            """Accept the Kubernetes API client."""
+
+        async def exists(self) -> bool:
+            """Return the Kubernetes not-found response."""
+
+            raise KubernetesError
+
+    def http_client(**_kwargs: object) -> object:
+        """Confirm installation continues to the manifest request."""
+
+        raise AssertionError("GatewayClass 404 must fetch the controller manifest")
+
+    monkeypatch.setattr(gateway, "ServerError", KubernetesError)
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway.httpx2, "AsyncClient", http_client)
+
+    # Act and assert
+    with pytest.raises(AssertionError, match="GatewayClass 404 must fetch the controller manifest"):
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+
+
+async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a controller manifest that does not match its pinned checksum."""
+
+    # Arrange
+    class GatewayClass:
+        """Report a GatewayClass not accepted by the controller."""
+
+        def __init__(self, _name: str, api: object) -> None:
+            """Expose the rejected GatewayClass status."""
+
+            self.raw = {"status": {"conditions": [{"type": "Accepted", "status": "False"}]}}
+
+        async def exists(self) -> bool:
+            """Report an existing but unaccepted GatewayClass."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the rejected GatewayClass status current."""
 
     class Response:
         """Return a deterministic altered manifest."""
@@ -350,6 +429,51 @@ async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: p
     assert deleted == [True]
 
 
+async def test_gateway_delete_translates_termination_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Report GatewayClass termination when its deletion deadline expires."""
+
+    # Arrange
+    class Timeout:
+        """Provide the Gateway deletion deadline context."""
+
+        async def __aenter__(self) -> "Timeout":
+            """Start the simulated deletion deadline."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Allow the polling timeout to propagate."""
+
+    class GatewayClass:
+        """Keep the GatewayClass present while Kubernetes deletes it."""
+
+        def __init__(self, _name: str, api: object) -> None:
+            """Initialize the pending GatewayClass."""
+
+            self.metadata: dict[str, object] = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
+
+        async def exists(self) -> bool:
+            """Report that GatewayClass deletion has not finished."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the pending deletion state unchanged."""
+
+    async def sleep(_delay: float) -> None:
+        """Expire the deletion deadline during polling."""
+
+        raise TimeoutError
+
+    monkeypatch.setattr(gateway.asyncio, "timeout", lambda _delay: Timeout())
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Kubernetes GatewayClass did not terminate: longlink-envoy"):
+        await gateway.Gateway(FakeKubernetes()).delete()  # type: ignore[arg-type]
+
+
 async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed(monkeypatch: pytest.MonkeyPatch) -> None:
     """Publish the first Gateway address only after all readiness conditions are terminal."""
 
@@ -383,6 +507,65 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
 
     # All readiness conditions produce the externally reachable Gateway endpoint.
     assert await gateway.Gateway(FakeKubernetes()).apply() == "192.0.2.1"  # type: ignore[arg-type]
+
+
+async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep polling when ready Gateway resources have no external address yet."""
+
+    # Arrange
+    gateway_manifest: dict[str, object] = {
+        "status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": {}}
+    }
+    sleeps: list[float] = []
+
+    class Resource:
+        """Represent a rendered Gateway API resource."""
+
+        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
+            """Keep the resource status used for readiness polling."""
+
+            self.raw = raw
+
+        async def refresh(self) -> None:
+            """Keep the resource status current."""
+
+    async def install(self: gateway.Gateway) -> None:
+        """Skip controller installation for readiness polling."""
+
+    async def apply(_resource: Resource) -> None:
+        """Accept a rendered Kubernetes resource."""
+
+    async def sleep(delay: float) -> None:
+        """Allocate the address after the first readiness poll."""
+
+        sleeps.append(delay)
+        status = gateway_manifest["status"]
+        assert isinstance(status, dict)
+        status["addresses"] = [{"value": ""}] if len(sleeps) == 1 else [{"value": "192.0.2.1"}]
+
+    def resource_class(*_args: object, **_kwargs: object):
+        """Build rendered Gateway API resource classes."""
+
+        return Resource
+
+    monkeypatch.setattr(gateway.Gateway, "install_controller", install)
+    monkeypatch.setattr(
+        gateway.templates,
+        "readyml_list",
+        lambda _path: ({}, {}, gateway_manifest, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}),
+    )
+    monkeypatch.setattr(gateway, "new_class", resource_class)
+    monkeypatch.setattr(gateway, "Namespace", Resource)
+    monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
+    monkeypatch.setattr(gateway, "apply", apply)
+    monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
+
+    # Act
+    address = await gateway.Gateway(FakeKubernetes()).apply()  # type: ignore[arg-type]
+
+    # Assert
+    assert address == "192.0.2.1"
+    assert sleeps == [5, 5]
 
 
 async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkeypatch: pytest.MonkeyPatch) -> None:
