@@ -9,7 +9,7 @@ from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.context import install_context_middleware
 from fastapi.responses import Response
-from starlette.routing import Match
+from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.utils.xml import validate_xml
 from longlink.middleware import FrontendMiddleware
@@ -38,7 +38,7 @@ class LongLink:
         """Install runtime services, routes, and the frontend fallback into an Application app."""
 
         # Preserve Application routes so page collisions are rejected during discovery.
-        self.application_routes = list(app.router.routes)
+        application_routes = list(app.router.routes)
 
         # Resolve the runtime environment and initialize application storage.
         settings = Envs()
@@ -60,7 +60,7 @@ class LongLink:
         app.include_router(router)
 
         # Bind Platform request identity across downstream request handling.
-        install_context_middleware(app)
+        install_context_middleware(app, settings.IDENTITY_SECRET)
 
         # Applications provide XML pages in the generated source layout.
         pages_directory = Path.cwd() / "src" / "pages"
@@ -68,7 +68,7 @@ class LongLink:
             raise ValueError(f"Application source directory is required: {pages_directory}")
 
         # Validate the complete catalog before registering its routes and metadata.
-        discovered_pages = self._discover_pages(pages_directory)
+        discovered_pages = self._discover_pages(pages_directory, application_routes)
         app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage)
 
         # Pages are registered once before the frontend mount is installed.
@@ -88,7 +88,8 @@ class LongLink:
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
 
-    def _discover_pages(self, pages_directory: Path) -> list[tuple[PageDefinition, str]]:
+    @staticmethod
+    def _discover_pages(pages_directory: Path, application_routes: list[BaseRoute]) -> list[tuple[PageDefinition, str]]:
         """Discover and validate all XML pages before registering any route."""
 
         registered_route_keys: set[str] = set()
@@ -118,7 +119,7 @@ class LongLink:
 
             # Application routes take precedence, so ambiguous page endpoints are rejected.
             scope = {"type": "http", "method": "GET", "path": registered_path}
-            if any(application_route.matches(scope)[0] is Match.FULL for application_route in self.application_routes):
+            if any(application_route.matches(scope)[0] is Match.FULL for application_route in application_routes):
                 raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
 
             discovered_pages.append(

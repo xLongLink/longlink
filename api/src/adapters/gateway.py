@@ -1,7 +1,10 @@
 import ssl
+import hmac
 import httpx2
 import tempfile
+from time import time
 from uuid import UUID
+from hashlib import sha256
 from dataclasses import dataclass
 from collections.abc import AsyncIterator
 
@@ -26,12 +29,13 @@ class GatewayResponse:
 class GatewayClient:
     """Send authenticated Platform requests to one compute gateway."""
 
-    def __init__(self, url: str, ca_certificate: str, client_identity: str) -> None:
+    def __init__(self, url: str, ca_certificate: str, client_identity: str, identity_secret: str) -> None:
         """Initialize one gateway connection from persisted compute state."""
 
         self._url = url.rstrip("/")
         self._ca_certificate = ca_certificate
         self._client_identity = client_identity
+        self._identity_secret = identity_secret
 
     async def request(
         self,
@@ -50,9 +54,13 @@ class GatewayClient:
         url = f"{self._url}/{path}"
         if query:
             url = f"{url}?{query}"
+        timestamp = str(int(time()))
+        identity = f"{user_id}.{timestamp}"
         headers = {
             "x-longlink-application-id": str(application_id),
-            "x-user-id": str(user_id),
+            "x-longlink-user-id": str(user_id),
+            "x-longlink-user-timestamp": timestamp,
+            "x-longlink-user-signature": hmac.new(self._identity_secret.encode("utf-8"), identity.encode("ascii"), sha256).hexdigest(),
         }
         if content_type is not None:
             headers["content-type"] = content_type

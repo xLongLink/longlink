@@ -271,7 +271,9 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
     await application_operations.create(application.id)
 
     # Assert
-    assert captured["secrets"] == {"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"}
+    assert captured["secrets"]["API_KEY"] == "runtime-secret"
+    assert captured["secrets"]["LONGLINK_ENV"] == "production"
+    assert captured["secrets"]["LONGLINK_IDENTITY_SECRET"]
 
 
 async def test_application_creation_skips_removed_application_provider_construction(

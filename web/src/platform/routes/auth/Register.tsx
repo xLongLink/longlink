@@ -35,7 +35,7 @@ export default function Register() {
     return (
         <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <Stack gap={3}>
-                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
+                <AuthForm gap={3} onSubmit={form.handleSubmit}>
                     <form.Field
                         name="email"
                         children={(field) => (

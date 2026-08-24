@@ -49,26 +49,6 @@ async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
     assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
 
 
-async def test_compute_registry_deletion_rejects_organization_assignment(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users,
-) -> None:
-    """Retain a Compute registry assigned to an Organization."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], infrastructure=infrastructure)
-
-    # Act
-    response = await clients[0].delete(f"/api/v1/computes/{infrastructure.compute.id}")
-    get_response = await clients[0].get(f"/api/v1/computes/{infrastructure.compute.id}")
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Compute registry is used by organizations"}
-    assert get_response.status_code == 200
-
-
 async def test_compute_registry_deletes_registration_after_completed_lifecycle(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:

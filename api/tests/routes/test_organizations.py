@@ -1,5 +1,5 @@
 import pytest
-from uuid import UUID
+from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
@@ -455,6 +455,19 @@ async def test_list_organizations_returns_stable_page_and_active_total(
         ],
         "total": 2,
     }
+
+
+async def test_delete_organization_returns_not_found_for_unknown_identifier(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return the organization-specific error for a missing deletion target."""
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/organizations/{uuid4()}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_get_organization_returns_403_for_non_member(

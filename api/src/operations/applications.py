@@ -67,6 +67,13 @@ async def create(application_id: UUID) -> None:
             "LONGLINK_STORAGE_REGION": object_storage.region,
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
+
+    # Issue an application-specific key so only Platform-originated requests can assert an audit identity.
+    if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
+        runtime_secrets = {
+            **runtime_secrets,
+            "LONGLINK_IDENTITY_SECRET": secrets.token_urlsafe(32),
+        }
         async with session_scope() as session:
             # Persist credentials only while the Application remains active.
             result = await session.execute(

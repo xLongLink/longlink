@@ -5,6 +5,7 @@ from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 
 PRODUCTION_SETTINGS = {
+    "LONGLINK_IDENTITY_SECRET": "identity-secret",
     "LONGLINK_DATABASE_HOST": "db",
     "LONGLINK_DATABASE_NAME": "longlink",
     "LONGLINK_DATABASE_PORT": "5432",

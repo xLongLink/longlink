@@ -63,49 +63,51 @@ async def test_database_usage_endpoint_rejects_missing_registry(
     assert response.json() == {"detail": "Database registry not found"}
 
 
-async def test_database_registry_list_paginates_without_exposing_password(
+async def test_database_usage_endpoint_rejects_regular_users_before_connecting(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Require administrator access before opening a database adapter."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+
+    def unexpected_postgres(*_args: object) -> object:
+        """Fail if authorization reaches the database boundary."""
+
+        raise AssertionError("Postgres adapter was constructed")
+
+    monkeypatch.setattr("src.routes.v1.databases.Postgres", unexpected_postgres)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/databases/{infrastructure.database.id}/usage")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+async def test_database_registry_creation_uses_required_ssl_by_default(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Return one ordered registry page without its administrator password."""
+    """Use the secure SSL mode when the registry payload omits it."""
 
     # Arrange
     payload = {
+        "name": "Default TLS database",
+        "host": "database.example",
         "port": 5432,
-        "username": "administrator",
-        "sslmode": "require",
+        "username": "admin",
+        "password": "database-secret",
     }
-    alpha_payload = {
-        **payload,
-        "name": "Alpha database",
-        "host": "alpha.example",
-        "password": "alpha-password",
-    }
-    bravo_payload = {
-        **payload,
-        "name": "Bravo database",
-        "host": "bravo.example",
-        "password": "bravo-password",
-    }
-    alpha_response = await clients[0].post("/api/v1/databases", json=alpha_payload)
-    bravo_response = await clients[0].post("/api/v1/databases", json=bravo_payload)
-
     # Act
-    response = await clients[0].get("/api/v1/databases?page_size=1")
+    response = await clients[0].post("/api/v1/databases", json=payload)
 
     # Assert
-    assert alpha_response.status_code == 201
-    assert bravo_response.status_code == 201
-    assert response.status_code == 200
-    assert response.json() == {
-        "items": [
-            {
-                "id": alpha_response.json()["id"],
-                "name": "Alpha database",
-                "host": "alpha.example",
-                "port": 5432,
-                "sslmode": "require",
-                "username": "administrator",
-            }
-        ],
-        "total": 2,
-    }
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["name"] == "Default TLS database"
+    assert payload["host"] == "database.example"
+    assert payload["port"] == 5432
+    assert payload["sslmode"] == "require"
+    assert payload["username"] == "admin"

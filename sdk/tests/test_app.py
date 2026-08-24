@@ -38,6 +38,32 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     assert health_response.json() == {"ok": True}
 
 
+def test_longlink_app_serves_runtime_routes_without_embedded_frontend(
+    application_source: Path,
+    monkeypatch: MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Keep SDK runtime routes available when package frontend assets are absent."""
+
+    # Arrange
+    monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
+    app = FastAPI()
+    LongLink(app)
+    client = TestClient(app)
+
+    # Act
+    health_response = client.get("/health")
+    pages_response = client.get("/pages.json")
+    frontend_response = client.get("/", headers={"accept": "text/html"})
+
+    # Assert
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
+    assert pages_response.status_code == 200
+    assert pages_response.json() == []
+    assert frontend_response.status_code == 404
+
+
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
     """Require every Platform-owned runtime setting before production startup."""
 
@@ -66,7 +92,11 @@ def test_production_startup_installs_one_access_filter(application_source: Path,
 
     # Arrange
     access_logger = logging.getLogger("uvicorn.access")
-    monkeypatch.setattr(longlink_app, "Envs", lambda: type("Settings", (), {"ENV": "production"})())
+    monkeypatch.setattr(
+        longlink_app,
+        "Envs",
+        lambda: type("Settings", (), {"ENV": "production", "IDENTITY_SECRET": "identity-secret"})(),
+    )
     monkeypatch.setattr(longlink_app, "create_fs", lambda _settings: object())
     monkeypatch.setattr(access_logger, "filters", [])
 

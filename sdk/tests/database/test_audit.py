@@ -1,9 +1,12 @@
+import hmac
 import pytest
 import asyncio
 import pytest_asyncio
+from time import time
 from uuid import UUID
 from typing import ClassVar
 from fastapi import FastAPI
+from hashlib import sha256
 from datetime import UTC, datetime
 from longlink import context as runtime_context
 from sqlmodel import Field
@@ -199,11 +202,14 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         )
 
 
+IDENTITY_SECRET = "test-identity-secret"
+
+
 def create_audit_application() -> FastAPI:
     """Create an application that exposes the request audit identity."""
 
     app = FastAPI()
-    runtime_context.install_context_middleware(app)
+    runtime_context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
     async def current_user() -> dict[str, str | None]:
@@ -222,19 +228,33 @@ def create_audit_application() -> FastAPI:
     return app
 
 
+def identity_headers(user_id: str) -> dict[str, str]:
+    """Build one current Platform identity assertion for middleware tests."""
+
+    # Match the Platform's HMAC assertion contract.
+    timestamp = str(int(time()))
+    signature = hmac.new(IDENTITY_SECRET.encode("utf-8"), f"{user_id}.{timestamp}".encode("ascii"), sha256).hexdigest()
+    return {
+        "x-longlink-user-id": user_id,
+        "x-longlink-user-timestamp": timestamp,
+        "x-longlink-user-signature": signature,
+    }
+
+
 @pytest.mark.parametrize(
     ("headers", "expected_user_id"),
     [
-        ({"x-user-id": "00000000-0000-0000-0000-000000000005"}, "00000000-0000-0000-0000-000000000005"),
-        ({"x-user-id": "invalid"}, None),
+        (identity_headers("00000000-0000-0000-0000-000000000005"), "00000000-0000-0000-0000-000000000005"),
+        ({"x-longlink-user-id": "00000000-0000-0000-0000-000000000005"}, None),
+        ({"x-longlink-user-id": "invalid"}, None),
         ({}, None),
     ],
 )
-def test_audit_middleware_binds_x_user_id_header(
+def test_audit_middleware_binds_signed_identity_header(
     headers: dict[str, str],
     expected_user_id: str | None,
 ) -> None:
-    """Bind valid audit user headers and treat missing or malformed values as anonymous."""
+    """Bind valid signed audit identities and treat untrusted headers as anonymous."""
 
     # Send the candidate audit identity through the HTTP boundary.
     with TestClient(create_audit_application()) as client:
@@ -254,7 +274,7 @@ async def test_audit_middleware_isolates_concurrent_request_identities() -> None
     # Dispatch two requests concurrently, each with a distinct trusted identity.
     with TestClient(create_audit_application()) as client:
         first_response, second_response = await asyncio.gather(
-            *(asyncio.to_thread(client.get, "/", headers={"x-user-id": user_id}) for user_id in (first_id, second_id))
+            *(asyncio.to_thread(client.get, "/", headers=identity_headers(user_id)) for user_id in (first_id, second_id))
         )
 
     # Each handler observes only its own request identity.
@@ -271,7 +291,7 @@ def test_audit_middleware_clears_identity_after_handler_failure() -> None:
     # Act
     with TestClient(create_audit_application()) as client:
         with pytest.raises(RuntimeError, match="handler failed"):
-            client.get("/failure", headers={"x-user-id": user_id})
+            client.get("/failure", headers=identity_headers(user_id))
 
     # Assert
     assert runtime_context._current_identity.get() is None

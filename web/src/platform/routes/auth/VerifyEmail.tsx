@@ -139,7 +139,7 @@ export default function VerifyEmail() {
     return (
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={() => void form.handleSubmit()}>
+                <AuthForm gap={3} onSubmit={form.handleSubmit}>
                     <form.Field
                         name="name"
                         children={(field) => (

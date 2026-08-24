@@ -1,5 +1,8 @@
+import hmac
+from time import time
 from uuid import UUID
 from fastapi import FastAPI, Request
+from hashlib import sha256
 from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
@@ -31,18 +34,32 @@ async def data(request: Request) -> AsyncGenerator[Context]:
         yield Context(user=user, storage=request.app.state.longlink.storage, database=database)
 
 
-def install_context_middleware(app: FastAPI) -> None:
+def install_context_middleware(app: FastAPI, identity_secret: str | None = None) -> None:
     """Bind trusted Platform identity for the complete request lifecycle."""
 
     @app.middleware("http")
     async def context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Attach request identity before application routes run."""
 
-        # Parse the Platform-provided user identifier when the request has one.
-        raw_user_id = request.headers.get("x-user-id")
+        # Verify the Platform-signed user assertion before making it available to application code.
+        raw_user_id = request.headers.get("x-longlink-user-id")
+        timestamp = request.headers.get("x-longlink-user-timestamp")
+        signature = request.headers.get("x-longlink-user-signature")
         try:
-            user_id = UUID(raw_user_id) if raw_user_id is not None else None
-        except ValueError:
+            issued_at = int(timestamp) if timestamp is not None else 0
+            identity = f"{raw_user_id}.{issued_at}"
+            expected_signature = (
+                hmac.new(identity_secret.encode("utf-8"), identity.encode("ascii"), sha256).hexdigest() if identity_secret else ""
+            )
+            user_id = (
+                UUID(raw_user_id)
+                if raw_user_id is not None
+                and identity_secret
+                and abs(int(time()) - issued_at) <= 300
+                and hmac.compare_digest(signature or "", expected_signature)
+                else None
+            )
+        except (TypeError, UnicodeEncodeError, ValueError):
             user_id = None
 
         # Keep the request identity available to both FastAPI and database audit hooks.

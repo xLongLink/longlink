@@ -3,15 +3,18 @@ from uuid import uuid4
 from sqlmodel import col
 from factories import fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
-from src.errors import NotFoundError
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
-from src.models.types import Image
+from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, applications, organizations
 from src.models.pagination import Pagination
+from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -87,6 +90,122 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert total == 1
 
 
+@pytest.mark.parametrize("deleted", [False, True])
+async def test_sync_users_skips_creating_and_deleted_organizations(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    deleted: bool,
+) -> None:
+    """Avoid connecting to Organization databases before activation or after deletion."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    synchronized: list[tuple[str, object]] = []
+
+    async def capture_sync(database_url: str, rows: object) -> None:
+        """Record unexpected shared-database synchronization attempts."""
+
+        synchronized.append((database_url, rows))
+
+    monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
+
+    # Act
+    async with session_scope() as session:
+        if deleted:
+            await organizations.soft_delete(session, organization.id, users[0])
+            await session.commit()
+        await organizations.sync_users(session, organization.id)
+
+    # Assert
+    assert synchronized == []
+
+
+async def test_sync_users_projects_active_organization_members(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Publish the Platform-authoritative member snapshot for a running Organization."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    synchronized: list[tuple[str, list[Audit]]] = []
+
+    async def capture_sync(database_url: str, rows: list[Audit]) -> None:
+        """Capture the shared-database projection without opening a connection."""
+
+        synchronized.append((database_url, rows))
+
+    monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await organizations.sync_users(session, organization.id)
+
+    # Assert
+    database_url, rows = synchronized[0]
+    assert organization.id.hex in database_url
+    assert [
+        {
+            "id": row.id,
+            "name": row.name,
+            "email": row.email,
+            "role": row.role,
+            "deleted_at": row.deleted_at,
+        }
+        for row in rows
+    ] == [
+        {
+            "id": users[0].id,
+            "name": users[0].name,
+            "email": users[0].email,
+            "role": OrganizationRoles.owner.value,
+            "deleted_at": None,
+        }
+    ]
+
+
+async def test_sync_users_projects_deleted_memberships_as_tombstones(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Publish deleted memberships as Organization database tombstones."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    synchronized: list[list[Audit]] = []
+
+    async def capture_sync(_database_url: str, rows: list[Audit]) -> None:
+        """Capture projected membership rows without opening a connection."""
+
+        synchronized.append(rows)
+
+    monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        membership = await session.get(UserOrganization, (users[0].id, organization.id))
+        assert persisted is not None
+        assert membership is not None
+        persisted.status = Status.running
+        membership.deleted_at = membership.updated_at
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        await organizations.sync_users(session, organization.id)
+
+    # Assert
+    assert len(synchronized) == 1
+    assert len(synchronized[0]) == 1
+    assert synchronized[0][0].id == users[0].id
+    assert synchronized[0][0].role == OrganizationRoles.owner.value
+    assert synchronized[0][0].deleted_at is not None
+
+
 async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
     """Reject role changes for absent organization members."""
 
@@ -100,6 +219,98 @@ async def test_update_member_role_rejects_missing_member(users: tuple[User, User
             await organizations.update_member_role(
                 session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
             )
+
+
+async def test_update_member_role_rejects_owner_changes_from_non_owners(users: tuple[User, User, User]) -> None:
+    """Require owner access to change an owner's Organization role."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ForbiddenError, match="Owner management permissions required"):
+            await organizations.update_member_role(
+                session,
+                organization.id,
+                owner.id,
+                OrganizationRoles.read,
+                owner,
+                OrganizationRoles.maintain,
+            )
+
+
+async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[User, User, User]) -> None:
+    """Preserve at least one active owner for every Organization."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(ConflictError, match="Organization must have at least one owner"):
+            await organizations.update_member_role(
+                session,
+                organization.id,
+                owner.id,
+                OrganizationRoles.maintain,
+                owner,
+                OrganizationRoles.owner,
+            )
+
+
+async def test_update_member_role_skips_unchanged_assignments(users: tuple[User, User, User]) -> None:
+    """Avoid mutations when a member already has the requested role."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act
+    async with session_scope() as session:
+        changed = await organizations.update_member_role(
+            session,
+            organization.id,
+            owner.id,
+            OrganizationRoles.owner,
+            owner,
+            OrganizationRoles.owner,
+        )
+
+    # Assert
+    assert changed is False
+
+
+async def test_update_member_role_persists_owner_authorized_change(users: tuple[User, User, User]) -> None:
+    """Allow owners to update an active member role."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+
+    # Act
+    async with session_scope() as session:
+        changed = await organizations.update_member_role(
+            session,
+            organization.id,
+            member.id,
+            OrganizationRoles.maintain,
+            owner,
+            OrganizationRoles.owner,
+        )
+        await session.commit()
+
+    # Assert
+    assert changed is True
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (member.id, organization.id))
+    assert membership is not None
+    assert membership.role == OrganizationRoles.maintain
 
 
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
@@ -126,6 +337,73 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
         assert len(await fetch_operations()) == 1
+
+
+async def test_create_default_selects_least_assigned_ready_infrastructure(users: tuple[User, User, User]) -> None:
+    """Assign the least-used ready registry of each infrastructure type."""
+
+    # Arrange
+    owner = users[0]
+    assigned_infrastructure = await create_ready_infrastructure()
+    available_infrastructure = await create_ready_infrastructure()
+    await create_organization(owner, infrastructure=assigned_infrastructure)
+
+    # Act
+    async with session_scope() as session:
+        organization = await organizations.create_default(session, "balanced", owner)
+        await session.commit()
+
+    # Assert
+    assert organization.compute_id == available_infrastructure.compute.id
+    assert organization.database_id == available_infrastructure.database.id
+    assert organization.storage_id == available_infrastructure.storage.id
+
+
+async def test_create_default_rejects_missing_ready_compute(users: tuple[User, User, User]) -> None:
+    """Require a ready compute registry before creating an Organization."""
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(UnavailableError, match="No ready compute registry available"):
+            await organizations.create_default(session, "acme", users[0])
+
+
+async def test_create_default_rejects_missing_database_registry(users: tuple[User, User, User]) -> None:
+    """Require a database registry after selecting a ready compute."""
+
+    # Arrange
+    async with session_scope() as session:
+        session.add(ComputeRegistry(name="Ready compute", kubeconfig={}, status=Status.running))
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(UnavailableError, match="No database registry available"):
+            await organizations.create_default(session, "acme", users[0])
+
+
+async def test_create_default_rejects_missing_storage_registry(users: tuple[User, User, User]) -> None:
+    """Require a storage registry after selecting compute and database targets."""
+
+    # Arrange
+    async with session_scope() as session:
+        session.add(ComputeRegistry(name="Ready compute", kubeconfig={}, status=Status.running))
+        session.add(
+            DatabaseRegistry(
+                name="Ready database",
+                host="database.example",
+                port=5432,
+                username="admin",
+                password="secret",
+                sslmode=DatabaseSSLMode.require,
+            )
+        )
+        await session.commit()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(UnavailableError, match="No storage registry available"):
+            await organizations.create_default(session, "acme", users[0])
 
 
 async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:

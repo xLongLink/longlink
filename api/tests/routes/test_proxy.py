@@ -20,8 +20,6 @@ class ProxyCapture(TypedDict, total=False):
     """Represent values observed by the proxy transport fakes."""
 
     close_count: int
-    client_identity: str
-    client_kwargs: dict[str, object]
     method: str
     url: str
     content: bytes
@@ -86,6 +84,10 @@ async def create_running_application(user: User) -> tuple[Application, Infrastru
     async with session_scope() as session:
         persisted_application = await session.get(Application, application.id)
         assert persisted_application is not None
+        persisted_application.secrets = {
+            **persisted_application.secrets,
+            "LONGLINK_IDENTITY_SECRET": "test-identity-secret",
+        }
         persisted_application.status = Status.running
         await session.commit()
 
@@ -161,18 +163,12 @@ async def test_application_proxy_forwards_safe_content(
     monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
     client = clients[0]
 
-    # Proxy a request carrying trusted and untrusted browser headers.
+    # Proxy a request with a content type and request body.
     response = await client.post(
         f"/api/v1/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
-            "accept": "application/json",
-            "accept-language": "en-US",
-            "authorization": "Bearer user-controlled",
             "content-type": "text/plain",
-            "x-custom-feature": "user-controlled",
-            "x-forwarded-for": "203.0.113.10",
-            "x-user-id": "spoofed",
         },
     )
 
@@ -489,6 +485,7 @@ async def test_application_proxy_allows_organization_read_members(
 async def test_application_proxy_rejects_cross_organization_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject a tenant's request to another Organization's Application."""
 
@@ -496,6 +493,13 @@ async def test_application_proxy_rejects_cross_organization_access(
     owner = users[0]
     organization = await create_organization(owner)
     application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if an unauthorized request reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")

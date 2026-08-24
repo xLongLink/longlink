@@ -22,6 +22,7 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
     # Arrange
     settings = {
         "ENV": "production",
+        "IDENTITY_SECRET": "identity-secret",
         "DATABASE_HOST": "db",
         "DATABASE_NAME": "longlink",
         "DATABASE_PORT": 5432,
@@ -124,6 +125,7 @@ def test_connect_args_returns_driver_specific_settings(
         pytest.param(
             Envs(
                 ENV="production",
+                IDENTITY_SECRET="identity-secret",
                 DATABASE_HOST="db",
                 DATABASE_NAME="longlink",
                 DATABASE_PORT=5432,
@@ -272,24 +274,21 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     """Verify a non-SQLite connection before yielding an Application session."""
 
     # Arrange
-    class AvailableConnection:
-        """Provide a successful database connection context."""
+    class AvailableEngine:
+        """Provide a healthy non-SQLite engine and connection context."""
+
+        url = "postgresql+asyncpg://database"
+
+        def connect(self) -> "AvailableEngine":
+            """Return the successful connection context."""
+
+            return self
 
         async def __aenter__(self) -> None:
             """Enter the available connection context."""
 
         async def __aexit__(self, *_args: object) -> None:
             """Exit the available connection context."""
-
-    class AvailableEngine:
-        """Provide a healthy non-SQLite engine without opening a real connection."""
-
-        url = "postgresql+asyncpg://database"
-
-        def connect(self) -> AvailableConnection:
-            """Return the successful connection context."""
-
-            return AvailableConnection()
 
     class AvailableSession:
         """Provide the initialized session through an async context manager."""

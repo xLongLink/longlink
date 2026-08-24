@@ -219,6 +219,7 @@ async def test_registration_completion_creates_authenticated_account(
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert restored_setup.status_code == 200
     assert restored_setup.json() == {"email": email}
+    assert restored_setup.headers["cache-control"] == "no-store"
     assert complete_response.status_code == 201
     registered_user = complete_response.json()
     assert registered_user["name"] == "Registered User"
@@ -496,7 +497,13 @@ async def test_forgot_and_reset_password(
     revoked_session = await client.get("/api/v1/me")
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
+    assert setup_response.headers["cache-control"] == "no-store"
     assert reset_response.status_code == 204
+    assert reset_response.headers["cache-control"] == "no-store"
+    reset_cookie = reset_response.headers["set-cookie"]
+    assert "longlink_password_reset=" in reset_cookie
+    assert "Max-Age=0" in reset_cookie
+    assert "Path=/api/v1/auth/reset-password" in reset_cookie
     assert reused_token_response.status_code == 400
     assert reused_token_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
     assert revoked_session.status_code == 401
@@ -609,6 +616,30 @@ async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
     assert "Path=/" in response.headers["set-cookie"]
     assert "SameSite=lax" in response.headers["set-cookie"]
     assert profile_response.status_code == 401
+
+
+async def test_authenticated_logout_uses_secure_cookie_policy_in_production(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Clear the browser session with the production cookie security attributes."""
+
+    # Arrange
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
+
+    # Act
+    response = await clients[0].post("/api/v1/auth/logout", headers={"origin": "https://platform.example"})
+
+    # Assert
+    assert response.status_code == 204
+    cookie = response.headers["set-cookie"]
+    assert "longlink_auth=" in cookie
+    assert "HttpOnly" in cookie
+    assert "Max-Age=0" in cookie
+    assert "Path=/" in cookie
+    assert "SameSite=lax" in cookie
+    assert "Secure" in cookie
 
 
 async def test_password_login_sets_production_session_security_and_cache_attributes(

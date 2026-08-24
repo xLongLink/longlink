@@ -50,7 +50,13 @@ async def proxy_application_request(
     if application.status != Status.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    if registry.gateway_url is None or registry.gateway_certificate is None or registry.gateway_client_identity is None:
+    identity_secret = application.secrets.get("LONGLINK_IDENTITY_SECRET")
+    if (
+        registry.gateway_url is None
+        or registry.gateway_certificate is None
+        or registry.gateway_client_identity is None
+        or not identity_secret
+    ):
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
@@ -70,6 +76,7 @@ async def proxy_application_request(
             registry.gateway_url,
             registry.gateway_certificate,
             registry.gateway_client_identity,
+            identity_secret,
         ).request(
             application_id=application.id,
             user_id=user.id,

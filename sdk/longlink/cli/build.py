@@ -190,6 +190,19 @@ def render_image_labels(description: str | None, environments: Sequence[Mapping[
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
+    # Require an explicit UV workspace before expanding the build context beyond the application root.
+    workspace_root = root
+    for candidate in (root, *root.parents):
+        candidate_pyproject = candidate / "pyproject.toml"
+        if not candidate_pyproject.is_file():
+            continue
+        candidate_data = read_pyproject(candidate)
+        tool_data = candidate_data.get("tool")
+        uv_data = tool_data.get("uv") if isinstance(tool_data, dict) else None
+        if isinstance(uv_data, dict) and isinstance(uv_data.get("workspace"), dict):
+            workspace_root = candidate
+            break
+
     # Validate the application root and initialize local dependency traversal.
     pending_paths: list[Path] = [root]
     seen_paths: set[Path] = set()
@@ -237,6 +250,8 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
                     # Include only project directories; invalid paths must not expand the Docker context.
                     if resolved_source_path != Path(resolved_source_path.anchor) and (resolved_source_path / "pyproject.toml").is_file():
+                        if not resolved_source_path.is_relative_to(workspace_root):
+                            raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
                         pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
@@ -327,9 +342,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
     # Scope application-local ignore rules to the expanded Docker context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = context_ignore_rules(source, root, source_root)
-    build_context.joinpath(".dockerignore").write_text(
-        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n", encoding="utf-8"
-    )
+    build_context.joinpath(".dockerignore").write_text(f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = root.relative_to(source_root).as_posix()

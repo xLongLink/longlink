@@ -107,7 +107,7 @@ export default function ResetPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <AuthForm gap={4} onSubmit={() => void form.handleSubmit()}>
+                <AuthForm gap={4} onSubmit={form.handleSubmit}>
                     <form.Field
                         name="password"
                         children={(field) => (

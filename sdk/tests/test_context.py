@@ -1,10 +1,28 @@
+import hmac
 import pytest
+from time import time
 from uuid import UUID
 from fastapi import Depends, FastAPI
+from hashlib import sha256
 from longlink import context
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
+
+IDENTITY_SECRET = "test-identity-secret"
+
+
+def identity_headers(user_id: UUID) -> dict[str, str]:
+    """Build one current Platform identity assertion for context tests."""
+
+    # Match the Platform HMAC contract used by the request middleware.
+    timestamp = str(int(time()))
+    signature = hmac.new(IDENTITY_SECRET.encode("utf-8"), f"{user_id}.{timestamp}".encode("ascii"), sha256).hexdigest()
+    return {
+        "x-longlink-user-id": str(user_id),
+        "x-longlink-user-timestamp": timestamp,
+        "x-longlink-user-signature": signature,
+    }
 
 
 @pytest.mark.parametrize(
@@ -55,7 +73,7 @@ def test_data_resolves_request_services(
             session_closed = True
 
     monkeypatch.setattr(context, "session", lambda: fake_session(database))
-    context.install_context_middleware(app)
+    context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
     async def get_context(value: context.Context = Depends(context.data)) -> dict[str, bool]:
@@ -66,7 +84,7 @@ def test_data_resolves_request_services(
     client = TestClient(app)
 
     # Act
-    response = client.get("/", headers={} if identity is None else {"x-user-id": str(identity)})
+    response = client.get("/", headers={} if identity is None else identity_headers(identity))
 
     # Assert
     assert response.status_code == 200

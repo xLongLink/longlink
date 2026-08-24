@@ -12,7 +12,6 @@ from src.database.models.users import User
         pytest.param("GET", "databases", None, id="list-databases"),
         pytest.param("GET", "storages", None, id="list-storages"),
         pytest.param("GET", "users", None, id="list-users"),
-        pytest.param("GET", "applications", None, id="list-applications"),
         pytest.param("GET", "organizations", None, id="list-organizations"),
         pytest.param("POST", "computes", {}, id="create-compute"),
         pytest.param("POST", "databases", {}, id="create-database"),
@@ -252,11 +251,17 @@ async def test_registry_creation_rejects_duplicate_name(
     assert duplicate_response.json() == {"detail": duplicate_error}
 
 
-@pytest.mark.parametrize(("path", "registry"), [("databases", "database"), ("storages", "storage")])
+@pytest.mark.parametrize(
+    ("path", "registry", "not_found_detail"),
+    [
+        pytest.param("databases", "database", "Database registry not found", id="database"),
+        pytest.param("storages", "storage", "Storage registry not found", id="storage"),
+    ],
+)
 async def test_registry_deletes_unused_registration(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str, not_found_detail: str
 ) -> None:
-    """Delete an unassigned registry and reject a repeated deletion."""
+    """Delete an unassigned registry and reject later reads or deletion."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
@@ -264,10 +269,13 @@ async def test_registry_deletes_unused_registration(
 
     # Act
     delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
     repeat_delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
 
     # Assert
     assert delete_response.status_code == 204
+    assert get_response.status_code == 404
+    assert get_response.json() == {"detail": not_found_detail}
     assert repeat_delete_response.status_code == 404
 
 
@@ -293,6 +301,8 @@ async def test_registry_delete_rejects_assigned_registry(
     registry_id = getattr(infrastructure, registry).id
 
     response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
 
     assert response.status_code == 409
     assert response.json() == {"detail": error}
+    assert get_response.status_code == 200

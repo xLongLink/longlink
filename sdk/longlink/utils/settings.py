@@ -13,6 +13,7 @@ class Envs(BaseSettings):
 
     # Runtime
     ENV: Literal["development", "testing", "production"] = "development"
+    IDENTITY_SECRET: str | None = None
 
     # Database
     DATABASE_HOST: str | None = None
@@ -54,6 +55,7 @@ class Envs(BaseSettings):
                 "STORAGE_PASSWORD",
                 "STORAGE_USERNAME",
                 "STORAGE_ENDPOINT_URL",
+                "IDENTITY_SECRET",
             )
             if (value := getattr(self, name)) is None or (isinstance(value, str) and not value.strip())
         ]

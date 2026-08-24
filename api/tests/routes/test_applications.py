@@ -58,15 +58,26 @@ async def test_list_apps_returns_requested_page_for_admin(
     assert paged_response.json()["total"] == 2
 
 
-async def test_list_apps_rejects_regular_users(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
-    """Prevent non-administrators from enumerating applications."""
+async def test_list_apps_omits_deleted_applications_from_items_and_total(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Exclude deleted Applications from administrator list results and totals."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    active_application = await create_application(organization, name="active")
+    deleted_application = await create_application(organization, name="deleted")
+    delete_response = await clients[0].delete(f"/api/v1/applications/{deleted_application.id}")
+    assert delete_response.status_code == 204
 
     # Act
-    response = await clients[1].get("/api/v1/applications")
+    response = await clients[0].get("/api/v1/applications")
 
     # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()["items"]] == [str(active_application.id)]
+    assert response.json()["total"] == 1
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
@@ -198,6 +209,30 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
     # Assert
     assert response.status_code == 422
+
+
+async def test_create_app_rejects_non_member_without_creating_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject application creation before image inspection for non-members."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    # Act
+    response = await clients[1].post(
+        f"/api/v1/organizations/{organization.id}/applications",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
+    async with session_scope() as session:
+        assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
 async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
@@ -421,6 +456,34 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     # Assert
     assert response.status_code == 503
     assert response.json() == {"detail": "Application logs unavailable"}
+
+
+async def test_app_logs_reject_deleted_application_before_constructing_kubernetes(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject runtime logs for deleted Applications before reaching Kubernetes."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    application = await create_application(organization)
+    delete_response = await clients[0].delete(f"/api/v1/applications/{application.id}")
+    assert delete_response.status_code == 204
+
+    def unexpected_kubernetes(*_args: object) -> object:
+        """Fail if a deleted Application reaches the cluster boundary."""
+
+        raise AssertionError("Kubernetes client was constructed")
+
+    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", unexpected_kubernetes)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/logs")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_delete_application_soft_deletes_and_queues_reconciliation(
