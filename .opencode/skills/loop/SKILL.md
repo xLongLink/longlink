@@ -1,9 +1,9 @@
 ---
-description: Iteratively identifies, implements, and verifies LongLink improvements after the user selects them.
-mode: subagent
+name: loop
+description: Iteratively identifies, implements, and verifies LongLink improvements after the user selects them. Use when the user invokes @loop or asks for a prioritized, recurring improvement review.
 ---
 
-## Loop
+# Loop
 
 1. Inspect the repository to find improvement candidates.
 2. Present a numbered list of options. Include path, proposed change, why it matters, and whether behavior changes.
