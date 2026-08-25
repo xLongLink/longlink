@@ -1,6 +1,5 @@
 from uuid import UUID
 from datetime import timedelta
-from sqlmodel import col
 from sqlalchemy import case, func, select, update
 from src.logger import logger
 from sqlalchemy.exc import IntegrityError
@@ -33,17 +32,17 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
+    result = await session.execute(select(ComputeRegistry.id).order_by(ComputeRegistry.id))
     compute_ids = result.scalars().all()
     result = await session.execute(
-        select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
+        select(Organization.id, Organization.deleted_at.is_not(None)).order_by(Organization.compute_id, Organization.id)
     )
     organization_rows = result.all()
     result = await session.execute(
-        select(col(Application.id), col(Application.deleted_at).is_not(None))
-        .join(Organization, col(Organization.id) == col(Application.organization_id))
-        .where(col(Organization.deleted_at).is_(None))
-        .order_by(col(Organization.compute_id), col(Application.id))
+        select(Application.id, Application.deleted_at.is_not(None))
+        .join(Organization, Organization.id == Application.organization_id)
+        .where(Organization.deleted_at.is_(None))
+        .order_by(Organization.compute_id, Application.id)
     )
     application_rows = result.all()
 
@@ -108,8 +107,8 @@ async def claim(session: AsyncSession) -> Operation | None:
         .where(Operation.finished_at.is_(None))
         .order_by(
             case(
-                (col(Operation.lease_expires_at) > now, 0),
-                (col(Operation.lease_expires_at).is_not(None), 1),
+                (Operation.lease_expires_at > now, 0),
+                (Operation.lease_expires_at.is_not(None), 1),
                 else_=2,
             ),
             Operation.created_at.asc(),
@@ -149,7 +148,7 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
         update(Operation)
         .where(
             Operation.id == operation_id,
-            col(Operation.lease_expires_at) > now,
+            Operation.lease_expires_at > now,
             Operation.finished_at.is_(None),
         )
         .values(finished_at=now, lease_expires_at=None)
