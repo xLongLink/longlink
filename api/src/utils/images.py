@@ -3,7 +3,7 @@ import httpx2
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import ImageLabels, LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
 
@@ -37,6 +37,25 @@ async def bounded_json(response: httpx2.Response) -> object | None:
     return json.loads(content)
 
 
+async def registry_json(
+    client: httpx2.AsyncClient,
+    url: str,
+    *,
+    headers: Mapping[str, str] | None = None,
+    params: Mapping[str, str] | None = None,
+    follow_redirects: bool = False,
+) -> tuple[object, httpx2.Headers] | None:
+    """Fetch a successful, bounded JSON registry response with its headers."""
+
+    async with client.stream("GET", url, headers=headers, params=params, follow_redirects=follow_redirects) as response:
+        if not response.is_success:
+            return None
+
+        payload = await bounded_json(response)
+
+    return payload, response.headers
+
+
 async def metadata(image: Image) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
@@ -45,35 +64,35 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0) as client:
         try:
-            async with client.stream(
-                "GET",
+            token_result = await registry_json(
+                client,
                 "https://ghcr.io/token",
                 params={"service": "ghcr.io", "scope": f"repository:{image.repository}:pull"},
-            ) as token_response:
-                if not token_response.is_success:
-                    return None
-                token_payload = await bounded_json(token_response)
+            )
+            if token_result is None:
+                return None
+            token_payload, _ = token_result
             if not isinstance(token_payload, dict):
                 return None
             token = token_payload.get("token")
             if not isinstance(token, str) or not token:
                 return None
 
-            async with client.stream(
-                "GET",
+            manifest_result = await registry_json(
+                client,
                 f"https://{image.registry}/v2/{image.repository}/manifests/{image.tag_or_digest}",
                 headers={
                     "Accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
                     "Authorization": f"Bearer {token}",
                 },
-            ) as manifest_response:
-                if not manifest_response.is_success:
-                    return None
-                manifest = await bounded_json(manifest_response)
-                digest = manifest_response.headers.get("Docker-Content-Digest")
+            )
+            if manifest_result is None:
+                return None
+            manifest, manifest_headers = manifest_result
             if not isinstance(manifest, dict):
                 return None
 
+            digest = manifest_headers.get("Docker-Content-Digest")
             if digest is None and IMAGE_DIGEST_PATTERN.fullmatch(image.tag_or_digest):
                 digest = image.tag_or_digest
             if digest is None or not IMAGE_DIGEST_PATTERN.fullmatch(digest):
@@ -87,14 +106,15 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             if not isinstance(config_digest, str) or not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
-            async with client.stream(
-                "GET",
+            config_result = await registry_json(
+                client,
                 f"https://{image.registry}/v2/{image.repository}/blobs/{config_digest}",
                 headers={"Authorization": f"Bearer {token}"},
-            ) as blob_response:
-                if not blob_response.is_success:
-                    return None
-                config_blob = await bounded_json(blob_response)
+                follow_redirects=True,
+            )
+            if config_result is None:
+                return None
+            config_blob, _ = config_result
             if not isinstance(config_blob, dict):
                 return None
 
@@ -105,12 +125,8 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
             raw_labels = image_config.get("Labels")
             if raw_labels is None:
                 labels: dict[str, str] = {}
-            elif isinstance(raw_labels, dict):
-                labels = {key: value for key, value in raw_labels.items() if isinstance(key, str) and isinstance(value, str)}
-                if len(labels) != len(raw_labels):
-                    return None
             else:
-                return None
+                labels = ImageLabels.model_validate(raw_labels).root
 
             result = LongLinkMetadata(
                 image=Image(f"{image.registry}/{image.repository}@{digest}"),
