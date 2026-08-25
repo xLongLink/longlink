@@ -103,6 +103,35 @@ async def test_metadata_fetches_digest_image_references(
     }
 
 
+async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Read image configuration after GHCR redirects the blob request."""
+
+    # Arrange
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return a GHCR metadata sequence with a redirected config blob."""
+
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": "sha256:deadbeef"},
+            )
+        if request.url.host == "ghcr.io":
+            return httpx2.Response(307, headers={"Location": "https://storage.example/config"})
+        return httpx2.Response(200, json={"config": {"Labels": {}}})
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
+
+    # Assert
+    assert image_metadata is not None
+    assert image_metadata.image == Image("ghcr.io/longlink/dashboard@sha256:deadbeef")
+
+
 async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject mutable image tags when GHCR omits the resolved manifest digest."""
 
