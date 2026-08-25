@@ -152,7 +152,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
 
     return (
         <>
-            <Button label="Create" isDisabled={organizationId.length === 0} clickAction={() => setOpen(true)} />
+            <Button
+                label="Create Application"
+                isDisabled={organizationId.length === 0}
+                clickAction={() => setOpen(true)}
+            />
 
             <form.Subscribe selector={(state) => [state.values.image, state.values.name, state.isValid] as const}>
                 {([image, name, isValid]) => {

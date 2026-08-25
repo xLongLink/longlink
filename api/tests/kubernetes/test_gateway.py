@@ -493,14 +493,10 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
     async def apply(resource: object) -> None:
         """Accept rendered Kubernetes resources."""
 
-    def resource_class(name: str, *args: object, **kwargs: object):
-        """Build the ready Gateway or ClientTrafficPolicy resource class."""
-
-        return Resource
-
     monkeypatch.setattr(gateway.Gateway, "install_controller", install)
     monkeypatch.setattr(gateway.templates, "readyml_list", lambda path: ({}, {}, {"status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": [{"value": "192.0.2.1"}]}}, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}))
-    monkeypatch.setattr(gateway, "new_class", resource_class)
+    monkeypatch.setattr(gateway, "GatewayResource", Resource)
+    monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
     monkeypatch.setattr(gateway, "Namespace", Resource)
     monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
     monkeypatch.setattr(gateway, "apply", apply)
@@ -543,18 +539,14 @@ async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.
         assert isinstance(status, dict)
         status["addresses"] = [{"value": ""}] if len(sleeps) == 1 else [{"value": "192.0.2.1"}]
 
-    def resource_class(*_args: object, **_kwargs: object):
-        """Build rendered Gateway API resource classes."""
-
-        return Resource
-
     monkeypatch.setattr(gateway.Gateway, "install_controller", install)
     monkeypatch.setattr(
         gateway.templates,
         "readyml_list",
         lambda _path: ({}, {}, gateway_manifest, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}),
     )
-    monkeypatch.setattr(gateway, "new_class", resource_class)
+    monkeypatch.setattr(gateway, "GatewayResource", Resource)
+    monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
     monkeypatch.setattr(gateway, "Namespace", Resource)
     monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
     monkeypatch.setattr(gateway, "apply", apply)
@@ -593,11 +585,6 @@ async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkey
 
         applied.append(resource.raw)
 
-    def resource_class(*_args: object, **_kwargs: object):
-        """Build the ready Gateway and ClientTrafficPolicy resource classes."""
-
-        return Resource
-
     monkeypatch.setattr(gateway.Gateway, "install_controller", install)
     monkeypatch.setattr(
         gateway.templates,
@@ -615,7 +602,8 @@ async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkey
             {"kind": "ClientTrafficPolicy", "status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}},
         ),
     )
-    monkeypatch.setattr(gateway, "new_class", resource_class)
+    monkeypatch.setattr(gateway, "GatewayResource", Resource)
+    monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
     monkeypatch.setattr(gateway, "Namespace", Resource)
     monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
     monkeypatch.setattr(gateway, "Secret", Resource)

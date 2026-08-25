@@ -96,6 +96,7 @@ jobs:
         uses: ./.github/workflows/sync-sample.yml
         with:
             channel: main
+            version: ${{ github.ref_name }}
         secrets: inherit
 
     publish-github-release:

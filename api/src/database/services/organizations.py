@@ -61,7 +61,7 @@ async def application_runtime_access(
 ) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry] | None:
     """Return one user's active application access with its compute registry."""
 
-    # Resolve the requested runtime and its active Organization membership in one scoped query.
+    # Load Application access and its gateway secret in one query.
     result = await session.execute(
         select(Application, Organization, UserOrganization.role, ComputeRegistry)
         .join(Organization, Organization.id == Application.organization_id)
