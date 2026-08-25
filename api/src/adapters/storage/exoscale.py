@@ -199,7 +199,7 @@ class Exoscale:
 
                 # Validate both generated values before returning runtime credentials.
                 key = await api.create_api_key(name=credential_name, role_id=role_id)
-                credentials: StorageRuntimeCredentials = {
+                return {
                     "access_key_id": self._string(key, "key"),
                     "secret_access_key": self._string(key, "secret"),
                 }
@@ -208,8 +208,6 @@ class Exoscale:
             with suppress(Exception):
                 await self.revoke(name)
             raise
-
-        return credentials
 
     async def revoke(self, name: str) -> None:
         """Delete Exoscale API keys and IAM roles created for one Application."""

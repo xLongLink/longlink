@@ -25,7 +25,7 @@ async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[U
     calls: list[tuple[str, list[Audit]]] = []
 
     # Persist one deleted membership whose deactivation follows its last regular update.
-    Session = await get_session()
+    Session = get_session()
     async with Session() as session:
         member_row = await session.get(User, member.id)
         assert member_row is not None

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Wrench } from 'lucide-react';
 import Logs from '@/components/dialogs/Logs';
 import { useDeleteDialog } from '@/lib/utils';
+import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -19,12 +20,14 @@ import type { OrganizationApplicationSummary } from '@/lib/generated/platform-ap
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
     organizationId,
+    organizationSlug,
     applications,
     canManageApplications,
     isLoading,
     error,
 }: {
     organizationId: string;
+    organizationSlug: string;
     applications: OrganizationApplicationSummary[];
     canManageApplications: boolean;
     isLoading: boolean;
@@ -52,7 +55,9 @@ export default function ApplicationSettings({
                 <HStack gap={3} align="center">
                     <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
-                        <Text weight="semibold">{application.name}</Text>
+                        <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
+                            {application.name}
+                        </Link>
                         {application.description ? <Text type="supporting">{application.description}</Text> : null}
                     </VStack>
                 </HStack>

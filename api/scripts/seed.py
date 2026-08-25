@@ -188,15 +188,15 @@ async def seed_local_development(settings: SeedSettings) -> None:
         application = await session.scalar(
             select(Application).where(
                 col(Application.organization_id) == organization.id,
-                col(Application.slug) == "longlink-app",
+                col(Application.slug) == "sample",
             )
         )
         if application is None:
             await applications.create(
                 session,
                 organization.id,
-                "LongLink App",
-                Image("localhost:15000/longlink-app:dev"),
+                "Sample",
+                Image("localhost:15000/sample:dev"),
                 {},
             )
         await session.commit()

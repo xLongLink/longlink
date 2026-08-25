@@ -121,7 +121,7 @@ async def users(password_hash: str) -> tuple[User, User, User]:
     """Create one Platform administrator and two regular Platform users."""
 
     # Persist independent users with the shared session-scoped credential.
-    Session = await session.get_session()
+    Session = session.get_session()
     async with Session() as db_session:
         platform_administrator = User(
             name="Platform Administrator",

@@ -9,7 +9,7 @@
             Track catalog items and their supporting files.
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
-            <Stack>
+            <Stack gap="0">
                 <TextInput label="Name" value="$draft.name" />
                 <NumberInput label="Price" value="$draft.price" min="0" />
                 <Action>

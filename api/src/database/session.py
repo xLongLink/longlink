@@ -27,7 +27,7 @@ def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
         connection.execute("PRAGMA foreign_keys=ON")
 
 
-async def get_session() -> async_sessionmaker[AsyncSession]:
+def get_session() -> async_sessionmaker[AsyncSession]:
     """Return a SQLAlchemy sessionmaker instance."""
     global Session
 
@@ -66,7 +66,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
-    session_factory = await get_session()
+    session_factory = get_session()
 
     # Open one session for the caller's scoped work.
     async with session_factory() as session:

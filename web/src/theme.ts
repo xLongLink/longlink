@@ -213,6 +213,14 @@ export const stoneTheme = defineTheme({
             },
         },
 
+        link: {
+            base: {
+                ':hover': {
+                    textDecorationLine: 'underline',
+                },
+            },
+        },
+
         button: {
             base: {
                 borderRadius: 'var(--radius-element)',

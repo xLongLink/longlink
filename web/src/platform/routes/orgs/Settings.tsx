@@ -192,6 +192,7 @@ export default function OrganizationSettings() {
                     <MenuItem icon="boxes" label="Applications">
                         <ApplicationSettings
                             organizationId={organizationId}
+                            organizationSlug={organization}
                             applications={applications}
                             canManageApplications={hasOrganizationApplicationAccess}
                             isLoading={isLoading}
