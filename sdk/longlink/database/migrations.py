@@ -30,10 +30,10 @@ def load_application_models() -> None:
         if module_name in sys.modules:
             continue
 
-        # Build an import spec from the file path and verify it can load the module.
+        # Build an import spec from the discovered Python source file.
         spec = importlib.util.spec_from_file_location(module_name, py_file)
         if spec is None or spec.loader is None:
-            continue
+            raise RuntimeError(f"Could not load application model: {py_file}")
 
         # Execute the application model module to populate database metadata.
         module = importlib.util.module_from_spec(spec)
@@ -96,9 +96,8 @@ def apply_migrations() -> None:
     """Apply all pending Alembic migrations."""
 
     # Production images must include committed application migrations.
-    environment = Envs().ENV
     migrations_path = Path.cwd() / "migrations"
-    if environment == "production" and (
+    if Envs().ENV == "production" and (
         not migrations_path.is_dir() or not any(path.name != "__init__.py" for path in migrations_path.glob("*.py"))
     ):
         raise RuntimeError(f"Production applications require migrations in {migrations_path}")

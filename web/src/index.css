@@ -29,10 +29,13 @@
     /* Astryx compound parts are exposed through stable classes but are not accepted by the theme compiler. */
     @scope (:is([data-astryx-theme^='longlink-'], [data-astryx-theme='stone'])) to ([data-astryx-theme]) {
         .astryx-breadcrumb-item {
-            margin-inline-start: var(--spacing-1);
             gap: var(--spacing-2);
             font-size: var(--font-size-base);
             line-height: var(--text-body-leading);
+        }
+
+        .astryx-breadcrumb-item:not(:first-child) {
+            margin-inline-start: var(--spacing-1);
         }
 
         .astryx-side-nav-item {

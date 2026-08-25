@@ -63,7 +63,7 @@ class LongLink:
         app.include_router(router)
 
         # Bind Platform request identity across downstream request handling.
-        install_context_middleware(app, settings.IDENTITY_SECRET)
+        install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
         # Applications provide XML pages in the generated source layout.
         pages_directory = Path.cwd() / "src" / "pages"
