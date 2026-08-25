@@ -1267,57 +1267,6 @@
         }
       }
     },
-    "/api/v1/icons": {
-      "get": {
-        "summary": "List Icons",
-        "description": "Return the Lucide icon slugs supported by the web runtime.",
-        "operationId": "list_icons_api_v1_icons_get",
-        "parameters": [
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Icon"
-                  },
-                  "title": "Response List Icons Api V1 Icons Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/image": {
       "get": {
         "summary": "Inspect Image",
@@ -2801,43 +2750,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "Icon": {
-        "type": "string",
-        "enum": [
-          "activity",
-          "arrow-right",
-          "banknote",
-          "bell",
-          "box",
-          "boxes",
-          "building-2",
-          "check",
-          "clipboard-list",
-          "container",
-          "cpu",
-          "database",
-          "download",
-          "hard-drive",
-          "layers",
-          "layout-dashboard",
-          "layout-grid",
-          "link",
-          "list",
-          "list-check",
-          "map-pin",
-          "plus",
-          "rocket",
-          "rotate-ccw",
-          "settings-2",
-          "shield-check",
-          "sliders-horizontal",
-          "timer",
-          "users",
-          "x"
-        ],
-        "title": "Icon",
-        "description": "Lucide icon slugs supported by LongLink runtimes."
       },
       "LongLinkMetadata": {
         "properties": {

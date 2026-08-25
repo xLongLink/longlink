@@ -1,4 +1,4 @@
-from . import auth, icons, image, proxy, users, health, computes, storages, databases, operations, applications, organizations
+from . import auth, image, proxy, users, health, computes, storages, databases, operations, applications, organizations
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/v1")
@@ -10,7 +10,6 @@ router.include_router(proxy.router)
 router.include_router(computes.router)
 router.include_router(databases.router)
 router.include_router(health.router)
-router.include_router(icons.router)
 router.include_router(image.router)
 router.include_router(operations.router)
 router.include_router(organizations.router)

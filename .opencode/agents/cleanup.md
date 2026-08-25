@@ -6,10 +6,7 @@ mode: subagent
 ## Task
 
 Inspect the repository and implement exactly one high-value, high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior.
-
-Choose a task with a clear, local scope. Do not only report cleanup opportunities. Make the change, run the most relevant existing verification, and summarize the implementation and verification result. Do not make unrelated changes.
-
-Focus on `web`, `sdk` and `api`.
+Choose a task with a clear, local scope. Make the change, run the most relevant existing verification
 
 ### 0. Project conventions
 

@@ -233,13 +233,6 @@ export type HttpValidationError = {
 };
 
 /**
- * Icon
- *
- * Lucide icon slugs supported by LongLink runtimes.
- */
-export type Icon = 'activity' | 'arrow-right' | 'banknote' | 'bell' | 'box' | 'boxes' | 'building-2' | 'check' | 'clipboard-list' | 'container' | 'cpu' | 'database' | 'download' | 'hard-drive' | 'layers' | 'layout-dashboard' | 'layout-grid' | 'link' | 'list' | 'list-check' | 'map-pin' | 'plus' | 'rocket' | 'rotate-ccw' | 'settings-2' | 'shield-check' | 'sliders-horizontal' | 'timer' | 'users' | 'x';
-
-/**
  * LongLinkMetadata
  *
  * Structured metadata extracted from OCI and LongLink image labels.
@@ -1484,33 +1477,6 @@ export type ReadyzApiV1ReadyzGetResponses = {
 };
 
 export type ReadyzApiV1ReadyzGetResponse = ReadyzApiV1ReadyzGetResponses[keyof ReadyzApiV1ReadyzGetResponses];
-
-export type ListIconsApiV1IconsGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/icons';
-};
-
-export type ListIconsApiV1IconsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type ListIconsApiV1IconsGetError = ListIconsApiV1IconsGetErrors[keyof ListIconsApiV1IconsGetErrors];
-
-export type ListIconsApiV1IconsGetResponses = {
-    /**
-     * Response List Icons Api V1 Icons Get
-     *
-     * Successful Response
-     */
-    200: Array<Icon>;
-};
-
-export type ListIconsApiV1IconsGetResponse = ListIconsApiV1IconsGetResponses[keyof ListIconsApiV1IconsGetResponses];
 
 export type InspectImageApiV1ImageGetData = {
     body?: never;

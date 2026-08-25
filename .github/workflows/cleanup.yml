@@ -2,6 +2,20 @@ name: OpenCode Change
 
 on:
   workflow_dispatch:
+    inputs:
+      model:
+        description: Free OpenCode model to use
+        required: true
+        default: opencode/nemotron-3.5-lightning-free
+        type: choice
+        options:
+          - opencode/big-pickle
+          - opencode/hy3-free
+          - opencode/mimo-v2.5-free
+          - opencode/muse-spark-1.2-contributor-free
+          - opencode/nemotron-3-ultra-free
+          - opencode/nemotron-3.5-lightning-free
+          - opencode/x-preview-f-free
 
 jobs:
   opencode:
@@ -14,7 +28,6 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-      issues: write
 
     steps:
       - name: Checkout repository
@@ -22,6 +35,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Configure Git author
+        run: |
+          git config user.name "longlink-bot"
+          git config user.email "bot@longlink.dev"
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
@@ -35,8 +53,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         with:
-          # Free Nemotron 3.5 Lightning model
-          model: opencode/nemotron-3.5-lightning-free
+          model: ${{ inputs.model }}
 
           # Use GitHub Actions' GITHUB_TOKEN instead of
           # requiring the OpenCode GitHub App.
