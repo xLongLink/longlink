@@ -42,3 +42,4 @@ jobs:
           # requiring the OpenCode GitHub App.
           use_github_token: true
           agent: cleanup
+          prompt: Execute one high cleanup task.

@@ -1,17 +1,13 @@
 ---
-description: Reviews LongLink for unnecessary code, complexity, and maintainability improvements.
+description: Implements one high-value cleanup that reduces unnecessary LongLink code or complexity.
 mode: subagent
 ---
 
-Review the repository for opportunities to remove unnecessary code, reduce complexity, improve maintainability, and follow project conventions.
-Return a numeric list of cleanup options:
+## Task
 
-1. Exact file path and line range.
-2. The current construct and why it is redundant.
-3. The smallest safe implementation change.
-4. Behavior/invariant checks required before applying it.
-5. Confidence: High, Medium, or Low.
-6. Whether it affects any shared contract or requires updating call sites.
+Inspect the repository and implement exactly one high-value, high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior.
+
+Choose a task with a clear, local scope. Do not only report cleanup opportunities. Make the change, run the most relevant existing verification, and summarize the implementation and verification result. Do not make unrelated changes.
 
 Focus on `web`, `sdk` and `api`.
 
