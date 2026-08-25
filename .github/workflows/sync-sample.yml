@@ -71,7 +71,7 @@ jobs:
                   git clone "https://x-access-token:${SAMPLE_REPOSITORY_TOKEN}@github.com/xlongLink/sample.git" sample
                   cd sample
                   git switch --orphan scaffold
-                  git rm -rf . || true
+                   git rm -rf --ignore-unmatch .
                   git clean -ffdx
                   cp -a "$RUNNER_TEMP/sample/." .
                   git add --all
@@ -82,7 +82,7 @@ jobs:
                   if gh release view "$SAMPLE_VERSION" >/dev/null 2>&1; then
                       gh release delete "$SAMPLE_VERSION" --yes --cleanup-tag
                   fi
-                  gh release create "$SAMPLE_VERSION" --target HEAD --title "$SAMPLE_VERSION" --generate-notes
+                   gh release create "$SAMPLE_VERSION" --target "$sample_branch" --title "$SAMPLE_VERSION" --generate-notes
 
                   while IFS=$'\t' read -r _ reference; do
                       branch="${reference#refs/heads/}"

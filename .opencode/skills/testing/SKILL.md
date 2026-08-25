@@ -1,7 +1,9 @@
 ---
-description: Reviews LongLink test code for coverage gaps and opportunities to simplify tests without changing production code.
-mode: subagent
+name: testing
+description: Reviews LongLink test code for coverage gaps and opportunities to simplify tests without changing production code. Use when the user asks to review, improve, or plan test-only changes.
 ---
+
+# Testing
 
 Review the repository for opportunities to remove unnecessary test code, reduce complexity, improve maintainability, and increase test coverage.
 Return a numeric list of cleanup options:
@@ -24,7 +26,7 @@ make sdk:test  # SDK: longlink
 make test      # Both packages
 ```
 
-## Testing
+## Testing Guidelines
 
 Test observable behavior and important boundaries. Use the lowest test level that provides confidence:
 
@@ -33,25 +35,25 @@ Test observable behavior and important boundaries. Use the lowest test level tha
 - Few end-to-end tests for critical user journeys.
 - Do not duplicate detailed business-rule coverage at higher test levels.
 
-### What to test
+### What to Test
 
-- Business rules, invariants, state transitions, and regressions
-- Happy paths, boundary values, invalid input, and expected failures
-- Public API contracts: status code and exact relevant response/error payload
-- Authentication and authorization as separate behaviors
-- Database constraints, transactions, and persistence queries
-- Custom validation, error handling, emitted events, and audit records when contractual
-- Time, retries, idempotency, and concurrency when they affect behavior
+- Business rules, invariants, state transitions, and regressions.
+- Happy paths, boundary values, invalid input, and expected failures.
+- Public API contracts: status code and exact relevant response/error payload.
+- Authentication and authorization as separate behaviors.
+- Database constraints, transactions, and persistence queries.
+- Custom validation, error handling, emitted events, and audit records when contractual.
+- Time, retries, idempotency, and concurrency when they affect behavior.
 
-### What not to test
+### What Not to Test
 
-- Private methods or internal call order
-- Framework or library behavior that the application has not customized
-- Trivial getters, setters, mappings, or generated CRUD with no business logic
-- Mock interactions instead of outcomes, unless the external request/event is the contract
-- Logs, metrics, timestamps, IDs, ordering, or presentation details unless contractual
-- Real external or production services in CI
-- Duplicate scenarios already covered at a lower level
+- Private methods or internal call order.
+- Framework or library behavior that the application has not customized.
+- Trivial getters, setters, mappings, or generated CRUD with no business logic.
+- Mock interactions instead of outcomes, unless the external request/event is the contract.
+- Logs, metrics, timestamps, IDs, ordering, or presentation details unless contractual.
+- Real external or production services in CI.
+- Duplicate scenarios already covered at a lower level.
 
 Do not write tests only to increase coverage. Coverage identifies untested risk; it is not proof of quality.
 
@@ -66,19 +68,6 @@ Do not write tests only to increase coverage. Coverage identifies untested risk;
 - Use async tests only for async code.
 - Freeze time instead of sleeping; seed unavoidable randomness.
 
-```python
-def test_calculate_total_applies_member_discount():
-    # Arrange
-    order = build_order(subtotal=Decimal("100.00"))
-    customer = build_customer(is_member=True)
-
-    # Act
-    total = calculate_total(order, customer)
-
-    # Assert
-    assert total == Decimal("90.00")
-```
-
 ### Parametrization
 
 - Use parametrization only for the same behavior across meaningful inputs.
@@ -88,32 +77,7 @@ def test_calculate_total_applies_member_discount():
 - Use `pytest.param(..., id="...")` for non-obvious cases.
 - Do not parameterize unrelated behaviors into one test.
 
-```python
-STATUSES = ["listed", "setup", "maintenance"]
-
-
-@pytest.mark.parametrize("status", STATUSES)
-@pytest.mark.parametrize("role", ["admin", "viewer"])
-async def test_property_endpoint_returns_expected_visibility_for_role_and_status(
-    client,
-    role,
-    status,
-):
-    # Arrange
-    token = create_token(role=role)
-    property_id = create_property(status=status)
-
-    # Act
-    response = await client.get(
-        f"/properties/{property_id}",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    # Assert
-    assert response.status_code == expected_status(role, status)
-```
-
-### Fixtures and mocking
+### Fixtures and Mocking
 
 - Prefer small, composable, function-scoped fixtures, factories, and builders.
 - Keep data minimal, domain-oriented, immutable where practical, and free of magic values.
@@ -123,7 +87,7 @@ async def test_property_endpoint_returns_expected_visibility_for_role_and_status
 - Prefer integration tests with a disposable production-compatible database for important persistence flows.
 - Never call real external services in CI.
 
-### FastAPI and database tests
+### FastAPI and Database Tests
 
 - Test routes through HTTP, not by calling route functions directly.
 - Assert both status code and response payload.

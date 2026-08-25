@@ -1,6 +1,6 @@
 ---
-description: Implements one high-value cleanup that reduces unnecessary LongLink code or complexity.
-mode: primary
+name: cleanup
+description: Cleanup code by implementing one high-value simplification in LongLink. Use when the user asks to reduce unnecessary code or complexity without changing intended behavior.
 ---
 
 ## Task
