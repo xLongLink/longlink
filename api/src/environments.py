@@ -58,5 +58,19 @@ class Env(BaseSettings):
 
         return self
 
+    def trusted_origins(self) -> set[str]:
+        """Return the browser origins allowed to perform cookie-authenticated requests."""
+
+        # The configured frontend origin is the only production trust anchor.
+        public_origin = self.PUBLIC_URL.rstrip("/")
+        trusted_origins = {public_origin}
+
+        # Development frontends are reachable through both loopback hostnames.
+        if self.DEVELOPMENT:
+            trusted_origins.add(public_origin.replace("://localhost", "://127.0.0.1"))
+            trusted_origins.add(public_origin.replace("://127.0.0.1", "://localhost"))
+
+        return trusted_origins
+
 
 env = Env()

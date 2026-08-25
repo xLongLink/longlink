@@ -3,7 +3,7 @@ from pwdlib import PasswordHash
 from typing import Annotated
 from fastapi import Body, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
-from src.utils import mail, token
+from src.utils import mail, token, cookies
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
 from src.environments import env
@@ -20,15 +20,7 @@ def set_auth_session(response: Response, credential: str) -> None:
 
     # Publish authentication as a private, browser-only session.
     response.headers["Cache-Control"] = "no-store"
-    response.set_cookie(
-        "longlink_auth",
-        credential,
-        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
-        path="/",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.set_browser_cookie(response, "longlink_auth", credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
 @router.post("/auth/password/login", status_code=204)
@@ -65,22 +57,11 @@ async def logout(
     """Remove the active browser credential."""
 
     # Block cross-origin requests from clearing an authenticated browser session.
-    public_origin = env.PUBLIC_URL.rstrip("/")
-    trusted_origins = {public_origin}
-    if env.DEVELOPMENT:
-        trusted_origins.add(public_origin.replace("://localhost", "://127.0.0.1"))
-        trusted_origins.add(public_origin.replace("://127.0.0.1", "://localhost"))
-    if origin is not None and origin not in trusted_origins:
+    if origin is not None and origin not in env.trusted_origins():
         raise HTTPException(status_code=403, detail="Origin required")
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.
-    response.delete_cookie(
-        "longlink_auth",
-        path="/",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.delete_browser_cookie(response, "longlink_auth", "/")
 
 
 @router.post("/auth/forgot-password", status_code=202)
@@ -115,15 +96,7 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
-    response.set_cookie(
-        "longlink_password_reset",
-        payload.token,
-        max_age=900,
-        path="/api/v1/auth/reset-password",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.set_browser_cookie(response, "longlink_password_reset", payload.token, "/api/v1/auth/reset-password", 900)
 
 
 @router.get("/auth/reset-password/setup", status_code=204)
@@ -163,13 +136,7 @@ async def reset_password(
 
     # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
-    response.delete_cookie(
-        "longlink_password_reset",
-        path="/api/v1/auth/reset-password",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.delete_browser_cookie(response, "longlink_password_reset", "/api/v1/auth/reset-password")
 
 
 @router.post("/auth/register", status_code=202)
@@ -200,15 +167,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
             detail="This registration link is invalid or expired. Request a new link to continue.",
         ) from exc
     response.headers["Cache-Control"] = "no-store"
-    response.set_cookie(
-        "longlink_registration",
-        payload.token,
-        max_age=token.EMAIL_TOKEN_LIFETIME_SECONDS,
-        path="/api/v1/auth/register",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.set_browser_cookie(response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS)
     return {"email": email}
 
 
@@ -264,11 +223,5 @@ async def complete_registration(
 
     # Publish browser authentication only after both persistent records commit.
     set_auth_session(response, credential)
-    response.delete_cookie(
-        "longlink_registration",
-        path="/api/v1/auth/register",
-        secure=not env.DEVELOPMENT,
-        httponly=True,
-        samesite="lax",
-    )
+    cookies.delete_browser_cookie(response, "longlink_registration", "/api/v1/auth/register")
     return user

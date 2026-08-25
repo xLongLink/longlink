@@ -221,21 +221,36 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     memberships = memberships_result.all()
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    rows = [
-        Audit(
-            id=membership.user.id,
-            name=membership.user.name,
-            email=membership.user.email,
-            avatar=membership.user.avatar,
-            role=membership.role.value,
-            created_at=membership.created_at,
-            deleted_at=(
-                deleted_at := max((item for item in (membership.user.deleted_at, membership.deleted_at) if item is not None), default=None)
-            ),
-            updated_at=max(membership.user.updated_at, membership.updated_at, deleted_at or membership.user.updated_at),
+    rows: list[Audit] = []
+    for membership in memberships:
+        # Use the latest tombstone from either the user or the membership row.
+        if membership.user.deleted_at is not None and membership.deleted_at is not None:
+            deleted_at = max(membership.user.deleted_at, membership.deleted_at)
+        elif membership.user.deleted_at is not None:
+            deleted_at = membership.user.deleted_at
+        elif membership.deleted_at is not None:
+            deleted_at = membership.deleted_at
+        else:
+            deleted_at = None
+
+        # Tombstone recency must be reflected in the projected update time.
+        if deleted_at is not None:
+            updated_at = max(membership.user.updated_at, membership.updated_at, deleted_at)
+        else:
+            updated_at = max(membership.user.updated_at, membership.updated_at)
+
+        rows.append(
+            Audit(
+                id=membership.user.id,
+                name=membership.user.name,
+                email=membership.user.email,
+                avatar=membership.user.avatar,
+                role=membership.role.value,
+                created_at=membership.created_at,
+                deleted_at=deleted_at,
+                updated_at=updated_at,
+            )
         )
-        for membership in memberships
-    ]
 
     # The Platform is authoritative over Organization user projections.
     await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
