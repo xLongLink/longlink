@@ -5,7 +5,7 @@ mode: primary
 
 ## Task
 
-Inspect the repository and implement exactly one high-value, high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior.
+Inspect the repository and implement exactly one high-value, high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior. Find a meaning full cleanup.
 Choose a task with a clear, local scope. Make the change, run the most relevant existing verification
 
 ### 0. Project conventions
