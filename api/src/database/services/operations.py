@@ -121,7 +121,7 @@ async def claim(session: AsyncSession) -> Operation | None:
         return None
     if operation.lease_expires_at is not None:
         logger.error("Operation %s failed after its worker lease expired", operation.id)
-        await fail(session, operation.id)
+        await fail(session, operation.id, "Operation lease expired")
         return None
 
     # Acquire the lease conditionally so concurrent workers cannot claim the same operation.
@@ -157,7 +157,7 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
     )
 
 
-async def fail(session: AsyncSession, operation_id: UUID) -> Operation | None:
+async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operation | None:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
@@ -168,6 +168,6 @@ async def fail(session: AsyncSession, operation_id: UUID) -> Operation | None:
             Operation.lease_expires_at.is_not(None),
             Operation.finished_at.is_(None),
         )
-        .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
+        .values(failed=(reason.strip() or "Operation failed")[:500], finished_at=utcnow(), lease_expires_at=None)
         .returning(Operation)
     )

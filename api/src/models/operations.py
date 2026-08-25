@@ -37,6 +37,7 @@ class OperationResponse(BaseModel):
 
     # State
     status: OperationStatus
+    failed: str | None
 
     # Timestamps
     created_at: datetime

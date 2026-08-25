@@ -272,6 +272,10 @@ export type OperationResponse = {
     target_id: string;
     status: OperationStatus;
     /**
+     * Failed
+     */
+    failed: string | null;
+    /**
      * Created At
      */
     created_at: string;

@@ -156,7 +156,7 @@ api: api\:install
 # Build and push the local sample Application image into the development registry.
 local\:image: sdk\:build
 	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && uv run --locked longlink init --folder dev --name sample
 	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
@@ -164,7 +164,6 @@ local\:image: sdk\:build
 # Seed local infrastructure and create the local example Organization and Application.
 seed:
 	cd api && uv sync --locked --extra dev
-	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked python -m scripts.seed
 
@@ -177,6 +176,6 @@ web: web\:install
 # Build the SDK web bundle, then recreate and run the generated SDK development app.
 sdk: sdk\:build
 	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && uv run --locked longlink init --folder dev --name sample
 	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
 	cd sdk/dev && uv run longlink dev

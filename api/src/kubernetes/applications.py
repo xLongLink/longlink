@@ -3,8 +3,9 @@ import asyncio
 import hashlib
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from src.utils import templates
+from src.logger import logger
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Secret, Service, Namespace, Deployment, new_class
 from src.kubernetes.utils import apply, deployment_is_ready
@@ -46,6 +47,7 @@ class Applications:
         revision = hashlib.sha256(
             json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
+        migration_id = f"{application_id}-migration-{revision[:8]}"
         migration, deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("application", "application.yml"),
             application_id=str(application_id),
@@ -53,16 +55,25 @@ class Applications:
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=revision,
-            migration_id=f"{application_id}-migration-{revision[:8]}",
+            migration_id=migration_id,
         )
 
         # Apply migrations once without restarting a failed migration container.
+        logger.info(
+            "Starting migration Job %s for Application %s in namespace %s from image %s",
+            migration_id,
+            application_id,
+            namespace,
+            image,
+        )
         migration_job = Job(migration, api=api)
         await apply(migration_job)
         await migration_job.wait(["condition=Complete", "condition=Failed"])
         status = migration_job.raw.get("status")
-        if isinstance(status, dict) and status.get("failed") == 1:
-            raise RuntimeError("Application migrations failed")
+        if isinstance(status, dict) and isinstance(status.get("failed"), int) and status["failed"] > 0:
+            logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
+            raise RuntimeError(f"Application migration Job '{migration_id}' failed")
+        logger.info("Migration Job %s completed for Application %s in namespace %s", migration_id, application_id, namespace)
 
         # Create the Service and its owned HTTPRoute before starting Application Pods.
         await apply(Service(service, api=api))
@@ -148,17 +159,25 @@ class Applications:
         # Scope the Application Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
-            failed_migration_pod = None
+            migration_pod: Pod | None = None
+            migration_phase: str | None = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
                 status = candidate.raw.get("status")
                 phase = status.get("phase") if isinstance(status, dict) else None
                 component = candidate.metadata.get("labels", {}).get("longlink.io/component")
                 if component != "migration" and phase not in {"Succeeded", "Failed"}:
                     return [line async for line in candidate.logs(tail_lines=200)]
-                if component == "migration" and phase == "Failed":
-                    failed_migration_pod = candidate
-            if failed_migration_pod is not None:
-                return ["Migration logs:", *[line async for line in failed_migration_pod.logs(tail_lines=200)]]
+                if component == "migration":
+                    migration_pod = cast(Pod, candidate)
+                    migration_phase = phase if isinstance(phase, str) else None
+            if migration_pod is not None:
+                migration_name = migration_pod.metadata.get("name", "unknown")
+                if migration_phase == "Failed":
+                    return [
+                        f"Migration Pod {migration_name} failed:",
+                        *[line async for line in migration_pod.logs(tail_lines=200)],
+                    ]
+                return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Application Pod unavailable"]
             raise RuntimeError("Application logs unavailable")
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
             raise RuntimeError("Application logs unavailable") from exc

@@ -37,7 +37,7 @@ export function AuthLayout({
     title: ReactNode;
 }) {
     return (
-        <Center minHeight="calc(100dvh - var(--appshell-header-height, 0px))" width="100%">
+        <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
             <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
                 <Stack gap={1}>
                     <Heading justify="center" level={1}>

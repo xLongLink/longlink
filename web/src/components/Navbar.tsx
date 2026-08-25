@@ -24,28 +24,15 @@ export function Navbar() {
                         label="Main navigation"
                         centerContent={
                             <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
-                                <Link
-                                    href="/docs"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    isStandalone
-                                    weight="medium"
-                                >
+                                <Link href="/docs" color="navigation" isStandalone weight="medium">
                                     Documentation
                                 </Link>
-                                <Link
-                                    href="/pricing"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    isStandalone
-                                    weight="medium"
-                                >
+                                <Link href="/pricing" color="navigation" isStandalone weight="medium">
                                     Pricing
                                 </Link>
                                 <Link
                                     as="a"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
+                                    color="navigation"
                                     href="https://github.com/xLongLink/longlink"
                                     isExternalLink
                                     isStandalone

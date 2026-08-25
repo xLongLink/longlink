@@ -1,5 +1,6 @@
 import asyncio
 from uuid import UUID
+from functools import partial
 from src.logger import logger
 from src.operations import handlers
 from collections.abc import Callable, Awaitable
@@ -64,7 +65,7 @@ async def execute(operation: Operation) -> Operation:
     except asyncio.CancelledError:
         # Graceful shutdown makes interrupted single-execution work terminal.
         try:
-            await _finish_transition(operations.fail, operation.id)
+            await _finish_transition(partial(operations.fail, reason="Operation cancelled"), operation.id)
         except Exception:
             logger.exception("Could not fail cancelled Operation %s", operation.id)
         raise
@@ -79,7 +80,7 @@ async def execute(operation: Operation) -> Operation:
         transition = operations.complete
     else:
         logger.error("Operation %s failed: %s", operation.id, reason)
-        transition = operations.fail
+        transition = partial(operations.fail, reason=reason)
 
     # Finish the terminal database transition even when shutdown cancels this worker.
     updated = await _finish_transition(transition, operation.id)

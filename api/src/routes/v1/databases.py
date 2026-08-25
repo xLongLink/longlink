@@ -90,5 +90,5 @@ async def get_database_usage(registry_id: UUID, session: AsyncSession = Depends(
     try:
         return await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).usage()
     except OperationalError as exc:
-        logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
+        logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc

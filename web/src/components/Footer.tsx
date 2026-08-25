@@ -25,8 +25,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className="hover:!text-primary"
-                                            color="secondary"
+                                            color="navigation"
                                             href="https://www.linkedin.com/company/longlink"
                                             label="LinkedIn"
                                             target="_blank"
@@ -37,8 +36,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className="hover:!text-primary"
-                                            color="secondary"
+                                            color="navigation"
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
                                             target="_blank"
@@ -49,8 +47,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className="hover:!text-primary"
-                                            color="secondary"
+                                            color="navigation"
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
                                             target="_blank"
@@ -62,31 +59,13 @@ export function Footer() {
                             </Stack>
 
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
-                                <Link
-                                    href="/"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/" color="navigation" type="supporting" weight="medium">
                                     Home
                                 </Link>
-                                <Link
-                                    href="/docs"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/docs" color="navigation" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
-                                <Link
-                                    href="/pricing"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/pricing" color="navigation" type="supporting" weight="medium">
                                     Pricing
                                 </Link>
                             </Stack>
@@ -99,31 +78,13 @@ export function Footer() {
                                 LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                             </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link
-                                    href="/impressum"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/impressum" color="navigation" type="supporting" weight="medium">
                                     Impressum
                                 </Link>
-                                <Link
-                                    href="/terms"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/terms" color="navigation" type="supporting" weight="medium">
                                     Terms
                                 </Link>
-                                <Link
-                                    href="/privacy"
-                                    className="hover:!text-primary hover:[&_.astryx-text]:!text-primary hover:!no-underline"
-                                    color="secondary"
-                                    type="supporting"
-                                    weight="medium"
-                                >
+                                <Link href="/privacy" color="navigation" type="supporting" weight="medium">
                                     Privacy
                                 </Link>
                             </Stack>

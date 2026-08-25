@@ -2,6 +2,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from datetime import timedelta
+from functools import partial
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
 from collections.abc import Callable, Awaitable, AsyncIterator
@@ -22,14 +23,14 @@ def leased_operation() -> Operation:
     )
 
 
-def failed_transition(operation: Operation) -> Callable[[object, UUID], Awaitable[Operation]]:
+def failed_transition(operation: Operation) -> Callable[[object, UUID, str], Awaitable[Operation]]:
     """Build a failure transition for one claimed Operation."""
 
-    async def fail(_session: object, operation_id: UUID) -> Operation:
+    async def fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Mark the expected Operation as failed."""
 
         assert operation_id == operation.id
-        operation.failed = True
+        operation.failed = reason
         operation.finished_at = utcnow()
         return operation
 
@@ -99,9 +100,10 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def fail(_session: object, _operation_id: UUID) -> Operation:
+    async def fail(_session: object, _operation_id: UUID, reason: str) -> Operation:
         """Fail only after cancellation reaches the protected transition."""
 
+        assert reason == "Operation cancelled"
         started.set()
         await release.wait()
         raise RuntimeError("database unavailable")
@@ -109,7 +111,9 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
     monkeypatch.setattr(operation_worker.operations, "fail", fail)
 
     # Act
-    transition = asyncio.create_task(operation_worker._finish_transition(operation_worker.operations.fail, UUID(int=1)))
+    transition = asyncio.create_task(
+        operation_worker._finish_transition(partial(operation_worker.operations.fail, reason="Operation cancelled"), UUID(int=1))
+    )
     await started.wait()
     transition.cancel()
     await asyncio.sleep(0)
@@ -125,7 +129,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
 
     # Arrange
     operation = leased_operation()
-    transitions: list[UUID] = []
+    transitions: list[tuple[UUID, str]] = []
 
     async def failing_handler(target_id: UUID) -> str | None:
         """Return one explicit terminal failure."""
@@ -133,11 +137,11 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         assert target_id == operation.target_id
         return "workload deployment failed"
 
-    async def fake_fail(session, operation_id: UUID) -> Operation:
+    async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Record the terminal failure transition."""
 
-        transitions.append(operation_id)
-        operation.failed = True
+        transitions.append((operation_id, reason))
+        operation.failed = reason
         operation.finished_at = utcnow()
         return operation
 
@@ -150,7 +154,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
 
     # Assert
     assert result.status == OperationStatus.failed
-    assert transitions == [operation.id]
+    assert transitions == [(operation.id, "workload deployment failed")]
 
 
 async def test_execute_persists_timeout_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -178,6 +182,7 @@ async def test_execute_persists_timeout_as_terminal_failure(monkeypatch: pytest.
 
     # Assert
     assert result.status == OperationStatus.failed
+    assert result.failed == "Operation timed out"
 
 
 async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -199,6 +204,7 @@ async def test_execute_persists_unexpected_handler_error_as_terminal_failure(mon
 
     # Assert
     assert result.status == OperationStatus.failed
+    assert result.failed == "Operation failed"
 
 
 async def test_execute_logs_terminal_transition_failure_during_handler_cancellation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -212,9 +218,10 @@ async def test_execute_logs_terminal_transition_failure_during_handler_cancellat
 
         raise asyncio.CancelledError
 
-    async def fail(_session: object, _operation_id: UUID) -> Operation:
+    async def fail(_session: object, _operation_id: UUID, reason: str) -> Operation:
         """Model a database failure while recording cancellation."""
 
+        assert reason == "Operation cancelled"
         raise RuntimeError("database unavailable")
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, cancelled_handler)

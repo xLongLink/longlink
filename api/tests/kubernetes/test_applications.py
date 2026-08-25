@@ -52,7 +52,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     monkeypatch.setattr(applications, "apply", apply)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Application migrations failed"):
+    with pytest.raises(RuntimeError, match="Application migration Job .* failed"):
         await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
             UUID("00000000-0000-4000-8000-000000000001"),
             "acme",
@@ -62,7 +62,9 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     assert applied == ["Secret", "Job"]
 
 
-async def test_application_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_application_apply_waits_for_deployment_and_route_readiness(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Apply every workload resource when the Deployment and HTTPRoute are ready."""
 
     # Arrange
@@ -149,6 +151,8 @@ async def test_application_apply_waits_for_deployment_and_route_readiness(monkey
 
     # Assert
     assert applied == ["Secret", "Job", "Service", "HTTPRoute", "Deployment"]
+    assert any("Starting migration Job" in message for message in caplog.messages)
+    assert any("Migration Job" in message and "completed" in message for message in caplog.messages)
 
 
 async def test_application_apply_reports_quota_admission_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -356,7 +360,7 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
         """Represent a failed migration Pod."""
 
         raw = {"status": {"phase": "Failed"}}
-        metadata = {"labels": {"longlink.io/component": "migration"}}
+        metadata = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
 
         @classmethod
         async def list(cls, **_kwargs: object):
@@ -379,7 +383,7 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
     )
 
     # Assert
-    assert logs == ["Migration logs:", "migration failed"]
+    assert logs == ["Migration Pod migration-123 failed:", "migration failed"]
 
 
 async def test_application_logs_returns_running_application_pod_logs(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -414,6 +418,36 @@ async def test_application_logs_returns_running_application_pod_logs(monkeypatch
 
     # Assert
     assert logs == ["application started"]
+
+
+async def test_application_logs_reports_completed_migration_when_application_pod_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Return migration context when the Application Pod has not started."""
+
+    # Arrange
+    class PodResource:
+        """Represent a completed migration Pod."""
+
+        raw = {"status": {"phase": "Succeeded"}}
+        metadata = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield the completed migration Pod."""
+
+            yield cls()
+
+    monkeypatch.setattr(applications, "Pod", PodResource)
+
+    # Act
+    logs = await applications.Applications(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        UUID("00000000-0000-4000-8000-000000000001"),
+        "acme",
+    )
+
+    # Assert
+    assert logs == ["Migration Pod migration-123 is Succeeded; Application Pod unavailable"]
 
 
 async def test_application_logs_reports_unavailable_when_no_pod_exists(monkeypatch: pytest.MonkeyPatch) -> None:

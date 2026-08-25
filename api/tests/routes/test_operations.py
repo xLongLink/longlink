@@ -85,3 +85,4 @@ async def test_operations_endpoint_paginates_history(
     assert second_payload["total"] == 2
     assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
     assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]
+    assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])

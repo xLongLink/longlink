@@ -312,6 +312,22 @@ async def test_operations_service_expired_leases_cannot_complete() -> None:
     assert row.finished_at is not None
 
 
+async def test_operations_service_records_bounded_failure_reason() -> None:
+    """Persist a bounded failure reason in the failed operation field."""
+
+    # Arrange
+    operation = await queue(target_id=uuid4())
+    claimed = await claim_operation()
+    assert claimed is not None
+
+    # Act
+    failed = await fail_operation(operation.id, "migration job failed" * 100)
+
+    # Assert
+    assert failed is not None
+    assert failed.failed == ("migration job failed" * 100)[:500]
+
+
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:
     """Keep claimed work immutable while coalescing one unclaimed follow-up."""
 

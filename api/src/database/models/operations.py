@@ -48,7 +48,8 @@ class Operation(PlatformModel, table=True):
     target_id: UUID
 
     # State
-    failed: bool = Field(default=False)
+    failed: str | None = Field(default=None, min_length=1, max_length=500)
+
     # Lock
     lease_expires_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 

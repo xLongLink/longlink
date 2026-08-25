@@ -147,6 +147,7 @@ export const zOperationResponse = z.object({
     kind: zOperationKind,
     target_id: z.uuid(),
     status: zOperationStatus,
+    failed: z.string().nullable(),
     created_at: z.iso.datetime(),
     finished_at: z.iso.datetime().nullable()
 });

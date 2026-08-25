@@ -69,7 +69,8 @@ class Postgres:
 
         return url.update_query_dict(query)
 
-    def quote(self, conn: AsyncConnection, value: str) -> str:
+    @staticmethod
+    def quote(conn: AsyncConnection, value: str) -> str:
         """Return a SQLAlchemy dialect-quoted SQL identifier."""
 
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)

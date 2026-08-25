@@ -81,6 +81,11 @@ export default function AdminOperations() {
                             <Text>
                                 <Text type="supporting">Target</Text> <Text type="code">{operation.target_id}</Text>
                             </Text>
+                            {operation.status === 'failed' && operation.failed ? (
+                                <Text>
+                                    <Text type="supporting">Reason</Text> {operation.failed}
+                                </Text>
+                            ) : null}
                         </VStack>
                     )}
                 </TableColumn>

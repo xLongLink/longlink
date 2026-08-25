@@ -5,21 +5,29 @@ from longlink.cli.init import init_command
 
 
 @pytest.mark.parametrize(
-    ("arguments", "ci_paths"),
+    ("arguments", "ci_paths", "project_name"),
     [
         pytest.param(
             ["--folder", "sample-app"],
             [],
+            "sample-app",
             id="default",
         ),
         pytest.param(
             ["--folder", "sample-app", "--ci", "github"],
             [".github/workflows/release.yml", ".github/workflows/tests.yml"],
+            "sample-app",
             id="github-ci",
+        ),
+        pytest.param(
+            ["--folder", "sample-app", "--name", "sample"],
+            [],
+            "sample",
+            id="name",
         ),
     ],
 )
-def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: list[str]) -> None:
+def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: list[str], project_name: str) -> None:
     """Copy the requested project scaffold into the target folder."""
 
     # Arrange
@@ -35,6 +43,7 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             assert (target / path).exists()
         assert "LongLink(app)" in (target / "main.py").read_text(encoding="utf-8")
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
+        assert f'name = "{project_name}"' in pyproject
         assert "[tool.longlink]" in pyproject
         assert 'environment = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
