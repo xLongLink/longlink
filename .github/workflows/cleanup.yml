@@ -3,10 +3,19 @@ name: OpenCode Change
 on:
   workflow_dispatch:
     inputs:
-      prompt:
-        description: "Describe the change OpenCode should make"
+      model:
+        description: Free OpenCode model to use
         required: true
-        type: string
+        default: opencode/nemotron-3.5-lightning-free
+        type: choice
+        options:
+          - opencode/big-pickle
+          - opencode/hy3-free
+          - opencode/mimo-v2.5-free
+          - opencode/muse-spark-1.2-contributor-free
+          - opencode/nemotron-3-ultra-free
+          - opencode/nemotron-3.5-lightning-free
+          - opencode/x-preview-f-free
 
 jobs:
   opencode:
@@ -19,14 +28,18 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-      issues: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
+
+      - name: Configure Git author
+        run: |
+          git config user.name "longlink-bot"
+          git config user.email "bot@longlink.dev"
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
@@ -40,34 +53,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         with:
-          # Free, open-source/open-weight model
-          model: opencode/mimo-v2.5-free
+          model: ${{ inputs.model }}
 
           # Use GitHub Actions' GITHUB_TOKEN instead of
           # requiring the OpenCode GitHub App.
           use_github_token: true
-
-          prompt: |
-            Make the following change to this repository:
-
-            ${{ inputs.prompt }}
-
-            Requirements:
-            - Inspect the existing codebase before making changes.
-            - Implement the requested change completely.
-            - Follow the existing architecture, style, and conventions.
-            - Do not make unrelated changes.
-            - Run relevant tests, linters, formatters, and type checks.
-            - Fix failures caused by your changes.
-            - Do not modify generated or vendored files unless necessary.
-            - Create a new branch for the implementation.
-            - Commit all changes with a clear commit message.
-            - Push the branch to the repository.
-            - Open a pull request against the repository's default branch.
-
-            The pull request must include:
-            - A concise title.
-            - A summary of the implementation.
-            - The reason for the changes.
-            - Tests/checks that were run.
-            - Any important implementation notes.
+          agent: cleanup
+          prompt: Execute one high cleanup task.

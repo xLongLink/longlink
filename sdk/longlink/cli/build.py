@@ -8,7 +8,7 @@ import tomllib
 import tempfile
 import subprocess
 from pathlib import Path
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 

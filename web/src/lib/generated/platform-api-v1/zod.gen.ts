@@ -103,44 +103,6 @@ export const zEnvironmentMetadata = z.object({
 });
 
 /**
- * Icon
- *
- * Lucide icon slugs supported by LongLink runtimes.
- */
-export const zIcon = z.enum([
-    'activity',
-    'arrow-right',
-    'banknote',
-    'bell',
-    'box',
-    'boxes',
-    'building-2',
-    'check',
-    'clipboard-list',
-    'container',
-    'cpu',
-    'database',
-    'download',
-    'hard-drive',
-    'layers',
-    'layout-dashboard',
-    'layout-grid',
-    'link',
-    'list',
-    'list-check',
-    'map-pin',
-    'plus',
-    'rocket',
-    'rotate-ccw',
-    'settings-2',
-    'shield-check',
-    'sliders-horizontal',
-    'timer',
-    'users',
-    'x'
-]);
-
-/**
  * LongLinkMetadata
  *
  * Structured metadata extracted from OCI and LongLink image labels.
@@ -732,13 +694,6 @@ export const zHealthzApiV1HealthzGetResponse = z.record(z.string(), z.boolean())
  * Successful Response
  */
 export const zReadyzApiV1ReadyzGetResponse = z.record(z.string(), z.boolean());
-
-/**
- * Response List Icons Api V1 Icons Get
- *
- * Successful Response
- */
-export const zListIconsApiV1IconsGetResponse = z.array(zIcon);
 
 export const zInspectImageApiV1ImageGetQuery = z.object({
     image: z.string()
