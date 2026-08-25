@@ -28,6 +28,13 @@ GatewayClassResource = new_class(
     namespaced=False,
     plural="gatewayclasses",
 )
+GatewayResource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")
+ClientTrafficPolicyResource = new_class(
+    "ClientTrafficPolicy",
+    "gateway.envoyproxy.io/v1alpha1",
+    asyncio=True,
+    plural="clienttrafficpolicies",
+)
 
 
 @dataclass(slots=True)
@@ -294,13 +301,8 @@ class Gateway:
             files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
         api = await self._client.api()
-        gateway_resource = new_class("Gateway", "gateway.networking.k8s.io/v1", asyncio=True, plural="gateways")(gateway, api=api)
-        policy_resource = new_class(
-            "ClientTrafficPolicy",
-            "gateway.envoyproxy.io/v1alpha1",
-            asyncio=True,
-            plural="clienttrafficpolicies",
-        )(client_traffic_policy, api=api)
+        gateway_resource = GatewayResource(gateway, api=api)
+        policy_resource = ClientTrafficPolicyResource(client_traffic_policy, api=api)
         await apply(Namespace(namespace, api=api))
         await apply(GatewayClassResource(gateway_class, api=api))
         if tls is not None:
