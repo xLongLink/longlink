@@ -13,7 +13,7 @@ describe('resolveXmlProps', () => {
             z.object({ count: z.number(), gap: xmlSpacingWithDefaultSchema, label: z.string() })
         );
 
-        expect(values).toEqual({ count: 2, gap: 3, label: 'Ready' });
+        expect(values).toEqual({ count: 2, gap: 1, label: 'Ready' });
     });
 
     it('rejects values outside the declared schema', () => {

@@ -39,4 +39,4 @@ export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'aroun
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;
 export const STACK_ITEM_SIZES = ['static', 'fill'] as const;
 export const SPACING_VALUES = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
-export const XML_LAYOUT_GAP = 3;
+export const XML_LAYOUT_GAP = 1;

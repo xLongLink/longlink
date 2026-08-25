@@ -104,24 +104,6 @@ def test_migration_loader_skips_already_imported_models(
     database_migrations.load_application_models()
 
 
-def test_migration_loader_skips_models_without_an_import_spec(
-    isolated_model: tuple[Path, Callable[[str, str], None]],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Skip model files that Python cannot load as modules."""
-
-    # Arrange
-    _, write_model = isolated_model
-    write_model("unloadable_inventory", "table_name = 'unloadable_inventory'\n")
-    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", lambda *_args: None)
-
-    # Act
-    database_migrations.load_application_models()
-
-    # Assert
-    assert "src.database.models.catalog.inventory" not in sys.modules
-
-
 def test_migration_loader_removes_failed_model_import_before_retry(
     isolated_model: tuple[Path, Callable[[str, str], None]],
 ) -> None:

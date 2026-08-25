@@ -13,7 +13,6 @@ from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application

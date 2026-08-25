@@ -1,4 +1,3 @@
-from uuid import uuid4
 from httpx2 import AsyncClient
 from factories import create_ready_infrastructure
 

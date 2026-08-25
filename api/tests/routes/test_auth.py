@@ -11,7 +11,7 @@ from src.utils import token
 from urllib.parse import parse_qs, urlparse
 from src.routes.v1 import auth as auth_routes
 from sqlalchemy.exc import IntegrityError
-from src.models.auth import TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
+from src.models.auth import TokenPayload, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow

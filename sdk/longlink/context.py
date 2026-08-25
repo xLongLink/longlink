@@ -32,7 +32,7 @@ async def data(request: Request) -> AsyncGenerator[Context]:
         yield Context(user=user, storage=request.app.state.longlink.storage, database=database)
 
 
-def install_context_middleware(app: FastAPI, identity_secret: str | None = None) -> None:
+def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
     """Bind trusted Platform identity for the complete request lifecycle."""
 
     @app.middleware("http")
@@ -41,7 +41,7 @@ def install_context_middleware(app: FastAPI, identity_secret: str | None = None)
 
         # Verify the Platform-signed user assertion before making it available to application code.
         try:
-            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity") or "", identity_secret or "")
+            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity") or "", identity_secret)
         except jwt.PyJWTError:
             user_id = None
 
