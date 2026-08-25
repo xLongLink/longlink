@@ -1,6 +1,6 @@
 ---
-name: loop
-description: Iteratively identifies, implements, and verifies LongLink improvements after the user selects them. Use when the user invokes @loop or asks for a prioritized, recurring improvement review.
+description: Iteratively identifies, implements, and verifies LongLink improvements after the user selects them.
+mode: primary
 ---
 
 # Loop
