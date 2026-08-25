@@ -1,8 +1,8 @@
 import { Wrench } from 'lucide-react';
 import { useParams } from 'react-router';
+import { hasMinimumRole } from '@/lib/roles';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -12,13 +12,16 @@ import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
+import CreateApplication from '@/components/dialogs/CreateApplication';
 import { useOrganizationApplications } from '@/lib/hooks/use-organization';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organization applications page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const { applications, isLoading, error } = useOrganizationApplications(organization);
+    const { applications, organizationId, role, isLoading, error } = useOrganizationApplications(organization);
+    const canManageApplications = hasMinimumRole(role, 'maintain');
+
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
         return <NotFoundLayout />;
@@ -40,12 +43,15 @@ export default function Organization() {
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8}>
-            <Stack gap={1} width="100%">
-                <Heading level={1}>Applications</Heading>
-                <Text as="p" color="secondary">
-                    Manage the applications attached to this organization.
-                </Text>
-            </Stack>
+            <HStack gap={4} justify="between" align="end" wrap="wrap">
+                <VStack gap={1}>
+                    <Heading level={1}>Applications</Heading>
+                    <Text as="p" color="secondary">
+                        Manage the applications attached to this organization.
+                    </Text>
+                </VStack>
+                {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
+            </HStack>
             <Table
                 data={applications}
                 density="compact"

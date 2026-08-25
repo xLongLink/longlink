@@ -62,7 +62,7 @@ export function useOrganization(organizationSlug: string) {
 
 /** Fetches organization applications without loading people-management data. */
 export function useOrganizationApplications(organizationSlug: string) {
-    const { organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
+    const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
     const applicationsPath = organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
     const applicationsQuery = useQuery({
         queryKey: ['api', applicationsPath],
@@ -81,6 +81,8 @@ export function useOrganizationApplications(organizationSlug: string) {
 
     return {
         applications: applicationsQuery.data ?? [],
+        organizationId: organizationId ?? '',
+        role: membership?.role ?? null,
         isLoading: isUserLoading || applicationsQuery.isLoading,
         error,
     };
