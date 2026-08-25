@@ -2,11 +2,6 @@ name: OpenCode Change
 
 on:
   workflow_dispatch:
-    inputs:
-      prompt:
-        description: "Describe the change OpenCode should make"
-        required: true
-        type: string
 
 jobs:
   opencode:
@@ -40,34 +35,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         with:
-          # Free, open-source/open-weight model
-          model: opencode/mimo-v2.5-free
+          # Free Nemotron 3.5 Lightning model
+          model: opencode/nemotron-3.5-lightning-free
 
           # Use GitHub Actions' GITHUB_TOKEN instead of
           # requiring the OpenCode GitHub App.
           use_github_token: true
-
-          prompt: |
-            Make the following change to this repository:
-
-            ${{ inputs.prompt }}
-
-            Requirements:
-            - Inspect the existing codebase before making changes.
-            - Implement the requested change completely.
-            - Follow the existing architecture, style, and conventions.
-            - Do not make unrelated changes.
-            - Run relevant tests, linters, formatters, and type checks.
-            - Fix failures caused by your changes.
-            - Do not modify generated or vendored files unless necessary.
-            - Create a new branch for the implementation.
-            - Commit all changes with a clear commit message.
-            - Push the branch to the repository.
-            - Open a pull request against the repository's default branch.
-
-            The pull request must include:
-            - A concise title.
-            - A summary of the implementation.
-            - The reason for the changes.
-            - Tests/checks that were run.
-            - Any important implementation notes.
+          agent: cleanup

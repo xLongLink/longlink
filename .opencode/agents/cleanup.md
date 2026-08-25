@@ -1,6 +1,6 @@
 ---
-name: cleanup
-description: Code cleanup specialist
+description: Reviews LongLink for unnecessary code, complexity, and maintainability improvements.
+mode: subagent
 ---
 
 Review the repository for opportunities to remove unnecessary code, reduce complexity, improve maintainability, and follow project conventions.
@@ -111,10 +111,10 @@ Prefer explicit control flow, clear ownership, high cohesion, and low coupling.
 
 Apply these pragmatically:
 
-- **KISS** — prefer the simplest implementation that correctly solves the problem.
-- **DRY** — avoid duplicated knowledge or business rules, but do not create abstractions solely to eliminate superficial code similarity.
-- **YAGNI** — remove or avoid functionality, abstractions, configurability, and extension points that exist only for hypothetical future needs.
-- **SRP / Separation of concerns** — keep responsibilities focused and ownership clear.
-- **High cohesion / Low coupling** — keep related behavior together and minimize unnecessary dependencies.
-- **Locality of behavior** — keep logic close to the data and concepts it operates on.
-- **Information hiding** — avoid exposing implementation details unnecessarily.
+- **KISS** - prefer the simplest implementation that correctly solves the problem.
+- **DRY** - avoid duplicated knowledge or business rules, but do not create abstractions solely to eliminate superficial code similarity.
+- **YAGNI** - remove or avoid functionality, abstractions, configurability, and extension points that exist only for hypothetical future needs.
+- **SRP / Separation of concerns** - keep responsibilities focused and ownership clear.
+- **High cohesion / Low coupling** - keep related behavior together and minimize unnecessary dependencies.
+- **Locality of behavior** - keep logic close to the data and concepts it operates on.
+- **Information hiding** - avoid exposing implementation details unnecessarily.

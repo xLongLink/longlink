@@ -1,9 +1,9 @@
 ---
-name: testing
-description: Code testing
+description: Reviews LongLink test code for coverage gaps and opportunities to simplify tests without changing production code.
+mode: subagent
 ---
 
-Review the repository for opportunities to remove unnecessary code, reduce complexity, improve maintainability, and increase test coverage.
+Review the repository for opportunities to remove unnecessary test code, reduce complexity, improve maintainability, and increase test coverage.
 Return a numeric list of cleanup options:
 
 1. Exact file path and line range.
@@ -12,7 +12,7 @@ Return a numeric list of cleanup options:
 4. Confidence: High, Medium, or Low.
 5. Whether it affects any shared contract or requires updating call sites.
 
-_Focus only on the test cases. Do not change production code_
+Focus only on the test cases. Do not change production code.
 
 ## LongLink Coverage
 
