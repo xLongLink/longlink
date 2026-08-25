@@ -1,6 +1,6 @@
 import pytest
-from fastapi import HTTPException
 from src.utils import names
+from src.errors import ConflictError
 
 pytestmark = pytest.mark.no_db
 
@@ -15,8 +15,5 @@ def test_slugify_normalizes_to_url_slug() -> None:
 def test_slugify_rejects_invalid_slug(value: str) -> None:
     """Reject names that cannot produce one URL slug."""
 
-    with pytest.raises(HTTPException) as exc:
+    with pytest.raises(ConflictError, match="Invalid name"):
         names.slugify(value)
-
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Invalid name"
