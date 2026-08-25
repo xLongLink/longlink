@@ -1,6 +1,6 @@
 ---
 description: Implements one high-value cleanup that reduces unnecessary LongLink code or complexity.
-mode: subagent
+mode: primary
 ---
 
 ## Task

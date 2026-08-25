@@ -270,7 +270,7 @@ async def update_member_role(
         raise NotFoundError("Organization member not found")
 
     # Only owners may grant or change owner access.
-    if (membership.role == OrganizationRoles.owner or role == OrganizationRoles.owner) and caller_role != OrganizationRoles.owner:
+    if OrganizationRoles.owner in (membership.role, role) and caller_role != OrganizationRoles.owner:
         raise ForbiddenError("Owner management permissions required")
 
     # Repeated role assignments do not require persistence or reconciliation.
@@ -382,7 +382,6 @@ async def create(
         raise UnavailableError("No database registry available")
     if storage_registry_id is None:
         raise UnavailableError("No storage registry available")
-
 
     return await _persist(
         session,
