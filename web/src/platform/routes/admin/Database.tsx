@@ -56,8 +56,8 @@ export default function AdminDatabase() {
 
     return (
         <VStack gap={6} width="100%">
-            <HStack gap={4} justify="between" align="end" wrap="wrap">
-                <VStack gap={1}>
+            <HStack gap={0} justify="between" align="center" wrap="wrap">
+                <VStack gap={0}>
                     <Heading level={1}>Database</Heading>
                     <Text type="supporting">Monitor platform data, schema health, and persistence state.</Text>
                 </VStack>

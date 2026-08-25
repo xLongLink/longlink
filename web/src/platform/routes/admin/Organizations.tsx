@@ -64,7 +64,7 @@ export default function AdminOrganizations() {
 
     return (
         <VStack gap={6} width="100%">
-            <VStack gap={1}>
+            <VStack gap={0}>
                 <Heading level={1}>Organizations</Heading>
                 <Text type="supporting">Review organization lifecycle, ownership, and access boundaries.</Text>
             </VStack>

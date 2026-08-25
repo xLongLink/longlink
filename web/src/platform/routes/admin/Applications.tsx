@@ -42,7 +42,7 @@ export default function AdminApplications() {
 
     return (
         <VStack gap={6} width="100%">
-            <VStack gap={1}>
+            <VStack gap={0}>
                 <Heading level={1}>Applications</Heading>
                 <Text type="supporting">Review all applications across organizations and deployment states.</Text>
             </VStack>

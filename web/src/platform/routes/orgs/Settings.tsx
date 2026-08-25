@@ -6,7 +6,6 @@ import { formatBytes } from '@/lib/utils';
 import { hasMinimumRole } from '@/lib/roles';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Stack } from '@astryxdesign/core/Stack';
 import People from '@/components/settings/People';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -146,12 +145,12 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8}>
-            <Stack gap={1} width="100%">
+            <VStack gap={0}>
                 <Heading level={1}>Settings</Heading>
                 <Text as="p" color="secondary">
                     Configure the organization and its runtime defaults.
                 </Text>
-            </Stack>
+            </VStack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem icon="building2" label="Organization">

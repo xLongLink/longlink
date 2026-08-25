@@ -323,11 +323,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
     )
 
     # Write the generated Dockerfile into the temporary build context.
-    dependency_source = root.relative_to(source_root).as_posix()
-    if dependency_source != ".":
-        dependency_source += "/"
-    else:
-        dependency_source = ""
+    dependency_source = "" if root == source_root else f"{root.relative_to(source_root).as_posix()}/"
     local_dependency_manifests = "\n".join(
         f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
         f"/workspace/{source_path.relative_to(source_root).as_posix()}/"

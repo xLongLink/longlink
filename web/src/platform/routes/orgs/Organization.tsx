@@ -43,8 +43,8 @@ export default function Organization() {
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8}>
-            <HStack gap={4} justify="between" align="end" wrap="wrap">
-                <VStack gap={1}>
+            <HStack gap={0} justify="between" align="center" wrap="wrap">
+                <VStack gap={0}>
                     <Heading level={1}>Applications</Heading>
                     <Text as="p" color="secondary">
                         Manage the applications attached to this organization.

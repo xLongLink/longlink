@@ -32,10 +32,12 @@ export default function Organizations() {
 
     return (
         <PageContainer gap={8}>
-            <HStack gap={4} justify="between" align="end" wrap="wrap">
-                <VStack gap={1}>
+            <HStack gap={0} justify="between" align="center" wrap="wrap">
+                <VStack gap={0}>
                     <Heading level={1}>Organizations</Heading>
-                    <Text type="supporting">Manage the workspaces connected to your LongLink account.</Text>
+                    <Text as="p" color="secondary">
+                        Manage the workspaces connected to your LongLink account.
+                    </Text>
                 </VStack>
                 <CreateOrganization />
             </HStack>

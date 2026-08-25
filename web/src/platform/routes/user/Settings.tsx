@@ -91,9 +91,11 @@ export default function Settings() {
     });
     return (
         <PageContainer gap={8}>
-            <VStack gap={1}>
+            <VStack gap={0}>
                 <Heading level={1}>Settings</Heading>
-                <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
+                <Text as="p" color="secondary">
+                    Manage your account, preferences, and workspace access.
+                </Text>
             </VStack>
 
             <Menu>
@@ -123,7 +125,7 @@ export default function Settings() {
                     </MenuItem>
                     <MenuItem icon="building2" label="Organizations">
                         <VStack gap={4}>
-                            <HStack gap={4} justify="between" align="end" wrap="wrap">
+                            <HStack gap={0} justify="between" align="center" wrap="wrap">
                                 <Heading level={2}>Organizations</Heading>
                                 <CreateOrganization />
                             </HStack>

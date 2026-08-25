@@ -42,7 +42,7 @@ export default function AdminOperations() {
 
     return (
         <VStack gap={6} width="100%">
-            <VStack gap={1}>
+            <VStack gap={0}>
                 <Heading level={1}>Operations</Heading>
                 <Text type="supporting">
                     Track long-running Platform tasks, when they become available, and when they finish.
