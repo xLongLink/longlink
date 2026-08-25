@@ -21,6 +21,9 @@ jobs:
         needs: tests
         runs-on: ubuntu-latest
 
+        outputs:
+            platform_version: ${{ steps.platform.outputs.version }}
+
         env:
             IMAGE: ghcr.io/xlonglink/longlink:nightly
 
@@ -99,4 +102,5 @@ jobs:
         uses: ./.github/workflows/sync-sample.yml
         with:
             channel: nightly
+            version: ${{ needs.publish-api-image.outputs.platform_version }}
         secrets: inherit

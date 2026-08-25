@@ -6,6 +6,9 @@ on:
             channel:
                 required: true
                 type: string
+            version:
+                required: true
+                type: string
     workflow_dispatch:
         inputs:
             channel:
@@ -14,6 +17,10 @@ on:
                 default: main
                 type: choice
                 options: [main, nightly]
+            version:
+                description: Sample release version
+                required: true
+                type: string
 
 permissions:
     contents: read
@@ -28,6 +35,7 @@ jobs:
 
         env:
             SYNC_CHANNEL: ${{ inputs.channel }}
+            SAMPLE_VERSION: ${{ inputs.version }}
 
         steps:
             - name: Checkout LongLink
@@ -41,11 +49,13 @@ jobs:
                   set -euo pipefail
                   uv sync --locked --project sdk
                   uv run --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
+                  perl -0pi -e 's/^version = "0\.0\.0"$/version = "$ENV{SAMPLE_VERSION}"/m' "$RUNNER_TEMP/sample/pyproject.toml"
                   uv lock --project "$RUNNER_TEMP/sample"
 
             - name: Replace sample history
               env:
                   SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
+                  GH_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
               run: |
                   set -euo pipefail
                   : "${SAMPLE_REPOSITORY_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
@@ -67,6 +77,12 @@ jobs:
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
                   git push --force origin "HEAD:${sample_branch}"
+
+                  # Recreate the release so its workflow publishes the newly synchronized image.
+                  if gh release view "$SAMPLE_VERSION" >/dev/null 2>&1; then
+                      gh release delete "$SAMPLE_VERSION" --yes --cleanup-tag
+                  fi
+                  gh release create "$SAMPLE_VERSION" --target HEAD --title "$SAMPLE_VERSION" --generate-notes
 
                   while IFS=$'\t' read -r _ reference; do
                       branch="${reference#refs/heads/}"
