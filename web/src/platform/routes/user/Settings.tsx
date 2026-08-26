@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -102,6 +103,7 @@ export default function Settings() {
                     <MenuItem icon="userRound" label="Account">
                         <Stack gap={4}>
                             <Heading level={2}>Account</Heading>
+                            <Divider />
                             <Stack direction="horizontal" gap={4} align="start" wrap="wrap">
                                 <TextInput
                                     label="Username"
@@ -128,6 +130,7 @@ export default function Settings() {
                                 <Heading level={2}>Organizations</Heading>
                                 <CreateOrganization />
                             </Stack>
+                            <Divider />
                             {isOrganizationsLoading && memberships.length === 0 ? null : (
                                 <Table
                                     data={memberships}

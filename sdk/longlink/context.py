@@ -41,7 +41,7 @@ def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
 
         # Verify the Platform-signed user assertion before making it available to application code.
         try:
-            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity") or "", identity_secret)
+            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
         except jwt.PyJWTError:
             user_id = None
 
