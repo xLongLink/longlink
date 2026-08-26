@@ -1,15 +1,16 @@
 import { api } from '@/lib/api';
-import { Badge } from '@astryxdesign/core/Badge';
+import type { ComponentProps } from 'react';
+import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Badge } from '@astryxdesign/core/Badge';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, TableColumn } from '@/components/ui/Table';
-import { Stack } from '@/components/ui/Stack';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
@@ -17,7 +18,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary, Status } from '@/lib/generated/platform-api-v1/types.gen';
-import type { ComponentProps } from 'react';
 
 const statusPresentation = {
     creating: { label: 'Creating', variant: 'info' },
