@@ -198,6 +198,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 "Sample",
                 Image("localhost:15000/sample:dev"),
                 {},
+                "A sample application for local development.",
             )
         await session.commit()
 

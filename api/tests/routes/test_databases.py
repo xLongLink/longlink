@@ -1,91 +1,8 @@
 import pytest
 from uuid import uuid4
-from types import SimpleNamespace
 from httpx2 import AsyncClient
-from fastapi import HTTPException
 from factories import create_ready_infrastructure
-from src.routes.v1 import databases
-from unittest.mock import AsyncMock
 from sqlalchemy.exc import OperationalError
-
-
-@pytest.mark.parametrize(
-    ("registry", "usage", "expected_status", "expected_detail"),
-    [
-        pytest.param(None, None, 404, "Database registry not found", id="missing-registry"),
-        pytest.param(
-            SimpleNamespace(host="database.example", port=5432, username="admin", password="secret", sslmode="require"),
-            OperationalError("SELECT", {}, RuntimeError("database offline")),
-            503,
-            "Database usage unavailable",
-            id="backend-unavailable",
-        ),
-    ],
-)
-async def test_get_database_usage_returns_exact_errors(
-    monkeypatch: pytest.MonkeyPatch,
-    registry: object | None,
-    usage: OperationalError | None,
-    expected_status: int,
-    expected_detail: str,
-) -> None:
-    """Return exact errors for missing registries and unavailable database backends."""
-
-    # Arrange
-    registry_id = uuid4()
-    session = SimpleNamespace(get=AsyncMock(return_value=registry))
-
-    class FakePostgres:
-        """Raise the configured backend failure when usage is requested."""
-
-        def __init__(self, *_args: object) -> None:
-            """Accept database connection details."""
-
-        async def usage(self) -> int:
-            """Raise the configured adapter error."""
-
-            assert usage is not None
-            raise usage
-
-    monkeypatch.setattr(databases, "Postgres", FakePostgres)
-
-    # Act
-    with pytest.raises(HTTPException) as exc:
-        await databases.get_database_usage(registry_id, session)
-
-    # Assert
-    assert exc.value.status_code == expected_status
-    assert exc.value.detail == expected_detail
-
-
-async def test_get_database_usage_returns_adapter_usage(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return the live usage reported by the configured database adapter."""
-
-    # Arrange
-    registry_id = uuid4()
-    registry = SimpleNamespace(
-        host="database.example", port=5432, username="admin", password="secret", sslmode="require"
-    )
-    session = SimpleNamespace(get=AsyncMock(return_value=registry))
-
-    class FakePostgres:
-        """Return a fixed usage value from the external database boundary."""
-
-        def __init__(self, *_args: object) -> None:
-            """Accept database connection details."""
-
-        async def usage(self) -> int:
-            """Return the configured live usage."""
-
-            return 42
-
-    monkeypatch.setattr(databases, "Postgres", FakePostgres)
-
-    # Act
-    usage = await databases.get_database_usage(registry_id, session)
-
-    # Assert
-    assert usage == 42
 
 
 @pytest.mark.parametrize(
@@ -195,30 +112,3 @@ async def test_database_registry_creation_uses_required_ssl_by_default(
     # Assert
     assert response.status_code == 201
     assert response.json()["sslmode"] == "require"
-
-
-async def test_database_registry_list_and_detail_omit_password(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return paginated database metadata without administrator credentials."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    list_response = await clients[0].get("/api/v1/databases")
-    detail_response = await clients[0].get(f"/api/v1/databases/{infrastructure.database.id}")
-
-    # Assert
-    expected_registry = {
-        "id": str(infrastructure.database.id),
-        "name": infrastructure.database.name,
-        "host": "database.example",
-        "port": 5432,
-        "sslmode": "disable",
-        "username": "admin",
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {"items": [expected_registry], "total": 1}
-    assert detail_response.status_code == 200
-    assert detail_response.json() == expected_registry

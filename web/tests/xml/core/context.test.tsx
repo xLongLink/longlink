@@ -92,4 +92,27 @@ describe('core/context', () => {
 
         expect(fetchImpl).not.toHaveBeenCalled();
     });
+
+    it('rejects non-string query paths before fetching', async () => {
+        // Arrange
+        const ctx = createContext();
+        const fetchImpl = vi.fn();
+        vi.stubGlobal('fetch', fetchImpl);
+
+        // Act and assert
+        await expect(
+            setupContext(
+                [
+                    {
+                        name: 'Query',
+                        params: compileProps({ id: 'issue', path: '${{id: "123"}}' }),
+                        children: [],
+                    },
+                ],
+                ctx
+            )
+        ).rejects.toThrow('Query path must resolve to a string');
+
+        expect(fetchImpl).not.toHaveBeenCalled();
+    });
 });

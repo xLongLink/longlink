@@ -75,7 +75,7 @@ export default function AdminDatabase() {
                     {(database) => (
                         <HStack gap={3} align="center">
                             <PostgreSQL height={24} width={24} />
-                            <VStack gap={1}>
+                            <VStack>
                                 <Text weight="semibold">{database.name}</Text>
                                 <Text type="supporting">{`${database.host}:${database.port}`}</Text>
                             </VStack>

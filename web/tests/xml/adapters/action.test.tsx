@@ -73,7 +73,10 @@ describe('Action', () => {
     it('prevents default Link navigation until Action effects complete', async () => {
         // Arrange
         const ctx = createContext();
-        const fetchRequest = vi.fn(async () => new Response('{}', { status: 201 }));
+        let completeRequest: (() => void) | undefined;
+        const fetchRequest = vi.fn(
+            () => new Promise<Response>((resolve) => (completeRequest = () => resolve(new Response('{}', { status: 201 }))))
+        );
         const event = new MouseEvent('click', { bubbles: true, cancelable: true });
         ctx.services.navigate = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
@@ -88,8 +91,15 @@ describe('Action', () => {
             await vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledOnce());
         });
 
-        // Assert
+        // Assert navigation does not begin while the request is pending.
         expect(event.defaultPrevented).toBe(true);
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
+
+        const resolveRequest = completeRequest;
+        if (!resolveRequest) throw new Error('Request did not start');
+
+        await act(async () => resolveRequest());
+
         expect(ctx.services.navigate).toHaveBeenCalledWith('/orders');
     });
 
@@ -209,6 +219,10 @@ describe('Action', () => {
             error: 'GET requests cannot send payloads',
             request: 'method="GET" json="${{name: \'Ada\'}}"',
         },
+        {
+            error: 'form must evaluate to an object',
+            request: 'method="POST" form="invalid"',
+        },
     ])('does not execute invalid request payloads: $error', async ({ error, request }) => {
         const ctx = createContext();
         const closeDialog = vi.fn();
@@ -278,6 +292,43 @@ describe('Action', () => {
         expect(toast).toHaveBeenCalledWith(
             expect.objectContaining({ body: 'Patch cannot update undeclared State property "other"', type: 'error' })
         );
+    });
+
+    it.each([
+        {
+            error: 'Patch requires exactly one of value or invalidate="true"',
+            setup: '<State id="form" value="draft" />',
+            patch: '<Patch state="form" />',
+        },
+        {
+            error: 'Patch requires exactly one of value or invalidate="true"',
+            setup: '<State id="form" value="draft" />',
+            patch: '<Patch state="form" value="${{value: \'published\'}}" invalidate="true" />',
+        },
+        {
+            error: 'Patch state "missing" does not reference a declared State or Query',
+            setup: '',
+            patch: '<Patch state="missing" invalidate="true" />',
+        },
+        {
+            error: 'Patch state "records" must reference a declared State',
+            setup: '<Query id="records" path="/records" />',
+            patch: '<Patch state="records" value="${{value: \'published\'}}" />',
+        },
+    ])('rejects invalid Patch contracts: $error', async ({ error, setup, patch }) => {
+        // Arrange
+        const ctx = createContext();
+        vi.stubGlobal('fetch', async () => new Response('{}'));
+        const button = await renderAction(`${setup}<Action>${patch}<Button>Save</Button></Action>`, ctx);
+
+        // Act
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
+        });
+
+        // Assert
+        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
     });
 
     async function renderAction(

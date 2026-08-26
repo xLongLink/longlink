@@ -1,5 +1,4 @@
 import { api } from '@/lib/api';
-import { Wrench } from 'lucide-react';
 import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -8,6 +7,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Kubernetes } from '@/components/svg/Kubernetes';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
@@ -76,8 +76,8 @@ export default function AdminCompute() {
                 <TableColumn<ComputeRegistryResponse> field="compute" header="Compute" width={proportional(2)}>
                     {(compute) => (
                         <HStack gap={3} align="center">
-                            <Wrench className="text-accent" size={20} />
-                            <VStack gap={1}>
+                            <Kubernetes height={24} width={24} />
+                            <VStack>
                                 <Text weight="semibold">{compute.name}</Text>
                                 <Text type="supporting">{compute.gateway_url}</Text>
                             </VStack>

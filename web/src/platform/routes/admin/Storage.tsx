@@ -75,7 +75,7 @@ export default function AdminStorage() {
                     {(storage) => (
                         <HStack gap={3} align="center">
                             <S3 />
-                            <VStack gap={1}>
+                            <VStack>
                                 <Text weight="semibold">{storage.name}</Text>
                                 <Text type="supporting">{storage.endpoint_url}</Text>
                             </VStack>

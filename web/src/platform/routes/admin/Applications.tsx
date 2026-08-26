@@ -1,5 +1,4 @@
-import { Wrench } from 'lucide-react';
-import type { ComponentProps } from 'react';
+import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
@@ -9,10 +8,15 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useState, type ComponentProps } from 'react';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
 
@@ -23,6 +27,7 @@ const statusPresentation = {
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
+    const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
     const {
         items: applications,
         error,
@@ -56,15 +61,15 @@ export default function AdminApplications() {
             >
                 <TableColumn<ApplicationResponse> field="name" header="Application" width={proportional(2)}>
                     {(app) => (
-                        <HStack gap={3} align="start">
-                            <Wrench className="text-accent" size={20} />
-                            <VStack gap={1}>
+                        <VStack>
+                            <HStack gap={1} align="center">
                                 <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
                                     {app.name}
                                 </Link>
-                                {app.description ? <Text type="supporting">{app.description}</Text> : null}
-                            </VStack>
-                        </HStack>
+                                <Badge {...statusPresentation[app.status]} />
+                            </HStack>
+                            {app.description ? <Text type="supporting">{app.description}</Text> : null}
+                        </VStack>
                     )}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="organization" header="Organization" width={proportional(1)}>
@@ -77,16 +82,66 @@ export default function AdminApplications() {
                         </HStack>
                     )}
                 </TableColumn>
-                <TableColumn<ApplicationResponse> field="status" header="Status" width={pixel(128)}>
-                    {(app) => <Badge {...statusPresentation[app.status]} />}
-                </TableColumn>
-                <TableColumn<ApplicationResponse> field="image_desired" header="Image" width={proportional(2)}>
-                    {(app) => <Text type="supporting">{app.image_desired}</Text>}
-                </TableColumn>
-                <TableColumn<ApplicationResponse> field="created_at" header="Created" width={pixel(208)}>
-                    {(app) => dateTimeFormatter.format(new Date(app.created_at))}
+                <TableColumn<ApplicationResponse> align="end" field="metadata" header="" width={pixel(56)}>
+                    {(app) => (
+                        <IconButton
+                            icon={<Ellipsis />}
+                            label={`View metadata for ${app.name}`}
+                            tooltip="View metadata"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setMetadataApplication(app)}
+                        />
+                    )}
                 </TableColumn>
             </Table>
+            {metadataApplication ? (
+                <Dialog
+                    isOpen
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setMetadataApplication(null);
+                        }
+                    }}
+                    purpose="info"
+                    width={560}
+                >
+                    <Layout
+                        header={
+                            <DialogHeader
+                                title="Application metadata"
+                                subtitle={metadataApplication.name}
+                                onOpenChange={() => setMetadataApplication(null)}
+                            />
+                        }
+                        content={
+                            <LayoutContent>
+                                <MetadataList>
+                                    <MetadataListItem label="Status">
+                                        <Badge {...statusPresentation[metadataApplication.status]} />
+                                    </MetadataListItem>
+                                    <MetadataListItem label="Organization">
+                                        {metadataApplication.organization.name}
+                                    </MetadataListItem>
+                                    <MetadataListItem label="Image">
+                                        {metadataApplication.image_desired}
+                                    </MetadataListItem>
+                                    <MetadataListItem label="ID">{metadataApplication.id}</MetadataListItem>
+                                    <MetadataListItem label="Slug">{metadataApplication.slug}</MetadataListItem>
+                                    {metadataApplication.description ? (
+                                        <MetadataListItem label="Description">
+                                            {metadataApplication.description}
+                                        </MetadataListItem>
+                                    ) : null}
+                                    <MetadataListItem label="Created">
+                                        {dateTimeFormatter.format(new Date(metadataApplication.created_at))}
+                                    </MetadataListItem>
+                                </MetadataList>
+                            </LayoutContent>
+                        }
+                    />
+                </Dialog>
+            ) : null}
         </VStack>
     );
 }

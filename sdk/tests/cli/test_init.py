@@ -65,3 +65,19 @@ def test_init_refuses_existing_folder() -> None:
         # Assert
         assert result.exit_code == 1
         assert "Target already exists" in result.output
+
+
+def test_init_rejects_invalid_project_name_without_creating_folder() -> None:
+    """Reject invalid project metadata before creating the requested scaffold."""
+
+    # Arrange
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # Act
+        result = runner.invoke(init_command, ["--folder", "sample-app", "--name", "../invalid"])
+
+        # Assert
+        assert result.exit_code == 1
+        assert "Invalid project name: ../invalid" in result.output
+        assert not (Path.cwd() / "sample-app").exists()

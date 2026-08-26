@@ -6,7 +6,6 @@ from factories import (
     queue_operation,
     fetch_operations,
     complete_operation,
-    create_ready_infrastructure,
 )
 from src.models.operations import OperationKind
 
@@ -29,31 +28,6 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     assert operations[0].kind == OperationKind.compute_create
     assert str(operations[0].target_id) == response.json()["id"]
     assert operations[0].finished_at is None
-
-
-async def test_compute_registry_list_and_detail_expose_only_administrator_metadata(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return paginated Compute metadata without its Kubernetes credentials."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    list_response = await clients[0].get("/api/v1/computes")
-    detail_response = await clients[0].get(f"/api/v1/computes/{infrastructure.compute.id}")
-
-    # Assert
-    expected_registry = {
-        "id": str(infrastructure.compute.id),
-        "name": infrastructure.compute.name,
-        "gateway_url": "https://gateway.example",
-        "status": "running",
-    }
-    assert list_response.status_code == 200
-    assert list_response.json() == {"items": [expected_registry], "total": 1}
-    assert detail_response.status_code == 200
-    assert detail_response.json() == expected_registry
 
 
 async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(

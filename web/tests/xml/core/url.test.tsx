@@ -47,7 +47,7 @@ describe('resolveRequestUrl', () => {
         );
     });
 
-    it.each(['/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'])(
+    it.each(['../me', '../../api/v1/me', '/%2e%2e/api/v1/me', '/.%2e/api/v1/me', '/%2e./api/v1/me', '/items%2f..%2fapi/v1/me'])(
         'rejects encoded path that could escape the application proxy: %s',
         (path) => {
             expect(() => resolveRequestUrl('/api/applications/123/proxy', path)).toThrow(

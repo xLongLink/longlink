@@ -45,7 +45,7 @@ export default function AdminUsers() {
                     {(user) => (
                         <HStack gap={3} align="center">
                             <Avatar src={user.avatar} name={user.name} size="md" />
-                            <VStack gap={1}>
+                            <VStack>
                                 <Text weight="semibold">{user.name}</Text>
                                 <Text type="supporting">{user.email}</Text>
                             </VStack>

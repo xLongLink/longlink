@@ -58,7 +58,7 @@ export default function AdminOperations() {
             >
                 <TableColumn<OperationResponse> field="operation" header="Operation" width={proportional(1)}>
                     {(operation) => (
-                        <VStack gap={1}>
+                        <VStack>
                             <Text weight="semibold">{kindLabels[operation.kind]}</Text>
                             <Text type="supporting">{statusLabels[operation.status]}</Text>
                         </VStack>

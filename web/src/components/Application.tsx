@@ -7,9 +7,9 @@ import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { NavigationTab } from '@/platform/layouts/Platform';
-import { matchRoutes, useNavigate, useParams } from 'react-router';
+import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
@@ -100,18 +100,11 @@ export function ApplicationRuntime({
             }) satisfies NavigationTab
     );
 
-    // Make the first navigable tab explicit in the URL when the app loads without a selected view.
-    useEffect(() => {
-        if (!firstTabPage || routePath) {
-            return;
-        }
-
-        navigate(resolveNavigationUrl(navigationBaseUrl, firstTabPage.route), { replace: true });
-    }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
-
     let content: ReactNode;
 
-    if (registeredPages && routePath && !activeRouteMatch) {
+    if (!routePath && firstTabPage) {
+        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabPage.route)} />;
+    } else if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {
         content = (

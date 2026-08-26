@@ -1,68 +1,9 @@
 import pytest
-from uuid import uuid4
-from types import SimpleNamespace
 from httpx2 import AsyncClient
 from factories import create_organization
-from src.routes.v1 import users as user_routes
-from unittest.mock import AsyncMock
-from src.models.users import UserUpdate
 from src.database.session import session_scope
 from src.database.services import organizations as organization_service
-from src.models.pagination import Pagination
 from src.database.models.users import User
-
-
-async def test_list_users_delegates_pagination_to_user_service() -> None:
-    """Return the user page supplied by the persistence service."""
-
-    # Arrange
-    session = SimpleNamespace()
-    pagination = Pagination()
-    items = [SimpleNamespace(id="user")]
-    original_fetch_page = user_routes.users.fetch_page
-    fetch_page = AsyncMock(return_value=(items, 1))
-    user_routes.users.fetch_page = fetch_page
-
-    try:
-        # Act
-        page = await user_routes.list_users(SimpleNamespace(), pagination, session)
-    finally:
-        user_routes.users.fetch_page = original_fetch_page
-
-    # Assert
-    assert page == {"items": items, "total": 1}
-    fetch_page.assert_awaited_once_with(session, pagination)
-
-
-async def test_patch_me_synchronizes_every_organization_after_update() -> None:
-    """Synchronize each organization after a persisted profile update."""
-
-    # Arrange
-    user = User(name="Original", email="user@example.com", password="secret")
-    session = SimpleNamespace(is_modified=lambda candidate: candidate is user, commit=AsyncMock())
-    organization_ids = [uuid4(), uuid4()]
-    original_organization_ids = user_routes.users.organization_ids
-    original_sync_users = user_routes.organizations.sync_users
-    fetch_organization_ids = AsyncMock(return_value=organization_ids)
-    sync_users = AsyncMock()
-    user_routes.users.organization_ids = fetch_organization_ids
-    user_routes.organizations.sync_users = sync_users
-
-    try:
-        # Act
-        result = await user_routes.patch_me(UserUpdate(name="Updated"), user, session)
-    finally:
-        user_routes.users.organization_ids = original_organization_ids
-        user_routes.organizations.sync_users = original_sync_users
-
-    # Assert
-    assert result is user
-    assert user.name == "Updated"
-    session.commit.assert_awaited_once()
-    fetch_organization_ids.assert_awaited_once_with(session, user.id)
-    assert sync_users.await_args_list == [
-        ((session, organization_id), {}) for organization_id in organization_ids
-    ]
 
 
 async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(

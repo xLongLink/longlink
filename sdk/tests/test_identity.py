@@ -22,6 +22,14 @@ def test_identity_token_user_returns_identity_from_created_token() -> None:
     assert result == user_id
 
 
+def test_identity_token_user_rejects_empty_identity_secret() -> None:
+    """Reject identity verification when the Application secret is absent."""
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError, match="Identity secret is required"):
+        identity.identity_token_user("token", "")
+
+
 @pytest.mark.parametrize(
     ("secret", "claims"),
     [

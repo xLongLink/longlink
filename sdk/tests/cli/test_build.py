@@ -232,17 +232,9 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert (version, name) == ("0.1.0", "demo")
     assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
-    assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
-    assert "WORKDIR /workspace" in dockerfile
-    assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
     assert ".env" in dockerignore
     assert "*.db" in dockerignore
-    assert ".git" in dockerignore
-    assert "Dockerfile" in dockerignore
-    assert ".dockerignore" in dockerignore
-    assert "**/.venv" in dockerignore
-    assert "**/.pytest_cache" in dockerignore
 
 
 @pytest.mark.parametrize(

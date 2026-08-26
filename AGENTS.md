@@ -54,6 +54,7 @@ longlink/
 
 ## JavaScript / TypeScript Guidelines
 
+- Do not use browsers or browser automation to inspect or verify changes; inspect source and run code-level checks only.
 - Validate inputs at system boundaries.
 - Avoid any; prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries.
 - Avoid unsafe assertions and truthiness checks when 0, false, or empty strings are valid.

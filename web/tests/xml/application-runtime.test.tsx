@@ -47,7 +47,11 @@ describe('ApplicationRuntime XML integration', () => {
                     <MemoryRouter initialEntries={['/home']}>
                         <Routes>
                             <Route
-                                element={<ApplicationRuntime>{({ content }) => content}</ApplicationRuntime>}
+                                element={
+                                    <ApplicationRuntime pagesUrl="/proxy/pages.json" requestBaseUrl="/proxy/">
+                                        {({ content }) => content}
+                                    </ApplicationRuntime>
+                                }
                                 path="*"
                             />
                         </Routes>
@@ -58,7 +62,7 @@ describe('ApplicationRuntime XML integration', () => {
 
         // Assert
         await act(async () =>
-            vi.waitFor(() => expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/pages.json', '/home.xml']))
+            vi.waitFor(() => expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/proxy/pages.json', '/proxy/home.xml']))
         );
         await act(async () => vi.waitFor(() => expect(container.textContent).toContain('Welcome')));
     });

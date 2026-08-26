@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Wrench } from 'lucide-react';
+import { useState, type ComponentProps } from 'react';
 import Logs from '@/components/dialogs/Logs';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -15,7 +15,12 @@ import CreateApplication from '@/components/dialogs/CreateApplication';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDeleteOrganizationApplication } from '@/lib/hooks/use-organization';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import type { OrganizationApplicationSummary, Status } from '@/lib/generated/platform-api-v1/types.gen';
+
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
@@ -52,15 +57,15 @@ export default function ApplicationSettings({
             header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
-                <HStack gap={3} align="center">
-                    <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
-                    <VStack gap={1}>
+                <VStack gap={1}>
+                    <HStack gap={1} align="center">
                         <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
                             {application.name}
                         </Link>
-                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
-                    </VStack>
-                </HStack>
+                        <Badge {...statusPresentation[application.status]} />
+                    </HStack>
+                    {application.description ? <Text type="supporting">{application.description}</Text> : null}
+                </VStack>
             ),
         },
         ...(canManageApplications

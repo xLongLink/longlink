@@ -1,4 +1,5 @@
 from pathlib import Path
+from sqlmodel import col
 from sqlalchemy import func, select
 from scripts.seed import SeedSettings, CloudSeedSettings, seed_cloud, seed_local_development
 from src.environments import env
@@ -45,8 +46,11 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> N
     assert await count(Application) == 1
     async with session_scope() as session:
         administrator = await session.scalar(select(User).where(User.email == env.ADMIN_EMAIL))
+        application = await session.scalar(select(Application).where(col(Application.slug) == "sample"))
     assert administrator is not None
     assert administrator.administrator is True
+    assert application is not None
+    assert application.description == "A sample application for local development."
 
 
 async def test_cloud_seed_registers_only_infrastructure(tmp_path: Path) -> None:

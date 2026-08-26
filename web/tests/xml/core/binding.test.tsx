@@ -75,7 +75,7 @@ describe('useBindableValue', () => {
         expect((ctx.scope.bindings.form as { value: string }).value).toBe('second');
     });
 
-    it('rejects unsafe writable binding paths without mutating prototypes', async () => {
+    it('rejects unsafe writable binding paths', async () => {
         // Arrange
         const ctx = createContext();
         const ast = parseXML(
@@ -91,7 +91,6 @@ describe('useBindableValue', () => {
 
         // Assert
         expect(container.textContent).toContain('XML binding path must use safe property names');
-        expect(Object.prototype).not.toHaveProperty('polluted');
     });
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {

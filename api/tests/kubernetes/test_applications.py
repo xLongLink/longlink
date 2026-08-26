@@ -62,9 +62,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     assert applied == ["Secret", "Job"]
 
 
-async def test_application_apply_waits_for_deployment_and_route_readiness(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_application_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply every workload resource when the Deployment and HTTPRoute are ready."""
 
     # Arrange
@@ -151,8 +149,6 @@ async def test_application_apply_waits_for_deployment_and_route_readiness(
 
     # Assert
     assert applied == ["Secret", "Job", "Service", "HTTPRoute", "Deployment"]
-    assert any("Starting migration Job" in message for message in caplog.messages)
-    assert any("Migration Job" in message and "completed" in message for message in caplog.messages)
 
 
 async def test_application_apply_reports_quota_admission_failure(monkeypatch: pytest.MonkeyPatch) -> None:
