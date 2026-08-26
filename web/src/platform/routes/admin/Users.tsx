@@ -85,13 +85,7 @@ export default function AdminUsers() {
                     width={560}
                 >
                     <Layout
-                        header={
-                            <DialogHeader
-                                title="User metadata"
-                                subtitle={metadataUser.name}
-                                onOpenChange={() => setMetadataUser(null)}
-                            />
-                        }
+                        header={<DialogHeader title="User metadata" onOpenChange={() => setMetadataUser(null)} />}
                         content={
                             <LayoutContent>
                                 <MetadataList>

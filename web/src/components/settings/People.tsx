@@ -125,7 +125,7 @@ export default function People({
         <>
             {activeSection === 'members' ? (
                 <Stack gap={4}>
-                    <Stack gap={1}>
+                    <Stack>
                         <Heading level={2}>Members</Heading>
                         <Text type="supporting">Users who have access to this organization.</Text>
                     </Stack>
@@ -146,7 +146,7 @@ export default function People({
             ) : (
                 <Stack gap={4}>
                     <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                        <Stack gap={1}>
+                        <Stack>
                             <Heading level={2}>Invitations</Heading>
                             <Text type="supporting">Pending invitations to join this organization.</Text>
                             {canInviteMembers ? null : (

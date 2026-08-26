@@ -3,13 +3,13 @@
     <Query id="items" path="/api/items" />
     <State id="draft" />
 
-    <Stack direction="horizontal" gap="0" justify="between" align="center" wrap="wrap">
-        <Stack gap="0">
+    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+        <Stack>
             <Heading level="1">Items</Heading>
             <Text color="secondary">Track catalog items and their supporting files.</Text>
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
-            <Stack gap="0">
+            <Stack>
                 <TextInput label="Name" value="$draft.name" />
                 <NumberInput label="Price" value="$draft.price" min="0" />
                 <Action>

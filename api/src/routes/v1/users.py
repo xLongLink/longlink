@@ -42,9 +42,8 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
 
     # Apply only supplied values that change the persisted profile.
     for field, value in payload.model_dump(exclude_unset=True, exclude_none=True).items():
-        if getattr(user, field) == value:
-            continue
-        setattr(user, field, value)
+        if getattr(user, field) != value:
+            setattr(user, field, value)
     if not session.is_modified(user):
         return user
     await session.commit()

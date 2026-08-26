@@ -6,6 +6,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useState, type ComponentProps } from 'react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -94,12 +95,13 @@ export default function ApplicationSettings({
         <>
             <Stack gap={4}>
                 <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                    <Stack gap={1}>
+                    <Stack>
                         <Heading level={2}>Applications</Heading>
                         <Text type="supporting">Review applications connected to this organization.</Text>
                     </Stack>
                     {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
                 </Stack>
+                <Divider />
 
                 {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
                     <Banner status="error" title="Failed to load applications." />

@@ -115,13 +115,7 @@ export default function AdminStorage() {
                     width={560}
                 >
                     <Layout
-                        header={
-                            <DialogHeader
-                                title="Storage metadata"
-                                subtitle={metadataStorage.name}
-                                onOpenChange={() => setMetadataStorage(null)}
-                            />
-                        }
+                        header={<DialogHeader title="Storage metadata" onOpenChange={() => setMetadataStorage(null)} />}
                         content={
                             <LayoutContent>
                                 <MetadataList>
@@ -132,15 +126,19 @@ export default function AdminStorage() {
                         }
                         footer={
                             <LayoutFooter>
-                                <Button
-                                    label="Delete"
-                                    variant="destructive"
-                                    onClick={() => {
-                                        const storage = metadataStorage;
-                                        setMetadataStorage(null);
-                                        deleteDialog.openFor(storage);
-                                    }}
-                                />
+                                <Stack direction="horizontal" gap={2} justify="end">
+                                    <Button
+                                        className="text-warning underline"
+                                        label="Delete"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            const storage = metadataStorage;
+                                            setMetadataStorage(null);
+                                            deleteDialog.openFor(storage);
+                                        }}
+                                    />
+                                    <Button label="Close" variant="primary" onClick={() => setMetadataStorage(null)} />
+                                </Stack>
                             </LayoutFooter>
                         }
                     />

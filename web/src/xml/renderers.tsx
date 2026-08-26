@@ -2,7 +2,7 @@ import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
 import { XML_LAYOUT_GAP } from './constants';
 import { isValtioProxy } from './core/state';
-import { Stack } from '@astryxdesign/core/Stack';
+import { Stack } from '@/components/ui/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { setupContext, XmlContext } from './core/context';

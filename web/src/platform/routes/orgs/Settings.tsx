@@ -10,6 +10,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
@@ -154,34 +155,35 @@ export default function OrganizationSettings() {
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem icon="building2" label="Organization">
                         <Stack gap={4}>
-                            <Stack gap={1}>
-                                <Heading level={2}>Organization</Heading>
-                                <Text type="supporting">View and manage organization details.</Text>
-                            </Stack>
-                            <Stack direction="horizontal" gap={4} align="center" wrap="wrap">
+                            <Stack direction="horizontal" justify="between" align="start">
+                                <Stack>
+                                    <Heading level={2}>Organization</Heading>
+                                    <Text type="supporting">View and manage organization details.</Text>
+                                </Stack>
                                 <Avatar
                                     kind="organization"
                                     name={organizationName}
                                     size="lg"
                                     src={avatar || undefined}
                                 />
-                                <TextInput
-                                    label="Avatar URL"
-                                    value={avatar}
-                                    width="100%"
-                                    isOptional
-                                    isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
-                                    placeholder="https://example.com/org.png"
-                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                    onChange={(value) => {
-                                        setEditedAvatar(value);
-                                        setAvatarError(null);
-                                    }}
-                                    onBlur={() => {
-                                        void saveAvatar();
-                                    }}
-                                />
                             </Stack>
+                            <Divider />
+                            <TextInput
+                                label="Avatar URL"
+                                value={avatar}
+                                width="100%"
+                                isOptional
+                                isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
+                                placeholder="https://example.com/org.png"
+                                status={avatarError ? { type: 'error', message: avatarError } : undefined}
+                                onChange={(value) => {
+                                    setEditedAvatar(value);
+                                    setAvatarError(null);
+                                }}
+                                onBlur={() => {
+                                    void saveAvatar();
+                                }}
+                            />
                         </Stack>
                     </MenuItem>
                     <MenuSubSection icon="users" label="People">
@@ -206,10 +208,11 @@ export default function OrganizationSettings() {
                         <>
                             <MenuItem icon="database" label="Database">
                                 <Stack gap={4}>
-                                    <Stack gap={1}>
+                                    <Stack>
                                         <Heading level={2}>Database</Heading>
                                         <Text type="supporting">Review database usage for this organization.</Text>
                                     </Stack>
+                                    <Divider />
                                     {isLoading || isDatabaseLoading ? null : error ? (
                                         <Banner status="error" title={error.message} />
                                     ) : databaseError ? (
@@ -248,10 +251,11 @@ export default function OrganizationSettings() {
                             </MenuItem>
                             <MenuItem icon="hardDrive" label="Storage">
                                 <Stack gap={4}>
-                                    <Stack gap={1}>
+                                    <Stack>
                                         <Heading level={2}>Storage</Heading>
                                         <Text type="supporting">Review storage usage for this organization.</Text>
                                     </Stack>
+                                    <Divider />
                                     {isLoading || isStorageLoading ? null : error ? (
                                         <Banner status="error" title={error.message} />
                                     ) : storageError ? (

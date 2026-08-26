@@ -188,7 +188,7 @@
     --color-icon-secondary: light-dark(#83838a, #9d9da3);
     --color-icon-disabled: light-dark(#d7d7da, #5e5e61);
     --color-background-card: light-dark(#FFFFFF, #242325);
-    --color-background-popover: light-dark(#ffffff, #25252a);
+    --color-background-popover: light-dark(#ffffff, #3b3b3f);
     --color-background-inverted: light-dark(#25252a, #f3f3f5);
     --color-success: light-dark(#374c36, #b4cdb2);
     --color-success-muted: light-dark(#d0e9ce, #b4cdb2);

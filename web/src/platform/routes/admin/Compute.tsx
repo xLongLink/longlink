@@ -135,13 +135,7 @@ export default function AdminCompute() {
                     width={560}
                 >
                     <Layout
-                        header={
-                            <DialogHeader
-                                title="Compute metadata"
-                                subtitle={metadataCompute.name}
-                                onOpenChange={() => setMetadataCompute(null)}
-                            />
-                        }
+                        header={<DialogHeader title="Compute metadata" onOpenChange={() => setMetadataCompute(null)} />}
                         content={
                             <LayoutContent>
                                 <MetadataList>
@@ -157,15 +151,19 @@ export default function AdminCompute() {
                         }
                         footer={
                             <LayoutFooter>
-                                <Button
-                                    label="Delete"
-                                    variant="destructive"
-                                    onClick={() => {
-                                        const compute = metadataCompute;
-                                        setMetadataCompute(null);
-                                        deleteDialog.openFor(compute);
-                                    }}
-                                />
+                                <Stack direction="horizontal" gap={2} justify="end">
+                                    <Button
+                                        className="text-warning underline"
+                                        label="Delete"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            const compute = metadataCompute;
+                                            setMetadataCompute(null);
+                                            deleteDialog.openFor(compute);
+                                        }}
+                                    />
+                                    <Button label="Close" variant="primary" onClick={() => setMetadataCompute(null)} />
+                                </Stack>
                             </LayoutFooter>
                         }
                     />

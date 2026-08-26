@@ -35,6 +35,7 @@ export function resolvePath(scope: Scope, parts: [string, ...string[]]): unknown
     // Walk the remaining path segments directly on the live value.
     for (let index = 1; index < parts.length; index += 1) {
         current = readSafeProperty(current, parts[index]);
+        if (current === undefined) return undefined;
     }
 
     return current;

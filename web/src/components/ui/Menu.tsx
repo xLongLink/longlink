@@ -87,7 +87,7 @@ export function Menu({ children }: MenuProps) {
 
                                         return (
                                             <AstryxSideNavItem
-                                                collapsible
+                                                collapsible={{ defaultIsCollapsed: true }}
                                                 icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                                                 key={label}
                                                 label={label}

@@ -88,7 +88,7 @@ export const stoneTheme = defineTheme({
 
         // Surface variants — H=291
         '--color-background-card': ['#FFFFFF', '#242325'], // T14
-        '--color-background-popover': ['#ffffff', '#25252a'], // dark: Stone Neutral T15
+        '--color-background-popover': ['#ffffff', '#3b3b3f'], // dark: Stone Neutral T25
         '--color-background-inverted': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
 
         // Status / Sentiment — T50 from palette for icons/borders (visible color)

@@ -7,7 +7,7 @@
     <State id="budgetLimit" value="${2500}" />
     <State id="workflow" owner="manager" risk="medium" />
 
-    <Stack gap="0">
+    <Stack>
         <Heading level="1">Application settings</Heading>
         <Text color="secondary">Configure application defaults with local XML state and Astryx form controls.</Text>
     </Stack>

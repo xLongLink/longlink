@@ -2,7 +2,6 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import or_, case, func, select, update
-from src.logger import logger
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from longlink.utils.time import utcnow

@@ -116,11 +116,7 @@ export default function AdminDatabase() {
                 >
                     <Layout
                         header={
-                            <DialogHeader
-                                title="Database metadata"
-                                subtitle={metadataDatabase.name}
-                                onOpenChange={() => setMetadataDatabase(null)}
-                            />
+                            <DialogHeader title="Database metadata" onOpenChange={() => setMetadataDatabase(null)} />
                         }
                         content={
                             <LayoutContent>
@@ -135,15 +131,19 @@ export default function AdminDatabase() {
                         }
                         footer={
                             <LayoutFooter>
-                                <Button
-                                    label="Delete"
-                                    variant="destructive"
-                                    onClick={() => {
-                                        const database = metadataDatabase;
-                                        setMetadataDatabase(null);
-                                        deleteDialog.openFor(database);
-                                    }}
-                                />
+                                <Stack direction="horizontal" gap={2} justify="end">
+                                    <Button
+                                        className="text-warning underline"
+                                        label="Delete"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            const database = metadataDatabase;
+                                            setMetadataDatabase(null);
+                                            deleteDialog.openFor(database);
+                                        }}
+                                    />
+                                    <Button label="Close" variant="primary" onClick={() => setMetadataDatabase(null)} />
+                                </Stack>
                             </LayoutFooter>
                         }
                     />

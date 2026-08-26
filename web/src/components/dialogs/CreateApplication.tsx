@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { X } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
+import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog } from '@astryxdesign/core/Dialog';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -39,7 +39,7 @@ function CompactDialogHeader({ title, onOpenChange }: { title: string; onOpenCha
     return (
         <LayoutHeader hasDivider>
             <Stack direction="horizontal" hAlign="between" vAlign="start">
-                <Stack gap={0}>
+                <Stack>
                     <Heading level={2}>{title}</Heading>
                     <Text type="body" size="sm" color="secondary">
                         1. Image / 2. Metadata / 3. Envs
