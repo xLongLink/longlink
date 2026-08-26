@@ -78,9 +78,9 @@ export function Menu({ children }: MenuProps) {
             height="auto"
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
-                    <AstryxSideNav className="w-full pr-4">
+                    <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
                         {sections.map(({ entries, section }) => (
-                            <AstryxSideNavSection {...section.props} key={section.props.title}>
+                            <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
                                 {entries.map((entry) => {
                                     if (entry.kind === 'subsection') {
                                         const { icon, label } = entry.subSection.props;
