@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import case, func, select, update
+from sqlalchemy import or_, case, func, select, update
 from src.logger import logger
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
@@ -120,24 +120,22 @@ async def claim(session: AsyncSession) -> Operation | None:
     )
     if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
         return None
-    if operation.lease_expires_at is not None:
-        logger.error("Operation %s failed after its worker lease expired", operation.id)
-        await fail(session, operation.id, "Operation lease expired", [])
-        return None
 
-    # Acquire the lease conditionally so concurrent workers cannot claim the same operation.
+    # Reclaim expired work or acquire unleased work without racing another scheduler.
     if (
         await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation.id,
                 Operation.finished_at.is_(None),
-                Operation.lease_expires_at.is_(None),
+                or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
             )
             .values(lease_expires_at=now + timedelta(minutes=30))
         )
     ).rowcount != 1:
         return None
+
+    await session.refresh(operation)
     return operation
 
 
@@ -162,16 +160,17 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
+    now = utcnow()
     operation = await session.scalar(
         update(Operation)
         .where(
             Operation.id == operation_id,
-            Operation.lease_expires_at.is_not(None),
+            col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )
         .values(
             failed=(reason.strip() or "Operation failed")[:500],
-            finished_at=utcnow(),
+            finished_at=now,
             lease_expires_at=None,
             logs=[] if logs is None else logs,
         )

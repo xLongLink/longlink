@@ -15,7 +15,7 @@ config.set_main_option("sqlalchemy.url", env.DATABASE_URL.replace("%", "%%"))
 
 # Apply configured migration logging when Alembic has an ini file.
 if config.config_file_name is not None:
-    logging.config.fileConfig(config.config_file_name)
+    logging.config.fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # Expose all imported SQLModel tables to migration autogeneration.
 target_metadata = PlatformModel.metadata

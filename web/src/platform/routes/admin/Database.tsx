@@ -59,7 +59,9 @@ export default function AdminDatabase() {
             <HStack gap={0} justify="between" align="center" wrap="wrap">
                 <VStack gap={0}>
                     <Heading level={1}>Database</Heading>
-                    <Text type="supporting">Monitor platform data, schema health, and persistence state.</Text>
+                    <Text as="p" color="secondary">
+                        Monitor platform data, schema health, and persistence state.
+                    </Text>
                 </VStack>
                 <CreateDatabase />
             </HStack>

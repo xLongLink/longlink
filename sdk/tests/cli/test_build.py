@@ -539,9 +539,9 @@ def test_build_command_reports_built_image(
                 "-t",
                 "localhost:15000/demo-app:dev",
                 str(temporary_context),
-            ]
+            ],
+            *expected_commands,
         ]
-        + expected_commands
     )
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output

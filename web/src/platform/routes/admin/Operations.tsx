@@ -48,7 +48,7 @@ export default function AdminOperations() {
         <VStack gap={6} width="100%">
             <VStack gap={0}>
                 <Heading level={1}>Operations</Heading>
-                <Text type="supporting">
+                <Text as="p" color="secondary">
                     Track long-running Platform tasks, when they become available, and when they finish.
                 </Text>
             </VStack>

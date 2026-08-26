@@ -31,7 +31,9 @@ export default function AdminUsers() {
         <VStack gap={6} width="100%">
             <VStack gap={0}>
                 <Heading level={1}>Users</Heading>
-                <Text type="supporting">Review account access, elevated users, and admin onboarding.</Text>
+                <Text as="p" color="secondary">
+                    Review account access, elevated users, and admin onboarding.
+                </Text>
             </VStack>
             <Table
                 data={users}

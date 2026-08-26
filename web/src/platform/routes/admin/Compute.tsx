@@ -72,7 +72,9 @@ export default function AdminCompute() {
             <HStack gap={0} justify="between" align="center" wrap="wrap">
                 <VStack gap={0}>
                     <Heading level={1}>Compute</Heading>
-                    <Text type="supporting">Inspect runtime workloads, node capacity, and orchestration status.</Text>
+                    <Text as="p" color="secondary">
+                        Inspect runtime workloads, node capacity, and orchestration status.
+                    </Text>
                 </VStack>
                 <CreateCompute />
             </HStack>

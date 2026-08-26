@@ -74,7 +74,9 @@ export default function AdminOrganizations() {
         <VStack gap={6} width="100%">
             <VStack gap={0}>
                 <Heading level={1}>Organizations</Heading>
-                <Text type="supporting">Review organization lifecycle, ownership, and access boundaries.</Text>
+                <Text as="p" color="secondary">
+                    Review organization lifecycle, ownership, and access boundaries.
+                </Text>
             </VStack>
             <Table
                 data={organizations}
@@ -88,12 +90,12 @@ export default function AdminOrganizations() {
                     {(organization) => (
                         <HStack gap={3} align="center">
                             <Avatar kind="organization" src={organization.avatar} name={organization.name} />
-                            <HStack gap={1} align="center">
+                            <VStack gap={0} align="start">
+                                <Badge {...statusPresentation[organization.status]} />
                                 <Link href={`/orgs/${organization.slug}`} weight="semibold">
                                     {organization.name}
                                 </Link>
-                                <Badge {...statusPresentation[organization.status]} />
-                            </HStack>
+                            </VStack>
                         </HStack>
                     )}
                 </TableColumn>

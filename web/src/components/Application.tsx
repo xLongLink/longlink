@@ -33,10 +33,11 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
+    const pages = useMemo(() => registeredPages ?? [], [registeredPages]);
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                (registeredPages ?? []).map((page) => ({
+                pages.map((page) => ({
                     path: page.route,
                     page,
                 })),
@@ -51,8 +52,8 @@ export function ApplicationRuntime({
                 Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
             ),
         };
-    }, [registeredPages, routePath]);
-    const staticPages = (registeredPages ?? []).filter((page) => !/(?:^|\/):/.test(page.route));
+    }, [pages, routePath]);
+    const staticPages = pages.filter((page) => !/(?:^|\/):/.test(page.route));
     const firstTabPage = staticPages.find((page) => page.route !== '/');
 
     // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.

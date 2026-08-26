@@ -50,7 +50,9 @@ export default function AdminApplications() {
         <VStack gap={6} width="100%">
             <VStack gap={0}>
                 <Heading level={1}>Applications</Heading>
-                <Text type="supporting">Review all applications across organizations and deployment states.</Text>
+                <Text as="p" color="secondary">
+                    Review all applications across organizations and deployment states.
+                </Text>
             </VStack>
             <Table
                 data={applications}

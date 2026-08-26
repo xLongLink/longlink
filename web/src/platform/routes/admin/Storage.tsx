@@ -59,7 +59,9 @@ export default function AdminStorage() {
             <HStack gap={0} justify="between" align="center" wrap="wrap">
                 <VStack gap={0}>
                     <Heading level={1}>Storage</Heading>
-                    <Text type="supporting">Review Exoscale SOS integrations and object storage configuration.</Text>
+                    <Text as="p" color="secondary">
+                        Review Exoscale SOS integrations and object storage configuration.
+                    </Text>
                 </VStack>
                 <CreateStorage />
             </HStack>
