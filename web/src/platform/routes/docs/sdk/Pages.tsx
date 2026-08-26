@@ -10,7 +10,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Link as RouterLink } from 'react-router';
 import { componentDocumentation } from '@/lib/xsd';
-import { Avatar } from '@astryxdesign/core/Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Dialog } from '@astryxdesign/core/Dialog';

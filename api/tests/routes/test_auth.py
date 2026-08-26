@@ -574,6 +574,18 @@ async def test_authenticated_logout_rejects_cross_origin_request(
     assert profile_response.status_code == 200
 
 
+async def test_logout_rejects_untrusted_origin_without_browser_session(client: AsyncClient) -> None:
+    """Reject an uncredentialed logout request from an untrusted origin."""
+
+    # Act
+    response = await client.post("/api/v1/auth/logout", headers={"origin": "https://attacker.example"})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
+    assert "set-cookie" not in response.headers
+
+
 @pytest.mark.parametrize(
     ("public_origin", "origin"),
     [

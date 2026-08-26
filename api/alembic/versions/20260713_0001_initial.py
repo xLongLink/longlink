@@ -257,6 +257,7 @@ def upgrade() -> None:
         ),
         sa.Column("target_id", sa.Uuid(), nullable=False),
         sa.Column("failed", sa.String(length=500), nullable=True),
+        sa.Column("logs", sa.JSON(), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),

@@ -79,7 +79,7 @@ export default function AdminCompute() {
                             <Kubernetes height={24} width={24} />
                             <VStack>
                                 <Text weight="semibold">{compute.name}</Text>
-                                <Text type="supporting">{compute.gateway_url}</Text>
+                                <Text type="supporting">{compute.gateway_url ?? 'Provisioning gateway'}</Text>
                             </VStack>
                         </HStack>
                     )}

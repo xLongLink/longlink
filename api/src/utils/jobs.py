@@ -1,7 +1,9 @@
 import asyncio
+import logging
 from uuid import UUID
 from functools import partial
 from src.logger import logger
+from contextvars import ContextVar
 from src.operations import handlers
 from collections.abc import Callable, Awaitable
 from src.environments import env
@@ -10,6 +12,28 @@ from src.database.session import session_scope
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
+
+operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
+
+
+class OperationLogHandler(logging.Handler):
+    """Collect log records emitted while one Operation is executing."""
+
+    def __init__(self, expected_operation_id: UUID) -> None:
+        """Initialize an empty log collector for one Operation."""
+
+        super().__init__()
+        self.logs: list[str] = []
+        self.expected_operation_id = expected_operation_id
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Store records produced by this handler's active Operation."""
+
+        # Ignore concurrent request and scheduler log records.
+        if operation_id.get() != self.expected_operation_id:
+            return
+
+        self.logs.append(self.format(record))
 
 
 async def _finish_transition(
@@ -54,42 +78,52 @@ async def execute(operation: Operation) -> Operation:
     if operation.lease_expires_at is None or operation.lease_expires_at <= utcnow():
         raise ValueError("Operation must be claimed before execution")
 
-    # Dispatch each operation through its registered lifecycle handler.
-    handler = handlers[operation.kind]
-    logger.info("Running %s operation %s", operation.kind, operation.id)
+    # Capture the operation's existing structured log output until its terminal state is persisted.
+    log_handler = OperationLogHandler(operation.id)
+    log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    token = operation_id.set(operation.id)
+    logger.addHandler(log_handler)
 
-    # Bound one complete handler execution under its worker lease.
     try:
-        async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
-            reason = await handler(operation.target_id)
-    except asyncio.CancelledError:
-        # Graceful shutdown makes interrupted single-execution work terminal.
+        # Dispatch each operation through its registered lifecycle handler.
+        handler = handlers[operation.kind]
+        logger.info("Running %s operation %s", operation.kind, operation.id)
+
+        # Bound one complete handler execution under its worker lease.
         try:
-            await _finish_transition(partial(operations.fail, reason="Operation cancelled"), operation.id)
+            async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
+                reason = await handler(operation.target_id)
+        except asyncio.CancelledError:
+            # Graceful shutdown makes interrupted single-execution work terminal.
+            try:
+                await _finish_transition(partial(operations.fail, reason="Operation cancelled", logs=log_handler.logs), operation.id)
+            except Exception:
+                logger.exception("Could not fail cancelled Operation %s", operation.id)
+            raise
+        except TimeoutError:
+            reason = "Operation timed out"
         except Exception:
-            logger.exception("Could not fail cancelled Operation %s", operation.id)
-        raise
-    except TimeoutError:
-        reason = "Operation timed out"
-    except Exception:
-        logger.exception("Operation %s failed", operation.id)
-        reason = "Operation failed"
+            logger.exception("Operation %s failed", operation.id)
+            reason = "Operation failed"
 
-    # Persist exactly one transition that releases the claimed operation.
-    if reason is None:
-        transition = operations.complete
-    else:
-        logger.error("Operation %s failed: %s", operation.id, reason)
-        transition = partial(operations.fail, reason=reason)
+        # Persist exactly one transition that releases the claimed operation.
+        if reason is None:
+            transition = partial(operations.complete, logs=log_handler.logs)
+        else:
+            logger.error("Operation %s failed: %s", operation.id, reason)
+            transition = partial(operations.fail, reason=reason, logs=log_handler.logs)
 
-    # Finish the terminal database transition even when shutdown cancels this worker.
-    updated = await _finish_transition(transition, operation.id)
+        # Finish the terminal database transition even when shutdown cancels this worker.
+        updated = await _finish_transition(transition, operation.id)
 
-    # Never return a stale in-memory row when the worker could not finish its leased Operation.
-    if updated is None:
-        raise RuntimeError(f"Operation '{operation.id}' lock was lost")
+        # Never return a stale in-memory row when the worker could not finish its leased Operation.
+        if updated is None:
+            raise RuntimeError(f"Operation '{operation.id}' lock was lost")
 
-    return updated
+        return updated
+    finally:
+        logger.removeHandler(log_handler)
+        operation_id.reset(token)
 
 
 async def run_operation_scheduler() -> None:

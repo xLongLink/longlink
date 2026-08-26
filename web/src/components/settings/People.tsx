@@ -4,7 +4,7 @@ import { dateFormatter } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Avatar } from '@astryxdesign/core/Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';

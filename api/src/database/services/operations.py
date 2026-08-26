@@ -121,7 +121,7 @@ async def claim(session: AsyncSession) -> Operation | None:
         return None
     if operation.lease_expires_at is not None:
         logger.error("Operation %s failed after its worker lease expired", operation.id)
-        await fail(session, operation.id, "Operation lease expired")
+        await fail(session, operation.id, "Operation lease expired", [])
         return None
 
     # Acquire the lease conditionally so concurrent workers cannot claim the same operation.
@@ -140,7 +140,7 @@ async def claim(session: AsyncSession) -> Operation | None:
     return operation
 
 
-async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
+async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | None = None) -> Operation | None:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
@@ -152,12 +152,12 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
             col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )
-        .values(finished_at=now, lease_expires_at=None)
+        .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
         .returning(Operation)
     )
 
 
-async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operation | None:
+async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
@@ -168,6 +168,11 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
             Operation.lease_expires_at.is_not(None),
             Operation.finished_at.is_(None),
         )
-        .values(failed=(reason.strip() or "Operation failed")[:500], finished_at=utcnow(), lease_expires_at=None)
+        .values(
+            failed=(reason.strip() or "Operation failed")[:500],
+            finished_at=utcnow(),
+            lease_expires_at=None,
+            logs=[] if logs is None else logs,
+        )
         .returning(Operation)
     )

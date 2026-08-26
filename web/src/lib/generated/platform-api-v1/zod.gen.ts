@@ -715,6 +715,17 @@ export const zListOperationsApiV1OperationsGetQuery = z.object({
  */
 export const zListOperationsApiV1OperationsGetResponse = zPageOperationResponse;
 
+export const zGetOperationLogsApiV1OperationsOperationIdLogsGetPath = z.object({
+    operation_id: z.uuid()
+});
+
+/**
+ * Response Get Operation Logs Api V1 Operations  Operation Id  Logs Get
+ *
+ * Successful Response
+ */
+export const zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse = z.array(z.string());
+
 export const zListOrganizationsApiV1OrganizationsGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),
     page_size: z.int().gte(1).lte(100).optional().default(25)

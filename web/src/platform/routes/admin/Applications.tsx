@@ -3,7 +3,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
@@ -16,6 +15,7 @@ import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Avatar } from '@/components/ui/Avatar';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
@@ -75,7 +75,7 @@ export default function AdminApplications() {
                 <TableColumn<ApplicationResponse> field="organization" header="Organization" width={proportional(1)}>
                     {(app) => (
                         <HStack gap={3} align="center">
-                            <Avatar src={app.organization.avatar ?? undefined} name={app.organization.name} size="md" />
+                            <Avatar kind="organization" src={app.organization.avatar} name={app.organization.name} />
                             <Link href={`/orgs/${app.organization.slug}`} weight="semibold">
                                 {app.organization.name}
                             </Link>

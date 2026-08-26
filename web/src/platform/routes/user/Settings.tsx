@@ -5,7 +5,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -18,6 +17,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Avatar } from '@/components/ui/Avatar';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
@@ -145,6 +145,7 @@ export default function Settings() {
                                         {(membership) => (
                                             <HStack gap={3} align="center">
                                                 <Avatar
+                                                    kind="organization"
                                                     src={membership.organization.avatar || undefined}
                                                     name={membership.organization.name}
                                                     size="md"

@@ -60,3 +60,50 @@ async def test_operations_endpoint_paginates_history(
     assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
     assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]
     assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])
+
+
+async def test_operation_logs_endpoint_returns_persisted_logs(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return captured logs for an Operation to a Platform administrator."""
+
+    # Arrange
+    operation = await queue_operation(target_id=uuid4())
+    async with session_scope() as session:
+        persisted = await session.get(Operation, operation.id)
+        assert persisted is not None
+        persisted.logs = ["INFO: Creating compute", "INFO: Compute created"]
+        await session.commit()
+
+    # Act
+    response = await clients[0].get(f"/api/v1/operations/{operation.id}/logs")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == ["INFO: Creating compute", "INFO: Compute created"]
+
+
+async def test_operation_logs_endpoint_returns_not_found_for_missing_operation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Return not found when the requested Operation does not exist."""
+
+    # Act
+    response = await clients[0].get(f"/api/v1/operations/{uuid4()}/logs")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Operation not found"}
+
+
+async def test_operation_logs_endpoint_rejects_non_administrators(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Require Platform administrator access for operation logs."""
+
+    # Act
+    response = await clients[1].get(f"/api/v1/operations/{uuid4()}/logs")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}

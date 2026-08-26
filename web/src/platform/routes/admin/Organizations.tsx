@@ -3,7 +3,6 @@ import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
@@ -14,6 +13,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Avatar } from '@/components/ui/Avatar';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
@@ -79,7 +79,7 @@ export default function AdminOrganizations() {
                 <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
                     {(organization) => (
                         <HStack gap={3} align="center">
-                            <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
+                            <Avatar kind="organization" src={organization.avatar} name={organization.name} />
                             <Link href={`/orgs/${organization.slug}`} weight="semibold">
                                 {organization.name}
                             </Link>

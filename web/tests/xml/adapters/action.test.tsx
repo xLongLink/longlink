@@ -75,7 +75,10 @@ describe('Action', () => {
         const ctx = createContext();
         let completeRequest: (() => void) | undefined;
         const fetchRequest = vi.fn(
-            () => new Promise<Response>((resolve) => (completeRequest = () => resolve(new Response('{}', { status: 201 }))))
+            () =>
+                new Promise<Response>(
+                    (resolve) => (completeRequest = () => resolve(new Response('{}', { status: 201 })))
+                )
         );
         const event = new MouseEvent('click', { bubbles: true, cancelable: true });
         ctx.services.navigate = vi.fn();

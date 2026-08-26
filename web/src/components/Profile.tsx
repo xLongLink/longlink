@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useSignOut } from '@/lib/hooks/use-user';
-import { Avatar } from '@astryxdesign/core/Avatar';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';

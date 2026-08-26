@@ -1,17 +1,21 @@
+import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
+import { Button } from '@astryxdesign/core/Button';
 import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
+import OperationLogs from '@/components/dialogs/OperationLogs';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
+    const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
     const statusLabels: Record<OperationResponse['status'], string> = {
         scheduled: 'Scheduled',
         active: 'Active',
@@ -89,7 +93,29 @@ export default function AdminOperations() {
                         </VStack>
                     )}
                 </TableColumn>
+                <TableColumn<OperationResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                    {(operation) => (
+                        <Button
+                            label="Logs"
+                            size="sm"
+                            variant="ghost"
+                            isDisabled={operation.finished_at === null}
+                            onClick={() => setLogOperation(operation)}
+                        />
+                    )}
+                </TableColumn>
             </Table>
+            {logOperation ? (
+                <OperationLogs
+                    operationId={logOperation.id}
+                    operationName={kindLabels[logOperation.kind]}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setLogOperation(null);
+                        }
+                    }}
+                />
+            ) : null}
         </VStack>
     );
 }

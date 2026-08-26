@@ -4,7 +4,6 @@ from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from typing import TypedDict
-from fastapi import HTTPException
 from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Awaitable, AsyncIterator
@@ -441,30 +440,6 @@ async def test_application_proxy_forwards_request_body_at_configured_limit(
     assert captured == [b"x" * 1024]
 
 
-async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return unavailable when the compute gateway configuration is incomplete."""
-
-    # Prepare a running Application with incomplete gateway TLS state.
-    owner = users[0]
-    app, infrastructure = await create_running_application(owner)
-    async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, infrastructure.compute.id)
-        assert registry is not None
-        registry.gateway_certificate = None
-        await session.commit()
-    client = clients[0]
-
-    # Request an Application resource through the unavailable gateway.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
-
-    # Verify incomplete gateway configuration returns service unavailable.
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Application gateway is not ready"}
-
-
 async def test_application_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -656,40 +631,37 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 
 
 @pytest.mark.parametrize("missing", ["gateway_url", "gateway_certificate", "gateway_client_identity", "identity_secret"])
-async def test_proxy_application_request_directly_rejects_each_missing_gateway_requirement(
+async def test_application_proxy_returns_unavailable_when_gateway_requirement_is_missing(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
     missing: str,
 ) -> None:
-    """Reject direct requests when any required gateway value is absent."""
+    """Return unavailable when any required compute gateway value is absent."""
 
-    # Arrange complete state, then omit one readiness requirement at a time.
-    registry = SimpleNamespace(
-        gateway_url="https://gateway.example",
-        gateway_certificate="certificate",
-        gateway_client_identity="identity",
-    )
-    secrets = {"LONGLINK_IDENTITY_SECRET": "identity-secret"}
-    if missing == "identity_secret":
-        secrets = {}
-    else:
-        setattr(registry, missing, None)
+    # Arrange a running Application with one persisted readiness requirement omitted.
+    app, infrastructure = await create_running_application(users[0])
+    async with session_scope() as session:
+        if missing == "identity_secret":
+            application = await session.get(Application, app.id)
+            assert application is not None
+            application.secrets = {}
+        else:
+            registry = await session.get(ComputeRegistry, infrastructure.compute.id)
+            assert registry is not None
+            setattr(registry, missing, None)
+        await session.commit()
 
-    async def runtime_access(*_args: object) -> tuple[object, object, OrganizationRoles, object]:
-        """Return a running application with incomplete gateway configuration."""
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail when incomplete gateway configuration reaches the network boundary."""
 
-        return SimpleNamespace(status=Status.running, secrets=secrets), SimpleNamespace(), OrganizationRoles.read, registry
+        raise AssertionError("Gateway client must not be constructed")
 
-    monkeypatch.setattr(proxy_routes.organizations, "application_runtime_access", runtime_access)
+    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Act
-    with pytest.raises(HTTPException) as raised:
-        await proxy_routes.proxy_application_request(
-            SimpleNamespace(method="GET", url=SimpleNamespace(query=""), headers={}),
-            UUID(int=1),
-            user=SimpleNamespace(id=UUID(int=2)),
-            session=SimpleNamespace(),
-        )
+    response = await clients[0].get(f"/api/v1/applications/{app.id}/proxy/pages.json")
 
     # Assert
-    assert raised.value.status_code == 503
-    assert raised.value.detail == "Application gateway is not ready"
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Application gateway is not ready"}

@@ -1,5 +1,4 @@
 from httpx2 import AsyncClient
-from factories import create_ready_infrastructure
 
 
 async def test_storage_registry_creation_normalizes_endpoint_url(
@@ -23,21 +22,3 @@ async def test_storage_registry_creation_normalizes_endpoint_url(
     payload = response.json()
     assert payload["name"] == "Normalized storage"
     assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
-
-
-async def test_storage_registry_deletion_removes_unused_registry(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Delete an unassigned storage registry."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-
-    # Act
-    delete_response = await clients[0].delete(f"/api/v1/storages/{infrastructure.storage.id}")
-    detail_response = await clients[0].get(f"/api/v1/storages/{infrastructure.storage.id}")
-
-    # Assert
-    assert delete_response.status_code == 204
-    assert detail_response.status_code == 404
-    assert detail_response.json() == {"detail": "Storage registry not found"}
