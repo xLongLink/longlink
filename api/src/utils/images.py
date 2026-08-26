@@ -121,10 +121,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             raw_labels = image_config.get("Labels")
-            if raw_labels is None:
-                labels: dict[str, str] = {}
-            else:
-                labels = ImageLabels.model_validate(raw_labels).root
+            labels: dict[str, str] = {} if raw_labels is None else ImageLabels.model_validate(raw_labels).root
 
             result = LongLinkMetadata(
                 image=Image(f"{image.registry}/{image.repository}@{digest}"),

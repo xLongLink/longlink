@@ -47,7 +47,7 @@ async def reconcile(organization_id: UUID) -> None:
             .where(
                 Organization.id == organization.id,
                 Organization.deleted_at.is_(None),
-                Organization.status == Status.creating,
+                Organization.status.in_((Status.creating, Status.failed)),
             )
             .values(status=Status.running)
         )

@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { Badge } from '@astryxdesign/core/Badge';
 import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -17,6 +18,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zPageComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import type { ComponentProps } from 'react';
+
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<
+    ComputeRegistryResponse['status'],
+    { label: string; variant: ComponentProps<typeof Badge>['variant'] }
+>;
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
@@ -78,8 +89,16 @@ export default function AdminCompute() {
                         <HStack gap={3} align="center">
                             <Kubernetes height={24} width={24} />
                             <VStack>
-                                <Text weight="semibold">{compute.name}</Text>
-                                <Text type="supporting">{compute.gateway_url ?? 'Provisioning gateway'}</Text>
+                                <HStack gap={1} align="center">
+                                    <Text weight="semibold">{compute.name}</Text>
+                                    <Badge {...statusPresentation[compute.status]} />
+                                </HStack>
+                                <Text type="supporting">
+                                    {compute.gateway_url ??
+                                        (compute.status === 'creating'
+                                            ? 'Provisioning gateway'
+                                            : 'Gateway unavailable')}
+                                </Text>
                             </VStack>
                         </HStack>
                     )}

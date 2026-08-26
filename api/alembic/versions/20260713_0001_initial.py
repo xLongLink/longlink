@@ -46,6 +46,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="compute_status_enum",
                 native_enum=False,
@@ -105,6 +106,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="organization_status_enum",
                 native_enum=False,
@@ -146,6 +148,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="application_status_enum",
                 native_enum=False,

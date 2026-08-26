@@ -6,6 +6,7 @@ from src.logger import logger
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
+from src.models.statuses import Status
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -161,7 +162,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
-    return await session.scalar(
+    operation = await session.scalar(
         update(Operation)
         .where(
             Operation.id == operation_id,
@@ -176,3 +177,27 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
         )
         .returning(Operation)
     )
+    if operation is None:
+        return None
+
+    # Expose failed creation work on its target without changing deletion lifecycle state.
+    if operation.kind == OperationKind.compute_create:
+        await session.execute(
+            update(ComputeRegistry)
+            .where(ComputeRegistry.id == operation.target_id, ComputeRegistry.status == Status.creating)
+            .values(status=Status.failed)
+        )
+    elif operation.kind == OperationKind.organization_create:
+        await session.execute(
+            update(Organization)
+            .where(Organization.id == operation.target_id, Organization.status == Status.creating)
+            .values(status=Status.failed)
+        )
+    elif operation.kind == OperationKind.application_create:
+        await session.execute(
+            update(Application)
+            .where(Application.id == operation.target_id, Application.status == Status.creating)
+            .values(status=Status.failed)
+        )
+
+    return operation

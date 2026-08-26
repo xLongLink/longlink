@@ -19,6 +19,7 @@ import type { OrganizationApplicationSummary, Status } from '@/lib/generated/pla
 
 const statusPresentation = {
     creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
     running: { label: 'Running', variant: 'neutral' },
 } satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 

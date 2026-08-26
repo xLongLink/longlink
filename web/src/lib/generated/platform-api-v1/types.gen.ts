@@ -368,6 +368,7 @@ export type OrganizationIdentity = {
      * Avatar
      */
     avatar: string;
+    status: Status;
 };
 
 /**
@@ -468,6 +469,7 @@ export type OrganizationSummary = {
      * Avatar
      */
     avatar: string;
+    status: Status;
 };
 
 /**
@@ -629,7 +631,7 @@ export type RegistrationComplete = {
  *
  * Lifecycle states shared by Platform-managed resources.
  */
-export type Status = 'creating' | 'running';
+export type Status = 'creating' | 'failed' | 'running';
 
 /**
  * StorageRegistryCreate

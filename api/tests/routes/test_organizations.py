@@ -453,10 +453,11 @@ async def test_list_organizations_returns_stable_page_and_active_total(
         "items": [
             {
                 "id": str(organization.id),
-                "name": "globex",
-                "slug": "globex",
-                "avatar": "",
-            }
+                    "name": "globex",
+                    "slug": "globex",
+                    "avatar": "",
+                    "status": "creating",
+                }
         ],
         "total": 2,
     }

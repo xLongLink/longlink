@@ -1,5 +1,6 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -11,7 +12,14 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
+import type { Status, UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
+import type { ComponentProps } from 'react';
+
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
@@ -57,9 +65,12 @@ export default function Organizations() {
                                 name={membership.organization.name}
                                 size="md"
                             />
-                            <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                {membership.organization.name}
-                            </Link>
+                            <HStack gap={1} align="center">
+                                <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                                    {membership.organization.name}
+                                </Link>
+                                <Badge {...statusPresentation[membership.organization.status]} />
+                            </HStack>
                         </HStack>
                     )}
                 </TableColumn>

@@ -3023,6 +3023,9 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
           }
         },
         "type": "object",
@@ -3030,7 +3033,8 @@
           "id",
           "name",
           "slug",
-          "avatar"
+          "avatar",
+          "status"
         ],
         "title": "OrganizationIdentity",
         "description": "Represent a compact Organization in nested API responses."
@@ -3164,6 +3168,9 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
           }
         },
         "type": "object",
@@ -3171,7 +3178,8 @@
           "id",
           "name",
           "slug",
-          "avatar"
+          "avatar",
+          "status"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."
@@ -3422,6 +3430,7 @@
         "type": "string",
         "enum": [
           "creating",
+          "failed",
           "running"
         ],
         "title": "Status",

@@ -22,6 +22,7 @@ import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v
 
 const statusPresentation = {
     creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
     running: { label: 'Running', variant: 'neutral' },
 } satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 

@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { Badge } from '@astryxdesign/core/Badge';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -16,7 +17,14 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import type { OrganizationSummary, Status } from '@/lib/generated/platform-api-v1/types.gen';
+import type { ComponentProps } from 'react';
+
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -80,9 +88,12 @@ export default function AdminOrganizations() {
                     {(organization) => (
                         <HStack gap={3} align="center">
                             <Avatar kind="organization" src={organization.avatar} name={organization.name} />
-                            <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                                {organization.name}
-                            </Link>
+                            <HStack gap={1} align="center">
+                                <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                                    {organization.name}
+                                </Link>
+                                <Badge {...statusPresentation[organization.status]} />
+                            </HStack>
                         </HStack>
                     )}
                 </TableColumn>

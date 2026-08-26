@@ -94,14 +94,14 @@ async def create(application_id: UUID) -> None:
     )
 
     # Publish the applied release only after workload readiness.
-    if application.status == Status.creating:
+    if application.status in {Status.creating, Status.failed}:
         async with session_scope() as session:
             await session.execute(
                 update(Application)
                 .where(
                     Application.id == application.id,
                     Application.deleted_at.is_(None),
-                    Application.status == Status.creating,
+                    Application.status.in_((Status.creating, Status.failed)),
                 )
                 .values(status=Status.running)
             )

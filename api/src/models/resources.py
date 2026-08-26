@@ -16,6 +16,9 @@ class OrganizationIdentity(BaseModel):
     slug: str
     avatar: str
 
+    # State
+    status: Status
+
 
 class OrganizationApplicationSummary(BaseModel):
     """Represent a compact LongLink Application in nested Organization responses."""

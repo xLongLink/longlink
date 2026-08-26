@@ -136,7 +136,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     async with session_scope() as session:
         refreshed = await session.get(ComputeRegistry, compute_registry.id)
     assert refreshed is not None
-    assert refreshed.status == Status.creating
+    assert refreshed.status == Status.failed
 
 
 async def test_create_running_compute_rejects_endpoint_change_without_rotating_credentials(

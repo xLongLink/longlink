@@ -55,6 +55,23 @@ export default function OrganizationApplication() {
         );
     }
 
+    if (applicationAccess.status === 'failed') {
+        return (
+            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
+                    <Card maxWidth={576} padding={6} width="100%">
+                        <EmptyState
+                            description="Review the failed operation in the Platform administration area."
+                            headingLevel={1}
+                            role="alert"
+                            title="Application deployment failed"
+                        />
+                    </Card>
+                </Center>
+            </Platform>
+        );
+    }
+
     return (
         <ApplicationRuntime
             navigationBaseUrl={`/orgs/${organization}/apps/${application}`}
