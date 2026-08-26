@@ -1,11 +1,11 @@
 import { ApiError } from '@/lib/api';
+import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Navigate, Outlet } from 'react-router';
 import Platform from '@/platform/layouts/Platform';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { VStack } from '@astryxdesign/core/VStack';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
@@ -29,10 +29,10 @@ export default function AuthenticatedLayout() {
                 tabs={[]}
             >
                 <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
-                    <VStack gap={4} align="center">
+                    <Stack gap={4} align="center">
                         <Banner status="error" title={error.message} />
                         <Button label="Retry" onClick={() => void refetch()} variant="primary" />
-                    </VStack>
+                    </Stack>
                 </Center>
             </Platform>
         );

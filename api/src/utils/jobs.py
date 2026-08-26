@@ -94,11 +94,11 @@ async def execute(operation: Operation) -> Operation:
             async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
                 reason = await handler(operation.target_id)
         except asyncio.CancelledError:
-            # Graceful shutdown makes interrupted single-execution work terminal.
+            # Graceful shutdown leaves interrupted work available for the next scheduler.
             try:
-                await _finish_transition(partial(operations.fail, reason="Operation cancelled", logs=log_handler.logs), operation.id)
+                await _finish_transition(operations.release, operation.id)
             except Exception:
-                logger.exception("Could not fail cancelled Operation %s", operation.id)
+                logger.exception("Could not release cancelled Operation %s", operation.id)
             raise
         except TimeoutError:
             reason = "Operation timed out"

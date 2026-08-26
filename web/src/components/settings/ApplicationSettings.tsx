@@ -1,12 +1,11 @@
 import Logs from '@/components/dialogs/Logs';
+import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useState, type ComponentProps } from 'react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -58,15 +57,15 @@ export default function ApplicationSettings({
             header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
-                <VStack gap={1}>
-                    <HStack gap={1} align="center">
+                <Stack gap={1}>
+                    <Stack direction="horizontal" gap={1} align="center">
                         <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
                             {application.name}
                         </Link>
                         <Badge {...statusPresentation[application.status]} />
-                    </HStack>
+                    </Stack>
                     {application.description ? <Text type="supporting">{application.description}</Text> : null}
-                </VStack>
+                </Stack>
             ),
         },
         ...(canManageApplications
@@ -93,14 +92,14 @@ export default function ApplicationSettings({
 
     return (
         <>
-            <VStack gap={4}>
-                <HStack gap={4} justify="between" align="end" wrap="wrap">
-                    <VStack gap={1}>
+            <Stack gap={4}>
+                <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
+                    <Stack gap={1}>
                         <Heading level={2}>Applications</Heading>
                         <Text type="supporting">Review applications connected to this organization.</Text>
-                    </VStack>
+                    </Stack>
                     {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
-                </HStack>
+                </Stack>
 
                 {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
                     <Banner status="error" title="Failed to load applications." />
@@ -114,7 +113,7 @@ export default function ApplicationSettings({
                         idKey="id"
                     />
                 )}
-            </VStack>
+            </Stack>
 
             {logsTarget ? (
                 <Logs

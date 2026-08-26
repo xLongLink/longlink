@@ -1,22 +1,25 @@
+import { useState } from 'react';
+import { Ellipsis } from 'lucide-react';
+import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
+import { pixel } from '@astryxdesign/core/Table';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { zPageUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
-    const toast = useToast();
+    const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
 
     if (isLoading && users.length === 0) {
@@ -28,13 +31,13 @@ export default function AdminUsers() {
     }
 
     return (
-        <VStack gap={6} width="100%">
-            <VStack gap={0}>
+        <Stack gap={6} width="100%">
+            <Stack>
                 <Heading level={1}>Users</Heading>
                 <Text as="p" color="secondary">
                     Review account access, elevated users, and admin onboarding.
                 </Text>
-            </VStack>
+            </Stack>
             <Table
                 data={users}
                 density="compact"
@@ -43,45 +46,66 @@ export default function AdminUsers() {
                 idKey="id"
                 plugins={{ pagination }}
             >
-                <TableColumn<UserSummary> field="user" header="User" width={proportional(1)}>
+                <TableColumn<UserSummary> field="user" header="User" width={pixel(400)}>
                     {(user) => (
-                        <HStack gap={3} align="center">
+                        <Stack direction="horizontal" gap={3} align="center">
                             <Avatar src={user.avatar} name={user.name} size="md" />
-                            <VStack>
-                                <Text weight="semibold">{user.name}</Text>
+                            <Stack>
+                                <Stack direction="horizontal" gap={1} align="center">
+                                    <Text weight="semibold">{user.name}</Text>
+                                    <Badge label={user.administrator ? 'Administrator' : 'User'} />
+                                </Stack>
                                 <Text type="supporting">{user.email}</Text>
-                            </VStack>
-                        </HStack>
+                            </Stack>
+                        </Stack>
                     )}
                 </TableColumn>
-                <TableColumn<UserSummary> field="id" header="ID" width={pixel(288)}>
-                    {(user) => <Text type="code">{user.id}</Text>}
-                </TableColumn>
-                <TableColumn<UserSummary> field="administrator" header="Access" width={pixel(128)}>
-                    {(user) => <Badge label={user.administrator ? 'Administrator' : 'User'} />}
-                </TableColumn>
-                <TableColumn<UserSummary> align="end" field="actions" header="Action" width={pixel(96)}>
+                <TableColumn<UserSummary> align="end" field="actions" header="" width={pixel(56)}>
                     {(user) => (
-                        <MoreMenu
-                            label={`Open actions for ${user.name}`}
+                        <IconButton
+                            icon={<Ellipsis />}
+                            label={`View metadata for ${user.name}`}
                             size="sm"
-                            items={[
-                                {
-                                    label: 'Copy email',
-                                    onClick: async () => {
-                                        try {
-                                            await navigator.clipboard.writeText(user.email);
-                                            toast({ body: 'Email copied' });
-                                        } catch {
-                                            toast({ body: 'Failed to copy to clipboard', type: 'error' });
-                                        }
-                                    },
-                                },
-                            ]}
+                            tooltip="View metadata"
+                            variant="ghost"
+                            onClick={() => setMetadataUser(user)}
                         />
                     )}
                 </TableColumn>
             </Table>
-        </VStack>
+            {metadataUser ? (
+                <Dialog
+                    isOpen
+                    onOpenChange={(isOpen) => {
+                        if (!isOpen) {
+                            setMetadataUser(null);
+                        }
+                    }}
+                    purpose="info"
+                    width={560}
+                >
+                    <Layout
+                        header={
+                            <DialogHeader
+                                title="User metadata"
+                                subtitle={metadataUser.name}
+                                onOpenChange={() => setMetadataUser(null)}
+                            />
+                        }
+                        content={
+                            <LayoutContent>
+                                <MetadataList>
+                                    <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
+                                    <MetadataListItem label="Access">
+                                        <Badge label={metadataUser.administrator ? 'Administrator' : 'User'} />
+                                    </MetadataListItem>
+                                    <MetadataListItem label="ID">{metadataUser.id}</MetadataListItem>
+                                </MetadataList>
+                            </LayoutContent>
+                        }
+                    />
+                </Dialog>
+            ) : null}
+        </Stack>
     );
 }

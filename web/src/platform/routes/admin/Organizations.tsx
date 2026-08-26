@@ -5,12 +5,11 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, TableColumn } from '@/components/ui/Table';
+import { Stack } from '@/components/ui/Stack';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
@@ -71,13 +70,13 @@ export default function AdminOrganizations() {
     }
 
     return (
-        <VStack gap={6} width="100%">
-            <VStack gap={0}>
+        <Stack gap={6} width="100%">
+            <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">
                     Review organization lifecycle, ownership, and access boundaries.
                 </Text>
-            </VStack>
+            </Stack>
             <Table
                 data={organizations}
                 density="compact"
@@ -88,15 +87,15 @@ export default function AdminOrganizations() {
             >
                 <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
                     {(organization) => (
-                        <HStack gap={3} align="center">
+                        <Stack direction="horizontal" gap={3} align="center">
                             <Avatar kind="organization" src={organization.avatar} name={organization.name} />
-                            <VStack gap={0} align="start">
+                            <Stack align="start">
                                 <Badge {...statusPresentation[organization.status]} />
                                 <Link href={`/orgs/${organization.slug}`} weight="semibold">
                                     {organization.name}
                                 </Link>
-                            </VStack>
-                        </HStack>
+                            </Stack>
+                        </Stack>
                     )}
                 </TableColumn>
                 <TableColumn<OrganizationSummary> align="end" field="actions" header="Action" width={pixel(96)}>
@@ -110,6 +109,6 @@ export default function AdminOrganizations() {
                 </TableColumn>
             </Table>
             <DeleteConfirmation {...deleteDialog.dialogProps} />
-        </VStack>
+        </Stack>
     );
 }

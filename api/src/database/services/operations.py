@@ -156,6 +156,23 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
     )
 
 
+async def release(session: AsyncSession, operation_id: UUID) -> Operation | None:
+    """Release one interrupted Operation for another worker to resume."""
+
+    # Release only work still owned by this worker.
+    now = utcnow()
+    return await session.scalar(
+        update(Operation)
+        .where(
+            Operation.id == operation_id,
+            col(Operation.lease_expires_at) > now,
+            Operation.finished_at.is_(None),
+        )
+        .values(lease_expires_at=None)
+        .returning(Operation)
+    )
+
+
 async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
     """Fail one leased Operation."""
 

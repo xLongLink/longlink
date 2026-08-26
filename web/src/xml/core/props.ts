@@ -78,7 +78,6 @@ export function resolveXmlProps<T extends z.ZodObject>(
 
 /** Return whether an XML node passes its optional conditional expression. */
 export function isVisibleXmlNode(node: ASTNode, ctx: Scope): boolean {
-    if (node.params.if == null) return true;
-
-    return Boolean(evaluate(node.params.if, ctx));
+    const condition = node.params.if;
+    return condition == null || Boolean(evaluate(condition, ctx));
 }

@@ -1,11 +1,10 @@
 import { useParams } from 'react-router';
 import type { ComponentProps } from 'react';
 import { hasMinimumRole } from '@/lib/roles';
+import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { proportional } from '@astryxdesign/core/Table';
 import NotFoundLayout from '@/components/layouts/NotFound';
@@ -50,15 +49,15 @@ export default function Organization() {
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8}>
-            <HStack gap={0} justify="between" align="center" wrap="wrap">
-                <VStack gap={0}>
+            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                <Stack>
                     <Heading level={1}>Applications</Heading>
                     <Text as="p" color="secondary">
                         Manage the applications attached to this organization.
                     </Text>
-                </VStack>
+                </Stack>
                 {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
-            </HStack>
+            </Stack>
             <Table
                 data={applications}
                 density="compact"
@@ -68,15 +67,15 @@ export default function Organization() {
             >
                 <TableColumn<OrganizationApplicationSummary> field="name" header="Application" width={proportional(1)}>
                     {(application) => (
-                        <VStack gap={1}>
-                            <HStack gap={1} align="center">
+                        <Stack gap={1}>
+                            <Stack direction="horizontal" gap={1} align="center">
                                 <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
                                     {application.name}
                                 </Link>
                                 <Badge {...statusPresentation[application.status]} />
-                            </HStack>
+                            </Stack>
                             {application.description ? <Text type="supporting">{application.description}</Text> : null}
-                        </VStack>
+                        </Stack>
                     )}
                 </TableColumn>
             </Table>

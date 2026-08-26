@@ -1,11 +1,10 @@
 import { Ellipsis } from 'lucide-react';
+import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { dateTimeFormatter } from '@/lib/utils';
 import { Badge } from '@astryxdesign/core/Badge';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useState, type ComponentProps } from 'react';
@@ -47,13 +46,13 @@ export default function AdminApplications() {
     }
 
     return (
-        <VStack gap={6} width="100%">
-            <VStack gap={0}>
+        <Stack gap={6} width="100%">
+            <Stack>
                 <Heading level={1}>Applications</Heading>
                 <Text as="p" color="secondary">
                     Review all applications across organizations and deployment states.
                 </Text>
-            </VStack>
+            </Stack>
             <Table
                 data={applications}
                 density="compact"
@@ -64,25 +63,25 @@ export default function AdminApplications() {
             >
                 <TableColumn<ApplicationResponse> field="name" header="Application" width={proportional(2)}>
                     {(app) => (
-                        <VStack>
-                            <HStack gap={1} align="center">
+                        <Stack>
+                            <Stack direction="horizontal" gap={1} align="center">
                                 <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
                                     {app.name}
                                 </Link>
                                 <Badge {...statusPresentation[app.status]} />
-                            </HStack>
+                            </Stack>
                             {app.description ? <Text type="supporting">{app.description}</Text> : null}
-                        </VStack>
+                        </Stack>
                     )}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> field="organization" header="Organization" width={proportional(1)}>
                     {(app) => (
-                        <HStack gap={3} align="center">
+                        <Stack direction="horizontal" gap={3} align="center">
                             <Avatar kind="organization" src={app.organization.avatar} name={app.organization.name} />
                             <Link href={`/orgs/${app.organization.slug}`} weight="semibold">
                                 {app.organization.name}
                             </Link>
-                        </HStack>
+                        </Stack>
                     )}
                 </TableColumn>
                 <TableColumn<ApplicationResponse> align="end" field="metadata" header="" width={pixel(56)}>
@@ -145,6 +144,6 @@ export default function AdminApplications() {
                     />
                 </Dialog>
             ) : null}
-        </VStack>
+        </Stack>
     );
 }
