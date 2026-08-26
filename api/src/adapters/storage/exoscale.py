@@ -224,11 +224,11 @@ class Exoscale:
                 ("API key", "api-keys", "key", api.list_api_keys, lambda resource_id: api.delete_api_key(id=resource_id)),
                 ("IAM role", "iam-roles", "id", api.list_iam_roles, lambda resource_id: api.delete_iam_role(id=resource_id)),
             )
-            for name, collection, identifier, list_resources, delete_resource in resources:
+            for resource_type, collection, identifier, list_resources, delete_resource in resources:
                 response = await list_resources()
                 items = response.get(collection)
                 if not isinstance(items, list):
-                    raise RuntimeError(f"Exoscale {name} inventory response is invalid")
+                    raise RuntimeError(f"Exoscale {resource_type} inventory response is invalid")
 
                 for item in items:
                     if not isinstance(item, dict) or item.get("name") != credential_name:
@@ -236,7 +236,7 @@ class Exoscale:
 
                     resource_id = item.get(identifier)
                     if not isinstance(resource_id, str) or not resource_id:
-                        raise RuntimeError(f"Exoscale {name} inventory item is missing its {identifier} id")
+                        raise RuntimeError(f"Exoscale {resource_type} inventory item is missing its {identifier} id")
                     try:
                         operation = await delete_resource(resource_id)
                     except ExoscaleAPIClientException as exc:

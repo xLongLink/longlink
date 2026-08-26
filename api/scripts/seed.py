@@ -11,7 +11,7 @@ from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
-from src.models.computes import ComputeRegistryCreate
+from src.models.computes import kubeconfig_mapping
 from src.database.session import session_scope
 from src.database.services import users, compute, storage, database, applications, organizations
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
@@ -109,9 +109,7 @@ async def seed_infrastructure(
     """Register the configured infrastructure and return its registries."""
 
     # Validate the configured Kubernetes compute before mutating Platform state.
-    compute_config = ComputeRegistryCreate.model_validate(
-        {"name": "development compute", "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8")}
-    )
+    kubeconfig = kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8"))
 
     # Resolve either the configured Application database or the local PostgreSQL service.
     database_config = application_database_configuration(settings)
@@ -119,7 +117,7 @@ async def seed_infrastructure(
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, compute_name, compute_config.kubeconfig)
+            await compute.create(session, compute_name, kubeconfig)
             await session.commit()
 
     # Register the configured database unless it already exists.

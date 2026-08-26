@@ -21,13 +21,24 @@
         <xsd:documentation>Alternative text for the image.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="kind" default="user">
+      <xsd:annotation>
+        <xsd:documentation>Avatar kind. Use organization for a squircle organization image; user is circular.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="organization"/>
+          <xsd:enumeration value="user"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Avatar" type="AvatarType">
     <xsd:annotation>
       <xsd:documentation>Avatar represents a person or team with a profile photo, initials, or a default icon. Use it in comment headers, contact lists, chat messages, user cards, and anywhere you need to identify someone visually.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="avatar" category="Content" lastUpdated="2026-07-21" source="adapters/Avatar.xsd"/>
+        <longlink:docs slug="avatar" category="Content" lastUpdated="2026-08-26" source="adapters/Avatar.xsd"/>
         <longlink:example>&lt;Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

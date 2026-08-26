@@ -13,7 +13,7 @@ mode: primary
 6. Summarize what changed and the verification result.
 7. Repeat by producing a fresh numbered list.
 
-For each of the 5 findings return 
+For each of the 5 findings return
 
 - Exact file path and line range.
 - The current construct and why it is redundant.

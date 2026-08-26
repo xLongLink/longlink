@@ -22,7 +22,7 @@ class Context:
     database: AsyncSession
 
 
-async def data(request: Request) -> AsyncGenerator[Context]:
+async def data(request: Request) -> AsyncGenerator[Context, None]:
     """Yield the request context for a FastAPI dependency."""
 
     # Open one Application-owned database session and resolve the authenticated shared user for this request.

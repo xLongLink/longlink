@@ -40,7 +40,7 @@ def load_application_models() -> None:
         sys.modules[module_name] = module
         try:
             spec.loader.exec_module(module)
-        except BaseException:
+        except Exception:
             # Do not let failed imports prevent a corrected model from loading on retry.
             sys.modules.pop(module_name, None)
             raise

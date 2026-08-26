@@ -5,6 +5,7 @@ import { S3 } from '@/components/svg/S3';
 import { formatBytes } from '@/lib/utils';
 import { hasMinimumRole } from '@/lib/roles';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import People from '@/components/settings/People';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -20,7 +21,6 @@ import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { skipToken, useQuery } from '@tanstack/react-query';
-import { Avatar } from '@/components/ui/Avatar';
 import ApplicationSettings from '@/components/settings/ApplicationSettings';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import type { OrganizationStorageUsageResponse } from '@/lib/generated/platform-api-v1/types.gen';
@@ -160,7 +160,12 @@ export default function OrganizationSettings() {
                                 <Text type="supporting">View and manage organization details.</Text>
                             </VStack>
                             <HStack gap={4} align="center" wrap="wrap">
-                                <Avatar kind="organization" name={organizationName} size="lg" src={avatar || undefined} />
+                                <Avatar
+                                    kind="organization"
+                                    name={organizationName}
+                                    size="lg"
+                                    src={avatar || undefined}
+                                />
                                 <TextInput
                                     label="Avatar URL"
                                     value={avatar}

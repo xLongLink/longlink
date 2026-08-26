@@ -18,15 +18,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_database_registry(payload: DatabaseRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register one database backend."""
 
-    registry = await database.create(
-        session,
-        payload.name,
-        payload.host,
-        payload.port,
-        payload.username,
-        payload.password,
-        payload.sslmode,
-    )
+    registry = await database.create(session, **payload.model_dump())
     await session.commit()
     return registry
 

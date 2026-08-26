@@ -1,6 +1,7 @@
 import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { dateTimeFormatter } from '@/lib/utils';
 import { Badge } from '@astryxdesign/core/Badge';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -15,7 +16,6 @@ import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { Avatar } from '@/components/ui/Avatar';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';

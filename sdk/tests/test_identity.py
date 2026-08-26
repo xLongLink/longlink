@@ -1,9 +1,8 @@
 import jwt
 import pytest
 from uuid import UUID
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from longlink import identity
-from longlink.utils.time import utcnow
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
@@ -35,7 +34,7 @@ def test_identity_token_user_rejects_empty_identity_secret() -> None:
     [
         pytest.param(
             IDENTITY_SECRET,
-            {"exp": utcnow() - timedelta(seconds=1)},
+            {"exp": datetime.now(UTC) - timedelta(seconds=1)},
             id="expired",
         ),
         pytest.param(
@@ -58,8 +57,8 @@ def test_identity_token_user_rejects_invalid_signed_token(secret: str, claims: d
         {
             "sub": "00000000-0000-0000-0000-000000000001",
             "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-            "iat": utcnow(),
-            "exp": utcnow() + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+            "iat": datetime.now(UTC),
+            "exp": datetime.now(UTC) + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
             **claims,
         },
         secret,
@@ -85,8 +84,8 @@ def test_identity_token_user_rejects_invalid_subject_claims(claims: dict[str, st
     token = jwt.encode(
         {
             "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-            "iat": utcnow(),
-            "exp": utcnow() + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+            "iat": datetime.now(UTC),
+            "exp": datetime.now(UTC) + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
             **claims,
         },
         IDENTITY_SECRET,

@@ -2,12 +2,12 @@ from uuid import uuid4
 from fastapi import Depends, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context, data
+from sqlmodel import select
 from collections.abc import Sequence
 from src.schemas.items import (
     ItemCreate,
     ItemAttachmentRead,
 )
-from src.database.services import items
 from src.database.models.items import Item
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,14 +20,21 @@ ATTACHMENTS_DIRECTORY = "item-attachments"
 async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
     """Return catalog items."""
 
-    return await items.list_items(ctx.database)
+    # Query items for display.
+    statement = select(Item).order_by("id")
+    result = await ctx.database.exec(statement)
+    return result.all()
 
 
 @router.post("/items", response_model=Item)
 async def items_post_endpoint(payload: ItemCreate, ctx: Context = Depends(data)) -> Item:
     """Create a catalog item."""
 
-    return await items.create_item(ctx.database, name=payload.name, price=payload.price)
+    # Persist the item so it includes its generated id.
+    item = Item(name=payload.name, price=payload.price)
+    ctx.database.add(item)
+    await ctx.database.commit()
+    return item
 
 
 @router.get("/items/{item_id}", response_model=Item)

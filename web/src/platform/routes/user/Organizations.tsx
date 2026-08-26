@@ -1,5 +1,6 @@
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -9,7 +10,6 @@ import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
-import { Avatar } from '@/components/ui/Avatar';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 

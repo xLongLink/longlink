@@ -2,6 +2,7 @@
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
+DEV_BUILDER := longlink-dev
 PYTHON_IMPORT_FORMAT := uv run --locked ruff check --select I --fix .
 
 # Install all API, SDK, and web dependencies.
@@ -142,6 +143,7 @@ down:
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	@docker image rm --force "localhost:15000/sample:dev" >/dev/null 2>&1 || true
+	@docker buildx rm --force "$(DEV_BUILDER)" >/dev/null 2>&1 || true
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 
@@ -155,10 +157,11 @@ api: api\:install
 
 # Build and push the local sample Application image into the development registry.
 local\:image: sdk\:build
+	@docker buildx inspect "$(DEV_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_BUILDER)" --driver docker-container
 	rm -rf sdk/dev
 	cd sdk && uv run --locked longlink init --folder dev --name sample
 	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
-	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+	cd sdk/dev && uv run longlink build --builder "$(DEV_BUILDER)" --registry localhost:15000 --push --tag dev
 
 
 # Seed local infrastructure and create the local example Organization and Application.

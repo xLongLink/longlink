@@ -486,21 +486,30 @@ def test_resolve_image_tag_rejects_invalid_image_references(
 
 
 @pytest.mark.parametrize(
-    ("arguments", "expected_commands", "expected_push_output"),
+    ("arguments", "expected_build_command", "expected_commands", "expected_push_output"),
     [
         pytest.param(
             ["--push"],
+            ["/usr/bin/docker", "build"],
             [["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"]],
             True,
             id="push",
         ),
-        pytest.param([], [], False, id="local-only"),
+        pytest.param([], ["/usr/bin/docker", "build"], [], False, id="local-only"),
+        pytest.param(
+            ["--builder", "longlink-dev"],
+            ["/usr/bin/docker", "buildx", "build", "--builder", "longlink-dev", "--load"],
+            [],
+            False,
+            id="isolated-builder",
+        ),
     ],
 )
 def test_build_command_reports_built_image(
     docker_build: tuple[list[list[str]], list[Path]],
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
+    expected_build_command: list[str],
     expected_commands: list[list[str]],
     expected_push_output: bool,
 ) -> None:
@@ -524,8 +533,7 @@ def test_build_command_reports_built_image(
         commands
         == [
             [
-                "/usr/bin/docker",
-                "build",
+                *expected_build_command,
                 "-f",
                 str(temporary_context / "Dockerfile"),
                 "-t",
