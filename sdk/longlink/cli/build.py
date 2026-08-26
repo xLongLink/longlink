@@ -136,7 +136,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
         env_entry: dict[str, object] = {
             "name": field_info.get("env_name") or field_name,
-            "required": bool(field_info.get("required")),
+            "required": field_info["required"],
         }
 
         # Preserve optional descriptions when present.
