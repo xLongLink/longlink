@@ -4,6 +4,11 @@
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
+    <xsd:attribute name="color" type="TextColorType" default="primary">
+      <xsd:annotation>
+        <xsd:documentation>Text color: primary or secondary.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="InlineTextType" mixed="true">
@@ -15,8 +20,8 @@
     <xsd:annotation>
       <xsd:documentation>Renders normal body text with standard bold and italic inline elements.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="text" category="Content" lastUpdated="2026-08-19" source="adapters/Text.xsd"/>
-        <longlink:example>&lt;Text&gt;Normal &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/Text&gt;</longlink:example>
+        <longlink:docs slug="text" category="Content" lastUpdated="2026-08-25" source="adapters/Text.xsd"/>
+        <longlink:example>&lt;Text color="secondary"&gt;Supporting &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/Text&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

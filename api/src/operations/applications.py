@@ -29,13 +29,6 @@ async def create(application_id: UUID) -> None:
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
         # Build providers from the Application's immutable infrastructure assignments.
-        db = Postgres(
-            infrastructure.database.host,
-            infrastructure.database.port,
-            infrastructure.database.username,
-            infrastructure.database.password,
-            infrastructure.database.sslmode,
-        )
         object_storage = Exoscale(
             infrastructure.storage.endpoint_url,
             infrastructure.storage.access_key_id,
@@ -47,7 +40,13 @@ async def create(application_id: UUID) -> None:
         prefix = f"applications/{application.id.hex}/"
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
-        connection = await db.schema(organization.id, application.id, secrets.token_urlsafe(24))
+        connection = await Postgres(
+            infrastructure.database.host,
+            infrastructure.database.port,
+            infrastructure.database.username,
+            infrastructure.database.password,
+            infrastructure.database.sslmode,
+        ).schema(organization.id, application.id, secrets.token_urlsafe(24))
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {

@@ -145,6 +145,12 @@
       <xsd:enumeration value="inherit"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="TextColorType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary"/>
+      <xsd:enumeration value="secondary"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="FontWeightType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="normal"/>

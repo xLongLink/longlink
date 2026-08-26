@@ -21,14 +21,13 @@ async def reconcile(organization_id: UUID) -> None:
     organization = infrastructure.organization
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
-    db = Postgres(
+    await Postgres(
         infrastructure.database.host,
         infrastructure.database.port,
         infrastructure.database.username,
         infrastructure.database.password,
         infrastructure.database.sslmode,
-    )
-    await db.prepare_organization_database(organization.id)
+    ).prepare_organization_database(organization.id)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
     await Exoscale(

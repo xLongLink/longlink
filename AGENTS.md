@@ -22,7 +22,7 @@ longlink/
 - Avoid renaming imports.
 - Channel YAGNI and KISS principle.
 - Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
-- Inline single use constants.
+- Inline single-use constants unless inlining an object construction and its only method call would wrap across multiple lines.
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.
 - Keep the code pytonic, prefer readability over efficiency.

@@ -7,9 +7,9 @@
     <State id="budgetLimit" value="${2500}" />
     <State id="workflow" owner="manager" risk="medium" />
 
-    <Stack>
-        <Heading level="3">Application settings</Heading>
-        Configure application defaults with local XML state and Astryx form controls.
+    <Stack gap="0">
+        <Heading level="1">Application settings</Heading>
+        <Text color="secondary">Configure application defaults with local XML state and Astryx form controls.</Text>
     </Stack>
 
     <Menu>
@@ -17,7 +17,7 @@
         <MenuItem icon="viewColumns" label="Application">
             <Stack>
                 <Heading level="2">Application</Heading>
-                Edit the sample application's local owner, cost-center, and reviewer note fields.
+                <Text color="secondary">Edit the sample application's local owner, cost-center, and reviewer note fields.</Text>
                 <Card>
                     <Stack direction="horizontal" align="center">
                         <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />
@@ -39,20 +39,20 @@
         <MenuItem icon="wrench" label="Preferences">
             <Stack>
                 <Heading level="2">Preferences</Heading>
-                Toggle notification controls and adjust a slider-backed approval threshold.
+                <Text color="secondary">Toggle notification controls and adjust a slider-backed approval threshold.</Text>
                 <Stack>
                     <CheckboxInput label="Email updates" value="$emailUpdates" />
                     <Switch label="In-app notifications" value="$notifications" />
                     <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
                 </Stack>
-                ${`Auto-approve up to CHF ${budgetLimit.value}`}
+                <Text color="secondary">${`Auto-approve up to CHF ${budgetLimit.value}`}</Text>
             </Stack>
         </MenuItem>
 
         <MenuItem icon="arrowsUpDown" label="Workflow">
             <Stack>
                 <Heading level="2">Workflow</Heading>
-                Use radio lists and selectors to model workflow defaults.
+                <Text color="secondary">Use radio lists and selectors to model workflow defaults.</Text>
                 <Stack>
                     <RadioList label="Default approver" value="$workflow.owner">
                         <Option value="manager" label="Manager" />

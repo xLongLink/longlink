@@ -268,8 +268,7 @@ class Exoscale:
         """Wait for an Exoscale operation and return its reference id."""
 
         # Delegate operation polling and error handling to the async client.
-        operation_id = self._string(operation, "id")
-        current = await api.wait(operation_id, max_wait_time=10)
+        current = await api.wait(self._string(operation, "id"), max_wait_time=10)
         reference = current.get("reference")
         if isinstance(reference, dict):
             reference_id = reference.get("id")
