@@ -1,5 +1,5 @@
-import type { ComponentProps } from 'react';
 import { useParams } from 'react-router';
+import type { ComponentProps } from 'react';
 import { hasMinimumRole } from '@/lib/roles';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
