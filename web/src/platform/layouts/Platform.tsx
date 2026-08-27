@@ -18,8 +18,10 @@ export type NavigationTab = {
 
 type PlatformProps = {
     action: ReactNode;
+    activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    isDevelopmentNoticeShown?: boolean;
     tabs: readonly NavigationTab[];
 };
 
@@ -38,12 +40,19 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({ action, breadcrumb, children, tabs }: PlatformProps) {
+export default function Platform({
+    action,
+    activeTab,
+    breadcrumb,
+    children,
+    isDevelopmentNoticeShown = true,
+    tabs,
+}: PlatformProps) {
     const { pathname } = useLocation();
 
     return (
         <AppShell
-            banner={<DevelopmentNotice />}
+            banner={isDevelopmentNoticeShown ? <DevelopmentNotice /> : undefined}
             contentPadding={0}
             height="auto"
             mobileNav={false}
@@ -73,7 +82,7 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
                                 aria-label="Section navigation"
                                 onChange={() => undefined}
                                 size="sm"
-                                value={findActiveTab(tabs, pathname) ?? ''}
+                                value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
                             >
                                 {tabs.map((tab) => {
                                     const Icon = tab.icon;
@@ -98,13 +107,7 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
             <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
-                    className="pointer-events-none absolute z-20 end-0 bottom-0 start-0 top-0 border-x-8 border-b-8 border-body bg-transparent"
-                    padding={0}
-                    variant="transparent"
-                />
-                <Card
-                    aria-hidden="true"
-                    className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip"
+                    className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip bg-body px-2 pb-2 pt-0"
                     padding={0}
                     variant="transparent"
                 >
