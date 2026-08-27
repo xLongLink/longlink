@@ -4,10 +4,12 @@ import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { componentDocumentation } from '@/lib/xsd';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { PageContainer } from '@/components/PageContainer';
 import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
 import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
@@ -19,10 +21,31 @@ type ArticlePage = {
     editUrl?: string;
 };
 
+const docsPages = [
+    '/docs',
+    '/docs/api',
+    '/docs/api/organizations',
+    '/docs/api/applications',
+    '/docs/sdk',
+    '/docs/sdk/environments',
+    '/docs/sdk/routes',
+    '/docs/sdk/storage',
+    '/docs/sdk/database',
+    '/docs/sdk/pages',
+    '/docs/sdk/pages/bindings',
+    '/docs/sdk/pages/expressions',
+    ...componentDocumentation.map((component) => `/docs/sdk/pages/${component.slug}`),
+    '/docs/sdk/testing',
+    '/docs/sdk/building',
+];
+
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
+    const currentPage = docsPages.indexOf(pathname);
+    const previousPage = currentPage > 0 ? docsPages[currentPage - 1] : undefined;
+    const nextPage = currentPage >= 0 ? docsPages[currentPage + 1] : undefined;
 
     return (
         <Layout
@@ -46,6 +69,29 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                             <article className="article-content space-y-7 text-justify">
                                 {children}
                                 <Stack as="footer" gap={3}>
+                                    {currentPage >= 0 ? (
+                                        <Stack
+                                            aria-label="Documentation page navigation"
+                                            direction="horizontal"
+                                            hAlign="between"
+                                            width="100%"
+                                        >
+                                            <Button
+                                                href={previousPage}
+                                                icon={<ArrowLeft aria-hidden size={16} />}
+                                                isDisabled={previousPage === undefined}
+                                                label="Previous"
+                                                variant="secondary"
+                                            />
+                                            <Button
+                                                endContent={<ArrowRight aria-hidden size={16} />}
+                                                href={nextPage}
+                                                isDisabled={nextPage === undefined}
+                                                label="Next"
+                                                variant="secondary"
+                                            />
+                                        </Stack>
+                                    ) : null}
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                                         <Text type="supporting" color="secondary">
