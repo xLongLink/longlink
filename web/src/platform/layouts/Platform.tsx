@@ -21,6 +21,7 @@ type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    isContentCentered?: boolean;
     contentMinHeight?: string;
     isDevelopmentNoticeShown?: boolean;
     tabs: readonly NavigationTab[];
@@ -46,6 +47,7 @@ export default function Platform({
     activeTab,
     breadcrumb,
     children,
+    isContentCentered = false,
     contentMinHeight = 'calc(100dvh - var(--_app-shell-header-height, 0px))',
     isDevelopmentNoticeShown = true,
     tabs,
@@ -106,7 +108,11 @@ export default function Platform({
             }
             variant="wash"
         >
-            <Stack className="relative" minHeight={contentMinHeight}>
+            <Stack
+                className="relative"
+                height={isContentCentered ? contentMinHeight : undefined}
+                minHeight={contentMinHeight}
+            >
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip bg-body px-2 pb-2 pt-0"
@@ -115,7 +121,13 @@ export default function Platform({
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack className="relative z-10" padding={2}>
+                <Stack
+                    align={isContentCentered ? 'center' : undefined}
+                    className="relative z-10"
+                    height={isContentCentered ? '100%' : undefined}
+                    justify={isContentCentered ? 'center' : undefined}
+                    padding={2}
+                >
                     {children}
                 </Stack>
             </Stack>
