@@ -48,7 +48,7 @@ const printStyles = `
 
     @page {
         size: 13.333in 7.5in;
-        margin: 0;
+        margin: 0.25in;
     }
 
     @media print {
@@ -73,7 +73,7 @@ const printStyles = `
         .ppt-print-title-slide {
             width: var(--ppt-print-slide-width);
             height: var(--ppt-print-slide-height);
-            margin: 0.25in auto;
+            margin: 0;
             box-sizing: border-box;
             overflow: hidden;
             break-inside: avoid;
@@ -83,10 +83,6 @@ const printStyles = `
         .ppt-print-slide .astryx-app-shell {
             height: 100%;
             min-height: 0;
-        }
-
-        .ppt-print-slide #astryx-app-shell-main > .astryx-stack > .astryx-card {
-            padding-block: var(--spacing-2);
         }
 
         .ppt-print-slide #astryx-app-shell-main > .astryx-stack {
