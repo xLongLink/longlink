@@ -21,6 +21,7 @@ type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    contentMinHeight?: string;
     isDevelopmentNoticeShown?: boolean;
     tabs: readonly NavigationTab[];
 };
@@ -45,6 +46,7 @@ export default function Platform({
     activeTab,
     breadcrumb,
     children,
+    contentMinHeight = 'calc(100dvh - var(--_app-shell-header-height, 0px))',
     isDevelopmentNoticeShown = true,
     tabs,
 }: PlatformProps) {
@@ -104,7 +106,7 @@ export default function Platform({
             }
             variant="wash"
         >
-            <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
+            <Stack className="relative" minHeight={contentMinHeight}>
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip bg-body px-2 pb-2 pt-0"

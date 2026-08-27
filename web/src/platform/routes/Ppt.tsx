@@ -1,39 +1,45 @@
+import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
 import { useLocation, useNavigate } from 'react-router';
+import { BookOpen, ChartNoAxesCombined, Lightbulb, TriangleAlert, Users } from 'lucide-react';
 
 const slides = [
-    { href: '/ppt?slide=why', id: 'why', label: 'Why' },
-    { href: '/ppt?slide=what', id: 'what', label: 'What' },
-    { href: '/ppt?slide=when', id: 'when', label: 'When' },
-    { href: '/ppt?slide=where', id: 'where', label: 'Where' },
-    { href: '/ppt?slide=who', id: 'who', label: 'Who' },
-    { href: '/ppt?slide=how', id: 'how', label: 'How' },
+    { href: '/ppt?slide=introduction', icon: BookOpen, id: 'introduction', label: 'Introduction' },
+    { href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
+    { href: '/ppt?slide=solution', icon: Lightbulb, id: 'solution', label: 'Solution' },
+    { href: '/ppt?slide=market', icon: ChartNoAxesCombined, id: 'market', label: 'Market' },
+    { href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 const printStyles = `
     .ppt-screen-slide {
         display: flex;
-        width: 100vw;
+        width: 100%;
         height: 100dvh;
         align-items: center;
         justify-content: center;
     }
 
-    .ppt-screen-slide > .astryx-app-shell {
-        width: min(100vw, calc(100dvh * 16 / 9));
-        height: min(100dvh, calc(100vw * 9 / 16));
-        min-height: 0;
+    .ppt-screen-frame {
+        --ppt-screen-margin: var(--spacing-6);
+        width: min(
+            calc(100% - var(--ppt-screen-margin) * 2),
+            calc((100dvh - var(--ppt-screen-margin) * 2) * 16 / 9)
+        );
+        aspect-ratio: 16 / 9;
+        box-sizing: border-box;
+        border-radius: var(--radius-none);
+        overflow: hidden;
     }
 
-    .ppt-screen-slide .astryx-layout {
+    .ppt-screen-frame .astryx-app-shell,
+    .ppt-screen-frame .astryx-layout {
+        width: 100%;
         height: 100%;
-    }
-
-    .ppt-screen-slide #astryx-app-shell-main > .astryx-stack {
-        min-height: calc(100% - var(--_app-shell-header-height, 0px));
+        min-height: 0;
     }
 
     .ppt-print-slides {
@@ -59,15 +65,15 @@ const printStyles = `
 
         .ppt-print-slides {
             display: block;
-            --ppt-print-slide-height: 7.375in;
-            --ppt-print-slide-width: 13.111in;
+            --ppt-print-slide-height: 7in;
+            --ppt-print-slide-width: 12.833in;
         }
 
         .ppt-print-slide,
         .ppt-print-title-slide {
             width: var(--ppt-print-slide-width);
             height: var(--ppt-print-slide-height);
-            margin: 0.0625in auto;
+            margin: 0.25in auto;
             box-sizing: border-box;
             overflow: hidden;
             break-inside: avoid;
@@ -77,6 +83,10 @@ const printStyles = `
         .ppt-print-slide .astryx-app-shell {
             height: 100%;
             min-height: 0;
+        }
+
+        .ppt-print-slide #astryx-app-shell-main > .astryx-stack > .astryx-card {
+            padding-block: var(--spacing-2);
         }
 
         .ppt-print-slide #astryx-app-shell-main > .astryx-stack {
@@ -90,8 +100,31 @@ const printStyles = `
 `;
 
 /** Renders a single empty Platform presentation slide. */
-function PresentationSlide({ className, slideIndex }: { className?: string; slideIndex: number }) {
+function PresentationSlide({
+    className,
+    isScreen = false,
+    slideIndex,
+}: {
+    className?: string;
+    isScreen?: boolean;
+    slideIndex: number;
+}) {
     const slide = slides[slideIndex];
+    const platform = (
+        <Platform
+            action={
+                <Text color="secondary" hasTabularNumbers type="supporting">
+                    {slideIndex + 1} / {slides.length}
+                </Text>
+            }
+            activeTab={slide.href}
+            contentMinHeight="100%"
+            isDevelopmentNoticeShown={false}
+            tabs={slides}
+        >
+            {null}
+        </Platform>
+    );
 
     return (
         <Stack
@@ -100,23 +133,18 @@ function PresentationSlide({ className, slideIndex }: { className?: string; slid
             className={className}
             width="100%"
         >
-            <Platform
-                action={
-                    <Text color="secondary" hasTabularNumbers type="supporting">
-                        {slideIndex + 1} / {slides.length}
-                    </Text>
-                }
-                activeTab={slide.href}
-                isDevelopmentNoticeShown={false}
-                tabs={slides}
-            >
-                {null}
-            </Platform>
+            {isScreen ? (
+                <Card className="ppt-screen-frame" padding={0}>
+                    {platform}
+                </Card>
+            ) : (
+                platform
+            )}
         </Stack>
     );
 }
 
-/** Renders a six-slide empty dashboard presentation. */
+/** Renders a five-slide empty dashboard presentation. */
 export default function Ppt() {
     const { search } = useLocation();
     const navigate = useNavigate();
@@ -143,7 +171,7 @@ export default function Ppt() {
     return (
         <>
             <style>{printStyles}</style>
-            <PresentationSlide className="ppt-screen-slide" slideIndex={slideIndex} />
+            <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">
                 <Stack
                     as="section"
