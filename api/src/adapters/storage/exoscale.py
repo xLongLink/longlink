@@ -199,7 +199,7 @@ class Exoscale:
 
                 # Validate both generated values before returning runtime credentials.
                 key = await api.create_api_key(name=credential_name, role_id=role_id)
-                credentials: StorageRuntimeCredentials = {
+                return {
                     "access_key_id": self._string(key, "key"),
                     "secret_access_key": self._string(key, "secret"),
                 }
@@ -208,8 +208,6 @@ class Exoscale:
             with suppress(Exception):
                 await self.revoke(name)
             raise
-
-        return credentials
 
     async def revoke(self, name: str) -> None:
         """Delete Exoscale API keys and IAM roles created for one Application."""
@@ -226,11 +224,11 @@ class Exoscale:
                 ("API key", "api-keys", "key", api.list_api_keys, lambda resource_id: api.delete_api_key(id=resource_id)),
                 ("IAM role", "iam-roles", "id", api.list_iam_roles, lambda resource_id: api.delete_iam_role(id=resource_id)),
             )
-            for name, collection, identifier, list_resources, delete_resource in resources:
+            for resource_type, collection, identifier, list_resources, delete_resource in resources:
                 response = await list_resources()
                 items = response.get(collection)
                 if not isinstance(items, list):
-                    raise RuntimeError(f"Exoscale {name} inventory response is invalid")
+                    raise RuntimeError(f"Exoscale {resource_type} inventory response is invalid")
 
                 for item in items:
                     if not isinstance(item, dict) or item.get("name") != credential_name:
@@ -238,7 +236,7 @@ class Exoscale:
 
                     resource_id = item.get(identifier)
                     if not isinstance(resource_id, str) or not resource_id:
-                        raise RuntimeError(f"Exoscale {name} inventory item is missing its {identifier} id")
+                        raise RuntimeError(f"Exoscale {resource_type} inventory item is missing its {identifier} id")
                     try:
                         operation = await delete_resource(resource_id)
                     except ExoscaleAPIClientException as exc:
@@ -270,8 +268,7 @@ class Exoscale:
         """Wait for an Exoscale operation and return its reference id."""
 
         # Delegate operation polling and error handling to the async client.
-        operation_id = self._string(operation, "id")
-        current = await api.wait(operation_id, max_wait_time=10)
+        current = await api.wait(self._string(operation, "id"), max_wait_time=10)
         reference = current.get("reference")
         if isinstance(reference, dict):
             reference_id = reference.get("id")

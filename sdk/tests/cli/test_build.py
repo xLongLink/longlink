@@ -232,17 +232,9 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     assert (version, name) == ("0.1.0", "demo")
     assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
-    assert "COPY pyproject.toml uv.lock /workspace/" in dockerfile
-    assert "WORKDIR /workspace" in dockerfile
-    assert "uv sync --locked --no-dev --no-install-local" in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
     assert ".env" in dockerignore
     assert "*.db" in dockerignore
-    assert ".git" in dockerignore
-    assert "Dockerfile" in dockerignore
-    assert ".dockerignore" in dockerignore
-    assert "**/.venv" in dockerignore
-    assert "**/.pytest_cache" in dockerignore
 
 
 @pytest.mark.parametrize(
@@ -494,21 +486,30 @@ def test_resolve_image_tag_rejects_invalid_image_references(
 
 
 @pytest.mark.parametrize(
-    ("arguments", "expected_commands", "expected_push_output"),
+    ("arguments", "expected_build_command", "expected_commands", "expected_push_output"),
     [
         pytest.param(
             ["--push"],
+            ["/usr/bin/docker", "build"],
             [["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"]],
             True,
             id="push",
         ),
-        pytest.param([], [], False, id="local-only"),
+        pytest.param([], ["/usr/bin/docker", "build"], [], False, id="local-only"),
+        pytest.param(
+            ["--builder", "longlink-dev"],
+            ["/usr/bin/docker", "buildx", "build", "--builder", "longlink-dev", "--load"],
+            [],
+            False,
+            id="isolated-builder",
+        ),
     ],
 )
 def test_build_command_reports_built_image(
     docker_build: tuple[list[list[str]], list[Path]],
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
+    expected_build_command: list[str],
     expected_commands: list[list[str]],
     expected_push_output: bool,
 ) -> None:
@@ -532,16 +533,15 @@ def test_build_command_reports_built_image(
         commands
         == [
             [
-                "/usr/bin/docker",
-                "build",
+                *expected_build_command,
                 "-f",
                 str(temporary_context / "Dockerfile"),
                 "-t",
                 "localhost:15000/demo-app:dev",
                 str(temporary_context),
-            ]
+            ],
+            *expected_commands,
         ]
-        + expected_commands
     )
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output

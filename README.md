@@ -53,11 +53,11 @@ longlink dev
 
 <br />
 
-## Solutions
+## Goals
 
-SDG 9, ISO 9001, ISO 22301, ISO 31000, ISO 37301, ISO 37000
+LongLink aims to bring software-development principles to the way organisations design and operate their processes by creating a clear boundary between what is a computer task and what requires a human decision. This approach aligns with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and supports organisations working towards relevant ISO certifications and guidance, including [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 31000](https://www.iso.org/standard/65694.html), [ISO 37301](https://www.iso.org/standard/75080.html), and [ISO 37000](https://www.iso.org/standard/65036.html).
 
-| Principle                        |                                                                            |
+| Principles                       |                                                                            |
 | -------------------------------- | -------------------------------------------------------------------------- |
 | **Ownership & accountability**   | Every process has clear owners, roles and responsibilities                 |
 | **Process orientation**          | Activities are structured, documented and consistently executed            |

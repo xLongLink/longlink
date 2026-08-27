@@ -19,7 +19,8 @@ def create_runtime_client() -> TestClient:
     return TestClient(app)
 
 
-def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Path) -> None:
+@pytest.mark.usefixtures("application_source")
+def test_longlink_app_serves_runtime_routes_and_frontend() -> None:
     """Serve SDK runtime endpoints and the embedded frontend."""
 
     # Initialize the development runtime and its in-process client.
@@ -38,11 +39,8 @@ def test_longlink_app_serves_runtime_routes_and_frontend(application_source: Pat
     assert health_response.json() == {"ok": True}
 
 
-def test_longlink_app_serves_runtime_routes_without_embedded_frontend(
-    application_source: Path,
-    monkeypatch: MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+@pytest.mark.usefixtures("application_source")
+def test_longlink_app_serves_runtime_routes_without_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Keep SDK runtime routes available when package frontend assets are absent."""
 
     # Arrange
@@ -84,7 +82,8 @@ def test_startup_rejects_a_missing_application_pages_directory(tmp_path: Path, m
         LongLink(FastAPI())
 
 
-def test_production_startup_installs_one_access_filter(application_source: Path, monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.usefixtures("application_source")
+def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch) -> None:
     """Avoid duplicate Uvicorn access filtering across Application instances."""
 
     # Arrange

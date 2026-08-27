@@ -88,7 +88,7 @@ export const stoneTheme = defineTheme({
 
         // Surface variants — H=291
         '--color-background-card': ['#FFFFFF', '#242325'], // T14
-        '--color-background-popover': ['#ffffff', '#25252a'], // dark: Stone Neutral T15
+        '--color-background-popover': ['#ffffff', '#3b3b3f'], // dark: Stone Neutral T25
         '--color-background-inverted': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
 
         // Status / Sentiment — T50 from palette for icons/borders (visible color)
@@ -207,9 +207,83 @@ export const stoneTheme = defineTheme({
     },
 
     components: {
+        'app-shell-header': {
+            base: {
+                position: 'static',
+            },
+        },
+
+        'breadcrumb-item': {
+            base: {
+                gap: 'var(--spacing-2)',
+                fontSize: 'var(--font-size-base)',
+                lineHeight: 'var(--text-body-leading)',
+                ':not(:first-child)': {
+                    marginInlineStart: 'var(--spacing-1)',
+                },
+            },
+        },
+
         codeblock: {
             base: {
                 width: '100%',
+            },
+        },
+
+        link: {
+            base: {
+                ':hover': {
+                    textDecorationLine: 'underline',
+                },
+            },
+            'color:navigation': {
+                color: 'var(--color-text-secondary)',
+                ':hover': {
+                    color: 'var(--color-text-primary)',
+                    textDecorationLine: 'none',
+                },
+            },
+        },
+
+        'side-nav-item': {
+            base: {
+                color: 'var(--color-text-secondary)',
+            },
+            selected: {
+                backgroundColor: 'var(--color-accent-muted)',
+                color: 'var(--color-text-primary)',
+            },
+        },
+
+        'side-nav-section': {
+            base: {
+                marginInline: 'calc(-1 * var(--spacing-2))',
+            },
+        },
+
+        'table-header': {
+            base: {
+                backgroundColor: 'var(--color-background-muted)',
+            },
+        },
+
+        'table-scroll-wrapper': {
+            base: {
+                '--container-padding-inline-end': '0px',
+                '--container-padding-inline-start': '0px',
+                borderColor: 'var(--color-border-emphasized)',
+                borderRadius: 'var(--radius-container)',
+                borderStyle: 'solid',
+                borderWidth: 'var(--border-width)',
+            },
+        },
+
+        text: {
+            'color:navigation': {
+                color: 'var(--color-text-secondary)',
+                ':hover': {
+                    color: 'var(--color-text-primary)',
+                },
             },
         },
 

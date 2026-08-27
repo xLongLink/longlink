@@ -29,13 +29,6 @@ async def create(application_id: UUID) -> None:
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
         # Build providers from the Application's immutable infrastructure assignments.
-        db = Postgres(
-            infrastructure.database.host,
-            infrastructure.database.port,
-            infrastructure.database.username,
-            infrastructure.database.password,
-            infrastructure.database.sslmode,
-        )
         object_storage = Exoscale(
             infrastructure.storage.endpoint_url,
             infrastructure.storage.access_key_id,
@@ -47,7 +40,13 @@ async def create(application_id: UUID) -> None:
         prefix = f"applications/{application.id.hex}/"
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
-        connection = await db.schema(organization.id, application.id, secrets.token_urlsafe(24))
+        connection = await Postgres(
+            infrastructure.database.host,
+            infrastructure.database.port,
+            infrastructure.database.username,
+            infrastructure.database.password,
+            infrastructure.database.sslmode,
+        ).schema(organization.id, application.id, secrets.token_urlsafe(24))
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {
@@ -70,10 +69,7 @@ async def create(application_id: UUID) -> None:
 
     # Issue an application-specific key so only Platform-originated requests can assert an audit identity.
     if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
-        runtime_secrets = {
-            **runtime_secrets,
-            "LONGLINK_IDENTITY_SECRET": secrets.token_urlsafe(32),
-        }
+        runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
         async with session_scope() as session:
             # Persist credentials only while the Application remains active.
             result = await session.execute(
@@ -90,19 +86,22 @@ async def create(application_id: UUID) -> None:
             await session.commit()
 
     # Apply the captured desired release so reconciliation repairs workload drift.
-    await Kubernetes(infrastructure.compute.kubeconfig).applications.apply(
+    cluster = Kubernetes(
+        infrastructure.compute.kubeconfig,
+    )
+    await cluster.applications.apply(
         application.id, organization.id.hex, application.image_desired, runtime_secrets
     )
 
     # Publish the applied release only after workload readiness.
-    if application.status == Status.creating:
+    if application.status in {Status.creating, Status.failed}:
         async with session_scope() as session:
             await session.execute(
                 update(Application)
                 .where(
                     Application.id == application.id,
                     Application.deleted_at.is_(None),
-                    Application.status == Status.creating,
+                    Application.status.in_((Status.creating, Status.failed)),
                 )
                 .values(status=Status.running)
             )

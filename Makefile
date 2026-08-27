@@ -1,7 +1,8 @@
-.PHONY: up local\:resources local\:image down build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test ty api\:ty sdk\:ty
+.PHONY: up local\:resources local\:image down clear build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
+DEV_BUILDER := longlink-dev
 PYTHON_IMPORT_FORMAT := uv run --locked ruff check --select I --fix .
 
 # Install all API, SDK, and web dependencies.
@@ -134,16 +135,22 @@ up: local\:resources
 	$(MAKE) local:image
 
 
-# Stop local services and remove local development state.
+# Stop local services and remove local development state except cached volumes.
 down:
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
-		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
-	@docker image rm --force "localhost:15000/longlink-app:dev" >/dev/null 2>&1 || true
+	@docker image rm --force "localhost:15000/sample:dev" >/dev/null 2>&1 || true
+	@docker buildx rm --force "$(DEV_BUILDER)" >/dev/null 2>&1 || true
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
+
+
+# Remove local Compose volumes.
+clear:
+	docker compose -f dev/compose.yml down --volumes --remove-orphans
 
 
 # Run the local LongLink Platform API server before `make seed`.
@@ -155,16 +162,16 @@ api: api\:install
 
 # Build and push the local sample Application image into the development registry.
 local\:image: sdk\:build
+	@docker buildx inspect "$(DEV_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_BUILDER)" --driver docker-container
 	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && uv run --locked longlink init --folder dev --name sample
 	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
-	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+	cd sdk/dev && uv run longlink build --builder "$(DEV_BUILDER)" --registry localhost:15000 --push --tag dev
 
 
 # Seed local infrastructure and create the local example Organization and Application.
 seed:
 	cd api && uv sync --locked --extra dev
-	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked python -m scripts.seed
 
@@ -177,6 +184,6 @@ web: web\:install
 # Build the SDK web bundle, then recreate and run the generated SDK development app.
 sdk: sdk\:build
 	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev
+	cd sdk && uv run --locked longlink init --folder dev --name sample
 	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
 	cd sdk/dev && uv run longlink dev

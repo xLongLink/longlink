@@ -44,7 +44,6 @@ export default function Platform({ action, breadcrumb, children, tabs }: Platfor
     return (
         <AppShell
             banner={<DevelopmentNotice />}
-            className="[&_.astryx-app-shell-header]:static"
             contentPadding={0}
             height="auto"
             mobileNav={false}

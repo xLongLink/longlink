@@ -53,7 +53,7 @@ class Image(str):
 
         # Parse digest references separately from tags.
         if "@" in remainder:
-            repository, _separator, tag_or_digest = remainder.partition("@")
+            repository, _, tag_or_digest = remainder.partition("@")
             if not IMAGE_DIGEST_PATTERN.fullmatch(tag_or_digest):
                 raise ValueError("Image digest is invalid")
         else:

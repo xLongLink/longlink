@@ -93,12 +93,12 @@ async def ensure_administrator(session: AsyncSession) -> None:
     """Reconcile the configured account as the sole Platform administrator."""
 
     # Reconcile the persisted administrator before considering an initial account creation.
-    statement = select(User).where(User.email == env.ADMIN_EMAIL)
     user = await session.scalar(select(User).where(User.administrator.is_(True)))
     password_hash = PasswordHash.recommended()
 
     # Match the configured identity only when no administrator has been created yet.
     if user is None:
+        statement = select(User).where(User.email == env.ADMIN_EMAIL)
         user = await session.scalar(statement)
     if user is None:
         user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=password_hash.hash(env.ADMIN_PASSWORD))

@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter } from '@/lib/utils';
+import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -67,13 +66,13 @@ export default function People({
             header: 'User',
             width: proportional(1),
             renderCell: (member) => (
-                <HStack gap={3} align="center">
+                <Stack direction="horizontal" gap={3} align="center">
                     <Avatar src={member.user.avatar} name={member.user.name} size="md" />
-                    <VStack gap={1}>
+                    <Stack>
                         <Text weight="semibold">{member.user.name}</Text>
                         <Text type="supporting">{member.user.email}</Text>
-                    </VStack>
-                </HStack>
+                    </Stack>
+                </Stack>
             ),
         },
         {
@@ -125,11 +124,11 @@ export default function People({
     return (
         <>
             {activeSection === 'members' ? (
-                <VStack gap={4}>
-                    <VStack gap={1}>
+                <Stack gap={4}>
+                    <Stack>
                         <Heading level={2}>Members</Heading>
                         <Text type="supporting">Users who have access to this organization.</Text>
-                    </VStack>
+                    </Stack>
                     <Divider />
                     {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
                         <Banner status="error" title="Failed to load people." />
@@ -143,11 +142,11 @@ export default function People({
                             idKey={(member) => member.user.id}
                         />
                     )}
-                </VStack>
+                </Stack>
             ) : (
-                <VStack gap={4}>
-                    <HStack gap={4} justify="between" align="end" wrap="wrap">
-                        <VStack gap={1}>
+                <Stack gap={4}>
+                    <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
+                        <Stack>
                             <Heading level={2}>Invitations</Heading>
                             <Text type="supporting">Pending invitations to join this organization.</Text>
                             {canInviteMembers ? null : (
@@ -155,14 +154,14 @@ export default function People({
                                     Only maintainers, admins, and owners can send invitations.
                                 </Text>
                             )}
-                        </VStack>
+                        </Stack>
                         <Button
                             label="Invite"
                             variant="primary"
                             isDisabled={organizationId.length === 0 || !canInviteMembers}
                             onClick={() => setInviteOpen(true)}
                         />
-                    </HStack>
+                    </Stack>
                     <Divider />
                     {isLoading && invitations.length === 0 ? null : error && invitations.length === 0 ? (
                         <Banner status="error" title="Failed to load invitations." />
@@ -176,7 +175,7 @@ export default function People({
                             idKey="id"
                         />
                     )}
-                </VStack>
+                </Stack>
             )}
 
             <AlertDialog
@@ -257,7 +256,7 @@ export default function People({
                                     }
                                 }}
                             >
-                                <VStack gap={4}>
+                                <Stack gap={4}>
                                     <FormLayout>
                                         <TextInput
                                             label="Email"
@@ -275,7 +274,7 @@ export default function People({
                                             onChange={(value) => setInviteRole(value as OrganizationRoles)}
                                         />
                                     </FormLayout>
-                                    <HStack gap={2} justify="end" wrap="wrap">
+                                    <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
                                         <Button label="Cancel" onClick={() => setInviteOpen(false)} />
                                         <Button
                                             label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
@@ -284,8 +283,8 @@ export default function People({
                                             isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />
-                                    </HStack>
-                                </VStack>
+                                    </Stack>
+                                </Stack>
                             </form>
                         </LayoutContent>
                     }

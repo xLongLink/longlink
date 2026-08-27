@@ -94,10 +94,10 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
             const left = evaluateNode(node.left, ctx);
 
             // Evaluate logical AND lazily.
-            if (node.operator === '&&') return left ? evaluateNode(node.right, ctx) : left;
+            if (node.operator === '&&') return left && evaluateNode(node.right, ctx);
 
             // Evaluate logical OR lazily.
-            if (node.operator === '||') return left ? left : evaluateNode(node.right, ctx);
+            if (node.operator === '||') return left || evaluateNode(node.right, ctx);
 
             // Evaluate nullish coalescing lazily.
             if (node.operator === '??') return left ?? evaluateNode(node.right, ctx);

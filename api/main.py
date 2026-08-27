@@ -64,9 +64,12 @@ async def prevent_cross_origin_authenticated_writes(
     """Reject unsafe requests that use browser-only authentication cookies from untrusted origins."""
 
     # Cookie-authenticated browser writes must originate from a trusted frontend origin.
-    if request.method in UNSAFE_METHODS and AUTHENTICATION_COOKIES.intersection(request.cookies):
-        if request.headers.get("origin") not in env.trusted_origins():
-            return JSONResponse(status_code=403, content={"detail": "Origin required"})
+    if (
+        request.method in UNSAFE_METHODS
+        and AUTHENTICATION_COOKIES.intersection(request.cookies)
+        and request.headers.get("origin") not in env.trusted_origins()
+    ):
+        return JSONResponse(status_code=403, content={"detail": "Origin required"})
 
     return await call_next(request)
 

@@ -1,5 +1,5 @@
 [project]
-name = "longlink-app"
+name = "__PROJECT_NAME__"
 version = "0.0.0"
 description = "Minimal LongLink office operations application."
 readme = "README.md"

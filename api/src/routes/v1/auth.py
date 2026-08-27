@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(tags=["auth"])
 
+INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
+
 
 def set_auth_session(response: Response, credential: str) -> None:
     """Apply the browser response policy for one signed authentication credential."""
@@ -164,7 +166,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=400,
-            detail="This registration link is invalid or expired. Request a new link to continue.",
+            detail=INVALID_REGISTRATION_LINK,
         ) from exc
     response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS)
@@ -181,7 +183,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
     except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=400,
-            detail="This registration link is invalid or expired. Request a new link to continue.",
+            detail=INVALID_REGISTRATION_LINK,
         ) from exc
     response.headers["Cache-Control"] = "no-store"
     return {"email": email}
@@ -202,7 +204,7 @@ async def complete_registration(
     except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=400,
-            detail="This registration link is invalid or expired. Request a new link to continue.",
+            detail=INVALID_REGISTRATION_LINK,
         ) from exc
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.

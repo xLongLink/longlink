@@ -74,9 +74,10 @@ class FrontendMiddleware:
             status = message["status"]
 
             # Shared caches must distinguish identity and gzip-capable requests.
-            vary_values = {item.strip().lower() for item in headers.get("vary", "").split(",")}
-            if compression_candidate and "accept-encoding" not in vary_values:
-                headers.add_vary_header("Accept-Encoding")
+            if compression_candidate:
+                vary_values = {item.strip().lower() for item in headers.get("vary", "").split(",")}
+                if "accept-encoding" not in vary_values:
+                    headers.add_vary_header("Accept-Encoding")
 
             # Potentially compressed resources share one weak validator across representations.
             etag = headers.get("etag")
@@ -97,5 +98,6 @@ class FrontendMiddleware:
             await send(message)
 
         # Range responses retain identity byte offsets; other eligible responses may use gzip.
-        application = self.gzip if compression_candidate and accepts_gzip(request_headers.get("accept-encoding", "")) else self.app
-        await application(scope, receive, send_with_headers)
+        await (self.gzip if compression_candidate and accepts_gzip(request_headers.get("accept-encoding", "")) else self.app)(
+            scope, receive, send_with_headers
+        )

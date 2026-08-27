@@ -22,7 +22,7 @@ class Context:
     database: AsyncSession
 
 
-async def data(request: Request) -> AsyncGenerator[Context]:
+async def data(request: Request) -> AsyncGenerator[Context, None]:
     """Yield the request context for a FastAPI dependency."""
 
     # Open one Application-owned database session and resolve the authenticated shared user for this request.
@@ -41,7 +41,7 @@ def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
 
         # Verify the Platform-signed user assertion before making it available to application code.
         try:
-            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity") or "", identity_secret)
+            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
         except jwt.PyJWTError:
             user_id = None
 

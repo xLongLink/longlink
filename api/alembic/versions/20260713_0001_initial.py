@@ -46,6 +46,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="compute_status_enum",
                 native_enum=False,
@@ -105,6 +106,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="organization_status_enum",
                 native_enum=False,
@@ -146,6 +148,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "creating",
+                "failed",
                 "running",
                 name="application_status_enum",
                 native_enum=False,
@@ -256,7 +259,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("target_id", sa.Uuid(), nullable=False),
-        sa.Column("failed", sa.Boolean(), nullable=False),
+        sa.Column("failed", sa.String(length=500), nullable=True),
+        sa.Column("logs", sa.JSON(), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),

@@ -21,10 +21,9 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
 
     # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
     try:
-        normalized = json.loads(json.dumps(value))
+        return json.loads(json.dumps(value))
     except TypeError as exc:
         raise ValueError("Kubernetes kubeconfig must be JSON-compatible") from exc
-    return normalized
 
 
 class ComputeRegistryCreate(BaseModel):

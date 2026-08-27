@@ -44,6 +44,13 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${user.toString}'), ctx)).toBeUndefined();
     });
 
+    it('reads own computed members without exposing inherited values', () => {
+        const ctx: Scope = { bindings: { user: { name: 'Ada' } } };
+
+        expect(evaluate(compileAttribute('${user["name"]}'), ctx)).toBe('Ada');
+        expect(evaluate(compileAttribute('${user["constructor"]}'), ctx)).toBeUndefined();
+    });
+
     it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
         const ctx: Scope = { bindings: {} };
 

@@ -1,6 +1,9 @@
 import kr8s
 from typing import cast
 from kr8s.asyncio import Api
+from src.kubernetes.gateway import Gateway
+from src.kubernetes.applications import Applications
+from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
@@ -11,11 +14,6 @@ class Kubernetes:
 
         self._kubeconfig = kubeconfig
         self._api_client: Api | None = None
-
-        # Import lifecycle classes after the client type is available for their annotations.
-        from src.kubernetes.gateway import Gateway
-        from src.kubernetes.applications import Applications
-        from src.kubernetes.organizations import Organizations
 
         self.gateway = Gateway(self)
         self.applications = Applications(self)

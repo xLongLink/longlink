@@ -69,7 +69,8 @@ class Postgres:
 
         return url.update_query_dict(query)
 
-    def quote(self, conn: AsyncConnection, value: str) -> str:
+    @staticmethod
+    def quote(conn: AsyncConnection, value: str) -> str:
         """Return a SQLAlchemy dialect-quoted SQL identifier."""
 
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
@@ -96,10 +97,8 @@ class Postgres:
         # Ensure the operation-scoped engine is disposed after use.
         try:
             # Use explicit connections for autocommit operations and transactions for normal operations.
-            connection_context = engine.connect() if autocommit else engine.begin()
-
             # Yield the selected connection context to the caller.
-            async with connection_context as conn:
+            async with (engine.connect() if autocommit else engine.begin()) as conn:
                 yield conn
 
         # Dispose the per-operation engine even when SQL execution raises.
@@ -299,5 +298,4 @@ class Postgres:
             )
 
             # Normalize the scalar result to the API response value.
-            database_size = result.scalar_one()
-            return int(database_size)
+            return int(result.scalar_one())

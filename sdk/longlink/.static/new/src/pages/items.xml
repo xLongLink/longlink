@@ -5,8 +5,8 @@
 
     <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
         <Stack>
-            <Heading level="3">Items</Heading>
-            Track catalog items and their supporting files.
+            <Heading level="1">Items</Heading>
+            <Text color="secondary">Track catalog items and their supporting files.</Text>
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
             <Stack>
@@ -32,7 +32,7 @@
                 <Link to="/items/${row.id}">
                     $row.name
                 </Link>
-                ${`CHF ${row.price}`}
+                <Text color="secondary">${`CHF ${row.price}`}</Text>
             </Stack>
         </TableColumn>
     </Table>

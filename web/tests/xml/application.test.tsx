@@ -30,6 +30,7 @@ vi.mock('@/xml', async (importOriginal) => {
 
 describe('ApplicationRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
+    let locationAssignDescriptor: PropertyDescriptor | undefined;
 
     afterEach(async () => {
         if (root) {
@@ -37,6 +38,14 @@ describe('ApplicationRuntime', () => {
         }
         root = undefined;
         vi.unstubAllGlobals();
+
+        // Restore direct location-method replacements made by navigation tests.
+        if (locationAssignDescriptor) {
+            Object.defineProperty(window.location, 'assign', locationAssignDescriptor);
+        } else {
+            Reflect.deleteProperty(window.location, 'assign');
+        }
+        locationAssignDescriptor = undefined;
     });
 
     it('renders a manifest failure', async () => {
@@ -177,6 +186,7 @@ describe('ApplicationRuntime', () => {
     it('assigns external XML destinations to the browser location', async () => {
         // Arrange
         const assign = vi.fn();
+        locationAssignDescriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
         Object.defineProperty(window.location, 'assign', { configurable: true, value: assign });
         stubFetch((url) => {
             if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home')]);

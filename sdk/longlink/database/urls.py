@@ -9,6 +9,11 @@ def connect_args(database_url: str | URL, schema: str | None = None, ssl: str | 
         server_settings = {"timezone": "UTC"}
         if schema is not None:
             server_settings["search_path"] = f'"{schema}", shared'
-        return {"server_settings": server_settings, **({"ssl": ssl} if ssl is not None else {})}
+
+        connect_args: dict[str, object] = {"server_settings": server_settings}
+        if ssl is not None:
+            connect_args["ssl"] = ssl
+
+        return connect_args
 
     return {}

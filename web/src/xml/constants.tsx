@@ -1,5 +1,6 @@
 /** Enumerated XML values mirrored from sdk/longlink/.static/xsd/types.xsd. */
 export const ACTION_METHODS = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'] as const;
+export const TEXT_COLORS = ['primary', 'secondary'] as const;
 export const TEXT_INPUT_TYPES = ['text', 'password', 'email'] as const;
 export const ICON_NAMES = [
     'close',

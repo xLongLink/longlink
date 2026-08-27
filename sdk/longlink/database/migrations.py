@@ -40,7 +40,7 @@ def load_application_models() -> None:
         sys.modules[module_name] = module
         try:
             spec.loader.exec_module(module)
-        except BaseException:
+        except Exception:
             # Do not let failed imports prevent a corrected model from loading on retry.
             sys.modules.pop(module_name, None)
             raise
@@ -70,16 +70,8 @@ def make_migrations() -> bool:
         """Skip writing a migration script when autogenerate finds no changes."""
         nonlocal migration_created
 
-        # Treat missing directives as no generated migration.
-        if not directives:
-            migration_created = False
-            return
-
-        # The first directive is Alembic's MigrationScript for this revision.
-        script = directives[0]
-
-        # When no schema operations are detected, prevent file generation.
-        if all(upgrade_ops.is_empty() for upgrade_ops in script.upgrade_ops_list):
+        # Suppress missing directives and revisions with no schema operations.
+        if not directives or all(upgrade_ops.is_empty() for upgrade_ops in directives[0].upgrade_ops_list):
             directives[:] = []
             migration_created = False
 

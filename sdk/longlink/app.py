@@ -111,8 +111,8 @@ class LongLink:
             # Validate XML pages and extract optional display metadata.
             content = page_file.read_text(encoding="utf-8")
             page_root = validate_xml(content)
-            page_name = (page_root.get("name") or "").strip() or None
-            page_icon = (page_root.get("icon") or "").strip() or None
+            page_name = page_root.get("name", "").strip() or None
+            page_icon = page_root.get("icon", "").strip() or None
 
             page_route = page_stem_route(path_without_suffix)
             relative_route = page_route.removeprefix("/")

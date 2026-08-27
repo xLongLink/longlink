@@ -1,11 +1,11 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import case, func, select, update
-from src.logger import logger
+from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.exc import IntegrityError
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
+from src.models.statuses import Status
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,28 +119,26 @@ async def claim(session: AsyncSession) -> Operation | None:
     )
     if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
         return None
-    if operation.lease_expires_at is not None:
-        logger.error("Operation %s failed after its worker lease expired", operation.id)
-        await fail(session, operation.id)
-        return None
 
-    # Acquire the lease conditionally so concurrent workers cannot claim the same operation.
+    # Reclaim expired work or acquire unleased work without racing another scheduler.
     if (
         await session.execute(
             update(Operation)
             .where(
                 Operation.id == operation.id,
                 Operation.finished_at.is_(None),
-                Operation.lease_expires_at.is_(None),
+                or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
             )
             .values(lease_expires_at=now + timedelta(minutes=30))
         )
     ).rowcount != 1:
         return None
+
+    await session.refresh(operation)
     return operation
 
 
-async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
+async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | None = None) -> Operation | None:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
@@ -152,22 +150,69 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
             col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )
-        .values(finished_at=now, lease_expires_at=None)
+        .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
         .returning(Operation)
     )
 
 
-async def fail(session: AsyncSession, operation_id: UUID) -> Operation | None:
-    """Fail one leased Operation."""
+async def release(session: AsyncSession, operation_id: UUID) -> Operation | None:
+    """Release one interrupted Operation for another worker to resume."""
 
-    # Mark only an unfinished Operation that remains leased terminal.
+    # Release only work still owned by this worker.
+    now = utcnow()
     return await session.scalar(
         update(Operation)
         .where(
             Operation.id == operation_id,
-            Operation.lease_expires_at.is_not(None),
+            col(Operation.lease_expires_at) > now,
             Operation.finished_at.is_(None),
         )
-        .values(failed=True, finished_at=utcnow(), lease_expires_at=None)
+        .values(lease_expires_at=None)
         .returning(Operation)
     )
+
+
+async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
+    """Fail one leased Operation."""
+
+    # Mark only an unfinished Operation that remains leased terminal.
+    now = utcnow()
+    operation = await session.scalar(
+        update(Operation)
+        .where(
+            Operation.id == operation_id,
+            col(Operation.lease_expires_at) > now,
+            Operation.finished_at.is_(None),
+        )
+        .values(
+            failed=(reason.strip() or "Operation failed")[:500],
+            finished_at=now,
+            lease_expires_at=None,
+            logs=[] if logs is None else logs,
+        )
+        .returning(Operation)
+    )
+    if operation is None:
+        return None
+
+    # Expose failed creation work on its target without changing deletion lifecycle state.
+    if operation.kind == OperationKind.compute_create:
+        await session.execute(
+            update(ComputeRegistry)
+            .where(ComputeRegistry.id == operation.target_id, ComputeRegistry.status == Status.creating)
+            .values(status=Status.failed)
+        )
+    elif operation.kind == OperationKind.organization_create:
+        await session.execute(
+            update(Organization)
+            .where(Organization.id == operation.target_id, Organization.status == Status.creating)
+            .values(status=Status.failed)
+        )
+    elif operation.kind == OperationKind.application_create:
+        await session.execute(
+            update(Application)
+            .where(Application.id == operation.target_id, Application.status == Status.creating)
+            .values(status=Status.failed)
+        )
+
+    return operation

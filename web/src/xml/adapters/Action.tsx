@@ -202,10 +202,9 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     if (!state || !isSafePropertyName(state)) {
         throw new Error('Patch requires a literal state ID');
     }
-    const valueAttribute = readXmlProp(props, 'value');
     const value = resolveXmlValue(props, 'value', ctx);
     const { invalidate } = resolveXmlProps(props, ctx, { invalidate: 'scalar' }, patchPropsSchema);
-    if ((valueAttribute != null) === (invalidate === true)) {
+    if ((readXmlProp(props, 'value') != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');
     }
     if (!(state in services.setups)) {

@@ -270,9 +270,8 @@ def test_audit_middleware_clears_identity_after_handler_failure() -> None:
     user_id = "00000000-0000-0000-0000-000000000008"
 
     # Act
-    with TestClient(create_audit_application()) as client:
-        with pytest.raises(RuntimeError, match="handler failed"):
-            client.get("/failure", headers=identity_headers(user_id))
+    with TestClient(create_audit_application()) as client, pytest.raises(RuntimeError, match="handler failed"):
+        client.get("/failure", headers=identity_headers(user_id))
 
     # Assert
     assert runtime_context._current_identity.get() is None

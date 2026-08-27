@@ -53,11 +53,11 @@ async def complete_operation(operation_id: UUID) -> Operation | None:
         return operation
 
 
-async def fail_operation(operation_id: UUID) -> Operation | None:
+async def fail_operation(operation_id: UUID, reason: str = "Operation failed") -> Operation | None:
     """Fail one queued Operation in a committed test transaction."""
 
     async with session_scope() as session:
-        operation = await operations.fail(session, operation_id)
+        operation = await operations.fail(session, operation_id, reason)
         await session.commit()
         return operation
 

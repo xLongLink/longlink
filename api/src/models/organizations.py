@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
+from src.models.statuses import Status
 from longlink.shared.models import Email
 
 
@@ -68,6 +69,9 @@ class OrganizationSummary(BaseModel):
     name: str
     slug: str
     avatar: str
+
+    # State
+    status: Status
 
 
 class OrganizationMemberAccessResponse(BaseModel):

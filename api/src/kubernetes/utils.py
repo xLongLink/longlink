@@ -8,8 +8,9 @@ async def apply(resource: APIObject) -> None:
     # Patch existing resources to repair drift without recreating their identities.
     if await resource.exists():
         await resource.patch(deepcopy(resource.raw))
-    else:
-        await resource.create()
+        return
+
+    await resource.create()
 
 
 def deployment_is_ready(deployment: Deployment) -> bool:

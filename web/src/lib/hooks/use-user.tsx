@@ -4,7 +4,12 @@ import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platf
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
-    const currentUser = useQuery({
+    const {
+        data: user,
+        error,
+        isLoading,
+        refetch,
+    } = useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
         queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
@@ -13,7 +18,6 @@ export function useCurrentUser() {
         retry: false,
     });
 
-    const { data: user, error, isLoading, refetch } = currentUser;
     return {
         user,
         isLoading,

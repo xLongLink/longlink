@@ -1,13 +1,13 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -91,17 +91,20 @@ export default function Settings() {
     });
     return (
         <PageContainer gap={8}>
-            <VStack gap={1}>
+            <Stack>
                 <Heading level={1}>Settings</Heading>
-                <Text type="supporting">Manage your account, preferences, and workspace access.</Text>
-            </VStack>
+                <Text as="p" color="secondary">
+                    Manage your account, preferences, and workspace access.
+                </Text>
+            </Stack>
 
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem icon="userRound" label="Account">
-                        <VStack gap={4}>
+                        <Stack gap={4}>
                             <Heading level={2}>Account</Heading>
-                            <HStack gap={4} align="start" wrap="wrap">
+                            <Divider />
+                            <Stack direction="horizontal" gap={4} align="start" wrap="wrap">
                                 <TextInput
                                     label="Username"
                                     value={name}
@@ -118,15 +121,16 @@ export default function Settings() {
                                     }}
                                 />
                                 <TextInput label="Email" type="email" value={user.email} width="100%" isDisabled />
-                            </HStack>
-                        </VStack>
+                            </Stack>
+                        </Stack>
                     </MenuItem>
                     <MenuItem icon="building2" label="Organizations">
-                        <VStack gap={4}>
-                            <HStack gap={4} justify="between" align="end" wrap="wrap">
+                        <Stack gap={4}>
+                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                                 <Heading level={2}>Organizations</Heading>
                                 <CreateOrganization />
-                            </HStack>
+                            </Stack>
+                            <Divider />
                             {isOrganizationsLoading && memberships.length === 0 ? null : (
                                 <Table
                                     data={memberships}
@@ -141,8 +145,9 @@ export default function Settings() {
                                         width={proportional(1)}
                                     >
                                         {(membership) => (
-                                            <HStack gap={3} align="center">
+                                            <Stack direction="horizontal" gap={3} align="center">
                                                 <Avatar
+                                                    kind="organization"
                                                     src={membership.organization.avatar || undefined}
                                                     name={membership.organization.name}
                                                     size="md"
@@ -150,7 +155,7 @@ export default function Settings() {
                                                 <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
                                                     {membership.organization.name}
                                                 </Link>
-                                            </HStack>
+                                            </Stack>
                                         )}
                                     </TableColumn>
                                     <TableColumn<(typeof memberships)[number]>
@@ -183,7 +188,7 @@ export default function Settings() {
                                     </TableColumn>
                                 </Table>
                             )}
-                        </VStack>
+                        </Stack>
                     </MenuItem>
                 </MenuSection>
             </Menu>

@@ -102,8 +102,9 @@ async def proxy_application_request(
         "cache-control": "no-store",
         "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
         "x-content-type-options": "nosniff",
-        **({"content-type": response_content_type} if response_content_type is not None else {}),
     }
+    if response_content_type is not None:
+        response_headers["content-type"] = response_content_type
 
     async def response_content() -> AsyncIterator[bytes]:
         """Stream the upstream response and release network resources on completion."""

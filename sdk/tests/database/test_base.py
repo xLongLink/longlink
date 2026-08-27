@@ -8,6 +8,39 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
+class VerificationEngine:
+    """Provide a configurable non-SQLite database verification boundary."""
+
+    url = "postgresql+asyncpg://database"
+
+    def __init__(self, failure: Exception | None = None) -> None:
+        """Configure the connection outcome and cleanup observation."""
+
+        self.failure = failure
+        self.connect_calls = 0
+        self.disposed = False
+
+    def connect(self) -> "VerificationEngine":
+        """Record and return the verification connection context."""
+
+        self.connect_calls += 1
+        return self
+
+    async def __aenter__(self) -> None:
+        """Raise the configured connection failure, if any."""
+
+        if self.failure:
+            raise self.failure
+
+    async def __aexit__(self, *_args: object) -> None:
+        """Complete the verification connection context."""
+
+    async def dispose(self) -> None:
+        """Record release of the engine resources."""
+
+        self.disposed = True
+
+
 @pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
 def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
@@ -214,35 +247,7 @@ async def test_session_retries_initialization_after_database_connection_failure(
     """Leave the session factory unset when its initial connection fails."""
 
     # Arrange
-    class FailingEngine:
-        """Provide a non-SQLite engine whose verification context fails to open."""
-
-        url = "postgresql+asyncpg://database"
-
-        def __init__(self) -> None:
-            """Track cleanup after a failed verification connection."""
-
-            self.disposed = False
-
-        def connect(self) -> "FailingEngine":
-            """Return the failing connection context."""
-
-            return self
-
-        async def __aenter__(self) -> None:
-            """Fail before a database connection is exposed."""
-
-            raise ConnectionError("database unavailable")
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Complete the failed context-manager protocol."""
-
-        async def dispose(self) -> None:
-            """Record release of the failed engine."""
-
-            self.disposed = True
-
-    engine = FailingEngine()
+    engine = VerificationEngine(ConnectionError("database unavailable"))
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     database = database_base.Database(Envs(ENV="testing"))
 
@@ -271,25 +276,6 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     """Verify a non-SQLite connection before yielding an Application session."""
 
     # Arrange
-    class AvailableEngine:
-        """Provide a healthy non-SQLite engine and connection context."""
-
-        url = "postgresql+asyncpg://database"
-
-        def connect(self) -> "AvailableEngine":
-            """Return the successful connection context."""
-
-            return self
-
-        async def __aenter__(self) -> None:
-            """Enter the available connection context."""
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Exit the available connection context."""
-
-        async def dispose(self) -> None:
-            """Release the fake engine."""
-
     class AvailableSession:
         """Provide the initialized session through an async context manager."""
 
@@ -301,7 +287,7 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
         async def __aexit__(self, *_args: object) -> None:
             """Exit the session context."""
 
-    engine = AvailableEngine()
+    engine = VerificationEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     monkeypatch.setattr(database_base, "async_sessionmaker", lambda *_args, **_kwargs: AvailableSession)
     database = database_base.Database(Envs(ENV="testing"))
@@ -312,4 +298,5 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
 
     # Assert
     assert result == "session"
+    assert engine.connect_calls == 1
     await database.dispose()

@@ -2,15 +2,15 @@ import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
 import { pagesSchema } from '@/xml/pages';
 import { PageError } from '@/components/Utils';
+import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { useEffect, useMemo, type ReactNode } from 'react';
 import type { NavigationTab } from '@/platform/layouts/Platform';
-import { matchRoutes, useNavigate, useParams } from 'react-router';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
+import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type ApplicationRuntimeProps = {
@@ -33,10 +33,11 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
+    const pages = useMemo(() => registeredPages ?? [], [registeredPages]);
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                (registeredPages ?? []).map((page) => ({
+                pages.map((page) => ({
                     path: page.route,
                     page,
                 })),
@@ -51,8 +52,8 @@ export function ApplicationRuntime({
                 Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
             ),
         };
-    }, [registeredPages, routePath]);
-    const staticPages = (registeredPages ?? []).filter((page) => !/(?:^|\/):/.test(page.route));
+    }, [pages, routePath]);
+    const staticPages = pages.filter((page) => !/(?:^|\/):/.test(page.route));
     const firstTabPage = staticPages.find((page) => page.route !== '/');
 
     // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
@@ -100,18 +101,11 @@ export function ApplicationRuntime({
             }) satisfies NavigationTab
     );
 
-    // Make the first navigable tab explicit in the URL when the app loads without a selected view.
-    useEffect(() => {
-        if (!firstTabPage || routePath) {
-            return;
-        }
-
-        navigate(resolveNavigationUrl(navigationBaseUrl, firstTabPage.route), { replace: true });
-    }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
-
     let content: ReactNode;
 
-    if (registeredPages && routePath && !activeRouteMatch) {
+    if (!routePath && firstTabPage) {
+        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabPage.route)} />;
+    } else if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {
         content = (

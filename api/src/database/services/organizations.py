@@ -5,7 +5,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, joinedload, contains_eager
+from sqlalchemy.orm import defer, load_only, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -64,6 +64,17 @@ async def application_runtime_access(
     # Load Application access and its gateway secret in one query.
     result = await session.execute(
         select(Application, Organization, UserOrganization.role, ComputeRegistry)
+        .options(
+            load_only(Application.id, Application.secrets, Application.status),
+            load_only(Organization.id),
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.kubeconfig,
+                ComputeRegistry.gateway_url,
+                ComputeRegistry.gateway_certificate,
+                ComputeRegistry.gateway_client_identity,
+            ),
+        )
         .join(Organization, Organization.id == Application.organization_id)
         .join(UserOrganization, UserOrganization.organization_id == Organization.id)
         .join(ComputeRegistry, ComputeRegistry.id == Organization.compute_id)
@@ -224,14 +235,9 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     rows: list[Audit] = []
     for membership in memberships:
         # Use the latest tombstone from either the user or the membership row.
-        if membership.user.deleted_at is not None and membership.deleted_at is not None:
-            deleted_at = max(membership.user.deleted_at, membership.deleted_at)
-        elif membership.user.deleted_at is not None:
-            deleted_at = membership.user.deleted_at
-        elif membership.deleted_at is not None:
-            deleted_at = membership.deleted_at
-        else:
-            deleted_at = None
+        deleted_at = max(
+            (value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None
+        )
 
         # Tombstone recency must be reflected in the projected update time.
         if deleted_at is not None:
@@ -302,6 +308,7 @@ async def update_member_role(
                 UserOrganization.role == OrganizationRoles.owner,
                 UserOrganization.deleted_at.is_(None),
             )
+            .limit(2)
             .with_for_update()
         )
         result = await session.scalars(owner_statement)

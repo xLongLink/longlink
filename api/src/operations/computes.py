@@ -42,10 +42,8 @@ async def create(compute_id: UUID) -> str | None:
         return None
 
     # Generate mTLS credentials only while bootstrapping an unpublished Compute.
-    tls = generate_gateway_bootstrap_tls(registry.id)
-
     # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
-    gateway_address = await cluster.gateway.apply(tls)
+    gateway_address = await cluster.gateway.apply(generate_gateway_bootstrap_tls(registry.id))
 
     # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
     tls = generate_gateway_tls(registry.id, gateway_address)

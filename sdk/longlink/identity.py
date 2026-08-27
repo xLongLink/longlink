@@ -1,7 +1,6 @@
 import jwt
 from uuid import UUID
-from datetime import timedelta
-from longlink.utils.time import utcnow
+from datetime import UTC, datetime, timedelta
 
 IDENTITY_TOKEN_ALGORITHM = "HS256"
 IDENTITY_TOKEN_AUDIENCE = "longlink:identity"
@@ -12,7 +11,7 @@ def create_identity_token(user_id: UUID, secret: str) -> str:
     """Create one short-lived Platform identity assertion for an Application request."""
 
     # Bind the assertion to one user and a fixed runtime-only token purpose.
-    issued_at = utcnow()
+    issued_at = datetime.now(UTC)
     return jwt.encode(
         {
             "sub": str(user_id),

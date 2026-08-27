@@ -1,19 +1,10 @@
 # LongLink Agent Guide
 
-- Project is in _MVP mode - No need for backwards compatibility_
+- Project is in _MVP mode - No need for backwards compatibility - Collapse migrations_
 - Focus on building complex things as simple as possible. Find ways to reduce complexity when solving problems
-
-## Architecture
-
-```bash
-longlink/
-├── api/                          # Platform API: auth, organizations, applications, registries, orchestration
-├── sdk/                          # Python SDK: application runtime, CLI, scaffolding
-└── web/                          # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
-```
-
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
+- For a small, fixed number of collection mutations, prefer explicit single-item additions over constructing a temporary collection for a bulk update.
 - For bounded, infrequent work, prefer clear iteration over query-count optimizations unless measurement shows a material cost.
 - Prefer standard-library or established libraries over handwritten implementations.
 
@@ -22,7 +13,7 @@ longlink/
 - Avoid renaming imports.
 - Channel YAGNI and KISS principle.
 - Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
-- Inline single use constants.
+- Keep class constructions in separate, multi-line assignments before invoking their methods.
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.
 - Keep the code pytonic, prefer readability over efficiency.
@@ -54,6 +45,7 @@ longlink/
 
 ## JavaScript / TypeScript Guidelines
 
+- Do not use browsers or browser automation to inspect or verify changes; inspect source and run code-level checks only.
 - Validate inputs at system boundaries.
 - Avoid any; prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries.
 - Avoid unsafe assertions and truthiness checks when 0, false, or empty strings are valid.

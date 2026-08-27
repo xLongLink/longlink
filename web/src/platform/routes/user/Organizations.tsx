@@ -1,8 +1,9 @@
+import type { ComponentProps } from 'react';
+import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { proportional } from '@astryxdesign/core/Table';
@@ -11,7 +12,13 @@ import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
+import type { Status, UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
+
+const statusPresentation = {
+    creating: { label: 'Creating', variant: 'info' },
+    failed: { label: 'Failed', variant: 'error' },
+    running: { label: 'Running', variant: 'neutral' },
+} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
@@ -32,13 +39,15 @@ export default function Organizations() {
 
     return (
         <PageContainer gap={8}>
-            <HStack gap={4} justify="between" align="end" wrap="wrap">
-                <VStack gap={1}>
+            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                <Stack>
                     <Heading level={1}>Organizations</Heading>
-                    <Text type="supporting">Manage the workspaces connected to your LongLink account.</Text>
-                </VStack>
+                    <Text as="p" color="secondary">
+                        Manage the workspaces connected to your LongLink account.
+                    </Text>
+                </Stack>
                 <CreateOrganization />
-            </HStack>
+            </Stack>
             <Table
                 data={memberships}
                 density="compact"
@@ -48,16 +57,20 @@ export default function Organizations() {
             >
                 <TableColumn<UserOrganizationMembership> field="name" header="Name" width={proportional(1)}>
                     {(membership) => (
-                        <HStack gap={3} align="center">
+                        <Stack direction="horizontal" gap={3} align="center">
                             <Avatar
+                                kind="organization"
                                 src={membership.organization.avatar || undefined}
                                 name={membership.organization.name}
                                 size="md"
                             />
-                            <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                {membership.organization.name}
-                            </Link>
-                        </HStack>
+                            <Stack direction="horizontal" gap={1} align="center">
+                                <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                                    {membership.organization.name}
+                                </Link>
+                                <Badge {...statusPresentation[membership.organization.status]} />
+                            </Stack>
+                        </Stack>
                     )}
                 </TableColumn>
             </Table>

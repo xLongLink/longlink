@@ -264,8 +264,8 @@ async def test_operations_service_claim_serializes_active_work() -> None:
     assert await claim_operation() is None
 
 
-async def test_operations_service_claim_expires_lost_work() -> None:
-    """Make an expired claimed operation terminal before searching for new work."""
+async def test_operations_service_claim_reclaims_expired_work() -> None:
+    """Reclaim an operation abandoned by a worker after its lease expires."""
 
     # Seed and claim work that its worker will abandon.
     expired = await queue(target_id=uuid4())
@@ -278,17 +278,20 @@ async def test_operations_service_claim_expires_lost_work() -> None:
         assert row is not None
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
         await session.commit()
-    replacement_claim = await claim_operation()
+    reclaimed = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
 
-    # Verify the lost work cannot be reclaimed.
-    assert replacement_claim is None
-    assert expired_row.status == OperationStatus.failed
-    assert expired_row.lease_expires_at is None
+    # Verify another worker owns the abandoned work without making it terminal.
+    assert reclaimed is not None
+    assert reclaimed.id == expired.id
+    assert expired_row.status == OperationStatus.active
+    assert expired_row.lease_expires_at is not None
+    assert expired_row.finished_at is None
+    assert expired_row.failed is None
 
 
-async def test_operations_service_expired_leases_cannot_complete() -> None:
-    """Fail expired work without completing its Operation."""
+async def test_operations_service_expired_leases_cannot_finish() -> None:
+    """Keep expired work available for another worker instead of finishing it."""
 
     # Claim an operation and expire its only lease.
     operation = await queue(target_id=uuid4())
@@ -305,11 +308,27 @@ async def test_operations_service_expired_leases_cannot_complete() -> None:
     expired_failure = await fail_operation(operation.id)
     row = next(item for item in await fetch_operations() if item.id == operation.id)
 
-    # Verify an expired lease cannot complete its terminal Operation.
+    # Verify an expired worker cannot finish work it no longer owns.
     assert expired_completion is None
-    assert expired_failure is not None
-    assert row.status == OperationStatus.failed
-    assert row.finished_at is not None
+    assert expired_failure is None
+    assert row.status == OperationStatus.scheduled
+    assert row.finished_at is None
+
+
+async def test_operations_service_records_bounded_failure_reason() -> None:
+    """Persist a bounded failure reason in the failed operation field."""
+
+    # Arrange
+    operation = await queue(target_id=uuid4())
+    claimed = await claim_operation()
+    assert claimed is not None
+
+    # Act
+    failed = await fail_operation(operation.id, "migration job failed" * 100)
+
+    # Assert
+    assert failed is not None
+    assert failed.failed == ("migration job failed" * 100)[:500]
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:

@@ -18,15 +18,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_database_registry(payload: DatabaseRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register one database backend."""
 
-    registry = await database.create(
-        session,
-        payload.name,
-        payload.host,
-        payload.port,
-        payload.username,
-        payload.password,
-        payload.sslmode,
-    )
+    registry = await database.create(session, **payload.model_dump())
     await session.commit()
     return registry
 
@@ -88,7 +80,14 @@ async def get_database_usage(registry_id: UUID, session: AsyncSession = Depends(
 
     # Inspect backend usage through the adapter.
     try:
-        return await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).usage()
+        database = Postgres(
+            registry.host,
+            registry.port,
+            registry.username,
+            registry.password,
+            registry.sslmode,
+        )
+        return await database.usage()
     except OperationalError as exc:
-        logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
+        logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc

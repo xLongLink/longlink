@@ -58,7 +58,7 @@ def database(database_url: str) -> DatabaseConnection:
         # Keep MySQL temporal functions and TIMESTAMP conversions in UTC for every connection.
         connect_args: dict[str, object] = {"init_command": "SET time_zone = '+00:00'"}
         if sslmode == "DISABLED":
-            if any(value is not None for value in (ssl_ca, ssl_cert, ssl_key)):
+            if ssl_ca is not None or ssl_cert is not None or ssl_key is not None:
                 raise ValueError("Disabled MySQL TLS cannot include certificates")
             return DatabaseConnection(normalized_url, connect_args)
 

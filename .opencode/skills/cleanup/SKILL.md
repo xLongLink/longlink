@@ -1,12 +1,11 @@
 ---
 name: cleanup
-description: Cleanup code by implementing one high-value simplification in LongLink. Use when the user asks to reduce unnecessary code or complexity without changing intended behavior.
+description: Cleanup code by implementing simplification in LongLink. Use when the user asks to reduce unnecessary code or complexity without changing intended behavior.
 ---
 
 ## Task
 
-Inspect the repository and implement exactly one high-value, high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior. Find a meaning full cleanup.
-Choose a task with a clear, local scope. Make the change, run the most relevant existing verification
+Inspect the repository and high-confidence cleanup that removes unnecessary code or reduces complexity without changing intended behavior.
 
 ### 0. Project conventions
 

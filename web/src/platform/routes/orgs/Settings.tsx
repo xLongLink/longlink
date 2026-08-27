@@ -4,14 +4,13 @@ import { useState } from 'react';
 import { S3 } from '@/components/svg/S3';
 import { formatBytes } from '@/lib/utils';
 import { hasMinimumRole } from '@/lib/roles';
+import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Stack } from '@astryxdesign/core/Stack';
 import People from '@/components/settings/People';
-import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useLocation, useParams } from 'react-router';
 import { proportional } from '@astryxdesign/core/Table';
@@ -146,7 +145,7 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8}>
-            <Stack gap={1} width="100%">
+            <Stack>
                 <Heading level={1}>Settings</Heading>
                 <Text as="p" color="secondary">
                     Configure the organization and its runtime defaults.
@@ -155,31 +154,37 @@ export default function OrganizationSettings() {
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem icon="building2" label="Organization">
-                        <VStack gap={4}>
-                            <VStack gap={1}>
-                                <Heading level={2}>Organization</Heading>
-                                <Text type="supporting">View and manage organization details.</Text>
-                            </VStack>
-                            <HStack gap={4} align="center" wrap="wrap">
-                                <Avatar src={avatar || undefined} name={organizationName} size="lg" />
-                                <TextInput
-                                    label="Avatar URL"
-                                    value={avatar}
-                                    width="100%"
-                                    isOptional
-                                    isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
-                                    placeholder="https://example.com/org.png"
-                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                    onChange={(value) => {
-                                        setEditedAvatar(value);
-                                        setAvatarError(null);
-                                    }}
-                                    onBlur={() => {
-                                        void saveAvatar();
-                                    }}
+                        <Stack gap={4}>
+                            <Stack direction="horizontal" justify="between" align="start">
+                                <Stack>
+                                    <Heading level={2}>Organization</Heading>
+                                    <Text type="supporting">View and manage organization details.</Text>
+                                </Stack>
+                                <Avatar
+                                    kind="organization"
+                                    name={organizationName}
+                                    size="lg"
+                                    src={avatar || undefined}
                                 />
-                            </HStack>
-                        </VStack>
+                            </Stack>
+                            <Divider />
+                            <TextInput
+                                label="Avatar URL"
+                                value={avatar}
+                                width="100%"
+                                isOptional
+                                isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
+                                placeholder="https://example.com/org.png"
+                                status={avatarError ? { type: 'error', message: avatarError } : undefined}
+                                onChange={(value) => {
+                                    setEditedAvatar(value);
+                                    setAvatarError(null);
+                                }}
+                                onBlur={() => {
+                                    void saveAvatar();
+                                }}
+                            />
+                        </Stack>
                     </MenuItem>
                     <MenuSubSection icon="users" label="People">
                         <MenuItem label="Members">
@@ -192,6 +197,7 @@ export default function OrganizationSettings() {
                     <MenuItem icon="boxes" label="Applications">
                         <ApplicationSettings
                             organizationId={organizationId}
+                            organizationSlug={organization}
                             applications={applications}
                             canManageApplications={hasOrganizationApplicationAccess}
                             isLoading={isLoading}
@@ -201,11 +207,12 @@ export default function OrganizationSettings() {
                     {hasOrganizationApplicationAccess ? (
                         <>
                             <MenuItem icon="database" label="Database">
-                                <VStack gap={4}>
-                                    <VStack gap={1}>
+                                <Stack gap={4}>
+                                    <Stack>
                                         <Heading level={2}>Database</Heading>
                                         <Text type="supporting">Review database usage for this organization.</Text>
-                                    </VStack>
+                                    </Stack>
+                                    <Divider />
                                     {isLoading || isDatabaseLoading ? null : error ? (
                                         <Banner status="error" title={error.message} />
                                     ) : databaseError ? (
@@ -224,10 +231,10 @@ export default function OrganizationSettings() {
                                                 width={proportional(2)}
                                             >
                                                 {(database) => (
-                                                    <HStack gap={3} align="center">
+                                                    <Stack direction="horizontal" gap={3} align="center">
                                                         <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
                                                         <Text weight="semibold">{database.name}</Text>
-                                                    </HStack>
+                                                    </Stack>
                                                 )}
                                             </TableColumn>
                                             <TableColumn<{ name: string; usage: number }>
@@ -240,14 +247,15 @@ export default function OrganizationSettings() {
                                             </TableColumn>
                                         </Table>
                                     )}
-                                </VStack>
+                                </Stack>
                             </MenuItem>
                             <MenuItem icon="hardDrive" label="Storage">
-                                <VStack gap={4}>
-                                    <VStack gap={1}>
+                                <Stack gap={4}>
+                                    <Stack>
                                         <Heading level={2}>Storage</Heading>
                                         <Text type="supporting">Review storage usage for this organization.</Text>
-                                    </VStack>
+                                    </Stack>
+                                    <Divider />
                                     {isLoading || isStorageLoading ? null : error ? (
                                         <Banner status="error" title={error.message} />
                                     ) : storageError ? (
@@ -262,10 +270,10 @@ export default function OrganizationSettings() {
                                                 width={proportional(2)}
                                             >
                                                 {(storage) => (
-                                                    <HStack gap={3} align="center">
+                                                    <Stack direction="horizontal" gap={3} align="center">
                                                         <S3 aria-hidden="true" className="shrink-0" />
                                                         <Text weight="semibold">{storage.bucket_name}</Text>
-                                                    </HStack>
+                                                    </Stack>
                                                 )}
                                             </TableColumn>
                                             <TableColumn<OrganizationStorageUsageResponse>
@@ -278,7 +286,7 @@ export default function OrganizationSettings() {
                                             </TableColumn>
                                         </Table>
                                     )}
-                                </VStack>
+                                </Stack>
                             </MenuItem>
                         </>
                     ) : null}

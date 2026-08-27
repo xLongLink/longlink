@@ -147,6 +147,7 @@ export const zOperationResponse = z.object({
     kind: zOperationKind,
     target_id: z.uuid(),
     status: zOperationStatus,
+    failed: z.string().nullable(),
     created_at: z.iso.datetime(),
     finished_at: z.iso.datetime().nullable()
 });
@@ -158,18 +159,6 @@ export const zOperationResponse = z.object({
  */
 export const zOrganizationCreate = z.object({
     name: z.string().min(1).max(128)
-});
-
-/**
- * OrganizationIdentity
- *
- * Represent a compact Organization in nested API responses.
- */
-export const zOrganizationIdentity = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string()
 });
 
 /**
@@ -227,18 +216,6 @@ export const zOrganizationStorageUsageResponse = z.object({
 });
 
 /**
- * OrganizationSummary
- *
- * Represent one organization in admin list responses.
- */
-export const zOrganizationSummary = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string()
-});
-
-/**
  * OrganizationUpdate
  *
  * Validate mutable organization settings.
@@ -263,14 +240,6 @@ export const zPageDatabaseRegistryResponse = z.object({
  */
 export const zPageOperationResponse = z.object({
     items: z.array(zOperationResponse),
-    total: z.int().gte(0)
-});
-
-/**
- * Page[OrganizationSummary]
- */
-export const zPageOrganizationSummary = z.object({
-    items: z.array(zOrganizationSummary),
     total: z.int().gte(0)
 });
 
@@ -308,23 +277,11 @@ export const zRegistrationComplete = z.object({
  *
  * Lifecycle states shared by Platform-managed resources.
  */
-export const zStatus = z.enum(['creating', 'running']);
-
-/**
- * ApplicationResponse
- *
- * Represent one application in API responses.
- */
-export const zApplicationResponse = z.object({
-    id: z.uuid(),
-    organization: zOrganizationIdentity,
-    name: z.string(),
-    slug: z.string(),
-    description: z.string().nullable(),
-    image_desired: z.string(),
-    status: zStatus,
-    created_at: z.iso.datetime()
-});
+export const zStatus = z.enum([
+    'creating',
+    'failed',
+    'running'
+]);
 
 /**
  * ComputeRegistryResponse
@@ -352,6 +309,48 @@ export const zOrganizationApplicationSummary = z.object({
 });
 
 /**
+ * OrganizationIdentity
+ *
+ * Represent a compact Organization in nested API responses.
+ */
+export const zOrganizationIdentity = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    slug: z.string(),
+    avatar: z.string(),
+    status: zStatus
+});
+
+/**
+ * ApplicationResponse
+ *
+ * Represent one application in API responses.
+ */
+export const zApplicationResponse = z.object({
+    id: z.uuid(),
+    organization: zOrganizationIdentity,
+    name: z.string(),
+    slug: z.string(),
+    description: z.string().nullable(),
+    image_desired: z.string(),
+    status: zStatus,
+    created_at: z.iso.datetime()
+});
+
+/**
+ * OrganizationSummary
+ *
+ * Represent one organization in admin list responses.
+ */
+export const zOrganizationSummary = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    slug: z.string(),
+    avatar: z.string(),
+    status: zStatus
+});
+
+/**
  * Page[ApplicationResponse]
  */
 export const zPageApplicationResponse = z.object({
@@ -364,6 +363,14 @@ export const zPageApplicationResponse = z.object({
  */
 export const zPageComputeRegistryResponse = z.object({
     items: z.array(zComputeRegistryResponse),
+    total: z.int().gte(0)
+});
+
+/**
+ * Page[OrganizationSummary]
+ */
+export const zPageOrganizationSummary = z.object({
+    items: z.array(zOrganizationSummary),
     total: z.int().gte(0)
 });
 
@@ -713,6 +720,17 @@ export const zListOperationsApiV1OperationsGetQuery = z.object({
  * Successful Response
  */
 export const zListOperationsApiV1OperationsGetResponse = zPageOperationResponse;
+
+export const zGetOperationLogsApiV1OperationsOperationIdLogsGetPath = z.object({
+    operation_id: z.uuid()
+});
+
+/**
+ * Response Get Operation Logs Api V1 Operations  Operation Id  Logs Get
+ *
+ * Successful Response
+ */
+export const zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse = z.array(z.string());
 
 export const zListOrganizationsApiV1OrganizationsGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),

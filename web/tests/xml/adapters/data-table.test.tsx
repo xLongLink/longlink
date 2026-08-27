@@ -4,6 +4,16 @@ import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
 
 describe('Table', () => {
+    it.each([
+        '<Table data="$items"><TableColumn /></Table>',
+        '<Table data="$items"><TableColumn field="created by" /></Table>',
+    ])('rejects TableColumn without a usable field path', (xml) => {
+        const ctx = createContext();
+        ctx.scope.bindings.items = [];
+
+        expect(() => renderXmlToMarkup(parseXML(xml), ctx)).toThrow('TableColumn requires a usable field path');
+    });
+
     it('renders shorthand field columns', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }];

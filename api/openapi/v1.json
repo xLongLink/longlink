@@ -1393,6 +1393,67 @@
         }
       }
     },
+    "/api/v1/operations/{operation_id}/logs": {
+      "get": {
+        "summary": "Get Operation Logs",
+        "description": "Return the terminal log output for one Platform operation.",
+        "operationId": "get_operation_logs_api_v1_operations__operation_id__logs_get",
+        "parameters": [
+          {
+            "name": "operation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Operation Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Operation Logs Api V1 Operations  Operation Id  Logs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/organizations": {
       "get": {
         "summary": "List Organizations",
@@ -2806,6 +2867,17 @@
           "status": {
             "$ref": "#/components/schemas/OperationStatus"
           },
+          "failed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failed"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -2830,6 +2902,7 @@
           "kind",
           "target_id",
           "status",
+          "failed",
           "created_at",
           "finished_at"
         ],
@@ -2950,6 +3023,9 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
           }
         },
         "type": "object",
@@ -2957,7 +3033,8 @@
           "id",
           "name",
           "slug",
-          "avatar"
+          "avatar",
+          "status"
         ],
         "title": "OrganizationIdentity",
         "description": "Represent a compact Organization in nested API responses."
@@ -3091,6 +3168,9 @@
           "avatar": {
             "type": "string",
             "title": "Avatar"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
           }
         },
         "type": "object",
@@ -3098,7 +3178,8 @@
           "id",
           "name",
           "slug",
-          "avatar"
+          "avatar",
+          "status"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."
@@ -3349,6 +3430,7 @@
         "type": "string",
         "enum": [
           "creating",
+          "failed",
           "running"
         ],
         "title": "Status",

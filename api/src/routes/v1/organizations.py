@@ -111,9 +111,14 @@ async def get_organization_database_usage(
     registry = await session.get(DatabaseRegistry, membership.organization.database_id)
 
     # Inspect the exact Organization database and return its physical size when available.
-    return await Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode).database_usage(
-        membership.organization.id.hex
+    database = Postgres(
+        registry.host,
+        registry.port,
+        registry.username,
+        registry.password,
+        registry.sslmode,
     )
+    return await database.database_usage(membership.organization.id.hex)
 
 
 @router.get(

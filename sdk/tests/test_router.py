@@ -1,10 +1,12 @@
+import pytest
 from fastapi import FastAPI, APIRouter
-from pathlib import Path
 from longlink import LongLink
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.usefixtures("application_source")
 
-def test_application_router_preserves_explicit_api_prefix(application_source: Path) -> None:
+
+def test_application_router_preserves_explicit_api_prefix() -> None:
     """Expose Application routes under their explicit API prefix."""
 
     # Arrange
@@ -32,7 +34,7 @@ def test_application_router_preserves_explicit_api_prefix(application_source: Pa
     assert root_response.status_code == 404
 
 
-def test_application_route_overrides_frontend_fallback(application_source: Path) -> None:
+def test_application_route_overrides_frontend_fallback() -> None:
     """Serve an Application route before the frontend fallback."""
 
     # Arrange

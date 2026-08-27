@@ -183,7 +183,7 @@ async def test_get_session_configures_database_specific_engine_options(
     monkeypatch.setattr(database_session, "enable_sqlite_foreign_keys", lambda _engine: None)
 
     # Act
-    result = await database_session.get_session()
+    result = database_session.get_session()
 
     # Assert
     assert result is session_factory

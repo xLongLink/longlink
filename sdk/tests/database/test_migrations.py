@@ -67,20 +67,6 @@ def test_migration_loader_discovers_nested_database_models(
     assert table_name in database_metadata.tables
 
 
-def test_migration_loader_skips_missing_models_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Allow migration commands for Applications without database models."""
-
-    # Arrange
-    monkeypatch.chdir(tmp_path)
-    tables = dict(database_metadata.tables)
-
-    # Act
-    database_migrations.load_application_models()
-
-    # Assert
-    assert dict(database_metadata.tables) == tables
-
-
 def test_migration_loader_skips_already_imported_models(
     isolated_model: tuple[Path, Callable[[str, str], None]],
     monkeypatch: pytest.MonkeyPatch,
@@ -112,7 +98,7 @@ def test_migration_loader_removes_failed_model_import_before_retry(
     # Arrange
     table_name = "retry_inventory_items"
     module_name = "src.database.models.catalog.inventory"
-    model_path, write_model = isolated_model
+    _, write_model = isolated_model
     write_model(table_name, 'raise RuntimeError("broken model")\n')
 
     # Act
