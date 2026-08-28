@@ -6,6 +6,7 @@ import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
+import { Divider } from '@astryxdesign/core/Divider';
 import baserowIcon from '@/components/svg/baserow.svg';
 import tooljetIcon from '@/components/svg/tooljet.svg';
 import { useLocation, useNavigate } from 'react-router';
@@ -19,7 +20,6 @@ import {
     ArrowRight,
     Blocks,
     BookOpen,
-    ChartNoAxesCombined,
     Cloud,
     FileSpreadsheet,
     GitFork,
@@ -40,7 +40,7 @@ const slides = [
     { href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
     { href: '/ppt?slide=competitors', icon: Swords, id: 'competitors', label: 'Competitors' },
     { href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
-    { href: '/ppt?slide=market', icon: ChartNoAxesCombined, id: 'market', label: 'Market' },
+    { href: '/ppt?slide=how', icon: Wrench, id: 'how', label: 'How' },
     { href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 
@@ -48,7 +48,6 @@ type CompetitorRow = {
     avatar?: string;
     language: string;
     license: string;
-    lockIn: string;
     product: string;
     release: string;
     solution: string;
@@ -62,7 +61,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'Proprietary',
         solution: 'Low Code',
         language: 'JavaScript, React',
-        lockIn: 'High',
     },
     {
         avatar: retoolIcon,
@@ -71,7 +69,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'Proprietary',
         solution: 'Hybrid',
         language: 'React, TypeScript',
-        lockIn: 'High',
     },
     {
         avatar: '/images/appsmith.png',
@@ -80,7 +77,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'Apache-2.0',
         solution: 'Hybrid',
         language: 'JavaScript, SQL',
-        lockIn: 'Medium',
     },
     {
         avatar: baserowIcon,
@@ -89,7 +85,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'MIT',
         solution: 'Hybrid',
         language: 'Python, Vue',
-        lockIn: 'Medium',
     },
     {
         avatar: budibaseIcon,
@@ -98,7 +93,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'GPLv3',
         solution: 'Hybrid',
         language: 'JavaScript',
-        lockIn: 'Medium',
     },
     {
         avatar: '/images/smartsuite.png',
@@ -107,7 +101,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'Proprietary',
         solution: 'Low Code',
         language: 'None',
-        lockIn: 'High',
     },
     {
         avatar: tooljetIcon,
@@ -116,7 +109,6 @@ const competitorRows: CompetitorRow[] = [
         license: 'AGPLv3',
         solution: 'Hybrid',
         language: 'JavaScript, Python',
-        lockIn: 'Medium',
     },
     {
         avatar: windmillIcon,
@@ -125,9 +117,26 @@ const competitorRows: CompetitorRow[] = [
         license: 'AGPLv3',
         solution: 'Hybrid',
         language: 'Python, TypeScript, Go, Bash, SQL',
-        lockIn: 'Low',
     },
 ];
+
+const howLayers = [
+    {
+        description: 'Authentication, permissions, deployment, storage, and logging.',
+        label: 'Focus on the solution',
+        width: '52%',
+    },
+    {
+        description: 'FastAPI, Pydantic, SQLAlchemy, Alembic, and more.',
+        label: "Don't reinvent the wheel",
+        width: '76%',
+    },
+    {
+        description: 'Git, CI/CD, code editors, package managers, issue trackers, and more.',
+        label: 'Use the right tool for the Job',
+        width: '100%',
+    },
+] as const;
 
 /** Renders the process stages covered by a problem source. */
 function ProcessCoverage({ stages }: { stages: readonly string[] }) {
@@ -140,6 +149,28 @@ function ProcessCoverage({ stages }: { stages: readonly string[] }) {
                     </Text>
                     {index < stages.length - 1 ? <ArrowRight aria-hidden className="text-secondary" size={12} /> : null}
                 </Stack>
+            ))}
+        </Stack>
+    );
+}
+
+/** Renders the practical principles as a card pyramid. */
+function HowPyramid() {
+    return (
+        <Stack align="center" gap={2} maxWidth={640} width="100%">
+            {howLayers.map(({ description, label, width }) => (
+                <Card height={120} key={label} padding={3} variant="muted" width={width}>
+                    <Stack align="center" gap={0.5} height="100%" justify="center">
+                        <Text justify="center" textWrap="balance" type="large" weight="semibold">
+                            {label}
+                        </Text>
+                        {description ? (
+                            <Text color="secondary" justify="center" textWrap="balance" type="supporting">
+                                {description}
+                            </Text>
+                        ) : null}
+                    </Stack>
+                </Card>
             ))}
         </Stack>
     );
@@ -335,7 +366,7 @@ function PresentationSlide({
                         {
                             key: 'product',
                             align: 'start',
-                            header: 'Product',
+                            header: '',
                             width: proportional(2),
                             renderCell: (competitor) => (
                                 <Stack align="center" direction="horizontal" gap={2}>
@@ -351,7 +382,6 @@ function PresentationSlide({
                         },
                         { key: 'solution', align: 'center', header: 'Solution', width: proportional(1) },
                         { key: 'language', align: 'center', header: 'Language', width: proportional(2) },
-                        { key: 'lockIn', align: 'center', header: 'Vendor lock-in', width: proportional(1) },
                     ]}
                     data={competitorRows}
                     density="compact"
@@ -391,19 +421,27 @@ function PresentationSlide({
                     </Stack>
                 </Stack>
             </Stack>
+        ) : slide.id === 'how' ? (
+            <HowPyramid />
         ) : slide.id === 'team' ? (
             <Stack align="center" gap={3}>
                 <Text as="h1" hasCapsize type="display-3" weight="semibold">
                     Leonardo Saurwein
                 </Text>
-                <Stack align="center" gap={1}>
+                <Stack align="center" gap={3}>
                     <Text type="large">BSc in Mechanical Engineering at ETHZ</Text>
-                    <Text aria-label="Empty team point" type="large">
-                        {' '}
-                    </Text>
-                    <Text aria-label="Empty team point" type="large">
-                        {' '}
-                    </Text>
+                    <Divider />
+                    <Stack align="center" gap={1}>
+                        <Text color="secondary" type="large">
+                            Elegant solutions for complex problems
+                        </Text>
+                        <Text color="secondary" type="large">
+                            Strongly belive in open source
+                        </Text>
+                        <Text color="secondary" type="large">
+                            Against free labour
+                        </Text>
+                    </Stack>
                 </Stack>
             </Stack>
         ) : null;
@@ -421,6 +459,7 @@ function PresentationSlide({
                 slide.id === 'problem' ||
                 slide.id === 'goal' ||
                 slide.id === 'competitors' ||
+                slide.id === 'how' ||
                 slide.id === 'team'
             }
             isDevelopmentNoticeShown={false}
@@ -448,7 +487,7 @@ function PresentationSlide({
     );
 }
 
-/** Renders a seven-slide dashboard presentation. */
+/** Renders an eight-slide dashboard presentation. */
 export default function Ppt() {
     const { search } = useLocation();
     const navigate = useNavigate();
@@ -489,6 +528,17 @@ export default function Ppt() {
                 {slides.map((slide, printSlideIndex) => (
                     <PresentationSlide className="ppt-print-slide" key={slide.id} slideIndex={printSlideIndex} />
                 ))}
+                <Stack
+                    as="section"
+                    aria-label="LongLink closing slide"
+                    className="ppt-print-slide ppt-print-title-slide"
+                    justify="center"
+                    align="center"
+                >
+                    <Text hasCapsize type="display-3" weight="semibold">
+                        longlink.dev
+                    </Text>
+                </Stack>
             </Stack>
         </>
     );
