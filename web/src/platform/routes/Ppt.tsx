@@ -1,23 +1,30 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { Wordmark } from '@/components/Wordmark';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
+import baserowIcon from '@/components/svg/baserow.svg';
+import tooljetIcon from '@/components/svg/tooljet.svg';
 import { useLocation, useNavigate } from 'react-router';
+import budibaseIcon from '@/components/svg/budibase.svg';
+import windmillIcon from '@/components/svg/windmill.svg';
+import { List, ListItem } from '@astryxdesign/core/List';
+import retoolIcon from '@/components/svg/retool-icon.svg';
 import { proportional, Table } from '@astryxdesign/core/Table';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
+import airtableIcon from '@/components/svg/airtable-svgrepo-com.svg';
 import {
     ArrowRight,
     Blocks,
     BookOpen,
     ChartNoAxesCombined,
     Cloud,
+    Ellipsis,
     FileSpreadsheet,
     Hand,
-    Lightbulb,
     Server,
     Sparkles,
     Swords,
@@ -30,15 +37,25 @@ import {
 const slides = [
     { href: '/ppt?slide=introduction', icon: BookOpen, id: 'introduction', label: 'Introduction' },
     { href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
-    { href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
     { href: '/ppt?slide=competitors', icon: Swords, id: 'competitors', label: 'Competitors' },
-    { href: '/ppt?slide=solution', icon: Lightbulb, id: 'solution', label: 'Solution' },
+    { href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
     { href: '/ppt?slide=market', icon: ChartNoAxesCombined, id: 'market', label: 'Market' },
     { href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 
-const competitorRows = [
+type CompetitorRow = {
+    avatar?: string;
+    language: string;
+    license: string;
+    lockIn: string;
+    product: string;
+    release: string;
+    solution: string;
+};
+
+const competitorRows: CompetitorRow[] = [
     {
+        avatar: airtableIcon,
         product: 'Airtable',
         release: '2015',
         license: 'Proprietary',
@@ -47,6 +64,7 @@ const competitorRows = [
         lockIn: 'High',
     },
     {
+        avatar: retoolIcon,
         product: 'Retool',
         release: '2018',
         license: 'Proprietary',
@@ -55,6 +73,7 @@ const competitorRows = [
         lockIn: 'High',
     },
     {
+        avatar: '/images/appsmith.png',
         product: 'Appsmith',
         release: '2020',
         license: 'Apache-2.0',
@@ -63,6 +82,7 @@ const competitorRows = [
         lockIn: 'Medium',
     },
     {
+        avatar: baserowIcon,
         product: 'Baserow',
         release: '2020',
         license: 'MIT',
@@ -71,6 +91,7 @@ const competitorRows = [
         lockIn: 'Medium',
     },
     {
+        avatar: budibaseIcon,
         product: 'Budibase',
         release: '2020',
         license: 'GPLv3',
@@ -79,6 +100,7 @@ const competitorRows = [
         lockIn: 'Medium',
     },
     {
+        avatar: '/images/smartsuite.png',
         product: 'SmartSuite',
         release: '2021',
         license: 'Proprietary',
@@ -87,6 +109,7 @@ const competitorRows = [
         lockIn: 'High',
     },
     {
+        avatar: tooljetIcon,
         product: 'ToolJet',
         release: '2021',
         license: 'AGPLv3',
@@ -95,6 +118,7 @@ const competitorRows = [
         lockIn: 'Medium',
     },
     {
+        avatar: windmillIcon,
         product: 'Windmill',
         release: '2022',
         license: 'AGPLv3',
@@ -303,20 +327,6 @@ function PresentationSlide({
                     </Card>
                 </Grid>
             </Stack>
-        ) : slide.id === 'goal' ? (
-            <Stack align="center" gap={3}>
-                <Text hasCapsize type="display-3" weight="semibold">
-                    Simple - Reliable - Resilient
-                </Text>
-                <Stack align="center" direction="horizontal" gap={2}>
-                    <Badge label="ISO 9001" variant="neutral" />
-                    <Badge label="ISO 22301" variant="neutral" />
-                    <Badge label="ISO 31000" variant="neutral" />
-                    <Badge label="ISO 37301" variant="neutral" />
-                    <Badge label="ISO 37000" variant="neutral" />
-                    <Badge icon={<Target aria-hidden size={16} />} label="Goal 9" variant="neutral" />
-                </Stack>
-            </Stack>
         ) : slide.id === 'competitors' ? (
             <Stack maxWidth={840} width="100%">
                 <Table
@@ -327,11 +337,14 @@ function PresentationSlide({
                             header: 'Product',
                             width: proportional(2),
                             renderCell: (competitor) => (
-                                <Stack align="start" gap={0}>
-                                    <Text weight="semibold">{competitor.product}</Text>
-                                    <Text color="secondary" type="supporting">
-                                        {competitor.release} - {competitor.license}
-                                    </Text>
+                                <Stack align="center" direction="horizontal" gap={2}>
+                                    <Avatar kind="organization" name={competitor.product} src={competitor.avatar} />
+                                    <Stack align="start" gap={0}>
+                                        <Text weight="semibold">{competitor.product}</Text>
+                                        <Text color="secondary" type="supporting">
+                                            {competitor.release} - {competitor.license}
+                                        </Text>
+                                    </Stack>
                                 </Stack>
                             ),
                         },
@@ -346,13 +359,38 @@ function PresentationSlide({
                     verticalAlign="middle"
                 />
             </Stack>
-        ) : slide.id === 'solution' ? (
-            <Stack width="100%">
+        ) : slide.id === 'goal' ? (
+            <Stack className="relative" height="100%" width="100%">
                 <img
                     alt="Human and robot hands reaching toward each other"
-                    className="h-auto w-full object-contain"
+                    className="h-auto w-full -translate-y-4 pointer-events-none select-none object-contain"
+                    draggable={false}
                     src={humanRobotHands}
                 />
+                <Stack className="absolute bottom-16 start-12">
+                    <List
+                        density="compact"
+                        header={
+                            <Text as="h1" hasCapsize type="display-3" weight="semibold">
+                                Principles
+                            </Text>
+                        }
+                        listStyle="none"
+                    >
+                        <ListItem
+                            label="Keep it simple"
+                            startContent={<Sparkles aria-hidden className="text-accent" size={16} />}
+                        />
+                        <ListItem
+                            label="..."
+                            startContent={<Ellipsis aria-hidden className="text-accent" size={16} />}
+                        />
+                        <ListItem
+                            label="Own the process"
+                            startContent={<Hand aria-hidden className="text-accent" size={16} />}
+                        />
+                    </List>
+                </Stack>
             </Stack>
         ) : slide.id === 'team' ? (
             <Stack align="center" gap={3}>
@@ -384,7 +422,6 @@ function PresentationSlide({
                 slide.id === 'problem' ||
                 slide.id === 'goal' ||
                 slide.id === 'competitors' ||
-                slide.id === 'solution' ||
                 slide.id === 'team'
             }
             isDevelopmentNoticeShown={false}
