@@ -11,7 +11,6 @@ import tooljetIcon from '@/components/svg/tooljet.svg';
 import { useLocation, useNavigate } from 'react-router';
 import budibaseIcon from '@/components/svg/budibase.svg';
 import windmillIcon from '@/components/svg/windmill.svg';
-import { List, ListItem } from '@astryxdesign/core/List';
 import retoolIcon from '@/components/svg/retool-icon.svg';
 import { proportional, Table } from '@astryxdesign/core/Table';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
@@ -22,9 +21,11 @@ import {
     BookOpen,
     ChartNoAxesCombined,
     Cloud,
-    Ellipsis,
     FileSpreadsheet,
+    GitFork,
     Hand,
+    LockKeyhole,
+    Minimize2,
     Server,
     Sparkles,
     Swords,
@@ -368,28 +369,26 @@ function PresentationSlide({
                     src={humanRobotHands}
                 />
                 <Stack className="absolute bottom-16 start-12">
-                    <List
-                        density="compact"
-                        header={
-                            <Text as="h1" hasCapsize type="display-3" weight="semibold">
-                                Principles
+                    <Stack gap={8}>
+                        <Stack align="center" direction="horizontal" gap={3}>
+                            <Minimize2 aria-hidden className="text-accent" size={24} />
+                            <Text hasCapsize type="display-3" weight="semibold">
+                                Keep it simple
                             </Text>
-                        }
-                        listStyle="none"
-                    >
-                        <ListItem
-                            label="Keep it simple"
-                            startContent={<Sparkles aria-hidden className="text-accent" size={16} />}
-                        />
-                        <ListItem
-                            label="..."
-                            startContent={<Ellipsis aria-hidden className="text-accent" size={16} />}
-                        />
-                        <ListItem
-                            label="Own the process"
-                            startContent={<Hand aria-hidden className="text-accent" size={16} />}
-                        />
-                    </List>
+                        </Stack>
+                        <Stack align="center" direction="horizontal" gap={3}>
+                            <GitFork aria-hidden className="text-accent" size={24} />
+                            <Text hasCapsize type="display-3" weight="semibold">
+                                Separate responsibilities
+                            </Text>
+                        </Stack>
+                        <Stack align="center" direction="horizontal" gap={3}>
+                            <LockKeyhole aria-hidden className="text-accent" size={24} />
+                            <Text hasCapsize type="display-3" weight="semibold">
+                                Own the process
+                            </Text>
+                        </Stack>
+                    </Stack>
                 </Stack>
             </Stack>
         ) : slide.id === 'team' ? (
