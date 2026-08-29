@@ -44,7 +44,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
     const { pathname } = useLocation();
     const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
     const currentPage = docsPages.indexOf(pathname);
-    const previousPage = currentPage > 0 ? docsPages[currentPage - 1] : undefined;
+    const previousPage = docsPages[currentPage - 1];
     const nextPage = currentPage >= 0 ? docsPages[currentPage + 1] : undefined;
 
     return (

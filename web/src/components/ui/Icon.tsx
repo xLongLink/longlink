@@ -101,7 +101,7 @@ export const stoneIconComponents = {
 
 export type StoneIconName = keyof typeof stoneIconComponents;
 
-export const stoneIconRegistry: IconRegistry = Object.fromEntries(
+export const stoneIconRegistry = Object.fromEntries(
     Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
         name,
         createElement(IconComponent, { 'aria-hidden': true, size: '1em' }),
