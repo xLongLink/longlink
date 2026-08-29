@@ -54,12 +54,9 @@ def test_image_normalizes_whitespace_and_preserves_validated_instances() -> None
     # Arrange
     reference = Image(" ghcr.io/longlink/dashboard:latest ")
 
-    # Act
-    reused_reference = Image(reference)
-
     # Assert
     assert reference == "ghcr.io/longlink/dashboard:latest"
-    assert reused_reference is reference
+    assert Image(reference) is reference
 
 
 def test_image_validates_and_serializes_as_a_pydantic_string() -> None:

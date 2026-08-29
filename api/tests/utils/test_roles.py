@@ -24,8 +24,5 @@ def test_atleast_enforces_organization_role_hierarchy(
 ) -> None:
     """Authorize only organization roles at or above the requested privilege."""
 
-    # Act
-    result = atleast(value, required_role)
-
     # Assert
-    assert result is expected
+    assert atleast(value, required_role) is expected

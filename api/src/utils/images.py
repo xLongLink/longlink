@@ -51,7 +51,11 @@ async def registry_json(
         if not response.is_success:
             return None
 
-        return await bounded_json(response), response.headers
+        payload = await bounded_json(response)
+        if payload is None:
+            return None
+
+        return payload, response.headers
 
 
 async def metadata(image: Image) -> LongLinkMetadata | None:
