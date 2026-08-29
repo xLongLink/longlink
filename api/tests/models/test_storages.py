@@ -9,16 +9,14 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
     """Accept the Exoscale storage registry payload submitted by the Platform UI."""
 
     # Validate and normalize storage endpoint URLs at the model boundary.
-    payload = StorageRegistryCreate.model_validate(
+    assert StorageRegistryCreate.model_validate(
         {
             "name": "Primary Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io/",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
         }
-    )
-
-    assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"
+    ).endpoint_url == "https://sos-ch-gva-2.exo.io"
 
 
 @pytest.mark.parametrize(
