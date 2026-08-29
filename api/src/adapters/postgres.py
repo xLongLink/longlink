@@ -114,9 +114,7 @@ class Postgres:
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection("postgres", autocommit=True) as conn:
             # Create the database only when PostgreSQL does not already list it.
-            if (
-                await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
-            ).scalar_one_or_none() is None:
+            if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
@@ -155,7 +153,9 @@ class Postgres:
             await conn.execute(CreateSchema(quoted_name(application.hex, True), if_not_exists=True))
 
             # Create or rotate the app login role before granting schema permissions.
-            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            role_exists = await conn.scalar(
+                text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username}
+            )
             role = self.quote(conn, runtime_username)
 
             # PostgreSQL password literals must be escaped by the active SQLAlchemy dialect.
@@ -166,7 +166,7 @@ class Postgres:
             password_literal = password_processor(password)
 
             # Create new roles and rotate existing roles with fresh credentials.
-            if result.scalar_one_or_none() is None:
+            if role_exists is None:
                 await conn.exec_driver_sql(f"CREATE ROLE {role} LOGIN PASSWORD {password_literal}")
 
             # Rotate credentials for existing runtime roles.
@@ -210,8 +210,7 @@ class Postgres:
         # Skip cleanup when the organization database was already removed.
         async with self._connection("postgres", autocommit=True) as conn:
             # Stop once PostgreSQL confirms the organization database is absent.
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
-            if result.scalar_one_or_none() is None:
+            if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 return
 
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
@@ -224,8 +223,7 @@ class Postgres:
             shared_schema = self.quote(conn, "shared")
 
             # Remove every grant and setting assigned during Application provisioning when its role exists.
-            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
-            if result.scalar_one_or_none() is not None:
+            if await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username}) is not None:
                 await conn.exec_driver_sql(
                     f"""
                     REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role};
