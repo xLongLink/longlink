@@ -127,7 +127,6 @@ export default function People({
                 <Stack gap={4}>
                     <Stack>
                         <Heading level={2}>Members</Heading>
-                        <Text type="supporting">Users who have access to this organization.</Text>
                     </Stack>
                     <Divider />
                     {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
@@ -148,16 +147,10 @@ export default function People({
                     <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
                         <Stack>
                             <Heading level={2}>Invitations</Heading>
-                            <Text type="supporting">Pending invitations to join this organization.</Text>
-                            {canInviteMembers ? null : (
-                                <Text type="supporting">
-                                    Only maintainers, admins, and owners can send invitations.
-                                </Text>
-                            )}
                         </Stack>
                         <Button
                             label="Invite"
-                            variant="primary"
+                            variant="secondary"
                             isDisabled={organizationId.length === 0 || !canInviteMembers}
                             onClick={() => setInviteOpen(true)}
                         />
@@ -279,7 +272,7 @@ export default function People({
                                         <Button
                                             label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
                                             type="submit"
-                                            variant="primary"
+                                            variant="secondary"
                                             isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />

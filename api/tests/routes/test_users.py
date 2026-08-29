@@ -1,4 +1,5 @@
 import pytest
+from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
@@ -94,9 +95,9 @@ async def test_patch_me_syncs_every_active_organization_after_profile_change(
     user = users[0]
     first_organization = await create_organization(user, name="acme")
     second_organization = await create_organization(user, name="globex")
-    synchronized_organization_ids = []
+    synchronized_organization_ids: list[UUID] = []
 
-    async def sync_users(_session: object, organization_id: object) -> None:
+    async def sync_users(_session: object, organization_id: UUID) -> None:
         """Record organization user-projection requests without a database adapter."""
 
         synchronized_organization_ids.append(organization_id)

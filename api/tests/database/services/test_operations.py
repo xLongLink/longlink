@@ -85,8 +85,6 @@ async def test_operations_service_enqueue_reraises_unresolved_insert_conflict(mo
     async def return_no_operation(_statement: object) -> None:
         """Model an unavailable competing Operation after the insert conflict."""
 
-        return None
-
     async def raise_unique_conflict() -> None:
         """Model an insert conflict without a visible winning transaction."""
 
@@ -173,7 +171,8 @@ async def test_operations_service_schedules_all_active_application_creation_once
             status=Status.running,
             deleted_at=utcnow(),
         )
-        session.add_all([running, deleted])
+        session.add(running)
+        session.add(deleted)
         await session.commit()
 
     async with session_scope() as session:

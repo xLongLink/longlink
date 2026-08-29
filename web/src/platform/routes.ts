@@ -1,6 +1,7 @@
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
+    route('ppt', './routes/Ppt.tsx'),
     layout('./layouts/Page.tsx', [index('./routes/Index.tsx'), route('pricing', './routes/Pricing.tsx')]),
     ...prefix('docs', [
         layout('./layouts/Documentation.tsx', [

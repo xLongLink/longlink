@@ -48,7 +48,7 @@ export default function Organization() {
 
     // Keep edge-aware content aligned within the centered page container.
     return (
-        <PageContainer gap={8}>
+        <PageContainer gap={8} padding={2}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Applications</Heading>
@@ -67,12 +67,14 @@ export default function Organization() {
             >
                 <TableColumn<OrganizationApplicationSummary> field="name" header="Application" width={proportional(1)}>
                     {(application) => (
-                        <Stack gap={1}>
+                        <Stack>
                             <Stack direction="horizontal" gap={1} align="center">
                                 <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
                                     {application.name}
                                 </Link>
-                                <Badge {...statusPresentation[application.status]} />
+                                {application.status === 'running' ? null : (
+                                    <Badge {...statusPresentation[application.status]} />
+                                )}
                             </Stack>
                             {application.description ? <Text type="supporting">{application.description}</Text> : null}
                         </Stack>

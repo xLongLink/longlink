@@ -38,7 +38,7 @@ export default function Organizations() {
     }
 
     return (
-        <PageContainer gap={8}>
+        <PageContainer gap={8} padding={2}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Organizations</Heading>
@@ -64,11 +64,16 @@ export default function Organizations() {
                                 name={membership.organization.name}
                                 size="md"
                             />
-                            <Stack direction="horizontal" gap={1} align="center">
-                                <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                    {membership.organization.name}
-                                </Link>
-                                <Badge {...statusPresentation[membership.organization.status]} />
+                            <Stack>
+                                <Stack direction="horizontal" gap={1} align="center">
+                                    <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                                        {membership.organization.name}
+                                    </Link>
+                                    {membership.organization.status === 'running' ? null : (
+                                        <Badge {...statusPresentation[membership.organization.status]} />
+                                    )}
+                                </Stack>
+                                <Text type="supporting">Organization</Text>
                             </Stack>
                         </Stack>
                     )}

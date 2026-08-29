@@ -134,7 +134,6 @@ async def claim(session: AsyncSession) -> Operation | None:
     ).rowcount != 1:
         return None
 
-    await session.refresh(operation)
     return operation
 
 

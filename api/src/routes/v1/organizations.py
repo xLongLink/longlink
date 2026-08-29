@@ -101,11 +101,7 @@ async def get_organization_database_usage(
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return maintainer-only live usage for the Organization database."""
-
-    # Restrict database inspection to maintainers.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
+    """Return live usage for the Organization database."""
 
     # Load the Organization's immutable database assignment.
     registry = await session.get(DatabaseRegistry, membership.organization.database_id)
@@ -129,11 +125,7 @@ async def get_organization_storage_usage(
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return maintainer-only live usage for the Organization bucket."""
-
-    # Restrict storage inspection to maintainers.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
+    """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
     registry = await session.get(StorageRegistry, membership.organization.storage_id)

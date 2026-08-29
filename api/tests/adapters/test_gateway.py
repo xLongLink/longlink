@@ -47,9 +47,6 @@ async def test_gateway_response_closes_client_when_response_close_fails() -> Non
 async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
     """Close the request client when cancellation interrupts response creation."""
 
-    # Replace the transport after TLS setup with a cancellable request client.
-    clients: list[Client] = []
-
     class Client:
         def __init__(self, **kwargs: object) -> None:
             """Record the constructed request client."""
@@ -76,6 +73,8 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
         def load_cert_chain(self, certfile: str) -> None:
             """Accept the temporary client identity."""
 
+    # Replace the transport after TLS setup with a cancellable request client.
+    clients: list[Client] = []
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: TLS())
     client = gateway.GatewayClient("https://gateway.example", "", "", "identity-secret-012345678901234567")

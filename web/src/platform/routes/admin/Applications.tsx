@@ -71,7 +71,7 @@ export default function AdminApplications() {
     }
 
     return (
-        <Stack gap={6} width="100%">
+        <Stack gap={8} width="100%">
             <Stack>
                 <Heading level={1}>Applications</Heading>
                 <Text as="p" color="secondary">
@@ -93,7 +93,7 @@ export default function AdminApplications() {
                                 <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
                                     {app.name}
                                 </Link>
-                                <Badge {...statusPresentation[app.status]} />
+                                {app.status === 'running' ? null : <Badge {...statusPresentation[app.status]} />}
                             </Stack>
                             {app.description ? <Text type="supporting">{app.description}</Text> : null}
                         </Stack>
@@ -144,7 +144,9 @@ export default function AdminApplications() {
                             <LayoutContent>
                                 <MetadataList>
                                     <MetadataListItem label="Status">
-                                        <Badge {...statusPresentation[metadataApplication.status]} />
+                                        {metadataApplication.status === 'running' ? null : (
+                                            <Badge {...statusPresentation[metadataApplication.status]} />
+                                        )}
                                     </MetadataListItem>
                                     <MetadataListItem label="Organization">
                                         {metadataApplication.organization.name}

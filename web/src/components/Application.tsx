@@ -33,11 +33,11 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
-    const pages = useMemo(() => registeredPages ?? [], [registeredPages]);
+    const pages = registeredPages ?? [];
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                pages.map((page) => ({
+                (registeredPages ?? []).map((page) => ({
                     path: page.route,
                     page,
                 })),
@@ -52,7 +52,7 @@ export function ApplicationRuntime({
                 Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
             ),
         };
-    }, [pages, routePath]);
+    }, [registeredPages, routePath]);
     const staticPages = pages.filter((page) => !/(?:^|\/):/.test(page.route));
     const firstTabPage = staticPages.find((page) => page.route !== '/');
 

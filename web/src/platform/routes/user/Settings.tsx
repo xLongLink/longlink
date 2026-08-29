@@ -12,6 +12,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import UserAvatar from '@/components/settings/UserAvatar';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
@@ -90,12 +91,17 @@ export default function Settings() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     return (
-        <PageContainer gap={8}>
-            <Stack>
-                <Heading level={1}>Settings</Heading>
-                <Text as="p" color="secondary">
-                    Manage your account, preferences, and workspace access.
-                </Text>
+        <PageContainer gap={8} padding={2}>
+            <Stack className="pt-1" direction="horizontal" gap={3} align="center">
+                <UserAvatar name={user.name} src={user.avatar} />
+                <Stack>
+                    <Heading accessibilityLevel={1} level={4}>
+                        {user.name}
+                    </Heading>
+                    <Text size="sm" type="supporting">
+                        Your Account
+                    </Text>
+                </Stack>
             </Stack>
 
             <Menu>
@@ -152,9 +158,15 @@ export default function Settings() {
                                                     name={membership.organization.name}
                                                     size="md"
                                                 />
-                                                <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                                    {membership.organization.name}
-                                                </Link>
+                                                <Stack>
+                                                    <Link
+                                                        href={`/orgs/${membership.organization.slug}`}
+                                                        weight="semibold"
+                                                    >
+                                                        {membership.organization.name}
+                                                    </Link>
+                                                    <Text type="supporting">Organization</Text>
+                                                </Stack>
                                             </Stack>
                                         )}
                                     </TableColumn>

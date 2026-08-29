@@ -7,6 +7,7 @@
 - For a small, fixed number of collection mutations, prefer explicit single-item additions over constructing a temporary collection for a bulk update.
 - For bounded, infrequent work, prefer clear iteration over query-count optimizations unless measurement shows a material cost.
 - Prefer standard-library or established libraries over handwritten implementations.
+- The direct web `isbot` dependency is intentional and may remain.
 
 ## Python Guidelines
 

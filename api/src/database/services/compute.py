@@ -47,8 +47,8 @@ async def create(session: AsyncSession, name: str, kubeconfig: dict[str, object]
 
     # Translate unique registry names to one stable API conflict.
     try:
-        await session.flush()
         session.add(Operation(kind=OperationKind.compute_create, target_id=registry.id))
+        await session.flush()
     except IntegrityError as exc:
         raise ConflictError("Compute registry already exists") from exc
 

@@ -76,7 +76,7 @@ export default function AdminOrganizations() {
     }
 
     return (
-        <Stack gap={6} width="100%">
+        <Stack gap={8} width="100%">
             <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">
@@ -96,7 +96,9 @@ export default function AdminOrganizations() {
                         <Stack direction="horizontal" gap={3} align="center">
                             <Avatar kind="organization" src={organization.avatar} name={organization.name} />
                             <Stack align="start">
-                                <Badge {...statusPresentation[organization.status]} />
+                                {organization.status === 'running' ? null : (
+                                    <Badge {...statusPresentation[organization.status]} />
+                                )}
                                 <Link href={`/orgs/${organization.slug}`} weight="semibold">
                                     {organization.name}
                                 </Link>
@@ -139,7 +141,9 @@ export default function AdminOrganizations() {
                             <LayoutContent>
                                 <MetadataList>
                                     <MetadataListItem label="Status">
-                                        <Badge {...statusPresentation[metadataOrganization.status]} />
+                                        {metadataOrganization.status === 'running' ? null : (
+                                            <Badge {...statusPresentation[metadataOrganization.status]} />
+                                        )}
                                     </MetadataListItem>
                                     <MetadataListItem label="Slug">{metadataOrganization.slug}</MetadataListItem>
                                     <MetadataListItem label="ID">{metadataOrganization.id}</MetadataListItem>

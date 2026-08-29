@@ -21,6 +21,8 @@ LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
 
 WORKDIR /app
 ENV PATH="/app/.venv/bin:${PATH}"
+ENV HOME="/tmp"
+ENV PYTHONDONTWRITEBYTECODE="1"
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
 
@@ -30,9 +32,13 @@ RUN apt-get update \
     && apt-get install --no-install-recommends --yes git \
     && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK_API=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache \
     && apt-get purge --auto-remove --yes git \
-    && rm -rf /var/lib/apt/lists/*
-COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 longlink \
+    && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink
+COPY --chown=10001:10001 --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000
+
+USER 10001:10001
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -73,7 +73,7 @@ export default function AdminCompute() {
     }
 
     return (
-        <Stack gap={6} width="100%">
+        <Stack gap={8} width="100%">
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Compute</Heading>
@@ -98,7 +98,9 @@ export default function AdminCompute() {
                             <Stack>
                                 <Stack direction="horizontal" gap={1} align="center">
                                     <Text weight="semibold">{compute.name}</Text>
-                                    <Badge {...statusPresentation[compute.status]} />
+                                    {compute.status === 'running' ? null : (
+                                        <Badge {...statusPresentation[compute.status]} />
+                                    )}
                                 </Stack>
                                 <Text type="supporting">
                                     {compute.gateway_url ??
@@ -140,7 +142,9 @@ export default function AdminCompute() {
                             <LayoutContent>
                                 <MetadataList>
                                     <MetadataListItem label="Status">
-                                        <Badge {...statusPresentation[metadataCompute.status]} />
+                                        {metadataCompute.status === 'running' ? null : (
+                                            <Badge {...statusPresentation[metadataCompute.status]} />
+                                        )}
                                     </MetadataListItem>
                                     <MetadataListItem label="Gateway">
                                         {metadataCompute.gateway_url ?? 'Unavailable'}

@@ -1,6 +1,6 @@
 from src.models.roles import OrganizationRoles
 
-_ROLE_RANKS = {role: index for index, role in enumerate(OrganizationRoles, start=1)}
+_ROLE_RANKS = {role: index for index, role in enumerate(OrganizationRoles)}
 
 
 def atleast(value: OrganizationRoles, required_role: OrganizationRoles) -> bool:

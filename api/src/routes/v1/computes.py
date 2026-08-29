@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, get_session
 from sqlalchemy.orm import load_only
+from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from src.models.pagination import Page, Pagination
@@ -12,7 +13,9 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)):
+async def create_compute_registry(
+    payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)
+) -> ComputeRegistry:
     """Register a compute target and queue its initial creation."""
 
     registry = await compute.create(session, **payload.model_dump())
@@ -21,7 +24,9 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
 
 
 @router.get("/computes", response_model=Page[ComputeRegistryResponse])
-async def list_compute_registries(pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)):
+async def list_compute_registries(
+    pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)
+) -> dict[str, Sequence[ComputeRegistry] | int]:
     """Return all registered compute backends."""
 
     items, total = await compute.fetch_page(session, pagination)
@@ -29,7 +34,9 @@ async def list_compute_registries(pagination: Pagination = Depends(), session: A
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
+async def get_compute_registry(
+    registry_id: UUID, session: AsyncSession = Depends(get_session)
+) -> ComputeRegistry:
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
@@ -52,7 +59,7 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
 
 
 @router.delete("/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)):
+async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)) -> None:
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
