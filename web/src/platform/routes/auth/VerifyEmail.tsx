@@ -65,7 +65,6 @@ export default function VerifyEmail() {
             return zUserSummary.parse(await response.json());
         },
     });
-    const { mutate: verifyToken } = verification;
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -93,13 +92,12 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        verifyToken(token);
-    }, [token, verifyToken]);
+        verification.mutate(token);
+    }, [token, verification.mutate]);
 
-    const recoverySearch = verification.data?.email
-        ? `?${new URLSearchParams({ email: verification.data.email })}`
-        : '';
-    const recoveryRegisterHref = `/auth/register${recoverySearch}`;
+    const recoveryRegisterHref = verification.data?.email
+        ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
+        : '/auth/register';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {

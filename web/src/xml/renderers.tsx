@@ -1,6 +1,5 @@
 import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
-import { XML_LAYOUT_GAP } from './constants';
 import { isValtioProxy } from './core/state';
 import { Stack } from '@/components/ui/Stack';
 import type { ASTNode, XmlRuntime } from './types';
@@ -144,7 +143,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     return (
         <XmlErrorBoundary ast={ast}>
             <XmlContext.Provider value={ctx}>
-                <Stack gap={XML_LAYOUT_GAP}>{renderNode(ast.children, ctx.scope)}</Stack>
+                <Stack gap={8}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );

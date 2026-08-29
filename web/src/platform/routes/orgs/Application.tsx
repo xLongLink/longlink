@@ -80,7 +80,9 @@ export default function OrganizationApplication() {
         >
             {({ content, tabs }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
-                    <PageContainer minHeight="100%">{content}</PageContainer>
+                    <PageContainer minHeight="100%" padding={2}>
+                        {content}
+                    </PageContainer>
                 </Platform>
             )}
         </ApplicationRuntime>

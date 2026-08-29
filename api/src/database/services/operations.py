@@ -117,7 +117,7 @@ async def claim(session: AsyncSession) -> Operation | None:
         )
         .limit(1)
     )
-    if operation is None or (operation.lease_expires_at is not None and operation.lease_expires_at > now):
+    if operation is None or operation.lease_expires_at is not None and operation.lease_expires_at > now:
         return None
 
     # Reclaim expired work or acquire unleased work without racing another scheduler.
