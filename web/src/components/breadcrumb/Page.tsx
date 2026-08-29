@@ -1,4 +1,4 @@
-import { startCase } from '@/lib/utils';
+import { decodePathSegment, startCase } from '@/lib/utils';
 import { useLocation } from 'react-router';
 import { Wordmark } from '@/components/Wordmark';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
@@ -7,7 +7,7 @@ import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 export function PageBreadcrumb({ applicationName }: { applicationName?: string }) {
     const { pathname } = useLocation();
     const organization = pathname.split('/')[2] ?? '';
-    const label = pathname.startsWith('/admin/') ? 'Admin' : startCase(decodeURIComponent(organization));
+    const label = pathname.startsWith('/admin/') ? 'Admin' : startCase(decodePathSegment(organization));
     return (
         <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/user/organizations">

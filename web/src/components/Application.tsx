@@ -53,8 +53,7 @@ export function ApplicationRuntime({
             ),
         };
     }, [registeredPages, routePath]);
-    const staticPages = pages.filter((page) => !/(?:^|\/):/.test(page.route));
-    const tabPages = staticPages.filter((page) => page.route !== '/');
+    const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
     const firstTabPage = tabPages[0];
 
     // Replace the root URL with the first navigable tab after the manifest loads.

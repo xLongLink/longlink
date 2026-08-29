@@ -136,6 +136,42 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert operation is not None
 
 
+async def test_create_app_enforces_the_per_organization_beta_limit(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Allow three applications per organization and reject the fourth."""
+
+    # Arrange one Organization with image metadata available for every creation request.
+    organization = await create_organization(users[0])
+
+    async def inspect_image(_image: Image) -> LongLinkMetadata:
+        """Return valid deployable image metadata without a registry request."""
+
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+
+    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+
+    # Act
+    responses = [
+        await clients[0].post(
+            f"/api/v1/organizations/{organization.id}/applications",
+            json={"name": f"dashboard-{number}", "image": "ghcr.io/longlink/dashboard:latest"},
+        )
+        for number in range(4)
+    ]
+
+    # Assert
+    assert [response.status_code for response in responses] == [204, 204, 204, 409]
+    assert responses[-1].json() == {
+        "detail": "Application limit reached during the beta. Contact LongLink to request additional applications."
+    }
+    async with session_scope() as session:
+        applications = (await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))).all()
+    assert len(applications) == 3
+
+
 @pytest.mark.parametrize(
     ("metadata", "expected_status", "expected_detail"),
     [

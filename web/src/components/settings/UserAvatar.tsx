@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Stack } from '@/components/ui/Stack';
 import { Avatar } from '@/components/ui/Avatar';
+import { avatarUrlSchema } from '@/components/settings/validation';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -11,11 +11,6 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-
-const userAvatarSchema = z.union([
-    z.literal(''),
-    z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
-]);
 
 type UserAvatarProps = {
     name: string;
@@ -54,7 +49,7 @@ export default function UserAvatar({ name, src }: UserAvatarProps) {
         }
 
         // Require an empty value or an HTTP(S) URL.
-        if (!userAvatarSchema.safeParse(normalizedAvatar).success) {
+        if (!avatarUrlSchema.safeParse(normalizedAvatar).success) {
             setAvatarError('Enter a valid HTTP(S) avatar URL.');
             return;
         }

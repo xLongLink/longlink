@@ -53,6 +53,15 @@ export function startCase(value: string): string {
         .join(' ');
 }
 
+/** Decodes a URL path segment without throwing for malformed percent encoding. */
+export function decodePathSegment(segment: string): string {
+    try {
+        return decodeURIComponent(segment);
+    } catch {
+        return segment;
+    }
+}
+
 /** Creates an open-change handler that ignores close attempts while a request is pending. */
 export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open: boolean) => void) {
     return (nextOpen: boolean) => {

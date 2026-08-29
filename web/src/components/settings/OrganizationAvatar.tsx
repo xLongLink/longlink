@@ -1,7 +1,7 @@
-import { z } from 'zod';
 import { useState } from 'react';
 import { Stack } from '@/components/ui/Stack';
 import { Avatar } from '@/components/ui/Avatar';
+import { avatarUrlSchema } from '@/components/settings/validation';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -9,11 +9,6 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useUpdateOrganization } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-
-const organizationAvatarSchema = z.union([
-    z.literal(''),
-    z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
-]);
 
 type OrganizationAvatarProps = {
     canManage: boolean;
@@ -46,7 +41,7 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
         }
 
         // Require an empty value or an HTTP(S) URL.
-        if (!organizationAvatarSchema.safeParse(normalizedAvatar).success) {
+        if (!avatarUrlSchema.safeParse(normalizedAvatar).success) {
             setAvatarError('Enter a valid HTTP(S) avatar URL.');
             return;
         }

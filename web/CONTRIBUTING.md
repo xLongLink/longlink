@@ -10,7 +10,7 @@ React Router Framework Mode builds two browser applications from the shared pack
 
 ## Routes
 
-`src/platform/routes.ts` is the Platform route source of truth. Documentation metadata and prerendered paths live in `src/platform/docs/pages.ts`, while `src/platform/docs/catalog.tsx` adds content and navigation. Generate the React Router route tree instead of maintaining a duplicate list:
+`src/platform/routes.ts` is the Platform route source of truth. Documentation content and navigation are co-located in `src/platform/routes/docs/`, while prerendered public paths live in `react-router.config.ts`. Generate the React Router route tree instead of maintaining a duplicate list:
 
 ```bash
 vp run routes
@@ -43,7 +43,7 @@ muted                   # Muted content color
 radius                  # none | small | medium | large
 ```
 
-Theme preferences are defined in `src/lib/theme.ts` and applied programmatically to the document root. `src/lib/default-theme.ts` is the source of truth for the static first-paint theme. Astryx uses `src/theme.ts` as input and writes its ignored outputs to `src/lib/generated/`; do not edit or commit those files. Development, type-check, route, and build scripts regenerate them automatically, or run `vp run theme` explicitly.
+Theme preferences are defined in `src/theme.ts` and applied through the root provider. Astryx writes generated theme outputs to `src/lib/generated/`; do not edit or commit those files. Development, type-check, route, and build scripts regenerate them automatically, or run `vp run theme` explicitly.
 
 ## Primitives
 

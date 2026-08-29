@@ -1,5 +1,6 @@
 import httpx2
 import pytest
+import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
@@ -265,6 +266,81 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["x-content-type-options"] == "nosniff"
     assert "content-type" not in response.headers
+    assert close_count == 1
+
+
+async def test_application_proxy_times_out_before_gateway_response(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a gateway request that does not produce response headers in time."""
+
+    # Arrange a running Application and a gateway that delays its initial response.
+    application, _infrastructure = await create_running_application(users[0])
+
+    class Gateway:
+        """Delay the gateway response beyond the proxy request deadline."""
+
+        def __init__(self, *_args: str) -> None:
+            """Accept the persisted gateway configuration."""
+
+        async def request(self, **_kwargs: object) -> FakeGatewayResponse:
+            """Wait longer than the configured request deadline."""
+
+            await asyncio.sleep(0.01)
+            raise AssertionError("timed-out gateway request must not complete")
+
+    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
+    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_TIMEOUT_SECONDS", 0.001)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+
+    # Assert
+    assert response.status_code == 504
+    assert response.json() == {"detail": "Application proxy request timed out"}
+
+
+async def test_application_proxy_closes_timed_out_response_stream(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Close the gateway connection when an application response streams too slowly."""
+
+    # Arrange a running Application and an upstream response that misses the stream deadline.
+    application, _infrastructure = await create_running_application(users[0])
+    close_count = 0
+
+    class SlowProxyResponse:
+        """Delay the first upstream response chunk."""
+
+        status_code = 200
+        headers = {"content-type": "text/plain"}
+
+        async def aiter_bytes(self):
+            """Yield only after the configured stream deadline."""
+
+            await asyncio.sleep(0.01)
+            yield b"late"
+
+    def close() -> None:
+        """Record gateway resource cleanup."""
+
+        nonlocal close_count
+        close_count += 1
+
+    gateway_response = FakeGatewayResponse(SlowProxyResponse(), close)
+    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
+    monkeypatch.setattr(proxy_routes, "PROXY_RESPONSE_TIMEOUT_SECONDS", 0.001)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.content == b""
     assert close_count == 1
 
 

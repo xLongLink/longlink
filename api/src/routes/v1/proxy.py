@@ -1,4 +1,5 @@
 import httpx2
+import asyncio
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, get_session
@@ -15,6 +16,8 @@ from src.database.models.users import User
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
 PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
+PROXY_REQUEST_TIMEOUT_SECONDS = 30
+PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 
 
 @router.api_route("/applications/{application_id}/proxy", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
@@ -72,20 +75,23 @@ async def proxy_application_request(
 
     # Proxy only authenticated API requests through the mTLS compute gateway boundary.
     try:
-        gateway_response = await GatewayClient(
-            registry.gateway_url,
-            registry.gateway_certificate,
-            registry.gateway_client_identity,
-            identity_secret,
-        ).request(
-            application_id=application.id,
-            user_id=user.id,
-            method=request.method,
-            path=path,
-            query=request.url.query,
-            content_type=request.headers.get("content-type"),
-            content=request_content(),
-        )
+        async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
+            gateway_response = await GatewayClient(
+                registry.gateway_url,
+                registry.gateway_certificate,
+                registry.gateway_client_identity,
+                identity_secret,
+            ).request(
+                application_id=application.id,
+                user_id=user.id,
+                method=request.method,
+                path=path,
+                query=request.url.query,
+                content_type=request.headers.get("content-type"),
+                content=request_content(),
+            )
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail="Application proxy request timed out") from exc
     except httpx2.HTTPError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
@@ -111,8 +117,11 @@ async def proxy_application_request(
 
         # Keep both upstream resources open until streaming ends or is interrupted.
         try:
-            async for chunk in gateway_response.response.aiter_bytes():
-                yield chunk
+            async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
+                async for chunk in gateway_response.response.aiter_bytes():
+                    yield chunk
+        except TimeoutError:
+            return
         finally:
             await gateway_response.aclose()
 

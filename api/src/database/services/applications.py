@@ -54,6 +54,19 @@ async def create(
     if organization.deleted_at is not None:
         raise ConflictError("Organization is not available")
 
+    # Serialize application creation through the locked Organization to enforce the beta limit.
+    application_ids_result = await session.execute(
+        select(Application.id)
+        .where(
+            Application.organization_id == organization_id,
+            Application.deleted_at.is_(None),
+        )
+        .limit(3)
+        .with_for_update()
+    )
+    if len(application_ids_result.all()) >= 3:
+        raise ConflictError("Application limit reached during the beta. Contact LongLink to request additional applications.")
+
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
         organization_id=organization_id,
