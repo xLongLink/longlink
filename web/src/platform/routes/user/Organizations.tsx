@@ -1,24 +1,17 @@
-import type { ComponentProps } from 'react';
 import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { proportional } from '@astryxdesign/core/Table';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import type { Status, UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
-
-const statusPresentation = {
-    creating: { label: 'Creating', variant: 'info' },
-    failed: { label: 'Failed', variant: 'error' },
-    running: { label: 'Running', variant: 'neutral' },
-} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
+import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
@@ -69,9 +62,7 @@ export default function Organizations() {
                                     <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
                                         {membership.organization.name}
                                     </Link>
-                                    {membership.organization.status === 'running' ? null : (
-                                        <Badge {...statusPresentation[membership.organization.status]} />
-                                    )}
+                                    <StatusBadge status={membership.organization.status} />
                                 </Stack>
                                 <Text type="supporting">Organization</Text>
                             </Stack>

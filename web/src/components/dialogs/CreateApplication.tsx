@@ -220,9 +220,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 }
                                 content={
                                     <LayoutContent>
-                                        {step === 'image' ? (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
+                                        <form id={formId} onSubmit={handleSubmit}>
+                                            <FormLayout>
+                                                {step === 'image' ? (
                                                     <form.Field name="image">
                                                         {(field) => (
                                                             <TextInput
@@ -236,12 +236,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
                                         ) : step === 'metadata' ? (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
+                                            <>
                                                     <form.Field name="name">
                                                         {(field) => (
                                                             <TextInput
@@ -267,13 +263,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
+                                            </>
                                         ) : (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
-                                                    {declaredEnvironments.map((env) => (
+                                            declaredEnvironments.map((env) => (
                                                         <form.Field
                                                             key={env.name}
                                                             name={`envs.${env.name}` as `envs.${string}`}
@@ -297,11 +289,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                                 />
                                                             )}
                                                         </form.Field>
-                                                    ))}
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
+                                            ))
                                         )}
+                                                {errorStatus}
+                                            </FormLayout>
+                                        </form>
                                     </LayoutContent>
                                 }
                                 footer={

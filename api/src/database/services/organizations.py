@@ -326,6 +326,23 @@ async def update_member_role(
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
     """Create an Organization on the least-assigned available infrastructure."""
 
+    # Serialize each creator's quota check and insert to prevent concurrent requests exceeding the beta limit.
+    locked_user_id = await session.scalar(select(User.id).where(User.id == user.id, User.deleted_at.is_(None)).with_for_update())
+    if locked_user_id is None:
+        raise ForbiddenError("Access required")
+
+    organization_ids_result = await session.execute(
+        select(Organization.id)
+        .where(
+            Organization.created_id == user.id,
+            Organization.deleted_at.is_(None),
+        )
+        .limit(3)
+        .with_for_update()
+    )
+    if len(organization_ids_result.all()) >= 3:
+        raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
+
     # Lock the selected Compute until the Organization assignment is committed.
     compute_assignments = (
         select(func.count(Organization.id))

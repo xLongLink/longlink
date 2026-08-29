@@ -9,16 +9,15 @@ import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { PostgreSQL } from '@/components/svg/PostgreSQL';
+import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
@@ -104,50 +103,33 @@ export default function AdminDatabase() {
                 </TableColumn>
             </Table>
             {metadataDatabase ? (
-                <Dialog
-                    isOpen
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setMetadataDatabase(null);
-                        }
-                    }}
-                    purpose="info"
-                    width={560}
+                <MetadataDialog
+                    footer={
+                        <Stack direction="horizontal" gap={2} justify="end">
+                            <Button
+                                className="text-warning underline"
+                                label="Delete"
+                                variant="ghost"
+                                onClick={() => {
+                                    const database = metadataDatabase;
+                                    setMetadataDatabase(null);
+                                    deleteDialog.openFor(database);
+                                }}
+                            />
+                            <Button label="Close" variant="primary" onClick={() => setMetadataDatabase(null)} />
+                        </Stack>
+                    }
+                    onClose={() => setMetadataDatabase(null)}
+                    title="Database metadata"
                 >
-                    <Layout
-                        header={
-                            <DialogHeader title="Database metadata" onOpenChange={() => setMetadataDatabase(null)} />
-                        }
-                        content={
-                            <LayoutContent>
-                                <MetadataList>
-                                    <MetadataListItem label="Host">{metadataDatabase.host}</MetadataListItem>
-                                    <MetadataListItem label="Port">{metadataDatabase.port}</MetadataListItem>
-                                    <MetadataListItem label="SSL mode">{metadataDatabase.sslmode}</MetadataListItem>
-                                    <MetadataListItem label="Username">{metadataDatabase.username}</MetadataListItem>
-                                    <MetadataListItem label="ID">{metadataDatabase.id}</MetadataListItem>
-                                </MetadataList>
-                            </LayoutContent>
-                        }
-                        footer={
-                            <LayoutFooter>
-                                <Stack direction="horizontal" gap={2} justify="end">
-                                    <Button
-                                        className="text-warning underline"
-                                        label="Delete"
-                                        variant="ghost"
-                                        onClick={() => {
-                                            const database = metadataDatabase;
-                                            setMetadataDatabase(null);
-                                            deleteDialog.openFor(database);
-                                        }}
-                                    />
-                                    <Button label="Close" variant="primary" onClick={() => setMetadataDatabase(null)} />
-                                </Stack>
-                            </LayoutFooter>
-                        }
-                    />
-                </Dialog>
+                    <MetadataList>
+                        <MetadataListItem label="Host">{metadataDatabase.host}</MetadataListItem>
+                        <MetadataListItem label="Port">{metadataDatabase.port}</MetadataListItem>
+                        <MetadataListItem label="SSL mode">{metadataDatabase.sslmode}</MetadataListItem>
+                        <MetadataListItem label="Username">{metadataDatabase.username}</MetadataListItem>
+                        <MetadataListItem label="ID">{metadataDatabase.id}</MetadataListItem>
+                    </MetadataList>
+                </MetadataDialog>
             ) : null}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>

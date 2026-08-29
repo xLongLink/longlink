@@ -65,6 +65,7 @@ export default function VerifyEmail() {
             return zUserSummary.parse(await response.json());
         },
     });
+    const { mutate: verifyToken } = verification;
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -92,8 +93,8 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        verification.mutate(token);
-    }, [token, verification.mutate]);
+        verifyToken(token);
+    }, [token, verifyToken]);
 
     const recoveryRegisterHref = verification.data?.email
         ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`

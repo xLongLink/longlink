@@ -5,6 +5,7 @@ from httpx2 import AsyncClient
 from fastapi import HTTPException
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
+from sqlalchemy import func
 from urllib.parse import urlencode
 from src.routes.v1 import organizations as organization_routes
 from src.models.roles import OrganizationRoles
@@ -50,6 +51,46 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert len(operations) == 1
     assert operations[0].kind == OperationKind.organization_create
     assert operations[0].target_id == organization.id
+
+
+async def test_create_organization_enforces_the_per_user_beta_limit(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject a user above the beta Organization limit without blocking another user."""
+
+    # Arrange
+    owner, other_user, _ = users
+    infrastructure = await create_ready_infrastructure()
+    for name in ("acme", "globex", "initech"):
+        await create_organization(owner, name=name, infrastructure=infrastructure)
+
+    # Act
+    blocked_response = await clients[0].post("/api/v1/organizations", json={"name": "umbrella"})
+    allowed_response = await clients[1].post("/api/v1/organizations", json={"name": "umbrella"})
+
+    # Assert
+    assert blocked_response.status_code == 409
+    assert blocked_response.json() == {
+        "detail": "Organization limit reached during the beta. Contact LongLink to request additional organizations."
+    }
+    assert allowed_response.status_code == 202
+    assert allowed_response.json()["name"] == "umbrella"
+    async with session_scope() as session:
+        owner_organization_count = await session.scalar(
+            select(func.count()).select_from(Organization)
+            .where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
+        )
+        other_user_organization_count = await session.scalar(
+            select(func.count())
+            .select_from(Organization)
+            .where(
+                Organization.created_id == other_user.id,
+                Organization.deleted_at.is_(None),
+            )
+        )
+    assert owner_organization_count == 3
+    assert other_user_organization_count == 1
 
 
 @pytest.mark.parametrize(

@@ -52,6 +52,7 @@ export default function ResetPassword() {
         mutationFn: (payload: ResetPasswordValues) =>
             api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }),
     });
+    const { mutate: verifyToken } = verification;
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
 
     /** Saves the new password while keeping invalid-token failures inline. */
@@ -72,8 +73,8 @@ export default function ResetPassword() {
     }
 
     useEffect(() => {
-        verification.mutate(token);
-    }, [token, verification.mutate]);
+        verifyToken(token);
+    }, [token, verifyToken]);
 
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {

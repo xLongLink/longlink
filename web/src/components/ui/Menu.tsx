@@ -2,14 +2,14 @@ import { useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
-import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 
-type MenuProps = { children?: ReactNode };
+type MenuProps = { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] };
 type MenuSectionProps = {
     children?: ReactNode;
     isHeaderHidden?: boolean;
@@ -44,7 +44,7 @@ function isMenuSubSection(node: ReactNode): node is ReactElement<MenuMarkerProps
 }
 
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children }: MenuProps) {
+export function Menu({ children, gap = 3 }: MenuProps) {
     const { hash } = useLocation();
     const sections = Children.toArray(children)
         .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)
@@ -129,7 +129,7 @@ export function Menu({ children }: MenuProps) {
                 </LayoutPanel>
             }
         >
-            <Stack gap={3}>{activeItem?.props.children}</Stack>
+            <Stack gap={gap}>{activeItem?.props.children}</Stack>
         </Layout>
     );
 }

@@ -1,11 +1,6 @@
 import { api } from '@/lib/api';
-import { Stack } from '@astryxdesign/core/Stack';
+import LogDialog from '@/components/dialogs/Log';
 import { useQuery } from '@tanstack/react-query';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the application logs dialog for an organization. */
@@ -31,36 +26,14 @@ export default function Logs({
     });
 
     return (
-        <Dialog isOpen onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
-            <Layout
-                header={
-                    <DialogHeader
-                        title="Pod logs"
-                        subtitle={`Recent logs for ${applicationName}.`}
-                        onOpenChange={onOpenChange}
-                    />
-                }
-                content={
-                    <LayoutContent>
-                        {isFetching ? (
-                            <Stack align="center" padding={6}>
-                                <Spinner />
-                            </Stack>
-                        ) : error ? (
-                            <Banner status="error" title={error.message || 'Failed to load logs'} />
-                        ) : (
-                            <CodeBlock
-                                code={logLines.length > 0 ? logLines.join('\n') : 'No logs available.'}
-                                hasCopyButton={false}
-                                hasLanguageLabel={false}
-                                isWrapped
-                                maxHeight="60vh"
-                                size="sm"
-                            />
-                        )}
-                    </LayoutContent>
-                }
-            />
-        </Dialog>
+        <LogDialog
+            emptyMessage="No logs available."
+            error={error}
+            isFetching={isFetching}
+            logLines={logLines}
+            onOpenChange={onOpenChange}
+            subtitle={`Recent logs for ${applicationName}.`}
+            title="Pod logs"
+        />
     );
 }
