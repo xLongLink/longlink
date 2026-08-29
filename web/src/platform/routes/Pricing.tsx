@@ -42,13 +42,13 @@ export default function Pricing() {
                                 <CollapsibleGroup className="px-4" density="balanced" hasDividers type="multiple">
                                     <Collapsible
                                         trigger={
-                                            <Text className="text-secondary" color="secondary" type="supporting">
+                                            <Text color="secondary" type="supporting">
                                                 Deploy any Application
                                             </Text>
                                         }
                                         value="deploy-any-application"
                                     >
-                                        <Text className="text-secondary" color="secondary" type="supporting">
+                                        <Text color="secondary" type="supporting">
                                             Deploy your application or find free open-source applications to start from.
                                             <br />
                                             <br />
@@ -58,25 +58,25 @@ export default function Pricing() {
                                     </Collapsible>
                                     <Collapsible
                                         trigger={
-                                            <Text className="text-secondary" color="secondary" type="supporting">
+                                            <Text color="secondary" type="supporting">
                                                 100MB Database Space
                                             </Text>
                                         }
                                         value="database-space"
                                     >
-                                        <Text className="text-secondary" color="secondary" type="supporting">
+                                        <Text color="secondary" type="supporting">
                                             Shared across all apps in the workspace.
                                         </Text>
                                     </Collapsible>
                                     <Collapsible
                                         trigger={
-                                            <Text className="text-secondary" color="secondary" type="supporting">
+                                            <Text color="secondary" type="supporting">
                                                 2GB Object Storage Space
                                             </Text>
                                         }
                                         value="object-storage-space"
                                     >
-                                        <Text className="text-secondary" color="secondary" type="supporting">
+                                        <Text color="secondary" type="supporting">
                                             Shared across all apps in the workspace.
                                         </Text>
                                     </Collapsible>

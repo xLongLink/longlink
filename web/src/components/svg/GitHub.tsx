@@ -1,7 +1,7 @@
 import type { SVGProps } from 'react';
 
 const GitHub = (props: SVGProps<SVGSVGElement>) => (
-    <svg {...props} viewBox="0 0 1024 1024" fill="none">
+    <svg {...props} viewBox="0 0 1024 1024">
         <path
             fillRule="evenodd"
             clipRule="evenodd"

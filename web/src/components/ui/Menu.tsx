@@ -79,52 +79,56 @@ export function Menu({ children, gap = 3 }: MenuProps) {
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
                     <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                        {sections.map(({ entries, section }) => (
-                            <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
-                                {entries.map((entry) => {
-                                    if (entry.kind === 'subsection') {
-                                        const { icon, label } = entry.subSection.props;
+                        {sections.map(({ entries, section }) => {
+                            const { children: _children, ...sectionProps } = section.props;
+
+                            return (
+                                <AstryxSideNavSection {...sectionProps} className="pt-0" key={sectionProps.title}>
+                                    {entries.map((entry) => {
+                                        if (entry.kind === 'subsection') {
+                                            const { icon, label } = entry.subSection.props;
+
+                                            return (
+                                                <AstryxSideNavItem
+                                                    collapsible={{ defaultIsCollapsed: true }}
+                                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
+                                                    key={label}
+                                                    label={label}
+                                                >
+                                                    {entry.items.map((item) => (
+                                                        <AstryxSideNavItem
+                                                            href={menuItemHref(item.props.label)}
+                                                            icon={
+                                                                item.props.icon ? (
+                                                                    <Icon icon={item.props.icon} size="sm" />
+                                                                ) : undefined
+                                                            }
+                                                            isSelected={item === activeItem}
+                                                            key={item.props.label}
+                                                            label={item.props.label}
+                                                        />
+                                                    ))}
+                                                </AstryxSideNavItem>
+                                            );
+                                        }
 
                                         return (
                                             <AstryxSideNavItem
-                                                collapsible={{ defaultIsCollapsed: true }}
-                                                icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                                                key={label}
-                                                label={label}
-                                            >
-                                                {entry.items.map((item) => (
-                                                    <AstryxSideNavItem
-                                                        href={menuItemHref(item.props.label)}
-                                                        icon={
-                                                            item.props.icon ? (
-                                                                <Icon icon={item.props.icon} size="sm" />
-                                                            ) : undefined
-                                                        }
-                                                        isSelected={item === activeItem}
-                                                        key={item.props.label}
-                                                        label={item.props.label}
-                                                    />
-                                                ))}
-                                            </AstryxSideNavItem>
+                                                href={menuItemHref(entry.item.props.label)}
+                                                icon={
+                                                    entry.item.props.icon ? (
+                                                        <Icon icon={entry.item.props.icon} size="sm" />
+                                                    ) : undefined
+                                                }
+                                                isSelected={entry.item === activeItem}
+                                                key={entry.item.props.label}
+                                                label={entry.item.props.label}
+                                            />
                                         );
-                                    }
-
-                                    return (
-                                        <AstryxSideNavItem
-                                            href={menuItemHref(entry.item.props.label)}
-                                            icon={
-                                                entry.item.props.icon ? (
-                                                    <Icon icon={entry.item.props.icon} size="sm" />
-                                                ) : undefined
-                                            }
-                                            isSelected={entry.item === activeItem}
-                                            key={entry.item.props.label}
-                                            label={entry.item.props.label}
-                                        />
-                                    );
-                                })}
-                            </AstryxSideNavSection>
-                        ))}
+                                    })}
+                                </AstryxSideNavSection>
+                            );
+                        })}
                     </AstryxSideNav>
                 </LayoutPanel>
             }

@@ -51,7 +51,6 @@ export function Tabs({ children, gap = 3, ...props }: TabsProps) {
                             {...tabProps}
                             icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
                             key={tabProps.label}
-                            value={tabProps.value}
                         />
                     );
                 })}
