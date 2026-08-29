@@ -54,8 +54,9 @@ async def test_list_apps_returns_requested_page_for_admin(
 
     # Assert
     assert paged_response.status_code == 200
-    assert [item["id"] for item in paged_response.json()["items"]] == [str(console.id)]
-    assert paged_response.json()["total"] == 2
+    payload = paged_response.json()
+    assert [item["id"] for item in payload["items"]] == [str(console.id)]
+    assert payload["total"] == 2
 
 
 async def test_list_apps_omits_deleted_applications_from_items_and_total(
@@ -76,8 +77,9 @@ async def test_list_apps_omits_deleted_applications_from_items_and_total(
 
     # Assert
     assert response.status_code == 200
-    assert [item["id"] for item in response.json()["items"]] == [str(active_application.id)]
-    assert response.json()["total"] == 1
+    payload = response.json()
+    assert [item["id"] for item in payload["items"]] == [str(active_application.id)]
+    assert payload["total"] == 1
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(

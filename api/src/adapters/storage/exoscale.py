@@ -1,4 +1,5 @@
 import aioboto3
+import itertools
 from uuid import UUID
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import suppress
@@ -143,7 +144,7 @@ class Exoscale:
                     page = await client.list_object_versions(Bucket=bucket, Prefix=prefix, MaxKeys=1000)
                     objects = [
                         {"Key": str(item["Key"]), "VersionId": str(item["VersionId"])}
-                        for item in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]
+                        for item in itertools.chain(page.get("Versions", []), page.get("DeleteMarkers", []))
                         if "Key" in item and "VersionId" in item
                     ]
                     if not objects:

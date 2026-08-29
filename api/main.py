@@ -47,13 +47,13 @@ app = FastAPI(
 
 
 AUTHENTICATION_COOKIES = frozenset(
-    {
+    (
         "longlink_auth",
         "longlink_password_reset",
         "longlink_registration",
-    }
+    )
 )
-UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+UNSAFE_METHODS = frozenset(("POST", "PUT", "PATCH", "DELETE"))
 
 
 @app.middleware("http")

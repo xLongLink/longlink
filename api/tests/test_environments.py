@@ -40,8 +40,7 @@ def test_env_rejects_invalid_smtp_authentication_settings(settings: dict[str, ob
 def test_env_accepts_complete_smtp_authentication_settings() -> None:
     """Accept one complete SMTP authentication configuration."""
 
-    # Act
-    settings = Env(**(ENVIRONMENT_SETTINGS | {"SMTP_HOST": "smtp.example.com", "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}))
-
     # Assert
-    assert settings.SMTP_HOST == "smtp.example.com"
+    assert Env(
+        **(ENVIRONMENT_SETTINGS | {"SMTP_HOST": "smtp.example.com", "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"})
+    ).SMTP_HOST == "smtp.example.com"

@@ -2,15 +2,15 @@ import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
 import { pagesSchema } from '@/xml/pages';
 import { PageError } from '@/components/Utils';
-import { useMemo, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
 import NotFoundLayout from '@/components/layouts/NotFound';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import type { NavigationTab } from '@/platform/layouts/Platform';
+import { matchRoutes, useNavigate, useParams } from 'react-router';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
-import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type ApplicationRuntimeProps = {
@@ -54,10 +54,18 @@ export function ApplicationRuntime({
         };
     }, [registeredPages, routePath]);
     const staticPages = pages.filter((page) => !/(?:^|\/):/.test(page.route));
-    const firstTabPage = staticPages.find((page) => page.route !== '/');
+    const tabPages = staticPages.filter((page) => page.route !== '/');
+    const firstTabPage = tabPages[0];
 
-    // Resolve explicit browser routes first so dynamic detail views can share a tab with their list page.
-    const activePage = activeRouteMatch?.page ?? (!routePath ? firstTabPage : undefined);
+    // Replace the root URL with the first navigable tab after the manifest loads.
+    useEffect(() => {
+        if (!routePath && firstTabPage) {
+            navigate(resolveNavigationUrl(navigationBaseUrl, firstTabPage.route), { replace: true });
+        }
+    }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
+
+    // Let dynamic detail views share a tab with their matching list page.
+    const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
     const runtimeContext = useMemo(() => {
         if (!activePage) return null;
 
@@ -92,7 +100,7 @@ export function ApplicationRuntime({
         retry: false,
     });
     // Build one static navigation target per runtime tab.
-    const tabs = staticPages.map(
+    const tabs = tabPages.map(
         (page) =>
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, page.route),
@@ -104,7 +112,11 @@ export function ApplicationRuntime({
     let content: ReactNode;
 
     if (!routePath && firstTabPage) {
-        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabPage.route)} />;
+        content = (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                <Spinner label="Loading" />
+            </Center>
+        );
     } else if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {

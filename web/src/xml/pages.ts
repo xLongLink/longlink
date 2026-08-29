@@ -56,9 +56,11 @@ export const pagesSchema = z.array(pageSchema).superRefine((pages, context) => {
 
         // Dynamic detail routes may share the navigation tab of their static list page.
         const isDynamicRoute = page.route.includes('/:');
-        if (!isDynamicRoute && staticTabs.has(page.tab)) {
-            context.addIssue({ code: 'custom', message: 'Static page tabs must be unique', path: [index, 'tab'] });
+        if (!isDynamicRoute) {
+            if (staticTabs.has(page.tab)) {
+                context.addIssue({ code: 'custom', message: 'Static page tabs must be unique', path: [index, 'tab'] });
+            }
+            staticTabs.add(page.tab);
         }
-        if (!isDynamicRoute) staticTabs.add(page.tab);
     }
 });

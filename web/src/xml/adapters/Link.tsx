@@ -33,7 +33,6 @@ export function Link({ props, nodes }: Props) {
     /** Starts an Action only for ordinary primary clicks. */
     function handleClick(event: MouseEvent<HTMLAnchorElement>): void {
         if (
-            !actionHandler ||
             event.defaultPrevented ||
             event.button !== 0 ||
             event.metaKey ||
@@ -45,7 +44,7 @@ export function Link({ props, nodes }: Props) {
         }
 
         event.preventDefault();
-        actionHandler();
+        actionHandler?.();
     }
 
     return (

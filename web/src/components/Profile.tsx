@@ -30,6 +30,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
     const signOut = useSignOut();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
+    const closeMenu = () => setIsOpen(false);
     return (
         <Popover
             alignment="end"
@@ -58,21 +59,21 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/organizations"
                             label="Organizations"
-                            onClickCapture={() => setIsOpen(false)}
+                            onClickCapture={closeMenu}
                             startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ChevronRight aria-hidden="true" className="text-secondary" size={12} />}
                             href="/user/settings"
                             label="Settings"
-                            onClickCapture={() => setIsOpen(false)}
+                            onClickCapture={closeMenu}
                             startContent={<Settings2 aria-hidden="true" className="text-secondary" size={16} />}
                         />
                         <ListItem
                             endContent={<ExternalLink aria-hidden="true" className="text-secondary" size={12} />}
                             href="/docs"
                             label="Documentation"
-                            onClickCapture={() => setIsOpen(false)}
+                            onClickCapture={closeMenu}
                             startContent={<BookOpen aria-hidden="true" className="text-secondary" size={16} />}
                             target="_blank"
                         />
@@ -91,43 +92,43 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                                 <ListItem
                                     href="/admin/users"
                                     label="Users"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/applications"
                                     label="Applications"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/organizations"
                                     label="Organizations"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/database"
                                     label="Database"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<Database aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/storage"
                                     label="Storage"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<HardDrive aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/compute"
                                     label="Compute"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={<Wrench aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/operations"
                                     label="Operations"
-                                    onClickCapture={() => setIsOpen(false)}
+                                    onClickCapture={closeMenu}
                                     startContent={
                                         <ArrowUpDown aria-hidden="true" className="text-secondary" size={16} />
                                     }
