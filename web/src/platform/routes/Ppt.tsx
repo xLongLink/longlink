@@ -164,11 +164,9 @@ function HowPyramid() {
                         <Text justify="center" textWrap="balance" type="large" weight="semibold">
                             {label}
                         </Text>
-                        {description ? (
-                            <Text color="secondary" justify="center" textWrap="balance" type="supporting">
-                                {description}
-                            </Text>
-                        ) : null}
+                        <Text color="secondary" justify="center" textWrap="balance" type="supporting">
+                            {description}
+                        </Text>
                     </Stack>
                 </Card>
             ))}
@@ -454,14 +452,7 @@ function PresentationSlide({
             }
             activeTab={slide.href}
             contentMinHeight="100%"
-            isContentCentered={
-                slide.id === 'introduction' ||
-                slide.id === 'problem' ||
-                slide.id === 'goal' ||
-                slide.id === 'competitors' ||
-                slide.id === 'how' ||
-                slide.id === 'team'
-            }
+            isContentCentered
             isDevelopmentNoticeShown={false}
             tabs={slides}
         >
@@ -492,8 +483,10 @@ export default function Ppt() {
     const { search } = useLocation();
     const navigate = useNavigate();
     const slideId = new URLSearchParams(search).get('slide');
-    const selectedSlideIndex = slides.findIndex((slide) => slide.id === slideId);
-    const slideIndex = selectedSlideIndex === -1 ? 0 : selectedSlideIndex;
+    const slideIndex = Math.max(
+        0,
+        slides.findIndex((slide) => slide.id === slideId),
+    );
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
         // Keep presentation navigation from moving the document viewport.
         if (event.key === 'ArrowLeft') {

@@ -365,12 +365,13 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
 
 @pytest.mark.parametrize("resource", ("database", "storage"))
-async def test_organization_resource_endpoints_require_elevated_role(
+async def test_organization_resource_endpoints_allow_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     resource: str,
+    monkeypatch,
 ) -> None:
-    """Reject resource usage for organization members without inspection permissions."""
+    """Allow resource usage for organization members."""
 
     # Arrange
     owner, regular_member, _ = users
@@ -386,14 +387,34 @@ async def test_organization_resource_endpoints_require_elevated_role(
         )
         await session.commit()
 
+    class FakePostgres:
+        """Provide an inspectable Organization database."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the route's database adapter configuration."""
+
+        async def database_usage(self, _database_name: str) -> int:
+            """Return the database's live usage."""
+
+            return 0
+
+    class FakeStorage:
+        """Provide an inspectable Organization storage bucket."""
+
+        async def usage(self, _bucket_name: str) -> int:
+            """Return the bucket's live usage."""
+
+            return 0
+
+    monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
+    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
     client = clients[1]
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
 
     # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
+    assert response.status_code == 200
 
 
 async def test_get_organization_returns_invitations(
@@ -453,11 +474,11 @@ async def test_list_organizations_returns_stable_page_and_active_total(
         "items": [
             {
                 "id": str(organization.id),
-                    "name": "globex",
-                    "slug": "globex",
-                    "avatar": "",
-                    "status": "creating",
-                }
+                "name": "globex",
+                "slug": "globex",
+                "avatar": "",
+                "status": "creating",
+            }
         ],
         "total": 2,
     }
@@ -882,9 +903,7 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
 
 
 @pytest.mark.parametrize("updated", (pytest.param(True, id="found"), pytest.param(False, id="missing")))
-async def test_update_organization_directly_returns_result_or_not_found(
-    monkeypatch: pytest.MonkeyPatch, updated: bool
-) -> None:
+async def test_update_organization_directly_returns_result_or_not_found(monkeypatch: pytest.MonkeyPatch, updated: bool) -> None:
     """Commit updates and report missing organizations with the public error."""
 
     # Arrange

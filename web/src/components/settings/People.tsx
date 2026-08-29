@@ -279,7 +279,7 @@ export default function People({
                                         <Button
                                             label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
                                             type="submit"
-                                            variant="primary"
+                                            variant="secondary"
                                             isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />

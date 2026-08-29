@@ -173,7 +173,8 @@ async def test_operations_service_schedules_all_active_application_creation_once
             status=Status.running,
             deleted_at=utcnow(),
         )
-        session.add_all([running, deleted])
+        session.add(running)
+        session.add(deleted)
         await session.commit()
 
     async with session_scope() as session:

@@ -36,7 +36,7 @@ async def reconcile(organization_id: UUID) -> None:
         infrastructure.storage.secret_access_key,
     ).create(organization.id.hex)
 
-    # Apply release changes to the Organization Namespace, quota, and ingress policy.
+    # Apply release changes to the Organization Namespace, quota, and network boundary.
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
     await cluster.organizations.apply(organization.id.hex)
 

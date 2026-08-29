@@ -112,7 +112,9 @@ async def create_ready_infrastructure() -> Infrastructure:
             access_key_id="access-key",
             secret_access_key="secret-key",
         )
-        session.add_all([compute, database, storage])
+        session.add(compute)
+        session.add(database)
+        session.add(storage)
         await session.commit()
         return Infrastructure(compute=compute, database=database, storage=storage)
 

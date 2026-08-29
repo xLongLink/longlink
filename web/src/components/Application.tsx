@@ -33,7 +33,7 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
-    const pages = useMemo(() => registeredPages ?? [], [registeredPages]);
+    const pages = registeredPages ?? [];
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
