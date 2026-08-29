@@ -94,7 +94,7 @@ export default function Settings() {
         <PageContainer gap={8}>
             <Stack className="pt-1" direction="horizontal" gap={3} align="center">
                 <UserAvatar name={user.name} src={user.avatar} />
-                <Stack gap={0}>
+                <Stack>
                     <Heading accessibilityLevel={1} level={4}>
                         {user.name}
                     </Heading>
@@ -158,7 +158,7 @@ export default function Settings() {
                                                     name={membership.organization.name}
                                                     size="md"
                                                 />
-                                                <Stack gap={0}>
+                                                <Stack>
                                                     <Link
                                                         href={`/orgs/${membership.organization.slug}`}
                                                         weight="semibold"

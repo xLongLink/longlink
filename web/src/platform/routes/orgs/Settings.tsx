@@ -101,7 +101,7 @@ export default function OrganizationSettings() {
                         organizationId={organizationId}
                         src={organizationAvatar}
                     />
-                    <Stack gap={0}>
+                    <Stack>
                         <Heading accessibilityLevel={1} level={4}>
                             {organizationName}
                         </Heading>

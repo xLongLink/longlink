@@ -58,7 +58,7 @@ export default function ApplicationSettings({
             header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
-                <Stack gap={0}>
+                <Stack>
                     <Stack direction="horizontal" gap={1} align="center">
                         <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
                             {application.name}

@@ -64,7 +64,7 @@ export default function Organizations() {
                                 name={membership.organization.name}
                                 size="md"
                             />
-                            <Stack gap={0}>
+                            <Stack>
                                 <Stack direction="horizontal" gap={1} align="center">
                                     <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
                                         {membership.organization.name}
