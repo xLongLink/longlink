@@ -41,7 +41,7 @@ function CompactDialogHeader({ title, onOpenChange }: { title: string; onOpenCha
             <Stack direction="horizontal" hAlign="between" vAlign="start">
                 <Stack>
                     <Heading level={2}>{title}</Heading>
-                    <Text type="body" size="sm" color="secondary">
+                    <Text size="sm" color="secondary">
                         1. Image / 2. Metadata / 3. Envs
                     </Text>
                 </Stack>

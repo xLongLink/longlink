@@ -67,7 +67,7 @@ export default function People({
             width: proportional(1),
             renderCell: (member) => (
                 <Stack direction="horizontal" gap={3} align="center">
-                    <Avatar src={member.user.avatar} name={member.user.name} size="md" />
+                    <Avatar src={member.user.avatar} name={member.user.name} />
                     <Stack>
                         <Text weight="semibold">{member.user.name}</Text>
                         <Text type="supporting">{member.user.email}</Text>

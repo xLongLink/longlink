@@ -57,7 +57,6 @@ export default function Platform({
     return (
         <AppShell
             banner={isDevelopmentNoticeShown ? <DevelopmentNotice /> : undefined}
-            contentPadding={0}
             height="auto"
             mobileNav={false}
             topNav={

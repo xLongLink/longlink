@@ -6,7 +6,7 @@ import { AppShell } from '@astryxdesign/core/AppShell';
 /** Renders a side-navigation shell with LongLink's fixed content frame. */
 export function SideLayout({ children, sideNav }: { children: ReactNode; sideNav: ReactNode }) {
     return (
-        <AppShell contentPadding={0} height="auto" mobileNav={{ breakpoint: 'lg' }} sideNav={sideNav} variant="wash">
+        <AppShell height="auto" mobileNav={{ breakpoint: 'lg' }} sideNav={sideNav} variant="wash">
             <Card
                 aria-hidden="true"
                 className="pointer-events-none fixed z-0 end-0 bottom-0 start-0 top-12 overflow-clip lg:start-[260px] lg:top-0"

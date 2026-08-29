@@ -44,7 +44,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                     <Item
                         description={user.email}
                         label={user.name}
-                        startContent={<Avatar src={user.avatar} name={user.name} size="md" />}
+                        startContent={<Avatar src={user.avatar} name={user.name} />}
                     />
                     <Divider />
                     <List
@@ -151,7 +151,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
             }
         >
             <IconButton
-                icon={<Avatar src={user.avatar} name={user.name} size="md" />}
+                icon={<Avatar src={user.avatar} name={user.name} />}
                 label={user.name}
                 size="md"
                 variant="ghost"

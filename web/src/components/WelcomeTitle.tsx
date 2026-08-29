@@ -6,9 +6,7 @@ import { Wordmark } from '@/components/Wordmark';
 export function WelcomeTitle() {
     return (
         <Stack as="span" direction="horizontal" gap={2} hAlign="center" vAlign="center" wrap="wrap">
-            <Text color="inherit" type="inherit">
-                Welcome to
-            </Text>
+            <Text type="inherit">Welcome to</Text>
             <Wordmark size="heading" />
         </Stack>
     );

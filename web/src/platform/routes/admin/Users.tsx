@@ -48,7 +48,7 @@ export default function AdminUsers() {
                 <TableColumn<UserSummary> field="user" header="User" width={pixel(400)}>
                     {(user) => (
                         <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar src={user.avatar} name={user.name} size="md" />
+                            <Avatar src={user.avatar} name={user.name} />
                             <Stack>
                                 <Stack direction="horizontal" gap={1} align="center">
                                     <Text weight="semibold">{user.name}</Text>

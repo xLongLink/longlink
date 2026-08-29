@@ -156,7 +156,6 @@ export default function Settings() {
                                                     kind="organization"
                                                     src={membership.organization.avatar}
                                                     name={membership.organization.name}
-                                                    size="md"
                                                 />
                                                 <Stack>
                                                     <Link

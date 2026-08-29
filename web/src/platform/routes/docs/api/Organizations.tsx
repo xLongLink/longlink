@@ -75,9 +75,7 @@ export default function DocsArticleRoute() {
                                     <Stack gap={1}>
                                         <Stack direction="horizontal" gap={2} align="center">
                                             <RoleIcon aria-hidden="true" className="text-accent" size={16} />
-                                            <Text type="body" weight="semibold">
-                                                {name}
-                                            </Text>
+                                            <Text weight="semibold">{name}</Text>
                                         </Stack>
                                         <Text type="supporting">{access}</Text>
                                     </Stack>
