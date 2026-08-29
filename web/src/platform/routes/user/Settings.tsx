@@ -154,7 +154,7 @@ export default function Settings() {
                                             <Stack direction="horizontal" gap={3} align="center">
                                                 <Avatar
                                                     kind="organization"
-                                                    src={membership.organization.avatar || undefined}
+                                                    src={membership.organization.avatar}
                                                     name={membership.organization.name}
                                                     size="md"
                                                 />

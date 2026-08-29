@@ -262,7 +262,7 @@ export default function People({
                                         <Selector
                                             isRequired
                                             label="Role"
-                                            options={[...ROLE_NAMES]}
+                                            options={ROLE_NAMES}
                                             value={inviteRole}
                                             onChange={(value) => setInviteRole(value as OrganizationRoles)}
                                         />

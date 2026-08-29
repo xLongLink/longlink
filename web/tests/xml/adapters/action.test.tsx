@@ -252,6 +252,7 @@ describe('Action', () => {
 
     it('invalidates declared State through Patch', async () => {
         const ctx = createContext();
+        ctx.services.navigate = vi.fn();
         const button = await renderAction(
             '<State id="form" value="draft" /><Action><Patch state="form" invalidate="true" /><Button>Reset</Button></Action>',
             ctx
@@ -262,6 +263,8 @@ describe('Action', () => {
             button.click();
             await vi.waitFor(() => expect((ctx.scope.bindings.form as { value: string }).value).toBe('draft'));
         });
+
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
     });
 
     it('updates declared State properties through Patch', async () => {

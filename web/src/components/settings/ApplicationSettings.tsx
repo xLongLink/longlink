@@ -4,24 +4,18 @@ import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useState, type ComponentProps } from 'react';
+import { useState } from 'react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import CreateApplication from '@/components/dialogs/CreateApplication';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDeleteOrganizationApplication } from '@/lib/hooks/use-organization';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { OrganizationApplicationSummary, Status } from '@/lib/generated/platform-api-v1/types.gen';
-
-const statusPresentation = {
-    creating: { label: 'Creating', variant: 'info' },
-    failed: { label: 'Failed', variant: 'error' },
-    running: { label: 'Running', variant: 'neutral' },
-} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
+import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders Organization-owned Application management. */
 export default function ApplicationSettings({
@@ -63,9 +57,7 @@ export default function ApplicationSettings({
                         <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
                             {application.name}
                         </Link>
-                        {application.status === 'running' ? null : (
-                            <Badge {...statusPresentation[application.status]} />
-                        )}
+                        <StatusBadge status={application.status} />
                     </Stack>
                     {application.description ? <Text type="supporting">{application.description}</Text> : null}
                 </Stack>

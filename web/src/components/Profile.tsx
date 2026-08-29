@@ -140,7 +140,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                     <Button
                         label="Sign out"
                         onClick={() => {
-                            setIsOpen(false);
+                            closeMenu();
                             void signOut().catch(() => {
                                 showToast({ body: 'Failed to sign out', type: 'error' });
                             });

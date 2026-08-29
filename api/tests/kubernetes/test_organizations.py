@@ -1,8 +1,35 @@
 import pytest
 from conftest import FakeKubernetes
+from src.utils import templates
 from src.kubernetes import organizations
+from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
+
+
+def test_organization_template_limits_ephemeral_storage() -> None:
+    """Bound the aggregate temporary storage available to one Organization namespace."""
+
+    # Arrange
+    _, resource_quota, _ = templates.readyml_list(
+        files("src.kubernetes.templates").joinpath("application", "organization.yml"),
+        namespace="acme",
+    )
+
+    # Assert
+    resource_quota_spec = resource_quota["spec"]
+    assert isinstance(resource_quota_spec, dict)
+    resource_quota_hard = resource_quota_spec["hard"]
+    assert isinstance(resource_quota_hard, dict)
+    assert resource_quota_hard == {
+        "limits.cpu": "2",
+        "limits.ephemeral-storage": "2Gi",
+        "limits.memory": "1Gi",
+        "pods": "4",
+        "requests.cpu": "400m",
+        "requests.ephemeral-storage": "1Gi",
+        "requests.memory": "512Mi",
+    }
 
 
 async def test_organization_apply_creates_namespace_boundary_resources(monkeypatch: pytest.MonkeyPatch) -> None:

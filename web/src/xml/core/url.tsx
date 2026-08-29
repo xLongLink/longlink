@@ -76,7 +76,7 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 
 /** Resolves an application navigation URL or omits invalid destinations. */
 export function resolveNavigationUrl(baseUrl: string, path: string): string {
-    return isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
+    return path.trim() && isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
 }
 
 /** Resolves an application destination with an optional browser-link fallback. */

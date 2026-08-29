@@ -32,9 +32,11 @@ spec:
                   resources:
                       requests:
                           cpu: 100m
+                          ephemeral-storage: 256Mi
                           memory: 128Mi
                       limits:
                           cpu: 500m
+                          ephemeral-storage: 512Mi
                           memory: 256Mi
                   envFrom:
                       - secretRef:
@@ -50,7 +52,8 @@ spec:
                         mountPath: /tmp
             volumes:
                 - name: tmp
-                  emptyDir: {}
+                  emptyDir:
+                      sizeLimit: 256Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -82,9 +85,11 @@ spec:
                   resources:
                       requests:
                           cpu: 100m
+                          ephemeral-storage: 256Mi
                           memory: 128Mi
                       limits:
                           cpu: 500m
+                          ephemeral-storage: 512Mi
                           memory: 256Mi
                   readinessProbe:
                       httpGet:
@@ -106,7 +111,8 @@ spec:
                         mountPath: /tmp
             volumes:
                 - name: tmp
-                  emptyDir: {}
+                  emptyDir:
+                      sizeLimit: 256Mi
 ---
 apiVersion: v1
 kind: Service
