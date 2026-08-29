@@ -60,6 +60,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         let mounted = true;
         let unsubscribers: Array<() => void> = [];
+        const controller = new AbortController();
 
         /** Removes every Valtio subscription owned by this renderer. */
         function unsubscribeAll() {
@@ -105,7 +106,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             setRenderVersion((current) => current + 1);
         };
 
-        void setupContext(setup.nodes, ctx)
+        void setupContext(setup.nodes, ctx, controller.signal)
             .then(() => {
                 subscribeToStateValues();
 
@@ -122,6 +123,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         return () => {
             mounted = false;
+            controller.abort();
 
             // Remove state subscriptions on unmount.
             unsubscribeAll();

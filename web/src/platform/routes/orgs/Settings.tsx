@@ -24,6 +24,7 @@ import {
 export default function OrganizationSettings() {
     const { organization = '' } = useParams();
     const { hash } = useLocation();
+    const isApplicationsSectionActive = hash === '#applications';
     const {
         organization: organizationDetails,
         members,
@@ -36,7 +37,7 @@ export default function OrganizationSettings() {
         applications,
         isLoading: isApplicationsLoading,
         error: applicationsError,
-    } = useOrganizationApplications(organization);
+    } = useOrganizationApplications(organization, isApplicationsSectionActive);
     const isLoading = isOrganizationLoading || isApplicationsLoading;
     const error = organizationError ?? applicationsError;
     const organizationName = organizationDetails?.name ?? organization;

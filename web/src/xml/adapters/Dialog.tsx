@@ -2,15 +2,17 @@ import { z } from 'zod';
 import type { Props } from '../types';
 import { createContext } from 'react';
 import { renderNode } from '../core/node';
+import { Stack } from '@/components/ui/Stack';
 import { useXmlRuntime } from '../core/context';
 import { Button } from '@astryxdesign/core/Button';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { coerceXmlBoolean, useBindableValue } from '../core/binding';
-import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 
 const dialogPropsSchema = z.object({
     purpose: z.enum(['required', 'form', 'info']).optional(),
+    gap: xmlSpacingSchema.default(3),
     subtitle: z.string().optional(),
     title: xmlNonblankStringSchema,
     triggerLabel: xmlNonblankStringSchema.optional(),
@@ -21,10 +23,10 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, coerceXmlBoolean);
-    const { purpose, subtitle, title, triggerLabel } = resolveXmlProps(
+    const { gap, purpose, subtitle, title, triggerLabel } = resolveXmlProps(
         props,
         ctx,
-        { purpose: 'scalar', subtitle: 'scalar', title: 'raw', triggerLabel: 'raw' },
+        { gap: 'scalar', purpose: 'scalar', subtitle: 'scalar', title: 'raw', triggerLabel: 'raw' },
         dialogPropsSchema
     );
 
@@ -45,7 +47,11 @@ export function Dialog({ props, nodes }: Props) {
                                 title={title}
                             />
                         }
-                        content={<LayoutContent>{renderNode(nodes, ctx)}</LayoutContent>}
+                        content={
+                            <LayoutContent>
+                                <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
+                            </LayoutContent>
+                        }
                     />
                 </AstryxDialog>
             </DialogCloseContext.Provider>
