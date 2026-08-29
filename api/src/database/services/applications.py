@@ -44,6 +44,8 @@ async def create(
     image: Image,
     secrets: dict[str, str],
     description: str | None = None,
+    *,
+    user_id: UUID,
 ) -> Application:
     """Create an Organization-owned LongLink Application."""
 
@@ -53,6 +55,13 @@ async def create(
         raise NotFoundError("Organization not found")
     if organization.deleted_at is not None:
         raise ConflictError("Organization is not available")
+
+    # Revalidate the caller after locking the Organization so revoked access cannot use stale request state.
+    membership = await session.get(UserOrganization, (user_id, organization_id), with_for_update=True)
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
 
     # Serialize application creation through the locked Organization to enforce the beta limit.
     application_ids_result = await session.execute(

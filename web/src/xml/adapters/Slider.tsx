@@ -14,7 +14,7 @@ const sliderPropsSchema = z.object({
 
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue<number>(props, 'value', ctx, (value) => (typeof value === 'number' ? value : 0));
+    const binding = useBindableValue(props, 'value', ctx, (value) => (typeof value === 'number' ? value : 0));
     const { label, max, min, step } = resolveXmlProps(
         props,
         ctx,

@@ -991,17 +991,26 @@ async def test_create_organization_invitation_directly_commits_and_sends_email(m
 
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1), name="acme")
+    user = SimpleNamespace(id=UUID(int=2))
     membership = SimpleNamespace(role=OrganizationRoles.maintain, organization_id=organization.id, organization=organization)
     session = SimpleNamespace(commits=0)
     calls: list[str] = []
 
-    async def create(_session: object, organization_id: UUID, email: str, role: OrganizationRoles) -> None:
-        """Record invitation persistence arguments."""
+    async def create_invitation(
+        _session: object,
+        organization_id: UUID,
+        email: str,
+        role: OrganizationRoles,
+        received_user: object,
+    ) -> object:
+        """Record invitation authorization and persistence arguments."""
 
         assert organization_id == organization.id
         assert email == "member@example.com"
         assert role == OrganizationRoles.write
+        assert received_user is user
         calls.append("create")
+        return organization
 
     async def commit() -> None:
         """Record the invitation transaction commit."""
@@ -1016,12 +1025,12 @@ async def test_create_organization_invitation_directly_commits_and_sends_email(m
         calls.append("send")
 
     session.commit = commit
-    monkeypatch.setattr(organization_routes.invitations, "create", create)
+    monkeypatch.setattr(organization_routes.organizations, "create_invitation", create_invitation)
     monkeypatch.setattr(organization_routes.mail, "send_organization_invitation_email", send)
 
     # Act
     result = await organization_routes.create_organization_invitation(
-        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write), membership, session
+        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write), user, membership, session
     )
 
     # Assert

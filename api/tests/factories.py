@@ -152,6 +152,9 @@ async def create_application(
 
     parsed_image = Image(image)
     resolved_image = Image(image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
+    if organization.created_id is None:
+        raise ValueError("Test organization must have a creator")
+
     async with session_scope() as session:
         application = await applications.create(
             session,
@@ -159,6 +162,7 @@ async def create_application(
             name,
             image=resolved_image,
             secrets={} if secrets is None else secrets,
+            user_id=organization.created_id,
         )
         await session.commit()
         return application

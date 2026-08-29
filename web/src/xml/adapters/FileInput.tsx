@@ -13,7 +13,7 @@ const fileInputPropsSchema = z.object({
 
 export function FileInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue<File | null>(props, 'value', ctx, (value) =>
+    const binding = useBindableValue(props, 'value', ctx, (value) =>
         typeof File !== 'undefined' && value instanceof File ? value : null
     );
     const { accept, label } = resolveXmlProps(props, ctx, { accept: 'scalar', label: 'raw' }, fileInputPropsSchema);

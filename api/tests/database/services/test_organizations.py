@@ -291,7 +291,7 @@ async def test_update_member_role_rejects_missing_member(users: tuple[User, User
     async with session_scope() as session:
         with pytest.raises(NotFoundError):
             await organizations.update_member_role(
-                session, organization.id, non_member.id, OrganizationRoles.read, owner, OrganizationRoles.owner
+                session, organization.id, non_member.id, OrganizationRoles.read, owner
             )
 
 
@@ -299,8 +299,11 @@ async def test_update_member_role_rejects_owner_changes_from_non_owners(users: t
     """Require owner access to change an owner's Organization role."""
 
     # Arrange
-    owner = users[0]
+    owner, administrator = users[0], users[1]
     organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=administrator.id, organization_id=organization.id, role=OrganizationRoles.admin))
+        await session.commit()
 
     # Act and assert
     async with session_scope() as session:
@@ -310,8 +313,7 @@ async def test_update_member_role_rejects_owner_changes_from_non_owners(users: t
                 organization.id,
                 owner.id,
                 OrganizationRoles.read,
-                owner,
-                OrganizationRoles.maintain,
+                administrator,
             )
 
 
@@ -331,7 +333,6 @@ async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[U
                 owner.id,
                 OrganizationRoles.maintain,
                 owner,
-                OrganizationRoles.owner,
             )
 
 
@@ -350,7 +351,6 @@ async def test_update_member_role_skips_unchanged_assignments(users: tuple[User,
             owner.id,
             OrganizationRoles.owner,
             owner,
-            OrganizationRoles.owner,
         )
 
     # Assert
@@ -375,7 +375,6 @@ async def test_update_member_role_persists_owner_authorized_change(users: tuple[
             member.id,
             OrganizationRoles.maintain,
             owner,
-            OrganizationRoles.owner,
         )
         await session.commit()
 
@@ -407,7 +406,6 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
             second_owner.id,
             OrganizationRoles.maintain,
             owner,
-            OrganizationRoles.owner,
         )
         await session.commit()
 
@@ -417,6 +415,83 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
         membership = await session.get(UserOrganization, (second_owner.id, organization.id))
     assert membership is not None
     assert membership.role == OrganizationRoles.maintain
+
+
+async def test_mutation_services_revalidate_revoked_administrator_access(users: tuple[User, User, User]) -> None:
+    """Reject stale administrator requests while retaining the owner's current mutation access."""
+
+    # Arrange an owner and a current administrator with access to every affected mutation.
+    owner, administrator = users[1], users[2]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=administrator.id, organization_id=organization.id, role=OrganizationRoles.admin))
+        await session.commit()
+
+    # Preserve legitimate owner mutations before revoking the administrator.
+    async with session_scope() as session:
+        updated = await organizations.update(session, organization.id, "https://example.com/owner.png", owner)
+        invitation = await organizations.create_invitation(
+            session,
+            organization.id,
+            "owner-invited@example.com",
+            OrganizationRoles.read,
+            owner,
+        )
+        await session.commit()
+
+    assert updated is not None
+    assert invitation.id == organization.id
+
+    # Revoke the administrator after an earlier request-level access check could have succeeded.
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (administrator.id, organization.id))
+        assert membership is not None
+        membership.deleted_at = membership.updated_at
+        await session.commit()
+
+    # Act and assert every service rechecks the persisted membership under its Organization lock.
+    async with session_scope() as session:
+        with pytest.raises(ForbiddenError, match="Access required"):
+            await organizations.update(session, organization.id, "https://example.com/blocked.png", administrator)
+        with pytest.raises(ForbiddenError, match="Access required"):
+            await organizations.create_invitation(
+                session,
+                organization.id,
+                "blocked-invited@example.com",
+                OrganizationRoles.read,
+                administrator,
+            )
+        with pytest.raises(ForbiddenError, match="Access required"):
+            await organizations.update_member_role(
+                session,
+                organization.id,
+                owner.id,
+                OrganizationRoles.admin,
+                administrator,
+            )
+
+
+async def test_soft_delete_revalidates_revoked_owner_access(users: tuple[User, User, User]) -> None:
+    """Reject an organization deletion after the initiating owner has been revoked."""
+
+    # Arrange and revoke a non-administrator owner so the tenant authorization path remains active.
+    owner = users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (owner.id, organization.id))
+        assert membership is not None
+        membership.deleted_at = membership.updated_at
+        await session.commit()
+
+    # Act and assert the stale owner cannot tombstone the Organization.
+    async with session_scope() as session:
+        with pytest.raises(ForbiddenError, match="Access required"):
+            await organizations.soft_delete(session, organization.id, owner)
+
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+    assert persisted is not None
+    assert persisted.deleted_at is None
 
 
 async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
@@ -598,7 +673,7 @@ async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tu
 
     # Act
     async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, organization.avatar, users[1])
+        updated = await organizations.update(session, organization.id, organization.avatar, users[0])
 
     # Assert
     assert updated is not None
@@ -619,6 +694,7 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
             "Dashboard",
             Image("ghcr.io/longlink/dashboard@sha256:test"),
             {},
+            user_id=owner.id,
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
         session.add(

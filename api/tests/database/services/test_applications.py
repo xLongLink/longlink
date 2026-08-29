@@ -30,6 +30,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization(use
                 "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                user_id=user.id,
             )
 
 
@@ -74,6 +75,7 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
                 "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                user_id=owner.id,
             )
 
     # Assert
@@ -95,7 +97,49 @@ async def test_create_rejects_missing_organization(users: tuple[User, User, User
                 "Dashboard",
                 image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                user_id=users[0].id,
             )
+
+
+async def test_create_revalidates_maintainer_access_after_membership_revocation(users: tuple[User, User, User]) -> None:
+    """Reject a deployment after its maintainer access has been revoked while preserving owner access."""
+
+    # Arrange a current owner and a maintainer whose request authorization could become stale.
+    owner, maintainer = users[1], users[2]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        await session.commit()
+
+    # Revoke the maintainer after their request would have passed the initial membership dependency.
+    async with session_scope() as session:
+        membership = await session.get(UserOrganization, (maintainer.id, organization.id))
+        assert membership is not None
+        membership.deleted_at = membership.updated_at
+        await session.commit()
+
+    # Act and assert the revoked maintainer cannot create an Application, while the owner still can.
+    async with session_scope() as session:
+        with pytest.raises(ForbiddenError, match="Access required"):
+            await applications.create(
+                session,
+                organization.id,
+                "Blocked dashboard",
+                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+                secrets={},
+                user_id=maintainer.id,
+            )
+        application = await applications.create(
+            session,
+            organization.id,
+            "Owner dashboard",
+            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
+            secrets={},
+            user_id=owner.id,
+        )
+        await session.commit()
+
+    assert application.organization_id == organization.id
 
 
 @pytest.mark.parametrize(
