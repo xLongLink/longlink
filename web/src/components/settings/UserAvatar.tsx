@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Stack } from '@/components/ui/Stack';
 import { Avatar } from '@/components/ui/Avatar';
@@ -7,25 +8,36 @@ import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useUpdateOrganization } from '@/lib/hooks/use-organization';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
-const organizationAvatarSchema = z.union([
+const userAvatarSchema = z.union([
     z.literal(''),
     z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 ]);
 
-type OrganizationAvatarProps = {
-    canManage: boolean;
+type UserAvatarProps = {
     name: string;
-    organizationId: string;
     src: string;
 };
 
-/** Renders an Organization avatar and its URL editor. */
-export default function OrganizationAvatar({ canManage, name, organizationId, src }: OrganizationAvatarProps) {
+/** Renders the current user's avatar and its URL editor. */
+export default function UserAvatar({ name, src }: UserAvatarProps) {
     const toast = useToast();
-    const updateOrganization = useUpdateOrganization(organizationId);
+    const queryClient = useQueryClient();
+    const updateUser = useMutation({
+        mutationFn: async (avatar: string) =>
+            zUserSummary.parse(
+                await api('/api/v1/me', {
+                    json: { avatar },
+                    method: 'PATCH',
+                }).json()
+            ),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
+        },
+    });
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,10 +47,6 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
     async function saveAvatar() {
         setAvatarError(null);
 
-        // Ignore unavailable, unauthorized, and unchanged Organizations.
-        if (!canManage) {
-            return;
-        }
         const normalizedAvatar = avatar.trim();
         if (normalizedAvatar === src) {
             setIsDialogOpen(false);
@@ -46,14 +54,14 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
         }
 
         // Require an empty value or an HTTP(S) URL.
-        if (!organizationAvatarSchema.safeParse(normalizedAvatar).success) {
+        if (!userAvatarSchema.safeParse(normalizedAvatar).success) {
             setAvatarError('Enter a valid HTTP(S) avatar URL.');
             return;
         }
 
-        // Persist the URL and keep the response available while Organization data refreshes.
+        // Persist the URL and keep the response available while profile data refreshes.
         try {
-            const updated = await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
+            const updated = await updateUser.mutateAsync(normalizedAvatar);
             setEditedAvatar(updated.avatar);
             setIsDialogOpen(false);
             toast({ body: 'Avatar saved' });
@@ -68,7 +76,7 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
     /** Opens or closes the avatar editor without retaining canceled changes. */
     function handleOpenChange(isOpen: boolean) {
         // Keep the dialog available while a submitted avatar URL is still saving.
-        if (updateOrganization.isPending) {
+        if (updateUser.isPending) {
             return;
         }
 
@@ -85,9 +93,8 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
         <>
             <IconButton
                 className="size-12"
-                icon={<Avatar kind="organization" name={name} size="lg" src={avatar || undefined} />}
-                isDisabled={!canManage}
-                label="Edit organization avatar"
+                icon={<Avatar name={name} size="lg" src={avatar || undefined} />}
+                label="Edit avatar"
                 tooltip="Edit avatar"
                 variant="ghost"
                 onClick={() => {
@@ -100,7 +107,7 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
                 <Layout
                     header={
                         <DialogHeader
-                            title="Organization avatar"
+                            title="Avatar"
                             subtitle="Use an HTTP(S) image URL."
                             onOpenChange={handleOpenChange}
                         />
@@ -108,7 +115,7 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
                     content={
                         <LayoutContent>
                             <form
-                                id="organization-avatar-form"
+                                id="user-avatar-form"
                                 onSubmit={(event) => {
                                     event.preventDefault();
                                     void saveAvatar();
@@ -119,8 +126,8 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
                                     value={avatar}
                                     width="100%"
                                     isOptional
-                                    isDisabled={updateOrganization.isPending}
-                                    placeholder="https://example.com/org.png"
+                                    isDisabled={updateUser.isPending}
+                                    placeholder="https://example.com/avatar.png"
                                     status={avatarError ? { type: 'error', message: avatarError } : undefined}
                                     onChange={(value) => {
                                         setEditedAvatar(value);
@@ -136,15 +143,15 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
                                 <Button
                                     label="Cancel"
                                     variant="ghost"
-                                    isDisabled={updateOrganization.isPending}
+                                    isDisabled={updateUser.isPending}
                                     onClick={() => handleOpenChange(false)}
                                 />
                                 <Button
-                                    form="organization-avatar-form"
+                                    form="user-avatar-form"
                                     type="submit"
                                     label="Save"
                                     variant="primary"
-                                    isLoading={updateOrganization.isPending}
+                                    isLoading={updateUser.isPending}
                                 />
                             </Stack>
                         </LayoutFooter>

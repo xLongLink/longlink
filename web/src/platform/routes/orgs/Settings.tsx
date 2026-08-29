@@ -93,28 +93,29 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8}>
-            <Stack>
-                <Heading level={1}>Settings</Heading>
-                <Text as="p" color="secondary">
-                    Configure the organization and its runtime defaults.
-                </Text>
+            <Stack gap={4}>
+                <Stack className="pt-1" direction="horizontal" gap={3} align="center">
+                    <OrganizationAvatar
+                        canManage={canManageOrganization}
+                        name={organizationName}
+                        organizationId={organizationId}
+                        src={organizationAvatar}
+                    />
+                    <Stack gap={0}>
+                        <Heading accessibilityLevel={1} level={4}>
+                            {organizationName}
+                        </Heading>
+                        <Text size="sm" type="supporting">
+                            Organization
+                        </Text>
+                    </Stack>
+                </Stack>
             </Stack>
             <Menu>
                 <MenuSection title="Settings" isHeaderHidden>
                     <MenuItem icon="building2" label="Organization">
-                        <Stack gap={4}>
-                            <Stack direction="horizontal" justify="between" align="start">
-                                <Stack>
-                                    <Heading level={2}>Organization</Heading>
-                                    <Text type="supporting">View and manage organization details.</Text>
-                                </Stack>
-                                <OrganizationAvatar
-                                    canManage={canManageOrganization}
-                                    name={organizationName}
-                                    organizationId={organizationId}
-                                    src={organizationAvatar}
-                                />
-                            </Stack>
+                        <Stack gap={3}>
+                            <Heading level={2}>Organization</Heading>
                             <Divider />
                             <ProgressBar
                                 formatValueLabel={(value) =>

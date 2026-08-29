@@ -485,7 +485,7 @@ export default function Ppt() {
     const slideId = new URLSearchParams(search).get('slide');
     const slideIndex = Math.max(
         0,
-        slides.findIndex((slide) => slide.id === slideId),
+        slides.findIndex((slide) => slide.id === slideId)
     );
     const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
         // Keep presentation navigation from moving the document viewport.

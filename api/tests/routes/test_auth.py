@@ -1,6 +1,7 @@
 import pytest
 from src import auth
 from main import app
+from uuid import UUID
 from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
@@ -51,13 +52,13 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
     return parse_qs(urlparse(reset_url).fragment)["token"][0]
 
 
-def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> list[UUID]:
     """Record Organization membership projections without a database adapter."""
 
     # Replace the external projection boundary with an observable local sink.
-    synchronized_organization_ids: list[object] = []
+    synchronized_organization_ids: list[UUID] = []
 
-    async def sync_users(_session: object, organization_id: object) -> None:
+    async def sync_users(_session: object, organization_id: UUID) -> None:
         """Record one requested Organization projection."""
 
         synchronized_organization_ids.append(organization_id)

@@ -97,7 +97,6 @@ export default function ApplicationSettings({
                 <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
                     <Stack>
                         <Heading level={2}>Applications</Heading>
-                        <Text type="supporting">Review applications connected to this organization.</Text>
                     </Stack>
                     {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
                 </Stack>

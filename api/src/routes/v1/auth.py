@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
+PASSWORD_HASHER = PasswordHash.recommended()
 
 
 def set_auth_session(response: Response, credential: str) -> None:
@@ -32,11 +33,11 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     # Load the canonical account identity before verifying its credential.
     user = await users.by_email(session, payload.email)
     if user is None:
-        PasswordHash.recommended().hash(payload.password)
+        PASSWORD_HASHER.hash(payload.password)
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Verify the supplied password before issuing a session.
-    if not PasswordHash.recommended().verify(payload.password, user.password) or user.deleted_at is not None:
+    if not PASSWORD_HASHER.verify(payload.password, user.password) or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
@@ -133,7 +134,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
-    user.password = PasswordHash.recommended().hash(payload.password)
+    user.password = PASSWORD_HASHER.hash(payload.password)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.
