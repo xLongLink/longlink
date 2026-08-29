@@ -26,6 +26,7 @@ def set_auth_session(response: Response, credential: str) -> None:
     cookies.set_browser_cookie(response, "longlink_auth", credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
+# Deployment rate limiting bounds unauthenticated credential work before it reaches the API.
 @router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
@@ -67,6 +68,7 @@ async def logout(
     cookies.delete_browser_cookie(response, "longlink_auth", "/")
 
 
+# Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/forgot-password", status_code=202)
 async def request_password_reset(
     email: Annotated[Email, Body(embed=True)],
@@ -142,6 +144,7 @@ async def reset_password(
     cookies.delete_browser_cookie(response, "longlink_password_reset", "/api/v1/auth/reset-password")
 
 
+# Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/register", status_code=202)
 async def request_registration(
     email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)
