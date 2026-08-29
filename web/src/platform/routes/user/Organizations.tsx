@@ -38,7 +38,7 @@ export default function Organizations() {
     }
 
     return (
-        <PageContainer gap={8}>
+        <PageContainer gap={8} padding={2}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Organizations</Heading>

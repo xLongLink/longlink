@@ -30,7 +30,7 @@ export default function Admin() {
                 { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
             ]}
         >
-            <PageContainer gap={8}>
+            <PageContainer gap={8} padding={2}>
                 <Outlet />
             </PageContainer>
         </Platform>

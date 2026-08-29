@@ -71,7 +71,7 @@ export default function AdminApplications() {
     }
 
     return (
-        <Stack gap={6} width="100%">
+        <Stack gap={8} width="100%">
             <Stack>
                 <Heading level={1}>Applications</Heading>
                 <Text as="p" color="secondary">

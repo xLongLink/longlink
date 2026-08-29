@@ -48,7 +48,7 @@ export default function Organization() {
 
     // Keep edge-aware content aligned within the centered page container.
     return (
-        <PageContainer gap={8}>
+        <PageContainer gap={8} padding={2}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Applications</Heading>

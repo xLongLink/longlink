@@ -91,7 +91,7 @@ export default function Settings() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     return (
-        <PageContainer gap={8}>
+        <PageContainer gap={8} padding={2}>
             <Stack className="pt-1" direction="horizontal" gap={3} align="center">
                 <UserAvatar name={user.name} src={user.avatar} />
                 <Stack>
