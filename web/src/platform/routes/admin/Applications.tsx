@@ -138,7 +138,9 @@ export default function AdminApplications() {
                         <MetadataListItem label="Status">
                             <StatusBadge status={metadataApplication.status} />
                         </MetadataListItem>
-                        <MetadataListItem label="Organization">{metadataApplication.organization.name}</MetadataListItem>
+                        <MetadataListItem label="Organization">
+                            {metadataApplication.organization.name}
+                        </MetadataListItem>
                         <MetadataListItem label="Image">{metadataApplication.image_desired}</MetadataListItem>
                         <MetadataListItem label="ID">{metadataApplication.id}</MetadataListItem>
                         <MetadataListItem label="Slug">{metadataApplication.slug}</MetadataListItem>

@@ -236,36 +236,36 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                        ) : step === 'metadata' ? (
-                                            <>
-                                                    <form.Field name="name">
-                                                        {(field) => (
-                                                            <TextInput
-                                                                label="Name"
-                                                                value={field.state.value}
-                                                                htmlName={field.name}
-                                                                isRequired
-                                                                onBlur={field.handleBlur}
-                                                                onChange={field.handleChange}
-                                                            />
-                                                        )}
-                                                    </form.Field>
-                                                    <form.Field name="description">
-                                                        {(field) => (
-                                                            <TextInput
-                                                                label="Description"
-                                                                value={field.state.value}
-                                                                htmlName={field.name}
-                                                                isOptional
-                                                                placeholder="Dashboard app"
-                                                                onBlur={field.handleBlur}
-                                                                onChange={field.handleChange}
-                                                            />
-                                                        )}
-                                                    </form.Field>
-                                            </>
-                                        ) : (
-                                            declaredEnvironments.map((env) => (
+                                                ) : step === 'metadata' ? (
+                                                    <>
+                                                        <form.Field name="name">
+                                                            {(field) => (
+                                                                <TextInput
+                                                                    label="Name"
+                                                                    value={field.state.value}
+                                                                    htmlName={field.name}
+                                                                    isRequired
+                                                                    onBlur={field.handleBlur}
+                                                                    onChange={field.handleChange}
+                                                                />
+                                                            )}
+                                                        </form.Field>
+                                                        <form.Field name="description">
+                                                            {(field) => (
+                                                                <TextInput
+                                                                    label="Description"
+                                                                    value={field.state.value}
+                                                                    htmlName={field.name}
+                                                                    isOptional
+                                                                    placeholder="Dashboard app"
+                                                                    onBlur={field.handleBlur}
+                                                                    onChange={field.handleChange}
+                                                                />
+                                                            )}
+                                                        </form.Field>
+                                                    </>
+                                                ) : (
+                                                    declaredEnvironments.map((env) => (
                                                         <form.Field
                                                             key={env.name}
                                                             name={`envs.${env.name}` as `envs.${string}`}
@@ -289,8 +289,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                                 />
                                                             )}
                                                         </form.Field>
-                                            ))
-                                        )}
+                                                    ))
+                                                )}
                                                 {errorStatus}
                                             </FormLayout>
                                         </form>

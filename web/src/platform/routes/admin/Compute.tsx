@@ -137,7 +137,9 @@ export default function AdminCompute() {
                         <MetadataListItem label="Status">
                             <StatusBadge status={metadataCompute.status} />
                         </MetadataListItem>
-                        <MetadataListItem label="Gateway">{metadataCompute.gateway_url ?? 'Unavailable'}</MetadataListItem>
+                        <MetadataListItem label="Gateway">
+                            {metadataCompute.gateway_url ?? 'Unavailable'}
+                        </MetadataListItem>
                         <MetadataListItem label="ID">{metadataCompute.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
