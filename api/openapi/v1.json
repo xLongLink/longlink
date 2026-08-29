@@ -1759,7 +1759,7 @@
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return maintainer-only live usage for the Organization database.",
+        "description": "Return live usage for the Organization database.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -1824,7 +1824,7 @@
     "/api/v1/organizations/{organization_id}/storage": {
       "get": {
         "summary": "Get Organization Storage Usage",
-        "description": "Return maintainer-only live usage for the Organization bucket.",
+        "description": "Return live usage for the Organization bucket.",
         "operationId": "get_organization_storage_usage_api_v1_organizations__organization_id__storage_get",
         "parameters": [
           {

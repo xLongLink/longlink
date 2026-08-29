@@ -471,10 +471,9 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
     organization = result.one_or_none()
     if organization is None:
         return None
-    if organization.avatar == avatar:
-        return organization
-    organization.avatar = avatar
-    organization.updated_id = user.id
+    if organization.avatar != avatar:
+        organization.avatar = avatar
+        organization.updated_id = user.id
 
     return organization
 

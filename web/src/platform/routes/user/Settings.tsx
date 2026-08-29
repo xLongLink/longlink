@@ -158,9 +158,15 @@ export default function Settings() {
                                                     name={membership.organization.name}
                                                     size="md"
                                                 />
-                                                <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                                    {membership.organization.name}
-                                                </Link>
+                                                <Stack gap={0}>
+                                                    <Link
+                                                        href={`/orgs/${membership.organization.slug}`}
+                                                        weight="semibold"
+                                                    >
+                                                        {membership.organization.name}
+                                                    </Link>
+                                                    <Text type="supporting">Organization</Text>
+                                                </Stack>
                                             </Stack>
                                         )}
                                     </TableColumn>

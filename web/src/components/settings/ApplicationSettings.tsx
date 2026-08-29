@@ -58,12 +58,14 @@ export default function ApplicationSettings({
             header: 'Application',
             width: proportional(1),
             renderCell: (application) => (
-                <Stack gap={1}>
+                <Stack gap={0}>
                     <Stack direction="horizontal" gap={1} align="center">
                         <Link href={`/orgs/${organizationSlug}/apps/${application.slug}`} weight="semibold">
                             {application.name}
                         </Link>
-                        <Badge {...statusPresentation[application.status]} />
+                        {application.status === 'running' ? null : (
+                            <Badge {...statusPresentation[application.status]} />
+                        )}
                     </Stack>
                     {application.description ? <Text type="supporting">{application.description}</Text> : null}
                 </Stack>
