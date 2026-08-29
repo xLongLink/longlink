@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Stack } from '@/components/ui/Stack';
 import { Avatar } from '@/components/ui/Avatar';
-import { avatarUrlSchema } from '@/components/settings/validation';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { avatarUrlSchema } from '@/components/settings/validation';
 import { useUpdateOrganization } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Logs from '@/components/dialogs/Logs';
 import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
@@ -7,13 +8,12 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useState } from 'react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import CreateApplication from '@/components/dialogs/CreateApplication';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDeleteOrganizationApplication } from '@/lib/hooks/use-organization';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationApplicationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 

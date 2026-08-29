@@ -1,5 +1,5 @@
-import { decodePathSegment, startCase } from '@/lib/utils';
 import { useLocation } from 'react-router';
+import { decodePathSegment, startCase } from '@/lib/utils';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 type LegalBreadcrumbProps = {
