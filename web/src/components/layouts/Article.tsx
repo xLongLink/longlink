@@ -1,5 +1,3 @@
-import { useEffect, useEffectEvent, type ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router';
 import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,8 +8,10 @@ import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
+import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
