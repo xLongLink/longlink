@@ -40,7 +40,7 @@ async def proxy_application_request(
         raise HTTPException(status_code=403, detail="Access required")
     application, _, role, registry = access
 
-    required_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
+    required_role = APPLICATION_PROXY_METHOD_ROLES[request.method]
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     if not roles.atleast(role, required_role):

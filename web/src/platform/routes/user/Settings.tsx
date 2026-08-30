@@ -122,9 +122,7 @@ export default function Settings() {
                                         setEditedName(value);
                                         setAccountError(null);
                                     }}
-                                    onBlur={() => {
-                                        void saveAccountName();
-                                    }}
+                                    onBlur={() => void saveAccountName()}
                                 />
                                 <TextInput label="Email" type="email" value={user.email} width="100%" isDisabled />
                             </Stack>

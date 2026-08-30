@@ -45,7 +45,7 @@ function SummaryCard({
     path?: string;
 }) {
     const component = componentDocumentation.find((candidate) => candidate.name === name);
-    const destination = component === undefined ? path : `/docs/sdk/pages/${component.slug}`;
+    const destination = component ? `/docs/sdk/pages/${component.slug}` : path;
 
     if (destination === undefined) {
         throw new Error(`Missing documentation route for ${name}`);

@@ -36,7 +36,7 @@ export default function Login() {
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
         staleTime: Infinity,
     });
-    const hasOAuthProvider = oauthAvailability?.github === true || oauthAvailability?.google === true;
+    const hasOAuthProvider = Boolean(oauthAvailability?.github || oauthAvailability?.google);
     const form = useForm({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         validationLogic: revalidateLogic(),

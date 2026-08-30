@@ -198,7 +198,7 @@ async def test_shared_audit_sync_upserts_rows_and_disposes_engine(
     assert "updated_at = excluded.updated_at" in compiled
     assert "deleted_at = excluded.deleted_at" in compiled
     assert engine.executed["parameters"] == [audit_user.model_dump()]
-    assert engine.disposed is True
+    assert engine.disposed
 
 
 async def test_shared_audit_sync_disposes_engine_when_upsert_fails(
@@ -215,7 +215,7 @@ async def test_shared_audit_sync_disposes_engine_when_upsert_fails(
     with pytest.raises(RuntimeError, match="database unavailable"):
         await shared_audit.sync("postgresql+asyncpg://db/longlink", [audit_user])
 
-    assert engine.disposed is True
+    assert engine.disposed
 
 
 @pytest.mark.integration

@@ -5,7 +5,6 @@ import { useLocation } from 'react-router';
 export function useFragmentToken(storageKey: string): string {
     const location = useLocation();
     const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token');
-    const token = fragmentToken || sessionStorage.getItem(storageKey) || '';
 
     useLayoutEffect(() => {
         if (fragmentToken) {
@@ -14,5 +13,5 @@ export function useFragmentToken(storageKey: string): string {
         }
     }, [fragmentToken, location.pathname, location.search, storageKey]);
 
-    return token;
+    return fragmentToken || sessionStorage.getItem(storageKey) || '';
 }

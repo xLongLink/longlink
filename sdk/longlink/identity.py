@@ -42,7 +42,7 @@ def identity_token_user(token: str, secret: str) -> UUID:
         )
     except jwt.MissingRequiredClaimError as exc:
         raise jwt.InvalidTokenError("Invalid identity token claims") from exc
-    raw_user_id = data.get("sub")
+    raw_user_id = data["sub"]
     if not isinstance(raw_user_id, str):
         raise jwt.InvalidTokenError("Invalid identity token claims")
     try:

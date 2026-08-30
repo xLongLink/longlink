@@ -11,20 +11,11 @@ type MetadataDialogProps = {
 
 /** Renders a standard administrator metadata dialog. */
 export default function MetadataDialog({ children, footer, onClose, title }: MetadataDialogProps) {
-    // Wrap optional footer content in the shared dialog layout region.
-    const layoutFooter = footer === undefined ? undefined : <LayoutFooter>{footer}</LayoutFooter>;
-
     return (
-        <Dialog
-            isOpen
-            onOpenChange={(isOpen) => {
-                if (!isOpen) onClose();
-            }}
-            width={560}
-        >
+        <Dialog isOpen onOpenChange={(isOpen) => !isOpen && onClose()} width={560}>
             <Layout
                 content={<LayoutContent>{children}</LayoutContent>}
-                footer={layoutFooter}
+                footer={footer === undefined ? undefined : <LayoutFooter>{footer}</LayoutFooter>}
                 header={<DialogHeader title={title} onOpenChange={onClose} />}
             />
         </Dialog>

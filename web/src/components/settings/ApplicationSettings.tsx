@@ -69,7 +69,7 @@ export default function ApplicationSettings({
                       key: 'action',
                       header: 'Action',
                       width: pixel(96),
-                      align: 'end' as const,
+                      align: 'end',
                       renderCell: (application: OrganizationApplicationSummary) => (
                           <MoreMenu
                               label={`Open actions for ${application.name}`}

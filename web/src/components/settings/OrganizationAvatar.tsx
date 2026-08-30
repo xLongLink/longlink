@@ -80,7 +80,7 @@ export default function OrganizationAvatar({ canManage, name, organizationId, sr
         <>
             <IconButton
                 className="size-12"
-                icon={<Avatar kind="organization" name={name} size="lg" src={avatar || undefined} />}
+                icon={<Avatar kind="organization" name={name} size="lg" src={avatar} />}
                 isDisabled={!canManage}
                 label="Edit organization avatar"
                 tooltip="Edit avatar"

@@ -47,9 +47,9 @@ def database(database_url: str) -> DatabaseConnection:
             raise ValueError("MySQL database URL requires ssl_cert with ssl_key")
 
         ssl_check_hostname = parsed_url.query.get("ssl_check_hostname")
+        if ssl_check_hostname is not None and (not isinstance(ssl_check_hostname, str) or ssl_check_hostname not in {"true", "false"}):
+            raise ValueError("MySQL database URL has an invalid ssl_check_hostname")
         if ssl_check_hostname is not None:
-            if not isinstance(ssl_check_hostname, str) or ssl_check_hostname not in {"true", "false"}:
-                raise ValueError("MySQL database URL has an invalid ssl_check_hostname")
             if (ssl_check_hostname == "true") != (sslmode == "VERIFY_IDENTITY"):
                 raise ValueError("MySQL ssl_check_hostname conflicts with ssl-mode")
 

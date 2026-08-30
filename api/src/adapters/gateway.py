@@ -49,7 +49,7 @@ class GatewayClient:
         """Start one streamed request through the authenticated application route."""
 
         # Preserve the existing gateway path and query contract.
-        url = f"{self._url}/{path}{f'?{query}' if query else ''}"
+        url = f"{self._url}/{path}{'?' + query if query else ''}"
         headers = {
             "x-longlink-application-id": str(application_id),
             "x-longlink-identity": identity.create_identity_token(user_id, self._identity_secret),
