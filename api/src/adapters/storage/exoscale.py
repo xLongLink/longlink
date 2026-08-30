@@ -221,11 +221,10 @@ class Exoscale:
             api = cast(AsyncClient, client)
 
             # Delete matching keys before roles because keys may reference their role.
-            resources = (
+            for resource_type, collection, identifier, list_resources, delete_resource in (
                 ("API key", "api-keys", "key", api.list_api_keys, lambda resource_id: api.delete_api_key(id=resource_id)),
                 ("IAM role", "iam-roles", "id", api.list_iam_roles, lambda resource_id: api.delete_iam_role(id=resource_id)),
-            )
-            for resource_type, collection, identifier, list_resources, delete_resource in resources:
+            ):
                 response = await list_resources()
                 items = response.get(collection)
                 if not isinstance(items, list):
@@ -253,11 +252,10 @@ class Exoscale:
         credential_name = f"longlink-{name}"
         async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
             api = cast(AsyncClient, client)
-            resources = (
+            for collection, response in (
                 ("api-keys", await api.list_api_keys()),
                 ("iam-roles", await api.list_iam_roles()),
-            )
-            for collection, response in resources:
+            ):
                 items = response.get(collection)
                 if not isinstance(items, list):
                     raise RuntimeError(f"Exoscale {collection} inventory response is invalid")

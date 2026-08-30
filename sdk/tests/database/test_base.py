@@ -294,9 +294,8 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
 
     # Act
     async with database.session() as database_session:
-        result = database_session
+        assert database_session == "session"
 
     # Assert
-    assert result == "session"
     assert engine.connect_calls == 1
     await database.dispose()
