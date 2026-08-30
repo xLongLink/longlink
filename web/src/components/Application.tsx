@@ -37,7 +37,7 @@ export function ApplicationRuntime({
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                pages.map((page) => ({
+                (registeredPages ?? []).map((page) => ({
                     path: page.route,
                     page,
                 })),

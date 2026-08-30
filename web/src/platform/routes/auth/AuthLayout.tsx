@@ -44,7 +44,7 @@ export function AuthLayout({
                         {title}
                     </Heading>
                     {typeof description === 'string' ? (
-                        <Text as="p" color="secondary" justify="center" type="supporting">
+                        <Text as="p" justify="center" type="supporting">
                             {description}
                         </Text>
                     ) : (

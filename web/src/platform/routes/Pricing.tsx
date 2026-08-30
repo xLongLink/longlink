@@ -39,7 +39,7 @@ export default function Pricing() {
                                     </Text>
                                 </Stack>
 
-                                <CollapsibleGroup className="px-4" density="balanced" hasDividers type="multiple">
+                                <CollapsibleGroup className="px-4" hasDividers type="multiple">
                                     <Collapsible
                                         trigger={
                                             <Text color="secondary" type="supporting">
