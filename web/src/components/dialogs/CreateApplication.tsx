@@ -232,7 +232,13 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                                 isRequired
                                                                 placeholder="ghcr.io/longlink/dashboard:latest"
                                                                 onBlur={field.handleBlur}
-                                                                onChange={field.handleChange}
+                                                                onChange={(value) =>
+                                                                    field.handleChange(
+                                                                        value.startsWith('docker pull ')
+                                                                            ? value.slice('docker pull '.length)
+                                                                            : value
+                                                                    )
+                                                                }
                                                             />
                                                         )}
                                                     </form.Field>
