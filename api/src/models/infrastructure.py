@@ -38,7 +38,7 @@ class DatabaseConfiguration(BaseModel):
     # Connection
     host: str = Field(min_length=1, max_length=255)
     port: int = Field(ge=1, le=65535)
-    sslmode: DatabaseSSLMode = DatabaseSSLMode.require
+    sslmode: DatabaseSSLMode = DatabaseSSLMode.verify_full
     password: str = Field(min_length=1, max_length=255)
     username: str = Field(min_length=1, max_length=255)
 

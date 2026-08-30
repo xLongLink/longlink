@@ -60,7 +60,7 @@ export const zDatabaseSslMode = z.enum([
 export const zDatabaseRegistryCreate = z.object({
     host: z.string().min(1).max(255),
     port: z.int().gte(1).lte(65535),
-    sslmode: zDatabaseSslMode.optional().default('require'),
+    sslmode: zDatabaseSslMode.optional().default('verify-full'),
     password: z.string().min(1).max(255),
     username: z.string().min(1).max(255),
     name: z.string().min(1).max(128)
@@ -825,6 +825,16 @@ export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvita
  * Successful Response
  */
 export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponse = z.void();
+
+export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeletePath = z.object({
+    invitation_id: z.uuid(),
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponse = z.void();
 
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchBody = zOrganizationMemberUpdate;
 

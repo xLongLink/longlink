@@ -4,6 +4,8 @@ from src.auth import authadmin, get_session
 from src.logger import logger
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import load_only
+from src.environments import env
+from src.models.types import DatabaseSSLMode
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.adapters.postgres import Postgres
 from src.database.services import database
@@ -17,6 +19,10 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 @router.post("/databases", response_model=DatabaseRegistryResponse, status_code=201)
 async def create_database_registry(payload: DatabaseRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register one database backend."""
+
+    # Managed database connections must verify both their certificate chain and hostname in production.
+    if not env.DEVELOPMENT and payload.sslmode != DatabaseSSLMode.verify_full:
+        raise HTTPException(status_code=422, detail="Production databases must use sslmode=verify-full")
 
     registry = await database.create(session, **payload.model_dump())
     await session.commit()

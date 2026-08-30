@@ -87,11 +87,12 @@ export default function OrganizationSettings() {
         member: OrganizationMemberAccessResponse;
         role: OrganizationRoles;
     } | null>(null);
+    const [revokeInvitationTarget, setRevokeInvitationTarget] = useState<OrganizationInvitationResponse | null>(null);
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
-    const { inviteMember, changeMemberRole } = useOrganizationMembers(organizationId);
+    const { inviteMember, revokeInvitation, changeMemberRole } = useOrganizationMembers(organizationId);
     const updateOrganization = useUpdateOrganization(organizationId);
     const deleteDialog = useDeleteDialog({
         title: 'Delete application',
@@ -361,6 +362,28 @@ export default function OrganizationSettings() {
                                         >
                                             {(invitation) => dateFormatter.format(new Date(invitation.created_at))}
                                         </TableColumn>
+                                        {hasOrganizationApplicationAccess ? (
+                                            <TableColumn<OrganizationInvitationResponse>
+                                                align="end"
+                                                field="actions"
+                                                header="Action"
+                                                width={pixel(96)}
+                                            >
+                                                {(invitation) => (
+                                                    <MoreMenu
+                                                        label={`Open actions for ${invitation.email}`}
+                                                        size="sm"
+                                                        isDisabled={!hasMinimumRole(organizationRole, invitation.role)}
+                                                        items={[
+                                                            {
+                                                                label: 'Revoke',
+                                                                onClick: () => setRevokeInvitationTarget(invitation),
+                                                            },
+                                                        ]}
+                                                    />
+                                                )}
+                                            </TableColumn>
+                                        ) : null}
                                     </Table>
                                 )}
                             </Stack>
@@ -481,6 +504,44 @@ export default function OrganizationSettings() {
                         toast({
                             body:
                                 mutationError instanceof Error ? mutationError.message : 'Failed to change member role',
+                            type: 'error',
+                        });
+                    }
+                }}
+            />
+            <AlertDialog
+                isOpen={revokeInvitationTarget !== null}
+                onOpenChange={(nextOpen) => {
+                    // Keep the selected invitation only while its confirmation is open.
+                    if (!nextOpen) {
+                        setRevokeInvitationTarget(null);
+                    }
+                }}
+                title="Revoke invitation"
+                description={
+                    revokeInvitationTarget
+                        ? `Revoke the pending invitation for ${revokeInvitationTarget.email}?`
+                        : 'Revoke this pending invitation?'
+                }
+                cancelLabel="Cancel"
+                actionLabel="Revoke invitation"
+                actionVariant="destructive"
+                isActionLoading={revokeInvitation.isPending}
+                onAction={async () => {
+                    // Ignore submissions without a selected invitation.
+                    if (revokeInvitationTarget === null) {
+                        return;
+                    }
+
+                    // Revoke the pending grant and refresh Organization details.
+                    try {
+                        await revokeInvitation.mutateAsync(revokeInvitationTarget.id);
+                        toast({ body: `Invitation for ${revokeInvitationTarget.email} revoked` });
+                        setRevokeInvitationTarget(null);
+                    } catch (mutationError) {
+                        toast({
+                            body:
+                                mutationError instanceof Error ? mutationError.message : 'Failed to revoke invitation',
                             type: 'error',
                         });
                     }

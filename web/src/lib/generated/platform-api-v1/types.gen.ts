@@ -1855,6 +1855,40 @@ export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitati
 
 export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponse = CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponses[keyof CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponses];
 
+export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Invitation Id
+         */
+        invitation_id: string;
+        /**
+         * Organization Id
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/{organization_id}/invitations/{invitation_id}';
+};
+
+export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteError = RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors[keyof RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors];
+
+export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponse = RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponses[keyof RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponses];
+
 export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchData = {
     body: OrganizationMemberUpdate;
     path: {

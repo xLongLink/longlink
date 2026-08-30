@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import timedelta
 from sqlalchemy import delete, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
@@ -63,7 +64,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
 async def accept(session: AsyncSession, user: User) -> set[UUID]:
     """Accept active email grants and return the Organizations with changed memberships."""
 
-    # Lock the recipient's active grants before creating or restoring memberships.
+    # Lock the recipient's pending grants before separating active and expired invitations.
     result = await session.scalars(
         select(OrganizationInvitation)
         .join(Organization, Organization.id == OrganizationInvitation.organization_id)
@@ -73,8 +74,19 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
         )
         .with_for_update()
     )
-    invitations = result.all()
-    if not invitations:
+    pending_invitations = result.all()
+    if not pending_invitations:
+        return set()
+
+    # Keep grants active for seven days and consume expired grants without creating access.
+    cutoff = utcnow() - timedelta(days=7)
+    active_invitations = [invitation for invitation in pending_invitations if invitation.created_at > cutoff]
+    if not active_invitations:
+        await session.execute(
+            delete(OrganizationInvitation).where(
+                OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
+            )
+        )
         return set()
 
     # Lock every existing membership before creating or restoring invitation access.
@@ -82,7 +94,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
         select(UserOrganization)
         .where(
             UserOrganization.user_id == user.id,
-            UserOrganization.organization_id.in_([invitation.organization_id for invitation in invitations]),
+            UserOrganization.organization_id.in_([invitation.organization_id for invitation in active_invitations]),
         )
         .with_for_update()
     )
@@ -92,7 +104,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     changed_organization_ids: set[UUID] = set()
 
     # Create or restore access without changing active membership roles.
-    for invitation in invitations:
+    for invitation in active_invitations:
         membership = memberships_by_organization_id.get(invitation.organization_id)
         if membership is None:
             session.add(
@@ -113,9 +125,11 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
             membership.deleted_id = None
             changed_organization_ids.add(invitation.organization_id)
 
-    # Consumed grants no longer need an active or audit record.
+    # Consumed and expired grants no longer need an active or audit record.
     await session.execute(
-        delete(OrganizationInvitation).where(OrganizationInvitation.id.in_([invitation.id for invitation in invitations]))
+        delete(OrganizationInvitation).where(
+            OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
+        )
     )
 
     return changed_organization_ids

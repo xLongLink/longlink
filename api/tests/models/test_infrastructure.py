@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+from src.models.types import DatabaseSSLMode
 from src.models.infrastructure import DatabaseConfiguration
 
 pytestmark = pytest.mark.no_db
@@ -17,6 +18,7 @@ def test_database_configuration_accepts_plain_hosts() -> None:
     )
 
     assert payload.host == "database.example"
+    assert payload.sslmode == DatabaseSSLMode.verify_full
 
 
 @pytest.mark.parametrize("host", ["https://database.example", "database.example:5432", "database.example:invalid", "db example"])

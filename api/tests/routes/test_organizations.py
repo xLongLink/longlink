@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from fastapi import HTTPException, BackgroundTasks
+from datetime import UTC, datetime
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import func
@@ -470,6 +471,14 @@ async def test_get_organization_returns_invitations(
     async with session_scope() as session:
         await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
         session.add(
+            OrganizationInvitation(
+                organization_id=organization.id,
+                email="expired@example.com",
+                role=OrganizationRoles.write,
+                created_at=datetime(2020, 1, 1, tzinfo=UTC),
+            )
+        )
+        session.add(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
@@ -477,7 +486,12 @@ async def test_get_organization_returns_invitations(
             )
         )
         await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(
+                OrganizationInvitation.organization_id == organization.id,
+                OrganizationInvitation.email == invitee.email,
+            )
+        )
         assert invitation is not None
 
     # Act
@@ -487,6 +501,7 @@ async def test_get_organization_returns_invitations(
     # Assert
     assert response.status_code == 200
     assert regular_member_response.status_code == 200
+    assert len(response.json()["invitations"]) == 1
     invitation_payload = response.json()["invitations"][0]
     assert invitation_payload["id"] == str(invitation.id)
     assert invitation_payload["email"] == invitee.email
@@ -632,6 +647,84 @@ async def test_reinviting_email_replaces_pending_organization_role(
     assert second_response.status_code == 204
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
     assert [item[0] for item in captured_mail] == [invitee.email, invitee.email]
+
+
+async def test_organization_owner_revokes_pending_invitation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow an Organization owner to revoke one pending invitation."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        assert invitation is not None
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/organizations/{organization.id}/invitations/{invitation.id}")
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        assert await session.get(OrganizationInvitation, invitation.id) is None
+
+
+async def test_organization_maintainer_cannot_revoke_invitation_above_their_role(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject revocation of a pending grant above the caller's current role."""
+
+    # Arrange
+    owner, maintainer, invitee = users
+    organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.owner)
+        await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        assert invitation is not None
+
+    # Act
+    response = await clients[1].delete(f"/api/v1/organizations/{organization.id}/invitations/{invitation.id}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Invitation role permissions required"}
+    async with session_scope() as session:
+        assert await session.get(OrganizationInvitation, invitation.id) is not None
+
+
+async def test_organization_member_cannot_revoke_another_organizations_invitation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject an invitation identifier that belongs to another Organization."""
+
+    # Arrange
+    first_owner, second_owner, invitee = users
+    first_organization = await create_organization(first_owner, name="first")
+    second_organization = await create_organization(second_owner, name="second")
+    async with session_scope() as session:
+        await invitations.create(session, second_organization.id, invitee.email, OrganizationRoles.write)
+        await session.commit()
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == second_organization.id)
+        )
+        assert invitation is not None
+
+    # Act
+    response = await clients[0].delete(f"/api/v1/organizations/{first_organization.id}/invitations/{invitation.id}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Invitation not found"}
+    async with session_scope() as session:
+        assert await session.get(OrganizationInvitation, invitation.id) is not None
 
 
 async def test_create_organization_invitation_rejects_active_member(

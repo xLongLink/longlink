@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ const PAGE_SIZE = 25;
 /** Fetches and paginates one administrator table through its API endpoint. */
 export function usePaginate<T extends Record<string, unknown>>(
     path: string,
-    schema: { parse: (value: unknown) => { items: T[]; total: number } },
+    schema: z.ZodType<{ items: T[]; total: number }>,
     refetchInterval?: number
 ) {
     const [page, setPage] = useState(1);

@@ -178,6 +178,23 @@ async def create_organization_invitation(
     background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization.name, payload.role)
 
 
+@router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)
+async def revoke_organization_invitation(
+    invitation_id: UUID,
+    user: User = Depends(authuser),
+    membership: UserOrganization = Depends(organization_access),
+    session: AsyncSession = Depends(get_session),
+):
+    """Revoke one pending Organization invitation."""
+
+    # Require maintainers before locking and revalidating persisted invitation access.
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user)
+    await session.commit()
+
+
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
     member_id: UUID,

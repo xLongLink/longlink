@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import timedelta
 from src.utils import names, roles
 from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
@@ -174,12 +175,13 @@ async def applications(session: AsyncSession, organization_id: UUID) -> Sequence
 async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[OrganizationInvitation]:
     """Return active email grants for one organization."""
 
-    # Query organization invitations in one session.
+    # Query unexpired organization invitations in one session.
     statement = (
         select(OrganizationInvitation)
         .join(Organization, Organization.id == OrganizationInvitation.organization_id)
         .where(
             OrganizationInvitation.organization_id == organization_id,
+            OrganizationInvitation.created_at > utcnow() - timedelta(days=7),
             Organization.deleted_at.is_(None),
         )
         .order_by(OrganizationInvitation.created_at.desc())
@@ -538,6 +540,29 @@ async def create_invitation(
 
     await invitations.create(session, organization_id, email, role)
     return organization
+
+
+async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user: User) -> None:
+    """Authorize and revoke one active Organization invitation."""
+
+    # Lock the Organization before revalidating the caller's active invitation permission.
+    organization = await session.get(Organization, organization_id, with_for_update=True)
+    if organization is None or organization.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
+
+    # Resolve only an invitation belonging to the locked Organization.
+    invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)
+    if invitation is None or invitation.organization_id != organization_id:
+        raise NotFoundError("Invitation not found")
+    if not roles.atleast(membership.role, invitation.role):
+        raise ForbiddenError("Invitation role permissions required")
+
+    await session.delete(invitation)
 
 
 async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) -> Organization | None:
