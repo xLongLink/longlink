@@ -2,6 +2,8 @@ import pytest
 from src.utils.roles import atleast
 from src.models.roles import OrganizationRoles
 
+pytestmark = pytest.mark.no_db
+
 
 @pytest.mark.parametrize(
     ("value", "required_role", "expected"),

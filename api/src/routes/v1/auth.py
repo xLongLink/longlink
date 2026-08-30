@@ -1,7 +1,7 @@
 import jwt
 import hmac
+import asyncio
 import secrets
-from pwdlib import PasswordHash
 from typing import Annotated
 from fastapi import Body, Query, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
-PASSWORD_HASHER = PasswordHash.recommended()
 OAUTH_STATE_COOKIE = "longlink_oauth"
 OAUTH_STATE_COOKIE_PATH = "/api/v1/auth/oauth"
 
@@ -141,11 +140,12 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     # Load the canonical account identity before verifying its credential.
     user = await users.by_email(session, payload.email)
     if user is None:
-        PASSWORD_HASHER.hash(payload.password)
+        await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Verify the supplied password before issuing a session.
-    if not PASSWORD_HASHER.verify(payload.password, user.password) or user.deleted_at is not None:
+    password_matches = await asyncio.to_thread(users.PASSWORD_HASH.verify, payload.password, user.password)
+    if not password_matches or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
     # Accept email-bound Organization access before issuing its signed browser session.
@@ -243,7 +243,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
-    user.password = PASSWORD_HASHER.hash(payload.password)
+    user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
     await session.commit()
 
     # Remove reset proof only after the replacement password commits.

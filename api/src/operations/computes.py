@@ -29,35 +29,40 @@ async def create(compute_id: UUID) -> str | None:
         return None
     cluster = Kubernetes(registry.kubeconfig)
 
-    # Reapply static Gateway resources without rotating published mTLS credentials.
-    if (
-        registry.status == Status.running
-        and registry.gateway_url is not None
-        and registry.gateway_certificate is not None
-        and registry.gateway_client_identity is not None
-    ):
-        gateway_address = await cluster.gateway.apply()
-        if registry.gateway_url != gateway_url(gateway_address):
-            return "Gateway endpoint changed and requires explicit credential rotation"
-        return None
-
-    # Generate mTLS credentials only while bootstrapping an unpublished Compute.
-    # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
-    gateway_address = await cluster.gateway.apply(generate_gateway_bootstrap_tls(registry.id))
-
-    # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
-    tls = generate_gateway_tls(registry.id, gateway_address)
-    await cluster.gateway.replace_tls(tls)
-
-    # Publish connection material only after the desired gateway Deployment is serving.
-    async with session_scope() as session:
-        if not await compute.record_success(
-            session,
-            registry.id,
-            gateway_url(gateway_address),
-            tls.ca_certificate,
-            f"{tls.client_certificate}\n{tls.client_private_key}",
-            registry.status,
+    try:
+        # Reapply static Gateway resources without rotating published mTLS credentials.
+        if (
+            registry.status == Status.running
+            and registry.gateway_url is not None
+            and registry.gateway_certificate is not None
+            and registry.gateway_client_identity is not None
         ):
-            return "Compute gateway state was not recorded"
-        await session.commit()
+            gateway_address = await cluster.gateway.apply()
+            if registry.gateway_url != gateway_url(gateway_address):
+                return "Gateway endpoint changed and requires explicit credential rotation"
+            return None
+
+        # Generate mTLS credentials only while bootstrapping an unpublished Compute.
+        # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
+        gateway_address = await cluster.gateway.apply(generate_gateway_bootstrap_tls(registry.id))
+
+        # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
+        tls = generate_gateway_tls(registry.id, gateway_address)
+        await cluster.gateway.replace_tls(tls)
+
+        # Publish connection material only after the desired gateway Deployment is serving.
+        async with session_scope() as session:
+            if not await compute.record_success(
+                session,
+                registry.id,
+                gateway_url(gateway_address),
+                tls.ca_certificate,
+                f"{tls.client_certificate}\n{tls.client_private_key}",
+                registry.status,
+            ):
+                return "Compute gateway state was not recorded"
+            await session.commit()
+    finally:
+        closer = getattr(cluster, "aclose", None)
+        if closer is not None:
+            await closer()

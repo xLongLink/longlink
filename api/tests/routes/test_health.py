@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from src.routes.v1 import health
 
 
+@pytest.mark.no_db
 async def test_healthz_returns_liveness_without_database_access(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Report liveness without requiring a database connection."""
 

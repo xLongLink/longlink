@@ -98,9 +98,14 @@ async def create(application_id: UUID) -> None:
     cluster = Kubernetes(
         infrastructure.compute.kubeconfig,
     )
-    await cluster.applications.apply(
-        application.id, organization.id.hex, application.image_desired, runtime_secrets
-    )
+    try:
+        await cluster.applications.apply(
+            application.id, organization.id.hex, application.image_desired, runtime_secrets
+        )
+    finally:
+        closer = getattr(cluster, "aclose", None)
+        if closer is not None:
+            await closer()
 
     # Publish the applied release only after workload readiness.
     if application.status in {Status.creating, Status.failed}:
@@ -128,7 +133,13 @@ async def delete(application_id: UUID) -> None:
         application, infrastructure = target
     organization = infrastructure.organization
     # Remove Application Kubernetes resources before revoking provider credentials.
-    await Kubernetes(infrastructure.compute.kubeconfig).applications.delete(application.id, organization.id.hex)
+    cluster = Kubernetes(infrastructure.compute.kubeconfig)
+    try:
+        await cluster.applications.delete(application.id, organization.id.hex)
+    finally:
+        closer = getattr(cluster, "aclose", None)
+        if closer is not None:
+            await closer()
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(

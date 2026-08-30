@@ -1,6 +1,8 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
+from sqlmodel import col
 from src.auth import authadmin, get_session
+from sqlalchemy import select
 from src.database.services import operations
 from src.models.operations import OperationResponse
 from src.models.pagination import Page, Pagination
@@ -22,8 +24,8 @@ async def list_operations(pagination: Pagination = Depends(), session: AsyncSess
 async def get_operation_logs(operation_id: UUID, session: AsyncSession = Depends(get_session)):
     """Return the terminal log output for one Platform operation."""
 
-    # Resolve the persisted operation before exposing its captured log output.
-    operation = await session.get(Operation, operation_id)
-    if operation is None:
+    # Load only the captured output while preserving missing-operation behavior.
+    logs = await session.scalar(select(col(Operation.logs)).where(col(Operation.id) == operation_id))
+    if logs is None:
         raise HTTPException(status_code=404, detail="Operation not found")
-    return operation.logs
+    return logs

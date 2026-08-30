@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from containers import start_postgres
+from containers import postgres_container
 from sqlalchemy import text
 from src.adapters import postgres
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,25 +20,22 @@ pytestmark = pytest.mark.no_db
 async def postgres_adapter() -> AsyncIterator[tuple[Postgres, UUID, UUID]]:
     """Provide one disposable PostgreSQL adapter with stable resource identifiers."""
 
-    container = start_postgres("longlink", "secret", "postgres")
-    organization_id = UUID("33333333-3333-3333-3333-333333333333")
-    application_id = UUID("44444444-4444-4444-4444-444444444444")
-    adapter = Postgres(
-        host=container.host(),
-        port=container.port(5432),
-        username="longlink",
-        password="secret",
-        sslmode=DatabaseSSLMode.disable,
-    )
+    with postgres_container("longlink", "secret", "postgres") as container:
+        organization_id = UUID("33333333-3333-3333-3333-333333333333")
+        application_id = UUID("44444444-4444-4444-4444-444444444444")
+        adapter = Postgres(
+            host=container.get_container_host_ip(),
+            port=container.get_exposed_port(5432),
+            username="longlink",
+            password="secret",
+            sslmode=DatabaseSSLMode.disable,
+        )
 
-    try:
-        yield adapter, organization_id, application_id
-    finally:
         try:
+            yield adapter, organization_id, application_id
+        finally:
             await adapter.delete_schema(organization_id, application_id)
             await adapter.delete_database(organization_id)
-        finally:
-            container.stop()
 
 
 @pytest.mark.integration

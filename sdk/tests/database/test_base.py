@@ -4,6 +4,7 @@ from typing import ClassVar
 from sqlmodel import Field
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
@@ -11,7 +12,7 @@ from longlink.utils.settings import Envs
 class VerificationEngine:
     """Provide a configurable non-SQLite database verification boundary."""
 
-    url = "postgresql+asyncpg://database"
+    url = make_url("postgresql+asyncpg://database")
 
     def __init__(self, failure: Exception | None = None) -> None:
         """Configure the connection outcome and cleanup observation."""
@@ -138,13 +139,13 @@ def test_connect_args_returns_driver_specific_settings(
     [
         pytest.param(
             Envs(ENV="testing"),
-            "sqlite+aiosqlite:///:memory:",
+            make_url("sqlite+aiosqlite:///:memory:"),
             {"pool_pre_ping": True, "pool_recycle": 20},
             id="testing",
         ),
         pytest.param(
             Envs(ENV="development"),
-            "sqlite+aiosqlite:///./dev.db",
+            make_url("sqlite+aiosqlite:///./dev.db"),
             {"pool_pre_ping": True, "pool_recycle": 20},
             id="development",
         ),
@@ -166,7 +167,14 @@ def test_connect_args_returns_driver_specific_settings(
                 STORAGE_USERNAME="key",
                 STORAGE_ENDPOINT_URL="https://storage.example.com",
             ),
-            "postgresql+asyncpg://app:secret@db:5432/longlink",
+            URL.create(
+                "postgresql+asyncpg",
+                username="app",
+                password="secret",
+                host="db",
+                port=5432,
+                database="longlink",
+            ),
             {
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
@@ -180,7 +188,7 @@ def test_connect_args_returns_driver_specific_settings(
 def test_create_engine_selects_database_url_and_options(
     monkeypatch: pytest.MonkeyPatch,
     env: Envs,
-    expected_url: str,
+    expected_url: URL,
     expected_kwargs: dict[str, object],
 ) -> None:
     """Use environment-specific database URLs and engine options."""
@@ -188,7 +196,7 @@ def test_create_engine_selects_database_url_and_options(
     # Capture engine settings without opening a database connection.
     captured: dict[str, object] = {}
 
-    def fake_create_async_engine(database_url: str, **kwargs: object) -> object:
+    def fake_create_async_engine(database_url: URL, **kwargs: object) -> object:
         """Capture async engine settings without opening a database connection."""
 
         captured["database_url"] = database_url

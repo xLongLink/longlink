@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 from pwdlib import PasswordHash
 from sqlalchemy import func, select
@@ -11,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
+
+PASSWORD_HASH = PasswordHash.recommended()
 
 
 async def active(session: AsyncSession, user_id: UUID) -> User | None:
@@ -56,8 +59,16 @@ async def by_oauth_identity(session: AsyncSession, provider: str, subject: str) 
 async def register(session: AsyncSession, name: str, email: str, password: str, avatar: str = "") -> User:
     """Add one user and assign its database-generated state without committing."""
 
+    # Keep expensive credential hashing outside the request event loop.
+    hashed_password = await asyncio.to_thread(PASSWORD_HASH.hash, password)
+    user = User(
+        name=name,
+        email=email,
+        avatar=avatar,
+        password=hashed_password,
+    )
+
     # Flush so callers can handle uniqueness errors within their existing transaction.
-    user = User(name=name, email=email, avatar=avatar, password=PasswordHash.recommended().hash(password))
     session.add(user)
     await session.flush()
     return user
@@ -103,14 +114,13 @@ async def ensure_administrator(session: AsyncSession) -> None:
 
     # Reconcile the persisted administrator before considering an initial account creation.
     user = await session.scalar(select(User).where(User.administrator.is_(True)))
-    password_hash = PasswordHash.recommended()
 
     # Match the configured identity only when no administrator has been created yet.
     if user is None:
         statement = select(User).where(User.email == env.ADMIN_EMAIL)
         user = await session.scalar(statement)
     if user is None:
-        user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=password_hash.hash(env.ADMIN_PASSWORD))
+        user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD))
 
         # Concurrent Platform startup may create the configured administrator first.
         try:
@@ -123,8 +133,8 @@ async def ensure_administrator(session: AsyncSession) -> None:
                 raise
 
     # Reconcile the configured account, including one created concurrently by another replica.
-    if not password_hash.verify(env.ADMIN_PASSWORD, user.password):
-        user.password = password_hash.hash(env.ADMIN_PASSWORD)
+    if not PASSWORD_HASH.verify(env.ADMIN_PASSWORD, user.password):
+        user.password = PASSWORD_HASH.hash(env.ADMIN_PASSWORD)
     user.name = env.ADMIN_NAME
     user.email = env.ADMIN_EMAIL
     user.administrator = True

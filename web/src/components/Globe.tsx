@@ -24,7 +24,7 @@ export function Globe() {
                     y1="230"
                     y2="560"
                 >
-                    <stop offset="0%" stopColor="black" stopOpacity="1" />
+                    <stop stopColor="black" />
                     <stop offset="28%" stopColor="black" stopOpacity="0.82" />
                     <stop offset="100%" stopColor="black" stopOpacity="0" />
                 </linearGradient>
@@ -36,7 +36,7 @@ export function Globe() {
                     y1="0"
                     y2="1260"
                 >
-                    <stop offset="0%" stopColor="black" />
+                    <stop stopColor="black" />
                     <stop offset="22%" stopColor="black" />
                     <stop offset="32%" stopColor="white" />
                     <stop offset="100%" stopColor="white" />

@@ -80,6 +80,9 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
             assert kubeconfig == compute_registry.kubeconfig
             self.gateway = FakeGateway()
 
+        async def aclose(self) -> None:
+            """Close the fake Kubernetes client."""
+
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
     monkeypatch.setattr(compute_operations, "generate_gateway_bootstrap_tls", generate_bootstrap_tls)
@@ -124,6 +127,9 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             self.gateway = FailingGateway()
+
+        async def aclose(self) -> None:
+            """Close the fake Kubernetes client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
     await queue_operation(target_id=compute_registry.id)
@@ -177,6 +183,9 @@ async def test_create_running_compute_rejects_endpoint_change_without_rotating_c
 
             assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
+
+        async def aclose(self) -> None:
+            """Close the fake Kubernetes client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 
@@ -253,6 +262,9 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
 
             assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
+
+        async def aclose(self) -> None:
+            """Close the fake Kubernetes client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 

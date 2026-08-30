@@ -1,7 +1,7 @@
+import yaml
 import httpx2
 import asyncio
 import hashlib
-import tempfile
 import ipaddress
 from kr8s import ServerError
 from uuid import UUID
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from cryptography import x509
 from kr8s.asyncio import Api
 from importlib.resources import files
-from kr8s.asyncio.objects import Secret, Namespace, new_class, objects_from_files
+from kr8s.asyncio.objects import Secret, Namespace, new_class, object_from_spec
 from src.kubernetes.utils import apply
 from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
@@ -271,27 +271,27 @@ class Gateway:
         if hashlib.sha256(manifest).hexdigest() != "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781":
             raise ValueError("Envoy Gateway v1.8.3 manifest checksum does not match")
 
-        # kr8s loads multi-document manifests from a file while retaining the Compute API connection.
-        with tempfile.NamedTemporaryFile() as manifest_file:
-            manifest_file.write(manifest)
-            manifest_file.flush()
-            resources = await objects_from_files(manifest_file.name, api=api)
-            for resource in resources:
-                # LongLink-generated resources do not need Envoy's optional admission policies or webhooks.
-                if resource.raw.get("kind") in {
-                    "MutatingWebhookConfiguration",
-                    "ValidatingAdmissionPolicy",
-                    "ValidatingAdmissionPolicyBinding",
-                    "ValidatingWebhookConfiguration",
-                }:
-                    continue
-                try:
-                    async with asyncio.timeout(30):
-                        await apply(resource)
-                except TimeoutError:
-                    metadata = resource.raw.get("metadata")
-                    name = metadata.get("name", "unknown") if isinstance(metadata, dict) else "unknown"
-                    raise RuntimeError(f"Timed out applying Envoy Gateway {resource.raw.get('kind', 'resource')}/{name}") from None
+        # Construct resources in manifest order while ignoring empty YAML documents.
+        for spec in yaml.safe_load_all(manifest):
+            if spec is None:
+                continue
+            resource = object_from_spec(spec, api=api, allow_unknown_type=True)
+
+            # LongLink-generated resources do not need Envoy's optional admission policies or webhooks.
+            if resource.raw.get("kind") in {
+                "MutatingWebhookConfiguration",
+                "ValidatingAdmissionPolicy",
+                "ValidatingAdmissionPolicyBinding",
+                "ValidatingWebhookConfiguration",
+            }:
+                continue
+            try:
+                async with asyncio.timeout(30):
+                    await apply(resource)
+            except TimeoutError:
+                metadata = resource.raw.get("metadata")
+                name = metadata.get("name", "unknown") if isinstance(metadata, dict) else "unknown"
+                raise RuntimeError(f"Timed out applying Envoy Gateway {resource.raw.get('kind', 'resource')}/{name}") from None
 
     async def apply(self, tls: GatewayTLS | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""

@@ -28,15 +28,15 @@ def validate_xml(content: str) -> etree._Element:
 
     # Parse user XML once for validation and downstream metadata extraction.
     try:
-        xml_doc = etree.XML(
-            content.encode("utf-8"), etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
-        )
+        xml_doc = etree.XML(content.encode("utf-8"), etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False))
     except etree.XMLSyntaxError as error:
         raise ValueError(f"XML syntax is invalid: {error}") from error
 
-    # Reuse the compiled schema while surfacing its validation details.
-    schema = _load_xml_schema()
-    if not schema.validate(xml_doc):
-        raise ValueError("XML is invalid: " + "; ".join(f"Line {error.line}: {error.message}" for error in schema.error_log))
+    # Reuse the compiled schema while surfacing validation details from this document.
+    try:
+        _load_xml_schema().assertValid(xml_doc)
+    except etree.DocumentInvalid as error:
+        details = "; ".join(f"Line {entry.line}: {entry.message}" for entry in error.error_log)
+        raise ValueError(f"XML is invalid: {details}") from error
 
     return xml_doc

@@ -24,13 +24,13 @@ ENV PATH="/app/.venv/bin:${PATH}"
 ENV HOME="/tmp"
 ENV PYTHONDONTWRITEBYTECODE="1"
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c /uv /usr/local/bin/uv
 
 COPY sdk/ /sdk/
 COPY api/ /app/
 RUN apt-get update \
     && apt-get install --no-install-recommends --yes git \
-    && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK_API=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache \
+    && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache --no-install-project \
     && apt-get purge --auto-remove --yes git \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 longlink \

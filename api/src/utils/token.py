@@ -1,6 +1,5 @@
 import jwt
 import hmac
-import hashlib
 from uuid import UUID
 from typing import Literal
 from datetime import timedelta
@@ -19,13 +18,14 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
+EMAIL_ADAPTER = TypeAdapter(Email)
 
 
 def password_fingerprint(password: str) -> str:
     """Return the signed-token fingerprint for one current password hash."""
 
     # Bind signed proof to the current credential without exposing its reusable hash.
-    return hmac.new(env.SESSION_KEY.encode("utf-8"), f"password-reset:{password}".encode(), hashlib.sha256).hexdigest()
+    return hmac.digest(env.SESSION_KEY.encode("utf-8"), f"password-reset:{password}".encode(), "sha256").hex()
 
 
 def create_registration_token(email: Email) -> str:
@@ -52,7 +52,7 @@ def registration_claims(token: str) -> Email:
     email = data.get("email")
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
-    return TypeAdapter(Email).validate_python(email)
+    return EMAIL_ADAPTER.validate_python(email)
 
 
 def create_password_reset_token(user: User) -> str:

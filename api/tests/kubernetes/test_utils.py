@@ -2,6 +2,8 @@ import pytest
 from types import SimpleNamespace
 from src.kubernetes.utils import apply, deployment_is_ready
 
+pytestmark = pytest.mark.no_db
+
 READY_STATUS = {
     "observedGeneration": 3,
     "replicas": 2,

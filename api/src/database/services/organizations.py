@@ -148,11 +148,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
     """Hard-delete one organization after all applications and external resources are gone."""
 
-    # The organization tombstone remains until lifecycle cleanup has purged every child application.
-    organization = await session.get(Organization, organization_id, with_for_update=True)
-    if organization is None:
-        return
-    await session.delete(organization)
+    # Delete the tombstone directly; an already-purged identifier is an idempotent no-op.
+    await session.execute(delete(Organization).where(Organization.id == organization_id))
 
 
 async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:

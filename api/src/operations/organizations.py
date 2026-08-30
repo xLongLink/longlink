@@ -38,7 +38,12 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Apply release changes to the Organization Namespace, quota, and network boundary.
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
-    await cluster.organizations.apply(organization.id.hex)
+    try:
+        await cluster.organizations.apply(organization.id.hex)
+    finally:
+        closer = getattr(cluster, "aclose", None)
+        if closer is not None:
+            await closer()
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     async with session_scope() as session:
@@ -88,7 +93,12 @@ async def delete(organization_id: UUID) -> str | None:
             select(Application.id).where(Application.organization_id == infrastructure.organization.id)
         )
         application_ids = application_ids_result.all()
-    await cluster.organizations.delete(infrastructure.organization.id.hex)
+    try:
+        await cluster.organizations.delete(infrastructure.organization.id.hex)
+    finally:
+        closer = getattr(cluster, "aclose", None)
+        if closer is not None:
+            await closer()
     for application_id in application_ids:
         await db.delete_schema(infrastructure.organization.id, application_id)
         await object_storage.revoke(application_id.hex)

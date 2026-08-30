@@ -3,11 +3,11 @@ import aiosmtplib
 from html import escape
 from mjml import mjml_to_html
 from string import Template
-from pathlib import Path
 from urllib.parse import urlencode
 from email.message import EmailMessage
 from src.environments import env
 from src.models.roles import OrganizationRoles
+from importlib.resources import files
 
 logger = logging.getLogger("longlink.mail")
 
@@ -17,10 +17,11 @@ def render_mjml_template(template_name: str, **context: object) -> str:
 
     # Render the MJML source with escaped string context values.
     escaped_context = {name: escape(str(value), quote=True) for name, value in context.items()}
-    source = Template((Path(__file__).with_name("templates") / template_name).read_text(encoding="utf-8")).substitute(**escaped_context)
+    template = files("src.utils").joinpath("templates", template_name)
+    source = Template(template.read_text(encoding="utf-8")).substitute(**escaped_context)
 
     # Compile the rendered MJML markup to email-safe HTML.
-    result = mjml_to_html(source.encode("utf-8"))
+    result = mjml_to_html(source)
     if result.errors:
         raise ValueError(f"Failed to render MJML template {template_name}: {result.errors}")
 

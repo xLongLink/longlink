@@ -5,14 +5,11 @@ const PostgreSQL = (props: SVGProps<SVGSVGElement>) => (
     <svg {...props} xmlSpace="preserve" viewBox="0 0 432.071 445.383">
         <g
             style={{
-                fillRule: 'nonzero',
-                clipRule: 'nonzero',
                 fill: 'none',
                 stroke: '#fff',
                 strokeWidth: '12.4651',
                 strokeLinecap: 'round',
                 strokeLinejoin: 'round',
-                strokeMiterlimit: '4',
             }}
         >
             <path

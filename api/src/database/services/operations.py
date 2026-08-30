@@ -3,6 +3,7 @@ from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -18,9 +19,23 @@ from src.database.models.organizations import Organization
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
     """Return one newest-first page of platform operations."""
 
-    # Query one stable page of operation history.
+    # Load only fields needed by the operation response and its derived status.
     statement = (
-        select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc()).offset(pagination.offset).limit(pagination.page_size)
+        select(Operation)
+        .options(
+            load_only(
+                Operation.id,
+                Operation.kind,
+                Operation.target_id,
+                Operation.failed,
+                Operation.lease_expires_at,
+                Operation.created_at,
+                Operation.finished_at,
+            )
+        )
+        .order_by(Operation.created_at.desc(), Operation.id.desc())
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
 
@@ -33,8 +48,8 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
-    compute_ids = result.scalars().all()
+    compute_result = await session.scalars(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
+    compute_ids = compute_result.all()
     result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )

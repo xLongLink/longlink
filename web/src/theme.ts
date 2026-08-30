@@ -57,7 +57,7 @@ export const stoneTheme = defineTheme({
     syntax: stoneSyntax,
 
     tokens: {
-        '--color-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
+        '--color-accent': 'var(--color-text-primary)',
         '--color-accent-muted': ['#25252a14', '#f3f3f520'], // light: Stone Neutral T15 · 8% / dark: T96 · 12.5%
         '--color-neutral': ['#25252a0f', '#f3f3f51a'], // light: Stone Neutral T15 · 6% / dark: T96 · 10%
         '--color-background-surface': ['#ffffff', '#1b1b1f'], // dark: Stone Neutral T10
@@ -71,7 +71,7 @@ export const stoneTheme = defineTheme({
         '--color-text-primary': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
         '--color-text-secondary': ['#83838a', '#9d9da3'], // T55 C=4 / T65 C=3
         '--color-text-disabled': ['#d7d7da', '#5e5e61'], // T86 C=1.6 / T40 C=2
-        '--color-text-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
+        '--color-text-accent': 'var(--color-text-primary)',
         '--color-on-dark': '#FFFFFF',
         '--color-on-light': ['#25252a', '#28282a'], // light: Stone Neutral T15
         '--color-on-accent': ['#ffffff', '#25252a'], // dark: Stone Neutral T15
@@ -81,9 +81,9 @@ export const stoneTheme = defineTheme({
         '--color-on-warning': ['#524622', '#f4e1b7'], // Yellow T30 / T90
 
         // Icon — H=291
-        '--color-icon-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-        '--color-icon-primary': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-        '--color-icon-secondary': ['#83838a', '#9d9da3'], // T55 C=4 / T65 C=3
+        '--color-icon-accent': 'var(--color-text-primary)',
+        '--color-icon-primary': 'var(--color-text-primary)',
+        '--color-icon-secondary': 'var(--color-text-secondary)',
         '--color-icon-disabled': ['#d7d7da', '#5e5e61'], // T86 C=1.6 / T40 C=2
 
         // Surface variants — H=291
@@ -125,32 +125,32 @@ export const stoneTheme = defineTheme({
         // Categorical — Blue H=265 C=10
         '--color-background-blue': ['#d7e4f5', '#485362'], // light T90 / dark T35
         '--color-border-blue': ['#c9d6e7', '#313c4a'], // light T85 / dark T25
-        '--color-icon-blue': ['#3c4856', '#d7e4f5'], // light T30 / dark T90
+        '--color-icon-blue': 'var(--color-text-blue)',
         '--color-text-blue': ['#3c4856', '#d7e4f5'],
 
         // Categorical — Cyan H=190 C=10
         '--color-background-cyan': ['#cce8e5', '#3e5755'],
         '--color-border-cyan': ['#bedad7', '#28403e'],
-        '--color-icon-cyan': ['#334b49', '#cce8e5'],
+        '--color-icon-cyan': 'var(--color-text-cyan)',
         '--color-text-cyan': ['#334b49', '#cce8e5'],
 
         // Categorical — Gray (pure neutral, C=0). Same T35/T25/T90 pattern from
         // the neutral H=291 C=3 ramp.
         '--color-background-gray': ['#e2e2e8', '#525257'], // light: Stone Neutral T90
         '--color-border-gray': ['#d4d4da', '#3b3b3f'], // light: Stone Neutral T85
-        '--color-icon-gray': ['#46464b', '#e2e2e8'], // light: Stone Neutral T30
+        '--color-icon-gray': 'var(--color-text-gray)',
         '--color-text-gray': ['#46464b', '#e2e2e8'], // light: Stone Neutral T30
 
         // Categorical — Green H=142 C=17
         '--color-background-green': ['#d0e9ce', '#425841'],
         '--color-border-green': ['#c2dbc0', '#2b402b'],
-        '--color-icon-green': ['#374c36', '#d0e9ce'],
+        '--color-icon-green': 'var(--color-text-green)',
         '--color-text-green': ['#374c36', '#d0e9ce'],
 
         // Categorical — Orange H=70 C=22
         '--color-background-orange': ['#ffdcbb', '#684d32'],
         '--color-border-orange': ['#f1ceae', '#4f361c'],
-        '--color-icon-orange': ['#5b4227', '#ffdcbb'],
+        '--color-icon-orange': 'var(--color-text-orange)',
         '--color-text-orange': ['#5b4227', '#ffdcbb'],
 
         // Categorical — Pink H=340 C=9
