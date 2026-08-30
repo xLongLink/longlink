@@ -92,7 +92,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     ) : null}
                                     <Divider />
                                     <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                                        <Text type="supporting" color="secondary">
+                                        <Text type="supporting">
                                             {`Last updated: ${dateFormatter.format(new Date(page.lastUpdated))}`}
                                         </Text>
                                         {page.editUrl ? (

@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
@@ -26,6 +27,7 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
+STORAGE_USAGE_TIMEOUT_SECONDS = 15
 
 
 @router.get("/organizations", response_model=Page[OrganizationSummary])
@@ -131,12 +133,16 @@ async def get_organization_storage_usage(
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
     try:
-        usage = await Exoscale(
+        storage = Exoscale(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
-        ).usage(bucket_name)
-    except (BotoCoreError, ClientError) as exc:
+        )
+
+        # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
+        async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
+            usage = await storage.usage(bucket_name)
+    except (TimeoutError, BotoCoreError, ClientError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,

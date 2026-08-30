@@ -317,8 +317,8 @@ export default function Home() {
                                 className="homepage-hands-support homepage-hands-support-right absolute left-1/2 z-1 origin-left"
                             />
 
-                            <div className="homepage-hands-frame relative z-2 p-0">
-                                <div className="homepage-hands-mat relative overflow-hidden border-0 bg-body">
+                            <div className="homepage-hands-frame relative z-2">
+                                <div className="homepage-hands-mat relative overflow-hidden bg-body">
                                     <img
                                         alt="Human and robot hands reaching toward each other"
                                         className="block h-auto w-full object-contain"
@@ -332,7 +332,7 @@ export default function Home() {
                         <div className="homepage-hands-description relative z-2">
                             <Text
                                 as="p"
-                                className="homepage-hands-description-title relative z-1 m-0 tracking-normal"
+                                className="homepage-hands-description-title relative z-1 tracking-normal"
                                 display="block"
                                 textWrap="balance"
                                 weight="semibold"

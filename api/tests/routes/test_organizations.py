@@ -364,6 +364,7 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
             None,
             id="backend-unavailable",
         ),
+        pytest.param(TimeoutError(), 503, None, id="timeout"),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(

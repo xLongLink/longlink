@@ -60,9 +60,7 @@ export default function DocsArticleRoute() {
                                     </Heading>
                                 </Center>
                             </Card>
-                            <Text color="secondary" type="supporting">
-                                {path}
-                            </Text>
+                            <Text type="supporting">{path}</Text>
                         </Stack>
                     ))}
                 </Grid>

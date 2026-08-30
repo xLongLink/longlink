@@ -41,14 +41,10 @@ export default function Pricing() {
 
                                 <CollapsibleGroup className="px-4" hasDividers type="multiple">
                                     <Collapsible
-                                        trigger={
-                                            <Text color="secondary" type="supporting">
-                                                Deploy any Application
-                                            </Text>
-                                        }
+                                        trigger={<Text type="supporting">Deploy any Application</Text>}
                                         value="deploy-any-application"
                                     >
-                                        <Text color="secondary" type="supporting">
+                                        <Text type="supporting">
                                             Deploy your application or find free open-source applications to start from.
                                             <br />
                                             <br />
@@ -57,16 +53,10 @@ export default function Pricing() {
                                         </Text>
                                     </Collapsible>
                                     <Collapsible
-                                        trigger={
-                                            <Text color="secondary" type="supporting">
-                                                100MB Database Space
-                                            </Text>
-                                        }
+                                        trigger={<Text type="supporting">100MB Database Space</Text>}
                                         value="database-space"
                                     >
-                                        <Text color="secondary" type="supporting">
-                                            Shared across all apps in the workspace.
-                                        </Text>
+                                        <Text type="supporting">Shared across all apps in the workspace.</Text>
                                     </Collapsible>
                                     <Collapsible
                                         trigger={
