@@ -2,6 +2,7 @@ import secrets
 from uuid import UUID
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
+from src.logger import logger
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -40,13 +41,21 @@ async def create(application_id: UUID) -> None:
         prefix = f"applications/{application.id.hex}/"
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
-        connection = await Postgres(
-            infrastructure.database.host,
-            infrastructure.database.port,
-            infrastructure.database.username,
-            infrastructure.database.password,
-            infrastructure.database.sslmode,
-        ).schema(organization.id, application.id, secrets.token_urlsafe(24))
+        # Revoke freshly-issued storage credentials if database provisioning cannot complete.
+        try:
+            connection = await Postgres(
+                infrastructure.database.host,
+                infrastructure.database.port,
+                infrastructure.database.username,
+                infrastructure.database.password,
+                infrastructure.database.sslmode,
+            ).schema(organization.id, application.id, secrets.token_urlsafe(24))
+        except Exception:
+            try:
+                await object_storage.revoke(application.id.hex)
+            except Exception:
+                logger.exception("Could not revoke storage credentials for Application '%s'", application.id)
+            raise
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {

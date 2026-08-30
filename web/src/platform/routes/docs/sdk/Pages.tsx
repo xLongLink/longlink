@@ -154,9 +154,7 @@ export default function DocsArticleRoute() {
                             <Avatar name="Ada Lovelace" size="lg" />
                         </SummaryCard>
                         <SummaryCard name="Heading">
-                            <Heading className="mt-0" level={3}>
-                                Orders
-                            </Heading>
+                            <Heading level={3}>Orders</Heading>
                         </SummaryCard>
                         <SummaryCard name="Text">
                             <Text>

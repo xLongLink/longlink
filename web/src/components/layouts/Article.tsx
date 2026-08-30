@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { useEffect, useEffectEvent, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -42,10 +42,52 @@ const docsPages = [
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
+    const navigate = useNavigate();
     const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
     const currentPage = docsPages.indexOf(pathname);
     const previousPage = docsPages[currentPage - 1];
     const nextPage = currentPage >= 0 ? docsPages[currentPage + 1] : undefined;
+
+    const scrollToArticleTop = () => {
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: 0 });
+        });
+    };
+
+    const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+            return;
+        }
+
+        // Leave text-entry controls available for their native cursor behavior.
+        if (
+            event.target instanceof HTMLElement &&
+            event.target.closest('input, textarea, select, [contenteditable="true"]')
+        ) {
+            return;
+        }
+
+        const destination =
+            event.key === 'ArrowLeft' ? previousPage : event.key === 'ArrowRight' ? nextPage : undefined;
+
+        if (destination === undefined) {
+            return;
+        }
+
+        event.preventDefault();
+        navigate(destination);
+        scrollToArticleTop();
+    });
+
+    useEffect(() => {
+        if (currentPage < 0) {
+            return;
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [currentPage]);
 
     return (
         <Layout
@@ -77,16 +119,20 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                             width="100%"
                                         >
                                             <Button
+                                                aria-keyshortcuts="ArrowLeft"
                                                 href={previousPage}
                                                 icon={<ArrowLeft aria-hidden size={16} />}
                                                 isDisabled={previousPage === undefined}
                                                 label="Previous"
+                                                onClick={scrollToArticleTop}
                                             />
                                             <Button
+                                                aria-keyshortcuts="ArrowRight"
                                                 endContent={<ArrowRight aria-hidden size={16} />}
                                                 href={nextPage}
                                                 isDisabled={nextPage === undefined}
                                                 label="Next"
+                                                onClick={scrollToArticleTop}
                                             />
                                         </Stack>
                                     ) : null}

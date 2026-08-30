@@ -10,7 +10,7 @@ import { TopNav } from '@astryxdesign/core/TopNav';
 export function Navbar() {
     return (
         <Stack as="header" className="relative z-20" padding={4} paddingBlock={5}>
-            <Center axis="horizontal" width="100%">
+            <Center axis="horizontal">
                 <Card maxWidth={620} padding={0} width="100%">
                     <TopNav
                         endContent={

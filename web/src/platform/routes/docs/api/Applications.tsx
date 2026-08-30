@@ -55,9 +55,7 @@ export default function DocsArticleRoute() {
                         <Stack key={path} gap={2}>
                             <Card height={190} padding={0} variant="muted">
                                 <Center height="100%">
-                                    <Heading className="mt-0" level={2}>
-                                        {path}
-                                    </Heading>
+                                    <Heading level={2}>{path}</Heading>
                                 </Center>
                             </Card>
                             <Text type="supporting">{path}</Text>

@@ -13,7 +13,6 @@ type ElementDocumentation = {
 };
 
 export type ComponentDocumentation = ElementDocumentation & {
-    category: string;
     lastUpdated: string;
     nested: ElementDocumentation[];
     slug: string;
@@ -195,7 +194,6 @@ function parseComponents(): ComponentDocumentation[] {
         return [
             {
                 ...component,
-                category: attribute(metadata, 'category'),
                 lastUpdated: attribute(metadata, 'lastUpdated'),
                 nested: Array.from(nestedNames)
                     .map((name) => elements.get(name))

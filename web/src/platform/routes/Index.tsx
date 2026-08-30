@@ -321,7 +321,7 @@ export default function Home() {
                                 <div className="homepage-hands-mat relative overflow-hidden bg-body">
                                     <img
                                         alt="Human and robot hands reaching toward each other"
-                                        className="block h-auto w-full object-contain"
+                                        className="block w-full object-contain"
                                         decoding="async"
                                         loading="lazy"
                                         src={humanRobotHands}
@@ -332,7 +332,7 @@ export default function Home() {
                         <div className="homepage-hands-description relative z-2">
                             <Text
                                 as="p"
-                                className="homepage-hands-description-title relative z-1 tracking-normal"
+                                className="homepage-hands-description-title relative z-1"
                                 display="block"
                                 textWrap="balance"
                                 weight="semibold"
@@ -357,7 +357,7 @@ export default function Home() {
             </section>
             <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
-                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} width="100%">
+                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
                             <Stack key={title} width="100%">
                                 <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>

@@ -17,12 +17,9 @@ export default function DocsArticleRoute() {
     return (
         <Article page={metadata}>
             <Stack gap={5}>
-                <Stack gap={2}>
-                    <Text type="supporting">Runtime</Text>
-                    <Heading id="introduction" level={1}>
-                        Expressions
-                    </Heading>
-                </Stack>
+                <Heading id="introduction" level={1}>
+                    Expressions
+                </Heading>
                 <Text as="p">Evaluates a safe JavaScript expression subset against the XML runtime scope.</Text>
                 <Heading id="usage" level={2}>
                     Usage

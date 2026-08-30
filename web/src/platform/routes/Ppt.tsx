@@ -391,7 +391,7 @@ function PresentationSlide({
             <Stack className="relative" height="100%" width="100%">
                 <img
                     alt="Human and robot hands reaching toward each other"
-                    className="h-auto w-full -translate-y-4 pointer-events-none select-none object-contain"
+                    className="w-full -translate-y-4 pointer-events-none select-none object-contain"
                     draggable={false}
                     src={humanRobotHands}
                 />
