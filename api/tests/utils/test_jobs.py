@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import logging
 from uuid import UUID
 from datetime import timedelta
 from functools import partial
@@ -11,6 +12,27 @@ from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.no_db
+
+
+def test_operation_log_handler_truncates_output_at_its_byte_limit() -> None:
+    """Retain bounded operation diagnostics after excessive logging."""
+
+    # Arrange
+    expected_operation_id = UUID("11111111-1111-1111-1111-111111111111")
+    handler = operation_worker.OperationLogHandler(expected_operation_id)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    token = operation_worker.operation_id.set(expected_operation_id)
+
+    # Act
+    try:
+        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "x" * operation_worker.MAX_OPERATION_LOG_BYTES, (), None))
+        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "overflow", (), None))
+        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "ignored", (), None))
+    finally:
+        operation_worker.operation_id.reset(token)
+
+    # Assert
+    assert handler.logs == [operation_worker.OPERATION_LOG_TRUNCATION]
 
 
 def leased_operation() -> Operation:

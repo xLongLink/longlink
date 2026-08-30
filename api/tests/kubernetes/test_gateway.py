@@ -52,7 +52,10 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
         def __init__(self, name: str, api: object) -> None:
             """Initialize the accepted GatewayClass."""
 
-            self.raw = {"status": {"conditions": [{"type": "Accepted", "status": "True"}]}}
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+            }
 
         async def exists(self) -> bool:
             """Report an existing GatewayClass."""
@@ -73,6 +76,34 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
 
     # The accepted terminal state returns before any network manifest fetch.
     await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+
+
+async def test_gateway_install_rejects_an_accepted_foreign_controller(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject an accepted GatewayClass owned by a different controller."""
+
+    # Arrange
+    class GatewayClass:
+        def __init__(self, _name: str, api: object) -> None:
+            """Expose an accepted GatewayClass owned by another controller."""
+
+            self.raw = {
+                "spec": {"controllerName": "example.com/gateway-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+            }
+
+        async def exists(self) -> bool:
+            """Report an existing GatewayClass."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the GatewayClass state current."""
+
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+
+    # Act and assert
+    with pytest.raises(ValueError, match="longlink-envoy is not controlled by Envoy Gateway"):
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 
 async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -159,7 +190,10 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
         def __init__(self, _name: str, api: object) -> None:
             """Expose the rejected GatewayClass status."""
 
-            self.raw = {"status": {"conditions": [{"type": "Accepted", "status": "False"}]}}
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
+            }
 
         async def exists(self) -> bool:
             """Report an existing but unaccepted GatewayClass."""

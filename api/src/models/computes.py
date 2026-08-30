@@ -19,21 +19,59 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     if not isinstance(value, dict):
         raise ValueError("Kubernetes kubeconfig must be a mapping")
 
-    # Kubeconfig exec authentication runs administrator-supplied commands in the API worker.
-    users = value.get("users")
-    if isinstance(users, list):
-        for entry in users:
-            if not isinstance(entry, dict):
-                continue
-            user = entry.get("user")
-            if isinstance(user, dict) and "exec" in user:
-                raise ValueError("Kubernetes kubeconfig exec authentication is not allowed")
-
     # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
     try:
-        return json.loads(json.dumps(value))
+        normalized_value = json.loads(json.dumps(value))
     except TypeError as exc:
         raise ValueError("Kubernetes kubeconfig must be JSON-compatible") from exc
+    if not isinstance(normalized_value, dict):
+        raise ValueError("Kubernetes kubeconfig must be a mapping")
+    value = normalized_value
+
+    # Require a selected context with resolvable cluster and user entries before persisting the connection.
+    clusters = value.get("clusters")
+    contexts = value.get("contexts")
+    users = value.get("users")
+    current_context = value.get("current-context")
+    if not isinstance(clusters, list) or not isinstance(contexts, list) or not isinstance(users, list) or not isinstance(current_context, str):
+        raise ValueError("Kubernetes kubeconfig requires clusters, contexts, users, and current-context")
+
+    cluster_names = {
+        entry.get("name")
+        for entry in clusters
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str) and isinstance(entry.get("cluster"), dict)
+    }
+    user_names = {
+        entry.get("name")
+        for entry in users
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str) and isinstance(entry.get("user"), dict)
+    }
+    selected_context: dict[str, object] | None = None
+    for entry in contexts:
+        if not isinstance(entry, dict) or entry.get("name") != current_context:
+            continue
+        context = entry.get("context")
+        if isinstance(context, dict):
+            selected_context = context
+            break
+    if (
+        not cluster_names
+        or not user_names
+        or not isinstance(selected_context, dict)
+        or selected_context.get("cluster") not in cluster_names
+        or selected_context.get("user") not in user_names
+    ):
+        raise ValueError("Kubernetes kubeconfig current-context must reference a configured cluster and user")
+
+    # Kubeconfig exec authentication runs administrator-supplied commands in the API worker.
+    for entry in users:
+        if not isinstance(entry, dict):
+            continue
+        user = entry.get("user")
+        if isinstance(user, dict) and "exec" in user:
+            raise ValueError("Kubernetes kubeconfig exec authentication is not allowed")
+
+    return value
 
 
 class ComputeRegistryCreate(BaseModel):

@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
 operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
+MAX_OPERATION_LOG_BYTES = 65536
+OPERATION_LOG_TRUNCATION = f"WARNING: Operation logs truncated after {MAX_OPERATION_LOG_BYTES} bytes"
 
 
 class OperationLogHandler(logging.Handler):
@@ -24,6 +26,8 @@ class OperationLogHandler(logging.Handler):
 
         super().__init__()
         self.logs: list[str] = []
+        self.log_bytes = 0
+        self.truncated = False
         self.expected_operation_id = expected_operation_id
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -33,7 +37,19 @@ class OperationLogHandler(logging.Handler):
         if operation_id.get() != self.expected_operation_id:
             return
 
-        self.logs.append(self.format(record))
+        # Preserve a bounded diagnostic payload for the terminal Operation row.
+        if self.truncated:
+            return
+        message = self.format(record)
+        message_bytes = len(message.encode("utf-8"))
+        maximum_message_bytes = MAX_OPERATION_LOG_BYTES - len(OPERATION_LOG_TRUNCATION.encode("utf-8"))
+        if self.log_bytes + message_bytes > maximum_message_bytes:
+            self.logs.append(OPERATION_LOG_TRUNCATION)
+            self.truncated = True
+            return
+
+        self.logs.append(message)
+        self.log_bytes += message_bytes
 
 
 async def _finish_transition(

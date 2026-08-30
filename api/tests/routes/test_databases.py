@@ -93,7 +93,7 @@ async def test_database_usage_endpoint_rejects_regular_users_before_connecting(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_database_registry_creation_uses_required_ssl_by_default(
+async def test_database_registry_creation_uses_verified_ssl_by_default(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Use the secure SSL mode when the registry payload omits it."""
@@ -111,4 +111,4 @@ async def test_database_registry_creation_uses_required_ssl_by_default(
 
     # Assert
     assert response.status_code == 201
-    assert response.json()["sslmode"] == "require"
+    assert response.json()["sslmode"] == "verify-full"

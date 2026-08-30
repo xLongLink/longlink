@@ -144,7 +144,14 @@ async def test_registry_endpoint_returns_resource_specific_not_found_error(
     [
         pytest.param(
             "computes",
-            {"kubeconfig": "apiVersion: v1\nclusters: []\n"},
+            {
+                "kubeconfig": {
+                    "clusters": [{"name": "cluster", "cluster": {}}],
+                    "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+                    "current-context": "context",
+                    "users": [{"name": "user", "user": {}}],
+                }
+            },
             {"gateway_url": None, "status": "creating"},
             202,
             id="compute",
@@ -194,7 +201,15 @@ async def test_registry_list_returns_ordered_page_and_total(
     [
         pytest.param(
             "computes",
-            {"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+            {
+                "name": "Ephemeral Compute",
+                "kubeconfig": {
+                    "clusters": [{"name": "cluster", "cluster": {}}],
+                    "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+                    "current-context": "context",
+                    "users": [{"name": "user", "user": {}}],
+                },
+            },
             ["kubeconfig"],
             "Compute registry already exists",
             202,

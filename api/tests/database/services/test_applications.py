@@ -140,6 +140,30 @@ async def test_create_revalidates_maintainer_access_after_membership_revocation(
         await session.commit()
 
     assert application.organization_id == organization.id
+    assert application.created_id == owner.id
+    assert application.updated_id == owner.id
+
+
+async def test_delete_records_the_maintainer_audit_fields(users: tuple[User, User, User]) -> None:
+    """Record the maintainer who tombstones an Application."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+    application = await create_application(organization)
+
+    # Act
+    async with session_scope() as session:
+        await applications.delete(session, application.id, owner.id)
+        await session.commit()
+        deleted_application = await session.get(Application, application.id)
+
+    # Assert
+    assert deleted_application is not None
+    assert deleted_application.deleted_at is not None
+    assert deleted_application.updated_at == deleted_application.deleted_at
+    assert deleted_application.deleted_id == owner.id
+    assert deleted_application.updated_id == owner.id
 
 
 @pytest.mark.parametrize(

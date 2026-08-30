@@ -251,6 +251,9 @@ class Gateway:
                 await gateway_class.refresh()
                 status = gateway_class.raw.get("status")
                 conditions = status.get("conditions", []) if isinstance(status, dict) else []
+                spec = gateway_class.raw.get("spec")
+                if not isinstance(spec, dict) or spec.get("controllerName") != "gateway.envoyproxy.io/gatewayclass-controller":
+                    raise ValueError("Kubernetes GatewayClass longlink-envoy is not controlled by Envoy Gateway")
                 if any(
                     isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
                     for condition in conditions

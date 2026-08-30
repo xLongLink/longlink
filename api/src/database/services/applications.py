@@ -78,12 +78,14 @@ async def create(
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
+        created_id=user_id,
         organization_id=organization_id,
         name=name,
         slug=names.slugify(name),
         description=description,
         image_desired=image,
         secrets=secrets,
+        updated_id=user_id,
     )
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
@@ -126,7 +128,11 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
         raise ForbiddenError("Permission required")
 
     # Record the tombstone and schedule external cleanup in one transaction.
-    application.deleted_at = utcnow()
+    now = utcnow()
+    application.deleted_at = now
+    application.deleted_id = user_id
+    application.updated_at = now
+    application.updated_id = user_id
 
     await operations.enqueue(
         session,
