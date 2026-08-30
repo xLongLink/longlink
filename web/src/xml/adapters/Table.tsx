@@ -51,7 +51,7 @@ export function Table({ props, nodes }: Props) {
 
                     // Shorthand columns render the resolved field value directly.
                     if (cellNodes.length === 0) {
-                        return value == null ? '' : String(value);
+                        return String(value ?? '');
                     }
 
                     const rowCtx: Scope = {

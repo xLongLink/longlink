@@ -26,6 +26,7 @@ import type { ApplicationResponse } from '@/lib/generated/platform-api-v1/types.
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
+    const closeMetadataApplication = () => setMetadataApplication(null);
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteApplication = useMutation({
@@ -128,10 +129,10 @@ export default function AdminApplications() {
                                     deleteDialog.openFor(application);
                                 }}
                             />
-                            <Button label="Close" variant="primary" onClick={() => setMetadataApplication(null)} />
+                            <Button label="Close" variant="primary" onClick={closeMetadataApplication} />
                         </Stack>
                     }
-                    onClose={() => setMetadataApplication(null)}
+                    onClose={closeMetadataApplication}
                     title="Application metadata"
                 >
                     <MetadataList>

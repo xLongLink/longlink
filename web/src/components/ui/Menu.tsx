@@ -33,6 +33,11 @@ function menuItemHref(label: string): string {
         .replace(/^-|-$/g, '')}`;
 }
 
+/** Renders a menu icon when one is configured. */
+function renderMenuIcon(icon: StoneIconName | undefined) {
+    return icon ? <Icon icon={icon} size="sm" /> : undefined;
+}
+
 /** Returns whether a node defines selectable menu content. */
 function isMenuItem(node: ReactNode): node is ReactElement<MenuMarkerProps> {
     return isValidElement(node) && node.type === MenuItem;
@@ -91,18 +96,14 @@ export function Menu({ children, gap = 3 }: MenuProps) {
                                             return (
                                                 <AstryxSideNavItem
                                                     collapsible={{ defaultIsCollapsed: true }}
-                                                    icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
+                                                    icon={renderMenuIcon(icon)}
                                                     key={label}
                                                     label={label}
                                                 >
                                                     {entry.items.map((item) => (
                                                         <AstryxSideNavItem
                                                             href={menuItemHref(item.props.label)}
-                                                            icon={
-                                                                item.props.icon ? (
-                                                                    <Icon icon={item.props.icon} size="sm" />
-                                                                ) : undefined
-                                                            }
+                                                            icon={renderMenuIcon(item.props.icon)}
                                                             isSelected={item === activeItem}
                                                             key={item.props.label}
                                                             label={item.props.label}
@@ -115,11 +116,7 @@ export function Menu({ children, gap = 3 }: MenuProps) {
                                         return (
                                             <AstryxSideNavItem
                                                 href={menuItemHref(entry.item.props.label)}
-                                                icon={
-                                                    entry.item.props.icon ? (
-                                                        <Icon icon={entry.item.props.icon} size="sm" />
-                                                    ) : undefined
-                                                }
+                                                icon={renderMenuIcon(entry.item.props.icon)}
                                                 isSelected={entry.item === activeItem}
                                                 key={entry.item.props.label}
                                                 label={entry.item.props.label}

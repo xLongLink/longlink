@@ -24,7 +24,6 @@ from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 router = APIRouter()
 

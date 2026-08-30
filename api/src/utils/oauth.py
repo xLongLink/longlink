@@ -115,13 +115,18 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
                 if not profile_response.is_success:
                     return None
                 return _google_identity(profile_response.json())
+            github_headers = {
+                **authorization,
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            }
             profile_response = await client.get(
                 GITHUB_USER_URL,
-                headers={**authorization, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
+                headers=github_headers,
             )
             emails_response = await client.get(
                 GITHUB_EMAILS_URL,
-                headers={**authorization, "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
+                headers=github_headers,
             )
             if not profile_response.is_success or not emails_response.is_success:
                 return None

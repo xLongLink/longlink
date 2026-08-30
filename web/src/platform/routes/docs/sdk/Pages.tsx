@@ -192,7 +192,6 @@ export default function DocsArticleRoute() {
                                     accept=".pdf"
                                     isLabelHidden
                                     label="Attachment"
-                                    mode="input"
                                     placeholder="File"
                                     value={null}
                                     onChange={noop}

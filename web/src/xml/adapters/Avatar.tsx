@@ -27,11 +27,11 @@ export function Avatar({ props }: Props) {
         { alt: 'scalar', fallbackSrc: 'scalar', kind: 'scalar', name: 'scalar', src: 'scalar' },
         avatarPropsSchema
     );
-    const src = resolveAnchorUrl(services.requestBaseUrl, source ?? '');
-    const fallbackSrc = resolveAnchorUrl(services.requestBaseUrl, fallbackSource ?? '');
+    const src = resolveAnchorUrl(services.requestBaseUrl, source ?? '') || undefined;
+    const fallbackSrc = resolveAnchorUrl(services.requestBaseUrl, fallbackSource ?? '') || undefined;
     if (kind === 'organization') {
-        return <UiAvatar kind="organization" name={name ?? ''} src={src || undefined} />;
+        return <UiAvatar kind="organization" name={name ?? ''} src={src} />;
     }
 
-    return <UiAvatar alt={alt} fallbackSrc={fallbackSrc || undefined} name={name} src={src || undefined} />;
+    return <UiAvatar alt={alt} fallbackSrc={fallbackSrc} name={name} src={src} />;
 }

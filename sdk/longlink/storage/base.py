@@ -10,16 +10,20 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
     bucket = settings.STORAGE_BUCKET or ""
     prefix = settings.STORAGE_PREFIX or ""
+    bucket_path: PurePosixPath | None = None
+    prefix_path: PurePosixPath | None = None
 
     # Reject bucket paths that could alter or escape the configured storage scope.
-    bucket_path = PurePosixPath(bucket)
-    if bucket and (bucket_path.is_absolute() or not bucket_path.parts or ".." in bucket_path.parts):
-        raise ValueError("Storage buckets must be bucket names")
+    if bucket:
+        bucket_path = PurePosixPath(bucket)
+        if bucket_path.is_absolute() or not bucket_path.parts or ".." in bucket_path.parts:
+            raise ValueError("Storage buckets must be bucket names")
 
     # Normalize only safe relative prefixes so a scoped view cannot escape its bucket.
-    prefix_path = PurePosixPath(prefix)
-    if prefix and (prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts):
-        raise ValueError("Storage prefixes must be relative paths inside a bucket")
+    if prefix:
+        prefix_path = PurePosixPath(prefix)
+        if prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts:
+            raise ValueError("Storage prefixes must be relative paths inside a bucket")
     if prefix and not bucket:
         raise ValueError("Storage prefixes require a bucket")
 
@@ -37,7 +41,8 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
         filesystem = fsspec.filesystem("memory" if settings.ENV == "testing" else "file")
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
-    if bucket:
-        return DirFileSystem(path=(bucket_path / prefix_path).as_posix(), fs=filesystem)
+    if bucket_path is not None:
+        path = bucket_path / prefix_path if prefix_path is not None else bucket_path
+        return DirFileSystem(path=path.as_posix(), fs=filesystem)
 
     return filesystem

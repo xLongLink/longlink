@@ -101,7 +101,7 @@ def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch)
     LongLink(FastAPI())
 
     # Assert
-    assert len([item for item in access_logger.filters if isinstance(item, ApiAccessFilter)]) == 1
+    assert sum(isinstance(item, ApiAccessFilter) for item in access_logger.filters) == 1
 
 
 @pytest.mark.parametrize(

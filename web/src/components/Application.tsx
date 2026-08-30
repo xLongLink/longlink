@@ -108,14 +108,15 @@ export function ApplicationRuntime({
             }) satisfies NavigationTab
     );
 
+    const loadingContent = (
+        <Center minHeight="calc(100vh - 14rem)" width="100%">
+            <Spinner label="Loading" />
+        </Center>
+    );
     let content: ReactNode;
 
     if (!routePath && firstTabPage) {
-        content = (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Spinner label="Loading" />
-            </Center>
-        );
+        content = loadingContent;
     } else if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {
@@ -142,11 +143,7 @@ export function ApplicationRuntime({
             />
         );
     } else {
-        content = (
-            <Center minHeight="calc(100vh - 14rem)" width="100%">
-                <Spinner label="Loading" />
-            </Center>
-        );
+        content = loadingContent;
     }
 
     return children({ content, tabs });
