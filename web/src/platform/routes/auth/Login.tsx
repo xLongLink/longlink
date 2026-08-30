@@ -80,14 +80,14 @@ export default function Login() {
                         <Stack gap={2}>
                             <Divider label="Continue with social" />
                             <Stack gap={2}>
-                                {oauthAvailability.google ? (
+                                {oauthAvailability?.google ? (
                                     <Button
                                         label="Continue with Google"
                                         onClick={() => window.location.assign('/api/v1/auth/oauth/google')}
                                         width="100%"
                                     />
                                 ) : null}
-                                {oauthAvailability.github ? (
+                                {oauthAvailability?.github ? (
                                     <Button
                                         label="Continue with GitHub"
                                         onClick={() => window.location.assign('/api/v1/auth/oauth/github')}

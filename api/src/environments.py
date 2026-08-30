@@ -50,6 +50,10 @@ class Env(BaseSettings):
     def validate_authentication(self) -> Self:
         """Validate authentication email-delivery configuration."""
 
+        # Public browser origins carrying authentication flows must be encrypted outside development.
+        if not self.DEVELOPMENT and not self.PUBLIC_URL.startswith("https://"):
+            raise ValueError("PUBLIC_URL must use HTTPS outside development")
+
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")

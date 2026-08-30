@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
 from src.logger import logger
@@ -150,6 +150,7 @@ async def get_organization_storage_usage(
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(authuser),
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
@@ -172,7 +173,9 @@ async def create_organization_invitation(
         user,
     )
     await session.commit()
-    await mail.send_organization_invitation_email(payload.email, organization.name, payload.role)
+
+    # Deliver only after the invitation transaction commits.
+    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization.name, payload.role)
 
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)

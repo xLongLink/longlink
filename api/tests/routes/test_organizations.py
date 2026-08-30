@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
 from httpx2 import AsyncClient
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import func
@@ -986,8 +986,8 @@ async def test_update_organization_directly_returns_result_or_not_found(monkeypa
         assert session.commits == 0
 
 
-async def test_create_organization_invitation_directly_commits_and_sends_email(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Commit an invitation before sending its email notification."""
+async def test_create_organization_invitation_directly_commits_and_queues_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit an invitation before queuing its email notification."""
 
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1), name="acme")
@@ -1018,22 +1018,23 @@ async def test_create_organization_invitation_directly_commits_and_sends_email(m
         session.commits += 1
         calls.append("commit")
 
-    async def send(email: str, organization_name: str, role: OrganizationRoles) -> None:
-        """Record the invitation notification after persistence."""
-
-        assert (email, organization_name, role) == ("member@example.com", "acme", OrganizationRoles.write)
-        calls.append("send")
-
     session.commit = commit
     monkeypatch.setattr(organization_routes.organizations, "create_invitation", create_invitation)
-    monkeypatch.setattr(organization_routes.mail, "send_organization_invitation_email", send)
+    background_tasks = BackgroundTasks()
 
     # Act
     result = await organization_routes.create_organization_invitation(
-        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write), user, membership, session
+        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write),
+        background_tasks,
+        user,
+        membership,
+        session,
     )
 
     # Assert
     assert result is None
     assert session.commits == 1
-    assert calls == ["create", "commit", "send"]
+    assert calls == ["create", "commit"]
+    assert len(background_tasks.tasks) == 1
+    assert background_tasks.tasks[0].func is organization_routes.mail.send_organization_invitation_email
+    assert background_tasks.tasks[0].args == ("member@example.com", "acme", OrganizationRoles.write)
