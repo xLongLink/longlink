@@ -1,5 +1,5 @@
-import { ArrowRight } from 'lucide-react';
 import { Globe } from '@/components/Globe';
+import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -9,6 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
+import { Activity, ArrowRight, Blocks, ShieldCheck, Workflow } from 'lucide-react';
 
 const paths = [
     {
@@ -34,6 +35,33 @@ const paths = [
         action: 'Build a new app',
         href: '/docs',
         isComingSoon: false,
+    },
+] as const;
+
+const platformCapabilities = [
+    {
+        title: 'Keep it simple',
+        description: 'Create clear processes that are easy to operate and economical to maintain.',
+        label: 'Less complexity',
+        icon: Blocks,
+    },
+    {
+        title: 'Solid engineering foundations',
+        description: 'Authentication, permissions, deployment, storage, routing, and logging are built in.',
+        label: 'Platform foundation',
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Own the process',
+        description: 'Express the workflow in maintainable code that remains reviewable, deployable, and yours.',
+        label: 'Structured in code',
+        icon: Workflow,
+    },
+    {
+        title: 'Operate with confidence',
+        description: 'Keep accountability, governance, and operational structure close to the work.',
+        label: 'Built for operations',
+        icon: Activity,
     },
 ] as const;
 
@@ -131,44 +159,6 @@ function IntegrationScale() {
 
 /** Renders the public home page. */
 export default function Home() {
-    const comparisonRef = useRef<HTMLElement>(null);
-
-    useEffect(() => {
-        const target = comparisonRef.current;
-        if (!target) return;
-
-        let frame: number | undefined;
-
-        // Hold before and after the city reveal for 60vh, then reveal the buildings across 80vh.
-        const updatePosition = () => {
-            frame = undefined;
-            const scrollDistance = target.offsetHeight - window.innerHeight;
-            const scrollProgress =
-                scrollDistance > 0 ? Math.min(Math.max(-target.getBoundingClientRect().top / scrollDistance, 0), 1) : 0;
-            const revealProgress = Math.min(Math.max((scrollProgress - 0.3) / 0.4, 0), 1);
-
-            target.style.setProperty('--homepage-before-after-position', `${revealProgress * 100}%`);
-        };
-
-        // Limit image updates to one animation frame while the page is scrolling.
-        const queuePositionUpdate = () => {
-            if (frame !== undefined) return;
-
-            frame = requestAnimationFrame(updatePosition);
-        };
-
-        updatePosition();
-        window.addEventListener('resize', queuePositionUpdate);
-        window.addEventListener('scroll', queuePositionUpdate, { passive: true });
-
-        return () => {
-            if (frame !== undefined) cancelAnimationFrame(frame);
-
-            window.removeEventListener('resize', queuePositionUpdate);
-            window.removeEventListener('scroll', queuePositionUpdate);
-        };
-    }, []);
-
     return (
         <>
             <main className="relative -mt-21 flex min-h-screen w-full overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
@@ -210,153 +200,135 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <section
-                ref={comparisonRef}
-                aria-labelledby="before-after-heading"
-                className="homepage-before-after-section relative z-20"
-            >
-                <Heading id="before-after-heading" level={2} className="sr-only">
-                    Build. Follow development standards. Operate. Keep workflows and costs under control.
-                </Heading>
-                <Stack
-                    as="figure"
-                    className="sticky top-0 isolate overflow-hidden bg-body"
-                    width="100%"
-                    minHeight="100svh"
-                    justify="center"
-                    hAlign="center"
-                >
-                    <img
-                        alt="LongLink infrastructure before buildings are added"
-                        className="pointer-events-none absolute inset-0 size-full object-cover object-center"
-                        src="/images/before-longlink.png"
-                    />
-                    <img
-                        alt="LongLink infrastructure after buildings are added"
-                        className="homepage-before-after-reveal pointer-events-none absolute inset-0 size-full object-cover object-center"
-                        src="/images/after-longlink.png"
-                    />
-                    <Stack
-                        aria-hidden="true"
-                        className="homepage-before-after-copy pointer-events-none absolute inset-0 z-1"
-                        hAlign="center"
-                        vAlign="center"
-                    >
-                        <Stack className="-translate-y-28 sm:-translate-y-32" width="100%" hAlign="center">
-                            <Stack
-                                className="relative h-24 sm:h-28 lg:h-32"
-                                width="100%"
-                                hAlign="center"
-                                vAlign="center"
-                            >
-                                <Stack
-                                    className="homepage-before-after-copy-before absolute inset-0"
-                                    gap={2}
-                                    hAlign="center"
-                                    vAlign="center"
-                                >
-                                    <Heading
-                                        className="text-6xl tracking-tighter sm:text-7xl"
-                                        level={2}
-                                        textWrap="nowrap"
-                                        type="display-1"
+            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
+                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={4}>
+                    <Grid gap={4} columns={{ minWidth: 320, max: 2, repeat: 'fit' }}>
+                        {platformCapabilities.slice(0, 2).map(({ title, description, label, icon: CapabilityIcon }) => (
+                            <Card key={title} className="overflow-hidden" minHeight={360} padding={0}>
+                                <Stack height="100%">
+                                    <Stack
+                                        aria-hidden="true"
+                                        className="relative min-h-52 overflow-hidden"
+                                        hAlign="center"
+                                        justify="center"
                                     >
-                                        Build
-                                    </Heading>
-                                    <Text
-                                        className="max-w-2xl px-6 text-center font-medium uppercase tracking-widest"
-                                        color="secondary"
-                                        display="block"
-                                        textWrap="pretty"
-                                    >
-                                        Follow development standards.
-                                    </Text>
+                                        <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
+                                        <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
+                                        <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
+                                        <Stack className="relative rounded-full border border-border-emphasized bg-surface p-5">
+                                            <CapabilityIcon
+                                                className="text-data-categorical-orange"
+                                                size={32}
+                                                strokeWidth={1.5}
+                                            />
+                                        </Stack>
+                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
+                                            <Text type="code" size="3xs" color="secondary">
+                                                {label}
+                                            </Text>
+                                        </Stack>
+                                    </Stack>
+                                    <Stack className="p-6" gap={3}>
+                                        <Stack direction="horizontal" gap={2} vAlign="center">
+                                            <CapabilityIcon
+                                                aria-hidden="true"
+                                                className="text-data-categorical-orange"
+                                                size={16}
+                                            />
+                                            <Heading className="text-base" level={2}>
+                                                {title}
+                                            </Heading>
+                                        </Stack>
+                                        <Text as="p" color="secondary" textWrap="pretty">
+                                            {description}
+                                        </Text>
+                                    </Stack>
                                 </Stack>
-                                <Stack
-                                    className="homepage-before-after-copy-after absolute inset-0"
-                                    gap={2}
-                                    hAlign="center"
-                                    vAlign="center"
-                                >
-                                    <Heading
-                                        className="text-6xl tracking-tighter sm:text-7xl"
-                                        level={2}
-                                        textWrap="nowrap"
-                                        type="display-1"
+                            </Card>
+                        ))}
+                    </Grid>
+                    <Grid gap={4} columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
+                        {platformCapabilities.slice(2).map(({ title, description, label, icon: CapabilityIcon }) => (
+                            <Card key={title} className="overflow-hidden" minHeight={320} padding={0}>
+                                <Stack height="100%">
+                                    <Stack
+                                        aria-hidden="true"
+                                        className="relative min-h-44 overflow-hidden"
+                                        hAlign="center"
+                                        justify="center"
                                     >
-                                        Operate
-                                    </Heading>
-                                    <Text
-                                        className="max-w-2xl px-6 text-center font-medium uppercase tracking-widest"
-                                        color="secondary"
-                                        display="block"
-                                        textWrap="pretty"
-                                    >
-                                        Keep workflows and costs under control.
-                                    </Text>
+                                        <Stack className="absolute size-40 rounded-full border border-border opacity-60" />
+                                        <Stack className="absolute size-28 rounded-full border border-border-emphasized opacity-50" />
+                                        <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
+                                        <Stack className="relative rounded-full border border-border-emphasized bg-surface p-5">
+                                            <CapabilityIcon
+                                                className="text-data-categorical-orange"
+                                                size={32}
+                                                strokeWidth={1.5}
+                                            />
+                                        </Stack>
+                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
+                                            <Text type="code" size="3xs" color="secondary">
+                                                {label}
+                                            </Text>
+                                        </Stack>
+                                    </Stack>
+                                    <Stack className="p-6" gap={3}>
+                                        <Stack direction="horizontal" gap={2} vAlign="center">
+                                            <CapabilityIcon
+                                                aria-hidden="true"
+                                                className="text-data-categorical-orange"
+                                                size={16}
+                                            />
+                                            <Heading className="text-base" level={2}>
+                                                {title}
+                                            </Heading>
+                                        </Stack>
+                                        <Text as="p" color="secondary" textWrap="pretty">
+                                            {description}
+                                        </Text>
+                                    </Stack>
                                 </Stack>
-                            </Stack>
-                        </Stack>
-                    </Stack>
-                </Stack>
-            </section>
-            <section className="relative z-20 overflow-hidden px-6 py-24 sm:py-32">
-                <Stack className="mx-auto" width="100%" maxWidth={1000}>
-                    <div className="relative z-2">
-                        <div
-                            aria-hidden="true"
-                            className="homepage-hands-nail absolute top-0 left-1/2 z-4 -translate-x-1/2 rounded-full"
-                        />
-                        <div className="homepage-hands relative">
-                            <div
-                                aria-hidden="true"
-                                className="homepage-hands-support homepage-hands-support-left absolute left-1/2 z-1 origin-left"
-                            />
-                            <div
-                                aria-hidden="true"
-                                className="homepage-hands-support homepage-hands-support-right absolute left-1/2 z-1 origin-left"
-                            />
-
-                            <div className="homepage-hands-frame relative z-2">
-                                <div className="homepage-hands-mat relative overflow-hidden bg-body">
+                            </Card>
+                        ))}
+                        <Card className="overflow-hidden" minHeight={320} padding={0}>
+                            <Stack height="100%">
+                                <Stack
+                                    aria-hidden="true"
+                                    className="relative min-h-44 overflow-hidden"
+                                    hAlign="center"
+                                    justify="center"
+                                >
                                     <img
                                         alt="Human and robot hands reaching toward each other"
-                                        className="block w-full object-contain"
+                                        className="size-full object-contain p-6"
                                         decoding="async"
                                         loading="lazy"
                                         src={humanRobotHands}
                                     />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="homepage-hands-description relative z-2">
-                            <Text
-                                as="p"
-                                className="homepage-hands-description-title relative z-1"
-                                display="block"
-                                textWrap="balance"
-                                weight="semibold"
-                            >
-                                Designed for the Agentic Era
-                            </Text>
-                            <Text
-                                as="p"
-                                className="homepage-hands-description-copy relative z-1"
-                                display="block"
-                                textWrap="pretty"
-                                type="supporting"
-                            >
-                                Humans make the decisions. Agents execute the work.
-                            </Text>
-                            <Stack className="relative z-1 mt-3" hAlign="end">
-                                <Text type="supporting">Coming Soon</Text>
+                                </Stack>
+                                <Stack className="p-6" gap={3}>
+                                    <Stack direction="horizontal" gap={2} vAlign="center">
+                                        <Workflow
+                                            aria-hidden="true"
+                                            className="text-data-categorical-orange"
+                                            size={16}
+                                        />
+                                        <Heading className="text-base" level={2}>
+                                            Separate responsibilities
+                                        </Heading>
+                                    </Stack>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        Humans make the decisions. Machines execute the work.
+                                    </Text>
+                                </Stack>
                             </Stack>
-                        </div>
-                    </div>
+                        </Card>
+                    </Grid>
                 </Stack>
-            </section>
-            <Section className="relative z-20 -mt-px" variant="transparent" padding={6} paddingBlock={10}>
-                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
+            </Section>
+            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
+                <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         {paths.map(({ title, description, action, href, isComingSoon }) => (
                             <Stack key={title} width="100%">
