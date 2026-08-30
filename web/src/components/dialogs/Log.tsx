@@ -26,7 +26,7 @@ export default function LogDialog({
     title,
 }: LogDialogProps) {
     return (
-        <Dialog isOpen onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
+        <Dialog isOpen onOpenChange={onOpenChange} width={768} maxHeight="85vh">
             <Layout
                 header={<DialogHeader title={title} subtitle={subtitle} onOpenChange={onOpenChange} />}
                 content={

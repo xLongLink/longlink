@@ -75,73 +75,82 @@ export default function Login() {
                         title="OAuth sign in failed"
                     />
                 ) : null}
-                {hasOAuthProvider ? (
-                    <>
+                <Stack gap={2}>
+                    {hasOAuthProvider ? (
                         <Stack gap={2}>
                             <Divider label="Continue with social" />
-                            {oauthAvailability.google ? (
-                                <Button
-                                    label="Continue with Google"
-                                    onClick={() => window.location.assign('/api/v1/auth/oauth/google')}
-                                    variant="secondary"
-                                    width="100%"
-                                />
-                            ) : null}
-                            {oauthAvailability.github ? (
-                                <Button
-                                    label="Continue with GitHub"
-                                    onClick={() => window.location.assign('/api/v1/auth/oauth/github')}
-                                    variant="secondary"
-                                    width="100%"
-                                />
-                            ) : null}
+                            <Stack gap={2}>
+                                {oauthAvailability.google ? (
+                                    <Button
+                                        label="Continue with Google"
+                                        onClick={() => window.location.assign('/api/v1/auth/oauth/google')}
+                                        width="100%"
+                                    />
+                                ) : null}
+                                {oauthAvailability.github ? (
+                                    <Button
+                                        label="Continue with GitHub"
+                                        onClick={() => window.location.assign('/api/v1/auth/oauth/github')}
+                                        width="100%"
+                                    />
+                                ) : null}
+                            </Stack>
+                            <Divider label="or sign in with email" />
                         </Stack>
-                        <Divider label="or sign in with email" />
-                    </>
-                ) : null}
-                <AuthForm gap={3} onSubmit={form.handleSubmit}>
-                    <form.Field
-                        name="email"
-                        children={(field) => (
-                            <TextInput
-                                htmlName="email"
-                                isRequired
-                                label="Email"
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
-                                type="email"
-                                value={field.state.value}
-                                width="100%"
+                    ) : null}
+                    <AuthForm gap={2} onSubmit={form.handleSubmit}>
+                        <Stack gap={1}>
+                            <Text type="label">Email</Text>
+                            <form.Field
+                                name="email"
+                                children={(field) => (
+                                    <TextInput
+                                        htmlName="email"
+                                        isLabelHidden
+                                        label="Email"
+                                        onChange={field.handleChange}
+                                        status={fieldErrorStatus(field.state.meta.errors)}
+                                        type="email"
+                                        value={field.state.value}
+                                        width="100%"
+                                    />
+                                )}
                             />
-                        )}
-                    />
-                    <Stack gap={1}>
-                        <Stack direction="horizontal" hAlign="between" vAlign="center">
-                            <Text type="label">Password</Text>
-                            <Link href="/auth/forgot-password" type="supporting">
-                                Forgot password?
-                            </Link>
                         </Stack>
-                        <form.Field
-                            name="password"
-                            children={(field) => (
-                                <TextInput
-                                    htmlName="password"
-                                    isLabelHidden
-                                    isRequired
-                                    label="Password"
-                                    onBlur={field.handleBlur}
-                                    onChange={field.handleChange}
-                                    status={fieldErrorStatus(field.state.meta.errors)}
-                                    value={field.state.value}
-                                    width="100%"
-                                    type="password"
-                                />
-                            )}
+                        <Stack gap={1}>
+                            <Stack direction="horizontal" hAlign="between" vAlign="center">
+                                <Text type="label">Password</Text>
+                                <Link href="/auth/forgot-password" type="supporting">
+                                    Forgot password?
+                                </Link>
+                            </Stack>
+                            <form.Field
+                                name="password"
+                                children={(field) => (
+                                    <TextInput
+                                        htmlName="password"
+                                        isLabelHidden
+                                        isRequired
+                                        label="Password"
+                                        onBlur={field.handleBlur}
+                                        onChange={field.handleChange}
+                                        status={fieldErrorStatus(field.state.meta.errors)}
+                                        value={field.state.value}
+                                        width="100%"
+                                        type="password"
+                                    />
+                                )}
+                            />
+                        </Stack>
+                        <Button
+                            isLoading={login.isPending}
+                            label="Sign In"
+                            type="submit"
+                            variant="primary"
+                            width="100%"
                         />
-                    </Stack>
-                    <Button isLoading={login.isPending} label="Sign In" type="submit" variant="primary" width="100%" />
-                </AuthForm>
+                    </AuthForm>
+                </Stack>
 
                 <form.Subscribe selector={(state) => state.values.email}>
                     {(email) => {

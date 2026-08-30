@@ -89,9 +89,7 @@ export default function ApplicationSettings({
         <>
             <Stack gap={4}>
                 <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                    <Stack>
-                        <Heading level={2}>Applications</Heading>
-                    </Stack>
+                    <Heading level={2}>Applications</Heading>
                     {canManageApplications ? <CreateApplication organizationId={organizationId} /> : null}
                 </Stack>
                 <Divider />

@@ -6,7 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 
 type AuthFormProps = {
     children: ReactNode;
-    gap: 3 | 4;
+    gap: 2 | 3 | 4;
     onSubmit: () => void | Promise<unknown>;
 };
 

@@ -45,7 +45,7 @@ const slides = [
 ] as const;
 
 type CompetitorRow = {
-    avatar?: string;
+    avatar: string;
     language: string;
     license: string;
     product: string;

@@ -31,7 +31,7 @@ import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
-const noop = () => undefined;
+const noop = () => {};
 
 function SummaryCard({
     children,
@@ -312,14 +312,7 @@ export default function DocsArticleRoute() {
                             </Tabs>
                         </SummaryCard>
                         <SummaryCard name="Dialog">
-                            <Dialog
-                                aria-label="Dialog preview"
-                                isInline
-                                isOpen
-                                purpose="info"
-                                width={160}
-                                onOpenChange={noop}
-                            >
+                            <Dialog aria-label="Dialog preview" isInline isOpen width={160} onOpenChange={noop}>
                                 <Layout
                                     className="relative"
                                     header={

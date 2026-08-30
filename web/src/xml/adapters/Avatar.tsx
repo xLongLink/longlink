@@ -28,8 +28,6 @@ export function Avatar({ props }: Props) {
         avatarPropsSchema
     );
     const src = resolveAnchorUrl(services.requestBaseUrl, source ?? '');
-    const fallbackSrc = resolveAnchorUrl(services.requestBaseUrl, fallbackSource ?? '');
-
     if (kind === 'organization') {
         return <UiAvatar kind="organization" name={name ?? ''} src={src || undefined} />;
     }

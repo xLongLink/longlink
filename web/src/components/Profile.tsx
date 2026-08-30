@@ -150,12 +150,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                 </Stack>
             }
         >
-            <IconButton
-                icon={<Avatar src={user.avatar} name={user.name} />}
-                label={user.name}
-                size="md"
-                variant="ghost"
-            />
+            <IconButton icon={<Avatar src={user.avatar} name={user.name} />} label={user.name} variant="ghost" />
         </Popover>
     );
 }

@@ -94,22 +94,20 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8} padding={2}>
-            <Stack gap={4}>
-                <Stack className="pt-1" direction="horizontal" gap={3} align="center">
-                    <OrganizationAvatar
-                        canManage={canManageOrganization}
-                        name={organizationName}
-                        organizationId={organizationId}
-                        src={organizationAvatar}
-                    />
-                    <Stack>
-                        <Heading accessibilityLevel={1} level={4}>
-                            {organizationName}
-                        </Heading>
-                        <Text size="sm" type="supporting">
-                            Organization
-                        </Text>
-                    </Stack>
+            <Stack className="pt-1" direction="horizontal" gap={3} align="center">
+                <OrganizationAvatar
+                    canManage={canManageOrganization}
+                    name={organizationName}
+                    organizationId={organizationId}
+                    src={organizationAvatar}
+                />
+                <Stack>
+                    <Heading accessibilityLevel={1} level={4}>
+                        {organizationName}
+                    </Heading>
+                    <Text size="sm" type="supporting">
+                        Organization
+                    </Text>
                 </Stack>
             </Stack>
             <Menu>
