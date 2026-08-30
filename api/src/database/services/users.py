@@ -44,11 +44,20 @@ async def by_email(session: AsyncSession, email: Email) -> User | None:
     return await session.scalar(select(User).where(User.email == email))
 
 
-async def register(session: AsyncSession, name: str, email: str, password: str) -> User:
+async def by_oauth_identity(session: AsyncSession, provider: str, subject: str) -> User | None:
+    """Return one user by a stable external OAuth provider identity."""
+
+    # Provider subjects remain stable when an account's primary email address changes.
+    if provider == "google":
+        return await session.scalar(select(User).where(User.google_id == subject))
+    return await session.scalar(select(User).where(User.github_id == subject))
+
+
+async def register(session: AsyncSession, name: str, email: str, password: str, avatar: str = "") -> User:
     """Add one user and assign its database-generated state without committing."""
 
     # Flush so callers can handle uniqueness errors within their existing transaction.
-    user = User(name=name, email=email, password=PasswordHash.recommended().hash(password))
+    user = User(name=name, email=email, avatar=avatar, password=PasswordHash.recommended().hash(password))
     session.add(user)
     await session.flush()
     return user

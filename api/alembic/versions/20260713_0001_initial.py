@@ -28,6 +28,8 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=254), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("password", sa.String(length=128), nullable=False),
+        sa.Column("google_id", sa.String(length=255), nullable=True),
+        sa.Column("github_id", sa.String(length=255), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
@@ -35,6 +37,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
+    op.create_index("ix_users_google_id", "users", ["google_id"], unique=True)
+    op.create_index("ix_users_github_id", "users", ["github_id"], unique=True)
 
     # Create compute registries.
     op.create_table(

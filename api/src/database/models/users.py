@@ -21,6 +21,8 @@ class User(PlatformModel, table=True):
 
     # Authentication
     password: str = Field(max_length=128)
+    google_id: str | None = Field(default=None, unique=True, index=True, max_length=255)
+    github_id: str | None = Field(default=None, unique=True, index=True, max_length=255)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)

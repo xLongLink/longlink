@@ -16,6 +16,10 @@ class Env(BaseSettings):
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
     SESSION_KEY: str = Field(min_length=32)
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
+    GITHUB_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
+    GOOGLE_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
+    GITHUB_OAUTH_CLIENT_SECRET: str | None = Field(default=None, min_length=1)
+    GOOGLE_OAUTH_CLIENT_SECRET: str | None = Field(default=None, min_length=1)
 
     # Initial Platform administrator
     ADMIN_NAME: str = Field(min_length=1)
@@ -55,6 +59,12 @@ class Env(BaseSettings):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
         if self.SMTP_USERNAME is not None and self.SMTP_HOST is None:
             raise ValueError("SMTP_HOST is required when SMTP authentication is configured")
+
+        # OAuth providers require both confidential client credentials before their routes are enabled.
+        if (self.GOOGLE_OAUTH_CLIENT_ID is None) != (self.GOOGLE_OAUTH_CLIENT_SECRET is None):
+            raise ValueError("GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together")
+        if (self.GITHUB_OAUTH_CLIENT_ID is None) != (self.GITHUB_OAUTH_CLIENT_SECRET is None):
+            raise ValueError("GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET must be configured together")
 
         return self
 

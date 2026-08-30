@@ -249,6 +249,22 @@ export type LongLinkMetadata = {
 };
 
 /**
+ * OAuthAvailability
+ *
+ * Return the external sign-in providers enabled for this Platform.
+ */
+export type OAuthAvailability = {
+    /**
+     * Github
+     */
+    github: boolean;
+    /**
+     * Google
+     */
+    google: boolean;
+};
+
+/**
  * OperationKind
  *
  * Supported registered operation handlers.
@@ -794,6 +810,22 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+export type GetOauthAvailabilityApiV1AuthOauthGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/oauth';
+};
+
+export type GetOauthAvailabilityApiV1AuthOauthGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: OAuthAvailability;
+};
+
+export type GetOauthAvailabilityApiV1AuthOauthGetResponse = GetOauthAvailabilityApiV1AuthOauthGetResponses[keyof GetOauthAvailabilityApiV1AuthOauthGetResponses];
 
 export type PasswordLoginApiV1AuthPasswordLoginPostData = {
     body: PasswordLogin;

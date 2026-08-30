@@ -136,7 +136,7 @@ export default function DocsArticleRoute() {
                         <SummaryCard name="Button">
                             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                                 <Button label="Save" size="sm" variant="primary" />
-                                <Button label="Edit" size="sm" variant="secondary" />
+                                <Button label="Edit" size="sm" />
                                 <Button label="View" size="sm" variant="ghost" />
                             </Stack>
                         </SummaryCard>

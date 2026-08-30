@@ -49,6 +49,7 @@ app = FastAPI(
 AUTHENTICATION_COOKIES = frozenset(
     (
         "longlink_auth",
+        "longlink_oauth",
         "longlink_password_reset",
         "longlink_registration",
     )

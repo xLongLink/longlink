@@ -6,7 +6,7 @@ import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
 import * as AstryxText from '@astryxdesign/core/Text';
 
-const textPropsSchema = z.object({ color: z.enum(TEXT_COLORS).default('primary') });
+const textPropsSchema = z.object({ color: z.enum(TEXT_COLORS).optional() });
 
 export function Text({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();

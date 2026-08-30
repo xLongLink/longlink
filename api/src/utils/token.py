@@ -2,6 +2,7 @@ import jwt
 import hmac
 import hashlib
 from uuid import UUID
+from typing import Literal
 from datetime import timedelta
 from pydantic import TypeAdapter
 from src.environments import env
@@ -15,7 +16,9 @@ JWT_ALGORITHM = "HS256"
 AUTH_TOKEN_AUDIENCE = "longlink:auth"
 REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
 PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
+OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
+OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 
 
 def password_fingerprint(password: str) -> str:
@@ -66,6 +69,35 @@ def create_password_reset_token(user: User) -> str:
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
     )
+
+
+def create_oauth_state_token(provider: Literal["google", "github"], state: str, verifier: str) -> str:
+    """Create browser-only OAuth state bound to one provider and PKCE verifier."""
+
+    # Keep the anti-forgery state and reusable verifier out of browser-accessible storage and redirect URLs.
+    return jwt.encode(
+        {
+            "provider": provider,
+            "state": state,
+            "verifier": verifier,
+            "aud": OAUTH_STATE_TOKEN_AUDIENCE,
+            "exp": utcnow() + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
+        },
+        env.SESSION_KEY,
+        algorithm=JWT_ALGORITHM,
+    )
+
+
+def oauth_state_claims(token: str, provider: Literal["google", "github"]) -> tuple[str, str]:
+    """Return state and verifier from one valid OAuth browser credential."""
+
+    # Bind callbacks to their initiating provider before exchanging an authorization code.
+    data = jwt.decode(token, env.SESSION_KEY, audience=OAUTH_STATE_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
+    state = data.get("state")
+    verifier = data.get("verifier")
+    if data.get("provider") != provider or not isinstance(state, str) or not isinstance(verifier, str):
+        raise jwt.InvalidTokenError("Invalid OAuth state token claims")
+    return state, verifier
 
 
 async def password_reset_user(session: AsyncSession, token: str) -> User:

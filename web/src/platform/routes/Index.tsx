@@ -333,7 +333,6 @@ export default function Home() {
                             <Text
                                 as="p"
                                 className="homepage-hands-description-title relative z-1 m-0 tracking-normal"
-                                color="primary"
                                 display="block"
                                 textWrap="balance"
                                 weight="semibold"

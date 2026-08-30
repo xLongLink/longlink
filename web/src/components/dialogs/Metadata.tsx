@@ -20,7 +20,6 @@ export default function MetadataDialog({ children, footer, onClose, title }: Met
             onOpenChange={(isOpen) => {
                 if (!isOpen) onClose();
             }}
-            purpose="info"
             width={560}
         >
             <Layout

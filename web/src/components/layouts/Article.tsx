@@ -81,14 +81,12 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                                 icon={<ArrowLeft aria-hidden size={16} />}
                                                 isDisabled={previousPage === undefined}
                                                 label="Previous"
-                                                variant="secondary"
                                             />
                                             <Button
                                                 endContent={<ArrowRight aria-hidden size={16} />}
                                                 href={nextPage}
                                                 isDisabled={nextPage === undefined}
                                                 label="Next"
-                                                variant="secondary"
                                             />
                                         </Stack>
                                     ) : null}

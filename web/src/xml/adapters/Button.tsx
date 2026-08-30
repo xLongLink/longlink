@@ -28,7 +28,6 @@ export function Button({ props, nodes }: Props) {
     return (
         <AstryxButton
             label=""
-            type="button"
             variant={variant}
             clickAction={actionHandler ?? (navigationUrl ? () => services.navigate(navigationUrl) : undefined)}
         >

@@ -150,7 +150,6 @@ export default function People({
                         </Stack>
                         <Button
                             label="Invite"
-                            variant="secondary"
                             isDisabled={organizationId.length === 0 || !canInviteMembers}
                             onClick={() => setInviteOpen(true)}
                         />
@@ -272,7 +271,6 @@ export default function People({
                                         <Button
                                             label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
                                             type="submit"
-                                            variant="secondary"
                                             isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />
