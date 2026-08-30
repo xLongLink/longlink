@@ -29,6 +29,11 @@
         <xsd:documentation>Dialog purpose: required, form, or info.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="gap" type="SpacingType" default="3">
+      <xsd:annotation>
+        <xsd:documentation>Space between dialog content elements.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">

@@ -41,7 +41,7 @@ function CompactDialogHeader({ title, onOpenChange }: { title: string; onOpenCha
             <Stack direction="horizontal" hAlign="between" vAlign="start">
                 <Stack>
                     <Heading level={2}>{title}</Heading>
-                    <Text type="body" size="sm" color="secondary">
+                    <Text size="sm" color="secondary">
                         1. Image / 2. Metadata / 3. Envs
                     </Text>
                 </Stack>
@@ -220,9 +220,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 }
                                 content={
                                     <LayoutContent>
-                                        {step === 'image' ? (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
+                                        <form id={formId} onSubmit={handleSubmit}>
+                                            <FormLayout>
+                                                {step === 'image' ? (
                                                     <form.Field name="image">
                                                         {(field) => (
                                                             <TextInput
@@ -236,44 +236,36 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                             />
                                                         )}
                                                     </form.Field>
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
-                                        ) : step === 'metadata' ? (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
-                                                    <form.Field name="name">
-                                                        {(field) => (
-                                                            <TextInput
-                                                                label="Name"
-                                                                value={field.state.value}
-                                                                htmlName={field.name}
-                                                                isRequired
-                                                                onBlur={field.handleBlur}
-                                                                onChange={field.handleChange}
-                                                            />
-                                                        )}
-                                                    </form.Field>
-                                                    <form.Field name="description">
-                                                        {(field) => (
-                                                            <TextInput
-                                                                label="Description"
-                                                                value={field.state.value}
-                                                                htmlName={field.name}
-                                                                isOptional
-                                                                placeholder="Dashboard app"
-                                                                onBlur={field.handleBlur}
-                                                                onChange={field.handleChange}
-                                                            />
-                                                        )}
-                                                    </form.Field>
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
-                                        ) : (
-                                            <form id={formId} onSubmit={handleSubmit}>
-                                                <FormLayout>
-                                                    {declaredEnvironments.map((env) => (
+                                                ) : step === 'metadata' ? (
+                                                    <>
+                                                        <form.Field name="name">
+                                                            {(field) => (
+                                                                <TextInput
+                                                                    label="Name"
+                                                                    value={field.state.value}
+                                                                    htmlName={field.name}
+                                                                    isRequired
+                                                                    onBlur={field.handleBlur}
+                                                                    onChange={field.handleChange}
+                                                                />
+                                                            )}
+                                                        </form.Field>
+                                                        <form.Field name="description">
+                                                            {(field) => (
+                                                                <TextInput
+                                                                    label="Description"
+                                                                    value={field.state.value}
+                                                                    htmlName={field.name}
+                                                                    isOptional
+                                                                    placeholder="Dashboard app"
+                                                                    onBlur={field.handleBlur}
+                                                                    onChange={field.handleChange}
+                                                                />
+                                                            )}
+                                                        </form.Field>
+                                                    </>
+                                                ) : (
+                                                    declaredEnvironments.map((env) => (
                                                         <form.Field
                                                             key={env.name}
                                                             name={`envs.${env.name}` as `envs.${string}`}
@@ -297,11 +289,11 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                                 />
                                                             )}
                                                         </form.Field>
-                                                    ))}
-                                                    {errorStatus}
-                                                </FormLayout>
-                                            </form>
-                                        )}
+                                                    ))
+                                                )}
+                                                {errorStatus}
+                                            </FormLayout>
+                                        </form>
                                     </LayoutContent>
                                 }
                                 footer={

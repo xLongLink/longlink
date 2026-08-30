@@ -62,6 +62,7 @@ async def create_application(
         image=metadata.image,
         description=payload.description,
         secrets=payload.envs,
+        user_id=user.id,
     )
     await session.commit()
 

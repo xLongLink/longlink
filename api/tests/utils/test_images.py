@@ -194,11 +194,8 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
 
     response = httpx2.Response(200, stream=OversizedStream())
 
-    # Act
-    payload = await images.bounded_json(response)
-
     # Assert
-    assert payload is None
+    assert await images.bounded_json(response) is None
 
 
 async def test_bounded_json_decodes_metadata_within_limit() -> None:

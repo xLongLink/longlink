@@ -1,5 +1,5 @@
-import { startCase } from '@/lib/utils';
 import { useLocation } from 'react-router';
+import { decodePathSegment, startCase } from '@/lib/utils';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 type DocumentationBreadcrumbProps = {
@@ -26,7 +26,7 @@ export function DocumentationBreadcrumb({ className }: DocumentationBreadcrumbPr
 
                 return (
                     <BreadcrumbItem key={href} href={isLast ? undefined : href} isCurrent={isLast}>
-                        {routeLabels[segment] ?? startCase(decodeURIComponent(segment))}
+                        {routeLabels[segment] ?? startCase(decodePathSegment(segment))}
                     </BreadcrumbItem>
                 );
             })}

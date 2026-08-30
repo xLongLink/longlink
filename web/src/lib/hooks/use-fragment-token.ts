@@ -4,8 +4,7 @@ import { useLocation } from 'react-router';
 /** Captures an authentication token from the URL fragment and removes it before the page paints. */
 export function useFragmentToken(storageKey: string): string {
     const location = useLocation();
-    const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token') ?? '';
-    const token = fragmentToken || sessionStorage.getItem(storageKey) || '';
+    const fragmentToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('token');
 
     useLayoutEffect(() => {
         if (fragmentToken) {
@@ -14,5 +13,5 @@ export function useFragmentToken(storageKey: string): string {
         }
     }, [fragmentToken, location.pathname, location.search, storageKey]);
 
-    return token;
+    return fragmentToken || sessionStorage.getItem(storageKey) || '';
 }

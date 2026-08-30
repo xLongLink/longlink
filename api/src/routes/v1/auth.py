@@ -1,13 +1,16 @@
 import jwt
+import hmac
+import secrets
 from pwdlib import PasswordHash
 from typing import Annotated
-from fastapi import Body, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
+from fastapi import Body, Query, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
-from src.utils import mail, token, cookies
+from src.utils import mail, oauth, token, cookies
 from sqlalchemy.exc import IntegrityError
-from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
+from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvailability, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserSummary
+from fastapi.responses import RedirectResponse
 from src.database.services import users, invitations, organizations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +19,8 @@ router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
 PASSWORD_HASHER = PasswordHash.recommended()
+OAUTH_STATE_COOKIE = "longlink_oauth"
+OAUTH_STATE_COOKIE_PATH = "/api/v1/auth/oauth"
 
 
 def set_auth_session(response: Response, credential: str) -> None:
@@ -26,6 +31,109 @@ def set_auth_session(response: Response, credential: str) -> None:
     cookies.set_browser_cookie(response, "longlink_auth", credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
+def oauth_failure_response() -> RedirectResponse:
+    """Return a generic failed OAuth redirect after removing transient state."""
+
+    # Do not expose provider or account details through the browser-facing failure response.
+    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1", status_code=302)
+    response.headers["Cache-Control"] = "no-store"
+    cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    return response
+
+
+@router.get("/auth/oauth", response_model=OAuthAvailability)
+async def get_oauth_availability():
+    """Return which external sign-in providers have complete configuration."""
+
+    # Expose provider availability without disclosing any confidential client credentials.
+    return {
+        "github": oauth.is_configured("github"),
+        "google": oauth.is_configured("google"),
+    }
+
+
+@router.get("/auth/oauth/{provider}", include_in_schema=False)
+async def start_oauth_login(provider: oauth.OAuthProvider):
+    """Start one provider sign-in flow with browser-bound state and PKCE proof."""
+
+    # Enabled providers require their complete server-only confidential client configuration.
+    if not oauth.is_configured(provider):
+        raise HTTPException(status_code=404, detail="OAuth provider is not configured")
+    state = secrets.token_urlsafe(32)
+    verifier = secrets.token_urlsafe(64)
+    credential = token.create_oauth_state_token(provider, state, verifier)
+    response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
+
+    # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
+    response.headers["Cache-Control"] = "no-store"
+    cookies.set_browser_cookie(response, OAUTH_STATE_COOKIE, credential, OAUTH_STATE_COOKIE_PATH, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
+    return response
+
+
+@router.get("/auth/oauth/{provider}/callback", include_in_schema=False)
+async def complete_oauth_login(
+    provider: oauth.OAuthProvider,
+    session: AsyncSession = Depends(get_session),
+    code: Annotated[str | None, Query(max_length=4096)] = None,
+    state: Annotated[str | None, Query(max_length=512)] = None,
+    error: Annotated[str | None, Query(max_length=128)] = None,
+    oauth_state: str | None = Cookie(default=None, alias=OAUTH_STATE_COOKIE),
+):
+    """Complete one verified provider sign-in and issue a LongLink browser session."""
+
+    # Validate the provider callback before processing a provider-declared cancellation or failure.
+    try:
+        expected_state, verifier = token.oauth_state_claims(oauth_state or "", provider)
+    except jwt.PyJWTError:
+        return oauth_failure_response()
+    if state is None or not hmac.compare_digest(expected_state, state) or error is not None or code is None:
+        return oauth_failure_response()
+
+    # Exchange the provider code only after the local callback proof has been verified.
+    identity = await oauth.identity(provider, code, verifier)
+    if identity is None:
+        return oauth_failure_response()
+
+    # Resolve a stable provider identity before safely linking verified email ownership.
+    user = await users.by_oauth_identity(session, provider, identity.subject)
+    if user is None:
+        user = await users.by_email(session, identity.email)
+        if user is None:
+            user = await users.register(
+                session,
+                identity.name,
+                identity.email,
+                secrets.token_urlsafe(48),
+                identity.avatar,
+            )
+        if provider == "google":
+            user.google_id = identity.subject
+        else:
+            user.github_id = identity.subject
+
+    # Deleted accounts remain inaccessible even if their provider identity is still valid.
+    if user.deleted_at is not None:
+        return oauth_failure_response()
+    try:
+        changed_organization_ids = await invitations.accept(session, user)
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        return oauth_failure_response()
+
+    # Complete pending membership projection before publishing the signed browser credential.
+    for organization_id in changed_organization_ids:
+        await organizations.sync_users(session, organization_id)
+    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/user/organizations", status_code=302)
+    credential = token.create_auth_token(user)
+
+    # Publish authentication only after all persistent OAuth login effects commit.
+    set_auth_session(response, credential)
+    cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    return response
+
+
+# Deployment rate limiting bounds unauthenticated credential work before it reaches the API.
 @router.post("/auth/password/login", status_code=204)
 async def password_login(payload: PasswordLogin, response: Response, session: AsyncSession = Depends(get_session)):
     """Authenticate a local account and create one signed browser session."""
@@ -67,6 +175,7 @@ async def logout(
     cookies.delete_browser_cookie(response, "longlink_auth", "/")
 
 
+# Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/forgot-password", status_code=202)
 async def request_password_reset(
     email: Annotated[Email, Body(embed=True)],
@@ -142,6 +251,7 @@ async def reset_password(
     cookies.delete_browser_cookie(response, "longlink_password_reset", "/api/v1/auth/reset-password")
 
 
+# Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
 @router.post("/auth/register", status_code=202)
 async def request_registration(
     email: Annotated[Email, Body(embed=True)], background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)
@@ -170,7 +280,9 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
             detail=INVALID_REGISTRATION_LINK,
         ) from exc
     response.headers["Cache-Control"] = "no-store"
-    cookies.set_browser_cookie(response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(
+        response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS
+    )
     return {"email": email}
 
 

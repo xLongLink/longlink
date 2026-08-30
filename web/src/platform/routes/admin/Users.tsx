@@ -7,12 +7,11 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { pixel } from '@astryxdesign/core/Table';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { zPageUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
@@ -49,7 +48,7 @@ export default function AdminUsers() {
                 <TableColumn<UserSummary> field="user" header="User" width={pixel(400)}>
                     {(user) => (
                         <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar src={user.avatar} name={user.name} size="md" />
+                            <Avatar src={user.avatar} name={user.name} />
                             <Stack>
                                 <Stack direction="horizontal" gap={1} align="center">
                                     <Text weight="semibold">{user.name}</Text>
@@ -74,31 +73,15 @@ export default function AdminUsers() {
                 </TableColumn>
             </Table>
             {metadataUser ? (
-                <Dialog
-                    isOpen
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setMetadataUser(null);
-                        }
-                    }}
-                    purpose="info"
-                    width={560}
-                >
-                    <Layout
-                        header={<DialogHeader title="User metadata" onOpenChange={() => setMetadataUser(null)} />}
-                        content={
-                            <LayoutContent>
-                                <MetadataList>
-                                    <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
-                                    <MetadataListItem label="Access">
-                                        <Badge label={metadataUser.administrator ? 'Administrator' : 'User'} />
-                                    </MetadataListItem>
-                                    <MetadataListItem label="ID">{metadataUser.id}</MetadataListItem>
-                                </MetadataList>
-                            </LayoutContent>
-                        }
-                    />
-                </Dialog>
+                <MetadataDialog onClose={() => setMetadataUser(null)} title="User metadata">
+                    <MetadataList>
+                        <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
+                        <MetadataListItem label="Access">
+                            <Badge label={metadataUser.administrator ? 'Administrator' : 'User'} />
+                        </MetadataListItem>
+                        <MetadataListItem label="ID">{metadataUser.id}</MetadataListItem>
+                    </MetadataList>
+                </MetadataDialog>
             ) : null}
         </Stack>
     );

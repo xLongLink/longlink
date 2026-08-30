@@ -87,7 +87,6 @@ const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Terms.tsx',
 };
 
-/** Returns SEO metadata for the terms article. */
 /** Renders the terms of service. */
 export default function Terms() {
     return (

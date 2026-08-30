@@ -189,7 +189,7 @@ async function executeRequest(
     const requestUrl = resolveRequestUrl(requestBaseUrl, url);
     const response = await api(requestUrl, { body, headers, method });
 
-    return { closeDialog: closeDialog === true, status: response.status };
+    return { closeDialog: closeDialog ?? false, status: response.status };
 }
 
 /** Updates a State value or invalidates one State or Query setup. */
@@ -211,7 +211,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error(`Patch state "${state}" does not reference a declared State or Query`);
     }
 
-    if (invalidate === true) {
+    if (invalidate) {
         await services.invalidate(state);
         return;
     }

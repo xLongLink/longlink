@@ -19,7 +19,7 @@ def dev_command(host: str) -> None:
         host=host,
         port=1707,
         reload=True,
-        reload_includes=["*.xml"],
+        reload_includes=["*.py", "*.xml"],
         app_dir=str(Path.cwd()),
         log_config=log_config,
     )

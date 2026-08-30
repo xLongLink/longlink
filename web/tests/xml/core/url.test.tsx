@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { resolveAnchorUrl, resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 
 describe('resolveNavigationUrl', () => {
+    it('omits empty destinations', () => {
+        expect(resolveNavigationUrl('/', '')).toBe('');
+        expect(resolveNavigationUrl('/applications/123', '   ')).toBe('');
+    });
+
     it('joins base and relative paths', () => {
         expect(resolveNavigationUrl('/api', '/items')).toBe('/api/items');
         expect(resolveNavigationUrl('/api/', 'items')).toBe('/api/items');

@@ -2,9 +2,10 @@ import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
 from httpx2 import AsyncClient
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
+from sqlalchemy import func
 from urllib.parse import urlencode
 from src.routes.v1 import organizations as organization_routes
 from src.models.roles import OrganizationRoles
@@ -50,6 +51,46 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert len(operations) == 1
     assert operations[0].kind == OperationKind.organization_create
     assert operations[0].target_id == organization.id
+
+
+async def test_create_organization_enforces_the_per_user_beta_limit(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject a user above the beta Organization limit without blocking another user."""
+
+    # Arrange
+    owner, other_user, _ = users
+    infrastructure = await create_ready_infrastructure()
+    for name in ("acme", "globex", "initech"):
+        await create_organization(owner, name=name, infrastructure=infrastructure)
+
+    # Act
+    blocked_response = await clients[0].post("/api/v1/organizations", json={"name": "umbrella"})
+    allowed_response = await clients[1].post("/api/v1/organizations", json={"name": "umbrella"})
+
+    # Assert
+    assert blocked_response.status_code == 409
+    assert blocked_response.json() == {
+        "detail": "Organization limit reached during the beta. Contact LongLink to request additional organizations."
+    }
+    assert allowed_response.status_code == 202
+    assert allowed_response.json()["name"] == "umbrella"
+    async with session_scope() as session:
+        owner_organization_count = await session.scalar(
+            select(func.count()).select_from(Organization)
+            .where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
+        )
+        other_user_organization_count = await session.scalar(
+            select(func.count())
+            .select_from(Organization)
+            .where(
+                Organization.created_id == other_user.id,
+                Organization.deleted_at.is_(None),
+            )
+        )
+    assert owner_organization_count == 3
+    assert other_user_organization_count == 1
 
 
 @pytest.mark.parametrize(
@@ -945,22 +986,31 @@ async def test_update_organization_directly_returns_result_or_not_found(monkeypa
         assert session.commits == 0
 
 
-async def test_create_organization_invitation_directly_commits_and_sends_email(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Commit an invitation before sending its email notification."""
+async def test_create_organization_invitation_directly_commits_and_queues_email(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Commit an invitation before queuing its email notification."""
 
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1), name="acme")
+    user = SimpleNamespace(id=UUID(int=2))
     membership = SimpleNamespace(role=OrganizationRoles.maintain, organization_id=organization.id, organization=organization)
     session = SimpleNamespace(commits=0)
     calls: list[str] = []
 
-    async def create(_session: object, organization_id: UUID, email: str, role: OrganizationRoles) -> None:
-        """Record invitation persistence arguments."""
+    async def create_invitation(
+        _session: object,
+        organization_id: UUID,
+        email: str,
+        role: OrganizationRoles,
+        received_user: object,
+    ) -> object:
+        """Record invitation authorization and persistence arguments."""
 
         assert organization_id == organization.id
         assert email == "member@example.com"
         assert role == OrganizationRoles.write
+        assert received_user is user
         calls.append("create")
+        return organization
 
     async def commit() -> None:
         """Record the invitation transaction commit."""
@@ -968,22 +1018,23 @@ async def test_create_organization_invitation_directly_commits_and_sends_email(m
         session.commits += 1
         calls.append("commit")
 
-    async def send(email: str, organization_name: str, role: OrganizationRoles) -> None:
-        """Record the invitation notification after persistence."""
-
-        assert (email, organization_name, role) == ("member@example.com", "acme", OrganizationRoles.write)
-        calls.append("send")
-
     session.commit = commit
-    monkeypatch.setattr(organization_routes.invitations, "create", create)
-    monkeypatch.setattr(organization_routes.mail, "send_organization_invitation_email", send)
+    monkeypatch.setattr(organization_routes.organizations, "create_invitation", create_invitation)
+    background_tasks = BackgroundTasks()
 
     # Act
     result = await organization_routes.create_organization_invitation(
-        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write), membership, session
+        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write),
+        background_tasks,
+        user,
+        membership,
+        session,
     )
 
     # Assert
     assert result is None
     assert session.commits == 1
-    assert calls == ["create", "commit", "send"]
+    assert calls == ["create", "commit"]
+    assert len(background_tasks.tasks) == 1
+    assert background_tasks.tasks[0].func is organization_routes.mail.send_organization_invitation_email
+    assert background_tasks.tasks[0].args == ("member@example.com", "acme", OrganizationRoles.write)

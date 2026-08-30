@@ -75,7 +75,7 @@ describe('ApplicationRuntime', () => {
 
         // Assert
         await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/,/home'))
+            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'))
         );
         await act(async () =>
             vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))

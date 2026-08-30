@@ -27,7 +27,7 @@ export default function DocsArticleRoute() {
                     designed to support.
                 </Text>
                 <Text as="p">
-                    <Text color="primary" size="lg" type="label" weight="bold">
+                    <Text size="lg" type="label" weight="bold">
                         Use
                     </Text>{' '}
                     an existing application when its process already reflects the way your organization works. LongLink
@@ -35,7 +35,7 @@ export default function DocsArticleRoute() {
                     application and the resources it needs.
                 </Text>
                 <Text as="p">
-                    <Text color="primary" size="lg" type="label" weight="bold">
+                    <Text size="lg" type="label" weight="bold">
                         Adapt
                     </Text>{' '}
                     an existing application when the underlying process is familiar but the details differ. Teams can
@@ -43,7 +43,7 @@ export default function DocsArticleRoute() {
                     their own requirements.
                 </Text>
                 <Text as="p">
-                    <Text color="primary" size="lg" type="label" weight="bold">
+                    <Text size="lg" type="label" weight="bold">
                         Create
                     </Text>{' '}
                     a new application when a process needs a dedicated design from the start. Developers build the

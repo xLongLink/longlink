@@ -5,6 +5,28 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/auth/oauth": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Oauth Availability",
+        "description": "Return which external sign-in providers have complete configuration.",
+        "operationId": "get_oauth_availability_api_v1_auth_oauth_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/password/login": {
       "post": {
         "tags": [
@@ -2836,6 +2858,25 @@
         "type": "object",
         "title": "LongLinkMetadata",
         "description": "Structured metadata extracted from OCI and LongLink image labels."
+      },
+      "OAuthAvailability": {
+        "properties": {
+          "github": {
+            "type": "boolean",
+            "title": "Github"
+          },
+          "google": {
+            "type": "boolean",
+            "title": "Google"
+          }
+        },
+        "type": "object",
+        "required": [
+          "github",
+          "google"
+        ],
+        "title": "OAuthAvailability",
+        "description": "Return the external sign-in providers enabled for this Platform."
       },
       "OperationKind": {
         "type": "string",

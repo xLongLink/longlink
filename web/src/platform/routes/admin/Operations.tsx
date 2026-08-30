@@ -13,22 +13,23 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
+const statusLabels: Record<OperationResponse['status'], string> = {
+    scheduled: 'Scheduled',
+    active: 'Active',
+    completed: 'Completed',
+    failed: 'Failed',
+};
+const kindLabels: Record<OperationResponse['kind'], string> = {
+    'compute.create': 'Compute creation',
+    'application.create': 'Application creation',
+    'application.delete': 'Application deletion',
+    'organization.create': 'Organization creation',
+    'organization.delete': 'Organization deletion',
+};
+
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
-    const statusLabels: Record<OperationResponse['status'], string> = {
-        scheduled: 'Scheduled',
-        active: 'Active',
-        completed: 'Completed',
-        failed: 'Failed',
-    };
-    const kindLabels: Record<OperationResponse['kind'], string> = {
-        'compute.create': 'Compute creation',
-        'application.create': 'Application creation',
-        'application.delete': 'Application deletion',
-        'organization.create': 'Organization creation',
-        'organization.delete': 'Organization deletion',
-    };
     const {
         items: operations,
         error,

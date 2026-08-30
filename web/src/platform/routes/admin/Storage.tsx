@@ -9,16 +9,15 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
@@ -104,45 +103,30 @@ export default function AdminStorage() {
                 </TableColumn>
             </Table>
             {metadataStorage ? (
-                <Dialog
-                    isOpen
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setMetadataStorage(null);
-                        }
-                    }}
-                    purpose="info"
-                    width={560}
+                <MetadataDialog
+                    footer={
+                        <Stack direction="horizontal" gap={2} justify="end">
+                            <Button
+                                className="text-warning underline"
+                                label="Delete"
+                                variant="ghost"
+                                onClick={() => {
+                                    const storage = metadataStorage;
+                                    setMetadataStorage(null);
+                                    deleteDialog.openFor(storage);
+                                }}
+                            />
+                            <Button label="Close" variant="primary" onClick={() => setMetadataStorage(null)} />
+                        </Stack>
+                    }
+                    onClose={() => setMetadataStorage(null)}
+                    title="Storage metadata"
                 >
-                    <Layout
-                        header={<DialogHeader title="Storage metadata" onOpenChange={() => setMetadataStorage(null)} />}
-                        content={
-                            <LayoutContent>
-                                <MetadataList>
-                                    <MetadataListItem label="Endpoint">{metadataStorage.endpoint_url}</MetadataListItem>
-                                    <MetadataListItem label="ID">{metadataStorage.id}</MetadataListItem>
-                                </MetadataList>
-                            </LayoutContent>
-                        }
-                        footer={
-                            <LayoutFooter>
-                                <Stack direction="horizontal" gap={2} justify="end">
-                                    <Button
-                                        className="text-warning underline"
-                                        label="Delete"
-                                        variant="ghost"
-                                        onClick={() => {
-                                            const storage = metadataStorage;
-                                            setMetadataStorage(null);
-                                            deleteDialog.openFor(storage);
-                                        }}
-                                    />
-                                    <Button label="Close" variant="primary" onClick={() => setMetadataStorage(null)} />
-                                </Stack>
-                            </LayoutFooter>
-                        }
-                    />
-                </Dialog>
+                    <MetadataList>
+                        <MetadataListItem label="Endpoint">{metadataStorage.endpoint_url}</MetadataListItem>
+                        <MetadataListItem label="ID">{metadataStorage.id}</MetadataListItem>
+                    </MetadataList>
+                </MetadataDialog>
             ) : null}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>

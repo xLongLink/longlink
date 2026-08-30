@@ -1,5 +1,5 @@
 from uuid import UUID
-from src.utils import names
+from src.utils import names, roles
 from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
@@ -268,11 +268,20 @@ async def update_member_role(
     member_id: UUID,
     role: OrganizationRoles,
     user: User,
-    caller_role: OrganizationRoles,
 ) -> bool:
     """Change one active Organization membership role."""
 
-    # Update the member role inside one transaction.
+    # Lock the Organization before revalidating the caller's active access.
+    organization = await session.get(Organization, organization_id, with_for_update=True)
+    if organization is None or organization.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    caller_membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    if caller_membership is None or caller_membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(caller_membership.role, OrganizationRoles.admin):
+        raise ForbiddenError("Permission required")
+
+    # Lock the member role after locking the Organization and caller access.
     statement = (
         select(UserOrganization)
         .join(User, User.id == UserOrganization.user_id)
@@ -282,6 +291,7 @@ async def update_member_role(
             UserOrganization.deleted_at.is_(None),
             User.deleted_at.is_(None),
         )
+        .with_for_update()
     )
 
     # Require an active organization membership.
@@ -291,7 +301,7 @@ async def update_member_role(
         raise NotFoundError("Organization member not found")
 
     # Only owners may grant or change owner access.
-    if OrganizationRoles.owner in (membership.role, role) and caller_role != OrganizationRoles.owner:
+    if OrganizationRoles.owner in (membership.role, role) and caller_membership.role != OrganizationRoles.owner:
         raise ForbiddenError("Owner management permissions required")
 
     # Repeated role assignments do not require persistence or reconciliation.
@@ -325,6 +335,23 @@ async def update_member_role(
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
     """Create an Organization on the least-assigned available infrastructure."""
+
+    # Serialize each creator's quota check and insert to prevent concurrent requests exceeding the beta limit.
+    locked_user_id = await session.scalar(select(User.id).where(User.id == user.id, User.deleted_at.is_(None)).with_for_update())
+    if locked_user_id is None:
+        raise ForbiddenError("Access required")
+
+    organization_ids_result = await session.execute(
+        select(Organization.id)
+        .where(
+            Organization.created_id == user.id,
+            Organization.deleted_at.is_(None),
+        )
+        .limit(3)
+        .with_for_update()
+    )
+    if len(organization_ids_result.all()) >= 3:
+        raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
     # Lock the selected Compute until the Organization assignment is committed.
     compute_assignments = (
@@ -471,10 +498,45 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
     organization = result.one_or_none()
     if organization is None:
         return None
+
+    # Revalidate the caller while the Organization is locked to reject revoked administrators.
+    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.admin):
+        raise ForbiddenError("Permission required")
     if organization.avatar != avatar:
         organization.avatar = avatar
         organization.updated_id = user.id
 
+    return organization
+
+
+async def create_invitation(
+    session: AsyncSession,
+    organization_id: UUID,
+    email: str,
+    role: OrganizationRoles,
+    user: User,
+) -> Organization:
+    """Authorize and create one Organization invitation."""
+
+    # Lock the Organization before revalidating the caller's active invitation permission.
+    organization = await session.get(Organization, organization_id, with_for_update=True)
+    if organization is None or organization.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
+    if not roles.atleast(membership.role, role):
+        raise ForbiddenError("Invitation role permissions required")
+
+    # Persist the email grant after the current role and Organization state have been locked.
+    from src.database.services import invitations
+
+    await invitations.create(session, organization_id, email, role)
     return organization
 
 
@@ -484,7 +546,19 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     # Lock the Organization state before tombstoning its nested rows.
     organization = await session.get(Organization, organization_id, with_for_update=True)
     if organization is None:
-        return None
+        if user.administrator:
+            return None
+        raise ForbiddenError("Access required")
+
+    # Revalidate active owners while the Organization is locked; only the original actor may retry a tombstone.
+    if organization.deleted_at is None and not user.administrator:
+        membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+        if membership is None or membership.deleted_at is not None:
+            raise ForbiddenError("Access required")
+        if not roles.atleast(membership.role, OrganizationRoles.owner):
+            raise ForbiddenError("Permission required")
+    elif organization.deleted_at is not None and not user.administrator and organization.deleted_id != user.id:
+        raise ForbiddenError("Access required")
 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
     if organization.deleted_at is None:

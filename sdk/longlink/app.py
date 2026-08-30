@@ -8,7 +8,7 @@ from longlink.pages import PageDefinition, page_stem_route
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.context import install_context_middleware
-from fastapi.responses import Response
+from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
 from longlink.utils.xml import validate_xml
@@ -89,6 +89,19 @@ class LongLink:
                 for definition, content in discovered_pages
             ]
         )
+
+        # Make the browser root URL resolve to the first navigable application page.
+        first_tab_page = next(
+            (definition for definition, _ in discovered_pages if definition.route != "/" and ":" not in definition.route),
+            None,
+        )
+        if first_tab_page:
+
+            @app.get("/", include_in_schema=False)
+            def redirect_root() -> RedirectResponse:
+                """Redirect the application root to its first static tab."""
+
+                return RedirectResponse(first_tab_page.route)
 
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():

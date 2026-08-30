@@ -13,9 +13,11 @@ metadata:
 spec:
     hard:
         limits.cpu: '2'
+        limits.ephemeral-storage: 2Gi
         limits.memory: 1Gi
         pods: '4'
         requests.cpu: 400m
+        requests.ephemeral-storage: 1Gi
         requests.memory: 512Mi
 ---
 apiVersion: networking.k8s.io/v1

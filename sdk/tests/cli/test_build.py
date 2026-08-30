@@ -378,6 +378,7 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
     )
     build_project.joinpath(".gitignore").write_text(".env\n", encoding="utf-8")
     build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    build_project.joinpath(".env.production").write_text("SECRET=production-value\n", encoding="utf-8")
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
@@ -386,8 +387,9 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
 
     # Assert
     assert build_context.joinpath("app", ".env").is_file()
+    assert build_context.joinpath("app", ".env.production").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.pytest_cache\n"
+        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.env.*\n**/.pytest_cache\n"
     )
 
 

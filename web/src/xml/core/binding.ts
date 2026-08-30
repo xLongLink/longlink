@@ -76,7 +76,8 @@ function resolveBindableTarget(
         return undefined;
     }
 
-    const parent = resolvePath(ctx, [parts[0], ...parts.slice(1, -1)]);
+    const parentParts: [string, ...string[]] = [parts[0], ...parts.slice(1, -1)];
+    const parent = resolvePath(ctx, parentParts);
 
     // Nested bindings require a reactive parent.
     if (!isValtioProxy(parent)) return undefined;

@@ -1,6 +1,5 @@
 import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
-import { XML_LAYOUT_GAP } from './constants';
 import { isValtioProxy } from './core/state';
 import { Stack } from '@/components/ui/Stack';
 import type { ASTNode, XmlRuntime } from './types';
@@ -61,6 +60,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         let mounted = true;
         let unsubscribers: Array<() => void> = [];
+        const controller = new AbortController();
 
         /** Removes every Valtio subscription owned by this renderer. */
         function unsubscribeAll() {
@@ -106,7 +106,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             setRenderVersion((current) => current + 1);
         };
 
-        void setupContext(setup.nodes, ctx)
+        void setupContext(setup.nodes, ctx, controller.signal)
             .then(() => {
                 subscribeToStateValues();
 
@@ -123,6 +123,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         return () => {
             mounted = false;
+            controller.abort();
 
             // Remove state subscriptions on unmount.
             unsubscribeAll();
@@ -144,7 +145,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     return (
         <XmlErrorBoundary ast={ast}>
             <XmlContext.Provider value={ctx}>
-                <Stack gap={XML_LAYOUT_GAP}>{renderNode(ast.children, ctx.scope)}</Stack>
+                <Stack gap={8}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );

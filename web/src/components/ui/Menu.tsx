@@ -2,14 +2,14 @@ import { useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
-import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 
-type MenuProps = { children?: ReactNode };
+type MenuProps = { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] };
 type MenuSectionProps = {
     children?: ReactNode;
     isHeaderHidden?: boolean;
@@ -33,6 +33,11 @@ function menuItemHref(label: string): string {
         .replace(/^-|-$/g, '')}`;
 }
 
+/** Renders a menu icon when one is configured. */
+function renderMenuIcon(icon: StoneIconName | undefined) {
+    return icon ? <Icon icon={icon} size="sm" /> : undefined;
+}
+
 /** Returns whether a node defines selectable menu content. */
 function isMenuItem(node: ReactNode): node is ReactElement<MenuMarkerProps> {
     return isValidElement(node) && node.type === MenuItem;
@@ -44,7 +49,7 @@ function isMenuSubSection(node: ReactNode): node is ReactElement<MenuMarkerProps
 }
 
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children }: MenuProps) {
+export function Menu({ children, gap = 3 }: MenuProps) {
     const { hash } = useLocation();
     const sections = Children.toArray(children)
         .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)
@@ -79,57 +84,53 @@ export function Menu({ children }: MenuProps) {
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
                     <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                        {sections.map(({ entries, section }) => (
-                            <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
-                                {entries.map((entry) => {
-                                    if (entry.kind === 'subsection') {
-                                        const { icon, label } = entry.subSection.props;
+                        {sections.map(({ entries, section }) => {
+                            const { children: _children, ...sectionProps } = section.props;
+
+                            return (
+                                <AstryxSideNavSection {...sectionProps} className="pt-0" key={sectionProps.title}>
+                                    {entries.map((entry) => {
+                                        if (entry.kind === 'subsection') {
+                                            const { icon, label } = entry.subSection.props;
+
+                                            return (
+                                                <AstryxSideNavItem
+                                                    collapsible={{ defaultIsCollapsed: true }}
+                                                    icon={renderMenuIcon(icon)}
+                                                    key={label}
+                                                    label={label}
+                                                >
+                                                    {entry.items.map((item) => (
+                                                        <AstryxSideNavItem
+                                                            href={menuItemHref(item.props.label)}
+                                                            icon={renderMenuIcon(item.props.icon)}
+                                                            isSelected={item === activeItem}
+                                                            key={item.props.label}
+                                                            label={item.props.label}
+                                                        />
+                                                    ))}
+                                                </AstryxSideNavItem>
+                                            );
+                                        }
 
                                         return (
                                             <AstryxSideNavItem
-                                                collapsible={{ defaultIsCollapsed: true }}
-                                                icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                                                key={label}
-                                                label={label}
-                                            >
-                                                {entry.items.map((item) => (
-                                                    <AstryxSideNavItem
-                                                        href={menuItemHref(item.props.label)}
-                                                        icon={
-                                                            item.props.icon ? (
-                                                                <Icon icon={item.props.icon} size="sm" />
-                                                            ) : undefined
-                                                        }
-                                                        isSelected={item === activeItem}
-                                                        key={item.props.label}
-                                                        label={item.props.label}
-                                                    />
-                                                ))}
-                                            </AstryxSideNavItem>
+                                                href={menuItemHref(entry.item.props.label)}
+                                                icon={renderMenuIcon(entry.item.props.icon)}
+                                                isSelected={entry.item === activeItem}
+                                                key={entry.item.props.label}
+                                                label={entry.item.props.label}
+                                            />
                                         );
-                                    }
-
-                                    return (
-                                        <AstryxSideNavItem
-                                            href={menuItemHref(entry.item.props.label)}
-                                            icon={
-                                                entry.item.props.icon ? (
-                                                    <Icon icon={entry.item.props.icon} size="sm" />
-                                                ) : undefined
-                                            }
-                                            isSelected={entry.item === activeItem}
-                                            key={entry.item.props.label}
-                                            label={entry.item.props.label}
-                                        />
-                                    );
-                                })}
-                            </AstryxSideNavSection>
-                        ))}
+                                    })}
+                                </AstryxSideNavSection>
+                            );
+                        })}
                     </AstryxSideNav>
                 </LayoutPanel>
             }
         >
-            <Stack gap={3}>{activeItem?.props.children}</Stack>
+            <Stack gap={gap}>{activeItem?.props.children}</Stack>
         </Layout>
     );
 }

@@ -18,12 +18,12 @@ export default function DocsArticleRoute() {
         <Article page={metadata}>
             <Stack gap={5}>
                 <Stack gap={2}>
-                    <Text type="supporting">{'Runtime'}</Text>
+                    <Text type="supporting">Runtime</Text>
                     <Heading id="introduction" level={1}>
-                        {'Bindings'}
+                        Bindings
                     </Heading>
                 </Stack>
-                <Text as="p">{'Connects writable control values to State objects declared in the XML runtime.'}</Text>
+                <Text as="p">Connects writable control values to State objects declared in the XML runtime.</Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

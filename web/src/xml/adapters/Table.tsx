@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
 import { readSafeProperty } from '../expressions/resolve';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
@@ -14,6 +15,7 @@ export function Table({ props, nodes }: Props) {
     const ctx = runtime.scope;
 
     const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
+
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
         .map((node): AstryxTableColumn<Record<string, unknown>> => {
@@ -49,7 +51,7 @@ export function Table({ props, nodes }: Props) {
 
                     // Shorthand columns render the resolved field value directly.
                     if (cellNodes.length === 0) {
-                        return value == null ? '' : String(value);
+                        return String(value ?? '');
                     }
 
                     const rowCtx: Scope = {
@@ -71,5 +73,13 @@ export function Table({ props, nodes }: Props) {
         throw new Error('Table requires at least one TableColumn');
     }
 
-    return <AstryxTable columns={columns} data={data} emptyState={false} idKey={idKey} />;
+    return (
+        <AstryxTable
+            columns={columns}
+            data={data}
+            density="compact"
+            emptyState={<EmptyState title="Nothing to show here" isCompact />}
+            idKey={idKey}
+        />
+    );
 }

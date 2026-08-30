@@ -14,7 +14,6 @@ const metadata = {
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Impressum.tsx',
 };
 
-/** Returns SEO metadata for the impressum article. */
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (

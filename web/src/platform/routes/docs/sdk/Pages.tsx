@@ -31,7 +31,7 @@ import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
-const noop = () => undefined;
+const noop = () => {};
 
 function SummaryCard({
     children,
@@ -45,7 +45,7 @@ function SummaryCard({
     path?: string;
 }) {
     const component = componentDocumentation.find((candidate) => candidate.name === name);
-    const destination = component === undefined ? path : `/docs/sdk/pages/${component.slug}`;
+    const destination = component ? `/docs/sdk/pages/${component.slug}` : path;
 
     if (destination === undefined) {
         throw new Error(`Missing documentation route for ${name}`);
@@ -136,7 +136,7 @@ export default function DocsArticleRoute() {
                         <SummaryCard name="Button">
                             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                                 <Button label="Save" size="sm" variant="primary" />
-                                <Button label="Edit" size="sm" variant="secondary" />
+                                <Button label="Edit" size="sm" />
                                 <Button label="View" size="sm" variant="ghost" />
                             </Stack>
                         </SummaryCard>
@@ -192,7 +192,6 @@ export default function DocsArticleRoute() {
                                     accept=".pdf"
                                     isLabelHidden
                                     label="Attachment"
-                                    mode="input"
                                     placeholder="File"
                                     value={null}
                                     onChange={noop}
@@ -312,14 +311,7 @@ export default function DocsArticleRoute() {
                             </Tabs>
                         </SummaryCard>
                         <SummaryCard name="Dialog">
-                            <Dialog
-                                aria-label="Dialog preview"
-                                isInline
-                                isOpen
-                                purpose="info"
-                                width={160}
-                                onOpenChange={noop}
-                            >
+                            <Dialog aria-label="Dialog preview" isInline isOpen width={160} onOpenChange={noop}>
                                 <Layout
                                     className="relative"
                                     header={

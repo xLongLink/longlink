@@ -16,6 +16,14 @@ class EmailPayload(BaseModel):
     email: Email
 
 
+class OAuthAvailability(BaseModel):
+    """Return the external sign-in providers enabled for this Platform."""
+
+    # Providers
+    github: bool
+    google: bool
+
+
 class PasswordLogin(BaseModel):
     """Validate one local password login request."""
 

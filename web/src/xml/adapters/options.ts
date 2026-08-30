@@ -12,13 +12,13 @@ export function resolveOptions(nodes: ASTNode[], scope: Scope) {
     return nodes
         .filter((node) => node.name === 'Option' && isVisibleXmlNode(node, scope))
         .map((node) => {
-            const { label: labelValue, value } = resolveXmlProps(
+            const { label, value } = resolveXmlProps(
                 node.params,
                 scope,
                 { label: 'scalar', value: 'raw' },
                 optionPropsSchema
             );
 
-            return { label: labelValue ?? value, value };
+            return { label: label ?? value, value };
         });
 }

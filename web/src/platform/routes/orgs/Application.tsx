@@ -38,33 +38,22 @@ export default function OrganizationApplication() {
     const action = <ProfileMenu user={user} />;
     const breadcrumb = <PageBreadcrumb applicationName={applicationAccess.name} />;
 
-    if (applicationAccess.status === 'creating') {
-        return (
-            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <Card maxWidth={576} padding={6} width="100%">
-                        <EmptyState
-                            description="Please try again in a moment."
-                            headingLevel={1}
-                            role="alert"
-                            title="Application is being deployed"
-                        />
-                    </Card>
-                </Center>
-            </Platform>
-        );
-    }
+    if (applicationAccess.status === 'creating' || applicationAccess.status === 'failed') {
+        const isCreating = applicationAccess.status === 'creating';
 
-    if (applicationAccess.status === 'failed') {
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <Card maxWidth={576} padding={6} width="100%">
                         <EmptyState
-                            description="Review the failed operation in the Platform administration area."
+                            description={
+                                isCreating
+                                    ? 'Please try again in a moment.'
+                                    : 'Review the failed operation in the Platform administration area.'
+                            }
                             headingLevel={1}
                             role="alert"
-                            title="Application deployment failed"
+                            title={isCreating ? 'Application is being deployed' : 'Application deployment failed'}
                         />
                     </Card>
                 </Center>
@@ -80,7 +69,9 @@ export default function OrganizationApplication() {
         >
             {({ content, tabs }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
-                    <PageContainer minHeight="100%">{content}</PageContainer>
+                    <PageContainer minHeight="100%" padding={2}>
+                        {content}
+                    </PageContainer>
                 </Platform>
             )}
         </ApplicationRuntime>

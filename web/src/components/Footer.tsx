@@ -74,9 +74,7 @@ export function Footer() {
                         <Divider />
 
                         <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                            <Text type="supporting" color="secondary">
-                                LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
-                            </Text>
+                            <Text type="supporting">LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
                                 <Link href="/impressum" color="navigation" type="supporting" weight="medium">
                                     Impressum

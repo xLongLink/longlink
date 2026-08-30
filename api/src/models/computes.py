@@ -19,6 +19,16 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     if not isinstance(value, dict):
         raise ValueError("Kubernetes kubeconfig must be a mapping")
 
+    # Kubeconfig exec authentication runs administrator-supplied commands in the API worker.
+    users = value.get("users")
+    if isinstance(users, list):
+        for entry in users:
+            if not isinstance(entry, dict):
+                continue
+            user = entry.get("user")
+            if isinstance(user, dict) and "exec" in user:
+                raise ValueError("Kubernetes kubeconfig exec authentication is not allowed")
+
     # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
     try:
         return json.loads(json.dumps(value))

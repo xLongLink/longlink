@@ -113,6 +113,16 @@ export const zLongLinkMetadata = z.object({
 });
 
 /**
+ * OAuthAvailability
+ *
+ * Return the external sign-in providers enabled for this Platform.
+ */
+export const zOAuthAvailability = z.object({
+    github: z.boolean(),
+    google: z.boolean()
+});
+
+/**
  * OperationKind
  *
  * Supported registered operation handlers.
@@ -505,6 +515,11 @@ export const zValidationError = z.object({
 export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
 });
+
+/**
+ * Successful Response
+ */
+export const zGetOauthAvailabilityApiV1AuthOauthGetResponse = zOAuthAvailability;
 
 export const zPasswordLoginApiV1AuthPasswordLoginPostBody = zPasswordLogin;
 

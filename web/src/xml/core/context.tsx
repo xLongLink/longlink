@@ -33,7 +33,7 @@ export function useXmlRuntime(): XmlRuntime {
 }
 
 /** Resolves validated State and Query nodes before rendering the page tree. */
-export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promise<void> {
+export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, signal?: AbortSignal): Promise<void> {
     const { scope, services } = runtime;
 
     // Seed setup declarations before rendering the component tree.
@@ -71,7 +71,7 @@ export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime): Promi
 
                 const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
-                scope.bindings[id] = await api(url).json();
+                scope.bindings[id] = await api(url, { signal }).json();
             };
             services.setups[id] = setup;
             await setup();

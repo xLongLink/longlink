@@ -39,11 +39,8 @@ def test_deployment_is_ready_requires_current_replicas(
         raw={"status": status},
     )
 
-    # Act
-    result = deployment_is_ready(deployment)
-
     # Assert
-    assert result is expected
+    assert deployment_is_ready(deployment) is expected
 
 
 @pytest.mark.parametrize(

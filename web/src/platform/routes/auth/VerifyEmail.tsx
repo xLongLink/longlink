@@ -96,10 +96,9 @@ export default function VerifyEmail() {
         verifyToken(token);
     }, [token, verifyToken]);
 
-    const recoverySearch = verification.data?.email
-        ? `?${new URLSearchParams({ email: verification.data.email })}`
-        : '';
-    const recoveryRegisterHref = `/auth/register${recoverySearch}`;
+    const recoveryRegisterHref = verification.data?.email
+        ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
+        : '/auth/register';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {

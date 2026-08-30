@@ -61,9 +61,9 @@ export function useOrganization(organizationSlug: string) {
 }
 
 /** Fetches organization applications without loading people-management data. */
-export function useOrganizationApplications(organizationSlug: string) {
+export function useOrganizationApplications(organizationSlug: string, enabled = true) {
     const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
-    const applicationsPath = organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
+    const applicationsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
     const applicationsQuery = useQuery({
         queryKey: ['api', applicationsPath],
         queryFn:

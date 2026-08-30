@@ -1,39 +1,32 @@
 import { api } from '@/lib/api';
+import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { Stack } from '@/components/ui/Stack';
-import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { dateTimeFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useState, type ComponentProps } from 'react';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { dateTimeFormatter, useDeleteDialog } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
-import type { ApplicationResponse, Status } from '@/lib/generated/platform-api-v1/types.gen';
-
-const statusPresentation = {
-    creating: { label: 'Creating', variant: 'info' },
-    failed: { label: 'Failed', variant: 'error' },
-    running: { label: 'Running', variant: 'neutral' },
-} satisfies Record<Status, { label: string; variant: ComponentProps<typeof Badge>['variant'] }>;
+import type { ApplicationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
+    const closeMetadataApplication = () => setMetadataApplication(null);
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteApplication = useMutation({
@@ -93,7 +86,7 @@ export default function AdminApplications() {
                                 <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
                                     {app.name}
                                 </Link>
-                                {app.status === 'running' ? null : <Badge {...statusPresentation[app.status]} />}
+                                <StatusBadge status={app.status} />
                             </Stack>
                             {app.description ? <Text type="supporting">{app.description}</Text> : null}
                         </Stack>
@@ -123,73 +116,43 @@ export default function AdminApplications() {
                 </TableColumn>
             </Table>
             {metadataApplication ? (
-                <Dialog
-                    isOpen
-                    onOpenChange={(isOpen) => {
-                        if (!isOpen) {
-                            setMetadataApplication(null);
-                        }
-                    }}
-                    purpose="info"
-                    width={560}
-                >
-                    <Layout
-                        header={
-                            <DialogHeader
-                                title="Application metadata"
-                                onOpenChange={() => setMetadataApplication(null)}
+                <MetadataDialog
+                    footer={
+                        <Stack direction="horizontal" gap={2} justify="end">
+                            <Button
+                                className="text-warning underline"
+                                label="Delete"
+                                variant="ghost"
+                                onClick={() => {
+                                    const application = metadataApplication;
+                                    setMetadataApplication(null);
+                                    deleteDialog.openFor(application);
+                                }}
                             />
-                        }
-                        content={
-                            <LayoutContent>
-                                <MetadataList>
-                                    <MetadataListItem label="Status">
-                                        {metadataApplication.status === 'running' ? null : (
-                                            <Badge {...statusPresentation[metadataApplication.status]} />
-                                        )}
-                                    </MetadataListItem>
-                                    <MetadataListItem label="Organization">
-                                        {metadataApplication.organization.name}
-                                    </MetadataListItem>
-                                    <MetadataListItem label="Image">
-                                        {metadataApplication.image_desired}
-                                    </MetadataListItem>
-                                    <MetadataListItem label="ID">{metadataApplication.id}</MetadataListItem>
-                                    <MetadataListItem label="Slug">{metadataApplication.slug}</MetadataListItem>
-                                    {metadataApplication.description ? (
-                                        <MetadataListItem label="Description">
-                                            {metadataApplication.description}
-                                        </MetadataListItem>
-                                    ) : null}
-                                    <MetadataListItem label="Created">
-                                        {dateTimeFormatter.format(new Date(metadataApplication.created_at))}
-                                    </MetadataListItem>
-                                </MetadataList>
-                            </LayoutContent>
-                        }
-                        footer={
-                            <LayoutFooter>
-                                <Stack direction="horizontal" gap={2} justify="end">
-                                    <Button
-                                        className="text-warning underline"
-                                        label="Delete"
-                                        variant="ghost"
-                                        onClick={() => {
-                                            const application = metadataApplication;
-                                            setMetadataApplication(null);
-                                            deleteDialog.openFor(application);
-                                        }}
-                                    />
-                                    <Button
-                                        label="Close"
-                                        variant="primary"
-                                        onClick={() => setMetadataApplication(null)}
-                                    />
-                                </Stack>
-                            </LayoutFooter>
-                        }
-                    />
-                </Dialog>
+                            <Button label="Close" variant="primary" onClick={closeMetadataApplication} />
+                        </Stack>
+                    }
+                    onClose={closeMetadataApplication}
+                    title="Application metadata"
+                >
+                    <MetadataList>
+                        <MetadataListItem label="Status">
+                            <StatusBadge status={metadataApplication.status} />
+                        </MetadataListItem>
+                        <MetadataListItem label="Organization">
+                            {metadataApplication.organization.name}
+                        </MetadataListItem>
+                        <MetadataListItem label="Image">{metadataApplication.image_desired}</MetadataListItem>
+                        <MetadataListItem label="ID">{metadataApplication.id}</MetadataListItem>
+                        <MetadataListItem label="Slug">{metadataApplication.slug}</MetadataListItem>
+                        {metadataApplication.description ? (
+                            <MetadataListItem label="Description">{metadataApplication.description}</MetadataListItem>
+                        ) : null}
+                        <MetadataListItem label="Created">
+                            {dateTimeFormatter.format(new Date(metadataApplication.created_at))}
+                        </MetadataListItem>
+                    </MetadataList>
+                </MetadataDialog>
             ) : null}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>

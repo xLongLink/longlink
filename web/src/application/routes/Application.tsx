@@ -16,7 +16,9 @@ export default function Application() {
                     }
                     tabs={tabs}
                 >
-                    <PageContainer minHeight="100%">{content}</PageContainer>
+                    <PageContainer minHeight="100%" padding={2}>
+                        {content}
+                    </PageContainer>
                 </Platform>
             )}
         </ApplicationRuntime>

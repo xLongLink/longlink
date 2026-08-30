@@ -34,11 +34,8 @@ def test_readyml_list_renders_mapping_documents(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    # Act
-    documents = templates.readyml_list(template_path, name="dashboard")
-
     # Assert
-    assert documents == [
+    assert templates.readyml_list(template_path, name="dashboard") == [
         {"name": "dashboard"},
         {"kind": "ConfigMap", "metadata": {"name": "dashboard-config"}},
     ]

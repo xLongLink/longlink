@@ -1,15 +1,14 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
-from sqlalchemy import select
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
 from src.adapters.postgres import Postgres
-from src.database.services import invitations, organizations
+from src.database.services import organizations
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
@@ -25,7 +24,6 @@ from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -152,6 +150,8 @@ async def get_organization_storage_usage(
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
+    background_tasks: BackgroundTasks,
+    user: User = Depends(authuser),
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
@@ -165,9 +165,17 @@ async def create_organization_invitation(
     if not roles.atleast(membership.role, payload.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    await invitations.create(session, membership.organization_id, payload.email, payload.role)
+    organization = await organizations.create_invitation(
+        session,
+        membership.organization_id,
+        payload.email,
+        payload.role,
+        user,
+    )
     await session.commit()
-    await mail.send_organization_invitation_email(payload.email, membership.organization.name, payload.role)
+
+    # Deliver only after the invitation transaction commits.
+    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization.name, payload.role)
 
 
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
@@ -191,7 +199,6 @@ async def update_organization_member(
         member_id,
         payload.role,
         user,
-        membership.role,
     )
     if changed:
         await session.commit()
@@ -206,25 +213,7 @@ async def delete_organization(
 ):
     """Mark one Organization absent and queue lifecycle cleanup."""
 
-    # The initiating owner may retry cleanup after memberships are removed.
-    if not user.administrator:
-        tombstone = await session.scalar(
-            select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_not(None))
-        )
-        if tombstone is not None and tombstone.deleted_id != user.id:
-            raise HTTPException(status_code=403, detail="Access required")
-
-        # Require active Organization ownership for the first deletion request.
-        if tombstone is None:
-            membership = await organizations.membership(session, user.id, organization_id)
-            if membership is None:
-                raise HTTPException(status_code=403, detail="Access required")
-
-            # Require organization owners to delete organizations.
-            if not roles.atleast(membership.role, OrganizationRoles.owner):
-                raise HTTPException(status_code=403, detail="Permission required")
-
-    # Tombstone the Organization and its lifecycle cleanup atomically.
+    # Tombstone the Organization only after the service revalidates current ownership under its resource lock.
     result = await organizations.soft_delete(session, organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")

@@ -1,9 +1,50 @@
 import pytest
 from uuid import UUID
 from conftest import FakeKubernetes
+from src.utils import templates
 from src.kubernetes import applications
+from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
+
+
+def test_application_template_limits_ephemeral_storage() -> None:
+    """Bound each Application and migration temporary filesystem."""
+
+    # Arrange
+    migration, deployment, _, _ = templates.readyml_list(
+        files("src.kubernetes.templates").joinpath("application", "application.yml"),
+        application_id="application",
+        application_id_label="longlink.io/application-id",
+        image='"ghcr.io/longlink/dashboard:latest"',
+        namespace="acme",
+        runtime_revision="revision",
+        migration_id="application-migration",
+    )
+
+    # Assert
+    for workload in (migration, deployment):
+        workload_spec = workload["spec"]
+        assert isinstance(workload_spec, dict)
+        pod_template = workload_spec["template"]
+        assert isinstance(pod_template, dict)
+        pod_spec = pod_template["spec"]
+        assert isinstance(pod_spec, dict)
+        containers = pod_spec["containers"]
+        assert isinstance(containers, list) and len(containers) == 1
+        container = containers[0]
+        assert isinstance(container, dict)
+        resources = container["resources"]
+        assert isinstance(resources, dict)
+        requests = resources["requests"]
+        assert isinstance(requests, dict)
+        limits = resources["limits"]
+        assert isinstance(limits, dict)
+
+        assert requests["ephemeral-storage"] == "256Mi"
+        assert limits["ephemeral-storage"] == "512Mi"
+        assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]
+        assert pod_spec["volumes"] == [{"name": "tmp", "emptyDir": {"sizeLimit": "256Mi"}}]
 
 
 async def test_application_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch) -> None:

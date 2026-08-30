@@ -30,7 +30,8 @@ async def count(model: type[object]) -> int:
     """Return the number of persisted rows for one model."""
 
     async with session_scope() as session:
-        return await session.scalar(select(func.count()).select_from(model)) or 0
+        result = await session.execute(select(func.count()).select_from(model))
+        return result.scalar_one()
 
 
 async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> None:

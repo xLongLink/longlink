@@ -45,7 +45,7 @@ const slides = [
 ] as const;
 
 type CompetitorRow = {
-    avatar?: string;
+    avatar: string;
     language: string;
     license: string;
     product: string;
@@ -369,7 +369,7 @@ function PresentationSlide({
                             renderCell: (competitor) => (
                                 <Stack align="center" direction="horizontal" gap={2}>
                                     <Avatar kind="organization" name={competitor.product} src={competitor.avatar} />
-                                    <Stack align="start" gap={0}>
+                                    <Stack align="start">
                                         <Text weight="semibold">{competitor.product}</Text>
                                         <Text color="secondary" type="supporting">
                                             {competitor.release} - {competitor.license}
@@ -385,7 +385,6 @@ function PresentationSlide({
                     density="compact"
                     dividers="grid"
                     idKey="product"
-                    verticalAlign="middle"
                 />
             </Stack>
         ) : slide.id === 'goal' ? (

@@ -173,10 +173,10 @@ class Applications:
             if migration_pod is not None:
                 migration_name = migration_pod.metadata.get("name", "unknown")
                 if migration_phase == "Failed":
-                    return [
-                        f"Migration Pod {migration_name} failed:",
-                        *[line async for line in migration_pod.logs(tail_lines=200)],
-                    ]
+                    logs = [f"Migration Pod {migration_name} failed:"]
+                    async for line in migration_pod.logs(tail_lines=200):
+                        logs.append(line)
+                    return logs
                 return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Application Pod unavailable"]
             raise RuntimeError("Application logs unavailable")
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:

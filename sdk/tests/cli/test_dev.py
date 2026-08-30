@@ -47,7 +47,7 @@ def test_dev_command_warns_only_for_public_hosts(
                 "host": host,
                 "port": 1707,
                 "reload": True,
-                "reload_includes": ["*.xml"],
+                "reload_includes": ["*.py", "*.xml"],
                 "app_dir": str(dev.Path.cwd()),
                 "log_config": dev.log_config,
             },

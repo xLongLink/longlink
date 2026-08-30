@@ -125,7 +125,7 @@ export function PlatformFlowDiagram() {
                     </Stack>
                 </Stack>
             </Card>
-            <Stack direction="horizontal" gap={6} align="center" justify="start">
+            <Stack direction="horizontal" gap={6} align="center">
                 <ArrowLeftRight
                     aria-label="Platform and application request flow"
                     className="text-secondary"
