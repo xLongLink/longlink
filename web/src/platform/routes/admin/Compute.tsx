@@ -63,7 +63,7 @@ export default function AdminCompute() {
     }
 
     return (
-        <Stack gap={8} width="100%">
+        <Stack gap={8}>
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Compute</Heading>

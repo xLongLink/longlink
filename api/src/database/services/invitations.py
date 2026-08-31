@@ -81,12 +81,11 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     # Keep grants active for seven days and consume expired grants without creating access.
     cutoff = utcnow() - timedelta(days=7)
     active_invitations = [invitation for invitation in pending_invitations if invitation.created_at > cutoff]
+    delete_pending_invitations = delete(OrganizationInvitation).where(
+        OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
+    )
     if not active_invitations:
-        await session.execute(
-            delete(OrganizationInvitation).where(
-                OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
-            )
-        )
+        await session.execute(delete_pending_invitations)
         return set()
 
     # Lock every existing membership before creating or restoring invitation access.
@@ -126,10 +125,6 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
             changed_organization_ids.add(invitation.organization_id)
 
     # Consumed and expired grants no longer need an active or audit record.
-    await session.execute(
-        delete(OrganizationInvitation).where(
-            OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
-        )
-    )
+    await session.execute(delete_pending_invitations)
 
     return changed_organization_ids

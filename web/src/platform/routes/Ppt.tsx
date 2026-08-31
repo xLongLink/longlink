@@ -142,14 +142,14 @@ const howLayers = [
 function ProcessCoverage({ stages }: { stages: readonly string[] }) {
     return (
         <Stack align="center" direction="horizontal" gap={0.5}>
-            {stages.map((stage, index) => (
-                <Stack align="center" direction="horizontal" gap={0.5} key={stage}>
-                    <Text textWrap="nowrap" type="supporting">
-                        {stage}
-                    </Text>
-                    {index < stages.length - 1 ? <ArrowRight aria-hidden className="text-secondary" size={12} /> : null}
-                </Stack>
-            ))}
+            {stages.flatMap((stage, index) => [
+                <Text key={stage} textWrap="nowrap" type="supporting">
+                    {stage}
+                </Text>,
+                index < stages.length - 1 ? (
+                    <ArrowRight aria-hidden className="text-secondary" key={`${stage}-separator`} size={12} />
+                ) : null,
+            ])}
         </Stack>
     );
 }

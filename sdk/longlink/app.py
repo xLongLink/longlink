@@ -89,7 +89,7 @@ class LongLink:
             (definition for definition, _ in discovered_pages if definition.route != "/" and ":" not in definition.route),
             None,
         )
-        if first_tab_page:
+        if first_tab_page is not None:
 
             @app.get("/", include_in_schema=False)
             def redirect_root() -> RedirectResponse:

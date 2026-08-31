@@ -69,7 +69,7 @@ export default function AdminOrganizations() {
     }
 
     return (
-        <Stack gap={8} width="100%">
+        <Stack gap={8}>
             <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">

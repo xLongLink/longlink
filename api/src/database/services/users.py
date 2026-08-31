@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import contains_eager
 from collections.abc import Sequence
+from src.utils.oauth import OAuthProvider
 from src.environments import env
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
@@ -47,7 +48,7 @@ async def by_email(session: AsyncSession, email: Email) -> User | None:
     return await session.scalar(select(User).where(User.email == email))
 
 
-async def by_oauth_identity(session: AsyncSession, provider: str, subject: str) -> User | None:
+async def by_oauth_identity(session: AsyncSession, provider: OAuthProvider, subject: str) -> User | None:
     """Return one user by a stable external OAuth provider identity."""
 
     # Provider subjects remain stable when an account's primary email address changes.
