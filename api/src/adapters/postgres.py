@@ -98,7 +98,7 @@ class Postgres:
         try:
             # Use explicit connections for autocommit operations and transactions for normal operations.
             # Yield the selected connection context to the caller.
-            async with (engine.connect() if autocommit else engine.begin()) as conn:
+            async with engine.connect() if autocommit else engine.begin() as conn:
                 yield conn
 
         # Dispose the per-operation engine even when SQL execution raises.
@@ -153,9 +153,7 @@ class Postgres:
             await conn.execute(CreateSchema(quoted_name(application.hex, True), if_not_exists=True))
 
             # Create or rotate the app login role before granting schema permissions.
-            role_exists = await conn.scalar(
-                text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username}
-            )
+            role_exists = await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             role = self.quote(conn, runtime_username)
 
             # PostgreSQL password literals must be escaped by the active SQLAlchemy dialect.
@@ -267,8 +265,7 @@ class Postgres:
         # Runtime roles are cluster-global and remain discoverable after their database is removed.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
         async with self._connection("postgres") as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
-            return result.scalar_one_or_none() is not None
+            return (await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})) is not None
 
     async def database_usage(self, database_name: str) -> int | None:
         """Return physical size for one database when it exists."""

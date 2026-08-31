@@ -22,7 +22,7 @@ const requestPropsSchema = z.object({
     method: xmlNonblankStringSchema.transform((value) => value.toUpperCase()).pipe(z.enum(ACTION_METHODS)),
     form: z.unknown().optional(),
     json: z.unknown().optional(),
-    closeDialog: z.boolean().optional(),
+    closeDialog: z.boolean().default(false),
 });
 
 const patchPropsSchema = z.object({
@@ -118,7 +118,7 @@ async function executeAction(
     toast: ReturnType<typeof useToast>
 ): Promise<void> {
     let closeOnSuccess = false;
-    let status: number | null = null;
+    let status: number | undefined;
 
     for (const step of plan.steps) {
         if (step.kind === 'request') {
@@ -152,7 +152,7 @@ async function executeAction(
         closeDialog?.();
     }
 
-    if (status !== null) {
+    if (status !== undefined) {
         toast({ body: `Request completed with status ${status}` });
     }
 }
@@ -189,7 +189,7 @@ async function executeRequest(
     const requestUrl = resolveRequestUrl(requestBaseUrl, url);
     const response = await api(requestUrl, { body, headers, method });
 
-    return { closeDialog: closeDialog ?? false, status: response.status };
+    return { closeDialog, status: response.status };
 }
 
 /** Updates a State value or invalidates one State or Query setup. */

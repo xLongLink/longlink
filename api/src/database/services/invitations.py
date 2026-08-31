@@ -41,7 +41,6 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
         .with_for_update()
     )
     invitation = await session.scalar(invitation_statement)
-    is_reinvite = invitation is not None
 
     # Resolve concurrent re-invites to the one database-enforced active grant.
     if invitation is None:
@@ -54,11 +53,11 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
             invitation = await session.scalar(invitation_statement)
             if invitation is None:
                 raise ConflictError("Invitation could not be created") from exc
-            is_reinvite = True
+        else:
+            return
 
-    if is_reinvite:
-        invitation.role = role
-        invitation.created_at = utcnow()
+    invitation.role = role
+    invitation.created_at = utcnow()
 
 
 async def accept(session: AsyncSession, user: User) -> set[UUID]:

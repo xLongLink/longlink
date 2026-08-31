@@ -11,8 +11,7 @@ const tablePropsSchema = z.object({ data: z.array(z.record(z.string(), z.unknown
 const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 
 export function Table({ props, nodes }: Props) {
-    const runtime = useXmlRuntime();
-    const ctx = runtime.scope;
+    const { scope: ctx, services } = useXmlRuntime();
 
     const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
 
@@ -60,7 +59,7 @@ export function Table({ props, nodes }: Props) {
                     };
 
                     return (
-                        <XmlContext.Provider value={{ scope: rowCtx, services: runtime.services }}>
+                        <XmlContext.Provider value={{ scope: rowCtx, services }}>
                             {renderNode(cellNodes, rowCtx)}
                         </XmlContext.Provider>
                     );

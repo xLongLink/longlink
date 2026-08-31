@@ -32,8 +32,8 @@ def test_organization_template_limits_ephemeral_storage() -> None:
     }
 
 
-def test_organization_template_blocks_ipv4_mapped_ipv6_egress() -> None:
-    """Exclude IPv4-mapped IPv6 addresses from public workload egress."""
+def test_organization_template_has_valid_ipv6_egress_exceptions() -> None:
+    """Keep IPv6 egress exceptions within the IPv6 destination block."""
 
     # Arrange
     _, _, network_policy = templates.readyml_list(
@@ -46,7 +46,7 @@ def test_organization_template_blocks_ipv4_mapped_ipv6_egress() -> None:
     assert isinstance(network_policy_spec, dict)
     egress = network_policy_spec["egress"]
     assert isinstance(egress, list)
-    assert "::ffff:0:0/96" in egress[2]["to"][0]["ipBlock"]["except"]
+    assert egress[2]["to"][0]["ipBlock"]["except"] == ["::1/128", "fc00::/7", "fe80::/10"]
 
 
 async def test_organization_apply_creates_namespace_boundary_resources(monkeypatch: pytest.MonkeyPatch) -> None:
