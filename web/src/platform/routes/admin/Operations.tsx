@@ -29,6 +29,13 @@ const kindLabels: Record<OperationResponse['kind'], string> = {
     'organization.create': 'Organization creation',
     'organization.delete': 'Organization deletion',
 };
+const resourceLabels: Record<OperationResponse['kind'], string> = {
+    'compute.create': 'Compute',
+    'application.create': 'Application',
+    'application.delete': 'Application',
+    'organization.create': 'Organization',
+    'organization.delete': 'Organization',
+};
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
@@ -74,6 +81,14 @@ export default function AdminOperations() {
                                     ? `${statusLabels[operation.status]} - ${dateTimeFormatter.format(new Date(operation.finished_at)).replace(', ', ' ')}`
                                     : `Started - ${dateTimeFormatter.format(new Date(operation.created_at)).replace(', ', ' ')}`}
                             </Text>
+                        </Stack>
+                    )}
+                </TableColumn>
+                <TableColumn<OperationResponse> field="resource" header="Resource" width={proportional(1)}>
+                    {(operation) => (
+                        <Stack>
+                            <Text weight="semibold">{operation.resource?.name ?? 'Resource unavailable'}</Text>
+                            <Text type="supporting">{resourceLabels[operation.kind]}</Text>
                         </Stack>
                     )}
                 </TableColumn>

@@ -41,9 +41,7 @@ async def reconcile(organization_id: UUID) -> None:
     try:
         await cluster.organizations.apply(organization.id.hex)
     finally:
-        closer = getattr(cluster, "aclose", None)
-        if closer is not None:
-            await closer()
+        await cluster.aclose()
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     async with session_scope() as session:
@@ -96,9 +94,7 @@ async def delete(organization_id: UUID) -> str | None:
     try:
         await cluster.organizations.delete(infrastructure.organization.id.hex)
     finally:
-        closer = getattr(cluster, "aclose", None)
-        if closer is not None:
-            await closer()
+        await cluster.aclose()
     for application_id in application_ids:
         await db.delete_schema(infrastructure.organization.id, application_id)
         await object_storage.revoke(application_id.hex)

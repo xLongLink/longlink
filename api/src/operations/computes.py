@@ -63,6 +63,4 @@ async def create(compute_id: UUID) -> str | None:
                 return "Compute gateway state was not recorded"
             await session.commit()
     finally:
-        closer = getattr(cluster, "aclose", None)
-        if closer is not None:
-            await closer()
+        await cluster.aclose()

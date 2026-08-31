@@ -35,6 +35,9 @@ class FakeCompute:
             raise self.outcome
         return self.outcome
 
+    async def aclose(self) -> None:
+        """Provide the Kubernetes client cleanup contract."""
+
 
 async def test_list_apps_returns_requested_page_for_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],

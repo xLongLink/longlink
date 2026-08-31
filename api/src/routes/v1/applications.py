@@ -91,9 +91,7 @@ async def get_application_logs(
         try:
             return await cluster.applications.logs(application.id, organization.id.hex)
         finally:
-            closer = getattr(cluster, "aclose", None)
-            if closer is not None:
-                await closer()
+            await cluster.aclose()
     except RuntimeError as exc:
         logger.warning("Application logs unavailable for '%s': %s", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
