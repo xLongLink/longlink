@@ -20,65 +20,62 @@ HTTPRouteResource = new_class("HTTPRoute", "gateway.networking.k8s.io/v1", async
 
 
 async def _log_migration_diagnostics(
-    api: Api, migration_job: Job, migration_id: str, application_id: UUID, namespace: str
+    api: Api, migration_job: Job, migration_id: str, namespace: str
 ) -> None:
     """Log the current Kubernetes state for one unsuccessful migration Job."""
 
-    # Capture the latest Job counters and terminal conditions.
+    # Bound best-effort diagnostics so cluster failures cannot hide the original outcome.
     try:
-        await migration_job.refresh()
-    except Exception:
-        logger.exception("Could not refresh migration Job %s diagnostics", migration_id)
-    status = migration_job.raw.get("status", {})
-    logger.error("Migration Job %s status: %s", migration_id, json.dumps(status, sort_keys=True, default=str))
+        async with asyncio.timeout(MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS):
+            await migration_job.refresh()
+            status = migration_job.raw.get("status", {})
+            logger.error("Migration Job %s status: %s", migration_id, json.dumps(status, sort_keys=True, default=str))
 
-    # Capture each Pod's scheduling, image, container, and termination state before requesting its output.
-    resource_names = [migration_id]
-    pod_found = False
-    try:
-        async for pod in Pod.list(
-            api=api,
-            namespace=namespace,
-            label_selector={APPLICATION_ID_LABEL: str(application_id), "job-name": migration_id},
-        ):
-            pod_found = True
-            pod_name = pod.metadata.get("name", "unknown")
-            resource_names.append(pod_name)
-            pod_status = pod.raw.get("status", {})
-            logger.error("Migration Pod %s status: %s", pod_name, json.dumps(pod_status, sort_keys=True, default=str))
+            # Materialize the bounded Job Pod set once for status, Event, and output collection.
+            pods = [
+                cast(Pod, pod)
+                async for pod in Pod.list(
+                    api=api,
+                    namespace=namespace,
+                    label_selector={"job-name": migration_id},
+                )
+            ]
+            if not pods:
+                logger.error("Migration Job %s has not created a Pod", migration_id)
 
-            # Running and terminated containers may have useful output even when the Job never became terminal.
-            phase = pod_status.get("phase") if isinstance(pod_status, dict) else None
-            if phase in {"Running", "Succeeded", "Failed"}:
-                try:
-                    logger.error("Recent output from migration Pod %s:", pod_name)
-                    async for line in pod.logs(tail_lines=200):
-                        logger.error("Migration Pod %s: %s", pod_name, line)
-                except Exception:
-                    logger.exception("Could not retrieve output from migration Pod %s", pod_name)
-    except Exception:
-        logger.exception("Could not retrieve Pods for migration Job %s", migration_id)
-    if not pod_found:
-        logger.error("Migration Job %s has not created a Pod", migration_id)
+            resource_names = {migration_id}
+            for pod in pods:
+                resource_names.add(pod.name)
+                pod_status = pod.raw.get("status", {})
+                logger.error("Migration Pod %s status: %s", pod.name, json.dumps(pod_status, sort_keys=True, default=str))
 
-    # Warning Events explain admission, quota, scheduling, volume, and image failures absent from Job status.
-    for resource_name in resource_names:
-        try:
-            async for event in Event.list(
-                api=api,
-                namespace=namespace,
-                field_selector={"involvedObject.name": resource_name},
-            ):
-                if event.raw.get("type") != "Warning":
+            # One namespace Event query covers admission, quota, scheduling, volume, and image failures.
+            async for event in Event.list(api=api, namespace=namespace, field_selector={"type": "Warning"}):
+                event = cast(Event, event)
+                involved_object = event.raw.get("involvedObject")
+                if not isinstance(involved_object, dict) or involved_object.get("name") not in resource_names:
                     continue
                 logger.error(
                     "Kubernetes warning for %s: %s: %s",
-                    resource_name,
+                    involved_object["name"],
                     event.raw.get("reason", "Unknown"),
                     event.raw.get("message", "No message"),
                 )
-        except Exception:
-            logger.exception("Could not retrieve Kubernetes Events for %s", resource_name)
+
+            # Running and terminated containers may have useful output even when the Job never became terminal.
+            for pod in pods:
+                pod_status = pod.raw.get("status", {})
+                phase = pod_status.get("phase") if isinstance(pod_status, dict) else None
+                if phase not in {"Running", "Succeeded", "Failed"}:
+                    continue
+
+                logger.error("Recent output from migration Pod %s:", pod.name)
+                async for line in pod.logs(tail_lines=200):
+                    logger.error("Migration Pod %s: %s", pod.name, line)
+    except TimeoutError:
+        logger.error("Migration Job %s diagnostics timed out", migration_id)
+    except Exception:
+        logger.exception("Could not collect migration Job %s diagnostics", migration_id)
 
 
 class Applications:
@@ -137,38 +134,21 @@ class Applications:
         except asyncio.CancelledError:
             # Preserve the operation timeout or worker shutdown after collecting bounded cluster diagnostics.
             logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
-            try:
-                async with asyncio.timeout(MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS):
-                    await _log_migration_diagnostics(api, migration_job, migration_id, application_id, namespace)
-            except TimeoutError:
-                logger.error("Migration Job %s diagnostics timed out", migration_id)
-            except Exception:
-                logger.exception("Could not collect migration Job %s diagnostics", migration_id)
+            await _log_migration_diagnostics(api, migration_job, migration_id, namespace)
             raise
 
-        # Treat the Kubernetes terminal conditions as authoritative even when failed Pod counters are absent.
+        # Treat the Kubernetes terminal condition as the authoritative Job outcome.
         status = migration_job.raw.get("status")
         conditions = status.get("conditions", []) if isinstance(status, dict) else []
-        failed_count = status.get("failed") if isinstance(status, dict) else None
-        failed_condition = isinstance(conditions, list) and any(
+        failed = isinstance(conditions, list) and any(
             isinstance(condition, dict)
             and condition.get("type") == "Failed"
             and condition.get("status") == "True"
             for condition in conditions
         )
-        failed = isinstance(failed_count, int) and failed_count > 0 or failed_condition
         if failed:
             logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
-
-            # Bound best-effort diagnostics so an unavailable Kubernetes API cannot hide the migration failure.
-            try:
-                async with asyncio.timeout(MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS):
-                    await _log_migration_diagnostics(api, migration_job, migration_id, application_id, namespace)
-            except TimeoutError:
-                logger.error("Migration Job %s diagnostics timed out", migration_id)
-            except Exception:
-                logger.exception("Could not collect migration Job %s diagnostics", migration_id)
-
+            await _log_migration_diagnostics(api, migration_job, migration_id, namespace)
             raise RuntimeError(f"Application migration Job '{migration_id}' failed")
         logger.info("Migration Job %s completed for Application %s in namespace %s", migration_id, application_id, namespace)
 

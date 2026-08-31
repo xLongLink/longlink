@@ -70,7 +70,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             """Accept the migration terminal conditions."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
-            self.raw["status"] = {"failed": 1}
+            self.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
 
         async def refresh(self) -> None:
             """Keep the terminal migration status unchanged."""
@@ -78,6 +78,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     class MigrationPod:
         """Expose output from the failed migration Job."""
 
+        name = "failed-migration-pod"
         metadata = {"name": "failed-migration-pod"}
         raw = {"status": {"phase": "Failed"}}
 
@@ -87,8 +88,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
             assert kwargs["namespace"] == "acme"
             assert kwargs["label_selector"] == {
-                applications.APPLICATION_ID_LABEL: "00000000-0000-4000-8000-000000000001",
-                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840",
+                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
             }
             yield cls()
 

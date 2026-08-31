@@ -2,7 +2,7 @@ import docker
 import pytest
 import asyncio
 import pytest_asyncio
-from docker.errors import APIError, DockerException
+from docker.errors import DockerException
 from collections.abc import AsyncIterator
 from docker.constants import DEFAULT_DOCKER_API_VERSION
 from sqlalchemy.engine import URL, make_url
@@ -21,8 +21,6 @@ def require_docker_daemon() -> None:
     try:
         client = docker.from_env(version=DEFAULT_DOCKER_API_VERSION)
         client.ping()
-    except APIError:
-        raise
     except (DockerException, OSError) as exc:
         pytest.skip(f"Docker daemon is not available: {exc}")
     finally:

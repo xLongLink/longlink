@@ -1,7 +1,7 @@
 import docker
 import pytest
 from contextlib import contextmanager
-from docker.errors import APIError, DockerException
+from docker.errors import DockerException
 from collections.abc import Iterator
 from docker.constants import DEFAULT_DOCKER_API_VERSION
 from testcontainers.community.postgres import PostgresContainer
@@ -17,8 +17,6 @@ def require_docker_daemon() -> None:
 
         # A reachable daemon may still reject the API version or request; those errors must fail the test.
         client.ping()
-    except APIError:
-        raise
     except (DockerException, OSError) as exc:
         pytest.skip(f"Docker daemon is not available: {exc}")
     finally:
