@@ -138,6 +138,7 @@ export function useOrganizationMembers(organizationId: string) {
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
             ]),
     });

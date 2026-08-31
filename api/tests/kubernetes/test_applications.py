@@ -72,10 +72,14 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             assert conditions == ["condition=Complete", "condition=Failed"]
             self.raw["status"] = {"failed": 1}
 
+        async def refresh(self) -> None:
+            """Keep the terminal migration status unchanged."""
+
     class MigrationPod:
         """Expose output from the failed migration Job."""
 
         metadata = {"name": "failed-migration-pod"}
+        raw = {"status": {"phase": "Failed"}}
 
         @classmethod
         async def list(cls, **kwargs: object) -> AsyncIterator["MigrationPod"]:
@@ -93,6 +97,16 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
             assert tail_lines == 200
             yield "database connection refused"
+
+    class MigrationEvent:
+        """Expose no warning Events for the failed migration fixture."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object) -> AsyncIterator["MigrationEvent"]:
+            """Yield no Kubernetes Events."""
+
+            if False:
+                yield cls()
 
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
@@ -117,6 +131,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     monkeypatch.setattr(applications, "Secret", Resource)
     monkeypatch.setattr(applications, "Job", MigrationJob)
     monkeypatch.setattr(applications, "Pod", MigrationPod)
+    monkeypatch.setattr(applications, "Event", MigrationEvent)
     monkeypatch.setattr(applications, "Service", Resource)
     monkeypatch.setattr(applications, "Deployment", Resource)
     monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
@@ -133,7 +148,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
         )
     assert applied == ["Secret", "Job"]
     assert logged[-2:] == [
-        "Recent output from failed migration Pod failed-migration-pod:",
+        "Recent output from migration Pod failed-migration-pod:",
         "Migration Pod failed-migration-pod: database connection refused",
     ]
 

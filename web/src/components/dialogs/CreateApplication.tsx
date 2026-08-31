@@ -86,19 +86,12 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             }
         },
     });
-    const errorStatus = error ? <FieldStatus type="error" message={error} variant="detached" /> : null;
 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
         form.reset(defaultCreateApplicationValues);
         setError(null);
-    }
-
-    /** Submits the form without navigating the browser. */
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        void form.handleSubmit();
     }
 
     /** Inspect the image and advance to the app details step. */
@@ -220,7 +213,13 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 }
                                 content={
                                     <LayoutContent>
-                                        <form id={formId} onSubmit={handleSubmit}>
+                                        <form
+                                            id={formId}
+                                            onSubmit={(event: FormEvent<HTMLFormElement>) => {
+                                                event.preventDefault();
+                                                void form.handleSubmit();
+                                            }}
+                                        >
                                             <FormLayout>
                                                 {step === 'image' ? (
                                                     <form.Field name="image">
@@ -297,7 +296,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                         </form.Field>
                                                     ))
                                                 )}
-                                                {errorStatus}
+                                                {error ? (
+                                                    <FieldStatus type="error" message={error} variant="detached" />
+                                                ) : null}
                                             </FormLayout>
                                         </form>
                                     </LayoutContent>

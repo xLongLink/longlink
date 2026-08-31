@@ -475,11 +475,11 @@ async def test_exoscale_delete_tolerates_absent_bucket(monkeypatch: pytest.Monke
 
 
 @pytest.mark.parametrize(
-    ("api_keys", "roles", "expected"),
+    ("api_keys", "roles", "expected", "expected_calls"),
     [
-        pytest.param([], [], False, id="absent"),
-        pytest.param([{"name": "longlink-dashboard"}], [], True, id="api-key"),
-        pytest.param([], [{"name": "longlink-dashboard"}], True, id="iam-role"),
+        pytest.param([], [], False, ["api-keys", "iam-roles"], id="absent"),
+        pytest.param([{"name": "longlink-dashboard"}], [], True, ["api-keys"], id="api-key"),
+        pytest.param([], [{"name": "longlink-dashboard"}], True, ["api-keys", "iam-roles"], id="iam-role"),
     ],
 )
 async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
@@ -487,6 +487,7 @@ async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
     api_keys: list[dict[str, str]],
     roles: list[dict[str, str]],
     expected: bool,
+    expected_calls: list[str],
 ) -> None:
     """Treat either generated credential resource as remaining Application state."""
 
@@ -526,7 +527,7 @@ async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
 
     # Assert
     assert exists is expected
-    assert calls == ["api-keys", "iam-roles"]
+    assert calls == expected_calls
 
 
 def test_exoscale_client_uses_registry_sos_configuration(monkeypatch: pytest.MonkeyPatch) -> None:

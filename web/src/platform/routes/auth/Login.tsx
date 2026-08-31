@@ -34,6 +34,7 @@ export default function Login() {
     const { data: oauthAvailability } = useQuery({
         queryKey: ['api', '/api/v1/auth/oauth'],
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
+        enabled: !user,
         staleTime: Infinity,
     });
     const hasOAuthProvider = Boolean(oauthAvailability?.github || oauthAvailability?.google);

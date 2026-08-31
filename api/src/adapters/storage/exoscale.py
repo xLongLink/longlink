@@ -256,10 +256,8 @@ class Exoscale:
         credential_name = f"longlink-{name}"
         async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
             api = cast(AsyncClient, client)
-            for collection, response in (
-                ("api-keys", await api.list_api_keys()),
-                ("iam-roles", await api.list_iam_roles()),
-            ):
+            for collection, list_resources in (("api-keys", api.list_api_keys), ("iam-roles", api.list_iam_roles)):
+                response = await list_resources()
                 items = response.get(collection)
                 if not isinstance(items, list):
                     raise RuntimeError(f"Exoscale {collection} inventory response is invalid")

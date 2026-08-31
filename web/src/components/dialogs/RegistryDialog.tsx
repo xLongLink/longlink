@@ -69,7 +69,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         open,
         openDialog: () => setOpen(true),
         handleOpenChange,
-        submit: form.handleSubmit,
     };
 }
 
@@ -102,7 +101,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                                 id={formId}
                                 onSubmit={(event) => {
                                     event.preventDefault();
-                                    void dialog.submit();
+                                    void dialog.form.handleSubmit();
                                 }}
                             >
                                 {children}

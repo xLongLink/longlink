@@ -34,6 +34,7 @@ export default function AdminOrganizations() {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]);
             toast({ body: 'Organization deleted' });
         },

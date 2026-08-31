@@ -50,6 +50,7 @@ export default function Settings() {
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]),
     });
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -79,6 +80,7 @@ export default function Settings() {
         // Persist the account name and surface any failure.
         try {
             await updateUser.mutateAsync({ name: accountName });
+            setEditedName(null);
             toast({ body: 'Username saved' });
         } catch (error) {
             toast({
@@ -104,10 +106,10 @@ export default function Settings() {
             return;
         }
 
-        // Persist the URL and keep the response available while profile data refreshes.
+        // Persist the URL and use the refreshed profile value.
         try {
-            const updated = await updateUser.mutateAsync({ avatar: normalizedAvatar });
-            setEditedAvatar(updated.avatar);
+            await updateUser.mutateAsync({ avatar: normalizedAvatar });
+            setEditedAvatar(null);
             setIsAvatarDialogOpen(false);
             toast({ body: 'Avatar saved' });
         } catch (mutationError) {

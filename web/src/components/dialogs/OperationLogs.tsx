@@ -3,6 +3,8 @@ import LogDialog from '@/components/dialogs/Log';
 import { useQuery } from '@tanstack/react-query';
 import { zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
+const EMPTY_LOG_LINES: readonly string[] = [];
+
 /** Renders the captured terminal logs for one Platform operation. */
 export default function OperationLogs({
     operationId,
@@ -14,7 +16,7 @@ export default function OperationLogs({
     onOpenChange: (open: boolean) => void;
 }) {
     const {
-        data: logLines = [],
+        data: logLines = EMPTY_LOG_LINES,
         error,
         isFetching,
     } = useQuery({

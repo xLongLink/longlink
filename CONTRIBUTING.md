@@ -45,7 +45,8 @@ make up             # Initialize local services, cluster, and Application image
 make web            # Run the Vite web app
 make api            # Run the LongLink Platform API after seeding
 
-make down           # Stop local services and remove local volumes and the cluster
+make down           # Stop local services and the cluster; retain volumes
+make clear          # Remove local Compose volumes
 ```
 
 ## Test the SDK in development

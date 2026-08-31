@@ -3,6 +3,8 @@ import LogDialog from '@/components/dialogs/Log';
 import { useQuery } from '@tanstack/react-query';
 import { zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
+const EMPTY_LOG_LINES: readonly string[] = [];
+
 /** Renders the application logs dialog for an organization. */
 export default function Logs({
     applicationId,
@@ -14,7 +16,7 @@ export default function Logs({
     onOpenChange: (open: boolean) => void;
 }) {
     const {
-        data: logLines = [],
+        data: logLines = EMPTY_LOG_LINES,
         error,
         isFetching,
     } = useQuery({

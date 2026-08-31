@@ -23,11 +23,10 @@
     "oxc.fmt.configPath": "./web/vite.config.ts",
     "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
     "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.ignore": ["api/src/database/models", "api/src/database/services"],
+    "python.analysis.ignore": ["api/src/database/models"],
     "python.analysis.extraPaths": [
         "${workspaceFolder}/api/src",
-        "${workspaceFolder}/sdk",
-        "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages"
+        "${workspaceFolder}/sdk"
     ],
     "terminal.integrated.env.linux": {
         "DEVELOPMENT": "true"
