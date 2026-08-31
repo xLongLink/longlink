@@ -79,8 +79,7 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     assert allowed_response.json()["name"] == "umbrella"
     async with session_scope() as session:
         owner_organization_count = await session.scalar(
-            select(func.count()).select_from(Organization)
-            .where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
+            select(func.count()).select_from(Organization).where(Organization.created_id == owner.id, Organization.deleted_at.is_(None))
         )
         other_user_organization_count = await session.scalar(
             select(func.count())
@@ -1043,7 +1042,7 @@ async def test_update_organization_directly_returns_result_or_not_found(monkeypa
 
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1))
-    membership = SimpleNamespace(role=OrganizationRoles.admin, organization_id=organization.id)
+    membership = SimpleNamespace(organization_id=organization.id)
     user = SimpleNamespace(id=UUID(int=2))
     session = SimpleNamespace(commits=0)
 
@@ -1086,7 +1085,7 @@ async def test_create_organization_invitation_directly_commits_and_queues_email(
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1), name="acme")
     user = SimpleNamespace(id=UUID(int=2))
-    membership = SimpleNamespace(role=OrganizationRoles.maintain, organization_id=organization.id, organization=organization)
+    membership = SimpleNamespace(organization_id=organization.id)
     session = SimpleNamespace(commits=0)
     calls: list[str] = []
 

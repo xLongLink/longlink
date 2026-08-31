@@ -5,6 +5,7 @@ from starlette.middleware.gzip import GZipMiddleware
 
 HASHED_ASSET_PATH = re.compile(r"^/assets/.+-[A-Za-z0-9_-]{8,}\.[A-Za-z0-9]+$")
 INCOMPRESSIBLE_SUFFIXES = (".avif", ".gif", ".gz", ".ico", ".jpeg", ".jpg", ".png", ".webp", ".woff2", ".zip")
+CACHEABLE_RESPONSE_STATUSES = frozenset((200, 206, 304))
 
 
 def accepts_gzip(value: str) -> bool:
@@ -48,7 +49,6 @@ class FrontendMiddleware:
         self.app = app
         self.gzip = GZipMiddleware(app, minimum_size=1000, compresslevel=6)
 
-
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Compress eligible responses and adjust their cache headers."""
 
@@ -86,13 +86,13 @@ class FrontendMiddleware:
 
             # Preserve explicit route policies before applying frontend defaults.
             if "cache-control" not in headers:
-                if headers.get("content-type", "").startswith("text/html") and status in {200, 206, 304}:
+                if headers.get("content-type", "").startswith("text/html") and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "no-cache"
-                elif HASHED_ASSET_PATH.fullmatch(path) and status in {200, 206, 304}:
+                elif HASHED_ASSET_PATH.fullmatch(path) and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "public, max-age=31536000, immutable"
                 elif path.startswith("/assets/"):
                     headers["cache-control"] = "no-store" if status >= 400 else "no-cache"
-                elif path == "/favicon.ico" and status in {200, 206, 304}:
+                elif path == "/favicon.ico" and status in CACHEABLE_RESPONSE_STATUSES:
                     headers["cache-control"] = "public, max-age=86400"
 
             await send(message)

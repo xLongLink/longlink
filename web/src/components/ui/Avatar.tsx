@@ -3,7 +3,7 @@ import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
 
 type AstryxAvatarProps = Omit<ComponentProps<typeof AstryxAvatar>, 'src'>;
 
-export type AvatarProps = AstryxAvatarProps &
+type AvatarProps = AstryxAvatarProps &
     ({ kind: 'organization'; name: string; src?: string | null } | { kind?: 'user'; src?: string });
 
 /** Renders a circular user avatar or rounded-square organization avatar. */

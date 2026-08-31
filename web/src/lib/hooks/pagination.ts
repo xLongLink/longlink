@@ -39,7 +39,8 @@ export function usePaginate<T extends Record<string, unknown>>(
     });
 
     return {
-        ...query,
+        error: query.error,
+        isLoading: query.isLoading,
         items,
         pagination,
     };

@@ -59,8 +59,8 @@ def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(
     assert any(middleware.cls is main.CORSMiddleware for middleware in app.user_middleware) is development
 
 
-async def test_lifespan_reconciles_administrator_and_stops_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile the administrator before starting and cancelling the scheduler."""
+async def test_lifespan_reconciles_administrator_and_stops_operation_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reconcile the administrator before starting and cancelling Operation jobs."""
 
     # Arrange
     events: list[str] = []
@@ -87,16 +87,27 @@ async def test_lifespan_reconciles_administrator_and_stops_scheduler(monkeypatch
     async def scheduler() -> None:
         """Record scheduler startup and cancellation from lifespan shutdown."""
 
-        events.append("start")
+        events.append("scheduler start")
         try:
             await main.asyncio.Event().wait()
         except main.asyncio.CancelledError:
-            events.append("cancel")
+            events.append("scheduler cancel")
+            raise
+
+    async def log_cleanup() -> None:
+        """Record log cleanup startup and cancellation from lifespan shutdown."""
+
+        events.append("cleanup start")
+        try:
+            await main.asyncio.Event().wait()
+        except main.asyncio.CancelledError:
+            events.append("cleanup cancel")
             raise
 
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", scheduler)
+    monkeypatch.setattr(main.jobs, "run_operation_log_cleanup", log_cleanup)
 
     # Act
     async with main.lifespan(main.app):
@@ -104,7 +115,15 @@ async def test_lifespan_reconciles_administrator_and_stops_scheduler(monkeypatch
         events.append("serving")
 
     # Assert
-    assert events == ["administrator", "commit", "start", "serving", "cancel"]
+    assert events == [
+        "administrator",
+        "commit",
+        "scheduler start",
+        "cleanup start",
+        "serving",
+        "scheduler cancel",
+        "cleanup cancel",
+    ]
 
 
 async def test_lifespan_does_not_start_scheduler_when_administrator_reconciliation_fails(

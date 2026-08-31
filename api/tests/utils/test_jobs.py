@@ -14,8 +14,8 @@ from src.database.models.operations import Operation
 pytestmark = pytest.mark.no_db
 
 
-def test_operation_log_handler_truncates_output_at_its_byte_limit() -> None:
-    """Retain bounded operation diagnostics after excessive logging."""
+def test_operation_log_handler_retains_all_output() -> None:
+    """Retain complete operation diagnostics without a size limit."""
 
     # Arrange
     expected_operation_id = UUID("11111111-1111-1111-1111-111111111111")
@@ -25,14 +25,14 @@ def test_operation_log_handler_truncates_output_at_its_byte_limit() -> None:
 
     # Act
     try:
-        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "x" * operation_worker.MAX_OPERATION_LOG_BYTES, (), None))
+        large_message = "x" * 65536
+        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, large_message, (), None))
         handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "overflow", (), None))
-        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "ignored", (), None))
     finally:
         operation_worker.operation_id.reset(token)
 
     # Assert
-    assert handler.logs == [operation_worker.OPERATION_LOG_TRUNCATION]
+    assert handler.logs == [large_message, "overflow"]
 
 
 def leased_operation() -> Operation:
@@ -53,6 +53,7 @@ def failed_transition(operation: Operation) -> Callable[[object, UUID, str, list
 
         assert operation_id == operation.id
         operation.failed = reason
+        operation.logs = logs
         operation.finished_at = utcnow()
         return operation
 
@@ -206,7 +207,7 @@ async def test_execute_persists_timeout_as_terminal_failure(monkeypatch: pytest.
 
     # Assert
     assert result.status == OperationStatus.failed
-    assert result.failed == "Operation timed out"
+    assert result.failed == f"Operation timed out after {operation_worker.env.OPERATION_TIMEOUT_SECONDS} seconds"
 
 
 async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -228,7 +229,8 @@ async def test_execute_persists_unexpected_handler_error_as_terminal_failure(mon
 
     # Assert
     assert result.status == OperationStatus.failed
-    assert result.failed == "Operation failed"
+    assert result.failed == "RuntimeError: provider unavailable"
+    assert any("RuntimeError: provider unavailable" in line for line in result.logs)
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -317,7 +319,15 @@ async def test_execute_completes_successful_operation(monkeypatch: pytest.Monkey
     # Assert
     assert result is operation
     assert result.status == OperationStatus.completed
-    assert transitions == [(operation.id, [f"INFO: Running {operation.kind} operation {operation.id}"])]
+    assert transitions == [
+        (
+            operation.id,
+            [
+                f"INFO: Running {operation.kind} operation {operation.id}",
+                f"INFO: Operation {operation.id} completed",
+            ],
+        )
+    ]
 
 
 async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch) -> None:

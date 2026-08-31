@@ -15,6 +15,8 @@ from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
+OPERATION_LOG_RETENTION = timedelta(days=30)
+
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[OperationResponse], int]:
     """Return one newest-first page of platform operations."""
@@ -101,6 +103,27 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
     return items, count_result.scalar_one()
+
+
+async def clear_expired_logs(session: AsyncSession) -> int:
+    """Clear logs from Operations that finished outside the retention window."""
+
+    # Load only expired diagnostic payloads while retaining their Operation history.
+    result = await session.scalars(
+        select(Operation)
+        .options(load_only(Operation.logs))
+        .where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+    )
+    expired_operations = result.all()
+
+    # Clear only payloads that have not already been removed by an earlier cleanup.
+    cleared = 0
+    for operation in expired_operations:
+        if not operation.logs:
+            continue
+        operation.logs = []
+        cleared += 1
+    return cleared
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

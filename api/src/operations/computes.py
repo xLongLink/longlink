@@ -1,5 +1,6 @@
 import ipaddress
 from uuid import UUID
+from src.logger import logger
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import compute
@@ -26,6 +27,7 @@ async def create(compute_id: UUID) -> str | None:
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute_id)
     if registry is None:
+        logger.info("Compute %s no longer exists; skipping reconciliation", compute_id)
         return None
     cluster = Kubernetes(registry.kubeconfig)
 
@@ -37,6 +39,7 @@ async def create(compute_id: UUID) -> str | None:
             and registry.gateway_certificate is not None
             and registry.gateway_client_identity is not None
         ):
+            logger.info("Applying existing Gateway resources for Compute %s", registry.id)
             gateway_address = await cluster.gateway.apply()
             if registry.gateway_url != gateway_url(gateway_address):
                 return "Gateway endpoint changed and requires explicit credential rotation"
@@ -44,13 +47,16 @@ async def create(compute_id: UUID) -> str | None:
 
         # Generate mTLS credentials only while bootstrapping an unpublished Compute.
         # Envoy Gateway allocates and publishes the shared production data-plane endpoint.
+        logger.info("Bootstrapping Gateway resources for Compute %s", registry.id)
         gateway_address = await cluster.gateway.apply(generate_gateway_bootstrap_tls(registry.id))
 
         # Replace bootstrap mTLS identities with a server certificate bound to the published endpoint.
+        logger.info("Replacing bootstrap Gateway TLS for Compute %s", registry.id)
         tls = generate_gateway_tls(registry.id, gateway_address)
         await cluster.gateway.replace_tls(tls)
 
         # Publish connection material only after the desired gateway Deployment is serving.
+        logger.info("Publishing Gateway connection state for Compute %s", registry.id)
         async with session_scope() as session:
             if not await compute.record_success(
                 session,

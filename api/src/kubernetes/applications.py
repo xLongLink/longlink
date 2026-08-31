@@ -72,6 +72,21 @@ class Applications:
         status = migration_job.raw.get("status")
         if isinstance(status, dict) and isinstance(status.get("failed"), int) and status["failed"] > 0:
             logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
+
+            # Capture the current migration Pod output without replacing the original failure when retrieval fails.
+            try:
+                async for pod in Pod.list(
+                    api=api,
+                    namespace=namespace,
+                    label_selector={APPLICATION_ID_LABEL: str(application_id), "job-name": migration_id},
+                ):
+                    pod_name = pod.metadata.get("name", "unknown")
+                    logger.error("Recent output from failed migration Pod %s:", pod_name)
+                    async for line in pod.logs(tail_lines=200):
+                        logger.error("Migration Pod %s: %s", pod_name, line)
+            except Exception:
+                logger.exception("Could not retrieve output for failed migration Job %s", migration_id)
+
             raise RuntimeError(f"Application migration Job '{migration_id}' failed")
         logger.info("Migration Job %s completed for Application %s in namespace %s", migration_id, application_id, namespace)
 

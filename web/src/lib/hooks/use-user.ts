@@ -21,7 +21,7 @@ export function useCurrentUser() {
     return {
         user,
         isLoading,
-        error: error ?? null,
+        error,
         refetch,
     };
 }
@@ -49,7 +49,7 @@ export function useUserProfile() {
         user,
         memberships: organizations.data ?? [],
         isOrganizationsLoading: organizations.isLoading,
-        organizationsError: organizations.error ?? null,
+        organizationsError: organizations.error,
     };
 }
 
