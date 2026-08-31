@@ -46,7 +46,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
     const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
     const currentPage = docsPages.indexOf(pathname);
     const previousPage = docsPages[currentPage - 1];
-    const nextPage = currentPage >= 0 ? docsPages[currentPage + 1] : undefined;
+    const nextPage = docsPages[currentPage + 1];
 
     const scrollToArticleTop = () => {
         requestAnimationFrame(() => {

@@ -1,7 +1,7 @@
 from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class OperationStatus(StrEnum):
@@ -35,8 +35,6 @@ class OperationResource(BaseModel):
 
 class OperationResponse(BaseModel):
     """Expose administrative asynchronous reconciliation state for one Platform resource target."""
-
-    model_config = ConfigDict(from_attributes=True)
 
     # Identifier
     id: UUID

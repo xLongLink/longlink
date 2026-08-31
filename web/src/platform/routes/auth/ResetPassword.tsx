@@ -38,9 +38,7 @@ export default function ResetPassword() {
 
             return api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST' });
         },
-        onSuccess: () => {
-            sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
-        },
+        onSuccess: () => sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY),
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
             if (isBadTokenError(error)) {

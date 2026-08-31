@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react';
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -9,7 +10,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
-import { Activity, ArrowRight, Blocks, ShieldCheck, Workflow } from 'lucide-react';
 
 const paths = [
     {
@@ -40,28 +40,25 @@ const paths = [
 
 const platformCapabilities = [
     {
-        title: 'Keep it simple',
-        description: 'Create clear processes that are easy to operate and economical to maintain.',
-        label: 'Less complexity',
-        icon: Blocks,
+        title: 'Build',
+        description: 'Build complete applications in code using your favorite developer tools.',
+        label: 'Full-code solution',
     },
     {
-        title: 'Solid engineering foundations',
-        description: 'Authentication, permissions, deployment, storage, routing, and logging are built in.',
-        label: 'Platform foundation',
-        icon: ShieldCheck,
+        title: 'Operate',
+        description:
+            'Run applications with authentication, permissions, deployment, storage, routing, and logging built in.',
+        label: 'Application operations',
+    },
+    {
+        title: 'Keep it simple',
+        description: 'Processes are clear, easy to operate, and cheap to maintain.',
+        label: 'Less complexity',
     },
     {
         title: 'Own the process',
-        description: 'Express the workflow in maintainable code that remains reviewable, deployable, and yours.',
+        description: 'Keep compliance, accountability, and a solution that fits your needs.',
         label: 'Structured in code',
-        icon: Workflow,
-    },
-    {
-        title: 'Operate with confidence',
-        description: 'Keep accountability, governance, and operational structure close to the work.',
-        label: 'Built for operations',
-        icon: Activity,
     },
 ] as const;
 
@@ -203,7 +200,7 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={4}>
                     <Grid gap={4} columns={{ minWidth: 320, max: 2, repeat: 'fit' }}>
-                        {platformCapabilities.slice(0, 2).map(({ title, description, label, icon: CapabilityIcon }) => (
+                        {platformCapabilities.slice(0, 2).map(({ title, description, label }) => (
                             <Card key={title} className="overflow-hidden" minHeight={360} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -215,13 +212,6 @@ export default function Home() {
                                         <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
                                         <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
                                         <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
-                                        <Stack className="relative rounded-full border border-border-emphasized bg-surface p-5">
-                                            <CapabilityIcon
-                                                className="text-data-categorical-orange"
-                                                size={32}
-                                                strokeWidth={1.5}
-                                            />
-                                        </Stack>
                                         <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
                                             <Text type="code" size="3xs" color="secondary">
                                                 {label}
@@ -229,16 +219,9 @@ export default function Home() {
                                         </Stack>
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
-                                        <Stack direction="horizontal" gap={2} vAlign="center">
-                                            <CapabilityIcon
-                                                aria-hidden="true"
-                                                className="text-data-categorical-orange"
-                                                size={16}
-                                            />
-                                            <Heading className="text-base" level={2}>
-                                                {title}
-                                            </Heading>
-                                        </Stack>
+                                        <Heading className="text-base" level={2}>
+                                            {title}
+                                        </Heading>
                                         <Text as="p" color="secondary" textWrap="pretty">
                                             {description}
                                         </Text>
@@ -248,7 +231,7 @@ export default function Home() {
                         ))}
                     </Grid>
                     <Grid gap={4} columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {platformCapabilities.slice(2).map(({ title, description, label, icon: CapabilityIcon }) => (
+                        {platformCapabilities.slice(2).map(({ title, description, label }) => (
                             <Card key={title} className="overflow-hidden" minHeight={320} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -257,16 +240,21 @@ export default function Home() {
                                         hAlign="center"
                                         justify="center"
                                     >
-                                        <Stack className="absolute size-40 rounded-full border border-border opacity-60" />
-                                        <Stack className="absolute size-28 rounded-full border border-border-emphasized opacity-50" />
-                                        <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
-                                        <Stack className="relative rounded-full border border-border-emphasized bg-surface p-5">
-                                            <CapabilityIcon
-                                                className="text-data-categorical-orange"
-                                                size={32}
-                                                strokeWidth={1.5}
+                                        {title === 'Keep it simple' ? (
+                                            <img
+                                                alt=""
+                                                className="size-full object-cover"
+                                                decoding="async"
+                                                loading="lazy"
+                                                src="/images/keep-it-simple.png"
                                             />
-                                        </Stack>
+                                        ) : (
+                                            <>
+                                                <Stack className="absolute size-40 rounded-full border border-border opacity-60" />
+                                                <Stack className="absolute size-28 rounded-full border border-border-emphasized opacity-50" />
+                                                <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
+                                            </>
+                                        )}
                                         <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
                                             <Text type="code" size="3xs" color="secondary">
                                                 {label}
@@ -274,16 +262,9 @@ export default function Home() {
                                         </Stack>
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
-                                        <Stack direction="horizontal" gap={2} vAlign="center">
-                                            <CapabilityIcon
-                                                aria-hidden="true"
-                                                className="text-data-categorical-orange"
-                                                size={16}
-                                            />
-                                            <Heading className="text-base" level={2}>
-                                                {title}
-                                            </Heading>
-                                        </Stack>
+                                        <Heading className="text-base" level={2}>
+                                            {title}
+                                        </Heading>
                                         <Text as="p" color="secondary" textWrap="pretty">
                                             {description}
                                         </Text>
@@ -301,25 +282,18 @@ export default function Home() {
                                 >
                                     <img
                                         alt="Human and robot hands reaching toward each other"
-                                        className="size-full object-contain p-6"
+                                        className="size-full object-cover"
                                         decoding="async"
                                         loading="lazy"
                                         src={humanRobotHands}
                                     />
                                 </Stack>
                                 <Stack className="p-6" gap={3}>
-                                    <Stack direction="horizontal" gap={2} vAlign="center">
-                                        <Workflow
-                                            aria-hidden="true"
-                                            className="text-data-categorical-orange"
-                                            size={16}
-                                        />
-                                        <Heading className="text-base" level={2}>
-                                            Separate responsibilities
-                                        </Heading>
-                                    </Stack>
+                                    <Heading className="text-base" level={2}>
+                                        Separate responsibilities
+                                    </Heading>
                                     <Text as="p" color="secondary" textWrap="pretty">
-                                        Humans make the decisions. Machines execute the work.
+                                        Keep a clear distinction between machine tasks and human tasks.
                                     </Text>
                                 </Stack>
                             </Stack>

@@ -40,9 +40,7 @@ export default function Settings() {
                     method: 'PATCH',
                 }).json()
             ),
-        onSuccess: (updatedUser) => {
-            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
-        },
+        onSuccess: (updatedUser) => void queryClient.setQueryData(['api', '/api/v1/me'], updatedUser),
     });
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),

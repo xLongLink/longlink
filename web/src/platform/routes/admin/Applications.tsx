@@ -115,7 +115,7 @@ export default function AdminApplications() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataApplication ? (
+            {metadataApplication && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -153,7 +153,7 @@ export default function AdminApplications() {
                         </MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );
