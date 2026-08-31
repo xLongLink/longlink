@@ -81,10 +81,6 @@ async def update_organization(
 ):
     """Update mutable organization settings."""
 
-    # Require organization administrators to change shared metadata.
-    if not roles.atleast(membership.role, OrganizationRoles.admin):
-        raise HTTPException(status_code=403, detail="Permission required")
-
     # Persist mutable metadata only while the Organization remains active.
     organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
@@ -163,14 +159,6 @@ async def create_organization_invitation(
 ):
     """Create one invitation for an organization member."""
 
-    # Require maintainers to create invitations.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    # Prevent inviting roles above the caller's role.
-    if not roles.atleast(membership.role, payload.role):
-        raise HTTPException(status_code=403, detail="Invitation role permissions required")
-
     organization = await organizations.create_invitation(
         session,
         membership.organization_id,
@@ -193,10 +181,6 @@ async def revoke_organization_invitation(
 ):
     """Revoke one pending Organization invitation."""
 
-    # Require maintainers before locking and revalidating persisted invitation access.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
     await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user)
     await session.commit()
 
@@ -210,10 +194,6 @@ async def update_organization_member(
     session: AsyncSession = Depends(get_session),
 ):
     """Update one organization member role."""
-
-    # Require organization administrators to manage members.
-    if not roles.atleast(membership.role, OrganizationRoles.admin):
-        raise HTTPException(status_code=403, detail="Permission required")
 
     # Persist the requested role only for an active Organization member.
     changed = await organizations.update_member_role(

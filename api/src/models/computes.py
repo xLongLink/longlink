@@ -21,11 +21,9 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
 
     # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
     try:
-        normalized_value = json.loads(json.dumps(value))
+        normalized_value: dict[str, object] = json.loads(json.dumps(value))
     except TypeError as exc:
         raise ValueError("Kubernetes kubeconfig must be JSON-compatible") from exc
-    if not isinstance(normalized_value, dict):
-        raise ValueError("Kubernetes kubeconfig must be a mapping")
     value = normalized_value
 
     # Require a selected context with resolvable cluster and user entries before persisting the connection.
@@ -33,7 +31,12 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     contexts = value.get("contexts")
     users = value.get("users")
     current_context = value.get("current-context")
-    if not isinstance(clusters, list) or not isinstance(contexts, list) or not isinstance(users, list) or not isinstance(current_context, str):
+    if (
+        not isinstance(clusters, list)
+        or not isinstance(contexts, list)
+        or not isinstance(users, list)
+        or not isinstance(current_context, str)
+    ):
         raise ValueError("Kubernetes kubeconfig requires clusters, contexts, users, and current-context")
 
     cluster_names = {
