@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';

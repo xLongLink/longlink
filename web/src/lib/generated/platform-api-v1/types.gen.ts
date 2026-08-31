@@ -1688,6 +1688,36 @@ export type CreateOrganizationApiV1OrganizationsPostResponses = {
 
 export type CreateOrganizationApiV1OrganizationsPostResponse = CreateOrganizationApiV1OrganizationsPostResponses[keyof CreateOrganizationApiV1OrganizationsPostResponses];
 
+export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetData = {
+    body?: never;
+    path: {
+        /**
+         * Organization Slug
+         */
+        organization_slug: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/slug/{organization_slug}';
+};
+
+export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetError = GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors[keyof GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors];
+
+export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: UserOrganizationMembership;
+};
+
+export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponse = GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponses[keyof GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponses];
+
 export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteData = {
     body?: never;
     path: {

@@ -19,6 +19,11 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
+/** Returns whether an API error reports an invalid or expired reset token. */
+function isBadTokenError(error: unknown): boolean {
+    return error instanceof ApiError && error.status === 400;
+}
+
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const showToast = useToast();
@@ -29,7 +34,6 @@ export default function ResetPassword() {
         validators: { onDynamic: resetPasswordSchema },
         onSubmit: ({ value }) => handleResetPassword(value),
     });
-    const isBadTokenError = (error: unknown) => error instanceof ApiError && error.status === 400;
     const verification = useMutation({
         mutationFn: (resetToken: string) => {
             if (!resetToken) {

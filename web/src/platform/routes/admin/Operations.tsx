@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
+import { Stack } from '@astryxdesign/core/Stack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import MetadataDialog from '@/components/dialogs/Metadata';

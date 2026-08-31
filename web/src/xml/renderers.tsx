@@ -1,7 +1,7 @@
 import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
 import { isValtioProxy } from './core/state';
-import { Stack } from '@/components/ui/Stack';
+import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { setupContext, XmlContext } from './core/context';

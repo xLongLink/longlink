@@ -775,6 +775,15 @@ export const zCreateOrganizationApiV1OrganizationsPostBody = zOrganizationCreate
  */
 export const zCreateOrganizationApiV1OrganizationsPostResponse = zOrganizationSummary;
 
+export const zGetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetPath = z.object({
+    organization_slug: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetResponse = zUserOrganizationMembership;
+
 export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeletePath = z.object({
     organization_id: z.uuid()
 });

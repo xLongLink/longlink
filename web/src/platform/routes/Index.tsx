@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react';
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -10,6 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
+import { ArrowRight, Circle, Square, Triangle } from 'lucide-react';
 
 const paths = [
     {
@@ -232,13 +232,13 @@ export default function Home() {
                                         justify="center"
                                     >
                                         {title === 'Keep it simple' ? (
-                                            <img
-                                                alt=""
-                                                className="size-full object-cover"
-                                                decoding="async"
-                                                loading="lazy"
-                                                src="/images/keep-it-simple.png"
-                                            />
+                                            <Stack direction="horizontal" gap={3} vAlign="center">
+                                                <Square size={44} strokeWidth={1.5} />
+                                                <ArrowRight size={28} strokeWidth={1.5} />
+                                                <Triangle size={44} strokeWidth={1.5} />
+                                                <ArrowRight size={28} strokeWidth={1.5} />
+                                                <Circle size={44} strokeWidth={1.5} />
+                                            </Stack>
                                         ) : (
                                             <>
                                                 <Stack className="absolute size-40 rounded-full border border-border opacity-60" />

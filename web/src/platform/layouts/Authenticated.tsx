@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api';
-import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Navigate, Outlet } from 'react-router';
+import { Stack } from '@astryxdesign/core/Stack';
 import Platform from '@/platform/layouts/Platform';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';

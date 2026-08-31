@@ -58,6 +58,24 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     return await session.scalar(statement)
 
 
+async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization | None:
+    """Return one user's active membership for an active Organization slug."""
+
+    # Load only the requested Organization membership and its response-ready Organization.
+    statement = (
+        select(UserOrganization)
+        .join(Organization, Organization.id == UserOrganization.organization_id)
+        .options(contains_eager(UserOrganization.organization))
+        .where(
+            UserOrganization.user_id == user_id,
+            Organization.slug == organization_slug,
+            UserOrganization.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+        )
+    )
+    return await session.scalar(statement)
+
+
 async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
 ) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry] | None:

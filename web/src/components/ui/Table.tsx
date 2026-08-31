@@ -7,7 +7,7 @@ import {
 
 type TableRow = Record<string, unknown>;
 type TableProps<Row extends TableRow> = Omit<AstryxTableProps<Row>, 'children' | 'columns' | 'data'> & {
-    children?: ReactNode;
+    children: ReactNode;
     data: Row[];
 };
 type TableColumnProps<Row extends TableRow> = Omit<AstryxTableColumn<Row>, 'key' | 'renderCell'> & {

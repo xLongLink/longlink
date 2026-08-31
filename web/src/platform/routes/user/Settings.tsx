@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -40,7 +40,9 @@ export default function Settings() {
                     method: 'PATCH',
                 }).json()
             ),
-        onSuccess: (updatedUser) => void queryClient.setQueryData(['api', '/api/v1/me'], updatedUser),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
+        },
     });
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
@@ -56,12 +58,12 @@ export default function Settings() {
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
     const name = editedName ?? user.name;
-    const accountName = name.trim();
     const avatar = editedAvatar ?? user.avatar;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
         setAccountError(null);
+        const accountName = name.trim();
 
         // Require a non-empty account name.
         if (!accountName) {
