@@ -33,7 +33,6 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
-    const pages = registeredPages ?? [];
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
@@ -53,7 +52,7 @@ export function ApplicationRuntime({
             ),
         };
     }, [registeredPages, routePath]);
-    const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
+    const tabPages = (registeredPages ?? []).filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
     const firstTabPage = tabPages[0];
 
     // Replace the root URL with the first navigable tab after the manifest loads.

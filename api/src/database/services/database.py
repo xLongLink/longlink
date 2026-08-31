@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlalchemy import func, select
-from src.errors import ConflictError
+from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
@@ -63,13 +63,13 @@ async def create(
     return registry
 
 
-async def delete(session: AsyncSession, registry_id: UUID) -> bool:
+async def delete(session: AsyncSession, registry_id: UUID) -> None:
     """Delete an unused database registry."""
 
     # Lock the registry while checking immutable Organization assignments.
     registry = await session.get(DatabaseRegistry, registry_id, with_for_update=True)
     if registry is None:
-        return False
+        raise NotFoundError("Database registry not found")
 
     # Keep registries assigned to active or cleanup-pending Organizations available.
     if await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1)) is not None:
@@ -77,4 +77,3 @@ async def delete(session: AsyncSession, registry_id: UUID) -> bool:
 
     # Internal registries have no soft-delete or audit lifecycle.
     await session.delete(registry)
-    return True

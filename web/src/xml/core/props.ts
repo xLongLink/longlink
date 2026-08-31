@@ -3,7 +3,7 @@ import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
 import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
 
-export type XmlSpacing = (typeof SPACING_VALUES)[number];
+type XmlSpacing = (typeof SPACING_VALUES)[number];
 
 export const xmlNonblankStringSchema = z
     .union([z.string(), z.number(), z.boolean()])

@@ -55,6 +55,5 @@ async def delete_storage_registry(registry_id: UUID, session: AsyncSession = Dep
     """Delete one unused Exoscale SOS backend registration."""
 
     # Delete only a registry that is not assigned to an Organization.
-    if not await storage.delete(session, registry_id):
-        raise HTTPException(status_code=404, detail="Storage registry not found")
+    await storage.delete(session, registry_id)
     await session.commit()

@@ -73,7 +73,7 @@ export default function Platform({
                         }
                         label="Platform navigation"
                     />
-                    {tabs.length > 0 ? (
+                    {tabs.length > 0 && (
                         <Stack direction="horizontal" paddingInline={4} width="100%">
                             <TabList
                                 aria-label="Section navigation"
@@ -96,7 +96,7 @@ export default function Platform({
                                 })}
                             </TabList>
                         </Stack>
-                    ) : null}
+                    )}
                 </Stack>
             }
             variant="wash"

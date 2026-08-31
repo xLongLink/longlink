@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlalchemy import func, select, update
-from src.errors import ConflictError
+from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
@@ -55,13 +55,13 @@ async def create(session: AsyncSession, name: str, kubeconfig: dict[str, object]
     return registry
 
 
-async def delete(session: AsyncSession, registry_id: UUID) -> bool:
+async def delete(session: AsyncSession, registry_id: UUID) -> None:
     """Remove an unused compute registration without modifying external resources."""
 
     # Lock the target before checking assignments and deleting it.
     registry = await session.get(ComputeRegistry, registry_id, with_for_update=True)
     if registry is None:
-        return False
+        raise NotFoundError("Compute registry not found")
 
     # Organizations must retain a valid registered compute assignment.
     if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
@@ -84,7 +84,6 @@ async def delete(session: AsyncSession, registry_id: UUID) -> bool:
 
     # Delete only after no Organization or active Compute lifecycle depends on the registration.
     await session.delete(registry)
-    return True
 
 
 async def record_success(
