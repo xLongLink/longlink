@@ -51,7 +51,7 @@ export default function AdminStorage() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && storages.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading storage registries" />;
     }
 

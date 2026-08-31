@@ -48,7 +48,7 @@ export default function AdminOperations() {
         pagination,
     } = usePaginate('/api/v1/operations', zPageOperationResponse, 5000);
 
-    if (isLoading && operations.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading operations" />;
     }
 

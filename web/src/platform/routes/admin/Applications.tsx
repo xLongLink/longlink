@@ -53,7 +53,7 @@ export default function AdminApplications() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && applications.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading applications" />;
     }
 

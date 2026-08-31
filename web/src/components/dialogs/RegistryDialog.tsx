@@ -15,7 +15,7 @@ type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     endpoint: string;
     errorMessage: string;
     schema: z.ZodType<TValues, TValues>;
-    invalidateKeys?: string[][];
+    additionalInvalidateKeys?: string[][];
 };
 
 type RegistryDialogProps<TValues extends Record<string, unknown>> = {
@@ -33,7 +33,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     endpoint,
     errorMessage,
     schema,
-    invalidateKeys = [['api', endpoint]],
+    additionalInvalidateKeys = [],
 }: RegistryDialogOptions<TValues>) {
     const toast = useToast();
     const queryClient = useQueryClient();
@@ -46,7 +46,10 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         onSuccess: () => {
             setOpen(false);
             form.reset();
-            return Promise.all(invalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+            return Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['api', endpoint] }),
+                ...additionalInvalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+            ]);
         },
     });
     const form = useForm({

@@ -17,7 +17,7 @@ import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1
 export default function Organizations() {
     const { memberships, isOrganizationsLoading, organizationsError } = useUserProfile();
 
-    if (memberships.length === 0 && isOrganizationsLoading) {
+    if (isOrganizationsLoading) {
         return <PageLoading label="Loading organizations" />;
     }
 

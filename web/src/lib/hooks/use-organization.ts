@@ -26,8 +26,9 @@ function useOrganizationMembership(organizationSlug: string) {
     });
     const membership = membershipQuery.data;
     const organizationId = membership?.organization.id;
+    const role = membership?.role ?? null;
 
-    return { membership, organizationId, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
+    return { organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
 }
 
 /** Invalidates cached organization application collections. */
@@ -43,8 +44,8 @@ function invalidateOrganizationApplicationQueries(queryClient: QueryClient, orga
 /** Fetches organization details and people-management data for the current workspace. */
 export function useOrganization(organizationSlug: string) {
     const {
-        membership,
         organizationId,
+        role,
         isLoading: isMembershipLoading,
         error: membershipError,
     } = useOrganizationMembership(organizationSlug);
@@ -65,7 +66,7 @@ export function useOrganization(organizationSlug: string) {
         organization,
         members,
         invitations,
-        role: membership?.role ?? null,
+        role,
         isLoading: isMembershipLoading || organizationQuery.isLoading,
         error,
     };
@@ -74,8 +75,8 @@ export function useOrganization(organizationSlug: string) {
 /** Fetches organization applications without loading people-management data. */
 export function useOrganizationApplications(organizationSlug: string, enabled = true) {
     const {
-        membership,
         organizationId,
+        role,
         isLoading: isMembershipLoading,
         error: membershipError,
     } = useOrganizationMembership(organizationSlug);
@@ -97,7 +98,7 @@ export function useOrganizationApplications(organizationSlug: string, enabled = 
     return {
         applications: applicationsQuery.data ?? [],
         organizationId: organizationId ?? '',
-        role: membership?.role ?? null,
+        role,
         isLoading: isMembershipLoading || applicationsQuery.isLoading,
         error,
     };

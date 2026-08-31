@@ -54,7 +54,7 @@ export default function AdminCompute() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && computes.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading compute registries" />;
     }
 

@@ -17,7 +17,6 @@ const paths = [
         description:
             'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
         action: 'Explore existing apps',
-        href: '/docs',
         isComingSoon: true,
     },
     {
@@ -25,7 +24,6 @@ const paths = [
         description:
             'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
         action: 'Start from a foundation',
-        href: '/docs',
         isComingSoon: true,
     },
     {
@@ -33,7 +31,6 @@ const paths = [
         description:
             'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
         action: 'Build a new app',
-        href: '/docs',
         isComingSoon: false,
     },
 ] as const;
@@ -290,7 +287,7 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {paths.map(({ title, description, action, href, isComingSoon }) => (
+                        {paths.map(({ title, description, action, isComingSoon }) => (
                             <Stack key={title} width="100%">
                                 <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
                                     <Banner
@@ -301,7 +298,7 @@ export default function Home() {
                                 </Stack>
                                 <ClickableCard
                                     className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
-                                    href={href}
+                                    href="/docs"
                                     label={action}
                                     padding={6}
                                 >

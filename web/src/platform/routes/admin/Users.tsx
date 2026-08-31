@@ -21,7 +21,7 @@ export default function AdminUsers() {
     const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
 
-    if (isLoading && users.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading users" />;
     }
 

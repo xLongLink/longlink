@@ -6,9 +6,11 @@ import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 
 /** Renders the fixed account navigation around user pages. */
 export default function UserLayout() {
+    const user = useAuthenticatedUser();
+
     return (
         <Platform
-            action={<ProfileMenu user={useAuthenticatedUser()} />}
+            action={<ProfileMenu user={user} />}
             tabs={[
                 { href: '/user/organizations', icon: Building2, label: 'Organizations' },
                 { href: '/user/settings', icon: Settings2, label: 'Settings' },

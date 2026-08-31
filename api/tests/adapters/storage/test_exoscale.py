@@ -333,7 +333,10 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
         ("delete", {"Objects": [{"Key": "apps/dashboard/a"}], "Quiet": True}),
         (
             "delete",
-            {"Objects": [{"Key": "apps/dashboard/a", "VersionId": "version"}, {"Key": "apps/dashboard/b", "VersionId": "marker"}], "Quiet": True},
+            {
+                "Objects": [{"Key": "apps/dashboard/a", "VersionId": "version"}, {"Key": "apps/dashboard/b", "VersionId": "marker"}],
+                "Quiet": True,
+            },
         ),
     ]
 

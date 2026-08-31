@@ -14,10 +14,7 @@ export default function CreateOrganization() {
         endpoint: '/api/v1/organizations',
         errorMessage: 'Failed to create organization',
         schema,
-        invalidateKeys: [
-            ['api', '/api/v1/organizations'],
-            ['api', '/api/v1/me/organizations'],
-        ],
+        additionalInvalidateKeys: [['api', '/api/v1/me/organizations']],
     });
 
     return (

@@ -56,7 +56,7 @@ export default function AdminOrganizations() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && organizations.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading organizations" />;
     }
 

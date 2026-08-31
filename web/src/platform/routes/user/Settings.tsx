@@ -202,7 +202,7 @@ export default function Settings() {
                                 <CreateOrganization />
                             </Stack>
                             <Divider />
-                            {isOrganizationsLoading && memberships.length === 0 ? null : (
+                            {isOrganizationsLoading ? null : (
                                 <Table
                                     data={memberships}
                                     density="compact"

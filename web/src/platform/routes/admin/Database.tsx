@@ -51,7 +51,7 @@ export default function AdminDatabase() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && databases.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading databases" />;
     }
 

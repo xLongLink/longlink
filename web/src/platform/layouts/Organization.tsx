@@ -8,10 +8,11 @@ import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 /** Renders the fixed navigation around organization pages. */
 export default function OrganizationLayout() {
     const { organization = '' } = useParams();
+    const user = useAuthenticatedUser();
 
     return (
         <Platform
-            action={<ProfileMenu user={useAuthenticatedUser()} />}
+            action={<ProfileMenu user={user} />}
             breadcrumb={<PageBreadcrumb />}
             tabs={[
                 { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
