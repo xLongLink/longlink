@@ -113,7 +113,7 @@ export default function AdminOrganizations() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataOrganization ? (
+            {metadataOrganization && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -141,7 +141,7 @@ export default function AdminOrganizations() {
                         <MetadataListItem label="ID">{metadataOrganization.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

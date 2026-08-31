@@ -291,7 +291,9 @@ def build_app(build_context: Path) -> tuple[str, str]:
         sdk_version = "0.0.0"
 
     # Render standard OCI metadata and LongLink-specific runtime metadata.
-    labels = [] if project_description is None else [f"LABEL org.opencontainers.image.description={json.dumps(project_description)}"]
+    labels: list[str] = []
+    if project_description is not None:
+        labels.append(f"LABEL org.opencontainers.image.description={json.dumps(project_description)}")
     environments = read_env_spec(root, pyproject_data)
     if environments:
         labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")

@@ -42,23 +42,19 @@ const platformCapabilities = [
     {
         title: 'Build',
         description: 'Build complete applications in code using your favorite developer tools.',
-        label: 'Full-code solution',
     },
     {
         title: 'Operate',
         description:
             'Run applications with authentication, permissions, deployment, storage, routing, and logging built in.',
-        label: 'Application operations',
     },
     {
         title: 'Keep it simple',
         description: 'Processes are clear, easy to operate, and cheap to maintain.',
-        label: 'Less complexity',
     },
     {
         title: 'Own the process',
         description: 'Keep compliance, accountability, and a solution that fits your needs.',
-        label: 'Structured in code',
     },
 ] as const;
 
@@ -200,7 +196,7 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={4}>
                     <Grid gap={4} columns={{ minWidth: 320, max: 2, repeat: 'fit' }}>
-                        {platformCapabilities.slice(0, 2).map(({ title, description, label }) => (
+                        {platformCapabilities.slice(0, 2).map(({ title, description }) => (
                             <Card key={title} className="overflow-hidden" minHeight={360} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -212,11 +208,6 @@ export default function Home() {
                                         <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
                                         <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
                                         <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
-                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
-                                            <Text type="code" size="3xs" color="secondary">
-                                                {label}
-                                            </Text>
-                                        </Stack>
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
                                         <Heading className="text-base" level={2}>
@@ -231,7 +222,7 @@ export default function Home() {
                         ))}
                     </Grid>
                     <Grid gap={4} columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {platformCapabilities.slice(2).map(({ title, description, label }) => (
+                        {platformCapabilities.slice(2).map(({ title, description }) => (
                             <Card key={title} className="overflow-hidden" minHeight={320} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -255,11 +246,6 @@ export default function Home() {
                                                 <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
                                             </>
                                         )}
-                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
-                                            <Text type="code" size="3xs" color="secondary">
-                                                {label}
-                                            </Text>
-                                        </Stack>
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
                                         <Heading className="text-base" level={2}>

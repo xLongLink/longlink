@@ -113,7 +113,7 @@ export default function AdminCompute() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataCompute ? (
+            {metadataCompute && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -143,7 +143,7 @@ export default function AdminCompute() {
                         <MetadataListItem label="ID">{metadataCompute.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

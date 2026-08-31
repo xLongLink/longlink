@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
-from src.models.statuses import Status
+from src.models.resources import OrganizationIdentity
 from longlink.shared.models import Email
 
 
@@ -57,21 +57,8 @@ class OrganizationInvitationResponse(BaseModel):
     created_at: datetime
 
 
-class OrganizationSummary(BaseModel):
+class OrganizationSummary(OrganizationIdentity):
     """Represent one organization in admin list responses."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    avatar: str
-
-    # State
-    status: Status
 
 
 class OrganizationMemberAccessResponse(BaseModel):

@@ -102,7 +102,7 @@ export default function AdminStorage() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataStorage ? (
+            {metadataStorage && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -127,7 +127,7 @@ export default function AdminStorage() {
                         <MetadataListItem label="ID">{metadataStorage.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

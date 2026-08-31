@@ -72,7 +72,7 @@ export default function AdminUsers() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataUser ? (
+            {metadataUser && (
                 <MetadataDialog onClose={() => setMetadataUser(null)} title="User metadata">
                     <MetadataList>
                         <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
@@ -82,7 +82,7 @@ export default function AdminUsers() {
                         <MetadataListItem label="ID">{metadataUser.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
         </Stack>
     );
 }

@@ -102,7 +102,7 @@ export default function AdminDatabase() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataDatabase ? (
+            {metadataDatabase && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -130,7 +130,7 @@ export default function AdminDatabase() {
                         <MetadataListItem label="ID">{metadataDatabase.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );
