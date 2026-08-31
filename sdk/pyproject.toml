@@ -42,10 +42,12 @@ classifiers = [
 
 [dependency-groups]
 dev = [
+    "docker>=7.2.0",
     "httpx2>=2.9.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.0.0",
+    "testcontainers>=4.15.0",
     "ty>=0.0.69",
     "ruff>=0.16.2",
     "lxml-stubs>=0.5.1",

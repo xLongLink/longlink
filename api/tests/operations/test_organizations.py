@@ -106,6 +106,9 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
 
             self.organizations = Organizations()
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     async def sync_users(session: object, organization_id: object) -> None:
         """Record user projection after publication."""
 
@@ -286,6 +289,9 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
             self.organizations = Organizations()
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
@@ -353,6 +359,9 @@ async def test_delete_tears_down_organization_boundaries_in_order(
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)

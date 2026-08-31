@@ -16,7 +16,15 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     """Queue one Compute creation operation when registering a Compute."""
 
     # Arrange
-    payload = {"name": "Queued Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"}
+    payload = {
+        "name": "Queued Compute",
+        "kubeconfig": {
+            "clusters": [{"name": "cluster", "cluster": {}}],
+            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+            "current-context": "context",
+            "users": [{"name": "user", "user": {}}],
+        },
+    }
 
     # Act
     response = await clients[0].post("/api/v1/computes", json=payload)

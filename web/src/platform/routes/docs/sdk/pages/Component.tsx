@@ -43,12 +43,9 @@ export default function DocsArticleRoute() {
     return (
         <Article page={metadata}>
             <Stack gap={5}>
-                <Stack gap={2}>
-                    <Text type="supporting">{component.category}</Text>
-                    <Heading id="introduction" level={1}>
-                        {component.name}
-                    </Heading>
-                </Stack>
+                <Heading id="introduction" level={1}>
+                    {component.name}
+                </Heading>
                 <Text as="p">{component.description}</Text>
                 <AttributeTable attributes={component.attributes} />
                 <Heading id="usage" level={2}>

@@ -72,30 +72,24 @@ class LongLink:
 
         # Validate the complete catalog before registering its routes and metadata.
         discovered_pages = self._discover_pages(pages_directory, application_routes)
-        app.state.longlink = RuntimeState(
-            pages=[definition for definition, _ in discovered_pages], storage=storage, database=database
-        )
+        app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage, database=database)
         app.router.on_shutdown.append(database.dispose)
 
         # Pages are registered once before the frontend mount is installed.
-        app.router.routes.extend(
-            [
-                app.router.route_class(
-                    f"/{definition.path}",
-                    partial(render_page, content),
-                    methods=["GET"],
-                    include_in_schema=False,
-                )
-                for definition, content in discovered_pages
-            ]
-        )
+        for definition, content in discovered_pages:
+            app.add_api_route(
+                f"/{definition.path}",
+                partial(render_page, content),
+                methods=["GET"],
+                include_in_schema=False,
+            )
 
         # Make the browser root URL resolve to the first navigable application page.
         first_tab_page = next(
             (definition for definition, _ in discovered_pages if definition.route != "/" and ":" not in definition.route),
             None,
         )
-        if first_tab_page:
+        if first_tab_page is not None:
 
             @app.get("/", include_in_schema=False)
             def redirect_root() -> RedirectResponse:

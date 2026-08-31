@@ -17,23 +17,27 @@ from fastapi.middleware.cors import CORSMiddleware
 
 @contextlib.asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
-    """Run this API replica's registered Operation scheduler."""
+    """Run this API replica's Operation background jobs."""
 
     # Reconcile the configured Platform administrator before serving authenticated traffic.
     async with session_scope() as session:
         await user_service.ensure_administrator(session)
         await session.commit()
 
-    # Start this replica's scheduler with the explicit registered handlers.
+    # Start this replica's scheduler and retained-log cleanup.
     worker = asyncio.create_task(jobs.run_operation_scheduler())
+    log_cleanup = asyncio.create_task(jobs.run_operation_log_cleanup())
 
-    # Always stop the Operation scheduler when the application lifespan exits.
+    # Always stop background Operation work when the application lifespan exits.
     try:
         yield
     finally:
         worker.cancel()
+        log_cleanup.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await worker
+        with contextlib.suppress(asyncio.CancelledError):
+            await log_cleanup
 
 
 app = FastAPI(

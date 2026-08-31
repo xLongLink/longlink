@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
 operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
+OPERATION_LOG_CLEANUP_SECONDS = 86400
 
 
 class OperationLogHandler(logging.Handler):
@@ -85,13 +86,13 @@ async def execute(operation: Operation) -> Operation:
     logger.addHandler(log_handler)
 
     try:
-        # Dispatch each operation through its registered lifecycle handler.
-        handler = handlers[operation.kind]
+        # Record the target before dispatch so registration and handler failures share one diagnostic path.
         logger.info("Running %s operation %s", operation.kind, operation.id)
 
         # Bound one complete handler execution under its worker lease.
         try:
             async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
+                handler = handlers[operation.kind]
                 reason = await handler(operation.target_id)
         except asyncio.CancelledError:
             # Graceful shutdown leaves interrupted work available for the next scheduler.
@@ -101,13 +102,14 @@ async def execute(operation: Operation) -> Operation:
                 logger.exception("Could not release cancelled Operation %s", operation.id)
             raise
         except TimeoutError:
-            reason = "Operation timed out"
-        except Exception:
+            reason = f"Operation timed out after {env.OPERATION_TIMEOUT_SECONDS} seconds"
+        except Exception as exc:
             logger.exception("Operation %s failed", operation.id)
-            reason = "Operation failed"
+            reason = f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__
 
         # Persist exactly one transition that releases the claimed operation.
         if reason is None:
+            logger.info("Operation %s completed", operation.id)
             transition = partial(operations.complete, logs=log_handler.logs)
         else:
             logger.error("Operation %s failed: %s", operation.id, reason)
@@ -149,3 +151,20 @@ async def run_operation_scheduler() -> None:
             await execute(operation)
         except Exception:
             logger.exception("Operation scheduler failed for %s", operation.id)
+
+
+async def run_operation_log_cleanup() -> None:
+    """Clear logs retained beyond the Operation diagnostic window."""
+
+    while True:
+        # Clear expired payloads without removing their Operation history.
+        try:
+            async with session_scope() as session:
+                cleared = await operations.clear_expired_logs(session)
+                await session.commit()
+            if cleared > 0:
+                logger.info("Cleared logs for %s expired Operations", cleared)
+        except Exception:
+            logger.exception("Operation log cleanup failed")
+
+        await asyncio.sleep(OPERATION_LOG_CLEANUP_SECONDS)

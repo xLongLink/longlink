@@ -276,7 +276,8 @@ class Exoscale:
 
         raise RuntimeError("Exoscale operation completed without a resource reference")
 
-    def _bucket_policy(self, bucket: str, write_prefix: str, organization_id: UUID) -> IamPolicy:
+    @staticmethod
+    def _bucket_policy(bucket: str, write_prefix: str, organization_id: UUID) -> IamPolicy:
         """Build one IAM policy for shared reads and private Application writes."""
 
         # Application writes are also readable, while shared prefixes remain read-only.
@@ -332,7 +333,8 @@ class Exoscale:
             },
         }
 
-    def _string(self, data: Mapping[str, object], field: str) -> str:
+    @staticmethod
+    def _string(data: Mapping[str, object], field: str) -> str:
         """Return one required string field from an Exoscale response."""
 
         # Validate external response data before using it in follow-up requests or runtime configuration.

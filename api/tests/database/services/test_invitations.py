@@ -1,5 +1,5 @@
 import pytest
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from sqlmodel import select
 from factories import create_organization
 from src.errors import ConflictError
@@ -84,14 +84,12 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
         email="invited@example.com",
         role=OrganizationRoles.read,
     )
-    scalar_calls = 0
+    responses = iter((None, None, concurrent_invitation))
 
     async def return_concurrent_invitation(_statement: object) -> OrganizationInvitation | None:
         """Model the invitation appearing after the unique-index conflict."""
 
-        nonlocal scalar_calls
-        scalar_calls += 1
-        return None if scalar_calls < 3 else concurrent_invitation
+        return next(responses)
 
     async def raise_unique_conflict() -> None:
         """Model the competing transaction winning the insert race."""
@@ -157,6 +155,40 @@ async def test_accept_creates_membership_and_consumes_invitation(users: tuple[Us
     assert invitation is None
     assert membership is not None
     assert membership.role == OrganizationRoles.write
+
+
+async def test_accept_removes_expired_invitation_without_creating_membership(
+    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject and consume an invitation at the seven-day expiration boundary."""
+
+    # Arrange
+    owner, invitee = users[0], users[1]
+    organization = await create_organization(owner)
+    now = datetime(2026, 8, 30, tzinfo=UTC)
+    async with session_scope() as session:
+        session.add(
+            OrganizationInvitation(
+                organization_id=organization.id,
+                email=invitee.email,
+                role=OrganizationRoles.write,
+                created_at=now - timedelta(days=7),
+            )
+        )
+        await session.commit()
+    monkeypatch.setattr(invitations, "utcnow", lambda: now)
+
+    # Act
+    async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        await session.commit()
+        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+
+    # Assert
+    assert changed_organization_ids == set()
+    assert invitation is None
+    assert membership is None
 
 
 async def test_accept_restores_deleted_membership_with_invited_role(users: tuple[User, User, User]) -> None:

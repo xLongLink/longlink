@@ -70,7 +70,7 @@ export default function ForgotPassword() {
                             variant="primary"
                         />
                     </AuthForm>
-                    <Text as="p" color="secondary" justify="center" type="supporting">
+                    <Text as="p" justify="center" type="supporting">
                         <Link href="/login" type="inherit" weight="medium">
                             Back to sign in
                         </Link>

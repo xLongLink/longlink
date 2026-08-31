@@ -4,6 +4,7 @@ from uuid import UUID
 from conftest import FakeKubernetes
 from cryptography import x509
 from src.kubernetes import gateway
+from kr8s.asyncio.objects import APIObject
 from cryptography.x509.oid import ExtendedKeyUsageOID
 from src.kubernetes.gateway import generate_gateway_tls
 
@@ -52,7 +53,10 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
         def __init__(self, name: str, api: object) -> None:
             """Initialize the accepted GatewayClass."""
 
-            self.raw = {"status": {"conditions": [{"type": "Accepted", "status": "True"}]}}
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+            }
 
         async def exists(self) -> bool:
             """Report an existing GatewayClass."""
@@ -73,6 +77,34 @@ async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkey
 
     # The accepted terminal state returns before any network manifest fetch.
     await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+
+
+async def test_gateway_install_rejects_an_accepted_foreign_controller(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject an accepted GatewayClass owned by a different controller."""
+
+    # Arrange
+    class GatewayClass:
+        def __init__(self, _name: str, api: object) -> None:
+            """Expose an accepted GatewayClass owned by another controller."""
+
+            self.raw = {
+                "spec": {"controllerName": "example.com/gateway-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+            }
+
+        async def exists(self) -> bool:
+            """Report an existing GatewayClass."""
+
+            return True
+
+        async def refresh(self) -> None:
+            """Keep the GatewayClass state current."""
+
+    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+
+    # Act and assert
+    with pytest.raises(ValueError, match="longlink-envoy is not controlled by Envoy Gateway"):
+        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 
 async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -159,7 +191,10 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
         def __init__(self, _name: str, api: object) -> None:
             """Expose the rejected GatewayClass status."""
 
-            self.raw = {"status": {"conditions": [{"type": "Accepted", "status": "False"}]}}
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
+            }
 
         async def exists(self) -> bool:
             """Report an existing but unaccepted GatewayClass."""
@@ -196,14 +231,14 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
 
             return Response()
 
-    async def unexpected_objects_from_files(*_args: object, **_kwargs: object) -> object:
+    def unexpected_safe_load_all(_manifest: bytes) -> object:
         """Fail if parsing begins before checksum verification."""
 
         raise AssertionError("tampered manifest was parsed")
 
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
-    monkeypatch.setattr(gateway, "objects_from_files", unexpected_objects_from_files)
+    monkeypatch.setattr(gateway.yaml, "safe_load_all", unexpected_safe_load_all)
 
     # Act and assert
     with pytest.raises(ValueError, match="Envoy Gateway v1.8.3 manifest checksum does not match"):
@@ -230,7 +265,43 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
     class Response:
         """Return a deterministic verified manifest."""
 
-        content = b"verified manifest"
+        content = b"""
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: gateways.gateway.networking.k8s.io
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: envoy-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy-gateway
+---
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: envoy-gateway
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: envoy-gateway
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: envoy-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-gateway
+"""
 
         def raise_for_status(self) -> None:
             """Report a successful transport response."""
@@ -262,28 +333,7 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
 
             return "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781"
 
-    class Resource:
-        """Expose one parsed manifest resource."""
-
-        def __init__(self, raw: dict[str, object]) -> None:
-            """Keep the parsed manifest payload."""
-
-            self.raw = raw
-
-    async def objects_from_files(_path: str, *, api: object) -> list[Resource]:
-        """Return resources in the upstream manifest order."""
-
-        return [
-            Resource({"kind": "CustomResourceDefinition", "metadata": {"name": "gateways.gateway.networking.k8s.io"}}),
-            Resource({"kind": "MutatingWebhookConfiguration", "metadata": {"name": "envoy-gateway"}}),
-            Resource({"kind": "Deployment", "metadata": {"name": "envoy-gateway"}}),
-            Resource({"kind": "ValidatingAdmissionPolicy", "metadata": {"name": "envoy-gateway"}}),
-            Resource({"kind": "ValidatingAdmissionPolicyBinding", "metadata": {"name": "envoy-gateway"}}),
-            Resource({"kind": "ValidatingWebhookConfiguration", "metadata": {"name": "envoy-gateway"}}),
-            Resource({"kind": "Service", "metadata": {"name": "envoy-gateway"}}),
-        ]
-
-    async def apply(resource: Resource) -> None:
+    async def apply(resource: APIObject) -> None:
         """Record each resource sent to Kubernetes."""
 
         applied.append(resource.raw)
@@ -291,13 +341,12 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
     def sha256(manifest: bytes) -> Digest:
         """Verify the expected deterministic manifest bytes."""
 
-        assert manifest == b"verified manifest"
+        assert manifest == Response.content
         return Digest()
 
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
     monkeypatch.setattr(gateway.hashlib, "sha256", sha256)
-    monkeypatch.setattr(gateway, "objects_from_files", objects_from_files)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act
@@ -305,9 +354,13 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
 
     # Assert
     assert applied == [
-        {"kind": "CustomResourceDefinition", "metadata": {"name": "gateways.gateway.networking.k8s.io"}},
-        {"kind": "Deployment", "metadata": {"name": "envoy-gateway"}},
-        {"kind": "Service", "metadata": {"name": "envoy-gateway"}},
+        {
+            "apiVersion": "apiextensions.k8s.io/v1",
+            "kind": "CustomResourceDefinition",
+            "metadata": {"name": "gateways.gateway.networking.k8s.io"},
+        },
+        {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": "envoy-gateway"}},
+        {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "envoy-gateway"}},
     ]
 
 
@@ -329,7 +382,7 @@ async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: py
     class Response:
         """Return a deterministic verified manifest."""
 
-        content = b"verified manifest"
+        content = b"apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: envoy-gateway\n"
 
         def raise_for_status(self) -> None:
             """Report a successful transport response."""
@@ -361,17 +414,7 @@ async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: py
 
             return "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781"
 
-    class Resource:
-        """Expose one parsed manifest resource."""
-
-        raw = {"kind": "Deployment", "metadata": {"name": "envoy-gateway"}}
-
-    async def objects_from_files(_path: str, *, api: object) -> list[Resource]:
-        """Return the controller resource that times out during application."""
-
-        return [Resource()]
-
-    async def apply(resource: Resource) -> None:
+    async def apply(resource: object) -> None:
         """Simulate a Kubernetes apply timeout."""
 
         raise TimeoutError
@@ -379,13 +422,12 @@ async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: py
     def sha256(manifest: bytes) -> Digest:
         """Verify the expected deterministic manifest bytes."""
 
-        assert manifest == b"verified manifest"
+        assert manifest == Response.content
         return Digest()
 
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
     monkeypatch.setattr(gateway.hashlib, "sha256", sha256)
-    monkeypatch.setattr(gateway, "objects_from_files", objects_from_files)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act and assert

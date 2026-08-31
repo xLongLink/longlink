@@ -20,7 +20,8 @@ describe('Action', () => {
         toast.mockClear();
 
         if (root) {
-            await act(async () => root?.unmount());
+            const mountedRoot = root;
+            await act(async () => mountedRoot.unmount());
         }
         root = undefined;
     });

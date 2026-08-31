@@ -69,7 +69,7 @@ export default function AdminOrganizations() {
     }
 
     return (
-        <Stack gap={8} width="100%">
+        <Stack gap={8}>
             <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">
@@ -89,10 +89,13 @@ export default function AdminOrganizations() {
                         <Stack direction="horizontal" gap={3} align="center">
                             <Avatar kind="organization" src={organization.avatar} name={organization.name} />
                             <Stack align="start">
-                                <StatusBadge status={organization.status} />
-                                <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                                    {organization.name}
-                                </Link>
+                                <Stack direction="horizontal" gap={1} align="center">
+                                    <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                                        {organization.name}
+                                    </Link>
+                                    <StatusBadge status={organization.status} />
+                                </Stack>
+                                <Text type="supporting">Organization</Text>
                             </Stack>
                         </Stack>
                     )}

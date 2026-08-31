@@ -1968,6 +1968,66 @@
         }
       }
     },
+    "/api/v1/organizations/{organization_id}/invitations/{invitation_id}": {
+      "delete": {
+        "summary": "Revoke Organization Invitation",
+        "description": "Revoke one pending Organization invitation.",
+        "operationId": "revoke_organization_invitation_api_v1_organizations__organization_id__invitations__invitation_id__delete",
+        "parameters": [
+          {
+            "name": "invitation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invitation Id"
+            }
+          },
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}/members/{member_id}": {
       "patch": {
         "summary": "Update Organization Member",
@@ -2692,7 +2752,7 @@
           },
           "sslmode": {
             "$ref": "#/components/schemas/DatabaseSSLMode",
-            "default": "require"
+            "default": "verify-full"
           },
           "password": {
             "type": "string",
@@ -2890,6 +2950,26 @@
         "title": "OperationKind",
         "description": "Supported registered operation handlers."
       },
+      "OperationResource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OperationResource",
+        "description": "Represent one operation target resource."
+      },
       "OperationResponse": {
         "properties": {
           "id": {
@@ -2899,6 +2979,16 @@
           },
           "kind": {
             "$ref": "#/components/schemas/OperationKind"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperationResource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "target_id": {
             "type": "string",
@@ -2941,6 +3031,7 @@
         "required": [
           "id",
           "kind",
+          "resource",
           "target_id",
           "status",
           "failed",

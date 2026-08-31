@@ -9,7 +9,7 @@ export function SideLayout({ children, sideNav }: { children: ReactNode; sideNav
         <AppShell height="auto" mobileNav={{ breakpoint: 'lg' }} sideNav={sideNav} variant="wash">
             <Card
                 aria-hidden="true"
-                className="pointer-events-none fixed z-0 end-0 bottom-0 start-0 top-12 overflow-clip lg:start-[260px] lg:top-0"
+                className="pointer-events-none fixed z-0 inset-x-0 bottom-0 top-12 overflow-clip lg:start-[260px] lg:top-0"
                 padding={0}
                 variant="transparent"
             >
@@ -19,7 +19,7 @@ export function SideLayout({ children, sideNav }: { children: ReactNode; sideNav
             </Card>
             <Card
                 aria-hidden="true"
-                className="pointer-events-none fixed z-30 end-0 bottom-0 start-0 top-12 border-8 border-body bg-transparent lg:start-[260px] lg:top-0"
+                className="pointer-events-none fixed z-30 inset-x-0 bottom-0 top-12 border-8 border-body lg:start-[260px] lg:top-0"
                 padding={0}
                 variant="transparent"
             />

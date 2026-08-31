@@ -29,3 +29,38 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
     assert first is api
     assert second is api
     assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
+
+
+async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Close the HTTP session opened by the cached kr8s client."""
+
+    # Arrange
+    closed: list[bool] = []
+
+    class Session:
+        """Record asynchronous HTTP session closure."""
+
+        async def aclose(self) -> None:
+            """Record one session closure."""
+
+            closed.append(True)
+
+    class Api:
+        """Expose the kr8s session retained by the client."""
+
+        _session = Session()
+
+    async def create_api(**_kwargs: object) -> Api:
+        """Return one API with a closeable session."""
+
+        return Api()
+
+    monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
+    kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
+    await kubernetes.api()
+
+    # Act
+    await kubernetes.aclose()
+
+    # Assert
+    assert closed == [True]

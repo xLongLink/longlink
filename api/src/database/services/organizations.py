@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import timedelta
 from src.utils import names, roles
 from sqlalchemy import func, delete, select
 from sqlalchemy import update as sql_update
@@ -13,6 +14,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
+from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
@@ -147,11 +149,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def purge(session: AsyncSession, organization_id: UUID) -> None:
     """Hard-delete one organization after all applications and external resources are gone."""
 
-    # The organization tombstone remains until lifecycle cleanup has purged every child application.
-    organization = await session.get(Organization, organization_id, with_for_update=True)
-    if organization is None:
-        return
-    await session.delete(organization)
+    # Delete the tombstone directly; an already-purged identifier is an idempotent no-op.
+    await session.execute(delete(Organization).where(Organization.id == organization_id))
 
 
 async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:
@@ -174,12 +173,13 @@ async def applications(session: AsyncSession, organization_id: UUID) -> Sequence
 async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[OrganizationInvitation]:
     """Return active email grants for one organization."""
 
-    # Query organization invitations in one session.
+    # Query unexpired organization invitations in one session.
     statement = (
         select(OrganizationInvitation)
         .join(Organization, Organization.id == OrganizationInvitation.organization_id)
         .where(
             OrganizationInvitation.organization_id == organization_id,
+            OrganizationInvitation.created_at > utcnow() - timedelta(days=7),
             Organization.deleted_at.is_(None),
         )
         .order_by(OrganizationInvitation.created_at.desc())
@@ -534,10 +534,31 @@ async def create_invitation(
         raise ForbiddenError("Invitation role permissions required")
 
     # Persist the email grant after the current role and Organization state have been locked.
-    from src.database.services import invitations
-
-    await invitations.create(session, organization_id, email, role)
+    await invitation_service.create(session, organization_id, email, role)
     return organization
+
+
+async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user: User) -> None:
+    """Authorize and revoke one active Organization invitation."""
+
+    # Lock the Organization before revalidating the caller's active invitation permission.
+    organization = await session.get(Organization, organization_id, with_for_update=True)
+    if organization is None or organization.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise ForbiddenError("Permission required")
+
+    # Resolve only an invitation belonging to the locked Organization.
+    invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)
+    if invitation is None or invitation.organization_id != organization_id:
+        raise NotFoundError("Invitation not found")
+    if not roles.atleast(membership.role, invitation.role):
+        raise ForbiddenError("Invitation role permissions required")
+
+    await session.delete(invitation)
 
 
 async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) -> Organization | None:

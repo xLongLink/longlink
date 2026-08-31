@@ -103,6 +103,16 @@ export function useOrganizationMembers(organizationId: string) {
             queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
     });
 
+    const revokeInvitation = useMutation({
+        mutationFn: async (invitationId: string) => {
+            await api(`/api/v1/organizations/${organizationId}/invitations/${invitationId}`, {
+                method: 'DELETE',
+            });
+        },
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
+    });
+
     const changeMemberRole = useMutation({
         mutationFn: async ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) => {
             await api(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
@@ -117,7 +127,7 @@ export function useOrganizationMembers(organizationId: string) {
             ]),
     });
 
-    return { inviteMember, changeMemberRole };
+    return { inviteMember, revokeInvitation, changeMemberRole };
 }
 
 /** Creates one application and refreshes organization application data. */

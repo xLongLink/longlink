@@ -69,7 +69,6 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
 async def test_list_users_returns_administrator_page_and_total(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Return a bounded administrator page with the full visible-user total."""
 

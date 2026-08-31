@@ -16,7 +16,14 @@ def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -
     """Build valid seed settings with a temporary compute configuration."""
 
     kubeconfig = tmp_path / "kubeconfig.yml"
-    kubeconfig.write_text("apiVersion: v1\nkind: Config\n", encoding="utf-8")
+    kubeconfig.write_text(
+        "apiVersion: v1\n"
+        "clusters:\n- name: cluster\n  cluster:\n    server: https://kubernetes.example\n"
+        "contexts:\n- name: context\n  context:\n    cluster: cluster\n    user: user\n"
+        "current-context: context\n"
+        "users:\n- name: user\n  user:\n    token: secret\n",
+        encoding="utf-8",
+    )
     return settings_type(
         KUBECONFIG=kubeconfig,
         APPLICATION_DATABASE_URL="postgresql://admin:admin@database:5432/postgres?sslmode=disable",

@@ -1,13 +1,12 @@
 import pytest
 from alembic import command
 from pathlib import Path
-from containers import start_postgres
+from containers import postgres_container
 from sqlalchemy import inspect, create_engine
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from src.environments import env
-from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
-from src.database.models.base import PlatformModel
+from src.database.models import registry
 
 pytestmark = pytest.mark.no_db
 
@@ -30,44 +29,29 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
     # Start the supported database backend with a password that requires URL escaping.
     password = "sec@ret"
-    encoded_password = "sec%40ret"
-    container = start_postgres("longlink", password, "longlink")
-
-    engine = None
-    try:
-        # Run the real Alembic environment to verify ConfigParser and SQLAlchemy preserve the encoded password.
-        database_url = f"postgresql+asyncpg://longlink:{encoded_password}@{container.host()}:{container.port(5432)}/longlink?ssl=disable"
-        monkeypatch.setattr(env, "DATABASE_URL", database_url)
-        config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
-        command.upgrade(config, "head")
-
-        # Compare every migrated platform table and column with the current model metadata.
-        inspection_url = (
-            f"postgresql+psycopg://longlink:{encoded_password}@{container.host()}:{container.port(5432)}/longlink?sslmode=disable"
-        )
-        engine = create_engine(inspection_url)
-        model_columns = {table.name: {column.name for column in table.columns} for table in PlatformModel.metadata.sorted_tables}
-        with engine.connect() as connection:
-            inspector = inspect(connection)
-            migrated_tables = set(inspector.get_table_names())
-            migrated_columns = {
-                table_name: {column["name"] for column in inspector.get_columns(table_name)} for table_name in model_columns
-            }
-
-        # Require exact table and column parity rather than migration-source approximations.
-        assert migrated_tables == set(model_columns) | {"alembic_version"}
-        assert migrated_columns == model_columns
-
-        # Execute downgrades too and prove they remove every platform table.
-        command.downgrade(config, "base")
-        with engine.connect() as connection:
-            remaining_tables = set(inspect(connection).get_table_names())
-
-        assert remaining_tables.isdisjoint(model_columns)
-    finally:
-        # Dispose database and container resources even when migration assertions fail.
+    with postgres_container("longlink", password, "longlink") as container:
+        engine = None
         try:
+            # Run Alembic through Testcontainers' escaped asyncpg connection URL.
+            database_url = f"{container.get_connection_url(driver='asyncpg')}?ssl=disable"
+            monkeypatch.setattr(env, "DATABASE_URL", database_url)
+            config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+            command.upgrade(config, "head")
+
+            # Ask Alembic to compare the upgraded schema with the complete model registry.
+            command.check(config)
+
+            # Open a synchronous connection for downgrade inspection.
+            inspection_url = f"{container.get_connection_url(driver='psycopg')}?sslmode=disable"
+            engine = create_engine(inspection_url)
+
+            # Execute downgrades too and prove they remove every platform table.
+            command.downgrade(config, "base")
+            with engine.connect() as connection:
+                remaining_tables = set(inspect(connection).get_table_names())
+
+            assert remaining_tables.isdisjoint(registry.metadata.tables)
+        finally:
+            # Dispose database resources before Testcontainers removes PostgreSQL.
             if engine is not None:
                 engine.dispose()
-        finally:
-            container.stop()

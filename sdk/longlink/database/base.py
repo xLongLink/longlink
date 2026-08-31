@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
 from longlink.database import urls
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
@@ -39,11 +39,11 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     # Testing uses an isolated in-memory SQLite database.
     if env.ENV == "testing":
-        dburl = "sqlite+aiosqlite:///:memory:"
+        dburl = make_url("sqlite+aiosqlite:///:memory:")
 
     # Development keeps data in a local SQLite file.
     elif env.ENV == "development":
-        dburl = "sqlite+aiosqlite:///./dev.db"
+        dburl = make_url("sqlite+aiosqlite:///./dev.db")
 
     # Production builds the URL from injected database settings.
     else:
@@ -55,7 +55,7 @@ def create_engine(env: Envs) -> AsyncEngine:
             host=env.DATABASE_HOST,
             port=env.DATABASE_PORT,
             database=env.DATABASE_NAME,
-        ).render_as_string(hide_password=False)
+        )
 
     # Configure connection health checks for every database backend.
     engine_kwargs: dict[str, object] = {
@@ -64,7 +64,7 @@ def create_engine(env: Envs) -> AsyncEngine:
     }
 
     # Enable LIFO pooling for network database connections.
-    if not dburl.startswith("sqlite+"):
+    if dburl.get_backend_name() != "sqlite":
         engine_kwargs["pool_use_lifo"] = True
 
     # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.
@@ -100,7 +100,7 @@ class Database:
                     engine = create_engine(self._env)
 
                     # Auto-create tables for SQLite only.
-                    if str(engine.url).startswith("sqlite+"):
+                    if engine.url.get_backend_name() == "sqlite":
                         async with engine.begin() as conn:
                             await conn.run_sync(database_metadata.create_all)
                     else:

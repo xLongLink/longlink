@@ -26,3 +26,11 @@ class Kubernetes:
         if self._api_client is None:
             self._api_client = await kr8s.asyncio.api(kubeconfig=cast(str, self._kubeconfig), serviceaccount="")
         return self._api_client
+
+    async def aclose(self) -> None:
+        """Close the cached Kubernetes HTTP session when one was opened."""
+
+        # kr8s retains its HTTPX session on the lazily created API client.
+        if self._api_client is not None and self._api_client._session is not None:
+            await self._api_client._session.aclose()
+        self._api_client = None

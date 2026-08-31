@@ -3,6 +3,7 @@ from uuid import UUID
 from conftest import FakeKubernetes
 from src.utils import templates
 from src.kubernetes import applications
+from collections.abc import AsyncIterator
 from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
@@ -52,6 +53,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
     # Arrange
     applied: list[str] = []
+    logged: list[str] = []
 
     class Resource:
         """Represent a Kubernetes resource without reaching a cluster."""
@@ -70,10 +72,37 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             assert conditions == ["condition=Complete", "condition=Failed"]
             self.raw["status"] = {"failed": 1}
 
+    class MigrationPod:
+        """Expose output from the failed migration Job."""
+
+        metadata = {"name": "failed-migration-pod"}
+
+        @classmethod
+        async def list(cls, **kwargs: object) -> AsyncIterator["MigrationPod"]:
+            """Yield the failed migration Pod selected by its Job label."""
+
+            assert kwargs["namespace"] == "acme"
+            assert kwargs["label_selector"] == {
+                applications.APPLICATION_ID_LABEL: "00000000-0000-4000-8000-000000000001",
+                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840",
+            }
+            yield cls()
+
+        async def logs(self, tail_lines: int) -> AsyncIterator[str]:
+            """Yield recent migration output."""
+
+            assert tail_lines == 200
+            yield "database connection refused"
+
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
+
+    def log_error(message: str, *args: object) -> None:
+        """Capture formatted operation error output."""
+
+        logged.append(message % args)
 
     monkeypatch.setattr(
         applications.templates,
@@ -87,10 +116,12 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     )
     monkeypatch.setattr(applications, "Secret", Resource)
     monkeypatch.setattr(applications, "Job", MigrationJob)
+    monkeypatch.setattr(applications, "Pod", MigrationPod)
     monkeypatch.setattr(applications, "Service", Resource)
     monkeypatch.setattr(applications, "Deployment", Resource)
     monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
     monkeypatch.setattr(applications, "apply", apply)
+    monkeypatch.setattr(applications.logger, "error", log_error)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Application migration Job .* failed"):
@@ -101,6 +132,10 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             {},
         )
     assert applied == ["Secret", "Job"]
+    assert logged[-2:] == [
+        "Recent output from failed migration Pod failed-migration-pod:",
+        "Migration Pod failed-migration-pod: database connection refused",
+    ]
 
 
 async def test_application_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch) -> None:

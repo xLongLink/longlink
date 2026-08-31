@@ -13,7 +13,8 @@ describe('useBindableValue', () => {
 
     afterEach(() => {
         if (root) {
-            act(() => root?.unmount());
+            const mountedRoot = root;
+            act(() => mountedRoot.unmount());
         }
         container?.remove();
         vi.unstubAllGlobals();

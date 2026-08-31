@@ -46,7 +46,7 @@ export default function DocsArticleRoute() {
                                     <Text weight="semibold">User</Text>
                                     <Text type="supporting">Browser</Text>
                                 </Stack>
-                                <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                                <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
                                     <Palette aria-label="Theming" className="text-secondary" size={16} />
                                     <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                                 </Stack>
@@ -62,7 +62,7 @@ export default function DocsArticleRoute() {
                                     <Text weight="semibold">Application</Text>
                                     <Text type="supporting">Runtime</Text>
                                 </Stack>
-                                <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                                <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
                                     <Code2 aria-label="Application logic" className="text-secondary" size={16} />
                                     <Database aria-label="Database logic" className="text-secondary" size={16} />
                                     <HardDrive aria-label="File storage" className="text-secondary" size={16} />

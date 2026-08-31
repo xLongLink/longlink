@@ -48,6 +48,7 @@ dev = [
     'pytest-asyncio>=1.4.0',
     'pytest-cov>=7.0.0',
     'docker>=7.2.0',
+    'testcontainers>=4.15.0',
     'types-aiobotocore-s3==3.9.0',
 ]
 
@@ -71,10 +72,7 @@ line-length = 140
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["UP", "D300", "I"]
-
-[tool.ruff.lint.per-file-ignores]
-"src/database/models/*.py" = ["UP037", "UP045"]
+select = ["F", "UP", "D300", "I"]
 
 [tool.ruff.lint.isort]
 no-sections = true
@@ -86,7 +84,7 @@ extra-paths = ["../sdk"]
 [tool.ty.src]
 include = ["main.py", "scripts", "src", "alembic"]
 # Keep SQLModel descriptor diagnostics out of the gate while checking callers.
-exclude = ["src/.static", "tests", "src/database/models"]
+exclude = ["src/database/models"]
 
 [tool.ty.rules]
 invalid-argument-type = "ignore"

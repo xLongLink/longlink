@@ -1,4 +1,3 @@
-from copy import deepcopy
 from kr8s.asyncio.objects import APIObject, Deployment
 
 
@@ -7,7 +6,7 @@ async def apply(resource: APIObject) -> None:
 
     # Patch existing resources to repair drift without recreating their identities.
     if await resource.exists():
-        await resource.patch(deepcopy(resource.raw))
+        await resource.patch(resource.raw)
         return
 
     await resource.create()

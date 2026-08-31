@@ -64,26 +64,29 @@ async def create(
         raise ForbiddenError("Permission required")
 
     # Serialize application creation through the locked Organization to enforce the beta limit.
-    application_ids_result = await session.execute(
+    application_limit_result = await session.execute(
         select(Application.id)
         .where(
             Application.organization_id == organization_id,
             Application.deleted_at.is_(None),
         )
-        .limit(3)
+        .offset(2)
+        .limit(1)
         .with_for_update()
     )
-    if len(application_ids_result.all()) >= 3:
+    if application_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Application limit reached during the beta. Contact LongLink to request additional applications.")
 
     # Build the Application row before checking its Organization-scoped uniqueness.
     application = Application(
+        created_id=user_id,
         organization_id=organization_id,
         name=name,
         slug=names.slugify(name),
         description=description,
         image_desired=image,
         secrets=secrets,
+        updated_id=user_id,
     )
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
@@ -126,7 +129,11 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
         raise ForbiddenError("Permission required")
 
     # Record the tombstone and schedule external cleanup in one transaction.
-    application.deleted_at = utcnow()
+    now = utcnow()
+    application.deleted_at = now
+    application.deleted_id = user_id
+    application.updated_at = now
+    application.updated_id = user_id
 
     await operations.enqueue(
         session,

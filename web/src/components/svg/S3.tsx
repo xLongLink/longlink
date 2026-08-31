@@ -5,14 +5,7 @@ const S3 = (props: SVGProps<SVGSVGElement>) => {
     const gradientId = useId();
 
     return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 96 96"
-            id="Aws-S3--Streamline-Svg-Logos"
-            height="24"
-            width="24"
-        >
+        <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" height="24" width="24">
             <desc>Aws S3 Streamline Icon: https://streamlinehq.com</desc>
             <path fill={`url(#${gradientId})`} d="M95 1H1v94h94V1Z" />
             <path

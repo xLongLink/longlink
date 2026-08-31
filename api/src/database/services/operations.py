@@ -3,10 +3,11 @@ from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.models.operations import OperationKind
+from src.models.operations import OperationKind, OperationResource, OperationResponse
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
@@ -14,27 +15,123 @@ from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
+OPERATION_LOG_RETENTION = timedelta(days=30)
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
+
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[OperationResponse], int]:
     """Return one newest-first page of platform operations."""
 
-    # Query one stable page of operation history.
+    # Load only fields needed by the operation response and its derived status.
     statement = (
-        select(Operation).order_by(Operation.created_at.desc(), Operation.id.desc()).offset(pagination.offset).limit(pagination.page_size)
+        select(Operation)
+        .options(
+            load_only(
+                Operation.id,
+                Operation.kind,
+                Operation.target_id,
+                Operation.failed,
+                Operation.lease_expires_at,
+                Operation.created_at,
+                Operation.finished_at,
+            )
+        )
+        .order_by(Operation.created_at.desc(), Operation.id.desc())
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    operations = result.all()
+
+    # Group targets by their concrete resource table.
+    compute_target_ids = [operation.target_id for operation in operations if operation.kind == OperationKind.compute_create]
+    organization_target_ids = [
+        operation.target_id
+        for operation in operations
+        if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
+    ]
+    application_target_ids = [
+        operation.target_id
+        for operation in operations
+        if operation.kind in {OperationKind.application_create, OperationKind.application_delete}
+    ]
+
+    # Load compact resource details for each target type.
+    resource_names: dict[tuple[OperationKind, UUID], str] = {}
+    if compute_target_ids:
+        result = await session.execute(
+            select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.compute_create, resource_id)] = name
+
+    if organization_target_ids:
+        result = await session.execute(
+            select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.organization_create, resource_id)] = name
+            resource_names[(OperationKind.organization_delete, resource_id)] = name
+
+    if application_target_ids:
+        result = await session.execute(
+            select(col(Application.id), col(Application.name)).where(col(Application.id).in_(application_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.application_create, resource_id)] = name
+            resource_names[(OperationKind.application_delete, resource_id)] = name
+
+    # Assemble response models with their resolved target resource.
+    items: list[OperationResponse] = []
+    for operation in operations:
+        resource_name = resource_names.get((operation.kind, operation.target_id))
+        resource = (
+            OperationResource(id=operation.target_id, name=resource_name) if resource_name is not None else None
+        )
+        items.append(
+            OperationResponse(
+                id=operation.id,
+                kind=operation.kind,
+                resource=resource,
+                target_id=operation.target_id,
+                status=operation.status,
+                failed=operation.failed,
+                created_at=operation.created_at,
+                finished_at=operation.finished_at,
+            )
+        )
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
-    return result.all(), count_result.scalar_one()
+    return items, count_result.scalar_one()
+
+
+async def clear_expired_logs(session: AsyncSession) -> int:
+    """Clear logs from Operations that finished outside the retention window."""
+
+    # Load only expired diagnostic payloads while retaining their Operation history.
+    result = await session.scalars(
+        select(Operation)
+        .options(load_only(Operation.logs))
+        .where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+    )
+    expired_operations = result.all()
+
+    # Clear only payloads that have not already been removed by an earlier cleanup.
+    cleared = 0
+    for operation in expired_operations:
+        if not operation.logs:
+            continue
+        operation.logs = []
+        cleared += 1
+    return cleared
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:
     """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    result = await session.execute(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
-    compute_ids = result.scalars().all()
+    compute_result = await session.scalars(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
+    compute_ids = compute_result.all()
     result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )

@@ -9,6 +9,7 @@ export const dateFormatter = new Intl.DateTimeFormat(undefined, {
 export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
     hour: 'numeric',
+    hourCycle: 'h23',
     minute: 'numeric',
     month: 'numeric',
     second: 'numeric',

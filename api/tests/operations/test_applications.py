@@ -70,6 +70,9 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
 
             raise RuntimeError("Kubernetes workload deletion failed")
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     def unexpected_provider(*_args: object) -> object:
         """Fail if provider cleanup runs before Kubernetes deletion completes."""
 
@@ -112,6 +115,9 @@ async def test_application_delete_removes_provider_state_and_tombstone(
             """Record workload removal."""
 
             calls.append(("workload", application_id))
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     class FakePostgres:
         """Record schema deletion."""
@@ -215,6 +221,9 @@ async def test_application_creation_applies_user_and_managed_environment_values(
 
             captured["secrets"] = secrets
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     monkeypatch.setattr(application_operations, "Postgres", FakePostgres)
     monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
     monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
@@ -229,6 +238,57 @@ async def test_application_creation_applies_user_and_managed_environment_values(
         persisted = await session.get(Application, application.id)
     assert persisted is not None
     assert persisted.status == Status.running
+
+
+async def test_application_creation_revokes_storage_credentials_when_schema_provisioning_fails(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Revoke generated storage credentials when the database schema cannot be provisioned."""
+
+    # Arrange
+    owner = users[0]
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(owner, infrastructure=infrastructure)
+    application = await create_application(organization)
+    calls: list[str] = []
+
+    class FailingPostgres:
+        """Fail schema provisioning after storage credentials are created."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the configured registry connection values."""
+
+        async def schema(self, *_args: object) -> dict[str, object]:
+            """Fail the database provisioning step."""
+
+            raise RuntimeError("database unavailable")
+
+    class FakeStorage:
+        """Record generated credential cleanup."""
+
+        def __init__(self, *_args: object) -> None:
+            """Accept the configured registry connection values."""
+
+        async def credentials(self, _name: str, _bucket: str, _prefix: str) -> dict[str, str]:
+            """Issue one application-scoped credential."""
+
+            calls.append("credentials")
+            return {"access_key_id": "application", "secret_access_key": "generated-secret"}
+
+        async def revoke(self, name: str) -> None:
+            """Record credential revocation."""
+
+            assert name == application.id.hex
+            calls.append("revoke")
+
+    monkeypatch.setattr(application_operations, "Postgres", FailingPostgres)
+    monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        await application_operations.create(application.id)
+    assert calls == ["credentials", "revoke"]
 
 
 async def test_application_creation_retry_reuses_persisted_runtime_secrets(
@@ -263,6 +323,9 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
             """Capture the persisted runtime environment."""
 
             captured["secrets"] = secrets
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
     monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
@@ -352,6 +415,9 @@ async def test_application_creation_reuses_complete_runtime_secrets_for_running_
             """Capture the persisted runtime contract."""
 
             applied.append(secrets)
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(application_operations, "Kubernetes", Kubernetes)
 

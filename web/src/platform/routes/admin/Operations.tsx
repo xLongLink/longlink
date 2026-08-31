@@ -1,16 +1,19 @@
 import { useState } from 'react';
+import { Ellipsis } from 'lucide-react';
 import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import OperationLogs from '@/components/dialogs/OperationLogs';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
 
 const statusLabels: Record<OperationResponse['status'], string> = {
@@ -26,10 +29,18 @@ const kindLabels: Record<OperationResponse['kind'], string> = {
     'organization.create': 'Organization creation',
     'organization.delete': 'Organization deletion',
 };
+const resourceLabels: Record<OperationResponse['kind'], string> = {
+    'compute.create': 'Compute',
+    'application.create': 'Application',
+    'application.delete': 'Application',
+    'organization.create': 'Organization',
+    'organization.delete': 'Organization',
+};
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
+    const [metadataOperation, setMetadataOperation] = useState<OperationResponse | null>(null);
     const {
         items: operations,
         error,
@@ -46,7 +57,7 @@ export default function AdminOperations() {
     }
 
     return (
-        <Stack gap={8} width="100%">
+        <Stack gap={8}>
             <Stack>
                 <Heading level={1}>Operations</Heading>
                 <Text as="p" color="secondary">
@@ -65,47 +76,66 @@ export default function AdminOperations() {
                     {(operation) => (
                         <Stack>
                             <Text weight="semibold">{kindLabels[operation.kind]}</Text>
-                            <Text type="supporting">{statusLabels[operation.status]}</Text>
+                            <Text type="supporting">
+                                {operation.finished_at
+                                    ? `${statusLabels[operation.status]} - ${dateTimeFormatter.format(new Date(operation.finished_at)).replace(', ', ' ')}`
+                                    : `Started - ${dateTimeFormatter.format(new Date(operation.created_at)).replace(', ', ' ')}`}
+                            </Text>
                         </Stack>
                     )}
                 </TableColumn>
-                <TableColumn<OperationResponse> field="timestamp" header="Timestamp" width={pixel(208)}>
-                    {(operation) => dateTimeFormatter.format(new Date(operation.created_at))}
-                </TableColumn>
-                <TableColumn<OperationResponse> field="finished_at" header="Finished" width={pixel(208)}>
-                    {(operation) =>
-                        operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-'
-                    }
-                </TableColumn>
-                <TableColumn<OperationResponse> field="metadata" header="Metadata" width={proportional(2)}>
+                <TableColumn<OperationResponse> field="resource" header="Resource" width={proportional(1)}>
                     {(operation) => (
-                        <Stack gap={1}>
-                            <Text>
-                                <Text type="supporting">ID</Text> <Text type="code">{operation.id}</Text>
-                            </Text>
-                            <Text>
-                                <Text type="supporting">Target</Text> <Text type="code">{operation.target_id}</Text>
-                            </Text>
-                            {operation.status === 'failed' && operation.failed ? (
-                                <Text>
-                                    <Text type="supporting">Reason</Text> {operation.failed}
-                                </Text>
-                            ) : null}
+                        <Stack>
+                            <Text weight="semibold">{operation.resource?.name ?? 'Resource unavailable'}</Text>
+                            <Text type="supporting">{resourceLabels[operation.kind]}</Text>
                         </Stack>
                     )}
                 </TableColumn>
-                <TableColumn<OperationResponse> align="end" field="actions" header="Action" width={pixel(96)}>
+                <TableColumn<OperationResponse> align="end" field="actions" header="" width={pixel(56)}>
                     {(operation) => (
-                        <Button
-                            label="Logs"
-                            size="sm"
-                            variant="ghost"
-                            isDisabled={operation.finished_at === null}
-                            onClick={() => setLogOperation(operation)}
+                        <DropdownMenu
+                            button={{
+                                icon: <Ellipsis />,
+                                isIconOnly: true,
+                                label: `Actions for ${kindLabels[operation.kind]}`,
+                                size: 'sm',
+                                variant: 'ghost',
+                            }}
+                            hasChevron={false}
+                            items={[
+                                { label: 'Metadata', onClick: () => setMetadataOperation(operation) },
+                                {
+                                    isDisabled: operation.finished_at === null,
+                                    label: 'Logs',
+                                    onClick: () => setLogOperation(operation),
+                                },
+                            ]}
                         />
                     )}
                 </TableColumn>
             </Table>
+            {metadataOperation ? (
+                <MetadataDialog onClose={() => setMetadataOperation(null)} title="Operation metadata">
+                    <MetadataList>
+                        <MetadataListItem label="Operation">{kindLabels[metadataOperation.kind]}</MetadataListItem>
+                        <MetadataListItem label="Status">{statusLabels[metadataOperation.status]}</MetadataListItem>
+                        <MetadataListItem label="ID">{metadataOperation.id}</MetadataListItem>
+                        <MetadataListItem label="Target">{metadataOperation.target_id}</MetadataListItem>
+                        <MetadataListItem label="Created">
+                            {dateTimeFormatter.format(new Date(metadataOperation.created_at)).replace(', ', ' ')}
+                        </MetadataListItem>
+                        {metadataOperation.finished_at ? (
+                            <MetadataListItem label="Finished">
+                                {dateTimeFormatter.format(new Date(metadataOperation.finished_at)).replace(', ', ' ')}
+                            </MetadataListItem>
+                        ) : null}
+                        {metadataOperation.failed ? (
+                            <MetadataListItem label="Reason">{metadataOperation.failed}</MetadataListItem>
+                        ) : null}
+                    </MetadataList>
+                </MetadataDialog>
+            ) : null}
             {logOperation ? (
                 <OperationLogs
                     operationId={logOperation.id}

@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
@@ -26,6 +27,7 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
+STORAGE_USAGE_TIMEOUT_SECONDS = 15
 
 
 @router.get("/organizations", response_model=Page[OrganizationSummary])
@@ -79,10 +81,6 @@ async def update_organization(
 ):
     """Update mutable organization settings."""
 
-    # Require organization administrators to change shared metadata.
-    if not roles.atleast(membership.role, OrganizationRoles.admin):
-        raise HTTPException(status_code=403, detail="Permission required")
-
     # Persist mutable metadata only while the Organization remains active.
     organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
     if organization is None:
@@ -131,12 +129,16 @@ async def get_organization_storage_usage(
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
     try:
-        usage = await Exoscale(
+        storage = Exoscale(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
-        ).usage(bucket_name)
-    except (BotoCoreError, ClientError) as exc:
+        )
+
+        # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
+        async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
+            usage = await storage.usage(bucket_name)
+    except (TimeoutError, BotoCoreError, ClientError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,
@@ -157,14 +159,6 @@ async def create_organization_invitation(
 ):
     """Create one invitation for an organization member."""
 
-    # Require maintainers to create invitations.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    # Prevent inviting roles above the caller's role.
-    if not roles.atleast(membership.role, payload.role):
-        raise HTTPException(status_code=403, detail="Invitation role permissions required")
-
     organization = await organizations.create_invitation(
         session,
         membership.organization_id,
@@ -178,6 +172,19 @@ async def create_organization_invitation(
     background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization.name, payload.role)
 
 
+@router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)
+async def revoke_organization_invitation(
+    invitation_id: UUID,
+    user: User = Depends(authuser),
+    membership: UserOrganization = Depends(organization_access),
+    session: AsyncSession = Depends(get_session),
+):
+    """Revoke one pending Organization invitation."""
+
+    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user)
+    await session.commit()
+
+
 @router.patch("/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
     member_id: UUID,
@@ -187,10 +194,6 @@ async def update_organization_member(
     session: AsyncSession = Depends(get_session),
 ):
     """Update one organization member role."""
-
-    # Require organization administrators to manage members.
-    if not roles.atleast(membership.role, OrganizationRoles.admin):
-        raise HTTPException(status_code=403, detail="Permission required")
 
     # Persist the requested role only for an active Organization member.
     changed = await organizations.update_member_role(

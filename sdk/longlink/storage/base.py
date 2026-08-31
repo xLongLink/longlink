@@ -8,23 +8,19 @@ from fsspec.implementations.dirfs import DirFileSystem
 def create_fs(settings: Envs) -> AbstractFileSystem:
     """Create the active Application filesystem from runtime settings."""
 
-    bucket = settings.STORAGE_BUCKET or ""
-    prefix = settings.STORAGE_PREFIX or ""
-    bucket_path: PurePosixPath | None = None
-    prefix_path: PurePosixPath | None = None
+    bucket_path = PurePosixPath(settings.STORAGE_BUCKET) if settings.STORAGE_BUCKET else None
+    prefix_path = PurePosixPath(settings.STORAGE_PREFIX) if settings.STORAGE_PREFIX else None
 
     # Reject bucket paths that could alter or escape the configured storage scope.
-    if bucket:
-        bucket_path = PurePosixPath(bucket)
+    if bucket_path is not None:
         if bucket_path.is_absolute() or not bucket_path.parts or ".." in bucket_path.parts:
             raise ValueError("Storage buckets must be bucket names")
 
     # Normalize only safe relative prefixes so a scoped view cannot escape its bucket.
-    if prefix:
-        prefix_path = PurePosixPath(prefix)
+    if prefix_path is not None:
         if prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts:
             raise ValueError("Storage prefixes must be relative paths inside a bucket")
-    if prefix and not bucket:
+    if prefix_path is not None and bucket_path is None:
         raise ValueError("Storage prefixes require a bucket")
 
     # Production uses remote object storage supplied by the platform.

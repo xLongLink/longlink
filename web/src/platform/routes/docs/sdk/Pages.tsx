@@ -1,8 +1,8 @@
 import { Info } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -62,9 +62,7 @@ function SummaryCard({
                     {children}
                 </Center>
             </Card>
-            <Text color="secondary" type="supporting">
-                {name}
-            </Text>
+            <Text type="supporting">{name}</Text>
             <RouterLink
                 aria-label={`Open ${name} documentation`}
                 className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -156,9 +154,7 @@ export default function DocsArticleRoute() {
                             <Avatar name="Ada Lovelace" size="lg" />
                         </SummaryCard>
                         <SummaryCard name="Heading">
-                            <Heading className="mt-0" level={3}>
-                                Orders
-                            </Heading>
+                            <Heading level={3}>Orders</Heading>
                         </SummaryCard>
                         <SummaryCard name="Text">
                             <Text>
@@ -277,16 +273,14 @@ export default function DocsArticleRoute() {
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="Card">
-                            <Card elevation="low" padding={3}>
-                                Lorem ipsum dolor sit amet.
-                            </Card>
+                            <Card elevation="low">Lorem ipsum dolor sit amet.</Card>
                         </SummaryCard>
                         <SummaryCard name="Grid">
                             <Grid columns={2} gap={2} justify="center">
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" padding={3}>
@@ -299,9 +293,9 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Stack">
                             <Stack align="center" gap={2} width="100%">
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <div aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Tabs">

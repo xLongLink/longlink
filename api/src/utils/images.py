@@ -1,11 +1,13 @@
 import json
 import httpx2
+from pydantic import TypeAdapter
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
 from src.models.metadata import ImageLabels, LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
+ENVIRONMENTS_ADAPTER = TypeAdapter(list[EnvironmentMetadata])
 
 
 def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
@@ -134,10 +136,7 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 
             environments = labels.get("longlink.environments")
             if environments is not None:
-                parsed_environments = json.loads(environments)
-                if not isinstance(parsed_environments, list):
-                    return None
-                result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
+                result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, TypeError, ValueError) as exc:

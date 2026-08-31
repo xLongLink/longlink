@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
@@ -97,13 +97,18 @@ async def record_success(
 ) -> bool:
     """Publish successful Compute and Gateway state when its lifecycle state is current."""
 
-    # Lock the compute while publishing its current gateway connection material.
-    registry = await session.get(ComputeRegistry, compute_id, with_for_update=True)
-    if registry is None or registry.status != expected_status:
-        return False
-
-    registry.gateway_url = gateway_url
-    registry.gateway_certificate = gateway_certificate
-    registry.gateway_client_identity = gateway_client_identity
-    registry.status = Status.running
-    return True
+    # Publish only when the Compute still has the lifecycle state observed by this worker.
+    result = await session.execute(
+        update(ComputeRegistry)
+        .where(
+            ComputeRegistry.id == compute_id,
+            ComputeRegistry.status == expected_status,
+        )
+        .values(
+            gateway_url=gateway_url,
+            gateway_certificate=gateway_certificate,
+            gateway_client_identity=gateway_client_identity,
+            status=Status.running,
+        )
+    )
+    return result.rowcount == 1

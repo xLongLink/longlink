@@ -60,7 +60,7 @@ export const zDatabaseSslMode = z.enum([
 export const zDatabaseRegistryCreate = z.object({
     host: z.string().min(1).max(255),
     port: z.int().gte(1).lte(65535),
-    sslmode: zDatabaseSslMode.optional().default('require'),
+    sslmode: zDatabaseSslMode.optional().default('verify-full'),
     password: z.string().min(1).max(255),
     username: z.string().min(1).max(255),
     name: z.string().min(1).max(128)
@@ -136,6 +136,16 @@ export const zOperationKind = z.enum([
 ]);
 
 /**
+ * OperationResource
+ *
+ * Represent one operation target resource.
+ */
+export const zOperationResource = z.object({
+    id: z.uuid(),
+    name: z.string()
+});
+
+/**
  * OperationStatus
  *
  * Supported long-running operation lifecycle states.
@@ -155,6 +165,7 @@ export const zOperationStatus = z.enum([
 export const zOperationResponse = z.object({
     id: z.uuid(),
     kind: zOperationKind,
+    resource: zOperationResource.nullable(),
     target_id: z.uuid(),
     status: zOperationStatus,
     failed: z.string().nullable(),
@@ -825,6 +836,16 @@ export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvita
  * Successful Response
  */
 export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostResponse = z.void();
+
+export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeletePath = z.object({
+    invitation_id: z.uuid(),
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zRevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteResponse = z.void();
 
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchBody = zOrganizationMemberUpdate;
 

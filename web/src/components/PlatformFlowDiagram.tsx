@@ -93,7 +93,7 @@ export function PlatformFlowDiagram() {
                             <Text weight="semibold">User</Text>
                             <Text type="supporting">Browser</Text>
                         </Stack>
-                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                        <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
                             <CapabilityIcon {...capabilities.theming} />
                             <CapabilityIcon {...capabilities.applicationShell} />
                         </Stack>
@@ -108,7 +108,7 @@ export function PlatformFlowDiagram() {
                         <Wordmark />
                         <Text type="supporting">Platform</Text>
                     </Stack>
-                    <Stack className="pb-3" gap={3} align="center">
+                    <Stack paddingBlockEnd={3} gap={3} align="center">
                         <Stack direction="horizontal" gap={3} justify="center">
                             <CapabilityIcon {...capabilities.authentication} />
                             <CapabilityIcon {...capabilities.organizations} />
@@ -138,7 +138,7 @@ export function PlatformFlowDiagram() {
                             <Text weight="semibold">Application</Text>
                             <Text type="supporting">Runtime</Text>
                         </Stack>
-                        <Stack className="pb-3" direction="horizontal" gap={3} justify="center">
+                        <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
                             <CapabilityIcon {...capabilities.applicationLogic} />
                             <CapabilityIcon {...capabilities.databases} />
                             <CapabilityIcon {...capabilities.storage} />

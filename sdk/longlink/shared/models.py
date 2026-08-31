@@ -1,25 +1,13 @@
 from uuid import UUID
+from typing import Annotated
 from datetime import datetime
-from pydantic import EmailStr, GetCoreSchemaHandler
+from pydantic import EmailStr, AfterValidator
 from sqlmodel import Field
 from sqlalchemy import Uuid, Column, String
-from pydantic_core import core_schema
 from longlink.database.types import UTCDateTime
 from longlink.database.registry import Base
 
-
-class Email(EmailStr):
-    """Validate and normalize one canonical email identity."""
-
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: object, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
-        """Normalize an address before Pydantic validates its email format."""
-
-        # Keep identity comparisons and persistence case-insensitive.
-        return core_schema.no_info_before_validator_function(
-            lambda value: value.strip().lower() if isinstance(value, str) else value,
-            handler.generate_schema(EmailStr),
-        )
+Email = Annotated[EmailStr, AfterValidator(str.lower)]
 
 
 class Audit(Base, table=True):

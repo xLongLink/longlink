@@ -175,7 +175,7 @@ export default function VerifyEmail() {
                     <Button isLoading={completion.isPending} label="Create account" type="submit" variant="primary" />
                 </AuthForm>
                 <Divider />
-                <Text as="p" color="secondary" justify="center" type="supporting">
+                <Text as="p" justify="center" type="supporting">
                     By continuing, you agree to our <br />
                     <Link href="/terms" hasUnderline type="inherit">
                         Terms of Service
