@@ -202,9 +202,20 @@ export default function Home() {
                                         hAlign="center"
                                         justify="center"
                                     >
-                                        <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
-                                        <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
-                                        <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
+                                        {title === 'Build' ? (
+                                            <img
+                                                alt="Connected application interfaces"
+                                                className="size-full object-cover"
+                                                decoding="async"
+                                                src="/images/build.png"
+                                            />
+                                        ) : (
+                                            <>
+                                                <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
+                                                <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
+                                                <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
+                                            </>
+                                        )}
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
                                         <Heading className="text-base" level={2}>

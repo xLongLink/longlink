@@ -1,11 +1,11 @@
+import * as React from 'react';
 import { proxy } from 'valtio';
 import { api } from '@/lib/api';
 import { resolveRequestUrl } from './url';
 import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, XmlRuntime } from '../types';
-import { createContext as createReactContext, useContext as useReactContext } from 'react';
 
-export const XmlContext = createReactContext<XmlRuntime | null>(null);
+export const XmlContext = React.createContext<XmlRuntime | null>(null);
 
 /** Creates a blank XML runtime context. */
 export function createContext(params: Record<string, string> = {}): XmlRuntime {
@@ -24,7 +24,7 @@ export function createContext(params: Record<string, string> = {}): XmlRuntime {
 /** Returns the active XML runtime from the XML context. */
 export function useXmlRuntime(): XmlRuntime {
     // Fail fast when XML runtime state is unavailable.
-    const runtime = useReactContext(XmlContext);
+    const runtime = React.useContext(XmlContext);
     if (!runtime) {
         throw new Error('useXmlRuntime must be used inside a rendered XML component');
     }

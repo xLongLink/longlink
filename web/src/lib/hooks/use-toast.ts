@@ -1,8 +1,8 @@
-import { useToast as useAstryxToast, type ShowToastFn } from '@astryxdesign/core/Toast';
+import * as Toast from '@astryxdesign/core/Toast';
 
 /** Return the shared LongLink toast function with automatic dismissal enabled by default. */
-export function useToast(): ShowToastFn {
-    const toast = useAstryxToast();
+export function useToast(): Toast.ShowToastFn {
+    const toast = Toast.useToast();
 
     return (options) =>
         toast({

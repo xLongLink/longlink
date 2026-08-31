@@ -23,8 +23,9 @@ export function Table({ props, nodes }: Props) {
 
             // Column field paths are static identifiers, not runtime values.
             if (
-                (fieldAttribute?.kind !== 'text' && fieldAttribute?.kind !== 'path') ||
-                (fieldAttribute?.kind === 'path' && fieldAttribute.isBinding)
+                !fieldAttribute ||
+                (fieldAttribute.kind !== 'text' && fieldAttribute.kind !== 'path') ||
+                (fieldAttribute.kind === 'path' && fieldAttribute.isBinding)
             ) {
                 throw new Error('TableColumn requires a usable field path');
             }
