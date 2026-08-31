@@ -30,7 +30,7 @@ export default function Pricing() {
                                     </Stack>
                                 </Stack>
 
-                                <Stack className="px-4 pt-12" direction="horizontal" gap={2} align="end">
+                                <Stack className="pt-12" paddingInline={4} direction="horizontal" gap={2} align="end">
                                     <Text hasCapsize type="display-3" weight="semibold">
                                         CHF 0
                                     </Text>
@@ -89,7 +89,7 @@ export default function Pricing() {
                                     </Stack>
                                 </Stack>
 
-                                <Stack className="px-4 pt-12" direction="horizontal" gap={2} align="end">
+                                <Stack className="pt-12" paddingInline={4} direction="horizontal" gap={2} align="end">
                                     <Text hasCapsize type="display-3" weight="semibold">
                                         Coming soon
                                     </Text>
@@ -112,7 +112,7 @@ export default function Pricing() {
                                     </Stack>
                                 </Stack>
 
-                                <Stack className="px-4 pt-12" direction="horizontal" gap={2} align="end">
+                                <Stack className="pt-12" paddingInline={4} direction="horizontal" gap={2} align="end">
                                     <Text hasCapsize type="display-3" weight="semibold">
                                         Coming soon
                                     </Text>

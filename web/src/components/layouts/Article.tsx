@@ -98,7 +98,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                         <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
                             <Breadcrumb className="min-w-0 overflow-hidden" />
                         </PageContainer>
-                        <Center className="absolute end-0 top-0 px-4" height={64}>
+                        <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
                             <Button href="/user/organizations" label="Get Started" size="sm" variant="primary" />
                         </Center>
                     </Stack>

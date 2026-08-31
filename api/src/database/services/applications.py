@@ -64,16 +64,17 @@ async def create(
         raise ForbiddenError("Permission required")
 
     # Serialize application creation through the locked Organization to enforce the beta limit.
-    application_ids_result = await session.execute(
+    application_limit_result = await session.execute(
         select(Application.id)
         .where(
             Application.organization_id == organization_id,
             Application.deleted_at.is_(None),
         )
-        .limit(3)
+        .offset(2)
+        .limit(1)
         .with_for_update()
     )
-    if len(application_ids_result.all()) >= 3:
+    if application_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Application limit reached during the beta. Contact LongLink to request additional applications.")
 
     # Build the Application row before checking its Organization-scoped uniqueness.

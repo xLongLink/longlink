@@ -69,17 +69,13 @@ export default function AdminOperations() {
                     {(operation) => (
                         <Stack>
                             <Text weight="semibold">{kindLabels[operation.kind]}</Text>
-                            <Text type="supporting">{statusLabels[operation.status]}</Text>
+                            <Text type="supporting">
+                                {operation.finished_at
+                                    ? `${statusLabels[operation.status]} - ${dateTimeFormatter.format(new Date(operation.finished_at)).replace(', ', ' ')}`
+                                    : `Started - ${dateTimeFormatter.format(new Date(operation.created_at)).replace(', ', ' ')}`}
+                            </Text>
                         </Stack>
                     )}
-                </TableColumn>
-                <TableColumn<OperationResponse> field="timestamp" header="Timestamp" width={pixel(208)}>
-                    {(operation) => dateTimeFormatter.format(new Date(operation.created_at))}
-                </TableColumn>
-                <TableColumn<OperationResponse> field="finished_at" header="Finished" width={pixel(208)}>
-                    {(operation) =>
-                        operation.finished_at ? dateTimeFormatter.format(new Date(operation.finished_at)) : '-'
-                    }
                 </TableColumn>
                 <TableColumn<OperationResponse> align="end" field="actions" header="" width={pixel(56)}>
                     {(operation) => (
@@ -112,11 +108,11 @@ export default function AdminOperations() {
                         <MetadataListItem label="ID">{metadataOperation.id}</MetadataListItem>
                         <MetadataListItem label="Target">{metadataOperation.target_id}</MetadataListItem>
                         <MetadataListItem label="Created">
-                            {dateTimeFormatter.format(new Date(metadataOperation.created_at))}
+                            {dateTimeFormatter.format(new Date(metadataOperation.created_at)).replace(', ', ' ')}
                         </MetadataListItem>
                         {metadataOperation.finished_at ? (
                             <MetadataListItem label="Finished">
-                                {dateTimeFormatter.format(new Date(metadataOperation.finished_at))}
+                                {dateTimeFormatter.format(new Date(metadataOperation.finished_at)).replace(', ', ' ')}
                             </MetadataListItem>
                         ) : null}
                         {metadataOperation.failed ? (

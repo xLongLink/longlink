@@ -103,9 +103,7 @@ async def create(application_id: UUID) -> None:
             application.id, organization.id.hex, application.image_desired, runtime_secrets
         )
     finally:
-        closer = getattr(cluster, "aclose", None)
-        if closer is not None:
-            await closer()
+        await cluster.aclose()
 
     # Publish the applied release only after workload readiness.
     if application.status in {Status.creating, Status.failed}:
@@ -137,9 +135,7 @@ async def delete(application_id: UUID) -> None:
     try:
         await cluster.applications.delete(application.id, organization.id.hex)
     finally:
-        closer = getattr(cluster, "aclose", None)
-        if closer is not None:
-            await closer()
+        await cluster.aclose()
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(

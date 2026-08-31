@@ -460,12 +460,7 @@ function PresentationSlide({
     );
 
     return (
-        <Stack
-            as="section"
-            aria-label={`Slide ${slideIndex + 1} of ${slides.length}`}
-            className={className}
-            width="100%"
-        >
+        <Stack as="section" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`} className={className}>
             {isScreen ? (
                 <Card className="ppt-screen-frame" padding={0}>
                     {platform}

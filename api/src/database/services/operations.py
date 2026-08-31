@@ -7,7 +7,7 @@ from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.models.operations import OperationKind
+from src.models.operations import OperationKind, OperationResource, OperationResponse
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
@@ -16,7 +16,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Operation], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[OperationResponse], int]:
     """Return one newest-first page of platform operations."""
 
     # Load only fields needed by the operation response and its derived status.
@@ -38,10 +38,69 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
+    operations = result.all()
+
+    # Group targets by their concrete resource table.
+    compute_target_ids = [operation.target_id for operation in operations if operation.kind == OperationKind.compute_create]
+    organization_target_ids = [
+        operation.target_id
+        for operation in operations
+        if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
+    ]
+    application_target_ids = [
+        operation.target_id
+        for operation in operations
+        if operation.kind in {OperationKind.application_create, OperationKind.application_delete}
+    ]
+
+    # Load compact resource details for each target type.
+    resource_names: dict[tuple[OperationKind, UUID], str] = {}
+    if compute_target_ids:
+        result = await session.execute(
+            select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.compute_create, resource_id)] = name
+
+    if organization_target_ids:
+        result = await session.execute(
+            select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.organization_create, resource_id)] = name
+            resource_names[(OperationKind.organization_delete, resource_id)] = name
+
+    if application_target_ids:
+        result = await session.execute(
+            select(col(Application.id), col(Application.name)).where(col(Application.id).in_(application_target_ids))
+        )
+        for resource_id, name in result.all():
+            resource_names[(OperationKind.application_create, resource_id)] = name
+            resource_names[(OperationKind.application_delete, resource_id)] = name
+
+    # Assemble response models with their resolved target resource.
+    items: list[OperationResponse] = []
+    for operation in operations:
+        resource_name = resource_names.get((operation.kind, operation.target_id))
+        resource = (
+            OperationResource(id=operation.target_id, name=resource_name) if resource_name is not None else None
+        )
+        items.append(
+            OperationResponse(
+                id=operation.id,
+                kind=operation.kind,
+                resource=resource,
+                target_id=operation.target_id,
+                status=operation.status,
+                failed=operation.failed,
+                created_at=operation.created_at,
+                finished_at=operation.finished_at,
+            )
+        )
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
-    return result.all(), count_result.scalar_one()
+    return items, count_result.scalar_one()
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

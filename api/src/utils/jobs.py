@@ -16,6 +16,7 @@ from src.database.models.operations import Operation
 operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
 MAX_OPERATION_LOG_BYTES = 65536
 OPERATION_LOG_TRUNCATION = f"WARNING: Operation logs truncated after {MAX_OPERATION_LOG_BYTES} bytes"
+MAX_OPERATION_MESSAGE_BYTES = MAX_OPERATION_LOG_BYTES - len(OPERATION_LOG_TRUNCATION.encode("utf-8"))
 
 
 class OperationLogHandler(logging.Handler):
@@ -42,8 +43,7 @@ class OperationLogHandler(logging.Handler):
             return
         message = self.format(record)
         message_bytes = len(message.encode("utf-8"))
-        maximum_message_bytes = MAX_OPERATION_LOG_BYTES - len(OPERATION_LOG_TRUNCATION.encode("utf-8"))
-        if self.log_bytes + message_bytes > maximum_message_bytes:
+        if self.log_bytes + message_bytes > MAX_OPERATION_MESSAGE_BYTES:
             self.logs.append(OPERATION_LOG_TRUNCATION)
             self.truncated = True
             return

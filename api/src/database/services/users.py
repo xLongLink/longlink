@@ -52,9 +52,8 @@ async def by_oauth_identity(session: AsyncSession, provider: OAuthProvider, subj
     """Return one user by a stable external OAuth provider identity."""
 
     # Provider subjects remain stable when an account's primary email address changes.
-    if provider == "google":
-        return await session.scalar(select(User).where(User.google_id == subject))
-    return await session.scalar(select(User).where(User.github_id == subject))
+    identity_column = User.google_id if provider == "google" else User.github_id
+    return await session.scalar(select(User).where(identity_column == subject))
 
 
 async def register(session: AsyncSession, name: str, email: str, password: str, avatar: str = "") -> User:

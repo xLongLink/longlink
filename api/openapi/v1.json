@@ -2950,6 +2950,26 @@
         "title": "OperationKind",
         "description": "Supported registered operation handlers."
       },
+      "OperationResource": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "OperationResource",
+        "description": "Represent one operation target resource."
+      },
       "OperationResponse": {
         "properties": {
           "id": {
@@ -2959,6 +2979,16 @@
           },
           "kind": {
             "$ref": "#/components/schemas/OperationKind"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperationResource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "target_id": {
             "type": "string",
@@ -3001,6 +3031,7 @@
         "required": [
           "id",
           "kind",
+          "resource",
           "target_id",
           "status",
           "failed",

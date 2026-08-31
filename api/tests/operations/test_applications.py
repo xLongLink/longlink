@@ -70,6 +70,9 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
 
             raise RuntimeError("Kubernetes workload deletion failed")
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     def unexpected_provider(*_args: object) -> object:
         """Fail if provider cleanup runs before Kubernetes deletion completes."""
 
@@ -112,6 +115,9 @@ async def test_application_delete_removes_provider_state_and_tombstone(
             """Record workload removal."""
 
             calls.append(("workload", application_id))
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     class FakePostgres:
         """Record schema deletion."""
@@ -215,6 +221,9 @@ async def test_application_creation_applies_user_and_managed_environment_values(
 
             captured["secrets"] = secrets
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     monkeypatch.setattr(application_operations, "Postgres", FakePostgres)
     monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
     monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
@@ -315,6 +324,9 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
 
             captured["secrets"] = secrets
 
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
     monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
     monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
@@ -403,6 +415,9 @@ async def test_application_creation_reuses_complete_runtime_secrets_for_running_
             """Capture the persisted runtime contract."""
 
             applied.append(secrets)
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(application_operations, "Kubernetes", Kubernetes)
 

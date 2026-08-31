@@ -84,14 +84,12 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
         email="invited@example.com",
         role=OrganizationRoles.read,
     )
-    scalar_calls = 0
+    responses = iter((None, None, concurrent_invitation))
 
     async def return_concurrent_invitation(_statement: object) -> OrganizationInvitation | None:
         """Model the invitation appearing after the unique-index conflict."""
 
-        nonlocal scalar_calls
-        scalar_calls += 1
-        return None if scalar_calls < 3 else concurrent_invitation
+        return next(responses)
 
     async def raise_unique_conflict() -> None:
         """Model the competing transaction winning the insert race."""
