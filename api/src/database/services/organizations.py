@@ -14,6 +14,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.adapters.postgres import Postgres
 from src.database.services import operations
+from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
@@ -533,9 +534,7 @@ async def create_invitation(
         raise ForbiddenError("Invitation role permissions required")
 
     # Persist the email grant after the current role and Organization state have been locked.
-    from src.database.services import invitations
-
-    await invitations.create(session, organization_id, email, role)
+    await invitation_service.create(session, organization_id, email, role)
     return organization
 
 

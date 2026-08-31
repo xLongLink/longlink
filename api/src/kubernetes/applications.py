@@ -174,8 +174,7 @@ class Applications:
                 migration_name = migration_pod.metadata.get("name", "unknown")
                 if migration_phase == "Failed":
                     logs = [f"Migration Pod {migration_name} failed:"]
-                    async for line in migration_pod.logs(tail_lines=200):
-                        logs.append(line)
+                    logs.extend([line async for line in migration_pod.logs(tail_lines=200)])
                     return logs
                 return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Application Pod unavailable"]
             raise RuntimeError("Application logs unavailable")

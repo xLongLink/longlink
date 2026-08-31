@@ -200,7 +200,7 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8} padding={2}>
-            <Stack className="pt-1" direction="horizontal" gap={3} align="center">
+            <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <IconButton
                     className="size-12"
                     icon={<Avatar kind="organization" name={organizationName} size="lg" src={avatar} />}

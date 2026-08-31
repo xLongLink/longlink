@@ -74,13 +74,7 @@ export default function Platform({
                         label="Platform navigation"
                     />
                     {tabs.length > 0 ? (
-                        <Stack
-                            className="overflow-y-hidden"
-                            direction="horizontal"
-                            isScrollable
-                            paddingInline={4}
-                            width="100%"
-                        >
+                        <Stack direction="horizontal" paddingInline={4} width="100%">
                             <TabList
                                 aria-label="Section navigation"
                                 onChange={() => undefined}
@@ -114,7 +108,7 @@ export default function Platform({
             >
                 <Card
                     aria-hidden="true"
-                    className="pointer-events-none absolute z-0 end-0 bottom-0 start-0 top-0 overflow-clip bg-body px-2 pb-2 pt-0"
+                    className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"
                     padding={0}
                     variant="transparent"
                 >

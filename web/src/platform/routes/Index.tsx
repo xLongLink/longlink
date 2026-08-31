@@ -162,9 +162,9 @@ export default function Home() {
     return (
         <>
             <main className="relative -mt-21 flex min-h-screen w-full overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
-                <div aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
+                <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <Globe />
-                </div>
+                </Stack>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <Stack gap={5}>
                         <Heading

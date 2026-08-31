@@ -159,7 +159,7 @@ function HowPyramid() {
     return (
         <Stack align="center" gap={2} maxWidth={640} width="100%">
             {howLayers.map(({ description, label, width }) => (
-                <Card height={120} key={label} padding={3} variant="muted" width={width}>
+                <Card height={120} key={label} variant="muted" width={width}>
                     <Stack align="center" gap={0.5} height="100%" justify="center">
                         <Text justify="center" textWrap="balance" type="large" weight="semibold">
                             {label}
@@ -288,7 +288,7 @@ function PresentationSlide({
         ) : slide.id === 'problem' ? (
             <Stack align="center" gap={2} maxWidth={832} width="100%">
                 <Grid columns={2} gap={2} justify="center" maxWidth={552} width="100%">
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Server aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -297,7 +297,7 @@ function PresentationSlide({
                             <ProcessCoverage stages={['Operate']} />
                         </Stack>
                     </Card>
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Blocks aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -308,7 +308,7 @@ function PresentationSlide({
                     </Card>
                 </Grid>
                 <Grid columns={3} gap={2} justify="center" width="100%">
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Cloud aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -317,7 +317,7 @@ function PresentationSlide({
                             <ProcessCoverage stages={['Operate']} />
                         </Stack>
                     </Card>
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <FileSpreadsheet aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -326,7 +326,7 @@ function PresentationSlide({
                             <ProcessCoverage stages={['Design', 'Build', 'Operate', 'Improve']} />
                         </Stack>
                     </Card>
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Sparkles aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -337,7 +337,7 @@ function PresentationSlide({
                     </Card>
                 </Grid>
                 <Grid columns={2} gap={2} justify="center" maxWidth={552} width="100%">
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Hand aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
@@ -346,7 +346,7 @@ function PresentationSlide({
                             <ProcessCoverage stages={['Operate']} />
                         </Stack>
                     </Card>
-                    <Card height={120} padding={3} variant="muted" width={272}>
+                    <Card height={120} variant="muted" width={272}>
                         <Stack align="center" gap={1} height="100%" justify="center">
                             <Wrench aria-hidden className="text-accent" size={16} />
                             <Text type="large" weight="semibold">
