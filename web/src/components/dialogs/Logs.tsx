@@ -69,7 +69,6 @@ export default function Logs({ kind, onOpenChange, resourceId, resourceName }: L
                             <CodeBlock
                                 code={logLines.length > 0 ? logLines.join('\n') : details.emptyMessage}
                                 hasCopyButton={false}
-                                hasLanguageLabel={false}
                                 isWrapped
                                 maxHeight="60vh"
                                 size="sm"

@@ -150,7 +150,7 @@ export default function Settings() {
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <IconButton
                     className="size-12"
-                    icon={<Avatar name={user.name} size="lg" src={avatar || undefined} />}
+                    icon={<Avatar name={user.name} size="lg" src={avatar} />}
                     label="Edit avatar"
                     tooltip="Edit avatar"
                     variant="ghost"

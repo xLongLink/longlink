@@ -58,12 +58,12 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         assert "Docker is required" not in result.output
 
 
-def test_build_reports_missing_docker_after_preparing_project(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_reports_missing_docker_after_preparing_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Require Docker only after the project build context is prepared."""
 
     # Arrange
     runner = CliRunner()
-    monkeypatch.setattr(build, "build_app", lambda _context: ("0.1.0", "demo"))
+    monkeypatch.chdir(build_project)
     monkeypatch.setattr(build.shutil, "which", lambda _command: None)
     monkeypatch.setattr(build.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("Docker must not run when unavailable"))
 

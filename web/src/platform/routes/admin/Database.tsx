@@ -25,7 +25,6 @@ export default function AdminDatabase() {
     const [metadataDatabase, setMetadataDatabase] = useState<DatabaseRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataDatabase = () => setMetadataDatabase(null);
     const deleteDatabase = useMutation({
         mutationFn: (databaseId: string) => api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -103,7 +102,7 @@ export default function AdminDatabase() {
             </Table>
             {metadataDatabase && (
                 <MetadataDialog
-                    onClose={closeMetadataDatabase}
+                    onClose={() => setMetadataDatabase(null)}
                     onDelete={() => deleteDialog.openFor(metadataDatabase)}
                     title="Database metadata"
                 >

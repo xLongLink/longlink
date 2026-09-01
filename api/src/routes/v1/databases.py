@@ -20,9 +20,9 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_database_registry(payload: DatabaseRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register one database backend."""
 
-    # Managed database connections must verify both their certificate chain and hostname in production.
-    if not env.DEVELOPMENT and payload.sslmode != DatabaseSSLMode.verify_full:
-        raise HTTPException(status_code=422, detail="Production databases must use sslmode=verify-full")
+    # Managed database connections must use TLS outside development.
+    if not env.DEVELOPMENT and payload.sslmode == DatabaseSSLMode.disable:
+        raise HTTPException(status_code=422, detail="Production databases must use SSL")
 
     registry = await database.create(session, **payload.model_dump())
     await session.commit()

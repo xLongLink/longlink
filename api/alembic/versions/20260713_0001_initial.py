@@ -76,7 +76,7 @@ def upgrade() -> None:
         sa.Column("password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "sslmode",
-            sa.Enum("disable", "verify-full", name="databasesslmode", native_enum=False),
+            sa.Enum("disable", "require", name="databasesslmode", native_enum=False),
             nullable=False,
         ),
         sa.Column("username", sa.String(length=255), nullable=False),

@@ -11,15 +11,28 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
-os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
-os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
-os.environ.setdefault("ADMIN_NAME", "Test Administrator")
-os.environ.setdefault("ADMIN_EMAIL", "test-administrator@example.com")
-os.environ.setdefault("ADMIN_PASSWORD", TEST_PASSWORD)
-os.environ.setdefault("ENCRYPTION_KEY", "longlink-test-encryption-key-that-is-long-enough")
-
-# Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
+os.environ["PUBLIC_URL"] = "http://localhost:5173"
+os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
+os.environ["ADMIN_NAME"] = "Test Administrator"
+os.environ["ADMIN_EMAIL"] = "test-administrator@example.com"
+os.environ["ADMIN_PASSWORD"] = TEST_PASSWORD
+os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough"
+os.environ["OPERATION_TIMEOUT_SECONDS"] = "600"
+os.environ["AUTH_SESSION_LIFETIME_SECONDS"] = "2592000"
+os.environ["SMTP_PORT"] = "587"
+os.environ["SMTP_USE_TLS"] = "false"
+os.environ["SMTP_START_TLS"] = "true"
+
+# Prevent optional workstation credentials from changing test capabilities.
+os.environ.pop("SMTP_HOST", None)
+os.environ.pop("SMTP_PASSWORD", None)
+os.environ.pop("SMTP_USERNAME", None)
+os.environ.pop("GITHUB_OAUTH_CLIENT_ID", None)
+os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
+os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
+os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 
 from main import app
 from src.utils import mail, token

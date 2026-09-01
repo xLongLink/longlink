@@ -70,6 +70,28 @@ def test_identity_token_user_rejects_invalid_signed_token(secret: str, claims: d
         identity.identity_token_user(encoded, IDENTITY_SECRET)
 
 
+def test_identity_token_user_rejects_unapproved_algorithm() -> None:
+    """Reject an otherwise valid identity assertion signed with another algorithm."""
+
+    # Arrange
+    identity_secret = IDENTITY_SECRET * 2
+    issued_at = datetime.now(UTC)
+    encoded = jwt.encode(
+        {
+            "sub": "00000000-0000-0000-0000-000000000001",
+            "aud": identity.IDENTITY_TOKEN_AUDIENCE,
+            "iat": issued_at,
+            "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+        },
+        identity_secret,
+        algorithm="HS384",
+    )
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
+        identity.identity_token_user(encoded, identity_secret)
+
+
 @pytest.mark.parametrize(
     ("claims", "message"),
     [
