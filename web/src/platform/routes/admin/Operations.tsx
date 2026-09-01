@@ -37,6 +37,11 @@ const resourceLabels: Record<OperationResponse['kind'], string> = {
     'organization.delete': 'Organization',
 };
 
+/** Formats an operation timestamp for display. */
+function formatOperationDate(value: string): string {
+    return dateTimeFormatter.format(new Date(value)).replace(', ', ' ');
+}
+
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
@@ -77,8 +82,8 @@ export default function AdminOperations() {
                             <Text weight="semibold">{kindLabels[operation.kind]}</Text>
                             <Text type="supporting">
                                 {operation.finished_at
-                                    ? `${statusLabels[operation.status]} - ${dateTimeFormatter.format(new Date(operation.finished_at)).replace(', ', ' ')}`
-                                    : `Started - ${dateTimeFormatter.format(new Date(operation.created_at)).replace(', ', ' ')}`}
+                                    ? `${statusLabels[operation.status]} - ${formatOperationDate(operation.finished_at)}`
+                                    : `Started - ${formatOperationDate(operation.created_at)}`}
                             </Text>
                         </Stack>
                     )}
@@ -122,11 +127,11 @@ export default function AdminOperations() {
                         <MetadataListItem label="ID">{metadataOperation.id}</MetadataListItem>
                         <MetadataListItem label="Target">{metadataOperation.target_id}</MetadataListItem>
                         <MetadataListItem label="Created">
-                            {dateTimeFormatter.format(new Date(metadataOperation.created_at)).replace(', ', ' ')}
+                            {formatOperationDate(metadataOperation.created_at)}
                         </MetadataListItem>
                         {metadataOperation.finished_at ? (
                             <MetadataListItem label="Finished">
-                                {dateTimeFormatter.format(new Date(metadataOperation.finished_at)).replace(', ', ' ')}
+                                {formatOperationDate(metadataOperation.finished_at)}
                             </MetadataListItem>
                         ) : null}
                         {metadataOperation.failed ? (

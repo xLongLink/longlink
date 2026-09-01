@@ -5,6 +5,10 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const metadata = {
+    seo: {
+        title: 'Bindings | LongLink Documentation',
+        description: 'Bind LongLink XML page components to application data and state.',
+    },
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

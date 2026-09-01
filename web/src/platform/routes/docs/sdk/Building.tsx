@@ -7,6 +7,10 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const metadata = {
+    seo: {
+        title: 'Building Applications | LongLink Documentation',
+        description: 'Build and package a LongLink application for deployment.',
+    },
     toc: [
         { id: 'building', label: 'Building', level: 1 },
         { id: 'metadata', label: 'Metadata', level: 2 },

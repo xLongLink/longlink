@@ -171,7 +171,8 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
         "detail": "Application limit reached during the beta. Contact LongLink to request additional applications."
     }
     async with session_scope() as session:
-        applications = (await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))).all()
+        result = await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))
+        applications = result.all()
     assert len(applications) == 3
 
 
@@ -304,7 +305,8 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
     assert response.status_code == 409
     assert response.json() == {"detail": "Application slug already exists"}
     async with session_scope() as session:
-        applications = (await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))).all()
+        result = await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))
+        applications = result.all()
     assert len(applications) == 1
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 

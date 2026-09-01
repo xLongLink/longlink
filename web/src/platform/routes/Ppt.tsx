@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
@@ -496,6 +497,7 @@ export default function Ppt() {
 
     return (
         <>
+            <Seo isIndexable={false} />
             <style>{printStyles}</style>
             <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">

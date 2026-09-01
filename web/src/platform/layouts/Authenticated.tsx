@@ -1,4 +1,5 @@
 import { ApiError } from '@/lib/api';
+import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Navigate, Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -28,6 +29,7 @@ export default function AuthenticatedLayout() {
                 }
                 tabs={[]}
             >
+                <Seo isIndexable={false} />
                 <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
                     <Stack gap={4} align="center">
                         <Banner status="error" title={error.message} />
@@ -40,11 +42,17 @@ export default function AuthenticatedLayout() {
 
     // Keep protected routes focused on authenticated application content.
     if (!user) {
-        return <Navigate replace to="/login" />;
+        return (
+            <>
+                <Seo isIndexable={false} />
+                <Navigate replace to="/login" />
+            </>
+        );
     }
 
     return (
         <AuthenticatedUserContext.Provider value={user}>
+            <Seo isIndexable={false} />
             <Outlet />
         </AuthenticatedUserContext.Provider>
     );

@@ -9,6 +9,10 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const metadata = {
+    seo: {
+        title: 'Storage | LongLink Documentation',
+        description: 'Store and manage files in a LongLink application.',
+    },
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

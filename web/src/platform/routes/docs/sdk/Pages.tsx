@@ -73,6 +73,10 @@ function SummaryCard({
 }
 
 const metadata = {
+    seo: {
+        title: 'Pages | LongLink Documentation',
+        description: 'Build application interfaces with LongLink XML pages and components.',
+    },
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },

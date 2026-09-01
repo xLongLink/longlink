@@ -7,6 +7,10 @@ import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
 const metadata = {
+    seo: {
+        title: 'Privacy Policy | LongLink',
+        description: 'Read the LongLink privacy policy.',
+    },
     toc: [
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },

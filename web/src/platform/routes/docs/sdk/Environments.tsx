@@ -6,6 +6,10 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const metadata = {
+    seo: {
+        title: 'Environments | LongLink Documentation',
+        description: 'Configure environments for local development and deployed LongLink applications.',
+    },
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

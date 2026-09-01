@@ -14,7 +14,7 @@ from longlink.database.base import database_metadata
 
 
 @pytest.fixture
-def isolated_model(tmp_path, monkeypatch) -> Generator[tuple[Path, Callable[[str, str], None]], None, None]:
+def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[Path, Callable[[str, str], None]], None, None]:
     """Provide an isolated application model file and clean up its global import state."""
 
     # Create the model path in a temporary application project.
@@ -149,7 +149,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
     assert directives == (original_directives if expected_migration_created else [])
 
 
-def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path, monkeypatch) -> None:
+def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail production startup without committed application revisions."""
 
     # Arrange
@@ -168,7 +168,7 @@ def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path
 
 @pytest.mark.parametrize(("environment", "committed_revision"), [("production", True), ("development", False)])
 def test_migrations_upgrade_head_when_revisions_are_available_or_development(
-    tmp_path, monkeypatch, environment: str, committed_revision: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, environment: str, committed_revision: bool
 ) -> None:
     """Apply revisions in production with a committed file and initialize development storage."""
 

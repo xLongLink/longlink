@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -158,8 +159,32 @@ function IntegrationScale() {
 
 /** Renders the public home page. */
 export default function Home() {
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'Organization',
+                name: 'LongLink',
+                url: 'https://longlink.dev',
+                sameAs: ['https://github.com/xLongLink/longlink', 'https://www.linkedin.com/company/longlink'],
+            },
+            {
+                '@type': 'WebSite',
+                name: 'LongLink',
+                url: 'https://longlink.dev',
+                description:
+                    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.',
+            },
+        ],
+    };
+
     return (
         <>
+            <Seo
+                description="LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python."
+                structuredData={structuredData}
+                title="LongLink | Build and operate business applications"
+            />
             <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <Globe />

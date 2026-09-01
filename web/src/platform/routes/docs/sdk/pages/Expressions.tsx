@@ -5,6 +5,10 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const metadata = {
+    seo: {
+        title: 'Expressions | LongLink Documentation',
+        description: 'Use expressions in LongLink XML pages to render dynamic application interfaces.',
+    },
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

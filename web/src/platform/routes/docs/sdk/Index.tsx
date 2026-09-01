@@ -8,6 +8,10 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
 const metadata = {
+    seo: {
+        title: 'Application SDK Documentation | LongLink',
+        description: 'Build LongLink applications as normal Python and FastAPI services with the Application SDK.',
+    },
     toc: [
         { id: 'application-sdk', label: 'Applications', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },

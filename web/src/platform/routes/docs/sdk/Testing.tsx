@@ -6,6 +6,10 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const metadata = {
+    seo: {
+        title: 'Testing | LongLink Documentation',
+        description: 'Test LongLink applications and their XML pages.',
+    },
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
