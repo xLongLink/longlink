@@ -4,7 +4,6 @@ import { Ellipsis } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Kubernetes } from '@/components/svg/Kubernetes';
@@ -115,21 +114,8 @@ export default function AdminCompute() {
             </Table>
             {metadataCompute && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    deleteDialog.openFor(metadataCompute);
-                                    closeMetadataCompute();
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataCompute} />
-                        </Stack>
-                    }
                     onClose={closeMetadataCompute}
+                    onDelete={() => deleteDialog.openFor(metadataCompute)}
                     title="Compute metadata"
                 >
                     <MetadataList>

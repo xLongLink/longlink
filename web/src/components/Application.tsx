@@ -96,8 +96,8 @@ export function ApplicationRuntime({
     // Let dynamic detail views share a tab with their matching list page.
     const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
     const { data: activePageAst, error: activePageError } = useQuery({
-        enabled: activePage !== undefined,
-        queryKey: ['application-page', pagesUrl, activePage?.path],
+        enabled: routePath.length > 0 && activePage !== undefined,
+        queryKey: ['api', 'application-page', pagesUrl, activePage?.path],
         queryFn: async ({ signal }) => {
             if (!activePage) throw new Error('No active application page');
 
@@ -153,7 +153,7 @@ export function ApplicationRuntime({
                 requestBaseUrl={requestBaseUrl}
             />
         );
-    } else if (!activePage) {
+    } else if (registeredPages && !activePage) {
         content = (
             <PageError
                 description="The application did not expose any pages to render."

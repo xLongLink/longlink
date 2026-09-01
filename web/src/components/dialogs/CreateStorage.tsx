@@ -20,7 +20,6 @@ export default function CreateStorage() {
             secret_access_key: '',
         },
         endpoint: '/api/v1/storages',
-        errorMessage: 'Failed to connect storage',
         schema,
     });
 

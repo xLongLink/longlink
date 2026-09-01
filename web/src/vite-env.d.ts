@@ -1,5 +1,4 @@
 interface ImportMetaEnv {
-    readonly VITE_DEV_PORT?: string;
     readonly VITE_SITE_URL: string;
     readonly VERSION?: string;
 }

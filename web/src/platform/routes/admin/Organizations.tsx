@@ -6,7 +6,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -116,21 +115,8 @@ export default function AdminOrganizations() {
             </Table>
             {metadataOrganization && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    deleteDialog.openFor(metadataOrganization);
-                                    closeMetadataOrganization();
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataOrganization} />
-                        </Stack>
-                    }
                     onClose={closeMetadataOrganization}
+                    onDelete={() => deleteDialog.openFor(metadataOrganization)}
                     title="Organization metadata"
                 >
                     <MetadataList>

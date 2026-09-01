@@ -12,7 +12,6 @@ export default function CreateOrganization() {
     const dialog = useRegistryDialog({
         defaultValues: { name: '' },
         endpoint: '/api/v1/organizations',
-        errorMessage: 'Failed to create organization',
         schema,
         additionalInvalidateKeys: [['api', '/api/v1/me/organizations']],
     });

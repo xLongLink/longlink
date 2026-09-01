@@ -110,15 +110,15 @@ async def organization_ids(session: AsyncSession, user_id: UUID) -> Sequence[UUI
     return result.all()
 
 
-async def ensure_administrator(session: AsyncSession) -> None:
+async def ensure_administrator(session: AsyncSession) -> User:
     """Reconcile the configured account as the sole Platform administrator."""
 
     # Reconcile the persisted administrator before considering an initial account creation.
+    statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
     user = await session.scalar(select(User).where(col(User.administrator).is_(True)))
 
     # Match the configured identity only when no administrator has been created yet.
     if user is None:
-        statement = select(User).where(col(User.email) == env.ADMIN_EMAIL)
         user = await session.scalar(statement)
     if user is None:
         user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD))
@@ -140,3 +140,4 @@ async def ensure_administrator(session: AsyncSession) -> None:
     user.email = env.ADMIN_EMAIL
     user.administrator = True
     user.deleted_at = None
+    return user

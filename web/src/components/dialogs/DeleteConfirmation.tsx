@@ -6,7 +6,7 @@ import { createGuardedOpenChange } from '@/lib/utils';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
-export type DeleteConfirmationProps = {
+type DeleteConfirmationProps = {
     open: boolean;
     title: string;
     description: ReactNode;

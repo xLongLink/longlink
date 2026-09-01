@@ -7,7 +7,6 @@ from sqlmodel import col
 from contextlib import suppress
 from sqlalchemy import select
 from src.errors import ConflictError
-from src.environments import env
 from src.models.types import Image, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
@@ -167,10 +166,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # The init workflow has no running API replica to create the administrator first.
     async with session_scope() as session:
-        await users.ensure_administrator(session)
-        administrator = await users.by_email(session, env.ADMIN_EMAIL)
-        if administrator is None:
-            raise RuntimeError("Configured administrator is not available")
+        administrator = await users.ensure_administrator(session)
 
         organization = await session.scalar(select(Organization).where(col(Organization.slug) == "development"))
         if organization is None:

@@ -1,22 +1,19 @@
 import { z } from 'zod';
-import { X } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
-import { Text } from '@astryxdesign/core/Text';
 import { useForm } from '@tanstack/react-form';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Dialog } from '@astryxdesign/core/Dialog';
-import { Heading } from '@astryxdesign/core/Heading';
 import { createGuardedOpenChange } from '@/lib/utils';
 import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -33,30 +30,6 @@ const defaultCreateApplicationValues: CreateApplicationInput = {
     description: '',
     envs: {},
 };
-
-/** Renders a dialog header with its title and progress text kept together. */
-function CompactDialogHeader({ title, onOpenChange }: { title: string; onOpenChange: (isOpen: boolean) => void }) {
-    return (
-        <LayoutHeader hasDivider>
-            <Stack direction="horizontal" hAlign="between" vAlign="start">
-                <Stack>
-                    <Heading level={2}>{title}</Heading>
-                    <Text size="sm" color="secondary">
-                        1. Image / 2. Metadata / 3. Envs
-                    </Text>
-                </Stack>
-                <Button
-                    variant="ghost"
-                    label="Close"
-                    tooltip="Close"
-                    icon={<X />}
-                    isIconOnly
-                    clickAction={() => onOpenChange(false)}
-                />
-            </Stack>
-        </LayoutHeader>
-    );
-}
 
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organizationId }: { organizationId: string }) {
@@ -200,7 +173,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                         >
                             <Layout
                                 header={
-                                    <CompactDialogHeader
+                                    <DialogHeader
+                                        hasDivider
                                         title={
                                             step === 'image'
                                                 ? 'Inspect image'
@@ -208,6 +182,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                   ? 'Review metadata'
                                                   : 'Review envs'
                                         }
+                                        subtitle="1. Image / 2. Metadata / 3. Envs"
                                         onOpenChange={handleOpenChange}
                                     />
                                 }

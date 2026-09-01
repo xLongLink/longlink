@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlmodel import col
+from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
 from src.models.statuses import Status
@@ -117,5 +118,5 @@ async def delete(organization_id: UUID) -> str | None:
     # Purge the tombstone only after all external resources are absent.
     logger.info("Purging Organization %s", infrastructure.organization.id)
     async with session_scope() as session:
-        await organizations.purge(session, infrastructure.organization.id)
+        await session.execute(sql_delete(Organization).where(col(Organization.id) == infrastructure.organization.id))
         await session.commit()

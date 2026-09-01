@@ -1,12 +1,10 @@
 from uuid import UUID
 from sqlmodel import col
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
-from sqlalchemy.engine import CursorResult
-from src.models.statuses import Status
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -86,32 +84,3 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
 
     # Delete only after no Organization or active Compute lifecycle depends on the registration.
     await session.delete(registry)
-
-
-async def record_success(
-    session: AsyncSession,
-    compute_id: UUID,
-    gateway_url: str,
-    gateway_certificate: str,
-    gateway_client_identity: str,
-    expected_status: Status,
-) -> bool:
-    """Publish successful Compute and Gateway state when its lifecycle state is current."""
-
-    # Publish only when the Compute still has the lifecycle state observed by this worker.
-    result = await session.execute(
-        update(ComputeRegistry)
-        .where(
-            col(ComputeRegistry.id) == compute_id,
-            col(ComputeRegistry.status) == expected_status,
-        )
-        .values(
-            gateway_url=gateway_url,
-            gateway_certificate=gateway_certificate,
-            gateway_client_identity=gateway_client_identity,
-            status=Status.running,
-        )
-    )
-    if not isinstance(result, CursorResult):
-        raise TypeError("Expected a cursor result")
-    return result.rowcount == 1

@@ -182,7 +182,6 @@ export default function Settings() {
                                     value={name}
                                     width="100%"
                                     isRequired
-                                    isDisabled={isOrganizationsLoading}
                                     status={accountError ? { type: 'error', message: accountError } : undefined}
                                     onChange={(value) => {
                                         setEditedName(value);

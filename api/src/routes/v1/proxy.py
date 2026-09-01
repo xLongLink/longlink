@@ -38,7 +38,7 @@ async def proxy_application_request(
     access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, _, role, registry = access
+    application, role, registry = access
 
     required_role = APPLICATION_PROXY_METHOD_ROLES[request.method]
 

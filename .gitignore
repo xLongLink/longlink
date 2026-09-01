@@ -62,13 +62,11 @@ TEMP
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
-/api/openapi.yml
 /sdk/longlink/.static/web/
 /sdk/dev/
 /web/logs/
 /web/coverage/
 /web/.react-router/
-/web/*.tsbuildinfo
 /web/src/lib/generated/*.d.ts
 /web/src/lib/generated/*.js
 /web/node_modules/

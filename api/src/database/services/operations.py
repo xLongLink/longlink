@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import or_, case, func, select, update
+from sqlalchemy import String, or_, case, cast, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
@@ -106,20 +106,18 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def clear_expired_logs(session: AsyncSession) -> int:
     """Clear logs from Operations that finished outside the retention window."""
 
-    # Load only expired diagnostic payloads while retaining their Operation history.
-    result = await session.scalars(
-        select(Operation).options(load_only(Operation.logs)).where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+    # Clear non-empty expired payloads without loading retained Operation history.
+    result = await session.execute(
+        update(Operation)
+        .where(
+            col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION,
+            cast(col(Operation.logs), String) != "[]",
+        )
+        .values(logs=[])
     )
-    expired_operations = result.all()
-
-    # Clear only payloads that have not already been removed by an earlier cleanup.
-    cleared = 0
-    for operation in expired_operations:
-        if not operation.logs:
-            continue
-        operation.logs = []
-        cleared += 1
-    return cleared
+    if not isinstance(result, CursorResult):
+        raise TypeError("Expected a cursor result")
+    return result.rowcount
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:

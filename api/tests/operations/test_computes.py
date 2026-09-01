@@ -5,7 +5,6 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute
 from src.models.operations import OperationStatus
 from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
 from src.database.models.computes import ComputeRegistry
@@ -280,61 +279,3 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
     assert persisted.gateway_url is None
     assert persisted.gateway_certificate is None
     assert persisted.gateway_client_identity is None
-
-
-async def test_record_success_rejects_stale_compute_lifecycle_writer() -> None:
-    """Preserve unpublished gateway state when its expected lifecycle has changed."""
-
-    # Arrange
-    registry = await create_compute()
-
-    # Act
-    async with session_scope() as session:
-        recorded = await compute.record_success(
-            session,
-            registry.id,
-            "https://gateway.example",
-            "certificate",
-            "client-identity",
-            Status.running,
-        )
-        await session.commit()
-
-    # Assert
-    assert recorded is False
-    async with session_scope() as session:
-        persisted = await session.get(ComputeRegistry, registry.id)
-    assert persisted is not None
-    assert persisted.status == Status.creating
-    assert persisted.gateway_url is None
-    assert persisted.gateway_certificate is None
-    assert persisted.gateway_client_identity is None
-
-
-async def test_record_success_publishes_gateway_state_for_current_compute_lifecycle() -> None:
-    """Publish gateway connection material when the Compute lifecycle is current."""
-
-    # Arrange
-    registry = await create_compute()
-
-    # Act
-    async with session_scope() as session:
-        recorded = await compute.record_success(
-            session,
-            registry.id,
-            "https://gateway.example",
-            "certificate",
-            "client-identity",
-            Status.creating,
-        )
-        await session.commit()
-
-    # Assert
-    assert recorded is True
-    async with session_scope() as session:
-        persisted = await session.get(ComputeRegistry, registry.id)
-    assert persisted is not None
-    assert persisted.status == Status.running
-    assert persisted.gateway_url == "https://gateway.example"
-    assert persisted.gateway_certificate == "certificate"
-    assert persisted.gateway_client_identity == "client-identity"

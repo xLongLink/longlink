@@ -1085,7 +1085,7 @@ async def test_create_organization_invitation_directly_commits_and_queues_email(
     # Arrange
     organization = SimpleNamespace(id=UUID(int=1), name="acme")
     user = SimpleNamespace(id=UUID(int=2))
-    membership = SimpleNamespace(organization_id=organization.id)
+    membership = SimpleNamespace(organization_id=organization.id, organization=organization)
     session = SimpleNamespace(commits=0)
     calls: list[str] = []
 
@@ -1095,7 +1095,7 @@ async def test_create_organization_invitation_directly_commits_and_queues_email(
         email: str,
         role: OrganizationRoles,
         received_user: object,
-    ) -> object:
+    ) -> None:
         """Record invitation authorization and persistence arguments."""
 
         assert organization_id == organization.id
@@ -1103,7 +1103,6 @@ async def test_create_organization_invitation_directly_commits_and_queues_email(
         assert role == OrganizationRoles.write
         assert received_user is user
         calls.append("create")
-        return organization
 
     async def commit() -> None:
         """Record the invitation transaction commit."""

@@ -7,7 +7,6 @@ import { Avatar } from '@/components/ui/Avatar';
 import { dateTimeFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -117,21 +116,8 @@ export default function AdminApplications() {
             </Table>
             {metadataApplication && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    deleteDialog.openFor(metadataApplication);
-                                    closeMetadataApplication();
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataApplication} />
-                        </Stack>
-                    }
                     onClose={closeMetadataApplication}
+                    onDelete={() => deleteDialog.openFor(metadataApplication)}
                     title="Application metadata"
                 >
                     <MetadataList>

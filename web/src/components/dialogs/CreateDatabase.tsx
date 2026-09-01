@@ -23,7 +23,6 @@ export default function CreateDatabase() {
     const dialog = useRegistryDialog({
         defaultValues: { name: '', host: '', port: 5432, sslmode: 'verify-full', username: '', password: '' },
         endpoint: '/api/v1/databases',
-        errorMessage: 'Failed to connect database',
         schema,
     });
 

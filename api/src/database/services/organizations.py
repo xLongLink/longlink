@@ -79,19 +79,19 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
 
 async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry] | None:
+) -> tuple[Application, OrganizationRoles, ComputeRegistry] | None:
     """Return one user's active application access with its compute registry."""
 
     # Load Application access and its gateway secret in one query.
     result = await session.execute(
-        select(Application, Organization, col(UserOrganization.role), ComputeRegistry)
+        select(Application, col(UserOrganization.role), ComputeRegistry)
         .options(
             load_only(
                 Application.id,
+                Application.organization_id,
                 Application.secrets,
                 Application.status,
             ),
-            load_only(Organization.id),
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.kubeconfig,
@@ -167,13 +167,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     # Count only active organizations visible in the listing.
     count_result = await session.execute(select(func.count()).select_from(Organization).where(col(Organization.deleted_at).is_(None)))
     return result.all(), count_result.scalar_one()
-
-
-async def purge(session: AsyncSession, organization_id: UUID) -> None:
-    """Hard-delete one organization after all applications and external resources are gone."""
-
-    # Delete the tombstone directly; an already-purged identifier is an idempotent no-op.
-    await session.execute(delete(Organization).where(col(Organization.id) == organization_id))
 
 
 async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:
@@ -540,7 +533,7 @@ async def create_invitation(
     email: str,
     role: OrganizationRoles,
     user: User,
-) -> Organization:
+) -> None:
     """Authorize and create one Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
@@ -557,7 +550,6 @@ async def create_invitation(
 
     # Persist the email grant after the current role and Organization state have been locked.
     await invitation_service.create(session, organization_id, email, role)
-    return organization
 
 
 async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user: User) -> None:

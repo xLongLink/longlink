@@ -47,15 +47,16 @@ async def create(application_id: UUID) -> None:
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
         # Revoke freshly-issued storage credentials if database provisioning cannot complete.
+        database_password = secrets.token_urlsafe(24)
         try:
             logger.info("Creating PostgreSQL schema for Application %s", application.id)
-            connection = await Postgres(
+            database_username = await Postgres(
                 infrastructure.database.host,
                 infrastructure.database.port,
                 infrastructure.database.username,
                 infrastructure.database.password,
                 infrastructure.database.sslmode,
-            ).schema(organization.id, application.id, secrets.token_urlsafe(24))
+            ).schema(organization.id, application.id, database_password)
         except Exception:
             try:
                 await object_storage.revoke(application.id.hex)
@@ -67,13 +68,13 @@ async def create(application_id: UUID) -> None:
         runtime_secrets = {
             **runtime_secrets,
             "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": connection["host"],
-            "LONGLINK_DATABASE_NAME": connection["database_name"],
-            "LONGLINK_DATABASE_PASSWORD": connection["password"],
-            "LONGLINK_DATABASE_PORT": str(connection["port"]),
+            "LONGLINK_DATABASE_HOST": infrastructure.database.host,
+            "LONGLINK_DATABASE_NAME": organization.id.hex,
+            "LONGLINK_DATABASE_PASSWORD": database_password,
+            "LONGLINK_DATABASE_PORT": str(infrastructure.database.port),
             "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-            "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
-            "LONGLINK_DATABASE_USERNAME": connection["username"],
+            "LONGLINK_DATABASE_SSLMODE": infrastructure.database.sslmode.value,
+            "LONGLINK_DATABASE_USERNAME": database_username,
             "LONGLINK_STORAGE_BUCKET": bucket,
             "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
             "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],

@@ -5,7 +5,6 @@ import { S3 } from '@/components/svg/S3';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import MetadataDialog from '@/components/dialogs/Metadata';
@@ -104,21 +103,8 @@ export default function AdminStorage() {
             </Table>
             {metadataStorage && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    deleteDialog.openFor(metadataStorage);
-                                    closeMetadataStorage();
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataStorage} />
-                        </Stack>
-                    }
                     onClose={closeMetadataStorage}
+                    onDelete={() => deleteDialog.openFor(metadataStorage)}
                     title="Storage metadata"
                 >
                     <MetadataList>

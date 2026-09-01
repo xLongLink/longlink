@@ -79,7 +79,7 @@ async def get_application_logs(
     access = await organizations.application_runtime_access(session, user.id, application_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, organization, role, registry = access
+    application, role, registry = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
@@ -89,7 +89,7 @@ async def get_application_logs(
             registry.kubeconfig,
         )
         try:
-            return await cluster.applications.logs(application.id, organization.id.hex)
+            return await cluster.applications.logs(application.id, application.organization_id.hex)
         finally:
             await cluster.aclose()
     except RuntimeError as exc:

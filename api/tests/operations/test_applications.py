@@ -9,7 +9,6 @@ from factories import (
 )
 from src.operations import applications as application_operations
 from src.utils.jobs import execute
-from src.models.types import DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import applications
@@ -176,6 +175,7 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     organization = await create_organization(owner, infrastructure=infrastructure)
     application = await create_application(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
+    database_passwords: list[str] = []
 
     class FakePostgres:
         """Provide generated schema credentials without contacting PostgreSQL."""
@@ -183,17 +183,11 @@ async def test_application_creation_applies_user_and_managed_environment_values(
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def schema(self, *_args: object) -> dict[str, object]:
-            """Return the generated application schema credentials."""
+        async def schema(self, _organization_id: object, _application_id: object, password: str) -> str:
+            """Return the generated application database username."""
 
-            return {
-                "host": "database.example",
-                "database_name": "organization",
-                "password": "generated-password",
-                "port": 5432,
-                "sslmode": DatabaseSSLMode.disable,
-                "username": "application",
-            }
+            database_passwords.append(password)
+            return "application"
 
     class FakeStorage:
         """Provide generated object-storage credentials without contacting storage."""
@@ -233,7 +227,12 @@ async def test_application_creation_applies_user_and_managed_environment_values(
 
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
-    assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == "generated-password"
+    assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == infrastructure.database.host
+    assert captured["secrets"]["LONGLINK_DATABASE_NAME"] == organization.id.hex
+    assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
+    assert captured["secrets"]["LONGLINK_DATABASE_PORT"] == str(infrastructure.database.port)
+    assert captured["secrets"]["LONGLINK_DATABASE_SSLMODE"] == infrastructure.database.sslmode.value
+    assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "application"
     async with session_scope() as session:
         persisted = await session.get(Application, application.id)
     assert persisted is not None
@@ -259,7 +258,7 @@ async def test_application_creation_revokes_storage_credentials_when_schema_prov
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def schema(self, *_args: object) -> dict[str, object]:
+        async def schema(self, *_args: object) -> str:
             """Fail the database provisioning step."""
 
             raise RuntimeError("database unavailable")
@@ -450,7 +449,7 @@ async def test_application_creation_skips_deployment_when_deleted_before_credent
         def __init__(self, *_args: object) -> None:
             """Accept the configured database connection values."""
 
-        async def schema(self, *_args: object) -> dict[str, object]:
+        async def schema(self, *_args: object) -> str:
             """Delete the target before its runtime credentials are persisted."""
 
             async with session_scope() as session:
@@ -458,14 +457,7 @@ async def test_application_creation_skips_deployment_when_deleted_before_credent
                 assert persisted is not None
                 await session.delete(persisted)
                 await session.commit()
-            return {
-                "host": "database.example",
-                "database_name": "organization",
-                "password": "generated-password",
-                "port": 5432,
-                "sslmode": DatabaseSSLMode.disable,
-                "username": "application",
-            }
+            return "application"
 
     class Storage:
         """Provide object-storage credentials without contacting storage."""
