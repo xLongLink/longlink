@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -18,17 +17,17 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
-    const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
+    const [metadataOrganizationId, setMetadataOrganizationId] = useState<string | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataOrganization = () => setMetadataOrganization(null);
+    const closeMetadataOrganization = () => setMetadataOrganizationId(null);
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
@@ -46,6 +45,8 @@ export default function AdminOrganizations() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/organizations', zPageOrganizationSummary);
+    const metadataOrganization =
+        organizations.find((organization) => organization.id === metadataOrganizationId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete organization',
         mutation: deleteOrganization,
@@ -110,7 +111,7 @@ export default function AdminOrganizations() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataOrganization(organization)}
+                            onClick={() => setMetadataOrganizationId(organization.id)}
                         />
                     )}
                 </TableColumn>
@@ -124,9 +125,8 @@ export default function AdminOrganizations() {
                                 label="Delete"
                                 variant="ghost"
                                 onClick={() => {
-                                    const organization = metadataOrganization;
+                                    deleteDialog.openFor(metadataOrganization);
                                     closeMetadataOrganization();
-                                    deleteDialog.openFor(organization);
                                 }}
                             />
                             <Button label="Close" variant="primary" onClick={closeMetadataOrganization} />

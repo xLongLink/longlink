@@ -1,16 +1,17 @@
 import { api } from '@/lib/api';
 import { startCase } from '@/lib/utils';
 import { pagesSchema } from '@/xml/pages';
+import type { ASTNode } from '@/xml/types';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
+import { useMemo, useState, type ReactNode } from 'react';
 import NotFoundLayout from '@/components/layouts/NotFound';
-import { useEffect, useMemo, type ReactNode } from 'react';
 import type { NavigationTab } from '@/platform/layouts/Platform';
-import { matchRoutes, useNavigate, useParams } from 'react-router';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
+import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type ApplicationRuntimeProps = {
@@ -22,6 +23,41 @@ type ApplicationRuntimeProps = {
 
 const EMPTY_PAGES = [] as const;
 
+/** Owns one XML runtime for the lifetime selected by its React key. */
+function ApplicationXmlRuntime({
+    ast,
+    navigationBaseUrl,
+    params,
+    requestBaseUrl,
+}: {
+    ast: ASTNode;
+    navigationBaseUrl: string;
+    params: Record<string, string>;
+    requestBaseUrl: string;
+}) {
+    const navigate = useNavigate();
+    const [runtime] = useState(() => {
+        const context = createXmlContext(params);
+
+        // Keep XML-triggered application navigation within the client router.
+        context.services.navigate = (url) => {
+            const destination = new URL(url, window.location.origin);
+
+            if (destination.origin === window.location.origin) {
+                navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+                return;
+            }
+
+            window.location.assign(url);
+        };
+        context.services.navigationBaseUrl = navigationBaseUrl;
+        context.services.requestBaseUrl = requestBaseUrl;
+        return context;
+    });
+
+    return <RenderXML ast={ast} ctx={runtime} />;
+}
+
 /** Resolves and renders the current manifest-defined application page. */
 export function ApplicationRuntime({
     children,
@@ -30,7 +66,6 @@ export function ApplicationRuntime({
     requestBaseUrl = '/',
 }: ApplicationRuntimeProps) {
     const { '*': routePath = '' } = useParams();
-    const navigate = useNavigate();
     const { data: registeredPages, error } = useQuery({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
@@ -58,35 +93,8 @@ export function ApplicationRuntime({
     const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
     const firstTabPage = tabPages[0];
 
-    // Replace the root URL with the first navigable tab after the manifest loads.
-    useEffect(() => {
-        if (!routePath && firstTabPage) {
-            navigate(resolveNavigationUrl(navigationBaseUrl, firstTabPage.route), { replace: true });
-        }
-    }, [firstTabPage, navigate, navigationBaseUrl, routePath]);
-
     // Let dynamic detail views share a tab with their matching list page.
     const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
-    const runtimeContext = useMemo(() => {
-        if (!activePage) return null;
-
-        const context = createXmlContext(activeRouteMatch?.params ?? {});
-
-        // Keep XML-triggered application navigation within the client router.
-        context.services.navigate = (url) => {
-            const destination = new URL(url, window.location.origin);
-
-            if (destination.origin === window.location.origin) {
-                navigate(`${destination.pathname}${destination.search}${destination.hash}`);
-                return;
-            }
-
-            window.location.assign(url);
-        };
-        context.services.navigationBaseUrl = navigationBaseUrl;
-        context.services.requestBaseUrl = requestBaseUrl;
-        return context;
-    }, [activePage, activeRouteMatch?.params, navigate, navigationBaseUrl, requestBaseUrl]);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: activePage !== undefined,
         queryKey: ['application-page', pagesUrl, activePage?.path],
@@ -118,7 +126,7 @@ export function ApplicationRuntime({
     let content: ReactNode;
 
     if (!routePath && firstTabPage) {
-        content = loadingContent;
+        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabPage.route)} />;
     } else if (registeredPages && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
     } else if (error) {
@@ -128,8 +136,23 @@ export function ApplicationRuntime({
                 title="Unable to load this application"
             />
         );
-    } else if (activePageAst && runtimeContext) {
-        content = <RenderXML ast={activePageAst} ctx={runtimeContext} />;
+    } else if (activePageAst && activePage) {
+        content = (
+            <ApplicationXmlRuntime
+                ast={activePageAst}
+                key={JSON.stringify([
+                    pagesUrl,
+                    navigationBaseUrl,
+                    requestBaseUrl,
+                    activePage.route,
+                    activePage.path,
+                    routePath,
+                ])}
+                navigationBaseUrl={navigationBaseUrl}
+                params={activeRouteMatch?.params ?? {}}
+                requestBaseUrl={requestBaseUrl}
+            />
+        );
     } else if (!activePage) {
         content = (
             <PageError

@@ -1,10 +1,9 @@
 from uuid import UUID
-from typing import cast
-from datetime import datetime, timedelta
+from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, load_only
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from sqlalchemy.engine import CursorResult
 from longlink.utils.time import utcnow
@@ -28,13 +27,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Operation)
         .options(
             load_only(
-                cast(QueryableAttribute[UUID], Operation.id),
-                cast(QueryableAttribute[OperationKind], Operation.kind),
-                cast(QueryableAttribute[UUID], Operation.target_id),
-                cast(QueryableAttribute[str | None], Operation.failed),
-                cast(QueryableAttribute[datetime | None], Operation.lease_expires_at),
-                cast(QueryableAttribute[datetime], Operation.created_at),
-                cast(QueryableAttribute[datetime | None], Operation.finished_at),
+                Operation.id,
+                Operation.kind,
+                Operation.target_id,
+                Operation.failed,
+                Operation.lease_expires_at,
+                Operation.created_at,
+                Operation.finished_at,
             )
         )
         .order_by(col(Operation.created_at).desc(), col(Operation.id).desc())
@@ -109,9 +108,7 @@ async def clear_expired_logs(session: AsyncSession) -> int:
 
     # Load only expired diagnostic payloads while retaining their Operation history.
     result = await session.scalars(
-        select(Operation)
-        .options(load_only(cast(QueryableAttribute[list[str]], Operation.logs)))
-        .where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+        select(Operation).options(load_only(Operation.logs)).where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
     )
     expired_operations = result.all()
 
@@ -217,18 +214,17 @@ async def claim(session: AsyncSession) -> Operation | None:
         return None
 
     # Reclaim expired work or acquire unleased work without racing another scheduler.
-    result = cast(
-        CursorResult[tuple[()]],
-        await session.execute(
-            update(Operation)
-            .where(
-                col(Operation.id) == operation.id,
-                col(Operation.finished_at).is_(None),
-                or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
-            )
-            .values(lease_expires_at=now + timedelta(minutes=30))
-        ),
+    result = await session.execute(
+        update(Operation)
+        .where(
+            col(Operation.id) == operation.id,
+            col(Operation.finished_at).is_(None),
+            or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
+        )
+        .values(lease_expires_at=now + timedelta(minutes=30))
     )
+    if not isinstance(result, CursorResult):
+        raise TypeError("Expected a cursor result")
     if result.rowcount != 1:
         return None
 

@@ -3,19 +3,19 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useUserProfile } from '@/lib/hooks/use-user';
 import { proportional } from '@astryxdesign/core/Table';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
+import { useUserOrganizations } from '@/lib/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
-    const { memberships, isOrganizationsLoading, organizationsError } = useUserProfile();
+    const { memberships, isOrganizationsLoading, organizationsError } = useUserOrganizations();
 
     if (isOrganizationsLoading) {
         return <PageLoading label="Loading organizations" />;

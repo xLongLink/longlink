@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -18,17 +17,17 @@ import { PageError, PageLoading } from '@/components/Utils';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
-    const [metadataCompute, setMetadataCompute] = useState<ComputeRegistryResponse | null>(null);
+    const [metadataComputeId, setMetadataComputeId] = useState<string | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataCompute = () => setMetadataCompute(null);
+    const closeMetadataCompute = () => setMetadataComputeId(null);
     const deleteCompute = useMutation({
         mutationFn: (computeId: string) => api(`/api/v1/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -42,6 +41,7 @@ export default function AdminCompute() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/computes', zPageComputeRegistryResponse, 5000);
+    const metadataCompute = computes.find((compute) => compute.id === metadataComputeId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete compute',
         mutation: deleteCompute,
@@ -109,7 +109,7 @@ export default function AdminCompute() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataCompute(compute)}
+                            onClick={() => setMetadataComputeId(compute.id)}
                         />
                     )}
                 </TableColumn>
@@ -123,9 +123,8 @@ export default function AdminCompute() {
                                 label="Delete"
                                 variant="ghost"
                                 onClick={() => {
-                                    const compute = metadataCompute;
+                                    deleteDialog.openFor(metadataCompute);
                                     closeMetadataCompute();
-                                    deleteDialog.openFor(compute);
                                 }}
                             />
                             <Button label="Close" variant="primary" onClick={closeMetadataCompute} />

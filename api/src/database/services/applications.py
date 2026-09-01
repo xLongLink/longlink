@@ -1,11 +1,10 @@
 from uuid import UUID
-from typing import cast
 from sqlmodel import col
 from src.utils import names, roles
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, defer, contains_eager
+from sqlalchemy.orm import defer, contains_eager
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -27,8 +26,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Application)
         .join(Organization, col(Organization.id) == col(Application.organization_id))
         .options(
-            contains_eager(cast(QueryableAttribute[Organization], Application.organization)),
-            defer(cast(QueryableAttribute[dict[str, str]], Application.secrets)),
+            contains_eager(Application.organization),
+            defer(Application.secrets),
         )
         .where(col(Application.deleted_at).is_(None))
         .order_by(col(Organization.name), col(Application.name), col(Application.id))

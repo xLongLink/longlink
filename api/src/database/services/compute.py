@@ -1,10 +1,9 @@
 from uuid import UUID
-from typing import cast
 from sqlmodel import col
 from sqlalchemy import func, select, update
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, load_only
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
@@ -24,10 +23,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(ComputeRegistry)
         .options(
             load_only(
-                cast(QueryableAttribute[UUID], ComputeRegistry.id),
-                cast(QueryableAttribute[str], ComputeRegistry.name),
-                cast(QueryableAttribute[str | None], ComputeRegistry.gateway_url),
-                cast(QueryableAttribute[Status], ComputeRegistry.status),
+                ComputeRegistry.id,
+                ComputeRegistry.name,
+                ComputeRegistry.gateway_url,
+                ComputeRegistry.status,
             )
         )
         .order_by(col(ComputeRegistry.name), col(ComputeRegistry.id))
@@ -100,20 +99,19 @@ async def record_success(
     """Publish successful Compute and Gateway state when its lifecycle state is current."""
 
     # Publish only when the Compute still has the lifecycle state observed by this worker.
-    result = cast(
-        CursorResult[tuple[()]],
-        await session.execute(
-            update(ComputeRegistry)
-            .where(
-                col(ComputeRegistry.id) == compute_id,
-                col(ComputeRegistry.status) == expected_status,
-            )
-            .values(
-                gateway_url=gateway_url,
-                gateway_certificate=gateway_certificate,
-                gateway_client_identity=gateway_client_identity,
-                status=Status.running,
-            )
-        ),
+    result = await session.execute(
+        update(ComputeRegistry)
+        .where(
+            col(ComputeRegistry.id) == compute_id,
+            col(ComputeRegistry.status) == expected_status,
+        )
+        .values(
+            gateway_url=gateway_url,
+            gateway_certificate=gateway_certificate,
+            gateway_client_identity=gateway_client_identity,
+            status=Status.running,
+        )
     )
+    if not isinstance(result, CursorResult):
+        raise TypeError("Expected a cursor result")
     return result.rowcount == 1

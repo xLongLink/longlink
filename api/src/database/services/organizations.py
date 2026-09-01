@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import cast
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles
@@ -8,7 +7,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import QueryableAttribute, defer, load_only, joinedload, contains_eager
+from sqlalchemy.orm import defer, load_only, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -49,7 +48,7 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     statement = (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(cast(QueryableAttribute[Organization], UserOrganization.organization)))
+        .options(contains_eager(UserOrganization.organization))
         .where(
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.organization_id) == organization_id,
@@ -67,7 +66,7 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
     statement = (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(cast(QueryableAttribute[Organization], UserOrganization.organization)))
+        .options(contains_eager(UserOrganization.organization))
         .where(
             col(UserOrganization.user_id) == user_id,
             col(Organization.slug) == organization_slug,
@@ -88,17 +87,17 @@ async def application_runtime_access(
         select(Application, Organization, col(UserOrganization.role), ComputeRegistry)
         .options(
             load_only(
-                cast(QueryableAttribute[UUID], Application.id),
-                cast(QueryableAttribute[dict[str, str]], Application.secrets),
-                cast(QueryableAttribute[Status], Application.status),
+                Application.id,
+                Application.secrets,
+                Application.status,
             ),
-            load_only(cast(QueryableAttribute[UUID], Organization.id)),
+            load_only(Organization.id),
             load_only(
-                cast(QueryableAttribute[UUID], ComputeRegistry.id),
-                cast(QueryableAttribute[dict[str, object]], ComputeRegistry.kubeconfig),
-                cast(QueryableAttribute[str | None], ComputeRegistry.gateway_url),
-                cast(QueryableAttribute[str | None], ComputeRegistry.gateway_certificate),
-                cast(QueryableAttribute[str | None], ComputeRegistry.gateway_client_identity),
+                ComputeRegistry.id,
+                ComputeRegistry.kubeconfig,
+                ComputeRegistry.gateway_url,
+                ComputeRegistry.gateway_certificate,
+                ComputeRegistry.gateway_client_identity,
             ),
         )
         .join(Organization, col(Organization.id) == col(Application.organization_id))
@@ -183,7 +182,7 @@ async def applications(session: AsyncSession, organization_id: UUID) -> Sequence
     # Query active organization applications in one session.
     statement = (
         select(Application)
-        .options(defer(cast(QueryableAttribute[dict[str, str]], Application.secrets)))
+        .options(defer(Application.secrets))
         .where(
             col(Application.organization_id) == organization_id,
             col(Application.deleted_at).is_(None),
@@ -218,7 +217,7 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     # Query memberships with their users so detached callers can shape API payloads.
     statement = (
         select(UserOrganization)
-        .options(joinedload(cast(QueryableAttribute[User], UserOrganization.user)))
+        .options(joinedload(UserOrganization.user))
         .where(
             col(UserOrganization.organization_id) == organization_id,
             col(UserOrganization.deleted_at).is_(None),
@@ -250,9 +249,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
 
     # Include deleted memberships so the Organization database receives tombstones.
     memberships_statement = (
-        select(UserOrganization)
-        .options(joinedload(cast(QueryableAttribute[User], UserOrganization.user)))
-        .where(col(UserOrganization.organization_id) == organization.id)
+        select(UserOrganization).options(joinedload(UserOrganization.user)).where(col(UserOrganization.organization_id) == organization.id)
     )
     memberships_result = await session.scalars(memberships_statement)
     memberships = memberships_result.all()

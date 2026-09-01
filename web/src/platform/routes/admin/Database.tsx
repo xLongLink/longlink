@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -17,17 +16,17 @@ import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageDatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { DatabaseRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
-    const [metadataDatabase, setMetadataDatabase] = useState<DatabaseRegistryResponse | null>(null);
+    const [metadataDatabaseId, setMetadataDatabaseId] = useState<string | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataDatabase = () => setMetadataDatabase(null);
+    const closeMetadataDatabase = () => setMetadataDatabaseId(null);
     const deleteDatabase = useMutation({
         mutationFn: (databaseId: string) => api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -41,6 +40,7 @@ export default function AdminDatabase() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/databases', zPageDatabaseRegistryResponse);
+    const metadataDatabase = databases.find((database) => database.id === metadataDatabaseId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete database',
         mutation: deleteDatabase,
@@ -98,7 +98,7 @@ export default function AdminDatabase() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataDatabase(database)}
+                            onClick={() => setMetadataDatabaseId(database.id)}
                         />
                     )}
                 </TableColumn>
@@ -112,9 +112,8 @@ export default function AdminDatabase() {
                                 label="Delete"
                                 variant="ghost"
                                 onClick={() => {
-                                    const database = metadataDatabase;
+                                    deleteDialog.openFor(metadataDatabase);
                                     closeMetadataDatabase();
-                                    deleteDialog.openFor(database);
                                 }}
                             />
                             <Button label="Close" variant="primary" onClick={closeMetadataDatabase} />

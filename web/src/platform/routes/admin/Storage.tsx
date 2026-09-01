@@ -2,7 +2,6 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { S3 } from '@/components/svg/S3';
-import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -17,17 +16,17 @@ import { PageError, PageLoading } from '@/components/Utils';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
-    const [metadataStorage, setMetadataStorage] = useState<StorageRegistryResponse | null>(null);
+    const [metadataStorageId, setMetadataStorageId] = useState<string | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataStorage = () => setMetadataStorage(null);
+    const closeMetadataStorage = () => setMetadataStorageId(null);
     const deleteStorage = useMutation({
         mutationFn: (storageId: string) => api(`/api/v1/storages/${storageId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -41,6 +40,7 @@ export default function AdminStorage() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/storages', zPageStorageRegistryResponse);
+    const metadataStorage = storages.find((storage) => storage.id === metadataStorageId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete storage',
         mutation: deleteStorage,
@@ -98,7 +98,7 @@ export default function AdminStorage() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataStorage(storage)}
+                            onClick={() => setMetadataStorageId(storage.id)}
                         />
                     )}
                 </TableColumn>
@@ -112,9 +112,8 @@ export default function AdminStorage() {
                                 label="Delete"
                                 variant="ghost"
                                 onClick={() => {
-                                    const storage = metadataStorage;
+                                    deleteDialog.openFor(metadataStorage);
                                     closeMetadataStorage();
-                                    deleteDialog.openFor(storage);
                                 }}
                             />
                             <Button label="Close" variant="primary" onClick={closeMetadataStorage} />

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { useEffect, useRef } from 'react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -28,6 +28,7 @@ function isBadTokenError(error: unknown): boolean {
 export default function ResetPassword() {
     const showToast = useToast();
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
+    const verificationController = useRef<AbortController | null>(null);
     const form = useForm({
         defaultValues: { password: '' },
         validationLogic: revalidateLogic(),
@@ -35,12 +36,16 @@ export default function ResetPassword() {
         onSubmit: ({ value }) => handleResetPassword(value),
     });
     const verification = useMutation({
-        mutationFn: (resetToken: string) => {
+        mutationFn: ({ signal, token: resetToken }: { signal: AbortSignal; token: string }) => {
             if (!resetToken) {
-                return api('/api/v1/auth/reset-password/setup');
+                return api('/api/v1/auth/reset-password/setup', { signal });
             }
 
-            return api('/api/v1/auth/reset-password/verify', { json: { token: resetToken }, method: 'POST' });
+            return api('/api/v1/auth/reset-password/verify', {
+                json: { token: resetToken },
+                method: 'POST',
+                signal,
+            });
         },
         onSuccess: () => sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY),
         onError: (error) => {
@@ -75,7 +80,15 @@ export default function ResetPassword() {
     }
 
     useEffect(() => {
-        verifyToken(token);
+        verificationController.current?.abort();
+        const controller = new AbortController();
+        verificationController.current = controller;
+        verifyToken({ signal: controller.signal, token });
+
+        return () => {
+            verificationController.current?.abort();
+            verificationController.current = null;
+        };
     }, [token, verifyToken]);
 
     // Invalid and expired credentials require a replacement email.
@@ -94,7 +107,16 @@ export default function ResetPassword() {
     if (verification.error) {
         return (
             <AuthLayout title="Set a new password" description="Please try again in a moment.">
-                <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
+                <Button
+                    label="Retry"
+                    onClick={() => {
+                        verificationController.current?.abort();
+                        const controller = new AbortController();
+                        verificationController.current = controller;
+                        verification.mutate({ signal: controller.signal, token });
+                    }}
+                    variant="primary"
+                />
             </AuthLayout>
         );
     }

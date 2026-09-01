@@ -4,6 +4,7 @@ import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { dateTimeFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
@@ -16,17 +17,16 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { dateTimeFormatter, useDeleteDialog } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
-    const closeMetadataApplication = () => setMetadataApplication(null);
+    const [metadataApplicationId, setMetadataApplicationId] = useState<string | null>(null);
+    const closeMetadataApplication = () => setMetadataApplicationId(null);
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteApplication = useMutation({
@@ -42,6 +42,7 @@ export default function AdminApplications() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/applications', zPageApplicationResponse, 5000);
+    const metadataApplication = applications.find((application) => application.id === metadataApplicationId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete application',
         mutation: deleteApplication,
@@ -110,7 +111,7 @@ export default function AdminApplications() {
                             tooltip="View metadata"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setMetadataApplication(app)}
+                            onClick={() => setMetadataApplicationId(app.id)}
                         />
                     )}
                 </TableColumn>
@@ -124,9 +125,8 @@ export default function AdminApplications() {
                                 label="Delete"
                                 variant="ghost"
                                 onClick={() => {
-                                    const application = metadataApplication;
-                                    setMetadataApplication(null);
-                                    deleteDialog.openFor(application);
+                                    deleteDialog.openFor(metadataApplication);
+                                    closeMetadataApplication();
                                 }}
                             />
                             <Button label="Close" variant="primary" onClick={closeMetadataApplication} />

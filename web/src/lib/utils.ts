@@ -1,6 +1,3 @@
-import { useState, type ReactNode } from 'react';
-import type { DeleteConfirmationProps } from '@/components/dialogs/DeleteConfirmation';
-
 export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',
     month: 'numeric',
@@ -16,17 +13,6 @@ export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
 });
 const numberFormatter = new Intl.NumberFormat();
-
-type UseDeleteDialogOptions<TItem> = {
-    title: string;
-    mutation: { isPending: boolean; mutateAsync: (id: string) => Promise<unknown> };
-    items: TItem[];
-    getId: (item: TItem) => string;
-    description: (item: TItem) => ReactNode;
-    errorMessage: string;
-    fallbackDescription: ReactNode;
-    onError: (message: string) => void;
-};
 
 /** Formats bytes using binary units for admin resource tables. */
 export function formatBytes(bytes: number): string {
@@ -72,52 +58,5 @@ export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open:
         }
 
         onOpenChange(nextOpen);
-    };
-}
-
-/** Manages the shared delete confirmation dialog state and confirm action. */
-export function useDeleteDialog<TItem>({
-    title,
-    mutation,
-    items,
-    getId,
-    description,
-    errorMessage,
-    fallbackDescription,
-    onError,
-}: UseDeleteDialogOptions<TItem>) {
-    const [targetId, setTargetId] = useState<string | null>(null);
-    const target = targetId === null ? null : (items.find((item) => getId(item) === targetId) ?? null);
-
-    return {
-        openFor: (item: TItem) => {
-            setTargetId(getId(item));
-        },
-        dialogProps: {
-            open: targetId !== null,
-            title,
-            description: target ? description(target) : fallbackDescription,
-            isPending: mutation.isPending,
-            onOpenChange: (open: boolean) => {
-                // Closing the dialog clears its selected item.
-                if (!open) {
-                    setTargetId(null);
-                }
-            },
-            onConfirm: async () => {
-                // Ignore confirmations without a selected target.
-                if (targetId === null) {
-                    return;
-                }
-
-                // Run the delete mutation and surface any failure.
-                try {
-                    await mutation.mutateAsync(targetId);
-                    setTargetId(null);
-                } catch (mutationError) {
-                    onError(mutationError instanceof Error ? mutationError.message : errorMessage);
-                }
-            },
-        } satisfies DeleteConfirmationProps,
     };
 }

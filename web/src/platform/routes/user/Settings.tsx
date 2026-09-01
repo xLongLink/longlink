@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -9,7 +8,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { AvatarDialog } from '@/components/dialogs/Avatar';
@@ -24,11 +22,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useAuthenticatedUser, useUserOrganizations } from '@/lib/hooks/use-user';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
-    const { user, memberships, isOrganizationsLoading } = useUserProfile();
+    const user = useAuthenticatedUser();
+    const { memberships, isOrganizationsLoading } = useUserOrganizations();
     const queryClient = useQueryClient();
     const updateUser = useMutation({
         mutationFn: async (payload: UserUpdate) =>
@@ -72,6 +72,7 @@ export default function Settings() {
 
         // Skip unchanged account names.
         if (accountName === user.name) {
+            setEditedName(null);
             return;
         }
 
