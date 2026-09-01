@@ -18,7 +18,7 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
-EMAIL_ADAPTER = TypeAdapter(Email)
+EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 
 
 def password_fingerprint(password: str) -> str:

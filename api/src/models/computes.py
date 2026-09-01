@@ -55,7 +55,7 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
             continue
         context = entry.get("context")
         if isinstance(context, dict):
-            selected_context = context
+            selected_context = cast(dict[str, object], context)
             break
     if (
         not cluster_names

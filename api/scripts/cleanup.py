@@ -126,7 +126,10 @@ async def cleanup() -> None:
     try:
         async with asyncio.timeout(10 * 60):
             while existing_namespaces:
-                remaining = {namespace for namespace in existing_namespaces if await Namespace(namespace, api=api).exists()}
+                remaining: set[str] = set()
+                for namespace in existing_namespaces:
+                    if await Namespace(namespace, api=api).exists():
+                        remaining.add(namespace)
                 if not remaining:
                     break
                 existing_namespaces = remaining
