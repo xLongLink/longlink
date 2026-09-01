@@ -286,10 +286,15 @@ async def update_member_role(
     """Change one active Organization membership role."""
 
     # Lock the Organization before revalidating the caller's active access.
-    organization = await session.get(Organization, organization_id, with_for_update=True)
+    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    caller_membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    caller_membership = await session.get(
+        UserOrganization,
+        (user.id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if caller_membership is None or caller_membership.deleted_at is not None:
         raise ForbiddenError("Access required")
     if not roles.atleast(caller_membership.role, OrganizationRoles.admin):
@@ -516,7 +521,12 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
         return None
 
     # Revalidate the caller while the Organization is locked to reject revoked administrators.
-    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    membership = await session.get(
+        UserOrganization,
+        (user.id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if membership is None or membership.deleted_at is not None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, OrganizationRoles.admin):
@@ -538,10 +548,15 @@ async def create_invitation(
     """Authorize and create one Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
-    organization = await session.get(Organization, organization_id, with_for_update=True)
+    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    membership = await session.get(
+        UserOrganization,
+        (user.id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if membership is None or membership.deleted_at is not None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
@@ -557,10 +572,15 @@ async def revoke_invitation(session: AsyncSession, organization_id: UUID, invita
     """Authorize and revoke one active Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
-    organization = await session.get(Organization, organization_id, with_for_update=True)
+    organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
+    membership = await session.get(
+        UserOrganization,
+        (user.id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if membership is None or membership.deleted_at is not None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, OrganizationRoles.maintain):

@@ -6,6 +6,7 @@ from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import func
 from urllib.parse import urlencode
+from sqlalchemy.exc import OperationalError
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError
 from src.models.statuses import Status
@@ -373,20 +374,22 @@ async def test_other_organization_user_cannot_delete_application(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_payload"),
+    ("usage", "expected_status", "expected_payload"),
     [
-        pytest.param(3584, 3584, id="available"),
-        pytest.param(None, None, id="not-provisioned"),
+        pytest.param(3584, 200, 3584, id="available"),
+        pytest.param(None, 200, None, id="not-provisioned"),
+        pytest.param(OperationalError("SELECT", {}, ConnectionError("database unavailable")), 503, None, id="backend-unavailable"),
     ],
 )
-async def test_organization_database_usage_returns_usage_or_unavailable(
+async def test_organization_database_usage_returns_usage_or_backend_failure(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
-    usage: int | None,
+    usage: int | None | Exception,
+    expected_status: int,
     expected_payload: int | None,
 ) -> None:
-    """Return database usage when the adapter can inspect it."""
+    """Return database usage or translate a backend failure."""
 
     # Arrange
     owner = users[0]
@@ -400,9 +403,11 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
             """Accept the adapter configuration supplied by the route."""
 
         async def database_usage(self, database_name: str) -> int | None:
-            """Return the configured database usage."""
+            """Return usage or raise the configured database backend failure."""
 
             assert database_name == organization.id.hex
+            if isinstance(usage, Exception):
+                raise usage
             return usage
 
     monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
@@ -411,8 +416,12 @@ async def test_organization_database_usage_returns_usage_or_unavailable(
     response = await client.get(f"/api/v1/organizations/{organization.id}/database")
 
     # Assert
-    assert response.status_code == 200
-    assert response.json() == expected_payload
+    assert response.status_code == expected_status
+    if expected_status == 200:
+        response_payload: int | None | dict[str, str] = expected_payload
+    else:
+        response_payload = {"detail": "Database resources unavailable"}
+    assert response.json() == response_payload
 
 
 @pytest.mark.parametrize(
@@ -926,12 +935,12 @@ async def test_update_organization_member_changes_role(
     assert synchronized_organizations == [organization.id]
 
 
-async def test_update_organization_member_skips_unchanged_role_synchronization(
+async def test_update_organization_member_reconciles_unchanged_role_without_persistence(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Avoid persistence and runtime synchronization for an unchanged member role."""
+    """Reconcile an unchanged member role without rewriting its audit fields."""
 
     # Arrange
     owner, member = users[0], users[1]
@@ -950,12 +959,14 @@ async def test_update_organization_member_skips_unchanged_role_synchronization(
         original_updated_at = original.updated_at
         original_updated_id = original.updated_id
 
-    async def unexpected_sync(_session: object, _organization_id: UUID) -> None:
-        """Fail if an unchanged member role reaches runtime synchronization."""
+    synchronized_organizations: list[UUID] = []
 
-        raise AssertionError("unchanged member role must not synchronize users")
+    async def sync_users(_session: object, organization_id: UUID) -> None:
+        """Record runtime membership reconciliation."""
 
-    monkeypatch.setattr(organizations, "sync_users", unexpected_sync)
+        synchronized_organizations.append(organization_id)
+
+    monkeypatch.setattr(organizations, "sync_users", sync_users)
 
     # Act
     response = await clients[0].patch(
@@ -970,6 +981,7 @@ async def test_update_organization_member_skips_unchanged_role_synchronization(
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
     assert unchanged.updated_id == original_updated_id
+    assert synchronized_organizations == [organization.id]
 
 
 async def test_update_organization_member_returns_not_found_for_non_member(

@@ -443,29 +443,42 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
 
     assert updated is not None
     assert invitation is None
-
-    # Revoke the administrator after an earlier request-level access check could have succeeded.
     async with session_scope() as session:
-        membership = await session.get(UserOrganization, (administrator.id, organization.id))
-        assert membership is not None
-        membership.deleted_at = membership.updated_at
-        await session.commit()
+        invitation_id = (await organizations.invitations(session, organization.id))[0].id
 
-    # Act and assert every service rechecks the persisted membership under its Organization lock.
-    async with session_scope() as session:
+    # Cache authorization in independent request sessions before concurrently revoking the administrator.
+    async with (
+        session_scope() as update_session,
+        session_scope() as create_invitation_session,
+        session_scope() as revoke_invitation_session,
+        session_scope() as role_session,
+    ):
+        for request_session in (update_session, create_invitation_session, revoke_invitation_session, role_session):
+            cached_membership = await organizations.membership(request_session, administrator.id, organization.id)
+            assert cached_membership is not None
+
+        async with session_scope() as concurrent_session:
+            membership = await concurrent_session.get(UserOrganization, (administrator.id, organization.id))
+            assert membership is not None
+            membership.deleted_at = membership.updated_at
+            await concurrent_session.commit()
+
+        # Act and assert every service refreshes the persisted membership under its Organization lock.
         with pytest.raises(ForbiddenError, match="Access required"):
-            await organizations.update(session, organization.id, "https://example.com/blocked.png", administrator)
+            await organizations.update(update_session, organization.id, "https://example.com/blocked.png", administrator)
         with pytest.raises(ForbiddenError, match="Access required"):
             await organizations.create_invitation(
-                session,
+                create_invitation_session,
                 organization.id,
                 "blocked-invited@example.com",
                 OrganizationRoles.read,
                 administrator,
             )
         with pytest.raises(ForbiddenError, match="Access required"):
+            await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator)
+        with pytest.raises(ForbiddenError, match="Access required"):
             await organizations.update_member_role(
-                session,
+                role_session,
                 organization.id,
                 owner.id,
                 OrganizationRoles.admin,

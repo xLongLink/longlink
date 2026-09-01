@@ -17,7 +17,7 @@ ENVIRONMENT_SETTINGS = {
     "ADMIN_PASSWORD": "longlink-test-password",
     "ENCRYPTION_KEY": "longlink-test-encryption-key-that-is-long-enough",
     "DATABASE_URL": "sqlite+aiosqlite:///./test.db",
-    "SMTP_HOST": None,
+    "SMTP_HOST": "smtp.example.com",
     "SMTP_PASSWORD": None,
     "SMTP_USERNAME": None,
 }
@@ -28,8 +28,9 @@ ENVIRONMENT_SETTINGS = {
     [
         pytest.param({"SMTP_USE_TLS": True}, "SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled", id="tls-and-starttls"),
         pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
+        pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required outside development", id="production-without-host"),
         pytest.param(
-            {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
+            {"DEVELOPMENT": True, "SMTP_HOST": None, "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
             "SMTP_HOST is required when SMTP authentication is configured",
             id="credentials-without-host",
         ),
@@ -73,3 +74,13 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     # Assert
     settings = ENVIRONMENT_SETTINGS | {"SMTP_HOST": "smtp.example.com", "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
     assert Env.model_validate(settings).SMTP_HOST == "smtp.example.com"
+
+
+def test_env_accepts_development_without_smtp_delivery() -> None:
+    """Allow development to retain its log-only email delivery fallback."""
+
+    # Act
+    environment = Env.model_validate(ENVIRONMENT_SETTINGS | {"DEVELOPMENT": True, "SMTP_HOST": None})
+
+    # Assert
+    assert environment.SMTP_HOST is None

@@ -4,6 +4,7 @@ from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
 from src.logger import logger
+from sqlalchemy.exc import OperationalError
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
@@ -120,15 +121,23 @@ async def get_organization_database_usage(
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
-    # Inspect the exact Organization database and return its physical size when available.
-    database = Postgres(
-        registry.host,
-        registry.port,
-        registry.username,
-        registry.password,
-        registry.sslmode,
-    )
-    return await database.database_usage(membership.organization.id.hex)
+    # Inspect the exact Organization database while distinguishing absence from backend failures.
+    try:
+        database = Postgres(
+            registry.host,
+            registry.port,
+            registry.username,
+            registry.password,
+            registry.sslmode,
+        )
+        return await database.database_usage(membership.organization.id.hex)
+    except OperationalError as exc:
+        logger.warning(
+            "Database resources unavailable for organization '%s' through registry '%s'",
+            membership.organization.slug,
+            registry.name,
+        )
+        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
 
 @router.get(
@@ -179,6 +188,9 @@ async def create_organization_invitation(
 ):
     """Create one invitation for an organization member."""
 
+    # Preserve immutable delivery context before authorization refreshes the membership.
+    organization_name = membership.organization.name
+
     await organizations.create_invitation(
         session,
         membership.organization_id,
@@ -189,7 +201,7 @@ async def create_organization_invitation(
     await session.commit()
 
     # Deliver only after the invitation transaction commits.
-    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, membership.organization.name, payload.role)
+    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization_name, payload.role)
 
 
 @router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)
@@ -216,16 +228,15 @@ async def update_organization_member(
     """Update one organization member role."""
 
     # Persist the requested role only for an active Organization member.
-    changed = await organizations.update_member_role(
+    await organizations.update_member_role(
         session,
         membership.organization_id,
         member_id,
         payload.role,
         user,
     )
-    if changed:
-        await session.commit()
-        await organizations.sync_users(session, membership.organization_id)
+    await session.commit()
+    await organizations.sync_users(session, membership.organization_id)
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
