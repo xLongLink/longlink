@@ -1,5 +1,6 @@
 import pytest
 from uuid import UUID
+from typing import ClassVar
 from conftest import FakeKubernetes
 from src.utils import templates
 from src.kubernetes import applications
@@ -82,9 +83,9 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     class MigrationPod:
         """Expose output from the failed migration Job."""
 
-        name = "failed-migration-pod"
-        metadata = {"name": "failed-migration-pod"}
-        raw = {"status": {"phase": "Failed"}}
+        name: ClassVar[str] = "failed-migration-pod"
+        metadata: ClassVar[dict[str, object]] = {"name": "failed-migration-pod"}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Failed"}}
 
         @classmethod
         async def list(cls, **kwargs: object) -> AsyncIterator["MigrationPod"]:
@@ -143,7 +144,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     monkeypatch.setattr(applications.logger, "error", log_error)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Application migration Job .* failed"):
+    with pytest.raises(RuntimeError, match=r"Application migration Job .* failed"):
         await applications.Applications(FakeKubernetes()).apply(  # type: ignore[arg-type]
             UUID("00000000-0000-4000-8000-000000000001"),
             "acme",
@@ -367,11 +368,12 @@ async def test_application_apply_reports_disappeared_deployment(monkeypatch: pyt
         )
 
 
-async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Retry rollout polling until the Deployment becomes ready."""
+async def test_application_apply_waits_for_route_after_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Retry rollout polling until the Deployment and HTTPRoute are ready."""
 
     # Arrange
     deployment_manifest = {"kind": "Deployment", "metadata": {"generation": 1}, "spec": {"replicas": 1}, "status": {}}
+    route_manifest: dict[str, object] = {"kind": "HTTPRoute", "status": {"parents": []}}
     sleeps: list[float] = []
 
     class Resource:
@@ -404,16 +406,21 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
         """Accept a resource without contacting Kubernetes."""
 
     async def sleep(delay: float) -> None:
-        """Make the Deployment ready for the next rollout poll."""
+        """Make each independent rollout gate ready in sequence."""
 
         sleeps.append(delay)
-        deployment_manifest["status"] = {
-            "observedGeneration": 1,
-            "replicas": 1,
-            "updatedReplicas": 1,
-            "readyReplicas": 1,
-            "availableReplicas": 1,
-        }
+        if len(sleeps) == 1:
+            deployment_manifest["status"] = {
+                "observedGeneration": 1,
+                "replicas": 1,
+                "updatedReplicas": 1,
+                "readyReplicas": 1,
+                "availableReplicas": 1,
+            }
+        else:
+            route_manifest["status"] = {
+                "parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]
+            }
 
     monkeypatch.setattr(
         applications.templates,
@@ -422,7 +429,7 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
             {"kind": "Job"},
             deployment_manifest,
             {"kind": "Service"},
-            {"kind": "HTTPRoute", "status": {"parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]}},
+            route_manifest,
         ),
     )
     monkeypatch.setattr(applications, "Secret", Resource)
@@ -439,7 +446,7 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
     )
 
     # Assert
-    assert sleeps == [5]
+    assert sleeps == [5, 5]
 
 
 async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -449,8 +456,8 @@ async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytes
     class PodResource:
         """Represent a failed migration Pod."""
 
-        raw = {"status": {"phase": "Failed"}}
-        metadata = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Failed"}}
+        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
 
         @classmethod
         async def list(cls, **_kwargs: object):
@@ -483,8 +490,8 @@ async def test_application_logs_returns_running_application_pod_logs(monkeypatch
     class PodResource:
         """Represent a running Application Pod."""
 
-        raw = {"status": {"phase": "Running"}}
-        metadata = {"labels": {"longlink.io/component": "application"}}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Running"}}
+        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "application"}}
 
         @classmethod
         async def list(cls, **_kwargs: object):
@@ -519,8 +526,8 @@ async def test_application_logs_reports_completed_migration_when_application_pod
     class PodResource:
         """Represent a completed migration Pod."""
 
-        raw = {"status": {"phase": "Succeeded"}}
-        metadata = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Succeeded"}}
+        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "migration"}, "name": "migration-123"}
 
         @classmethod
         async def list(cls, **_kwargs: object):
@@ -570,8 +577,8 @@ async def test_application_logs_ignores_terminal_application_pods(monkeypatch: p
     class PodResource:
         """Represent a completed Application Pod."""
 
-        raw = {"status": {"phase": "Succeeded"}}
-        metadata = {"labels": {"longlink.io/component": "application"}}
+        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Succeeded"}}
+        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "application"}}
 
         @classmethod
         async def list(cls, **_kwargs: object):
@@ -664,7 +671,7 @@ async def test_application_delete_removes_resources_before_waiting_for_pods(monk
     class JobResource:
         """Expose one retained migration Job during the initial cleanup poll."""
 
-        metadata: dict[str, object] = {}
+        metadata: ClassVar[dict[str, object]] = {}
 
         async def delete(self) -> None:
             """Record migration Job cleanup."""
@@ -782,7 +789,7 @@ async def test_application_delete_does_not_repeat_deletions_for_terminating_reso
     class Resource:
         """Represent a terminating Kubernetes resource."""
 
-        metadata = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
+        metadata: ClassVar[dict[str, object]] = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
 
         def __init__(self, *_args: object, **_kwargs: object) -> None:
             """Accept the Kubernetes resource constructor arguments."""

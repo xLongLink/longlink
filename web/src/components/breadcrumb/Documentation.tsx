@@ -2,10 +2,6 @@ import { useLocation } from 'react-router';
 import { decodePathSegment, startCase } from '@/lib/utils';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
-type DocumentationBreadcrumbProps = {
-    className?: string;
-};
-
 const routeLabels: Record<string, string> = {
     docs: 'Documentation',
     api: 'Platform',
@@ -14,7 +10,7 @@ const routeLabels: Record<string, string> = {
 };
 
 /** Renders breadcrumbs for the current documentation URL. */
-export function DocumentationBreadcrumb({ className }: DocumentationBreadcrumbProps) {
+export function DocumentationBreadcrumb({ className }: { className?: string }) {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
 

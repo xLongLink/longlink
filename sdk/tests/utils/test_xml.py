@@ -98,16 +98,25 @@ INVALID_FRAGMENTS = [
     ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
 ]
 
+UNSUPPORTED_MARKUP = [
+    pytest.param('<!DOCTYPE longlink><longlink />', id="doctype"),
+    pytest.param(
+        '<!DOCTYPE longlink [<!ENTITY xxe SYSTEM "file:///tmp/longlink-xxe-secret">]><longlink>&xxe;</longlink>',
+        id="external-entity",
+    ),
+    pytest.param('<longlink><![CDATA[content]]></longlink>', id="cdata"),
+]
 
-def test_xml_validation_rejects_malformed_entity() -> None:
-    """Reject malformed entity declarations through the secure parser."""
 
-    # Validate the malformed document at the shared XML boundary.
+def test_xml_validation_rejects_malformed_document() -> None:
+    """Reject malformed XML syntax through the secure parser."""
+
+    # Act and assert
     with pytest.raises(ValueError, match="XML syntax is invalid"):
-        validate_xml('<!ENTITY hidden "value"><longlink>&hidden;</longlink>')
+        validate_xml("<longlink>")
 
 
-@pytest.mark.parametrize("content", ['<!DOCTYPE longlink><longlink />', '<longlink><![CDATA[content]]></longlink>'])
+@pytest.mark.parametrize("content", UNSUPPORTED_MARKUP)
 def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
     """Reject markup that the web runtime parser cannot support."""
 

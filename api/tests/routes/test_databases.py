@@ -3,6 +3,7 @@ from uuid import uuid4
 from httpx2 import AsyncClient
 from factories import create_ready_infrastructure
 from sqlalchemy.exc import OperationalError
+from src.environments import env
 
 
 @pytest.mark.parametrize(
@@ -106,9 +107,39 @@ async def test_database_registry_creation_uses_verified_ssl_by_default(
         "username": "admin",
         "password": "database-secret",
     }
+
     # Act
     response = await clients[0].post("/api/v1/databases", json=payload)
 
     # Assert
     assert response.status_code == 201
     assert response.json()["sslmode"] == "verify-full"
+
+
+async def test_database_registry_creation_rejects_unverified_tls_in_production(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject production database registrations that do not verify the server."""
+
+    # Arrange
+    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    payload = {
+        "name": "Unverified TLS database",
+        "host": "database.example",
+        "port": 5432,
+        "username": "admin",
+        "password": "database-secret",
+        "sslmode": "disable",
+    }
+
+    # Act
+    response = await clients[0].post("/api/v1/databases", json=payload)
+    registries_response = await clients[0].get("/api/v1/databases")
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Production databases must use sslmode=verify-full"}
+    assert "database-secret" not in response.text
+    assert registries_response.status_code == 200
+    assert registries_response.json() == {"items": [], "total": 0}

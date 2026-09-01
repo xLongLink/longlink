@@ -9,7 +9,6 @@ import {
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 
-type MenuProps = { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] };
 type MenuSectionProps = {
     children?: ReactNode;
     isHeaderHidden?: boolean;
@@ -49,7 +48,7 @@ function isMenuSubSection(node: ReactNode): node is ReactElement<MenuMarkerProps
 }
 
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children, gap = 3 }: MenuProps) {
+export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] }) {
     const { hash } = useLocation();
     const sections = Children.toArray(children)
         .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)

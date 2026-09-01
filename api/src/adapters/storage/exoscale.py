@@ -64,7 +64,7 @@ class Exoscale:
         details = error.response.get("Error")
         status = error.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
         code = details.get("Code") if isinstance(details, Mapping) else None
-        return isinstance(code, str) and code in {"NoSuchBucket", "NoSuchKey", "404"} or status == 404
+        return (isinstance(code, str) and code in {"NoSuchBucket", "NoSuchKey", "404"}) or status == 404
 
     async def usage(self, bucket: str) -> int | None:
         """Return aggregate usage for one bucket, or none when the bucket is absent."""

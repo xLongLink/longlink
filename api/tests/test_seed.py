@@ -42,8 +42,14 @@ async def count(model: type[object]) -> int:
 
 
 async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> None:
+    """Keep local seed resources stable across repeated initialization."""
+
+    # Arrange
+    local_settings = settings(tmp_path)
+
     # Act
-    await seed_local_development(settings(tmp_path))
+    await seed_local_development(local_settings)
+    await seed_local_development(local_settings)
 
     # Assert
     assert await count(User) == 1
@@ -62,6 +68,8 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> N
 
 
 async def test_cloud_seed_registers_only_infrastructure(tmp_path: Path) -> None:
+    """Create only infrastructure registries for a cloud deployment."""
+
     # Act
     await seed_cloud(settings(tmp_path, CloudSeedSettings))
 

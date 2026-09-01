@@ -30,8 +30,6 @@ export function Tabs({ children, gap = 3, ...props }: TabsProps) {
         return null;
     }
 
-    const selectedValue = activeTab.props.value;
-
     return (
         <Stack gap={gap}>
             <AstryxTabList
@@ -43,7 +41,7 @@ export function Tabs({ children, gap = 3, ...props }: TabsProps) {
 
                     onChange?.(nextValue);
                 }}
-                value={selectedValue}
+                value={activeTab.props.value}
             >
                 {tabs.map((tab) => {
                     const { children: _children, icon, ...tabProps } = tab.props;

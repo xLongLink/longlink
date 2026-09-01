@@ -407,3 +407,54 @@ async def test_scheduler_recovers_from_worker_failures(
 
     assert len(executed) == expected_execution_count
     assert sleeps == expected_sleep_count
+
+
+async def test_operation_log_cleanup_recovers_and_commits_later_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Continue cleanup after failure and commit only successful work."""
+
+    # Arrange
+    class CleanupSession:
+        """Represent one isolated cleanup transaction."""
+
+        async def commit(self) -> None:
+            """Record a successful cleanup commit."""
+
+            committed.append(self)
+
+    attempts: list[CleanupSession] = []
+    committed: list[CleanupSession] = []
+    sleeps: list[float] = []
+
+    @asynccontextmanager
+    async def cleanup_session_scope() -> AsyncIterator[CleanupSession]:
+        """Yield a fresh cleanup transaction for each attempt."""
+
+        session = CleanupSession()
+        attempts.append(session)
+        yield session
+
+    async def clear_expired_logs(session: CleanupSession) -> int:
+        """Fail the first cleanup attempt and complete the second."""
+
+        if session is attempts[0]:
+            raise RuntimeError("database unavailable")
+        return 2
+
+    async def sleep(delay: float) -> None:
+        """Stop after proving cleanup continued to a second iteration."""
+
+        sleeps.append(delay)
+        if len(sleeps) == 2:
+            raise asyncio.CancelledError
+
+    monkeypatch.setattr(operation_worker, "session_scope", cleanup_session_scope)
+    monkeypatch.setattr(operation_worker.operations, "clear_expired_logs", clear_expired_logs)
+    monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
+
+    # Act and assert
+    with pytest.raises(asyncio.CancelledError):
+        await operation_worker.run_operation_log_cleanup()
+
+    assert len(attempts) == 2
+    assert committed == [attempts[1]]
+    assert sleeps == [operation_worker.OPERATION_LOG_CLEANUP_SECONDS, operation_worker.OPERATION_LOG_CLEANUP_SECONDS]

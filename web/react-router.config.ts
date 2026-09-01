@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { documentationComponentSlugs } from './src/platform/docs';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -28,36 +29,7 @@ const publicPagePaths = [
     '/docs/sdk/storage',
     '/docs/sdk/testing',
     '/docs/sdk/pages',
-    '/docs/sdk/pages/action',
-    '/docs/sdk/pages/avatar',
-    '/docs/sdk/pages/badge',
-    '/docs/sdk/pages/bindings',
-    '/docs/sdk/pages/button',
-    '/docs/sdk/pages/card',
-    '/docs/sdk/pages/checkbox-input',
-    '/docs/sdk/pages/dialog',
-    '/docs/sdk/pages/divider',
-    '/docs/sdk/pages/expressions',
-    '/docs/sdk/pages/file-input',
-    '/docs/sdk/pages/for',
-    '/docs/sdk/pages/grid',
-    '/docs/sdk/pages/heading',
-    '/docs/sdk/pages/icon',
-    '/docs/sdk/pages/link',
-    '/docs/sdk/pages/menu',
-    '/docs/sdk/pages/number-input',
-    '/docs/sdk/pages/query',
-    '/docs/sdk/pages/radio-list',
-    '/docs/sdk/pages/selector',
-    '/docs/sdk/pages/slider',
-    '/docs/sdk/pages/stack',
-    '/docs/sdk/pages/state',
-    '/docs/sdk/pages/switch',
-    '/docs/sdk/pages/tabs',
-    '/docs/sdk/pages/table',
-    '/docs/sdk/pages/text',
-    '/docs/sdk/pages/text-area',
-    '/docs/sdk/pages/text-input',
+    ...documentationComponentSlugs.map((slug) => `/docs/sdk/pages/${slug}`),
 ];
 const outputDirectory = path.resolve(
     import.meta.dirname,
@@ -74,24 +46,30 @@ export default {
     async buildEnd({ reactRouterConfig }) {
         const clientDirectory = path.join(reactRouterConfig.buildDirectory, 'client');
 
-        // Applications do not publish Platform crawler configuration or public images.
+        // Applications do not publish Platform images.
         if (isApplication) {
-            await Promise.all([
-                rm(path.join(clientDirectory, 'robots.txt'), { force: true }),
-                rm(path.join(clientDirectory, 'sitemap.xml'), { force: true }),
-                rm(path.join(clientDirectory, 'images'), { force: true, recursive: true }),
-            ]);
+            await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
         } else {
-            // Generate crawler URLs from the same inventory used for prerendering.
+            // Generate crawler configuration from the same inventory used for prerendering.
+            const configuredSiteUrl = import.meta.env.VITE_SITE_URL ?? 'https://longlink.dev';
+            const siteUrl = new URL(configuredSiteUrl);
+            if (siteUrl.pathname !== '/' || siteUrl.search || siteUrl.hash) {
+                throw new Error('VITE_SITE_URL must contain only the public site origin.');
+            }
+
             const urls = publicPagePaths
                 .map(
                     (pagePath) =>
-                        `    <url><loc>${import.meta.env.VITE_SITE_URL}${pagePath === '/' ? '/' : `${pagePath}/`}</loc></url>`
+                        `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc></url>`
                 )
                 .join('\n');
             await writeFile(
                 path.join(clientDirectory, 'sitemap.xml'),
                 `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`
+            );
+            await writeFile(
+                path.join(clientDirectory, 'robots.txt'),
+                `User-agent: *\nAllow: /\n\nSitemap: ${new URL('/sitemap.xml', siteUrl).href}\n`
             );
 
             // Keep the prerendered home page while making the generic SPA document FastAPI's fallback.

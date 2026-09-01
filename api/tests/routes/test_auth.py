@@ -6,7 +6,7 @@ from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
 from factories import create_organization
-from src.utils import token
+from src.utils import oauth, token
 from urllib.parse import parse_qs, urlparse
 from src.environments import env
 from src.models.roles import OrganizationRoles
@@ -65,6 +65,93 @@ def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> li
 
     monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
     return synchronized_organization_ids
+
+
+async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a callback whose browser-bound OAuth state does not match."""
+
+    # Arrange
+    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    async def unexpected_identity(
+        _provider: oauth.OAuthProvider,
+        _code: str,
+        _verifier: str,
+    ) -> oauth.OAuthIdentity | None:
+        """Fail if invalid callback state reaches the external provider."""
+
+        raise AssertionError("invalid OAuth state must not reach the provider")
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
+
+    # Act
+    response = await client.get(
+        "/api/v1/auth/oauth/google/callback",
+        params={"code": "provider-code", "state": "mismatched-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+
+
+async def test_oauth_callback_links_existing_email_and_authenticates_browser(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Link a verified provider identity to its existing canonical account."""
+
+    # Arrange
+    user = users[1]
+    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+    provider_calls: list[tuple[str, str, str]] = []
+
+    async def identity(provider: oauth.OAuthProvider, code: str, verifier: str) -> oauth.OAuthIdentity:
+        """Return one verified provider identity while recording the exchange proof."""
+
+        provider_calls.append((provider, code, verifier))
+        return oauth.OAuthIdentity(
+            subject="google-subject",
+            email=user.email,
+            name="Provider Name",
+            avatar="https://example.com/avatar.png",
+        )
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", identity)
+
+    # Act
+    response = await client.get(
+        "/api/v1/auth/oauth/google/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is not None
+    assert provider_calls == [("google", "provider-code", "pkce-verifier")]
+    assert profile_response.status_code == 200
+    assert profile_response.json()["id"] == str(user.id)
+    async with session_scope() as session:
+        linked_user = await session.get(User, user.id)
+    assert linked_user is not None
+    assert linked_user.google_id == "google-subject"
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(

@@ -239,11 +239,13 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     assert persisted.status == Status.running
 
 
-async def test_application_creation_revokes_storage_credentials_when_schema_provisioning_fails(
+@pytest.mark.parametrize("revoke_error", [None, RuntimeError("revoke failed")], ids=["success", "failure"])
+async def test_application_creation_preserves_schema_failure_during_credential_compensation(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
+    revoke_error: RuntimeError | None,
 ) -> None:
-    """Revoke generated storage credentials when the database schema cannot be provisioned."""
+    """Preserve schema failure while compensating generated storage credentials."""
 
     # Arrange
     owner = users[0]
@@ -276,10 +278,12 @@ async def test_application_creation_revokes_storage_credentials_when_schema_prov
             return {"access_key_id": "application", "secret_access_key": "generated-secret"}
 
         async def revoke(self, name: str) -> None:
-            """Record credential revocation."""
+            """Record credential revocation and optionally fail compensation."""
 
             assert name == application.id.hex
             calls.append("revoke")
+            if revoke_error is not None:
+                raise revoke_error
 
     monkeypatch.setattr(application_operations, "Postgres", FailingPostgres)
     monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)

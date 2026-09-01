@@ -2,6 +2,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig, lazyPlugins, loadEnv } from 'vite-plus';
 
+const ignoredPaths = ['.react-router/**', 'build/**', 'src/lib/generated/**'];
+
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
@@ -13,7 +15,7 @@ export default defineConfig(({ mode }) => {
 
         fmt: {
             arrowParens: 'always',
-            ignorePatterns: ['.react-router/**', 'build/**', 'src/lib/generated/**'],
+            ignorePatterns: ignoredPaths,
             printWidth: 120,
             semi: true,
             singleQuote: true,
@@ -32,7 +34,7 @@ export default defineConfig(({ mode }) => {
                 builtin: true,
                 es2020: true,
             },
-            ignorePatterns: ['.react-router/**', 'build/**', 'src/lib/generated/**'],
+            ignorePatterns: ignoredPaths,
             options: {
                 typeAware: true,
                 typeCheck: true,

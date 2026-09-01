@@ -151,7 +151,7 @@ async def test_postgres_adapter_rejects_schema_provisioning_without_string_liter
     monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
 
     # Act and assert
-    with pytest.raises(ValueError, match="^PostgreSQL string literal processing is unavailable$"):
+    with pytest.raises(ValueError, match=r"^PostgreSQL string literal processing is unavailable$"):
         await adapter.schema(organization_id, application_id, "stable-runtime-password")
 
 

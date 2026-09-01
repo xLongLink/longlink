@@ -37,7 +37,6 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
             isOpen={isOpen}
             label={user.name}
             onOpenChange={setIsOpen}
-            placement="below"
             width={280}
             content={
                 <Stack gap={2} width="100%">
