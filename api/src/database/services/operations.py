@@ -1,10 +1,12 @@
 from uuid import UUID
-from datetime import timedelta
+from typing import cast
+from datetime import datetime, timedelta
 from sqlmodel import col
 from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import QueryableAttribute, load_only
 from collections.abc import Sequence
+from sqlalchemy.engine import CursorResult
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.models.operations import OperationKind, OperationResource, OperationResponse
@@ -26,16 +28,16 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(Operation)
         .options(
             load_only(
-                Operation.id,
-                Operation.kind,
-                Operation.target_id,
-                Operation.failed,
-                Operation.lease_expires_at,
-                Operation.created_at,
-                Operation.finished_at,
+                cast(QueryableAttribute[UUID], Operation.id),
+                cast(QueryableAttribute[OperationKind], Operation.kind),
+                cast(QueryableAttribute[UUID], Operation.target_id),
+                cast(QueryableAttribute[str | None], Operation.failed),
+                cast(QueryableAttribute[datetime | None], Operation.lease_expires_at),
+                cast(QueryableAttribute[datetime], Operation.created_at),
+                cast(QueryableAttribute[datetime | None], Operation.finished_at),
             )
         )
-        .order_by(Operation.created_at.desc(), Operation.id.desc())
+        .order_by(col(Operation.created_at).desc(), col(Operation.id).desc())
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
@@ -107,7 +109,9 @@ async def clear_expired_logs(session: AsyncSession) -> int:
 
     # Load only expired diagnostic payloads while retaining their Operation history.
     result = await session.scalars(
-        select(Operation).options(load_only(Operation.logs)).where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+        select(Operation)
+        .options(load_only(cast(QueryableAttribute[list[str]], Operation.logs)))
+        .where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
     )
     expired_operations = result.all()
 
@@ -166,10 +170,10 @@ async def enqueue(
 
     # Reuse unleased work and preserve active work as an immutable retry boundary.
     statement = select(Operation).where(
-        Operation.kind == kind,
-        Operation.target_id == target_id,
-        Operation.finished_at.is_(None),
-        Operation.lease_expires_at.is_(None),
+        col(Operation.kind) == kind,
+        col(Operation.target_id) == target_id,
+        col(Operation.finished_at).is_(None),
+        col(Operation.lease_expires_at).is_(None),
     )
     operation = await session.scalar(statement)
     if operation is not None:
@@ -197,15 +201,15 @@ async def claim(session: AsyncSession) -> Operation | None:
     # Classify the active lease, expired lease, or next Operation.
     operation = await session.scalar(
         select(Operation)
-        .where(Operation.finished_at.is_(None))
+        .where(col(Operation.finished_at).is_(None))
         .order_by(
             case(
                 (col(Operation.lease_expires_at) > now, 0),
                 (col(Operation.lease_expires_at).is_not(None), 1),
                 else_=2,
             ),
-            Operation.created_at.asc(),
-            Operation.id.asc(),
+            col(Operation.created_at).asc(),
+            col(Operation.id).asc(),
         )
         .limit(1)
     )
@@ -213,17 +217,19 @@ async def claim(session: AsyncSession) -> Operation | None:
         return None
 
     # Reclaim expired work or acquire unleased work without racing another scheduler.
-    if (
+    result = cast(
+        CursorResult[tuple[()]],
         await session.execute(
             update(Operation)
             .where(
-                Operation.id == operation.id,
-                Operation.finished_at.is_(None),
+                col(Operation.id) == operation.id,
+                col(Operation.finished_at).is_(None),
                 or_(col(Operation.lease_expires_at).is_(None), col(Operation.lease_expires_at) <= now),
             )
             .values(lease_expires_at=now + timedelta(minutes=30))
-        )
-    ).rowcount != 1:
+        ),
+    )
+    if result.rowcount != 1:
         return None
 
     return operation
@@ -237,9 +243,9 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
     return await session.scalar(
         update(Operation)
         .where(
-            Operation.id == operation_id,
+            col(Operation.id) == operation_id,
             col(Operation.lease_expires_at) > now,
-            Operation.finished_at.is_(None),
+            col(Operation.finished_at).is_(None),
         )
         .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
         .returning(Operation)
@@ -254,9 +260,9 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
     return await session.scalar(
         update(Operation)
         .where(
-            Operation.id == operation_id,
+            col(Operation.id) == operation_id,
             col(Operation.lease_expires_at) > now,
-            Operation.finished_at.is_(None),
+            col(Operation.finished_at).is_(None),
         )
         .values(lease_expires_at=None)
         .returning(Operation)
@@ -271,9 +277,9 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
     operation = await session.scalar(
         update(Operation)
         .where(
-            Operation.id == operation_id,
+            col(Operation.id) == operation_id,
             col(Operation.lease_expires_at) > now,
-            Operation.finished_at.is_(None),
+            col(Operation.finished_at).is_(None),
         )
         .values(
             failed=(reason.strip() or "Operation failed")[:500],
@@ -290,19 +296,19 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
     if operation.kind == OperationKind.compute_create:
         await session.execute(
             update(ComputeRegistry)
-            .where(ComputeRegistry.id == operation.target_id, ComputeRegistry.status == Status.creating)
+            .where(col(ComputeRegistry.id) == operation.target_id, col(ComputeRegistry.status) == Status.creating)
             .values(status=Status.failed)
         )
     elif operation.kind == OperationKind.organization_create:
         await session.execute(
             update(Organization)
-            .where(Organization.id == operation.target_id, Organization.status == Status.creating)
+            .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
             .values(status=Status.failed)
         )
     elif operation.kind == OperationKind.application_create:
         await session.execute(
             update(Application)
-            .where(Application.id == operation.target_id, Application.status == Status.creating)
+            .where(col(Application.id) == operation.target_id, col(Application.status) == Status.creating)
             .values(status=Status.failed)
         )
 

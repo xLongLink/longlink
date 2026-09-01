@@ -1,9 +1,12 @@
 from uuid import UUID
+from typing import cast
+from sqlmodel import col
 from sqlalchemy import func, select, update
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import QueryableAttribute, load_only
 from collections.abc import Sequence
+from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -21,13 +24,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         select(ComputeRegistry)
         .options(
             load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.name,
-                ComputeRegistry.gateway_url,
-                ComputeRegistry.status,
+                cast(QueryableAttribute[UUID], ComputeRegistry.id),
+                cast(QueryableAttribute[str], ComputeRegistry.name),
+                cast(QueryableAttribute[str | None], ComputeRegistry.gateway_url),
+                cast(QueryableAttribute[Status], ComputeRegistry.status),
             )
         )
-        .order_by(ComputeRegistry.name, ComputeRegistry.id)
+        .order_by(col(ComputeRegistry.name), col(ComputeRegistry.id))
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
@@ -64,17 +67,17 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
         raise NotFoundError("Compute registry not found")
 
     # Organizations must retain a valid registered compute assignment.
-    if await session.scalar(select(Organization.id).where(Organization.compute_id == registry_id).limit(1)) is not None:
+    if await session.scalar(select(col(Organization.id)).where(col(Organization.compute_id) == registry_id).limit(1)) is not None:
         raise ConflictError("Compute registry is used by organizations")
 
     # Retain the Compute while its Gateway lifecycle may still use its Kubernetes credentials.
     if (
         await session.scalar(
-            select(Operation.id)
+            select(col(Operation.id))
             .where(
-                Operation.kind == OperationKind.compute_create,
-                Operation.target_id == registry_id,
-                Operation.finished_at.is_(None),
+                col(Operation.kind) == OperationKind.compute_create,
+                col(Operation.target_id) == registry_id,
+                col(Operation.finished_at).is_(None),
             )
             .limit(1)
         )
@@ -97,17 +100,20 @@ async def record_success(
     """Publish successful Compute and Gateway state when its lifecycle state is current."""
 
     # Publish only when the Compute still has the lifecycle state observed by this worker.
-    result = await session.execute(
-        update(ComputeRegistry)
-        .where(
-            ComputeRegistry.id == compute_id,
-            ComputeRegistry.status == expected_status,
-        )
-        .values(
-            gateway_url=gateway_url,
-            gateway_certificate=gateway_certificate,
-            gateway_client_identity=gateway_client_identity,
-            status=Status.running,
-        )
+    result = cast(
+        CursorResult[tuple[()]],
+        await session.execute(
+            update(ComputeRegistry)
+            .where(
+                col(ComputeRegistry.id) == compute_id,
+                col(ComputeRegistry.status) == expected_status,
+            )
+            .values(
+                gateway_url=gateway_url,
+                gateway_certificate=gateway_certificate,
+                gateway_client_identity=gateway_client_identity,
+                status=Status.running,
+            )
+        ),
     )
     return result.rowcount == 1

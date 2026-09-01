@@ -19,6 +19,7 @@ import { hasMinimumRole, ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter, formatBytes } from '@/lib/utils';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { AvatarDialog } from '@/components/dialogs/Avatar';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -30,10 +31,10 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import CreateApplication from '@/components/dialogs/CreateApplication';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import {
     zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
@@ -461,9 +462,10 @@ export default function OrganizationSettings() {
             </Menu>
             {logsTarget ? (
                 <Logs
-                    applicationId={logsTarget.id}
-                    applicationName={logsTarget.name}
+                    kind="application"
                     onOpenChange={(open) => !open && setLogsTarget(null)}
+                    resourceId={logsTarget.id}
+                    resourceName={logsTarget.name}
                 />
             ) : null}
             <AlertDialog
@@ -616,61 +618,21 @@ export default function OrganizationSettings() {
                     }
                 />
             </Dialog>
-            <Dialog isOpen={isAvatarDialogOpen} purpose="form" onOpenChange={handleAvatarOpenChange}>
-                <Layout
-                    header={
-                        <DialogHeader
-                            title="Organization avatar"
-                            subtitle="Use an HTTP(S) image URL."
-                            onOpenChange={handleAvatarOpenChange}
-                        />
-                    }
-                    content={
-                        <LayoutContent>
-                            <form
-                                id="organization-avatar-form"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    void saveAvatar();
-                                }}
-                            >
-                                <TextInput
-                                    label="Avatar URL"
-                                    value={avatar}
-                                    width="100%"
-                                    isOptional
-                                    isDisabled={updateOrganization.isPending}
-                                    placeholder="https://example.com/org.png"
-                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                    onChange={(value) => {
-                                        setEditedAvatar(value);
-                                        setAvatarError(null);
-                                    }}
-                                />
-                            </form>
-                        </LayoutContent>
-                    }
-                    footer={
-                        <LayoutFooter>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={updateOrganization.isPending}
-                                    onClick={() => handleAvatarOpenChange(false)}
-                                />
-                                <Button
-                                    form="organization-avatar-form"
-                                    type="submit"
-                                    label="Save"
-                                    variant="primary"
-                                    isLoading={updateOrganization.isPending}
-                                />
-                            </Stack>
-                        </LayoutFooter>
-                    }
-                />
-            </Dialog>
+            <AvatarDialog
+                avatar={avatar}
+                error={avatarError}
+                formId="organization-avatar-form"
+                isOpen={isAvatarDialogOpen}
+                isSaving={updateOrganization.isPending}
+                onAvatarChange={(value) => {
+                    setEditedAvatar(value);
+                    setAvatarError(null);
+                }}
+                onOpenChange={handleAvatarOpenChange}
+                onSave={saveAvatar}
+                placeholder="https://example.com/org.png"
+                title="Organization avatar"
+            />
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </PageContainer>
     );

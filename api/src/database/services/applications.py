@@ -1,9 +1,11 @@
 from uuid import UUID
+from typing import cast
+from sqlmodel import col
 from src.utils import names, roles
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, contains_eager
+from sqlalchemy.orm import QueryableAttribute, defer, contains_eager
 from collections.abc import Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -23,17 +25,20 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     # Load page response data without loading encrypted application secrets.
     statement = (
         select(Application)
-        .join(Application.organization)
-        .options(contains_eager(Application.organization), defer(Application.secrets))
-        .where(Application.deleted_at.is_(None))
-        .order_by(Organization.name, Application.name, Application.id)
+        .join(Organization, col(Organization.id) == col(Application.organization_id))
+        .options(
+            contains_eager(cast(QueryableAttribute[Organization], Application.organization)),
+            defer(cast(QueryableAttribute[dict[str, str]], Application.secrets)),
+        )
+        .where(col(Application.deleted_at).is_(None))
+        .order_by(col(Organization.name), col(Application.name), col(Application.id))
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
     result = await session.scalars(statement)
 
     # Count only rows eligible for the administrator listing.
-    count_result = await session.execute(select(func.count()).select_from(Application).where(Application.deleted_at.is_(None)))
+    count_result = await session.execute(select(func.count()).select_from(Application).where(col(Application.deleted_at).is_(None)))
     return result.all(), count_result.scalar_one()
 
 
@@ -50,7 +55,7 @@ async def create(
     """Create an Organization-owned LongLink Application."""
 
     # Lock the Organization before creating an Application against its assignment.
-    organization = await session.scalar(select(Organization).where(Organization.id == organization_id).with_for_update())
+    organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
     if organization is None:
         raise NotFoundError("Organization not found")
     if organization.deleted_at is not None:
@@ -65,10 +70,10 @@ async def create(
 
     # Serialize application creation through the locked Organization to enforce the beta limit.
     application_limit_result = await session.execute(
-        select(Application.id)
+        select(col(Application.id))
         .where(
-            Application.organization_id == organization_id,
-            Application.deleted_at.is_(None),
+            col(Application.organization_id) == organization_id,
+            col(Application.deleted_at).is_(None),
         )
         .offset(2)
         .limit(1)
@@ -111,13 +116,13 @@ async def delete(session: AsyncSession, application_id: UUID, user_id: UUID) -> 
 
     # Lock active application access before changing its lifecycle state.
     result = await session.execute(
-        select(Application, UserOrganization.role)
-        .join(UserOrganization, UserOrganization.organization_id == Application.organization_id)
+        select(Application, col(UserOrganization.role))
+        .join(UserOrganization, col(UserOrganization.organization_id) == col(Application.organization_id))
         .where(
-            Application.id == application_id,
-            Application.deleted_at.is_(None),
-            UserOrganization.user_id == user_id,
-            UserOrganization.deleted_at.is_(None),
+            col(Application.id) == application_id,
+            col(Application.deleted_at).is_(None),
+            col(UserOrganization.user_id) == user_id,
+            col(UserOrganization.deleted_at).is_(None),
         )
         .with_for_update()
     )
