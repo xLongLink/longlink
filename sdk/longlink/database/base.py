@@ -1,7 +1,7 @@
 import asyncio
 from uuid import UUID
 from datetime import datetime
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
@@ -11,12 +11,16 @@ from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
-from longlink.database.registry import Base, database_metadata
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+database_metadata = SQLModel.metadata
 
-class AuditTable(Base):
+
+class AuditTable(SQLModel):
     """Base SQLModel for Application tables that track Platform users."""
+
+    model_config = SQLModel.model_config.copy()
+    model_config["ignored_types"] = (declared_attr,)
 
     # Audit timestamps
     created_at: datetime | None = Field(default=None, sa_type=UTCDateTime)

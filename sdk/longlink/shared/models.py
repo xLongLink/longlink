@@ -2,15 +2,14 @@ from uuid import UUID
 from typing import Annotated
 from datetime import datetime
 from pydantic import EmailStr, AfterValidator
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from sqlalchemy import Uuid, Column, String
 from longlink.database.types import UTCDateTime
-from longlink.database.registry import Base
 
 Email = Annotated[EmailStr, AfterValidator(str.lower)]
 
 
-class Audit(Base, table=True):
+class Audit(SQLModel, table=True):
     """Represent one Platform-owned Organization user shared across all Organization Applications.
 
     Applications have read-only access to this shared-schema projection.
