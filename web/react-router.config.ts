@@ -51,11 +51,7 @@ export default {
             await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
         } else {
             // Generate crawler configuration from the same inventory used for prerendering.
-            const configuredSiteUrl = import.meta.env.VITE_SITE_URL;
-            if (!configuredSiteUrl) {
-                throw new Error('VITE_SITE_URL is required to generate sitemap.xml.');
-            }
-
+            const configuredSiteUrl = import.meta.env.VITE_SITE_URL ?? 'https://longlink.dev';
             const siteUrl = new URL(configuredSiteUrl);
             if (siteUrl.pathname !== '/' || siteUrl.search || siteUrl.hash) {
                 throw new Error('VITE_SITE_URL must contain only the public site origin.');
