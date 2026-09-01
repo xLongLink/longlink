@@ -26,7 +26,8 @@ async def test_ensure_administrator_creates_absent_configured_user() -> None:
 
     # Assert
     async with session_scope() as session:
-        administrators = (await session.scalars(select(User).where(col(User.administrator).is_(True)))).all()
+        result = await session.scalars(select(User).where(col(User.administrator).is_(True)))
+        administrators = result.all()
     assert len(administrators) == 1
     assert administrators[0].name == env.ADMIN_NAME
     assert administrators[0].email == env.ADMIN_EMAIL

@@ -1,3 +1,5 @@
+import pytest
+from pathlib import Path
 from pydantic import Field
 from longlink.utils.environments import Environments
 
@@ -8,7 +10,7 @@ class EnvironmentSettings(Environments):
     api_key: str = Field(default="", validation_alias="API_KEY")
 
 
-def test_environments_prioritizes_process_variables_over_dotenv_files(monkeypatch, tmp_path) -> None:
+def test_environments_prioritizes_process_variables_over_dotenv_files(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Load the declared setting from the highest-priority configured source."""
 
     # Arrange
@@ -24,7 +26,7 @@ def test_environments_prioritizes_process_variables_over_dotenv_files(monkeypatc
     assert environments.api_key == "process"
 
 
-def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch, tmp_path) -> None:
+def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Load dotenv values from the application file instead of its sample."""
 
     # Arrange
@@ -40,7 +42,7 @@ def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch, tmp_path)
     assert environments.api_key == "file"
 
 
-def test_environments_loads_sample_file_without_application_dotenv(monkeypatch, tmp_path) -> None:
+def test_environments_loads_sample_file_without_application_dotenv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Load declared defaults from the sample dotenv file."""
 
     # Arrange

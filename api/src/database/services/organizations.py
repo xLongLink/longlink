@@ -356,16 +356,17 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if locked_user_id is None:
         raise ForbiddenError("Access required")
 
-    organization_count_result = await session.scalars(
+    organization_limit_result = await session.execute(
         select(1)
         .where(
             col(Organization.created_id) == user.id,
             col(Organization.deleted_at).is_(None),
         )
-        .limit(3)
+        .offset(2)
+        .limit(1)
         .with_for_update()
     )
-    if len(organization_count_result.all()) >= 3:
+    if organization_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
     # Lock the selected Compute until the Organization assignment is committed.
