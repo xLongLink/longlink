@@ -164,7 +164,7 @@ function HowPyramid() {
                         <Text justify="center" textWrap="balance" type="large" weight="semibold">
                             {label}
                         </Text>
-                        <Text color="secondary" justify="center" textWrap="balance" type="supporting">
+                        <Text justify="center" textWrap="balance" type="supporting">
                             {description}
                         </Text>
                     </Stack>
@@ -371,7 +371,7 @@ function PresentationSlide({
                                     <Avatar kind="organization" name={competitor.product} src={competitor.avatar} />
                                     <Stack align="start">
                                         <Text weight="semibold">{competitor.product}</Text>
-                                        <Text color="secondary" type="supporting">
+                                        <Text type="supporting">
                                             {competitor.release} - {competitor.license}
                                         </Text>
                                     </Stack>
@@ -445,7 +445,7 @@ function PresentationSlide({
     const platform = (
         <Platform
             action={
-                <Text color="secondary" hasTabularNumbers type="supporting">
+                <Text hasTabularNumbers type="supporting">
                     {slideIndex + 1} / {slides.length}
                 </Text>
             }

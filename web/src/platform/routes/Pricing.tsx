@@ -59,16 +59,10 @@ export default function Pricing() {
                                         <Text type="supporting">Shared across all apps in the workspace.</Text>
                                     </Collapsible>
                                     <Collapsible
-                                        trigger={
-                                            <Text color="secondary" type="supporting">
-                                                2GB Object Storage Space
-                                            </Text>
-                                        }
+                                        trigger={<Text type="supporting">2GB Object Storage Space</Text>}
                                         value="object-storage-space"
                                     >
-                                        <Text color="secondary" type="supporting">
-                                            Shared across all apps in the workspace.
-                                        </Text>
+                                        <Text type="supporting">Shared across all apps in the workspace.</Text>
                                     </Collapsible>
                                 </CollapsibleGroup>
                             </Stack>

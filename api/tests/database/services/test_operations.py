@@ -1,7 +1,14 @@
 import pytest
 from uuid import uuid4
 from datetime import timedelta
-from factories import fail_operation, claim_operation, fetch_operations, complete_operation, create_ready_infrastructure
+from factories import (
+    create_compute,
+    fail_operation,
+    claim_operation,
+    fetch_operations,
+    complete_operation,
+    create_ready_infrastructure,
+)
 from factories import queue_operation as queue
 from sqlalchemy.exc import IntegrityError
 from longlink.utils.time import utcnow
@@ -10,6 +17,7 @@ from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.models.pagination import Pagination
+from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -347,6 +355,84 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     # Assert
     assert failed is not None
     assert failed.failed == ("migration job failed" * 100)[:500]
+
+
+async def test_operations_service_failed_creation_updates_targets_and_resolves_resources() -> None:
+    """Expose failed creation work with its concrete failed resource."""
+
+    # Arrange
+    compute = await create_compute()
+    infrastructure = await create_ready_infrastructure()
+    async with session_scope() as session:
+        organization = Organization(
+            name="Acme",
+            slug="acme",
+            compute_id=infrastructure.compute.id,
+            database_id=infrastructure.database.id,
+            storage_id=infrastructure.storage.id,
+        )
+        session.add(organization)
+        await session.flush()
+        application = Application(
+            organization_id=organization.id,
+            name="Dashboard",
+            slug="dashboard",
+            image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
+            secrets={},
+        )
+        session.add(application)
+        await session.commit()
+
+    compute_operation = await queue(kind=OperationKind.compute_create, target_id=compute.id)
+    compute_claim = await claim_operation()
+    assert compute_claim is not None
+    assert compute_claim.id == compute_operation.id
+    assert await fail_operation(compute_operation.id, "compute creation failed") is not None
+
+    organization_operation = await queue(kind=OperationKind.organization_create, target_id=organization.id)
+    organization_claim = await claim_operation()
+    assert organization_claim is not None
+    assert organization_claim.id == organization_operation.id
+    assert await fail_operation(organization_operation.id, "organization creation failed") is not None
+
+    application_operation = await queue(kind=OperationKind.application_create, target_id=application.id)
+    application_claim = await claim_operation()
+    assert application_claim is not None
+    assert application_claim.id == application_operation.id
+    assert await fail_operation(application_operation.id, "application creation failed") is not None
+
+    # Act
+    async with session_scope() as session:
+        compute_row = await session.get(ComputeRegistry, compute.id)
+        organization_row = await session.get(Organization, organization.id)
+        application_row = await session.get(Application, application.id)
+        items, total = await operations.fetch_page(session, Pagination())
+
+    # Assert
+    assert compute_row is not None
+    assert compute_row.status == Status.failed
+    assert organization_row is not None
+    assert organization_row.status == Status.failed
+    assert application_row is not None
+    assert application_row.status == Status.failed
+    assert total == 3
+
+    items_by_kind = {item.kind: item for item in items}
+    compute_item = items_by_kind[OperationKind.compute_create]
+    organization_item = items_by_kind[OperationKind.organization_create]
+    application_item = items_by_kind[OperationKind.application_create]
+    assert compute_item.resource is not None
+    assert compute_item.resource.id == compute.id
+    assert compute_item.resource.name == compute.name
+    assert compute_item.status == OperationStatus.failed
+    assert organization_item.resource is not None
+    assert organization_item.resource.id == organization.id
+    assert organization_item.resource.name == organization.name
+    assert organization_item.status == OperationStatus.failed
+    assert application_item.resource is not None
+    assert application_item.resource.id == application.id
+    assert application_item.resource.name == application.name
+    assert application_item.status == OperationStatus.failed
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:

@@ -13,6 +13,7 @@ from src.database.models.users import User
         pytest.param("GET", "storages", None, id="list-storages"),
         pytest.param("GET", "users", None, id="list-users"),
         pytest.param("GET", "organizations", None, id="list-organizations"),
+        pytest.param("GET", "applications", None, id="list-applications"),
         pytest.param("POST", "computes", {}, id="create-compute"),
         pytest.param("POST", "databases", {}, id="create-database"),
         pytest.param("POST", "storages", {}, id="create-storage"),

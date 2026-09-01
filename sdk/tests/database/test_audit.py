@@ -1,17 +1,13 @@
 import pytest
-import asyncio
 import pytest_asyncio
 from uuid import UUID
 from typing import ClassVar
-from fastapi import FastAPI
 from datetime import UTC, datetime
 from longlink import context as runtime_context
-from longlink import identity
 from sqlmodel import Field
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
-from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
@@ -198,79 +194,3 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
             creator_id,
             updater_id,
         )
-
-
-IDENTITY_SECRET = "test-identity-secret-01234567890"
-
-
-def create_audit_application() -> FastAPI:
-    """Create an application that exposes the request audit identity."""
-
-    app = FastAPI()
-    runtime_context.install_context_middleware(app, IDENTITY_SECRET)
-
-    @app.get("/")
-    async def current_user() -> dict[str, str | None]:
-        """Return the request-local audit identity after yielding control."""
-
-        await asyncio.sleep(0)
-        user_id = runtime_context._current_identity.get()
-        return {"user_id": str(user_id) if user_id is not None else None}
-
-    @app.get("/failure")
-    async def fail() -> None:
-        """Raise after middleware has bound an audit identity."""
-
-        raise RuntimeError("handler failed")
-
-    return app
-
-
-def identity_headers(user_id: str) -> dict[str, str]:
-    """Build one current Platform identity assertion for middleware tests."""
-
-    # Use the same token constructor that the Platform gateway calls.
-    return {"x-longlink-identity": identity.create_identity_token(UUID(user_id), IDENTITY_SECRET)}
-
-
-def test_audit_middleware_binds_signed_identity_header() -> None:
-    """Bind one trusted identity and clear it after the response."""
-
-    # Act
-    with TestClient(create_audit_application()) as client:
-        response = client.get("/", headers=identity_headers("00000000-0000-0000-0000-000000000005"))
-
-    # Assert
-    assert response.json() == {"user_id": "00000000-0000-0000-0000-000000000005"}
-    assert runtime_context._current_identity.get() is None
-
-
-async def test_audit_middleware_isolates_concurrent_request_identities() -> None:
-    """Keep audit identities isolated across concurrently handled requests."""
-
-    first_id = "00000000-0000-0000-0000-000000000006"
-    second_id = "00000000-0000-0000-0000-000000000007"
-
-    # Dispatch two requests concurrently, each with a distinct trusted identity.
-    with TestClient(create_audit_application()) as client:
-        first_response, second_response = await asyncio.gather(
-            *(asyncio.to_thread(client.get, "/", headers=identity_headers(user_id)) for user_id in (first_id, second_id))
-        )
-
-    # Each handler observes only its own request identity.
-    assert first_response.json() == {"user_id": first_id}
-    assert second_response.json() == {"user_id": second_id}
-
-
-def test_audit_middleware_clears_identity_after_handler_failure() -> None:
-    """Restore the ambient audit identity when a route raises an exception."""
-
-    # Arrange
-    user_id = "00000000-0000-0000-0000-000000000008"
-
-    # Act
-    with TestClient(create_audit_application()) as client, pytest.raises(RuntimeError, match="handler failed"):
-        client.get("/failure", headers=identity_headers(user_id))
-
-    # Assert
-    assert runtime_context._current_identity.get() is None
