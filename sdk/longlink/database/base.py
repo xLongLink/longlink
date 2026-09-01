@@ -103,18 +103,17 @@ class Database:
                 if self._sessions is None:
                     engine = create_engine(self._env)
 
-                    # Auto-create tables for SQLite only.
-                    if engine.url.get_backend_name() == "sqlite":
-                        async with engine.begin() as conn:
-                            await conn.run_sync(database_metadata.create_all)
-                    else:
-                        # Release failed connections so a later request can retry initialization.
-                        try:
+                    # Initialize the database without publishing partially initialized resources.
+                    try:
+                        if engine.url.get_backend_name() == "sqlite":
+                            async with engine.begin() as conn:
+                                await conn.run_sync(database_metadata.create_all)
+                        else:
                             async with engine.connect():
                                 pass
-                        except BaseException:
-                            await engine.dispose()
-                            raise
+                    except BaseException:
+                        await engine.dispose()
+                        raise
 
                     # Publish the initialized engine and factory together.
                     self._engine = engine

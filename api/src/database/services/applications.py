@@ -61,7 +61,12 @@ async def create(
         raise ConflictError("Organization is not available")
 
     # Revalidate the caller after locking the Organization so revoked access cannot use stale request state.
-    membership = await session.get(UserOrganization, (user_id, organization_id), with_for_update=True)
+    membership = await session.get(
+        UserOrganization,
+        (user_id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
     if membership is None or membership.deleted_at is not None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, OrganizationRoles.maintain):

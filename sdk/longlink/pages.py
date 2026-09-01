@@ -1,4 +1,7 @@
+import re
 from dataclasses import dataclass
+
+STATIC_ROUTE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._~-]+")
 
 
 @dataclass(slots=True)
@@ -45,6 +48,10 @@ def page_stem_route(page_stem: str) -> str:
         # Static file names cannot introduce browser route parameters or wildcards.
         if segment.startswith(":") or "*" in segment or "{" in segment or "}" in segment:
             raise ValueError("Static page route segments cannot contain route parameters or wildcards")
+
+        # Static routes must satisfy the web manifest's normalized path grammar.
+        if segment in {"", ".", ".."} or STATIC_ROUTE_SEGMENT_PATTERN.fullmatch(segment) is None:
+            raise ValueError("Static page route segments must use URL-safe file names")
 
         route_segments.append(segment)
 

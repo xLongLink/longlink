@@ -84,7 +84,7 @@ def apply_migrations() -> None:
 
     # Production images must include committed application migrations.
     migrations_path = Path.cwd() / "migrations"
-    if Envs().ENV == "production" and not any(path.name != "__init__.py" for path in migrations_path.glob("*.py")):
+    if Envs().ENV == "production" and all(path.name == "__init__.py" for path in migrations_path.glob("*.py")):
         raise RuntimeError(f"Production applications require migrations in {migrations_path}")
     migrations_path.mkdir(exist_ok=True)
 

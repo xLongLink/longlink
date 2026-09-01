@@ -43,41 +43,7 @@ You are working on a LongLink application.
 
 ## Testing
 
-Structure:
-
-- Use AAA sections with comments: # Arrange, # Act, # Assert
-- Test names must describe expected behavior
-- One test = one behavior
-- Keep tests deterministic, isolated, and independently executable
-- Prefer explicit assertions (==, exact payloads, exact errors)
-  Parametrization:
-- Keep @pytest.mark.parametrize on one line
-- Use multiple decorators instead of multi-dimensional tuples
-- Extract large parameter sets into constants
-- Use pytest.param(..., id="...") for non-trivial cases
-  Test Design:
-- Test observable behavior only
-- Do not test framework internals
-- Separate API tests from service-layer tests
-- Test happy paths, edge cases, and failure paths
-- In API tests, assert both status codes and response payloads
-- Validate error schemas, not only error codes
-- Test authentication separately from authorization
-  Fixtures & Data:
-- Prefer fixtures/factories/builders over inline complex setup
-- Keep fixtures small, composable, and function-scoped by default
-- Avoid shared mutable state
-- Keep test data minimal and domain-oriented
-- Avoid magic values; use named constants
-- Prefer immutable inputs
-  Mocking:
-- Mock external boundaries only (HTTP, DB, filesystem, queues, time)
-- Do not mock business logic
-- Prefer integration tests for important business flows
-- Never call real external services in CI
-- Freeze/mock time instead of using sleeps
-  FastAPI / DB:
-- Use dependency overrides for FastAPI dependencies
-- Clear app.dependency_overrides after tests
-- Override auth dependencies in tests
-- Use transactional rollback fixtures for DB isolation
+- Write tests only when instructed.
+- Test observable behavior with clear, deterministic assertions.
+- Use Arrange, Act, Assert sections for non-trivial tests.
+- Mock external boundaries, not application logic.

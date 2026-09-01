@@ -30,6 +30,13 @@ def test_page_stem_route_converts_valid_page_paths(page_stem: str, expected_rout
         pytest.param(":settings", "cannot contain route parameters", id="static-parameter"),
         pytest.param("issues/{id}", "cannot contain route parameters", id="brace-parameter"),
         pytest.param("files/*", "cannot contain route parameters", id="wildcard"),
+        pytest.param("encoded%2Fsegment", "URL-safe file names", id="percent-encoding"),
+        pytest.param("admin\\settings", "URL-safe file names", id="backslash"),
+        pytest.param("search?tab", "URL-safe file names", id="query"),
+        pytest.param("section#anchor", "URL-safe file names", id="fragment"),
+        pytest.param("admin//settings", "URL-safe file names", id="empty-segment"),
+        pytest.param("admin/.", "URL-safe file names", id="current-directory"),
+        pytest.param("admin/..", "URL-safe file names", id="parent-directory"),
     ],
 )
 def test_page_stem_route_rejects_invalid_route_segments(page_stem: str, message: str) -> None:
