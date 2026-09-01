@@ -132,11 +132,8 @@ def test_nonproduction_storage_selects_local_filesystem(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
 
-    # Act
-    result = storage_base.create_fs(Envs(ENV=environment))
-
     # Assert
-    assert result is filesystem
+    assert storage_base.create_fs(Envs(ENV=environment)) is filesystem
     assert protocols == [expected_protocol]
 
 

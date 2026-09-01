@@ -149,7 +149,6 @@ export default function AdminOperations() {
                         }
                     }}
                     resourceId={logOperation.id}
-                    resourceName={kindLabels[logOperation.kind]}
                 />
             ) : null}
         </Stack>

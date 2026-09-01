@@ -176,18 +176,11 @@ async function executeRequest(
         throw new Error('GET requests cannot send payloads');
     }
 
-    const headers = new Headers({ Accept: 'application/json' });
-    let body: FormData | string | undefined;
-
-    if (form !== undefined) {
-        body = createActionFormData(form);
-    } else if (json !== undefined) {
-        body = JSON.stringify(json);
-        headers.set('Content-Type', 'application/json');
-    }
-
     const requestUrl = resolveRequestUrl(requestBaseUrl, url);
-    const response = await api(requestUrl, { body, headers, method });
+    const response = await api(
+        requestUrl,
+        form !== undefined ? { body: createActionFormData(form), method } : { json, method }
+    );
 
     return { closeDialog, status: response.status };
 }

@@ -30,3 +30,19 @@ export const documentationComponentSlugs = [
     'text-area',
     'text-input',
 ] as const;
+
+export const documentationPaths = [
+    '/docs',
+    '/docs/api',
+    '/docs/api/organizations',
+    '/docs/api/applications',
+    '/docs/sdk',
+    '/docs/sdk/environments',
+    '/docs/sdk/routes',
+    '/docs/sdk/storage',
+    '/docs/sdk/database',
+    '/docs/sdk/pages',
+    ...documentationComponentSlugs.map((slug) => `/docs/sdk/pages/${slug}`),
+    '/docs/sdk/testing',
+    '/docs/sdk/building',
+];

@@ -130,11 +130,10 @@ class Applications:
             raise
 
         # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-        failed = any(
+        if any(
             condition.get("type") == "Failed" and condition.get("status") == "True"
             for condition in migration_job.raw["status"]["conditions"]
-        )
-        if failed:
+        ):
             logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
             await _log_migration_diagnostics(migration_job)
             raise RuntimeError(f"Application migration Job '{migration_id}' failed")

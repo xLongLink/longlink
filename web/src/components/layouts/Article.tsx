@@ -3,9 +3,9 @@ import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { componentDocumentation } from '@/lib/xsd';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
+import { documentationPaths } from '@/platform/docs';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
@@ -26,32 +26,14 @@ type ArticlePage = {
     editUrl?: string;
 };
 
-const docsPages = [
-    '/docs',
-    '/docs/api',
-    '/docs/api/organizations',
-    '/docs/api/applications',
-    '/docs/sdk',
-    '/docs/sdk/environments',
-    '/docs/sdk/routes',
-    '/docs/sdk/storage',
-    '/docs/sdk/database',
-    '/docs/sdk/pages',
-    '/docs/sdk/pages/bindings',
-    '/docs/sdk/pages/expressions',
-    ...componentDocumentation.map((component) => `/docs/sdk/pages/${component.slug}`),
-    '/docs/sdk/testing',
-    '/docs/sdk/building',
-];
-
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const navigate = useNavigate();
     const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
-    const currentPage = docsPages.indexOf(pathname);
-    const previousPage = docsPages[currentPage - 1];
-    const nextPage = docsPages[currentPage + 1];
+    const currentPage = documentationPaths.indexOf(pathname);
+    const previousPage = documentationPaths[currentPage - 1];
+    const nextPage = documentationPaths[currentPage + 1];
 
     const scrollToArticleTop = () => {
         requestAnimationFrame(() => {

@@ -221,23 +221,19 @@ export default function Settings() {
                                                     name={membership.organization.name}
                                                 />
                                                 <Stack>
-                                                    <Link
-                                                        href={`/orgs/${membership.organization.slug}`}
-                                                        weight="semibold"
-                                                    >
-                                                        {membership.organization.name}
-                                                    </Link>
+                                                    <Stack direction="horizontal" gap={2} align="center">
+                                                        <Link
+                                                            href={`/orgs/${membership.organization.slug}`}
+                                                            weight="semibold"
+                                                        >
+                                                            {membership.organization.name}
+                                                        </Link>
+                                                        <Badge label={membership.role} />
+                                                    </Stack>
                                                     <Text type="supporting">Organization</Text>
                                                 </Stack>
                                             </Stack>
                                         )}
-                                    </TableColumn>
-                                    <TableColumn<(typeof memberships)[number]>
-                                        field="role"
-                                        header="Role"
-                                        width={pixel(128)}
-                                    >
-                                        {(membership) => <Badge label={membership.role} />}
                                     </TableColumn>
                                     <TableColumn<(typeof memberships)[number]>
                                         field="actions"

@@ -470,7 +470,6 @@ export default function OrganizationSettings() {
                     kind="application"
                     onOpenChange={(open) => !open && setLogsTargetId(null)}
                     resourceId={logsTarget.id}
-                    resourceName={logsTarget.name}
                 />
             ) : null}
             <AlertDialog

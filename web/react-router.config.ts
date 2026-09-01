@@ -1,7 +1,7 @@
 import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
+import { documentationPaths } from './src/platform/docs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import { documentationComponentSlugs } from './src/platform/docs';
 
 const requestedMode = import.meta.env.MODE;
 
@@ -11,26 +11,7 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isApplication = process.env.LONGLINK_WEB_TARGET === 'sdk';
-const publicPagePaths = [
-    '/',
-    '/pricing',
-    '/terms',
-    '/impressum',
-    '/privacy',
-    '/docs',
-    '/docs/api',
-    '/docs/api/applications',
-    '/docs/api/organizations',
-    '/docs/sdk',
-    '/docs/sdk/building',
-    '/docs/sdk/database',
-    '/docs/sdk/environments',
-    '/docs/sdk/routes',
-    '/docs/sdk/storage',
-    '/docs/sdk/testing',
-    '/docs/sdk/pages',
-    ...documentationComponentSlugs.map((slug) => `/docs/sdk/pages/${slug}`),
-];
+const publicPagePaths = ['/', '/pricing', '/terms', '/impressum', '/privacy', ...documentationPaths];
 const outputDirectory = path.resolve(
     import.meta.dirname,
     isApplication ? '../sdk/longlink/.static/web' : '../api/src/.static/web'

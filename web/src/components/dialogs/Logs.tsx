@@ -17,21 +17,18 @@ type LogsProps = {
     kind: 'application' | 'operation';
     onOpenChange: (open: boolean) => void;
     resourceId: string;
-    resourceName: string;
 };
 
 /** Renders a resource's captured logs in a controlled dialog. */
-export default function Logs({ kind, onOpenChange, resourceId, resourceName }: LogsProps) {
+export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
     const isApplication = kind === 'application';
     const details = isApplication
         ? {
               emptyMessage: 'No logs available.',
-              subtitle: `Recent logs for ${resourceName}.`,
               title: 'Pod logs',
           }
         : {
               emptyMessage: 'No logs were recorded.',
-              subtitle: `Captured output for ${resourceName}.`,
               title: 'Operation logs',
           };
     const logsPath = isApplication
@@ -56,7 +53,7 @@ export default function Logs({ kind, onOpenChange, resourceId, resourceName }: L
     return (
         <Dialog isOpen onOpenChange={onOpenChange} width={768} maxHeight="85vh">
             <Layout
-                header={<DialogHeader title={details.title} subtitle={details.subtitle} onOpenChange={onOpenChange} />}
+                header={<DialogHeader title={details.title} onOpenChange={onOpenChange} />}
                 content={
                     <LayoutContent>
                         {isFetching ? (
@@ -68,7 +65,6 @@ export default function Logs({ kind, onOpenChange, resourceId, resourceName }: L
                         ) : (
                             <CodeBlock
                                 code={logLines.length > 0 ? logLines.join('\n') : details.emptyMessage}
-                                hasCopyButton={false}
                                 isWrapped
                                 maxHeight="60vh"
                                 size="sm"

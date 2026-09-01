@@ -16,16 +16,16 @@ import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './valid
 export default function Register() {
     const showToast = useToast();
     const [searchParams] = useSearchParams();
+    const registration = useMutation({
+        mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
+        onSuccess: () => showToast({ body: 'If this email can be registered, a registration link is on the way.' }),
+        onError: () => showToast({ body: 'Could not send the registration link. Try again shortly.', type: 'error' }),
+    });
     const form = useForm({
         defaultValues: { email: searchParams.get('email') ?? '' },
         validationLogic: revalidateLogic(),
         validators: { onDynamic: emailPayloadSchema },
         onSubmit: ({ value }) => registration.mutate(value),
-    });
-    const registration = useMutation({
-        mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
-        onSuccess: () => showToast({ body: 'If this email can be registered, a registration link is on the way.' }),
-        onError: () => showToast({ body: 'Could not send the registration link. Try again shortly.', type: 'error' }),
     });
 
     return (
