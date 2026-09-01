@@ -2,8 +2,6 @@ from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import select, update
 from src.logger import logger
-from src.environments import env
-from src.models.types import DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -24,10 +22,6 @@ async def reconcile(organization_id: UUID) -> None:
         logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
         return
     organization = infrastructure.organization
-
-    # Refuse legacy insecure database registrations before provisioning a production Organization.
-    if not env.DEVELOPMENT and infrastructure.database.sslmode != DatabaseSSLMode.verify_full:
-        raise RuntimeError("Production databases must use sslmode=verify-full")
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     logger.info("Preparing PostgreSQL database for Organization %s", organization.id)

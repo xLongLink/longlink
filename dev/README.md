@@ -80,8 +80,6 @@ To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 KUBECONFIG=../kubeconfig.yml
 ```
 
-If `api/dev.db` came from an earlier checkout, run `make clean` once before seeding the Exoscale-backed environment.
-
 Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations
 and seed local or remote compute data:
 
