@@ -12,7 +12,7 @@ def accepts_gzip(value: str) -> bool:
     """Return whether an Accept-Encoding value permits gzip."""
 
     gzip_quality: float | None = None
-    wildcard_quality: float | None = None
+    wildcard_quality = 0.0
 
     # Parse gzip and wildcard quality values rather than using a substring check.
     for item in value.split(","):
@@ -37,7 +37,7 @@ def accepts_gzip(value: str) -> bool:
         else:
             wildcard_quality = quality
 
-    return (gzip_quality if gzip_quality is not None else wildcard_quality or 0.0) > 0.0
+    return (gzip_quality if gzip_quality is not None else wildcard_quality) > 0.0
 
 
 class FrontendMiddleware:

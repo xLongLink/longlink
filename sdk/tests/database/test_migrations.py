@@ -18,7 +18,7 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
     """Provide an isolated application model file and clean up its global import state."""
 
     # Create the model path in a temporary application project.
-    root = tmp_path / "src" / "database" / "models" / "catalog"
+    root = tmp_path / "src" / "models" / "catalog"
     model_path = root / "inventory.py"
     root.mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
@@ -38,10 +38,10 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
         table = database_metadata.tables.get(tracked_table_name)
         if table is not None:
             database_metadata.remove(table)
-    sys.modules.pop("src.database.models.catalog.inventory", None)
+    sys.modules.pop("src.models.catalog.inventory", None)
 
 
-def test_migration_loader_discovers_nested_database_models(
+def test_migration_loader_discovers_nested_application_models(
     isolated_model: tuple[Path, Callable[[str, str], None]],
 ) -> None:
     """Load nested application model modules for Alembic metadata."""
@@ -75,7 +75,7 @@ def test_migration_loader_skips_already_imported_models(
 
     # Arrange
     _, write_model = isolated_model
-    module_name = "src.database.models.catalog.inventory"
+    module_name = "src.models.catalog.inventory"
     write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
     sys.modules[module_name] = ModuleType(module_name)
 

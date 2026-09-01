@@ -234,8 +234,6 @@ async def test_update_organization_returns_not_found_when_active_organization_di
     async def missing_organization(*_args: object) -> None:
         """Simulate the Organization disappearing before its update."""
 
-        return None
-
     monkeypatch.setattr(organizations, "update", missing_organization)
 
     # Act

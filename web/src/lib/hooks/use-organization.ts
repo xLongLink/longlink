@@ -110,33 +110,22 @@ export function useOrganizationMembers(organizationId: string) {
     const queryClient = useQueryClient();
 
     const inviteMember = useMutation({
-        mutationFn: async (payload: OrganizationInvitationCreate) => {
-            await api(`/api/v1/organizations/${organizationId}/invitations`, {
-                json: payload,
-                method: 'POST',
-            });
-        },
+        mutationFn: (payload: OrganizationInvitationCreate) =>
+            api(`/api/v1/organizations/${organizationId}/invitations`, { json: payload, method: 'POST' }),
         onSuccess: () =>
             queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
     });
 
     const revokeInvitation = useMutation({
-        mutationFn: async (invitationId: string) => {
-            await api(`/api/v1/organizations/${organizationId}/invitations/${invitationId}`, {
-                method: 'DELETE',
-            });
-        },
+        mutationFn: (invitationId: string) =>
+            api(`/api/v1/organizations/${organizationId}/invitations/${invitationId}`, { method: 'DELETE' }),
         onSuccess: () =>
             queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
     });
 
     const changeMemberRole = useMutation({
-        mutationFn: async ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) => {
-            await api(`/api/v1/organizations/${organizationId}/members/${memberId}`, {
-                json: { role },
-                method: 'PATCH',
-            });
-        },
+        mutationFn: ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) =>
+            api(`/api/v1/organizations/${organizationId}/members/${memberId}`, { json: { role }, method: 'PATCH' }),
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
@@ -153,12 +142,8 @@ export function useCreateOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (payload: ApplicationCreate) => {
-            await api(`/api/v1/organizations/${organizationId}/applications`, {
-                json: payload,
-                method: 'POST',
-            });
-        },
+        mutationFn: (payload: ApplicationCreate) =>
+            api(`/api/v1/organizations/${organizationId}/applications`, { json: payload, method: 'POST' }),
         onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
     });
 }
@@ -168,9 +153,7 @@ export function useDeleteOrganizationApplication(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (applicationId: string) => {
-            await api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' });
-        },
+        mutationFn: (applicationId: string) => api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' }),
         onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
     });
 }

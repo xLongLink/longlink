@@ -8,7 +8,7 @@ from src.schemas.items import (
     ItemCreate,
     ItemAttachmentRead,
 )
-from src.database.models.items import Item
+from src.models.items import Item
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/api")

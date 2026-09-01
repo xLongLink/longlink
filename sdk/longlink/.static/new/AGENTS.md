@@ -19,13 +19,12 @@ You are working on a LongLink application.
 
 ```
 ├── src/
-│   ├── database/     # SQLModel application data layer
-│   │   ├── models/   # SQLModel application tables
-│   │   └── services/ # Database utility services
+│   ├── models/       # SQLModel application tables
 │   ├── pages/        # XML pages registered automatically under /pages
 │   ├── routes/       # API routes (items.py)
 │   ├── schemas/      # Pydantic schemas (items.py)
-│   ├── envs.py       # Environment and settings helpers
+│   ├── services/     # Application services
+│   └── envs.py       # Environment and settings helpers
 │
 ├── tests/
 │   └── test_app.py   # Application tests

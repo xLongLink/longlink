@@ -22,7 +22,7 @@ def load_application_models() -> None:
     root = Path.cwd()
 
     # Load each discovered model module exactly once.
-    model_path = root / "src" / "database" / "models"
+    model_path = root / "src" / "models"
     for py_file in sorted(py_file for py_file in model_path.rglob("*.py") if not py_file.name.startswith("__")):
         module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
 
