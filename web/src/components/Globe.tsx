@@ -13,7 +13,6 @@ export function Globe() {
             className="homepage-hero-globe pointer-events-none absolute left-1/2 max-w-none -translate-x-1/2 text-accent opacity-90"
             focusable="false"
             viewBox="0 0 1400 1260"
-            xmlns="http://www.w3.org/2000/svg"
         >
             <defs>
                 <linearGradient

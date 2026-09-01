@@ -1,7 +1,11 @@
+import runpy
 import pytest
+import sqlite3
 from pathlib import Path
+from contextlib import chdir, closing
 from click.testing import CliRunner
 from longlink.cli.init import init_command
+from longlink.database import migrations as database_migrations
 
 
 @pytest.mark.parametrize(
@@ -81,3 +85,29 @@ def test_init_rejects_invalid_project_name_without_creating_folder() -> None:
         assert result.exit_code == 1
         assert "Invalid project name: ../invalid" in result.output
         assert not (Path.cwd() / "sample-app").exists()
+
+
+def test_initialized_project_applies_bundled_migration_through_deployment_entrypoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apply a generated project's initial migration through the deployment entrypoint."""
+
+    # Arrange
+    runner = CliRunner()
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(init_command, ["--folder", "sample-app"])
+        assert result.exit_code == 0
+        target = Path.cwd() / "sample-app"
+
+        # Act
+        with chdir(target):
+            runpy.run_path(str(database_migrations.CURRENT_FILE), run_name="__main__")
+
+        # Assert
+        with closing(sqlite3.connect(target / "dev.db")) as connection:
+            tables = connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('alembic_version', 'item') ORDER BY name"
+            ).fetchall()
+            revision = connection.execute("SELECT version_num FROM alembic_version").fetchone()
+        assert tables == [("alembic_version",), ("item",)]
+        assert revision == ("20260713_0001",)

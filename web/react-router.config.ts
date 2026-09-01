@@ -83,10 +83,20 @@ export default {
             ]);
         } else {
             // Generate crawler URLs from the same inventory used for prerendering.
+            const configuredSiteUrl = import.meta.env.VITE_SITE_URL;
+            if (!configuredSiteUrl) {
+                throw new Error('VITE_SITE_URL is required to generate sitemap.xml.');
+            }
+
+            const siteUrl = new URL(configuredSiteUrl);
+            if (siteUrl.pathname !== '/' || siteUrl.search || siteUrl.hash) {
+                throw new Error('VITE_SITE_URL must contain only the public site origin.');
+            }
+
             const urls = publicPagePaths
                 .map(
                     (pagePath) =>
-                        `    <url><loc>${import.meta.env.VITE_SITE_URL}${pagePath === '/' ? '/' : `${pagePath}/`}</loc></url>`
+                        `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc></url>`
                 )
                 .join('\n');
             await writeFile(

@@ -72,14 +72,13 @@ export function ApplicationRuntime({
     });
     const pages = registeredPages ?? EMPTY_PAGES;
     const activeRouteMatch = useMemo(() => {
-        const [match] =
-            matchRoutes(
-                pages.map((page) => ({
-                    path: page.route,
-                    page,
-                })),
-                `/${routePath}`
-            ) ?? [];
+        const match = matchRoutes(
+            pages.map((page) => ({
+                path: page.route,
+                page,
+            })),
+            `/${routePath}`
+        )?.[0];
 
         if (!match) return null;
 
@@ -136,7 +135,7 @@ export function ApplicationRuntime({
                 title="Unable to load this application"
             />
         );
-    } else if (activePageAst && activePage) {
+    } else if (activePageAst && activePage && activeRouteMatch) {
         content = (
             <ApplicationXmlRuntime
                 ast={activePageAst}
@@ -149,7 +148,7 @@ export function ApplicationRuntime({
                     routePath,
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
-                params={activeRouteMatch?.params ?? {}}
+                params={activeRouteMatch.params}
                 requestBaseUrl={requestBaseUrl}
             />
         );

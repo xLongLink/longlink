@@ -1,70 +1,13 @@
 import pytest
 from uuid import uuid4
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
-from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
-from src.database.session import get_session, session_scope
-from src.database.services import organizations as organization_service
-from longlink.shared.models import Audit
+from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-
-
-async def test_sync_users_projects_active_and_deleted_memberships(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
-    """Seed Organization memberships through the shared users schema boundary."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
-    base_time = datetime.fromisoformat("2026-07-01T09:00:00+00:00")
-    deleted_at = base_time + timedelta(minutes=2)
-    calls: list[tuple[str, list[Audit]]] = []
-
-    # Persist one deleted membership whose deactivation follows its last regular update.
-    Session = get_session()
-    async with Session() as session:
-        member_row = await session.get(User, member.id)
-        assert member_row is not None
-        member_row.updated_at = base_time
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-                updated_at=base_time + timedelta(minutes=1),
-                deleted_at=deleted_at,
-            )
-        )
-        await session.commit()
-
-    async def sync(shared_schema_url: str, rows: list[Audit]) -> None:
-        """Capture the shared audit payload."""
-
-        calls.append((shared_schema_url, rows))
-
-    monkeypatch.setattr(organization_service.shared_audit, "sync", sync)
-
-    async with session_scope() as session:
-        organization_row = await session.get(Organization, organization.id)
-        assert organization_row is not None
-        organization_row.status = Status.running
-        await session.commit()
-
-    async with session_scope() as session:
-        await organization_service.sync_users(session, organization.id)
-
-    # Assert
-    rows = {row.id: row for row in calls[0][1]}
-    assert rows[owner.id].role == OrganizationRoles.owner
-    assert rows[owner.id].deleted_at is None
-    assert rows[member.id].role == OrganizationRoles.write
-    assert rows[member.id].deleted_at == deleted_at
-    assert rows[member.id].updated_at == deleted_at
 
 
 async def test_reconcile_prepares_providers_namespace_and_publishes_organization(
@@ -129,6 +72,75 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     assert calls == ["database", "storage", "namespace", "users"]
     assert refreshed is not None
     assert refreshed.status == Status.running
+
+
+async def test_reconcile_rolls_back_publication_when_user_projection_fails(
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep an Organization unpublished when its user projection fails."""
+
+    # Arrange
+    infrastructure = await create_ready_infrastructure()
+    organization = await create_organization(users[0], infrastructure=infrastructure)
+    calls: list[str] = []
+
+    class Database:
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
+
+        async def prepare_organization_database(self, organization_id: object) -> None:
+            """Record database preparation."""
+
+            assert organization_id == organization.id
+            calls.append("database")
+
+    class Storage:
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
+
+        async def create(self, bucket: str) -> None:
+            """Record bucket creation."""
+
+            assert bucket == organization.id.hex
+            calls.append("storage")
+
+    class Organizations:
+        async def apply(self, namespace: str) -> None:
+            """Record namespace reconciliation."""
+
+            assert namespace == organization.id.hex
+            calls.append("namespace")
+
+    class Kubernetes:
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Expose Organization Kubernetes operations."""
+
+            self.organizations = Organizations()
+
+        async def aclose(self) -> None:
+            """Provide the Kubernetes client cleanup contract."""
+
+    async def sync_users(_session: object, organization_id: object) -> None:
+        """Fail the user projection after every external boundary is ready."""
+
+        assert organization_id == organization.id
+        calls.append("users")
+        raise RuntimeError("user projection failed")
+
+    monkeypatch.setattr(organization_operations, "Postgres", Database)
+    monkeypatch.setattr(organization_operations, "Exoscale", Storage)
+    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations.organizations, "sync_users", sync_users)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="user projection failed"):
+        await organization_operations.reconcile(organization.id)
+    async with session_scope() as session:
+        refreshed = await session.get(Organization, organization.id)
+    assert calls == ["database", "storage", "namespace", "users"]
+    assert refreshed is not None
+    assert refreshed.status == Status.creating
 
 
 async def test_reconcile_skips_missing_organization_without_constructing_providers(monkeypatch: pytest.MonkeyPatch) -> None:

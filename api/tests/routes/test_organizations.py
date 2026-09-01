@@ -121,6 +121,50 @@ async def test_create_organization_rejects_when_required_registry_is_unavailable
     assert await fetch_operations() == []
 
 
+async def test_get_organization_by_slug_returns_owner_membership(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return the authenticated owner's membership for an Organization slug."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.json() == {
+        "organization": {
+            "id": str(organization.id),
+            "name": "acme",
+            "slug": "acme",
+            "avatar": "",
+            "status": "creating",
+        },
+        "role": "owner",
+    }
+
+
+async def test_get_organization_by_slug_hides_cross_tenant_organization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Hide an Organization slug from authenticated users without membership."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    response = await clients[1].get(f"/api/v1/organizations/slug/{organization.slug}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
+
+
 async def test_get_organization_returns_member_payload(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -432,7 +476,7 @@ async def test_organization_resource_endpoints_allow_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     resource: str,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow resource usage for organization members."""
 
@@ -456,17 +500,19 @@ async def test_organization_resource_endpoints_allow_members(
         def __init__(self, *_args: object) -> None:
             """Accept the route's database adapter configuration."""
 
-        async def database_usage(self, _database_name: str) -> int:
+        async def database_usage(self, database_name: str) -> int:
             """Return the database's live usage."""
 
+            assert database_name == organization.id.hex
             return 0
 
     class FakeStorage:
         """Provide an inspectable Organization storage bucket."""
 
-        async def usage(self, _bucket_name: str) -> int:
+        async def usage(self, bucket_name: str) -> int:
             """Return the bucket's live usage."""
 
+            assert bucket_name == organization.id.hex
             return 0
 
     monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
@@ -478,6 +524,39 @@ async def test_organization_resource_endpoints_allow_members(
 
     # Assert
     assert response.status_code == 200
+    expected_payloads: dict[str, object] = {
+        "database": 0,
+        "storage": {"bucket_name": organization.id.hex, "space_used": 0},
+    }
+    assert response.json() == expected_payloads[resource]
+
+
+@pytest.mark.parametrize("resource", ("database", "storage"))
+async def test_organization_resource_endpoints_reject_non_members(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    resource: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject resource inspection before constructing a tenant provider."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    def unexpected_provider(*_args: object) -> object:
+        """Fail if denied resource inspection constructs a provider."""
+
+        raise AssertionError("cross-tenant resource access reached a provider")
+
+    monkeypatch.setattr("src.routes.v1.organizations.Postgres", unexpected_provider)
+    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", unexpected_provider)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/organizations/{organization.id}/{resource}")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_get_organization_returns_invitations(

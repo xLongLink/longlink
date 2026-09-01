@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4
+from datetime import timedelta
 from sqlmodel import col
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import update
@@ -265,7 +266,8 @@ async def test_sync_users_projects_deleted_memberships_as_tombstones(
         assert persisted is not None
         assert membership is not None
         persisted.status = Status.running
-        membership.deleted_at = membership.updated_at
+        deleted_at = membership.updated_at + timedelta(minutes=1)
+        membership.deleted_at = deleted_at
         await session.commit()
 
     # Act
@@ -275,9 +277,11 @@ async def test_sync_users_projects_deleted_memberships_as_tombstones(
     # Assert
     assert len(synchronized) == 1
     assert len(synchronized[0]) == 1
-    assert synchronized[0][0].id == users[0].id
-    assert synchronized[0][0].role == OrganizationRoles.owner.value
-    assert synchronized[0][0].deleted_at is not None
+    projected = synchronized[0][0]
+    assert projected.id == users[0].id
+    assert projected.role == OrganizationRoles.owner.value
+    assert projected.deleted_at == deleted_at
+    assert projected.updated_at == deleted_at
 
 
 async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
