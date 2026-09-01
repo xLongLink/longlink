@@ -1,4 +1,5 @@
 import pytest
+from kr8s import NotFoundError
 from types import SimpleNamespace
 from src.kubernetes.utils import apply, deployment_is_ready
 
@@ -48,7 +49,7 @@ def test_deployment_is_ready_requires_current_replicas(
 @pytest.mark.parametrize(
     ("exists", "expected_calls"),
     [
-        pytest.param(False, [("create", None)], id="missing"),
+        pytest.param(False, [("patch", {"metadata": {"name": "dashboard"}}), ("create", None)], id="missing"),
         pytest.param(True, [("patch", {"metadata": {"name": "dashboard"}})], id="existing"),
     ],
 )
@@ -65,11 +66,6 @@ async def test_apply_creates_missing_resources_and_repairs_existing_ones(
 
         raw = {"metadata": {"name": "dashboard"}}
 
-        async def exists(self) -> bool:
-            """Return the configured resource state."""
-
-            return exists
-
         async def create(self) -> None:
             """Record resource creation."""
 
@@ -79,6 +75,8 @@ async def test_apply_creates_missing_resources_and_repairs_existing_ones(
             """Record a drift-repair manifest."""
 
             calls.append(("patch", manifest))
+            if not exists:
+                raise NotFoundError("Resource missing")
 
     # Act
     await apply(Resource())  # type: ignore[arg-type]

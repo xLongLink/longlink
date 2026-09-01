@@ -6,7 +6,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from src.utils import templates
 from src.logger import logger
-from kr8s.asyncio import Api
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, Service, Namespace, Deployment, new_class
 from src.kubernetes.utils import apply, deployment_is_ready
@@ -19,59 +18,53 @@ MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS = 10
 HTTPRouteResource = new_class("HTTPRoute", "gateway.networking.k8s.io/v1", asyncio=True, plural="httproutes")
 
 
-async def _log_migration_diagnostics(
-    api: Api, migration_job: Job, migration_id: str, namespace: str
-) -> None:
+async def _log_migration_diagnostics(migration_job: Job) -> None:
     """Log the current Kubernetes state for one unsuccessful migration Job."""
 
     # Bound best-effort diagnostics so cluster failures cannot hide the original outcome.
+    migration_id = migration_job.name
     try:
         async with asyncio.timeout(MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS):
-            await migration_job.refresh()
             status = migration_job.raw.get("status", {})
             logger.error("Migration Job %s status: %s", migration_id, json.dumps(status, sort_keys=True, default=str))
 
-            # Materialize the bounded Job Pod set once for status, Event, and output collection.
-            pods = [
-                cast(Pod, pod)
-                async for pod in Pod.list(
-                    api=api,
-                    namespace=namespace,
-                    label_selector={"job-name": migration_id},
-                )
-            ]
-            if not pods:
-                logger.error("Migration Job %s has not created a Pod", migration_id)
-
+            # Capture each bounded Job Pod's status and available output once.
             resource_names = {migration_id}
-            for pod in pods:
+            pod_found = False
+            async for candidate in Pod.list(
+                api=migration_job.api,
+                namespace=migration_job.namespace,
+                label_selector={"job-name": migration_id},
+            ):
+                pod_found = True
+                pod = cast(Pod, candidate)
                 resource_names.add(pod.name)
                 pod_status = pod.raw.get("status", {})
                 logger.error("Migration Pod %s status: %s", pod.name, json.dumps(pod_status, sort_keys=True, default=str))
 
+                phase = pod_status.get("phase") if isinstance(pod_status, dict) else None
+                if phase in {"Running", "Succeeded", "Failed"}:
+                    output = [line async for line in pod.logs(tail_lines=200)]
+                    logger.error("Recent output from migration Pod %s:\n%s", pod.name, "\n".join(output) or "(no output)")
+            if not pod_found:
+                logger.error("Migration Job %s has not created a Pod", migration_id)
+
             # One namespace Event query covers admission, quota, scheduling, volume, and image failures.
-            async for event in Event.list(api=api, namespace=namespace, field_selector={"type": "Warning"}):
-                event = cast(Event, event)
-                involved_object = event.raw.get("involvedObject")
+            async for event in Event.list(
+                api=migration_job.api,
+                namespace=migration_job.namespace,
+                field_selector={"type": "Warning"},
+            ):
+                event_resource = cast(Event, event)
+                involved_object = event_resource.raw.get("involvedObject")
                 if not isinstance(involved_object, dict) or involved_object.get("name") not in resource_names:
                     continue
                 logger.error(
                     "Kubernetes warning for %s: %s: %s",
                     involved_object["name"],
-                    event.raw.get("reason", "Unknown"),
-                    event.raw.get("message", "No message"),
+                    event_resource.raw.get("reason", "Unknown"),
+                    event_resource.raw.get("message", "No message"),
                 )
-
-            # Running and terminated containers may have useful output even when the Job never became terminal.
-            for pod in pods:
-                pod_status = pod.raw.get("status", {})
-                phase = pod_status.get("phase") if isinstance(pod_status, dict) else None
-                if phase not in {"Running", "Succeeded", "Failed"}:
-                    continue
-
-                logger.error("Recent output from migration Pod %s:", pod.name)
-                async for line in pod.logs(tail_lines=200):
-                    logger.error("Migration Pod %s: %s", pod.name, line)
     except TimeoutError:
         logger.error("Migration Job %s diagnostics timed out", migration_id)
     except Exception:
@@ -89,21 +82,6 @@ class Applications:
     async def apply(self, application_id: UUID, namespace: str, image: str, secrets: dict[str, str]) -> None:
         """Deploy one Application and wait for its rollout."""
 
-        # Recreate the complete Kubernetes Secret from Platform-authoritative encrypted state.
-        api = await self._client.api()
-        await apply(
-            Secret(
-                {
-                    "metadata": {
-                        "name": str(application_id),
-                        "namespace": namespace,
-                    },
-                    "stringData": secrets,
-                },
-                api=api,
-            )
-        )
-
         # Render workload resources before the first cluster mutation.
         revision = hashlib.sha256(
             json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
@@ -118,6 +96,20 @@ class Applications:
             runtime_revision=revision,
             migration_id=migration_id,
         )
+
+        # Recreate the complete Kubernetes Secret from Platform-authoritative encrypted state.
+        api = await self._client.api()
+        application_secret = Secret(
+            {
+                "metadata": {
+                    "name": str(application_id),
+                    "namespace": namespace,
+                },
+                "stringData": secrets,
+            },
+            api=api,
+        )
+        await apply(application_secret)
 
         # Apply migrations once without restarting a failed migration container.
         logger.info(
@@ -134,26 +126,23 @@ class Applications:
         except asyncio.CancelledError:
             # Preserve the operation timeout or worker shutdown after collecting bounded cluster diagnostics.
             logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
-            await _log_migration_diagnostics(api, migration_job, migration_id, namespace)
+            await _log_migration_diagnostics(migration_job)
             raise
 
         # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-        status = migration_job.raw.get("status")
-        conditions = status.get("conditions", []) if isinstance(status, dict) else []
-        failed = isinstance(conditions, list) and any(
-            isinstance(condition, dict)
-            and condition.get("type") == "Failed"
-            and condition.get("status") == "True"
-            for condition in conditions
+        failed = any(
+            condition.get("type") == "Failed" and condition.get("status") == "True"
+            for condition in migration_job.raw["status"]["conditions"]
         )
         if failed:
             logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
-            await _log_migration_diagnostics(api, migration_job, migration_id, namespace)
+            await _log_migration_diagnostics(migration_job)
             raise RuntimeError(f"Application migration Job '{migration_id}' failed")
         logger.info("Migration Job %s completed for Application %s in namespace %s", migration_id, application_id, namespace)
 
         # Create the Service and its owned HTTPRoute before starting Application Pods.
-        await apply(Service(service, api=api))
+        service_resource = Service(service, api=api)
+        await apply(service_resource)
         route_resource = HTTPRouteResource(route, api=api)
         await apply(route_resource)
         deployed = Deployment(deployment, api=api)
@@ -161,9 +150,10 @@ class Applications:
 
         # Poll rollout status without repeatedly applying the same Application revision.
         while True:
-            if not await deployed.exists():
-                raise RuntimeError("Kubernetes Application Deployment disappeared during rollout")
-            await deployed.refresh()
+            try:
+                await deployed.refresh()
+            except NotFoundError as exc:
+                raise RuntimeError("Kubernetes Application Deployment disappeared during rollout") from exc
 
             # Surface quota admission failures instead of waiting for an unavailable Pod indefinitely.
             status = deployed.raw.get("status")
@@ -177,20 +167,22 @@ class Applications:
                 for condition in conditions
             ):
                 raise RuntimeError("Kubernetes Application capacity exhausted")
+            if not deployment_is_ready(deployed):
+                await asyncio.sleep(5)
+                continue
+
+            # Wait for the ready Deployment's route references to be accepted.
             await route_resource.refresh()
             route_status = route_resource.raw.get("status")
             parents = route_status.get("parents", []) if isinstance(route_status, dict) else []
-            route_ready = all(
-                any(
-                    condition.get("type") == condition_type and condition.get("status") == "True"
-                    for parent in parents
-                    if isinstance(parent, dict)
-                    for condition in parent.get("conditions", [])
-                    if isinstance(condition, dict)
-                )
-                for condition_type in ("Accepted", "ResolvedRefs")
-            )
-            if deployment_is_ready(deployed) and route_ready:
+            route_conditions = {
+                condition.get("type")
+                for parent in parents
+                if isinstance(parent, dict)
+                for condition in parent.get("conditions", [])
+                if isinstance(condition, dict) and condition.get("status") == "True"
+            }
+            if {"Accepted", "ResolvedRefs"} <= route_conditions:
                 return
             await asyncio.sleep(5)
 

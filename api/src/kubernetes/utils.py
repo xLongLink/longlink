@@ -1,15 +1,15 @@
+from kr8s import NotFoundError
 from kr8s.asyncio.objects import APIObject, Deployment
 
 
 async def apply(resource: APIObject) -> None:
     """Create or patch one Kubernetes resource to its desired manifest."""
 
-    # Patch existing resources to repair drift without recreating their identities.
-    if await resource.exists():
+    # Patch the common existing-resource path without a separate presence query.
+    try:
         await resource.patch(resource.raw)
-        return
-
-    await resource.create()
+    except NotFoundError:
+        await resource.create()
 
 
 def deployment_is_ready(deployment: Deployment) -> bool:
