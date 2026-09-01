@@ -1,45 +1,38 @@
 # AGENTS.md
 
-You are working on a LongLink application.
-
-- Keep changes small and clear.
-- Remove obsolete code when replacing old flows.
-- Use built-in types for type hints list, dict
-- Use | for union types instead of Optional
-- All Python functions must include docstring (""" ... """) immediately after definition.
-- Any non-trivial Python logic block must have standalone inline comment (# ...) above block.
-- Include two blank lines between function definitions.
-- Write test cases only when instructed
-- Create a function when it gives you a meaningful abstraction boundary. Do not create one just to “split code”.
-- Keep improving and cleanup the repository so that it follows the described architecture
-- Make sure that the repository is self-contained and portable
-- Let fastapi manage the validation, use `response_model`
+You are working on a LongLink application:
+- Application models and migrations own only the application schema.
+- The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
+- Use `longlink.database.base.AuditTable` for application tables.
 
 ## Code structure
 
 ```
 ├── src/
 │   ├── models/       # SQLModel application tables
-│   ├── pages/        # XML pages registered automatically under /pages
-│   ├── routes/       # API routes (items.py)
-│   ├── schemas/      # Pydantic schemas (items.py)
+│   ├── pages/        # LongLink pages
+│   ├── routes/       # API routes
+│   ├── schemas/      # Pydantic schemas
 │   ├── services/     # Application services
-│   └── envs.py       # Environment and settings helpers
-│
-├── tests/
-│   └── test_app.py   # Application tests
-│
+│   └── envs.py       # Enviroments
+├── tests/            # Application tests
 ├── .env.sample       # Environment template
-├── main.py           # Application entry point
-└── pyproject.toml    # Project configuration
+└── main.py           # Application entry pointn
 ```
 
-## Database ownership
 
-- Application models and migrations own only the application schema.
-- The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
-- Use plain `SQLModel` for ordinary application tables. Use `longlink.database.AuditTable` only when a table needs Platform-user attribution.
-- Do not create, update, delete, or migrate shared tables from application code.
+## Python Guidelines
+
+- Avoid renaming imports.
+- Validate types at the boundary.
+- Channel YAGNI and KISS principle.
+- Avoid `Any`, prefer precise type annotations.
+- Keep the code pytonic, prefer readability over efficiency.
+- Use clear domain names, prefer single-word Python filenames.
+- Prefer namespaced module APIs, over directly importing many related functions.
+- Declare `response_model` on FastAPI routes, let FastAPI validating response model.
+- Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
+- Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
 
 ## Testing
 
