@@ -3,13 +3,12 @@ from src.auth import authuser
 from src.utils import images
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.database.models.users import User
 
 router = APIRouter()
 
 
-@router.get("/image", response_model=LongLinkMetadata)
-async def inspect_image(image: Image, _: User = Depends(authuser)):
+@router.get("/image", response_model=LongLinkMetadata, dependencies=[Depends(authuser)])
+async def inspect_image(image: Image):
     """Inspect a container image and return its LongLink metadata."""
 
     # Fail fast when the image cannot be inspected or has no metadata labels.
