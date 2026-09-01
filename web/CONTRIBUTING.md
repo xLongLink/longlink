@@ -43,7 +43,7 @@ muted                   # Muted content color
 radius                  # none | small | medium | large
 ```
 
-Theme preferences are defined in `src/theme.ts` and applied through the root provider. Astryx writes generated theme outputs to `src/lib/generated/`; do not edit or commit those files. Development, type-check, route, and build scripts regenerate them automatically, or run `vp run theme` explicitly.
+Theme preferences are defined in `src/theme.ts` and applied through the root provider. `src/lib/generated/stone.css` is a committed generated artifact; do not edit it directly. Run `vp run theme` after changing `src/theme.ts`.
 
 ## Primitives
 

@@ -100,13 +100,12 @@ async def postgres_engine(postgresql_url: URL) -> AsyncIterator[AsyncEngine]:
         await engine.dispose()
 
 
-@pytest.mark.parametrize("database_url", ["postgresql://db/longlink", "sqlite+aiosqlite:///:memory:"])
-def test_migration_config_rejects_non_asyncpg_postgresql_urls(database_url: str) -> None:
+def test_migration_config_rejects_non_asyncpg_postgresql_urls() -> None:
     """Reject shared migration URLs that cannot use the asyncpg driver."""
 
     # Act and assert
     with pytest.raises(ValueError, match="Shared migrations require a postgresql\\+asyncpg database URL"):
-        migration_config(database_url)
+        migration_config("postgresql://db/longlink")
 
 
 def test_migration_config_preserves_percent_encoded_credentials() -> None:

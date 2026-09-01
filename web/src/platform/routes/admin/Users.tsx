@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -21,7 +21,7 @@ export default function AdminUsers() {
     const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
 
-    if (isLoading && users.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading users" />;
     }
 
@@ -72,7 +72,7 @@ export default function AdminUsers() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataUser ? (
+            {metadataUser && (
                 <MetadataDialog onClose={() => setMetadataUser(null)} title="User metadata">
                     <MetadataList>
                         <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
@@ -82,7 +82,7 @@ export default function AdminUsers() {
                         <MetadataListItem label="ID">{metadataUser.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
         </Stack>
     );
 }

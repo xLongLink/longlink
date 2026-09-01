@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -28,12 +28,14 @@ export default function AdminOrganizations() {
     const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
+    const closeMetadataOrganization = () => setMetadataOrganization(null);
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]);
             toast({ body: 'Organization deleted' });
         },
@@ -55,7 +57,7 @@ export default function AdminOrganizations() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && organizations.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading organizations" />;
     }
 
@@ -113,7 +115,7 @@ export default function AdminOrganizations() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataOrganization ? (
+            {metadataOrganization && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -123,14 +125,14 @@ export default function AdminOrganizations() {
                                 variant="ghost"
                                 onClick={() => {
                                     const organization = metadataOrganization;
-                                    setMetadataOrganization(null);
+                                    closeMetadataOrganization();
                                     deleteDialog.openFor(organization);
                                 }}
                             />
-                            <Button label="Close" variant="primary" onClick={() => setMetadataOrganization(null)} />
+                            <Button label="Close" variant="primary" onClick={closeMetadataOrganization} />
                         </Stack>
                     }
-                    onClose={() => setMetadataOrganization(null)}
+                    onClose={closeMetadataOrganization}
                     title="Organization metadata"
                 >
                     <MetadataList>
@@ -141,7 +143,7 @@ export default function AdminOrganizations() {
                         <MetadataListItem label="ID">{metadataOrganization.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

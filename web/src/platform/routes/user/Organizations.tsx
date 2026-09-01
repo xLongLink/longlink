@@ -1,7 +1,7 @@
-import { Stack } from '@/components/ui/Stack';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useUserProfile } from '@/lib/hooks/use-user';
 import { proportional } from '@astryxdesign/core/Table';
@@ -17,7 +17,7 @@ import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1
 export default function Organizations() {
     const { memberships, isOrganizationsLoading, organizationsError } = useUserProfile();
 
-    if (memberships.length === 0 && isOrganizationsLoading) {
+    if (isOrganizationsLoading) {
         return <PageLoading label="Loading organizations" />;
     }
 

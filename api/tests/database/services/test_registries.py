@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from factories import queue_operation, create_organization, create_ready_infrastructure
-from src.errors import ConflictError
+from src.errors import ConflictError, NotFoundError
 from collections.abc import Callable, Sequence, Awaitable
 from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
@@ -14,7 +14,7 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 
-DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[bool]]
+DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
 Registry = ComputeRegistry | DatabaseRegistry | StorageRegistry
 FetchRegistry = Callable[[AsyncSession, Pagination], Awaitable[tuple[Sequence[Registry], int]]]
 
@@ -27,15 +27,13 @@ FetchRegistry = Callable[[AsyncSession, Pagination], Awaitable[tuple[Sequence[Re
         pytest.param(storage.delete, id="storage"),
     ],
 )
-async def test_delete_returns_false_for_missing_registry(delete: DeleteRegistry) -> None:
-    """Return false when the requested registry does not exist."""
+async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
+    """Reject deletion when the requested registry does not exist."""
 
-    # Act
+    # Act and assert
     async with session_scope() as session:
-        deleted = await delete(session, uuid4())
-
-    # Assert
-    assert deleted is False
+        with pytest.raises(NotFoundError, match="registry not found"):
+            await delete(session, uuid4())
 
 
 @pytest.mark.parametrize(
@@ -110,11 +108,10 @@ async def test_delete_removes_unused_registry(
 
     # Act
     async with session_scope() as session:
-        deleted = await delete(session, registry_id)
+        await delete(session, registry_id)
         await session.commit()
 
     # Assert
-    assert deleted is True
     async with session_scope() as session:
         persisted = await session.get(model, registry_id)
     assert persisted is None

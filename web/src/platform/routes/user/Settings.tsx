@@ -1,12 +1,12 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -40,7 +40,9 @@ export default function Settings() {
                     method: 'PATCH',
                 }).json()
             ),
-        onSuccess: (updatedUser) => void queryClient.setQueryData(['api', '/api/v1/me'], updatedUser),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
+        },
     });
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
@@ -48,6 +50,7 @@ export default function Settings() {
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]),
     });
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -56,12 +59,12 @@ export default function Settings() {
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
     const name = editedName ?? user.name;
-    const accountName = name.trim();
     const avatar = editedAvatar ?? user.avatar;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
         setAccountError(null);
+        const accountName = name.trim();
 
         // Require a non-empty account name.
         if (!accountName) {
@@ -77,6 +80,7 @@ export default function Settings() {
         // Persist the account name and surface any failure.
         try {
             await updateUser.mutateAsync({ name: accountName });
+            setEditedName(null);
             toast({ body: 'Username saved' });
         } catch (error) {
             toast({
@@ -102,10 +106,10 @@ export default function Settings() {
             return;
         }
 
-        // Persist the URL and keep the response available while profile data refreshes.
+        // Persist the URL and use the refreshed profile value.
         try {
-            const updated = await updateUser.mutateAsync({ avatar: normalizedAvatar });
-            setEditedAvatar(updated.avatar);
+            await updateUser.mutateAsync({ avatar: normalizedAvatar });
+            setEditedAvatar(null);
             setIsAvatarDialogOpen(false);
             toast({ body: 'Avatar saved' });
         } catch (mutationError) {
@@ -198,7 +202,7 @@ export default function Settings() {
                                 <CreateOrganization />
                             </Stack>
                             <Divider />
-                            {isOrganizationsLoading && memberships.length === 0 ? null : (
+                            {isOrganizationsLoading ? null : (
                                 <Table
                                     data={memberships}
                                     density="compact"

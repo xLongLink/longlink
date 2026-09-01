@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -27,6 +27,7 @@ export default function AdminDatabase() {
     const [metadataDatabase, setMetadataDatabase] = useState<DatabaseRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
+    const closeMetadataDatabase = () => setMetadataDatabase(null);
     const deleteDatabase = useMutation({
         mutationFn: (databaseId: string) => api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -51,7 +52,7 @@ export default function AdminDatabase() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && databases.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading databases" />;
     }
 
@@ -102,7 +103,7 @@ export default function AdminDatabase() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataDatabase ? (
+            {metadataDatabase && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -112,14 +113,14 @@ export default function AdminDatabase() {
                                 variant="ghost"
                                 onClick={() => {
                                     const database = metadataDatabase;
-                                    setMetadataDatabase(null);
+                                    closeMetadataDatabase();
                                     deleteDialog.openFor(database);
                                 }}
                             />
-                            <Button label="Close" variant="primary" onClick={() => setMetadataDatabase(null)} />
+                            <Button label="Close" variant="primary" onClick={closeMetadataDatabase} />
                         </Stack>
                     }
-                    onClose={() => setMetadataDatabase(null)}
+                    onClose={closeMetadataDatabase}
                     title="Database metadata"
                 >
                     <MetadataList>
@@ -130,7 +131,7 @@ export default function AdminDatabase() {
                         <MetadataListItem label="ID">{metadataDatabase.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

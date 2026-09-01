@@ -13,9 +13,7 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
-async def create_compute_registry(
-    payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)
-) -> ComputeRegistry:
+async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target and queue its initial creation."""
 
     registry = await compute.create(session, **payload.model_dump())
@@ -34,9 +32,7 @@ async def list_compute_registries(
 
 
 @router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(
-    registry_id: UUID, session: AsyncSession = Depends(get_session)
-) -> ComputeRegistry:
+async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Return one compute backend registration."""
 
     # Resolve the requested active compute registry.
@@ -63,6 +59,5 @@ async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Dep
     """Remove one unused compute registration without changing its cluster."""
 
     # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
-    if not await compute.delete(session, registry_id):
-        raise HTTPException(status_code=404, detail="Compute registry not found")
+    await compute.delete(session, registry_id)
     await session.commit()

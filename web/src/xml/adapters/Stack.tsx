@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
-import { Stack as UiStack } from '@/components/ui/Stack';
+import { Stack as UiStack } from '@astryxdesign/core/Stack';
 import { resolveXmlProps, xmlSpacingSchema } from '../core/props';
 import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../constants';
 

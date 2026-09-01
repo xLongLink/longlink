@@ -164,12 +164,8 @@ class Postgres:
             password_literal = password_processor(password)
 
             # Create new roles and rotate existing roles with fresh credentials.
-            if role_exists is None:
-                await conn.exec_driver_sql(f"CREATE ROLE {role} LOGIN PASSWORD {password_literal}")
-
-            # Rotate credentials for existing runtime roles.
-            else:
-                await conn.exec_driver_sql(f"ALTER ROLE {role} LOGIN PASSWORD {password_literal}")
+            verb = "CREATE" if role_exists is None else "ALTER"
+            await conn.exec_driver_sql(f"{verb} ROLE {role} LOGIN PASSWORD {password_literal}")
 
             # Quote all identifiers before composing role and privilege statements.
             database = self.quote(conn, organization.hex)

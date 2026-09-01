@@ -24,8 +24,7 @@ export default function Register() {
     });
     const registration = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
-        onSuccess: () =>
-            showToast({ body: 'If this email can be registered, a registration link is on the way.', type: 'info' }),
+        onSuccess: () => showToast({ body: 'If this email can be registered, a registration link is on the way.' }),
         onError: () => showToast({ body: 'Could not send the registration link. Try again shortly.', type: 'error' }),
     });
 

@@ -58,6 +58,24 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
     return await session.scalar(statement)
 
 
+async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_slug: str) -> UserOrganization | None:
+    """Return one user's active membership for an active Organization slug."""
+
+    # Load only the requested Organization membership and its response-ready Organization.
+    statement = (
+        select(UserOrganization)
+        .join(Organization, Organization.id == UserOrganization.organization_id)
+        .options(contains_eager(UserOrganization.organization))
+        .where(
+            UserOrganization.user_id == user_id,
+            Organization.slug == organization_slug,
+            UserOrganization.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+        )
+    )
+    return await session.scalar(statement)
+
+
 async def application_runtime_access(
     session: AsyncSession, user_id: UUID, application_id: UUID
 ) -> tuple[Application, Organization, OrganizationRoles, ComputeRegistry] | None:
@@ -312,7 +330,7 @@ async def update_member_role(
     if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
         # Reject demotion when this is the only owner.
         owner_statement = (
-            select(UserOrganization.user_id)
+            select(1)
             .where(
                 UserOrganization.organization_id == organization_id,
                 UserOrganization.role == OrganizationRoles.owner,
@@ -321,9 +339,8 @@ async def update_member_role(
             .limit(2)
             .with_for_update()
         )
-        result = await session.scalars(owner_statement)
-        owner_ids = result.all()
-        if len(owner_ids) <= 1:
+        owner_result = await session.scalars(owner_statement)
+        if len(owner_result.all()) <= 1:
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
@@ -341,8 +358,8 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if locked_user_id is None:
         raise ForbiddenError("Access required")
 
-    organization_ids_result = await session.execute(
-        select(Organization.id)
+    organization_count_result = await session.scalars(
+        select(1)
         .where(
             Organization.created_id == user.id,
             Organization.deleted_at.is_(None),
@@ -350,7 +367,7 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
         .limit(3)
         .with_for_update()
     )
-    if len(organization_ids_result.all()) >= 3:
+    if len(organization_count_result.all()) >= 3:
         raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
     # Lock the selected Compute until the Organization assignment is committed.

@@ -32,14 +32,12 @@ function resolveUrl(baseUrl: string, path: string): string {
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
 function isAppRelativeUrl(path: string): boolean {
-    const value = path.trim();
-
     // Block Windows separators before URL parsing.
-    if (value.includes('\\')) return false;
+    if (path.includes('\\')) return false;
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
-        const url = new URL(value, RELATIVE_URL_ORIGIN);
+        const url = new URL(path, RELATIVE_URL_ORIGIN);
 
         return url.origin === RELATIVE_URL_ORIGIN;
     } catch {
@@ -76,7 +74,9 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 
 /** Resolves an application navigation URL or omits invalid destinations. */
 export function resolveNavigationUrl(baseUrl: string, path: string): string {
-    return path.trim() && isAppRelativeUrl(path) ? resolveUrl(baseUrl, path) : '';
+    const value = path.trim();
+
+    return value && isAppRelativeUrl(value) ? resolveUrl(baseUrl, path) : '';
 }
 
 /** Resolves an application destination with an optional browser-link fallback. */

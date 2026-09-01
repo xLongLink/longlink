@@ -2,12 +2,8 @@ import { useLocation } from 'react-router';
 import { decodePathSegment, startCase } from '@/lib/utils';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
-type LegalBreadcrumbProps = {
-    className?: string;
-};
-
 /** Renders breadcrumbs for the current legal article URL. */
-export function LegalBreadcrumb({ className }: LegalBreadcrumbProps) {
+export function LegalBreadcrumb({ className }: { className?: string }) {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
 

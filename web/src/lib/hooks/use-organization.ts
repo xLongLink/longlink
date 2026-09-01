@@ -1,5 +1,4 @@
-import { api, ApiError } from '@/lib/api';
-import { useUserProfile } from '@/lib/hooks/use-user';
+import { api } from '@/lib/api';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
@@ -11,16 +10,25 @@ import {
     zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse,
     zOrganizationDetails,
     zOrganizationSummary,
+    zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Returns current-user membership data for one organization route slug. */
 function useOrganizationMembership(organizationSlug: string) {
-    const { memberships, isOrganizationsLoading: isUserLoading } = useUserProfile();
-    const membership = memberships.find((item) => item.organization.slug === organizationSlug);
+    const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
+    const membershipQuery = useQuery({
+        queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
+        queryFn:
+            organizationSlug === ''
+                ? skipToken
+                : async ({ signal }) => zUserOrganizationMembership.parse(await api(membershipPath, { signal }).json()),
+        retry: false,
+    });
+    const membership = membershipQuery.data;
     const organizationId = membership?.organization.id;
-    const notFoundError = !isUserLoading && !organizationId ? new ApiError('Organization not found', 404) : null;
+    const role = membership?.role ?? null;
 
-    return { membership, organizationId, isUserLoading, notFoundError };
+    return { organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
 }
 
 /** Invalidates cached organization application collections. */
@@ -35,55 +43,63 @@ function invalidateOrganizationApplicationQueries(queryClient: QueryClient, orga
 
 /** Fetches organization details and people-management data for the current workspace. */
 export function useOrganization(organizationSlug: string) {
-    const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
+    const {
+        organizationId,
+        role,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organizationSlug);
 
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
     const organizationQuery = useQuery({
         queryKey: ['api', organizationPath],
-        queryFn:
-            organizationPath === null
-                ? skipToken
-                : async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json()),
+        queryFn: organizationPath
+            ? async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json())
+            : skipToken,
         retry: false,
     });
 
-    const error: (Error & { status?: number }) | null = organizationQuery.error ?? notFoundError;
+    const error: (Error & { status?: number }) | null = organizationQuery.error ?? membershipError;
     const { organization, members = [], invitations = [] } = organizationQuery.data ?? {};
 
     return {
         organization,
         members,
         invitations,
-        role: membership?.role ?? null,
-        isLoading: isUserLoading || organizationQuery.isLoading,
+        role,
+        isLoading: isMembershipLoading || organizationQuery.isLoading,
         error,
     };
 }
 
 /** Fetches organization applications without loading people-management data. */
 export function useOrganizationApplications(organizationSlug: string, enabled = true) {
-    const { membership, organizationId, isUserLoading, notFoundError } = useOrganizationMembership(organizationSlug);
+    const {
+        organizationId,
+        role,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organizationSlug);
     const applicationsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
     const applicationsQuery = useQuery({
         queryKey: ['api', applicationsPath],
-        queryFn:
-            applicationsPath === null
-                ? skipToken
-                : async ({ signal }) =>
-                      zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse.parse(
-                          await api(applicationsPath, { signal }).json()
-                      ),
+        queryFn: applicationsPath
+            ? async ({ signal }) =>
+                  zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse.parse(
+                      await api(applicationsPath, { signal }).json()
+                  )
+            : skipToken,
         refetchInterval: (query) =>
             query.state.data?.some((application) => application.status === 'creating') ? 5000 : false,
         retry: false,
     });
-    const error: (Error & { status?: number }) | null = applicationsQuery.error ?? notFoundError;
+    const error: (Error & { status?: number }) | null = applicationsQuery.error ?? membershipError;
 
     return {
         applications: applicationsQuery.data ?? [],
         organizationId: organizationId ?? '',
-        role: membership?.role ?? null,
-        isLoading: isUserLoading || applicationsQuery.isLoading,
+        role,
+        isLoading: isMembershipLoading || applicationsQuery.isLoading,
         error,
     };
 }
@@ -123,6 +139,7 @@ export function useOrganizationMembers(organizationId: string) {
         onSuccess: () =>
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
             ]),
     });

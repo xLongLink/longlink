@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react';
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -10,6 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
+import { ArrowRight, Circle, Square, Triangle } from 'lucide-react';
 
 const paths = [
     {
@@ -17,7 +17,6 @@ const paths = [
         description:
             'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
         action: 'Explore existing apps',
-        href: '/docs',
         isComingSoon: true,
     },
     {
@@ -25,7 +24,6 @@ const paths = [
         description:
             'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
         action: 'Start from a foundation',
-        href: '/docs',
         isComingSoon: true,
     },
     {
@@ -33,7 +31,6 @@ const paths = [
         description:
             'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
         action: 'Build a new app',
-        href: '/docs',
         isComingSoon: false,
     },
 ] as const;
@@ -42,23 +39,19 @@ const platformCapabilities = [
     {
         title: 'Build',
         description: 'Build complete applications in code using your favorite developer tools.',
-        label: 'Full-code solution',
     },
     {
         title: 'Operate',
         description:
             'Run applications with authentication, permissions, deployment, storage, routing, and logging built in.',
-        label: 'Application operations',
     },
     {
         title: 'Keep it simple',
         description: 'Processes are clear, easy to operate, and cheap to maintain.',
-        label: 'Less complexity',
     },
     {
         title: 'Own the process',
         description: 'Keep compliance, accountability, and a solution that fits your needs.',
-        label: 'Structured in code',
     },
 ] as const;
 
@@ -200,7 +193,7 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={4}>
                     <Grid gap={4} columns={{ minWidth: 320, max: 2, repeat: 'fit' }}>
-                        {platformCapabilities.slice(0, 2).map(({ title, description, label }) => (
+                        {platformCapabilities.slice(0, 2).map(({ title, description }) => (
                             <Card key={title} className="overflow-hidden" minHeight={360} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -209,14 +202,20 @@ export default function Home() {
                                         hAlign="center"
                                         justify="center"
                                     >
-                                        <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
-                                        <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
-                                        <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
-                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
-                                            <Text type="code" size="3xs" color="secondary">
-                                                {label}
-                                            </Text>
-                                        </Stack>
+                                        {title === 'Build' ? (
+                                            <img
+                                                alt="Connected application interfaces"
+                                                className="size-full object-cover"
+                                                decoding="async"
+                                                src="/images/build.png"
+                                            />
+                                        ) : (
+                                            <>
+                                                <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
+                                                <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
+                                                <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
+                                            </>
+                                        )}
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
                                         <Heading className="text-base" level={2}>
@@ -231,7 +230,7 @@ export default function Home() {
                         ))}
                     </Grid>
                     <Grid gap={4} columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {platformCapabilities.slice(2).map(({ title, description, label }) => (
+                        {platformCapabilities.slice(2).map(({ title, description }) => (
                             <Card key={title} className="overflow-hidden" minHeight={320} padding={0}>
                                 <Stack height="100%">
                                     <Stack
@@ -241,13 +240,13 @@ export default function Home() {
                                         justify="center"
                                     >
                                         {title === 'Keep it simple' ? (
-                                            <img
-                                                alt=""
-                                                className="size-full object-cover"
-                                                decoding="async"
-                                                loading="lazy"
-                                                src="/images/keep-it-simple.png"
-                                            />
+                                            <Stack direction="horizontal" gap={3} vAlign="center">
+                                                <Square size={44} strokeWidth={1.5} />
+                                                <ArrowRight size={28} strokeWidth={1.5} />
+                                                <Triangle size={44} strokeWidth={1.5} />
+                                                <ArrowRight size={28} strokeWidth={1.5} />
+                                                <Circle size={44} strokeWidth={1.5} />
+                                            </Stack>
                                         ) : (
                                             <>
                                                 <Stack className="absolute size-40 rounded-full border border-border opacity-60" />
@@ -255,11 +254,6 @@ export default function Home() {
                                                 <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
                                             </>
                                         )}
-                                        <Stack className="absolute bottom-3 rounded-full border border-border bg-surface px-3 py-1">
-                                            <Text type="code" size="3xs" color="secondary">
-                                                {label}
-                                            </Text>
-                                        </Stack>
                                     </Stack>
                                     <Stack className="p-6" gap={3}>
                                         <Heading className="text-base" level={2}>
@@ -304,7 +298,7 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {paths.map(({ title, description, action, href, isComingSoon }) => (
+                        {paths.map(({ title, description, action, isComingSoon }) => (
                             <Stack key={title} width="100%">
                                 <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
                                     <Banner
@@ -315,7 +309,7 @@ export default function Home() {
                                 </Stack>
                                 <ClickableCard
                                     className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
-                                    href={href}
+                                    href="/docs"
                                     label={action}
                                     padding={6}
                                 >

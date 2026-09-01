@@ -25,7 +25,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            color="navigation"
+                                            color="secondary"
                                             href="https://www.linkedin.com/company/longlink"
                                             label="LinkedIn"
                                             target="_blank"
@@ -36,7 +36,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            color="navigation"
+                                            color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
                                             target="_blank"
@@ -47,7 +47,7 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            color="navigation"
+                                            color="secondary"
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
                                             target="_blank"
@@ -59,13 +59,13 @@ export function Footer() {
                             </Stack>
 
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
-                                <Link href="/" color="navigation" type="supporting" weight="medium">
+                                <Link href="/" color="secondary" type="supporting" weight="medium">
                                     Home
                                 </Link>
-                                <Link href="/docs" color="navigation" type="supporting" weight="medium">
+                                <Link href="/docs" color="secondary" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
-                                <Link href="/pricing" color="navigation" type="supporting" weight="medium">
+                                <Link href="/pricing" color="secondary" type="supporting" weight="medium">
                                     Pricing
                                 </Link>
                             </Stack>
@@ -76,13 +76,13 @@ export function Footer() {
                         <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                             <Text type="supporting">LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link href="/impressum" color="navigation" type="supporting" weight="medium">
+                                <Link href="/impressum" color="secondary" type="supporting" weight="medium">
                                     Impressum
                                 </Link>
-                                <Link href="/terms" color="navigation" type="supporting" weight="medium">
+                                <Link href="/terms" color="secondary" type="supporting" weight="medium">
                                     Terms
                                 </Link>
-                                <Link href="/privacy" color="navigation" type="supporting" weight="medium">
+                                <Link href="/privacy" color="secondary" type="supporting" weight="medium">
                                     Privacy
                                 </Link>
                             </Stack>

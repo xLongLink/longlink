@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Stack } from '@/components/ui/Stack';
 import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -28,6 +28,7 @@ export default function AdminCompute() {
     const [metadataCompute, setMetadataCompute] = useState<ComputeRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
+    const closeMetadataCompute = () => setMetadataCompute(null);
     const deleteCompute = useMutation({
         mutationFn: (computeId: string) => api(`/api/v1/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -54,7 +55,7 @@ export default function AdminCompute() {
         onError: (message) => toast({ body: message, type: 'error' }),
     });
 
-    if (isLoading && computes.length === 0) {
+    if (isLoading) {
         return <PageLoading label="Loading compute registries" />;
     }
 
@@ -113,7 +114,7 @@ export default function AdminCompute() {
                     )}
                 </TableColumn>
             </Table>
-            {metadataCompute ? (
+            {metadataCompute && (
                 <MetadataDialog
                     footer={
                         <Stack direction="horizontal" gap={2} justify="end">
@@ -123,14 +124,14 @@ export default function AdminCompute() {
                                 variant="ghost"
                                 onClick={() => {
                                     const compute = metadataCompute;
-                                    setMetadataCompute(null);
+                                    closeMetadataCompute();
                                     deleteDialog.openFor(compute);
                                 }}
                             />
-                            <Button label="Close" variant="primary" onClick={() => setMetadataCompute(null)} />
+                            <Button label="Close" variant="primary" onClick={closeMetadataCompute} />
                         </Stack>
                     }
-                    onClose={() => setMetadataCompute(null)}
+                    onClose={closeMetadataCompute}
                     title="Compute metadata"
                 >
                     <MetadataList>
@@ -143,7 +144,7 @@ export default function AdminCompute() {
                         <MetadataListItem label="ID">{metadataCompute.id}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
-            ) : null}
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </Stack>
     );

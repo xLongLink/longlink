@@ -1601,6 +1601,62 @@
         }
       }
     },
+    "/api/v1/organizations/slug/{organization_slug}": {
+      "get": {
+        "summary": "Get Organization By Slug",
+        "description": "Return the current user's membership for one Organization slug.",
+        "operationId": "get_organization_by_slug_api_v1_organizations_slug__organization_slug__get",
+        "parameters": [
+          {
+            "name": "organization_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Organization Slug"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOrganizationMembership"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}": {
       "get": {
         "summary": "Get Organization",

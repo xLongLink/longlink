@@ -23,15 +23,14 @@ You are working on a LongLink application.
 │   │   ├── models/   # SQLModel application tables
 │   │   └── services/ # Database utility services
 │   ├── pages/        # XML pages registered automatically under /pages
-│   ├── routes/       # API route registration
-│   ├── schemas/      # Pydantic request and response schemas
+│   ├── routes/       # API routes (items.py)
+│   ├── schemas/      # Pydantic schemas (items.py)
 │   ├── envs.py       # Environment and settings helpers
-│   └── router.py     # Application router definition
 │
 ├── tests/
-│   └── conftest.py   # Test fixtures
+│   └── test_app.py   # Application tests
 │
-├──.env.sample        # Environment template
+├── .env.sample       # Environment template
 ├── main.py           # Application entry point
 └── pyproject.toml    # Project configuration
 ```

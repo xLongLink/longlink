@@ -1,6 +1,7 @@
 import json
 import yaml
 from uuid import UUID
+from typing import cast
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.statuses import Status
 
@@ -21,10 +22,9 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
 
     # Canonicalize values so the database JSON column never receives YAML-only types or non-string keys.
     try:
-        normalized_value: dict[str, object] = json.loads(json.dumps(value))
+        value = cast(dict[str, object], json.loads(json.dumps(value)))
     except TypeError as exc:
         raise ValueError("Kubernetes kubeconfig must be JSON-compatible") from exc
-    value = normalized_value
 
     # Require a selected context with resolvable cluster and user entries before persisting the connection.
     clusters = value.get("clusters")

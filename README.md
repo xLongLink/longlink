@@ -83,7 +83,8 @@ Cleanup
 
 ```bash
 make clean  # Remove tracked remote development resources
-make down   # Stop local services, volumes, and the cluster
+make down   # Stop local services and the cluster; retain volumes
+make clear  # Remove local Compose volumes
 ```
 
 <br />

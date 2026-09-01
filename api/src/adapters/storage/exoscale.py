@@ -57,6 +57,14 @@ class Exoscale:
             ),
         )
 
+    @staticmethod
+    def _bucket_is_absent(error: ClientError) -> bool:
+        """Return whether an S3 error reports an already-absent bucket or key."""
+
+        details = error.response.get("Error", {})
+        status = error.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        return details.get("Code") in {"NoSuchBucket", "NoSuchKey", "404"} or status == 404
+
     async def usage(self, bucket: str) -> int | None:
         """Return aggregate usage for one bucket, or none when the bucket is absent."""
 
@@ -101,9 +109,7 @@ class Exoscale:
             try:
                 await client.delete_bucket(Bucket=bucket)
             except ClientError as exc:
-                error = exc.response.get("Error", {})
-                status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"} and status != 404:
+                if not self._bucket_is_absent(exc):
                     raise
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
@@ -151,9 +157,7 @@ class Exoscale:
                         break
                     await self._delete_objects(client, bucket, objects)
             except ClientError as exc:
-                error = exc.response.get("Error", {})
-                status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
-                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"} and status != 404:
+                if not self._bucket_is_absent(exc):
                     raise
 
     async def _delete_objects(self, client: "S3Client", bucket: str, objects: "list[ObjectIdentifierTypeDef]") -> None:
@@ -252,10 +256,8 @@ class Exoscale:
         credential_name = f"longlink-{name}"
         async with AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url) as client:
             api = cast(AsyncClient, client)
-            for collection, response in (
-                ("api-keys", await api.list_api_keys()),
-                ("iam-roles", await api.list_iam_roles()),
-            ):
+            for collection, list_resources in (("api-keys", api.list_api_keys), ("iam-roles", api.list_iam_roles)):
+                response = await list_resources()
                 items = response.get(collection)
                 if not isinstance(items, list):
                     raise RuntimeError(f"Exoscale {collection} inventory response is invalid")

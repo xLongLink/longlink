@@ -5,6 +5,7 @@ from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
 from src.logger import logger
 from src.models.roles import OrganizationRoles
+from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationApplicationSummary
@@ -40,6 +41,21 @@ async def list_organizations(
 
     items, total = await organizations.fetch_page(session, pagination)
     return {"items": items, "total": total}
+
+
+@router.get("/organizations/slug/{organization_slug}", response_model=UserOrganizationMembership)
+async def get_organization_by_slug(
+    organization_slug: str,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_session),
+):
+    """Return the current user's membership for one Organization slug."""
+
+    # Resolve the route slug within the authenticated user's active memberships.
+    membership = await organizations.membership_by_slug(session, user.id, organization_slug)
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return membership
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetails)

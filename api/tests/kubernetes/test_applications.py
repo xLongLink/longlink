@@ -24,6 +24,9 @@ def test_application_template_limits_ephemeral_storage() -> None:
     )
 
     # Assert
+    migration_spec = migration["spec"]
+    assert isinstance(migration_spec, dict)
+    assert "ttlSecondsAfterFinished" not in migration_spec
     for workload in (migration, deployment):
         workload_spec = workload["spec"]
         assert isinstance(workload_spec, dict)
@@ -62,20 +65,26 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             """Keep the resource manifest for apply assertions."""
 
             self.raw = raw
+            self.api = _kwargs.get("api")
 
     class MigrationJob(Resource):
         """Report a terminally failed migration Job."""
+
+        name = "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
+        namespace = "acme"
 
         async def wait(self, conditions: list[str]) -> None:
             """Accept the migration terminal conditions."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
-            self.raw["status"] = {"failed": 1}
+            self.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
 
     class MigrationPod:
         """Expose output from the failed migration Job."""
 
+        name = "failed-migration-pod"
         metadata = {"name": "failed-migration-pod"}
+        raw = {"status": {"phase": "Failed"}}
 
         @classmethod
         async def list(cls, **kwargs: object) -> AsyncIterator["MigrationPod"]:
@@ -83,8 +92,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
             assert kwargs["namespace"] == "acme"
             assert kwargs["label_selector"] == {
-                applications.APPLICATION_ID_LABEL: "00000000-0000-4000-8000-000000000001",
-                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840",
+                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
             }
             yield cls()
 
@@ -93,6 +101,16 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
 
             assert tail_lines == 200
             yield "database connection refused"
+
+    class MigrationEvent:
+        """Expose no warning Events for the failed migration fixture."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object) -> AsyncIterator["MigrationEvent"]:
+            """Yield no Kubernetes Events."""
+
+            if False:
+                yield cls()
 
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
@@ -117,6 +135,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
     monkeypatch.setattr(applications, "Secret", Resource)
     monkeypatch.setattr(applications, "Job", MigrationJob)
     monkeypatch.setattr(applications, "Pod", MigrationPod)
+    monkeypatch.setattr(applications, "Event", MigrationEvent)
     monkeypatch.setattr(applications, "Service", Resource)
     monkeypatch.setattr(applications, "Deployment", Resource)
     monkeypatch.setattr(applications, "HTTPRouteResource", Resource)
@@ -132,10 +151,7 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
             {},
         )
     assert applied == ["Secret", "Job"]
-    assert logged[-2:] == [
-        "Recent output from failed migration Pod failed-migration-pod:",
-        "Migration Pod failed-migration-pod: database connection refused",
-    ]
+    assert logged[-1] == "Recent output from migration Pod failed-migration-pod:\ndatabase connection refused"
 
 
 async def test_application_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -169,6 +185,7 @@ async def test_application_apply_waits_for_deployment_and_route_readiness(monkey
             """Accept the migration terminal conditions."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
@@ -257,6 +274,8 @@ async def test_application_apply_reports_quota_admission_failure(monkeypatch: py
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before the rollout failure."""
 
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
+
     async def apply(resource: Resource) -> None:
         """Record the resources accepted by Kubernetes."""
 
@@ -313,21 +332,18 @@ async def test_application_apply_reports_disappeared_deployment(monkeypatch: pyt
 
             self.raw = raw
 
-        async def exists(self) -> bool:
+        async def refresh(self) -> None:
             """Report that the Deployment disappeared before rollout completed."""
 
-            return False
-
-        async def refresh(self) -> None:
-            """Reject refreshes after the missing Deployment check."""
-
-            raise AssertionError("A missing Deployment must not be refreshed")
+            raise applications.NotFoundError("Deployment missing")
 
     class MigrationJob(Resource):
         """Report a completed migration Job."""
 
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before rollout polling."""
+
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
     async def apply(_resource: Resource) -> None:
         """Accept a resource without contacting Kubernetes."""
@@ -381,6 +397,8 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
 
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before rollout polling."""
+
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
     async def apply(_resource: Resource) -> None:
         """Accept a resource without contacting Kubernetes."""

@@ -20,6 +20,8 @@ type ApplicationRuntimeProps = {
     requestBaseUrl?: string;
 };
 
+const EMPTY_PAGES = [] as const;
+
 /** Resolves and renders the current manifest-defined application page. */
 export function ApplicationRuntime({
     children,
@@ -33,11 +35,11 @@ export function ApplicationRuntime({
         queryKey: ['api', pagesUrl],
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
-    const pages = registeredPages ?? [];
+    const pages = registeredPages ?? EMPTY_PAGES;
     const activeRouteMatch = useMemo(() => {
         const [match] =
             matchRoutes(
-                (registeredPages ?? []).map((page) => ({
+                pages.map((page) => ({
                     path: page.route,
                     page,
                 })),
@@ -52,7 +54,7 @@ export function ApplicationRuntime({
                 Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
             ),
         };
-    }, [registeredPages, routePath]);
+    }, [pages, routePath]);
     const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
     const firstTabPage = tabPages[0];
 

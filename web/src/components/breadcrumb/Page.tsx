@@ -19,7 +19,7 @@ export function PageBreadcrumb({ applicationName }: { applicationName?: string }
             >
                 {label}
             </BreadcrumbItem>
-            {applicationName !== undefined ? <BreadcrumbItem isCurrent>{applicationName}</BreadcrumbItem> : null}
+            {applicationName !== undefined && <BreadcrumbItem isCurrent>{applicationName}</BreadcrumbItem>}
         </Breadcrumbs>
     );
 }

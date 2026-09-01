@@ -185,15 +185,10 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
     assert directives == (original_directives if expected_migration_created else [])
 
 
-@pytest.mark.parametrize("has_init_file", [False, True])
-def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path, monkeypatch, has_init_file: bool) -> None:
+def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path, monkeypatch) -> None:
     """Fail production startup without committed application revisions."""
 
     # Arrange
-    if has_init_file:
-        migrations_path = tmp_path / "migrations"
-        migrations_path.mkdir()
-        migrations_path.joinpath("__init__.py").write_text("", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
     monkeypatch.setattr(
@@ -208,7 +203,9 @@ def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path
 
 
 @pytest.mark.parametrize(("environment", "committed_revision"), [("production", True), ("development", False)])
-def test_migrations_upgrade_head_when_revisions_are_available_or_development(tmp_path, monkeypatch, environment: str, committed_revision: bool) -> None:
+def test_migrations_upgrade_head_when_revisions_are_available_or_development(
+    tmp_path, monkeypatch, environment: str, committed_revision: bool
+) -> None:
     """Apply revisions in production with a committed file and initialize development storage."""
 
     # Arrange

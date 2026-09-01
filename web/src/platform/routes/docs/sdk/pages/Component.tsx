@@ -16,7 +16,6 @@ function AttributeTable({ attributes }: { attributes: ComponentDocumentation['at
                 { key: 'description', header: 'Description', width: proportional(3) },
             ]}
             density="compact"
-            dividers="rows"
         />
     );
 }

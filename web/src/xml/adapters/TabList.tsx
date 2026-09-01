@@ -4,9 +4,9 @@ import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { useBindableValue } from '../core/binding';
 import { Tab as ApplicationTab, Tabs as ApplicationTabs } from '@/components/ui/Tabs';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingWithDefaultSchema } from '../core/props';
+import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 
-const tabsPropsSchema = z.object({ gap: xmlSpacingWithDefaultSchema });
+const tabsPropsSchema = z.object({ gap: xmlSpacingSchema.optional() });
 const tabPropsSchema = z.object({ label: xmlNonblankStringSchema, value: xmlNonblankStringSchema });
 
 export function Tabs({ props, nodes }: Props) {

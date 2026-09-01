@@ -6,11 +6,9 @@ import { isVisibleXmlNode, resolveXmlValue } from './props';
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     return nodes.map((node, index) => {
-        const props = node.params;
-
         // Render parser-generated text directly rather than through a public XML component.
         if (node.name === '$text') {
-            const value = resolveXmlValue(props, 'value', ctx);
+            const value = resolveXmlValue(node.params, 'value', ctx);
 
             return value == null ? null : String(value);
         }
@@ -27,7 +25,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
 
         // Render registered XML components directly.
         if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={props} nodes={node.children} />;
+            return <RegisteredComponent key={index} props={node.params} nodes={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

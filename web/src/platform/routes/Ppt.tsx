@@ -261,7 +261,7 @@ function PresentationSlide({
     isScreen = false,
     slideIndex,
 }: {
-    className?: string;
+    className: string;
     isScreen?: boolean;
     slideIndex: number;
 }) {
