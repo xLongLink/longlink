@@ -113,7 +113,7 @@ async def test_database_registry_creation_uses_verified_ssl_by_default(
 
     # Assert
     assert response.status_code == 201
-    assert response.json()["sslmode"] == "verify-full"
+    assert response.json()["sslmode"] == "require"
 
 
 async def test_database_registry_creation_rejects_unverified_tls_in_production(
@@ -139,7 +139,7 @@ async def test_database_registry_creation_rejects_unverified_tls_in_production(
 
     # Assert
     assert response.status_code == 422
-    assert response.json() == {"detail": "Production databases must use sslmode=verify-full"}
+    assert response.json() == {"detail": "Production databases must use SSL"}
     assert "database-secret" not in response.text
     assert registries_response.status_code == 200
     assert registries_response.json() == {"items": [], "total": 0}

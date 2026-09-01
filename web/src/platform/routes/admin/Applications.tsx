@@ -25,7 +25,6 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
-    const closeMetadataApplication = () => setMetadataApplication(null);
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteApplication = useMutation({
@@ -116,7 +115,7 @@ export default function AdminApplications() {
             </Table>
             {metadataApplication && (
                 <MetadataDialog
-                    onClose={closeMetadataApplication}
+                    onClose={() => setMetadataApplication(null)}
                     onDelete={() => deleteDialog.openFor(metadataApplication)}
                     title="Application metadata"
                 >

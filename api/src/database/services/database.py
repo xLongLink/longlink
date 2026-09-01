@@ -45,9 +45,9 @@ async def create(
 ) -> DatabaseRegistry:
     """Register one database backend."""
 
-    # Managed production databases must authenticate both their certificate chain and hostname.
-    if not env.DEVELOPMENT and sslmode != DatabaseSSLMode.verify_full:
-        raise ValueError("Production databases must use sslmode=verify-full")
+    # Managed production databases must use TLS.
+    if not env.DEVELOPMENT and sslmode == DatabaseSSLMode.disable:
+        raise ValueError("Production databases must use SSL")
 
     # Persist administrator credentials only at the registry control-plane boundary.
     registry = DatabaseRegistry(

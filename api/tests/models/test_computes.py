@@ -62,6 +62,16 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
         pytest.param([], "must be a mapping", id="non-mapping"),
         pytest.param({"cluster": object()}, "JSON-compatible", id="non-json-value"),
         pytest.param({}, "requires clusters, contexts, users, and current-context", id="incomplete"),
+        pytest.param(
+            {
+                "clusters": [{"name": "cluster", "cluster": {}}],
+                "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "missing-user"}}],
+                "current-context": "context",
+                "users": [{"name": "user", "user": {}}],
+            },
+            "current-context must reference a configured cluster and user",
+            id="dangling-context-user",
+        ),
     ],
 )
 def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object, message: str) -> None:

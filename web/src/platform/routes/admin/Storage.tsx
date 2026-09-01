@@ -25,7 +25,6 @@ export default function AdminStorage() {
     const [metadataStorage, setMetadataStorage] = useState<StorageRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataStorage = () => setMetadataStorage(null);
     const deleteStorage = useMutation({
         mutationFn: (storageId: string) => api(`/api/v1/storages/${storageId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -103,7 +102,7 @@ export default function AdminStorage() {
             </Table>
             {metadataStorage && (
                 <MetadataDialog
-                    onClose={closeMetadataStorage}
+                    onClose={() => setMetadataStorage(null)}
                     onDelete={() => deleteDialog.openFor(metadataStorage)}
                     title="Storage metadata"
                 >

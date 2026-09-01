@@ -188,12 +188,16 @@ def test_xml_page_catalog_uses_deterministic_path_order(application_source: Path
 
     # Act
     catalog_response = client.get("/pages.json")
+    root_response = client.get("/", follow_redirects=False)
 
     # Assert
+    assert catalog_response.status_code == 200
     assert catalog_response.json() == [
         {"path": "pages/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
         {"path": "pages/zebra", "route": "/zebra", "tab": "zebra"},
     ]
+    assert root_response.status_code == 307
+    assert root_response.headers["location"] == "/admin/alpha"
 
 
 def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:

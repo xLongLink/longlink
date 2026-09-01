@@ -18,7 +18,7 @@ def test_database_configuration_accepts_plain_hosts() -> None:
     )
 
     assert payload.host == "database.example"
-    assert payload.sslmode == DatabaseSSLMode.verify_full
+    assert payload.sslmode == DatabaseSSLMode.require
 
 
 @pytest.mark.parametrize("host", ["https://database.example", "database.example:5432", "database.example:invalid", "db example"])

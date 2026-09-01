@@ -12,7 +12,7 @@ class DatabaseSSLMode(StrEnum):
     """Supported PostgreSQL SSL modes."""
 
     disable = "disable"
-    verify_full = "verify-full"
+    require = "require"
 
 
 class Image(str):

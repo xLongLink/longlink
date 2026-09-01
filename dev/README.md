@@ -63,11 +63,11 @@ To test Organization and Application database provisioning against a remote Post
 service, set its administrator URL in the same ignored file:
 
 ```bash
-APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=verify-full
+APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=require
 ```
 
 The local Compose PostgreSQL service intentionally uses `sslmode=disable`. Production managed PostgreSQL databases
-must use `sslmode=verify-full`.
+must use `sslmode=require`.
 
 The configured role must be able to connect to the `postgres` maintenance database and create databases and roles.
 The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not run

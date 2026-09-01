@@ -2808,7 +2808,7 @@
           },
           "sslmode": {
             "$ref": "#/components/schemas/DatabaseSSLMode",
-            "default": "verify-full"
+            "default": "require"
           },
           "password": {
             "type": "string",
@@ -2883,7 +2883,7 @@
         "type": "string",
         "enum": [
           "disable",
-          "verify-full"
+          "require"
         ],
         "title": "DatabaseSSLMode",
         "description": "Supported PostgreSQL SSL modes."
