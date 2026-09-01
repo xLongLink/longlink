@@ -22,7 +22,6 @@ export default function CreateCompute() {
             dialog={dialog}
             subtitle="Register a compute backend for orchestration."
             title="Connect compute"
-            triggerLabel="Connect compute"
             width={640}
         >
             <FormLayout>

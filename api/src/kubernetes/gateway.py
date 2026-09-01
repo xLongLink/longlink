@@ -184,17 +184,19 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
         builder = builder.add_extension(x509.SubjectAlternativeName([name]), critical=False)
     server_certificate = builder.sign(ca_key, hashes.SHA256())
 
-    tls = GatewayTLS(
-        ca_certificate=ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_certificate=server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
-        server_private_key=server_key.private_bytes(
-            serialization.Encoding.PEM,
-            serialization.PrivateFormat.PKCS8,
-            serialization.NoEncryption(),
-        ).decode("ascii"),
-    )
+    ca_pem = ca_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii")
+    server_pem = server_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii")
+    server_key_pem = server_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    ).decode("ascii")
     if not client:
-        return tls
+        return GatewayTLS(
+            ca_certificate=ca_pem,
+            server_certificate=server_pem,
+            server_private_key=server_key_pem,
+        )
 
     # Bind the Platform client identity to this Compute CA without exposing the CA private key.
     client_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -208,9 +210,9 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
     ).sign(ca_key, hashes.SHA256())
 
     return GatewayClientTLS(
-        ca_certificate=tls.ca_certificate,
-        server_certificate=tls.server_certificate,
-        server_private_key=tls.server_private_key,
+        ca_certificate=ca_pem,
+        server_certificate=server_pem,
+        server_private_key=server_key_pem,
         client_certificate=client_certificate.public_bytes(serialization.Encoding.PEM).decode("ascii"),
         client_private_key=client_key.private_bytes(
             serialization.Encoding.PEM,
@@ -247,18 +249,17 @@ class Gateway:
         api = await self._client.api()
         gateway_class = GatewayClassResource("longlink-envoy", api=api)
         try:
-            if await gateway_class.exists():
-                await gateway_class.refresh()
-                status = gateway_class.raw.get("status")
-                conditions = status.get("conditions", []) if isinstance(status, dict) else []
-                spec = gateway_class.raw.get("spec")
-                if not isinstance(spec, dict) or spec.get("controllerName") != "gateway.envoyproxy.io/gatewayclass-controller":
-                    raise ValueError("Kubernetes GatewayClass longlink-envoy is not controlled by Envoy Gateway")
-                if any(
-                    isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
-                    for condition in conditions
-                ):
-                    return
+            await gateway_class.refresh()
+            status = gateway_class.raw.get("status")
+            conditions = status.get("conditions", []) if isinstance(status, dict) else []
+            spec = gateway_class.raw.get("spec")
+            if not isinstance(spec, dict) or spec.get("controllerName") != "gateway.envoyproxy.io/gatewayclass-controller":
+                raise ValueError("Kubernetes GatewayClass longlink-envoy is not controlled by Envoy Gateway")
+            if any(
+                isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
+                for condition in conditions
+            ):
+                return
         except ServerError as exc:
             if exc.response is None or exc.response.status_code != 404:
                 raise

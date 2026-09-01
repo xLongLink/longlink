@@ -28,7 +28,6 @@ export default function CreateStorage() {
             dialog={dialog}
             subtitle="Register an Exoscale SOS backend."
             title="Connect storage"
-            triggerLabel="Connect storage"
             width={520}
         >
             <FormLayout>

@@ -50,12 +50,11 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
                 invitation = OrganizationInvitation(organization_id=organization_id, email=email, role=role)
                 session.add(invitation)
                 await session.flush()
+            return
         except IntegrityError as exc:
             invitation = await session.scalar(invitation_statement)
             if invitation is None:
                 raise ConflictError("Invitation could not be created") from exc
-        else:
-            return
 
     invitation.role = role
     invitation.created_at = utcnow()

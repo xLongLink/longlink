@@ -31,7 +31,6 @@ export default function CreateDatabase() {
             dialog={dialog}
             subtitle="Register a database backend for the LongLink Platform."
             title="Connect database"
-            triggerLabel="Connect database"
             width={520}
         >
             <FormLayout>

@@ -151,7 +151,7 @@ async def create_application(
     """Create one Application with the specified Organization."""
 
     parsed_image = Image(image)
-    resolved_image = Image(image if "@" in image else f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
+    resolved_image = parsed_image if "@" in image else Image(f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
     if organization.created_id is None:
         raise ValueError("Test organization must have a creator")
 

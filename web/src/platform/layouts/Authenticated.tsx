@@ -19,7 +19,7 @@ export default function AuthenticatedLayout() {
     }
 
     // Keep authenticated users from seeing a sign-in prompt during profile API failures.
-    if (error && (!(error instanceof ApiError) || error.status !== 401)) {
+    if (error && (error instanceof ApiError ? error.status !== 401 : true)) {
         return (
             <Platform
                 action={

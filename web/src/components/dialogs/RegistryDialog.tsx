@@ -22,7 +22,7 @@ type RegistryDialogProps<TValues extends Record<string, unknown>> = {
     dialog: ReturnType<typeof useRegistryDialog<TValues>>;
     subtitle: string;
     title: string;
-    triggerLabel: string;
+    triggerLabel?: string;
     width: number;
 };
 
@@ -79,7 +79,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
     dialog,
     subtitle,
     title,
-    triggerLabel,
+    triggerLabel = title,
     width,
 }: RegistryDialogProps<TValues>) {
     const formId = useId();
