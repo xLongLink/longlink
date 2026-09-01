@@ -1,11 +1,8 @@
 import asyncio
 from uuid import UUID
-from pathlib import Path
-from sqlalchemy import text, inspect
+from sqlalchemy import text
 from scripts.seed import SeedSettings
-from src.environments import env
 from src.models.types import DatabaseSSLMode
-from sqlalchemy.engine import make_url
 from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Namespace
 from src.database.session import session_scope
@@ -25,90 +22,65 @@ async def cleanup() -> None:
     cluster = Kubernetes(kubeconfig_mapping(kubeconfig.read_text(encoding="utf-8")))
     api = await cluster.api()
 
-    # Collect provider resources from Platform state when its schema is available.
+    # Collect provider resources from current Platform state.
     managed_namespaces = {"longlink-system"}
     storage_resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
     database_resources: dict[tuple[str, int, str, str, DatabaseSSLMode, UUID], set[UUID]] = {}
-    platform_tables: set[str] = set()
-    platform_database_url = make_url(env.DATABASE_URL)
-    platform_database_name = platform_database_url.database
-    platform_database_available = True
-    if (
-        platform_database_url.get_backend_name() == "sqlite"
-        and isinstance(platform_database_name, str)
-        and platform_database_name not in {"", ":memory:"}
-    ):
-        platform_database_available = Path(platform_database_name).resolve().is_file()
+    async with session_scope() as session:
+        result = await session.execute(
+            text(
+                """
+                SELECT organizations.id,
+                       applications.id,
+                       database_registries.host,
+                       database_registries.port,
+                       database_registries.username,
+                       database_registries.password,
+                       database_registries.sslmode,
+                       storage_registries.endpoint_url,
+                       storage_registries.access_key_id,
+                       storage_registries.secret_access_key
+                FROM organizations
+                JOIN database_registries ON database_registries.id = organizations.database_id
+                JOIN storage_registries ON storage_registries.id = organizations.storage_id
+                LEFT JOIN applications ON applications.organization_id = organizations.id
+                """
+            )
+        )
+        for (
+            organization_id,
+            application_id,
+            database_host,
+            database_port,
+            database_username,
+            database_password,
+            database_sslmode,
+            endpoint_url,
+            access_key_id,
+            secret_access_key,
+        ) in result:
+            organization = UUID(str(organization_id))
+            managed_namespaces.add(organization.hex)
 
-    # Read tracked Organization assignments without creating an absent local SQLite database.
-    if platform_database_available:
-        async with session_scope() as session:
-            connection = await session.connection()
-            platform_tables = set(await connection.run_sync(lambda sync_connection: inspect(sync_connection).get_table_names()))
-            required_tables = {"applications", "database_registries", "organizations", "storage_registries"}
-            if required_tables.issubset(platform_tables):
-                result = await session.execute(
-                    text(
-                        """
-                        SELECT organizations.id,
-                               applications.id,
-                               database_registries.host,
-                               database_registries.port,
-                               database_registries.username,
-                               database_registries.password,
-                               database_registries.sslmode,
-                               storage_registries.endpoint_url,
-                               storage_registries.access_key_id,
-                               storage_registries.secret_access_key
-                        FROM organizations
-                        LEFT JOIN database_registries ON database_registries.id = organizations.database_id
-                        LEFT JOIN storage_registries ON storage_registries.id = organizations.storage_id
-                        LEFT JOIN applications ON applications.organization_id = organizations.id
-                        """
-                    )
-                )
-                for (
-                    organization_id,
-                    application_id,
-                    database_host,
-                    database_port,
-                    database_username,
-                    database_password,
-                    database_sslmode,
-                    endpoint_url,
-                    access_key_id,
-                    secret_access_key,
-                ) in result:
-                    organization = UUID(str(organization_id))
-                    managed_namespaces.add(organization.hex)
+            # Group Application credentials and the Organization bucket by storage registry.
+            storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
+            storage_applications = storage_resources.setdefault(storage_key, set())
+            if application_id is not None:
+                storage_applications.add(UUID(str(application_id)))
 
-                    # Group Application credentials and the Organization bucket by storage registry.
-                    if endpoint_url is not None and access_key_id is not None and secret_access_key is not None:
-                        storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
-                        storage_applications = storage_resources.setdefault(storage_key, set())
-                        if application_id is not None:
-                            storage_applications.add(UUID(str(application_id)))
-
-                    # Group Application runtime identities and the Organization database by database registry.
-                    if (
-                        database_host is not None
-                        and database_port is not None
-                        and database_username is not None
-                        and database_password is not None
-                        and database_sslmode is not None
-                    ):
-                        sslmode_value = database_sslmode.value if isinstance(database_sslmode, DatabaseSSLMode) else str(database_sslmode)
-                        database_key = (
-                            str(database_host),
-                            int(database_port),
-                            str(database_username),
-                            str(database_password),
-                            DatabaseSSLMode(sslmode_value),
-                            organization,
-                        )
-                        database_applications = database_resources.setdefault(database_key, set())
-                        if application_id is not None:
-                            database_applications.add(UUID(str(application_id)))
+            # Group Application runtime identities and the Organization database by database registry.
+            sslmode = database_sslmode if isinstance(database_sslmode, DatabaseSSLMode) else DatabaseSSLMode(str(database_sslmode))
+            database_key = (
+                str(database_host),
+                int(database_port),
+                str(database_username),
+                str(database_password),
+                sslmode,
+                organization,
+            )
+            database_applications = database_resources.setdefault(database_key, set())
+            if application_id is not None:
+                database_applications.add(UUID(str(application_id)))
 
     # Delete only namespaces selected by local seed configuration and tracked Platform state.
     existing_namespaces: set[str] = set()
@@ -126,7 +98,10 @@ async def cleanup() -> None:
     try:
         async with asyncio.timeout(10 * 60):
             while existing_namespaces:
-                remaining = {namespace for namespace in existing_namespaces if await Namespace(namespace, api=api).exists()}
+                remaining: set[str] = set()
+                for namespace in existing_namespaces:
+                    if await Namespace(namespace, api=api).exists():
+                        remaining.add(namespace)
                 if not remaining:
                     break
                 existing_namespaces = remaining
@@ -170,7 +145,7 @@ async def cleanup() -> None:
         if await database.database_usage(organization.hex) is not None:
             raise RuntimeError(f"PostgreSQL Organization database remains: {organization}")
 
-    # Remove stale Platform lifecycle and registry state only after external cleanup is verified.
+    # Remove Platform lifecycle and registry state only after external cleanup is verified.
     cleanup_order = (
         "operations",
         "organization_invitations",
@@ -181,12 +156,10 @@ async def cleanup() -> None:
         "database_registries",
         "storage_registries",
     )
-    if platform_tables:
-        async with session_scope() as session:
-            for table in cleanup_order:
-                if table in platform_tables:
-                    await session.execute(text(f"DELETE FROM {table}"))
-            await session.commit()
+    async with session_scope() as session:
+        for table in cleanup_order:
+            await session.execute(text(f"DELETE FROM {table}"))
+        await session.commit()
 
     print(
         f"Removed and verified {removed_namespaces} Kubernetes namespaces, "

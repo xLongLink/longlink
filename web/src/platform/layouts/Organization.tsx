@@ -19,7 +19,7 @@ export default function OrganizationLayout() {
                 { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
             ]}
         >
-            <Outlet />
+            <Outlet key={organization} />
         </Platform>
     );
 }

@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
-from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -62,27 +61,24 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
     runtime_password = "stable-runtime-password"
 
     # Act
-    runtime_connection = await adapter.schema(organization_id, application_id, runtime_password)
-    retried_runtime_connection = await adapter.schema(organization_id, application_id, runtime_password)
-    runtime_url = URL.create(
-        "postgresql+psycopg",
-        username=runtime_connection["username"],
-        password=runtime_connection["password"],
-        host=runtime_connection["host"],
-        port=runtime_connection["port"],
-        database=runtime_connection["database_name"],
-    )
+    runtime_username = await adapter.schema(organization_id, application_id, runtime_password)
+    retried_runtime_username = await adapter.schema(organization_id, application_id, runtime_password)
+    runtime_url = adapter.url(organization_id.hex).set(username=runtime_username, password=runtime_password)
     runtime_engine = create_async_engine(runtime_url)
     try:
         async with runtime_engine.begin() as connection:
             await connection.execute(text("CREATE TABLE runtime_items (id integer PRIMARY KEY, name text)"))
             await connection.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
             shared_user = (
-                await connection.execute(
-                    text("SELECT email, role FROM shared.audit WHERE id = :user_id"),
-                    {"user_id": active_user.id},
+                (
+                    await connection.execute(
+                        text("SELECT email, role FROM shared.audit WHERE id = :user_id"),
+                        {"user_id": active_user.id},
+                    )
                 )
-            ).mappings().one()
+                .mappings()
+                .one()
+            )
 
         with pytest.raises(SQLAlchemyError):
             async with runtime_engine.begin() as connection:
@@ -114,11 +110,9 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
         await maintenance_engine.dispose()
 
     # Assert
-    assert retried_runtime_connection == runtime_connection
-    assert runtime_connection["password"] == runtime_password
-    assert runtime_connection["sslmode"] == "disable"
-    assert runtime_connection["username"].startswith("longlink_")
-    assert len(runtime_connection["username"]) <= 63
+    assert retried_runtime_username == runtime_username
+    assert runtime_username.startswith("longlink_")
+    assert len(runtime_username) <= 63
     assert shared_user == {"email": "owner@example.com", "role": "owner"}
     assert deleted_at is not None
 

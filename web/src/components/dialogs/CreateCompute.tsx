@@ -14,7 +14,6 @@ export default function CreateCompute() {
     const dialog = useRegistryDialog({
         defaultValues: { name: '', kubeconfig: '' },
         endpoint: '/api/v1/computes',
-        errorMessage: 'Failed to connect compute',
         schema,
     });
 

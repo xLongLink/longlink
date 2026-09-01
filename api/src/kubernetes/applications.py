@@ -208,14 +208,16 @@ class Applications:
                         await resource.delete()
 
             # Delete retained migration Jobs only when their Application is being removed.
-            async for job in Job.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+            async for candidate in Job.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                job = cast(Job, candidate)
                 remaining = True
                 if job.metadata.get("deletionTimestamp") is None:
                     await job.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining:
-                async for pod in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                    pod = cast(Pod, candidate)
                     if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}:
                         break
                 else:
@@ -231,13 +233,14 @@ class Applications:
             migration_pod: Pod | None = None
             migration_phase: str | None = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
-                status = candidate.raw.get("status")
+                pod = cast(Pod, candidate)
+                status = pod.raw.get("status")
                 phase = status.get("phase") if isinstance(status, dict) else None
-                component = candidate.metadata.get("labels", {}).get("longlink.io/component")
+                component = pod.metadata.get("labels", {}).get("longlink.io/component")
                 if component != "migration" and phase not in {"Succeeded", "Failed"}:
-                    return [line async for line in candidate.logs(tail_lines=200)]
+                    return [line async for line in pod.logs(tail_lines=200)]
                 if component == "migration":
-                    migration_pod = cast(Pod, candidate)
+                    migration_pod = pod
                     migration_phase = phase if isinstance(phase, str) else None
             if migration_pod is not None:
                 migration_name = migration_pod.metadata.get("name", "unknown")

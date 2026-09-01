@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from uuid import UUID
+from typing import override
 from functools import partial
 from src.logger import logger
 from contextvars import ContextVar
@@ -27,6 +28,7 @@ class OperationLogHandler(logging.Handler):
         self.logs: list[str] = []
         self.expected_operation_id = expected_operation_id
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Store records produced by this handler's active Operation."""
 

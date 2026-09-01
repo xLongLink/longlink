@@ -73,6 +73,9 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         /** Subscribes the renderer to every Valtio-backed state in the current page context. */
         function subscribeToStateValues() {
+            // Ignore asynchronous continuations after this renderer releases ownership.
+            if (!mounted) return;
+
             // Remove previous subscriptions before rebuilding them.
             unsubscribeAll();
 
@@ -95,6 +98,9 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         ctx.services.invalidate = async (id) => {
+            // Ignore invalidations after this renderer releases ownership.
+            if (!mounted) return;
+
             // Skip unknown invalidation targets.
             const setup = ctx.services.setups[id];
             if (setup) {
@@ -102,19 +108,21 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
                 await setup();
             }
 
+            // Do not subscribe or render when cleanup occurred during setup.
+            if (!mounted) return;
+
             subscribeToStateValues();
             setRenderVersion((current) => current + 1);
         };
 
         void setupContext(setup.nodes, ctx, controller.signal)
             .then(() => {
-                subscribeToStateValues();
+                // Do not publish setup completion after cleanup.
+                if (!mounted) return;
 
-                // Publish initialized AST only while mounted.
-                if (mounted) {
-                    initializedAst.current = ast;
-                    setRenderVersion((current) => current + 1);
-                }
+                subscribeToStateValues();
+                initializedAst.current = ast;
+                setRenderVersion((current) => current + 1);
             })
             .catch((error) => {
                 // Report setup failures only while mounted.

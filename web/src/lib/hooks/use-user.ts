@@ -1,6 +1,10 @@
 import { api } from '@/lib/api';
+import { createContext, useContext } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+
+export const AuthenticatedUserContext = createContext<UserSummary | null>(null);
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
@@ -28,28 +32,30 @@ export function useCurrentUser() {
 
 /** Reads the user guaranteed by the authenticated route boundary. */
 export function useAuthenticatedUser() {
-    const { user } = useCurrentUser();
-    if (user === undefined) {
+    const user = useContext(AuthenticatedUserContext);
+    if (user === null) {
         throw new Error('useAuthenticatedUser must be used within an authenticated route');
     }
 
     return user;
 }
 
-/** Reads the current user profile and organization memberships. */
-export function useUserProfile() {
-    const user = useAuthenticatedUser();
-    const organizations = useQuery({
+/** Reads organization memberships for the authenticated user. */
+export function useUserOrganizations() {
+    const {
+        data: memberships,
+        error: organizationsError,
+        isLoading: isOrganizationsLoading,
+    } = useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: async ({ signal }) =>
             zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
     });
 
     return {
-        user,
-        memberships: organizations.data ?? [],
-        isOrganizationsLoading: organizations.isLoading,
-        organizationsError: organizations.error,
+        memberships: memberships ?? [],
+        isOrganizationsLoading,
+        organizationsError,
     };
 }
 

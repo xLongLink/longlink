@@ -1,9 +1,11 @@
 import ipaddress
 from uuid import UUID
+from sqlmodel import col
+from sqlalchemy import update
 from src.logger import logger
+from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import generate_gateway_tls, generate_gateway_bootstrap_tls
 from src.database.models.computes import ComputeRegistry
@@ -58,14 +60,22 @@ async def create(compute_id: UUID) -> str | None:
         # Publish connection material only after the desired gateway Deployment is serving.
         logger.info("Publishing Gateway connection state for Compute %s", registry.id)
         async with session_scope() as session:
-            if not await compute.record_success(
-                session,
-                registry.id,
-                gateway_url(gateway_address),
-                tls.ca_certificate,
-                f"{tls.client_certificate}\n{tls.client_private_key}",
-                registry.status,
-            ):
+            result = await session.execute(
+                update(ComputeRegistry)
+                .where(
+                    col(ComputeRegistry.id) == registry.id,
+                    col(ComputeRegistry.status) == registry.status,
+                )
+                .values(
+                    gateway_url=gateway_url(gateway_address),
+                    gateway_certificate=tls.ca_certificate,
+                    gateway_client_identity=f"{tls.client_certificate}\n{tls.client_private_key}",
+                    status=Status.running,
+                )
+            )
+            if not isinstance(result, CursorResult):
+                raise TypeError("Expected a cursor result")
+            if result.rowcount != 1:
                 return "Compute gateway state was not recorded"
             await session.commit()
     finally:

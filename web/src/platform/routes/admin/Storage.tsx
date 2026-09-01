@@ -2,11 +2,9 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { S3 } from '@/components/svg/S3';
-import { useDeleteDialog } from '@/lib/utils';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import MetadataDialog from '@/components/dialogs/Metadata';
@@ -17,10 +15,10 @@ import { PageError, PageLoading } from '@/components/Utils';
 import CreateStorage from '@/components/dialogs/CreateStorage';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageStorageRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { StorageRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
@@ -105,22 +103,8 @@ export default function AdminStorage() {
             </Table>
             {metadataStorage && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    const storage = metadataStorage;
-                                    closeMetadataStorage();
-                                    deleteDialog.openFor(storage);
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataStorage} />
-                        </Stack>
-                    }
                     onClose={closeMetadataStorage}
+                    onDelete={() => deleteDialog.openFor(metadataStorage)}
                     title="Storage metadata"
                 >
                     <MetadataList>

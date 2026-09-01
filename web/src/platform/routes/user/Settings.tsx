@@ -1,36 +1,34 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useUserProfile } from '@/lib/hooks/use-user';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { AvatarDialog } from '@/components/dialogs/Avatar';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { useAuthenticatedUser, useUserOrganizations } from '@/lib/hooks/use-user';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
-    const { user, memberships, isOrganizationsLoading } = useUserProfile();
+    const user = useAuthenticatedUser();
+    const { memberships, isOrganizationsLoading } = useUserOrganizations();
     const queryClient = useQueryClient();
     const updateUser = useMutation({
         mutationFn: async (payload: UserUpdate) =>
@@ -74,6 +72,7 @@ export default function Settings() {
 
         // Skip unchanged account names.
         if (accountName === user.name) {
+            setEditedName(null);
             return;
         }
 
@@ -183,7 +182,6 @@ export default function Settings() {
                                     value={name}
                                     width="100%"
                                     isRequired
-                                    isDisabled={isOrganizationsLoading}
                                     status={accountError ? { type: 'error', message: accountError } : undefined}
                                     onChange={(value) => {
                                         setEditedName(value);
@@ -270,61 +268,21 @@ export default function Settings() {
             </Menu>
 
             <DeleteConfirmation {...deleteDialog.dialogProps} />
-            <Dialog isOpen={isAvatarDialogOpen} purpose="form" onOpenChange={handleAvatarDialogOpenChange}>
-                <Layout
-                    header={
-                        <DialogHeader
-                            title="Avatar"
-                            subtitle="Use an HTTP(S) image URL."
-                            onOpenChange={handleAvatarDialogOpenChange}
-                        />
-                    }
-                    content={
-                        <LayoutContent>
-                            <form
-                                id="user-avatar-form"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    void saveAvatar();
-                                }}
-                            >
-                                <TextInput
-                                    label="Avatar URL"
-                                    value={avatar}
-                                    width="100%"
-                                    isOptional
-                                    isDisabled={updateUser.isPending}
-                                    placeholder="https://example.com/avatar.png"
-                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                    onChange={(value) => {
-                                        setEditedAvatar(value);
-                                        setAvatarError(null);
-                                    }}
-                                />
-                            </form>
-                        </LayoutContent>
-                    }
-                    footer={
-                        <LayoutFooter>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={updateUser.isPending}
-                                    onClick={() => handleAvatarDialogOpenChange(false)}
-                                />
-                                <Button
-                                    form="user-avatar-form"
-                                    type="submit"
-                                    label="Save"
-                                    variant="primary"
-                                    isLoading={updateUser.isPending}
-                                />
-                            </Stack>
-                        </LayoutFooter>
-                    }
-                />
-            </Dialog>
+            <AvatarDialog
+                avatar={avatar}
+                error={avatarError}
+                formId="user-avatar-form"
+                isOpen={isAvatarDialogOpen}
+                isSaving={updateUser.isPending}
+                onAvatarChange={(value) => {
+                    setEditedAvatar(value);
+                    setAvatarError(null);
+                }}
+                onOpenChange={handleAvatarDialogOpenChange}
+                onSave={saveAvatar}
+                placeholder="https://example.com/avatar.png"
+                title="Avatar"
+            />
         </PageContainer>
     );
 }

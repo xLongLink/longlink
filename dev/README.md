@@ -63,8 +63,11 @@ To test Organization and Application database provisioning against a remote Post
 service, set its administrator URL in the same ignored file:
 
 ```bash
-APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=require
+APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=verify-full
 ```
+
+The local Compose PostgreSQL service intentionally uses `sslmode=disable`. Production managed PostgreSQL databases
+must use `sslmode=verify-full`.
 
 The configured role must be able to connect to the `postgres` maintenance database and create databases and roles.
 The URL's database path is not persisted; LongLink provisions a separate database for each Organization. Do not run
@@ -76,8 +79,6 @@ To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 ```bash
 KUBECONFIG=../kubeconfig.yml
 ```
-
-If `api/dev.db` came from an earlier checkout, run `make clean` once before seeding the Exoscale-backed environment.
 
 Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations
 and seed local or remote compute data:

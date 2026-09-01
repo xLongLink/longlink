@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
+import Logs from '@/components/dialogs/Logs';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -9,7 +10,6 @@ import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
-import OperationLogs from '@/components/dialogs/OperationLogs';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -47,7 +47,6 @@ export default function AdminOperations() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/operations', zPageOperationResponse, 5000);
-
     if (isLoading) {
         return <PageLoading label="Loading operations" />;
     }
@@ -137,14 +136,15 @@ export default function AdminOperations() {
                 </MetadataDialog>
             ) : null}
             {logOperation ? (
-                <OperationLogs
-                    operationId={logOperation.id}
-                    operationName={kindLabels[logOperation.kind]}
+                <Logs
+                    kind="operation"
                     onOpenChange={(open) => {
                         if (!open) {
                             setLogOperation(null);
                         }
                     }}
+                    resourceId={logOperation.id}
+                    resourceName={kindLabels[logOperation.kind]}
                 />
             ) : null}
         </Stack>

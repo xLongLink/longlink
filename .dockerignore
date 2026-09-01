@@ -38,7 +38,6 @@ web/tests
 **/*.sqlite-*
 **/*.sqlite3
 **/*.sqlite3-*
-**/*.tsbuildinfo
 **/.coverage
 **/.coverage.*
 **/.pytest_cache
@@ -52,7 +51,6 @@ web/tests
 **/node_modules
 
 # LongLink generated workspaces and bundles
-api/openapi.yml
 api/src/.static/web
 sdk/dev
 sdk/longlink/.static/web

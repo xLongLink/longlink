@@ -20,7 +20,7 @@ class Envs(BaseSettings):
     DATABASE_NAME: str | None = None
     DATABASE_PORT: int | None = None
     DATABASE_SCHEMA: str | None = None
-    DATABASE_SSLMODE: Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"] = "verify-full"
+    DATABASE_SSLMODE: Literal["disable", "verify-full"] = "verify-full"
     DATABASE_PASSWORD: str | None = None
     DATABASE_USERNAME: str | None = None
 
@@ -61,10 +61,6 @@ class Envs(BaseSettings):
         ]
         if missing_settings:
             raise ValueError(f"Production settings are required: {', '.join(missing_settings)}")
-
-        # Managed database connections must verify both their certificate chain and hostname.
-        if self.DATABASE_SSLMODE != "verify-full":
-            raise ValueError("DATABASE_SSLMODE must be verify-full in production")
 
         # PostgreSQL identifiers cannot be safely bound as query parameters.
         if self.DATABASE_SCHEMA is None or not DATABASE_SCHEMA_PATTERN.fullmatch(self.DATABASE_SCHEMA):

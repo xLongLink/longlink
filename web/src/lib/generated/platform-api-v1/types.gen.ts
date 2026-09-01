@@ -188,7 +188,7 @@ export type DatabaseRegistryResponse = {
  *
  * Supported PostgreSQL SSL modes.
  */
-export type DatabaseSslMode = 'disable' | 'allow' | 'prefer' | 'require' | 'verify-ca' | 'verify-full';
+export type DatabaseSslMode = 'disable' | 'verify-full';
 
 /**
  * EmailPayload

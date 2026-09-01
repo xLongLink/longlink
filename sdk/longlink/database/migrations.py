@@ -38,12 +38,7 @@ def load_application_models() -> None:
         # Execute the application model module to populate database metadata.
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
-        try:
-            spec.loader.exec_module(module)
-        except Exception:
-            # Do not let failed imports prevent a corrected model from loading on retry.
-            sys.modules.pop(module_name, None)
-            raise
+        spec.loader.exec_module(module)
 
 
 def make_migrations() -> bool:

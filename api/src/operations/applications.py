@@ -1,8 +1,10 @@
 import secrets
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
+from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -45,15 +47,16 @@ async def create(application_id: UUID) -> None:
         credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
 
         # Revoke freshly-issued storage credentials if database provisioning cannot complete.
+        database_password = secrets.token_urlsafe(24)
         try:
             logger.info("Creating PostgreSQL schema for Application %s", application.id)
-            connection = await Postgres(
+            database_username = await Postgres(
                 infrastructure.database.host,
                 infrastructure.database.port,
                 infrastructure.database.username,
                 infrastructure.database.password,
                 infrastructure.database.sslmode,
-            ).schema(organization.id, application.id, secrets.token_urlsafe(24))
+            ).schema(organization.id, application.id, database_password)
         except Exception:
             try:
                 await object_storage.revoke(application.id.hex)
@@ -65,13 +68,13 @@ async def create(application_id: UUID) -> None:
         runtime_secrets = {
             **runtime_secrets,
             "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": connection["host"],
-            "LONGLINK_DATABASE_NAME": connection["database_name"],
-            "LONGLINK_DATABASE_PASSWORD": connection["password"],
-            "LONGLINK_DATABASE_PORT": str(connection["port"]),
+            "LONGLINK_DATABASE_HOST": infrastructure.database.host,
+            "LONGLINK_DATABASE_NAME": organization.id.hex,
+            "LONGLINK_DATABASE_PASSWORD": database_password,
+            "LONGLINK_DATABASE_PORT": str(infrastructure.database.port),
             "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-            "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
-            "LONGLINK_DATABASE_USERNAME": connection["username"],
+            "LONGLINK_DATABASE_SSLMODE": infrastructure.database.sslmode.value,
+            "LONGLINK_DATABASE_USERNAME": database_username,
             "LONGLINK_STORAGE_BUCKET": bucket,
             "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
             "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
@@ -89,11 +92,13 @@ async def create(application_id: UUID) -> None:
             result = await session.execute(
                 update(Application)
                 .where(
-                    Application.id == application.id,
-                    Application.deleted_at.is_(None),
+                    col(Application.id) == application.id,
+                    col(Application.deleted_at).is_(None),
                 )
                 .values(secrets=runtime_secrets)
             )
+            if not isinstance(result, CursorResult):
+                raise TypeError("Expected a cursor result")
             if result.rowcount != 1:
                 return
 
@@ -105,9 +110,7 @@ async def create(application_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     try:
-        await cluster.applications.apply(
-            application.id, organization.id.hex, application.image_desired, runtime_secrets
-        )
+        await cluster.applications.apply(application.id, organization.id.hex, application.image_desired, runtime_secrets)
     finally:
         await cluster.aclose()
 
@@ -118,9 +121,9 @@ async def create(application_id: UUID) -> None:
             await session.execute(
                 update(Application)
                 .where(
-                    Application.id == application.id,
-                    Application.deleted_at.is_(None),
-                    Application.status.in_((Status.creating, Status.failed)),
+                    col(Application.id) == application.id,
+                    col(Application.deleted_at).is_(None),
+                    col(Application.status).in_((Status.creating, Status.failed)),
                 )
                 .values(status=Status.running)
             )
@@ -171,5 +174,5 @@ async def delete(application_id: UUID) -> None:
     logger.info("Purging Application %s", application.id)
     async with session_scope() as session:
         # The delete statement locks the tombstone while making completed cleanup idempotent.
-        await session.execute(sql_delete(Application).where(Application.id == application.id))
+        await session.execute(sql_delete(Application).where(col(Application.id) == application.id))
         await session.commit()

@@ -9,7 +9,7 @@ from src.environments import env
 from longlink.shared.models import Email
 
 OAuthProvider = Literal["google", "github"]
-EMAIL_ADAPTER = TypeAdapter(Email)
+EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"

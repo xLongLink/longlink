@@ -117,6 +117,8 @@ async def get_organization_database_usage(
 
     # Load the Organization's immutable database assignment.
     registry = await session.get(DatabaseRegistry, membership.organization.database_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
     # Inspect the exact Organization database and return its physical size when available.
     database = Postgres(
@@ -141,6 +143,8 @@ async def get_organization_storage_usage(
 
     # Load the Organization's immutable storage assignment.
     registry = await session.get(StorageRegistry, membership.organization.storage_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Storage registry not found")
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     bucket_name = membership.organization.id.hex
@@ -175,7 +179,7 @@ async def create_organization_invitation(
 ):
     """Create one invitation for an organization member."""
 
-    organization = await organizations.create_invitation(
+    await organizations.create_invitation(
         session,
         membership.organization_id,
         payload.email,
@@ -185,7 +189,7 @@ async def create_organization_invitation(
     await session.commit()
 
     # Deliver only after the invitation transaction commits.
-    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, organization.name, payload.role)
+    background_tasks.add_task(mail.send_organization_invitation_email, payload.email, membership.organization.name, payload.role)
 
 
 @router.delete("/organizations/{organization_id}/invitations/{invitation_id}", status_code=204)

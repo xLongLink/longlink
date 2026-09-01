@@ -13,7 +13,6 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     defaultValues: TValues;
     endpoint: string;
-    errorMessage: string;
     schema: z.ZodType<TValues, TValues>;
     additionalInvalidateKeys?: string[][];
 };
@@ -31,7 +30,6 @@ type RegistryDialogProps<TValues extends Record<string, unknown>> = {
 export function useRegistryDialog<TValues extends Record<string, unknown>>({
     defaultValues,
     endpoint,
-    errorMessage,
     schema,
     additionalInvalidateKeys = [],
 }: RegistryDialogOptions<TValues>) {
@@ -41,7 +39,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     const mutation = useMutation({
         mutationFn: (payload: TValues) => api(endpoint, { json: payload, method: 'POST' }),
         onError: (error) => {
-            toast({ body: error instanceof Error ? error.message : errorMessage, type: 'error' });
+            toast({ body: error.message, type: 'error' });
         },
         onSuccess: () => {
             setOpen(false);

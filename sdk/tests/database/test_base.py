@@ -116,8 +116,8 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         pytest.param(
             "postgresql+asyncpg://app:secret@db/longlink",
             "application",
-            "require",
-            {"server_settings": {"timezone": "UTC", "search_path": '"application", shared'}, "ssl": "require"},
+            "disable",
+            {"server_settings": {"timezone": "UTC", "search_path": '"application", shared'}, "ssl": "disable"},
             id="postgresql-schema-and-ssl",
         ),
     ],

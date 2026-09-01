@@ -19,15 +19,17 @@ export function usePaginate<T extends Record<string, unknown>>(
             schema.parse(await api(`${path}?page=${page}&page_size=${PAGE_SIZE}`, { signal }).json()),
         refetchInterval,
     });
+    const hasData = query.data !== undefined;
     const items = query.data?.items ?? [];
     const total = query.data?.total ?? 0;
     const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     useEffect(() => {
-        if (page > lastPage) {
+        // Clamp only after the requested page returns its own total.
+        if (hasData && page > lastPage) {
             setPage(lastPage);
         }
-    }, [lastPage, page]);
+    }, [hasData, lastPage, page]);
 
     const pagination = useTablePagination<T>({
         page,

@@ -1,6 +1,5 @@
 import contextlib
 from uuid import UUID
-from typing import TypedDict
 from sqlalchemy import String, text
 from sqlalchemy.exc import OperationalError
 from collections.abc import AsyncGenerator
@@ -10,17 +9,6 @@ from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
-
-
-class DatabaseRuntimeConnection(TypedDict):
-    """Describe least-privilege connection material injected into one Application runtime."""
-
-    host: str
-    port: int
-    password: str
-    sslmode: DatabaseSSLMode
-    username: str
-    database_name: str
 
 
 class Postgres:
@@ -139,10 +127,10 @@ class Postgres:
             await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
 
-    async def schema(self, organization: UUID, application: UUID, password: str) -> DatabaseRuntimeConnection:
+    async def schema(self, organization: UUID, application: UUID, password: str) -> str:
         """Converge one application schema and runtime role, rotating to the supplied password on every retry.
 
-        Grant writes only to the application schema and reads to shared tables, then return non-administrator connection material.
+        Grant writes only to the application schema and reads to shared tables, then return the runtime username.
         """
 
         # Derive the app-scoped role while the cluster-owned password remains stable across retries.
@@ -188,15 +176,7 @@ class Postgres:
                 """
             )
 
-        # Return runtime credentials without exposing the registry administrator password.
-        return {
-            "host": self._host,
-            "port": self._port,
-            "password": password,
-            "sslmode": self._sslmode,
-            "username": runtime_username,
-            "database_name": organization.hex,
-        }
+        return runtime_username
 
     async def delete_schema(self, organization: UUID, application: UUID) -> None:
         """Delete an application schema and its runtime role when present."""

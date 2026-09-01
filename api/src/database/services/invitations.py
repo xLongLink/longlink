@@ -1,5 +1,6 @@
 from uuid import UUID
 from datetime import timedelta
+from sqlmodel import col
 from sqlalchemy import delete, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
@@ -19,12 +20,12 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
     # Reject emails that already belong to the organization.
     if (
         await session.scalar(
-            select(User.id)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
+            select(col(User.id))
+            .join(UserOrganization, col(UserOrganization.user_id) == col(User.id))
             .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                User.email == email,
+                col(UserOrganization.organization_id) == organization_id,
+                col(UserOrganization.deleted_at).is_(None),
+                col(User.email) == email,
             )
         )
         is not None
@@ -35,8 +36,8 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
     invitation_statement = (
         select(OrganizationInvitation)
         .where(
-            OrganizationInvitation.organization_id == organization_id,
-            OrganizationInvitation.email == email,
+            col(OrganizationInvitation.organization_id) == organization_id,
+            col(OrganizationInvitation.email) == email,
         )
         .with_for_update()
     )
@@ -66,10 +67,10 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     # Lock the recipient's pending grants before separating active and expired invitations.
     result = await session.scalars(
         select(OrganizationInvitation)
-        .join(Organization, Organization.id == OrganizationInvitation.organization_id)
+        .join(Organization, col(Organization.id) == col(OrganizationInvitation.organization_id))
         .where(
-            Organization.deleted_at.is_(None),
-            OrganizationInvitation.email == user.email,
+            col(Organization.deleted_at).is_(None),
+            col(OrganizationInvitation.email) == user.email,
         )
         .with_for_update()
     )
@@ -81,7 +82,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     cutoff = utcnow() - timedelta(days=7)
     active_invitations = [invitation for invitation in pending_invitations if invitation.created_at > cutoff]
     delete_pending_invitations = delete(OrganizationInvitation).where(
-        OrganizationInvitation.id.in_([invitation.id for invitation in pending_invitations])
+        col(OrganizationInvitation.id).in_([invitation.id for invitation in pending_invitations])
     )
     if not active_invitations:
         await session.execute(delete_pending_invitations)
@@ -91,8 +92,8 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     result = await session.scalars(
         select(UserOrganization)
         .where(
-            UserOrganization.user_id == user.id,
-            UserOrganization.organization_id.in_([invitation.organization_id for invitation in active_invitations]),
+            col(UserOrganization.user_id) == user.id,
+            col(UserOrganization.organization_id).in_([invitation.organization_id for invitation in active_invitations]),
         )
         .with_for_update()
     )

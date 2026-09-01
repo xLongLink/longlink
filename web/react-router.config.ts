@@ -74,11 +74,12 @@ export default {
     async buildEnd({ reactRouterConfig }) {
         const clientDirectory = path.join(reactRouterConfig.buildDirectory, 'client');
 
-        // Applications do not publish Platform crawler configuration.
+        // Applications do not publish Platform crawler configuration or public images.
         if (isApplication) {
             await Promise.all([
                 rm(path.join(clientDirectory, 'robots.txt'), { force: true }),
                 rm(path.join(clientDirectory, 'sitemap.xml'), { force: true }),
+                rm(path.join(clientDirectory, 'images'), { force: true, recursive: true }),
             ]);
         } else {
             // Generate crawler URLs from the same inventory used for prerendering.

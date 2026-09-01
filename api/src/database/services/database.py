@@ -1,9 +1,11 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
+from src.environments import env
 from src.models.types import DatabaseSSLMode
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,7 +29,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 DatabaseRegistry.username,
             )
         )
-        .order_by(DatabaseRegistry.name, DatabaseRegistry.id)
+        .order_by(col(DatabaseRegistry.name), col(DatabaseRegistry.id))
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
@@ -42,6 +44,10 @@ async def create(
     session: AsyncSession, name: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode
 ) -> DatabaseRegistry:
     """Register one database backend."""
+
+    # Managed production databases must authenticate both their certificate chain and hostname.
+    if not env.DEVELOPMENT and sslmode != DatabaseSSLMode.verify_full:
+        raise ValueError("Production databases must use sslmode=verify-full")
 
     # Persist administrator credentials only at the registry control-plane boundary.
     registry = DatabaseRegistry(
@@ -72,7 +78,7 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
         raise NotFoundError("Database registry not found")
 
     # Keep registries assigned to active or cleanup-pending Organizations available.
-    if await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1)) is not None:
+    if await session.scalar(select(col(Organization.id)).where(col(Organization.database_id) == registry_id).limit(1)) is not None:
         raise ConflictError("Database registry is used by organizations")
 
     # Internal registries have no soft-delete or audit lifecycle.

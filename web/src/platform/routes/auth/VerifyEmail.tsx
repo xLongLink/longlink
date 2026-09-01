@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { useNavigate } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
@@ -12,6 +11,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { fieldErrorStatus, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -26,12 +26,18 @@ const registrationCompleteSchema = z.object({
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
 
+type VerificationRequest = {
+    signal: AbortSignal;
+    token: string;
+};
+
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
     const showToast = useToast();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
+    const verificationController = useRef<AbortController | null>(null);
     const form = useForm({
         defaultValues: { name: '', password: '' },
         validationLogic: revalidateLogic(),
@@ -39,33 +45,50 @@ export default function VerifyEmail() {
         onSubmit: ({ value }) => handleComplete(value),
     });
     const verification = useMutation({
-        mutationFn: async (registrationToken: string) => {
+        mutationFn: async ({ signal, token: registrationToken }: VerificationRequest) => {
             if (!registrationToken) {
-                return zEmailPayload.parse(await api('/api/v1/auth/register/setup').json());
+                return zEmailPayload.parse(await api('/api/v1/auth/register/setup', { signal }).json());
             }
 
-            const response = await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST' });
-
-            return zEmailPayload.parse(await response.json());
+            return zEmailPayload.parse(
+                await api('/api/v1/auth/verify', {
+                    json: { token: registrationToken },
+                    method: 'POST',
+                    signal,
+                }).json()
+            );
         },
-        onError: (error) => {
+        onError: (error, variables) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.status === 400) {
+            if (
+                variables.signal === verificationController.current?.signal &&
+                error instanceof ApiError &&
+                error.status === 400
+            ) {
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             }
         },
     });
     const completion = useMutation({
         mutationFn: async (payload: RegistrationCompleteValues) => {
-            const response = await api('/api/v1/auth/register/complete', {
-                json: payload,
-                method: 'POST',
-            });
-
-            return zUserSummary.parse(await response.json());
+            return zUserSummary.parse(
+                await api('/api/v1/auth/register/complete', {
+                    json: payload,
+                    method: 'POST',
+                }).json()
+            );
         },
     });
-    const { mutate: verifyToken } = verification;
+    /** Replaces the active credential exchange with a cancellable request. */
+    function startVerification(verificationToken: string) {
+        verificationController.current?.abort();
+        const controller = new AbortController();
+        verificationController.current = controller;
+        verification.mutate({ signal: controller.signal, token: verificationToken });
+    }
+
+    const startInitialVerification = useEffectEvent(startVerification);
+
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -78,7 +101,7 @@ export default function VerifyEmail() {
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
-                verification.mutate('');
+                startVerification('');
                 return;
             }
             if (error instanceof ApiError && error.status === 409) {
@@ -93,8 +116,14 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        verifyToken(token);
-    }, [token, verifyToken]);
+        startInitialVerification(token);
+
+        return () => {
+            const controller = verificationController.current;
+            verificationController.current = null;
+            controller?.abort();
+        };
+    }, [token]);
 
     const recoveryRegisterHref = verification.data?.email
         ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
@@ -109,7 +138,7 @@ export default function VerifyEmail() {
             <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
                 <Stack gap={3}>
                     {invalidToken ? null : (
-                        <Button label="Retry" onClick={() => verification.mutate(token)} variant="primary" />
+                        <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
                     )}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>

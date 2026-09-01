@@ -99,9 +99,9 @@ async def test_application_runtime_access_returns_member_and_compute_assignment(
 
     # Assert
     assert access is not None
-    resolved_application, resolved_organization, role, compute = access
+    resolved_application, role, compute = access
     assert resolved_application.id == application.id
-    assert resolved_organization.id == organization.id
+    assert resolved_application.organization_id == organization.id
     assert role == OrganizationRoles.owner
     assert compute.id == organization.compute_id
 
@@ -290,9 +290,7 @@ async def test_update_member_role_rejects_missing_member(users: tuple[User, User
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(NotFoundError):
-            await organizations.update_member_role(
-                session, organization.id, non_member.id, OrganizationRoles.read, owner
-            )
+            await organizations.update_member_role(session, organization.id, non_member.id, OrganizationRoles.read, owner)
 
 
 async def test_update_member_role_rejects_owner_changes_from_non_owners(users: tuple[User, User, User]) -> None:
@@ -440,7 +438,7 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
         await session.commit()
 
     assert updated is not None
-    assert invitation.id == organization.id
+    assert invitation is None
 
     # Revoke the administrator after an earlier request-level access check could have succeeded.
     async with session_scope() as session:
@@ -576,7 +574,7 @@ async def test_create_default_rejects_missing_storage_registry(users: tuple[User
                 port=5432,
                 username="admin",
                 password="secret",
-                sslmode=DatabaseSSLMode.require,
+                sslmode=DatabaseSSLMode.verify_full,
             )
         )
         await session.commit()
@@ -732,35 +730,3 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None
-
-
-async def test_purge_removes_tombstoned_organization(users: tuple[User, User, User]) -> None:
-    """Remove an Organization only after it has been tombstoned."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        await organizations.soft_delete(session, organization.id, owner)
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        await organizations.purge(session, organization.id)
-        await session.commit()
-
-    # Assert
-    async with session_scope() as session:
-        assert await session.get(Organization, organization.id) is None
-
-
-async def test_purge_ignores_missing_organization() -> None:
-    """Allow idempotent cleanup after an Organization was already removed."""
-
-    # Act
-    async with session_scope() as session:
-        result = await organizations.purge(session, uuid4())
-        await session.commit()
-
-    # Assert
-    assert result is None

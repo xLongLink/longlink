@@ -6,7 +6,7 @@ import Platform from '@/platform/layouts/Platform';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { useCurrentUser } from '@/lib/hooks/use-user';
+import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {
@@ -43,5 +43,9 @@ export default function AuthenticatedLayout() {
         return <Navigate replace to="/login" />;
     }
 
-    return <Outlet />;
+    return (
+        <AuthenticatedUserContext.Provider value={user}>
+            <Outlet />
+        </AuthenticatedUserContext.Provider>
+    );
 }

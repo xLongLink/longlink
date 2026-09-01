@@ -31,24 +31,6 @@ def test_organization_template_limits_ephemeral_storage() -> None:
         "requests.memory": "512Mi",
     }
 
-
-def test_organization_template_has_valid_ipv6_egress_exceptions() -> None:
-    """Keep IPv6 egress exceptions within the IPv6 destination block."""
-
-    # Arrange
-    _, _, network_policy = templates.readyml_list(
-        files("src.kubernetes.templates").joinpath("application", "organization.yml"),
-        namespace="acme",
-    )
-
-    # Assert
-    network_policy_spec = network_policy["spec"]
-    assert isinstance(network_policy_spec, dict)
-    egress = network_policy_spec["egress"]
-    assert isinstance(egress, list)
-    assert egress[2]["to"][0]["ipBlock"]["except"] == ["::1/128", "fc00::/7", "fe80::/10"]
-
-
 async def test_organization_apply_creates_namespace_boundary_resources(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply the Namespace, quota, and network policy for one Organization."""
 

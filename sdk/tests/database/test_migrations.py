@@ -90,42 +90,6 @@ def test_migration_loader_skips_already_imported_models(
     database_migrations.load_application_models()
 
 
-def test_migration_loader_removes_failed_model_import_before_retry(
-    isolated_model: tuple[Path, Callable[[str, str], None]],
-) -> None:
-    """Allow a corrected model module to load after its first import fails."""
-
-    # Arrange
-    table_name = "retry_inventory_items"
-    module_name = "src.database.models.catalog.inventory"
-    _, write_model = isolated_model
-    write_model(table_name, 'raise RuntimeError("broken model")\n')
-
-    # Act
-    with pytest.raises(RuntimeError, match="broken model"):
-        database_migrations.load_application_models()
-
-    # Assert
-    assert module_name not in sys.modules
-
-    # Act
-    write_model(
-        table_name,
-        "from sqlmodel import Field, SQLModel\n"
-        "\n\n"
-        "class RetryInventoryItem(SQLModel, table=True):\n"
-        '    """Retry inventory table."""\n'
-        "\n"
-        f'    __tablename__ = "{table_name}"\n'
-        "\n"
-        "    id: int | None = Field(default=None, primary_key=True)\n",
-    )
-    database_migrations.load_application_models()
-
-    # Assert
-    assert table_name in database_metadata.tables
-
-
 @pytest.mark.parametrize(
     ("name", "type_", "expected"),
     [

@@ -4,9 +4,9 @@ import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { dateTimeFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -16,12 +16,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { dateTimeFormatter, useDeleteDialog } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageApplicationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { ApplicationResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
@@ -117,22 +116,8 @@ export default function AdminApplications() {
             </Table>
             {metadataApplication && (
                 <MetadataDialog
-                    footer={
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                className="text-warning underline"
-                                label="Delete"
-                                variant="ghost"
-                                onClick={() => {
-                                    const application = metadataApplication;
-                                    setMetadataApplication(null);
-                                    deleteDialog.openFor(application);
-                                }}
-                            />
-                            <Button label="Close" variant="primary" onClick={closeMetadataApplication} />
-                        </Stack>
-                    }
                     onClose={closeMetadataApplication}
+                    onDelete={() => deleteDialog.openFor(metadataApplication)}
                     title="Application metadata"
                 >
                     <MetadataList>

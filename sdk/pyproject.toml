@@ -75,7 +75,7 @@ include = ["longlink*"]
 
 [tool.setuptools.package-data]
 longlink = [".static/**"]
-"longlink.shared" = ["alembic/*.py", "alembic/*.mako", "alembic/versions/*.py"]
+"longlink.shared" = ["alembic/*.py", "alembic/versions/*.py"]
 
 [tool.setuptools.exclude-package-data]
 longlink = [

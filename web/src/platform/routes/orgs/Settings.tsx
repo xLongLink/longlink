@@ -1,7 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import Logs from '@/components/dialogs/Logs';
-import { useDeleteDialog } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -19,6 +18,7 @@ import { hasMinimumRole, ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter, formatBytes } from '@/lib/utils';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { AvatarDialog } from '@/components/dialogs/Avatar';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -30,11 +30,11 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import CreateApplication from '@/components/dialogs/CreateApplication';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
+import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import {
     zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
     zOrganizationStorageUsageResponse,
@@ -79,15 +79,15 @@ export default function OrganizationSettings() {
     const organizationId = organizationDetails?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
-    const [logsTarget, setLogsTarget] = useState<OrganizationApplicationSummary | null>(null);
+    const [logsTargetId, setLogsTargetId] = useState<string | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<OrganizationRoles>('write');
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
-        member: OrganizationMemberAccessResponse;
+        memberId: string;
         role: OrganizationRoles;
     } | null>(null);
-    const [revokeInvitationTarget, setRevokeInvitationTarget] = useState<OrganizationInvitationResponse | null>(null);
+    const [revokeInvitationId, setRevokeInvitationId] = useState<string | null>(null);
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
@@ -106,6 +106,12 @@ export default function OrganizationSettings() {
     });
     const isOrganizationSectionActive = hash === '' || hash === '#organization';
     const avatar = editedAvatar ?? organizationAvatar;
+    const logsTarget = applications.find((application) => application.id === logsTargetId) ?? null;
+    const roleChangeMember =
+        roleChangeTarget === null
+            ? null
+            : (members.find((member) => member.user.id === roleChangeTarget.memberId) ?? null);
+    const revokeInvitationTarget = invitations.find((invitation) => invitation.id === revokeInvitationId) ?? null;
     const databasePath =
         isOrganizationSectionActive && organizationId ? `/api/v1/organizations/${organizationId}/database` : null;
     const {
@@ -149,10 +155,10 @@ export default function OrganizationSettings() {
             return;
         }
 
-        // Persist the URL and keep the response available while Organization data refreshes.
+        // Persist the URL and use the refreshed Organization value.
         try {
-            const updated = await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
-            setEditedAvatar(updated.avatar);
+            await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
+            setEditedAvatar(null);
             setIsAvatarDialogOpen(false);
             toast({ body: 'Avatar saved' });
         } catch (mutationError) {
@@ -308,7 +314,8 @@ export default function OrganizationSettings() {
                                                     items={ROLE_NAMES.filter((role) => role !== member.role).map(
                                                         (role) => ({
                                                             label: `Grant ${roleLabel(role)} permission`,
-                                                            onClick: () => setRoleChangeTarget({ member, role }),
+                                                            onClick: () =>
+                                                                setRoleChangeTarget({ memberId: member.user.id, role }),
                                                         })
                                                     )}
                                                 />
@@ -377,7 +384,7 @@ export default function OrganizationSettings() {
                                                         items={[
                                                             {
                                                                 label: 'Revoke',
-                                                                onClick: () => setRevokeInvitationTarget(invitation),
+                                                                onClick: () => setRevokeInvitationId(invitation.id),
                                                             },
                                                         ]}
                                                     />
@@ -443,7 +450,10 @@ export default function OrganizationSettings() {
                                                     label={`Open actions for ${application.name}`}
                                                     size="sm"
                                                     items={[
-                                                        { label: 'Logs', onClick: () => setLogsTarget(application) },
+                                                        {
+                                                            label: 'Logs',
+                                                            onClick: () => setLogsTargetId(application.id),
+                                                        },
                                                         {
                                                             label: 'Delete',
                                                             onClick: () => deleteDialog.openFor(application),
@@ -461,9 +471,10 @@ export default function OrganizationSettings() {
             </Menu>
             {logsTarget ? (
                 <Logs
-                    applicationId={logsTarget.id}
-                    applicationName={logsTarget.name}
-                    onOpenChange={(open) => !open && setLogsTarget(null)}
+                    kind="application"
+                    onOpenChange={(open) => !open && setLogsTargetId(null)}
+                    resourceId={logsTarget.id}
+                    resourceName={logsTarget.name}
                 />
             ) : null}
             <AlertDialog
@@ -476,8 +487,8 @@ export default function OrganizationSettings() {
                 }}
                 title="Change member role"
                 description={
-                    roleChangeTarget
-                        ? `Grant ${roleLabel(roleChangeTarget.role)} permission to ${roleChangeTarget.member.user.name} in this organization?`
+                    roleChangeTarget && roleChangeMember
+                        ? `Grant ${roleLabel(roleChangeTarget.role)} permission to ${roleChangeMember.user.name} in this organization?`
                         : 'Change this member role?'
                 }
                 cancelLabel="Cancel"
@@ -486,18 +497,18 @@ export default function OrganizationSettings() {
                 isActionLoading={changeMemberRole.isPending}
                 onAction={async () => {
                     // Ignore submissions without a selected role change.
-                    if (roleChangeTarget === null) {
+                    if (roleChangeTarget === null || roleChangeMember === null) {
                         return;
                     }
 
                     // Persist the selected organization role.
                     try {
                         await changeMemberRole.mutateAsync({
-                            memberId: roleChangeTarget.member.user.id,
+                            memberId: roleChangeTarget.memberId,
                             role: roleChangeTarget.role,
                         });
                         toast({
-                            body: `${roleChangeTarget.member.user.name} now has ${roleLabel(roleChangeTarget.role)} permission`,
+                            body: `${roleChangeMember.user.name} now has ${roleLabel(roleChangeTarget.role)} permission`,
                         });
                         setRoleChangeTarget(null);
                     } catch (mutationError) {
@@ -510,11 +521,11 @@ export default function OrganizationSettings() {
                 }}
             />
             <AlertDialog
-                isOpen={revokeInvitationTarget !== null}
+                isOpen={revokeInvitationId !== null}
                 onOpenChange={(nextOpen) => {
                     // Keep the selected invitation only while its confirmation is open.
                     if (!nextOpen) {
-                        setRevokeInvitationTarget(null);
+                        setRevokeInvitationId(null);
                     }
                 }}
                 title="Revoke invitation"
@@ -537,7 +548,7 @@ export default function OrganizationSettings() {
                     try {
                         await revokeInvitation.mutateAsync(revokeInvitationTarget.id);
                         toast({ body: `Invitation for ${revokeInvitationTarget.email} revoked` });
-                        setRevokeInvitationTarget(null);
+                        setRevokeInvitationId(null);
                     } catch (mutationError) {
                         toast({
                             body:
@@ -616,61 +627,21 @@ export default function OrganizationSettings() {
                     }
                 />
             </Dialog>
-            <Dialog isOpen={isAvatarDialogOpen} purpose="form" onOpenChange={handleAvatarOpenChange}>
-                <Layout
-                    header={
-                        <DialogHeader
-                            title="Organization avatar"
-                            subtitle="Use an HTTP(S) image URL."
-                            onOpenChange={handleAvatarOpenChange}
-                        />
-                    }
-                    content={
-                        <LayoutContent>
-                            <form
-                                id="organization-avatar-form"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    void saveAvatar();
-                                }}
-                            >
-                                <TextInput
-                                    label="Avatar URL"
-                                    value={avatar}
-                                    width="100%"
-                                    isOptional
-                                    isDisabled={updateOrganization.isPending}
-                                    placeholder="https://example.com/org.png"
-                                    status={avatarError ? { type: 'error', message: avatarError } : undefined}
-                                    onChange={(value) => {
-                                        setEditedAvatar(value);
-                                        setAvatarError(null);
-                                    }}
-                                />
-                            </form>
-                        </LayoutContent>
-                    }
-                    footer={
-                        <LayoutFooter>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={updateOrganization.isPending}
-                                    onClick={() => handleAvatarOpenChange(false)}
-                                />
-                                <Button
-                                    form="organization-avatar-form"
-                                    type="submit"
-                                    label="Save"
-                                    variant="primary"
-                                    isLoading={updateOrganization.isPending}
-                                />
-                            </Stack>
-                        </LayoutFooter>
-                    }
-                />
-            </Dialog>
+            <AvatarDialog
+                avatar={avatar}
+                error={avatarError}
+                formId="organization-avatar-form"
+                isOpen={isAvatarDialogOpen}
+                isSaving={updateOrganization.isPending}
+                onAvatarChange={(value) => {
+                    setEditedAvatar(value);
+                    setAvatarError(null);
+                }}
+                onOpenChange={handleAvatarOpenChange}
+                onSave={saveAvatar}
+                placeholder="https://example.com/org.png"
+                title="Organization avatar"
+            />
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </PageContainer>
     );

@@ -25,6 +25,7 @@ class Organizations:
             files("src.kubernetes.templates").joinpath("application", "organization.yml"),
             namespace=namespace,
         )
+
         api = await self._client.api()
         await apply(Namespace(namespace_manifest, api=api))
         await apply(ResourceQuota(resource_quota, api=api))
