@@ -44,7 +44,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match="^User is already a member$"):
+        with pytest.raises(ConflictError, match=r"^User is already a member$"):
             await invitations.create(session, organization.id, owner.email, OrganizationRoles.write)
 
 
@@ -124,7 +124,7 @@ async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User
     async with session_scope() as session:
         monkeypatch.setattr(session, "scalar", no_invitation)
         monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        with pytest.raises(ConflictError, match="^Invitation could not be created$"):
+        with pytest.raises(ConflictError, match=r"^Invitation could not be created$"):
             await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
 
 

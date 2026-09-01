@@ -71,6 +71,9 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
         pytest.param("ssl_check_hostname=yes", "invalid ssl_check_hostname", id="invalid-hostname-policy"),
         pytest.param("ssl-mode=VERIFY_CA&ssl_check_hostname=true", "conflicts with ssl-mode", id="conflicting-hostname-policy"),
         pytest.param("ssl-mode=DISABLED&ssl_cert=cert.pem", "cannot include certificates", id="disabled-with-certificate"),
+        pytest.param("ssl_cert=first&ssl_cert=second", "one ssl_cert value", id="duplicate-certificate"),
+        pytest.param("ssl_key=first&ssl_key=second&ssl_cert=certificate", "one ssl_key value", id="duplicate-key"),
+        pytest.param("ssl-mode=REQUIRED&ssl_ca=ca.pem", "requires VERIFY_CA or VERIFY_IDENTITY", id="unverified-ca"),
     ],
 )
 def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, message: str) -> None:
@@ -82,6 +85,21 @@ def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, messag
     # Act and assert
     with pytest.raises(ValueError, match=message):
         urls.database(database_url)
+
+
+def test_mysql_database_url_defaults_to_identity_verification() -> None:
+    """Authenticate the MySQL server hostname when no TLS mode is specified."""
+
+    # Act
+    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink")
+
+    # Assert
+    context = connection.connect_args["ssl"]
+    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
+    assert connection.connect_args["init_command"] == "SET time_zone = '+00:00'"
+    assert isinstance(context, ssl.SSLContext)
+    assert context.check_hostname is True
+    assert context.verify_mode == ssl.CERT_REQUIRED
 
 
 def test_mysql_database_url_builds_required_tls_context() -> None:
@@ -159,22 +177,6 @@ def test_postgresql_database_url_rejects_unsupported_ssl_options(query: str, mes
     # Act and assert
     with pytest.raises(ValueError, match=message):
         urls.database(f"postgresql+asyncpg://control:secret@db:5432/longlink?{query}")
-
-
-@pytest.mark.parametrize(
-    ("query", "message"),
-    [
-        pytest.param("ssl_cert=first&ssl_cert=second", "one ssl_cert value", id="duplicate-certificate"),
-        pytest.param("ssl_key=first&ssl_key=second&ssl_cert=certificate", "one ssl_key value", id="duplicate-key"),
-        pytest.param("ssl-mode=REQUIRED&ssl_ca=ca.pem", "requires VERIFY_CA or VERIFY_IDENTITY", id="unverified-ca"),
-    ],
-)
-def test_mysql_database_url_rejects_invalid_client_tls_configuration(query: str, message: str) -> None:
-    """Reject ambiguous or ineffective MySQL client TLS settings."""
-
-    # Act and assert
-    with pytest.raises(ValueError, match=message):
-        urls.database(f"mysql+aiomysql://control:secret@db:3306/longlink?{query}")
 
 
 def test_database_url_rejects_unsupported_driver() -> None:

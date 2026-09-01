@@ -127,7 +127,7 @@ async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> N
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match="^Compute registry has unfinished lifecycle operation$"):
+        with pytest.raises(ConflictError, match=r"^Compute registry has unfinished lifecycle operation$"):
             await compute.delete(session, compute_id)
 
     # Assert
@@ -146,7 +146,7 @@ async def test_create_rejects_duplicate_compute_names() -> None:
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match="^Compute registry already exists$"):
+        with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
             await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})
 
 
@@ -168,7 +168,7 @@ async def test_create_rejects_duplicate_database_names() -> None:
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match="^Database registry already exists$"):
+        with pytest.raises(ConflictError, match=r"^Database registry already exists$"):
             await database.create(
                 session,
                 "Duplicate Database",
@@ -196,7 +196,7 @@ async def test_create_rejects_duplicate_storage_names() -> None:
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match="^Storage registry already exists$"):
+        with pytest.raises(ConflictError, match=r"^Storage registry already exists$"):
             await storage.create(
                 session,
                 "Duplicate Storage",

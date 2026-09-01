@@ -10,6 +10,7 @@ from src.database.services import organizations as organization_service
 from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -307,10 +308,12 @@ async def test_delete_tears_down_organization_boundaries_in_order(
 ) -> None:
     """Delete namespace, Application resources, providers, then the Organization tombstone."""
 
-    # Arrange a tombstoned Organization with one Application to clean up.
+    # Arrange a tombstoned Organization and an active sibling on the same infrastructure.
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
     application = await create_application(organization)
+    sibling_organization = await create_organization(users[1], name="sibling", infrastructure=infrastructure)
+    sibling_application = await create_application(sibling_organization)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None
@@ -325,12 +328,14 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         async def delete_schema(self, organization_id: object, application_id: object) -> None:
             """Record Application schema deletion."""
 
+            assert organization_id == organization.id
             assert application_id == application.id
             calls.append("schema")
 
         async def delete_database(self, organization_id: object) -> None:
             """Record Organization database deletion."""
 
+            assert organization_id == organization.id
             calls.append("database")
 
     class Storage:
@@ -346,12 +351,14 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         async def delete(self, bucket: str) -> None:
             """Record Organization bucket deletion."""
 
+            assert bucket == organization.id.hex
             calls.append("bucket")
 
     class Organizations:
         async def delete(self, namespace: str) -> None:
             """Record namespace deletion."""
 
+            assert namespace == organization.id.hex
             calls.append("namespace")
 
     class Kubernetes:
@@ -371,4 +378,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(
     assert await organization_operations.delete(organization.id) is None
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
+        assert await session.get(Application, application.id) is None
+        assert await session.get(Organization, sibling_organization.id) is not None
+        assert await session.get(Application, sibling_application.id) is not None
     assert calls == ["namespace", "schema", "revoke", "database", "bucket"]

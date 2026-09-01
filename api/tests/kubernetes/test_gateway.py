@@ -241,7 +241,7 @@ async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeyp
     monkeypatch.setattr(gateway.yaml, "safe_load_all", unexpected_safe_load_all)
 
     # Act and assert
-    with pytest.raises(ValueError, match="Envoy Gateway v1.8.3 manifest checksum does not match"):
+    with pytest.raises(ValueError, match=r"Envoy Gateway v1.8.3 manifest checksum does not match"):
         await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 

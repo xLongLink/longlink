@@ -1,21 +1,17 @@
 import pytest
 from uuid import UUID, uuid4
-from types import SimpleNamespace
 from httpx2 import AsyncClient
-from fastapi import HTTPException, BackgroundTasks
 from datetime import UTC, datetime
 from sqlmodel import select
 from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
 from sqlalchemy import func
 from urllib.parse import urlencode
-from src.routes.v1 import organizations as organization_routes
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
-from src.models.organizations import OrganizationUpdate, OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -179,6 +175,31 @@ async def test_update_organization_updates_metadata_for_administrator(
     assert updated is not None
     assert updated.avatar == "https://example.com/acme.png"
     assert updated.updated_id == owner.id
+
+
+async def test_update_organization_returns_not_found_when_active_organization_disappears(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Report an Organization removed after its membership was authorized."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    async def missing_organization(*_args: object) -> None:
+        """Simulate the Organization disappearing before its update."""
+
+        return None
+
+    monkeypatch.setattr(organizations, "update", missing_organization)
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": ""})
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_update_organization_rejects_write_member(
@@ -611,6 +632,7 @@ async def test_organization_member_creates_organization_invitation(
 
     # Assert
     assert response.status_code == 204
+    assert response.content == b""
     async with session_scope() as session:
         invitations_list = await organizations.invitations(session, organization.id)
     assert [(item.email, item.role) for item in invitations_list] == [(invitee.email, OrganizationRoles.write)]
@@ -1034,99 +1056,3 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await organizations.invitations(session, organization.id) == []
-
-
-@pytest.mark.parametrize("updated", (pytest.param(True, id="found"), pytest.param(False, id="missing")))
-async def test_update_organization_directly_returns_result_or_not_found(monkeypatch: pytest.MonkeyPatch, updated: bool) -> None:
-    """Commit updates and report missing organizations with the public error."""
-
-    # Arrange
-    organization = SimpleNamespace(id=UUID(int=1))
-    membership = SimpleNamespace(organization_id=organization.id)
-    user = SimpleNamespace(id=UUID(int=2))
-    session = SimpleNamespace(commits=0)
-
-    async def update(_session: object, organization_id: UUID, avatar: str, received_user: object) -> object | None:
-        """Return the configured update outcome after verifying route arguments."""
-
-        assert organization_id == organization.id
-        assert avatar == ""
-        assert received_user is user
-        return organization if updated else None
-
-    async def commit() -> None:
-        """Record successful update commits."""
-
-        session.commits += 1
-
-    session.commit = commit
-    monkeypatch.setattr(organization_routes.organizations, "update", update)
-
-    # Act
-    if not updated:
-        with pytest.raises(HTTPException) as raised:
-            await organization_routes.update_organization(OrganizationUpdate(avatar=""), user, membership, session)
-    else:
-        result = await organization_routes.update_organization(OrganizationUpdate(avatar=""), user, membership, session)
-
-    # Assert
-    if updated:
-        assert result is organization
-        assert session.commits == 1
-    else:
-        assert raised.value.status_code == 404
-        assert raised.value.detail == "Organization not found"
-        assert session.commits == 0
-
-
-async def test_create_organization_invitation_directly_commits_and_queues_email(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Commit an invitation before queuing its email notification."""
-
-    # Arrange
-    organization = SimpleNamespace(id=UUID(int=1), name="acme")
-    user = SimpleNamespace(id=UUID(int=2))
-    membership = SimpleNamespace(organization_id=organization.id, organization=organization)
-    session = SimpleNamespace(commits=0)
-    calls: list[str] = []
-
-    async def create_invitation(
-        _session: object,
-        organization_id: UUID,
-        email: str,
-        role: OrganizationRoles,
-        received_user: object,
-    ) -> None:
-        """Record invitation authorization and persistence arguments."""
-
-        assert organization_id == organization.id
-        assert email == "member@example.com"
-        assert role == OrganizationRoles.write
-        assert received_user is user
-        calls.append("create")
-
-    async def commit() -> None:
-        """Record the invitation transaction commit."""
-
-        session.commits += 1
-        calls.append("commit")
-
-    session.commit = commit
-    monkeypatch.setattr(organization_routes.organizations, "create_invitation", create_invitation)
-    background_tasks = BackgroundTasks()
-
-    # Act
-    result = await organization_routes.create_organization_invitation(
-        OrganizationInvitationCreate(email="member@example.com", role=OrganizationRoles.write),
-        background_tasks,
-        user,
-        membership,
-        session,
-    )
-
-    # Assert
-    assert result is None
-    assert session.commits == 1
-    assert calls == ["create", "commit"]
-    assert len(background_tasks.tasks) == 1
-    assert background_tasks.tasks[0].func is organization_routes.mail.send_organization_invitation_email
-    assert background_tasks.tasks[0].args == ("member@example.com", "acme", OrganizationRoles.write)

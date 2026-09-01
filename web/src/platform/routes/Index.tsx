@@ -1,6 +1,7 @@
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -8,8 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
-import { ArrowRight, Circle, Square, Triangle } from 'lucide-react';
+import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 
 const paths = [
     {
@@ -39,19 +39,28 @@ const platformCapabilities = [
     {
         title: 'Build',
         description: 'Build complete applications in code using your favorite developer tools.',
+        icon: Code2,
     },
     {
         title: 'Operate',
         description:
             'Run applications with authentication, permissions, deployment, storage, routing, and logging built in.',
+        icon: ServerCog,
     },
     {
         title: 'Keep it simple',
         description: 'Processes are clear, easy to operate, and cheap to maintain.',
+        icon: Sparkles,
     },
     {
         title: 'Own the process',
         description: 'Keep compliance, accountability, and a solution that fits your needs.',
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Separate responsibilities',
+        description: 'Keep a clear distinction between machine tasks and human tasks.',
+        icon: Workflow,
     },
 ] as const;
 
@@ -191,109 +200,50 @@ export default function Home() {
             </main>
             <IntegrationScale />
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
-                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={4}>
-                    <Grid gap={4} columns={{ minWidth: 320, max: 2, repeat: 'fit' }}>
-                        {platformCapabilities.slice(0, 2).map(({ title, description }) => (
-                            <Card key={title} className="overflow-hidden" minHeight={360} padding={0}>
-                                <Stack height="100%">
-                                    <Stack
-                                        aria-hidden="true"
-                                        className="relative min-h-52 overflow-hidden"
-                                        hAlign="center"
-                                        justify="center"
-                                    >
-                                        {title === 'Build' ? (
-                                            <img
-                                                alt="Connected application interfaces"
-                                                className="size-full object-cover"
-                                                decoding="async"
-                                                src="/images/build.png"
-                                            />
-                                        ) : (
-                                            <>
-                                                <Stack className="absolute size-48 rounded-full border border-border opacity-60" />
-                                                <Stack className="absolute size-32 rounded-full border border-border-emphasized opacity-50" />
-                                                <Stack className="absolute inset-x-8 top-1/2 border-t border-border opacity-50" />
-                                            </>
-                                        )}
-                                    </Stack>
-                                    <Stack className="p-6" gap={3}>
-                                        <Heading className="text-base" level={2}>
-                                            {title}
-                                        </Heading>
-                                        <Text as="p" color="secondary" textWrap="pretty">
-                                            {description}
-                                        </Text>
-                                    </Stack>
-                                </Stack>
-                            </Card>
-                        ))}
-                    </Grid>
-                    <Grid gap={4} columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {platformCapabilities.slice(2).map(({ title, description }) => (
-                            <Card key={title} className="overflow-hidden" minHeight={320} padding={0}>
-                                <Stack height="100%">
-                                    <Stack
-                                        aria-hidden="true"
-                                        className="relative min-h-44 overflow-hidden"
-                                        hAlign="center"
-                                        justify="center"
-                                    >
-                                        {title === 'Keep it simple' ? (
-                                            <Stack direction="horizontal" gap={3} vAlign="center">
-                                                <Square size={44} strokeWidth={1.5} />
-                                                <ArrowRight size={28} strokeWidth={1.5} />
-                                                <Triangle size={44} strokeWidth={1.5} />
-                                                <ArrowRight size={28} strokeWidth={1.5} />
-                                                <Circle size={44} strokeWidth={1.5} />
-                                            </Stack>
-                                        ) : (
-                                            <>
-                                                <Stack className="absolute size-40 rounded-full border border-border opacity-60" />
-                                                <Stack className="absolute size-28 rounded-full border border-border-emphasized opacity-50" />
-                                                <Stack className="absolute inset-x-6 top-1/2 border-t border-border opacity-50" />
-                                            </>
-                                        )}
-                                    </Stack>
-                                    <Stack className="p-6" gap={3}>
-                                        <Heading className="text-base" level={2}>
-                                            {title}
-                                        </Heading>
-                                        <Text as="p" color="secondary" textWrap="pretty">
-                                            {description}
-                                        </Text>
-                                    </Stack>
-                                </Stack>
-                            </Card>
-                        ))}
-                        <Card className="overflow-hidden" minHeight={320} padding={0}>
-                            <Stack height="100%">
-                                <Stack
-                                    aria-hidden="true"
-                                    className="relative min-h-44 overflow-hidden"
-                                    hAlign="center"
-                                    justify="center"
-                                >
-                                    <img
-                                        alt="Human and robot hands reaching toward each other"
-                                        className="size-full object-cover"
-                                        decoding="async"
-                                        loading="lazy"
-                                        src={humanRobotHands}
-                                    />
-                                </Stack>
-                                <Stack className="p-6" gap={3}>
+                <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
+                    {platformCapabilities.slice(0, 2).map(({ title, description, icon }) => (
+                        <Card
+                            key={title}
+                            className="-mb-px -mr-px rounded-none bg-transparent"
+                            minHeight={240}
+                            padding={6}
+                        >
+                            <Stack height="100%" justify="between">
+                                <Icon color="tertiary" icon={icon} size="lg" />
+                                <Stack gap={3}>
                                     <Heading className="text-base" level={2}>
-                                        Separate responsibilities
+                                        {title}
                                     </Heading>
                                     <Text as="p" color="secondary" textWrap="pretty">
-                                        Keep a clear distinction between machine tasks and human tasks.
+                                        {description}
                                     </Text>
                                 </Stack>
                             </Stack>
                         </Card>
-                    </Grid>
-                </Stack>
+                    ))}
+                </Grid>
+                <Grid className="mx-auto" columns={{ minWidth: 240, max: 3 }} gap={0} maxWidth={1000}>
+                    {platformCapabilities.slice(2).map(({ title, description, icon }) => (
+                        <Card
+                            key={title}
+                            className="-mb-px -mr-px rounded-none bg-transparent"
+                            minHeight={240}
+                            padding={6}
+                        >
+                            <Stack height="100%" justify="between">
+                                <Icon color="tertiary" icon={icon} size="lg" />
+                                <Stack gap={3}>
+                                    <Heading className="text-base" level={2}>
+                                        {title}
+                                    </Heading>
+                                    <Text as="p" color="secondary" textWrap="pretty">
+                                        {description}
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Card>
+                    ))}
+                </Grid>
             </Section>
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
