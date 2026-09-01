@@ -56,7 +56,7 @@ function SummaryCard({
             <Card aria-hidden="true" inert padding={padding} variant="muted">
                 <Center
                     className="scale-90"
-                    axis={padding === 3 ? 'vertical' : 'both'}
+                    axis={padding === 3 ? 'vertical' : undefined}
                     minHeight={padding === 3 ? 166 : 190}
                 >
                     {children}

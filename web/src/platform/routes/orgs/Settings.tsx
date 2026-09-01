@@ -264,9 +264,7 @@ export default function OrganizationSettings() {
                     <MenuSubSection icon="users" label="People">
                         <MenuItem label="Members">
                             <Stack gap={4}>
-                                <Stack>
-                                    <Heading level={2}>Members</Heading>
-                                </Stack>
+                                <Heading level={2}>Members</Heading>
                                 <Divider />
                                 {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
                                     <Banner status="error" title="Failed to load people." />
@@ -328,9 +326,7 @@ export default function OrganizationSettings() {
                         <MenuItem label="Invitations">
                             <Stack gap={4}>
                                 <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                                    <Stack>
-                                        <Heading level={2}>Invitations</Heading>
-                                    </Stack>
+                                    <Heading level={2}>Invitations</Heading>
                                     <Button
                                         label="Invite"
                                         isDisabled={organizationId.length === 0 || !hasOrganizationApplicationAccess}
