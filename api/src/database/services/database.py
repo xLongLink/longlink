@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -28,7 +29,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 DatabaseRegistry.username,
             )
         )
-        .order_by(DatabaseRegistry.name, DatabaseRegistry.id)
+        .order_by(col(DatabaseRegistry.name), col(DatabaseRegistry.id))
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
@@ -77,7 +78,7 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
         raise NotFoundError("Database registry not found")
 
     # Keep registries assigned to active or cleanup-pending Organizations available.
-    if await session.scalar(select(Organization.id).where(Organization.database_id == registry_id).limit(1)) is not None:
+    if await session.scalar(select(col(Organization.id)).where(col(Organization.database_id) == registry_id).limit(1)) is not None:
         raise ConflictError("Database registry is used by organizations")
 
     # Internal registries have no soft-delete or audit lifecycle.

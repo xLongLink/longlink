@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
@@ -23,7 +24,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 StorageRegistry.endpoint_url,
             )
         )
-        .order_by(StorageRegistry.name, StorageRegistry.id)
+        .order_by(col(StorageRegistry.name), col(StorageRegistry.id))
         .offset(pagination.offset)
         .limit(pagination.page_size)
     )
@@ -64,7 +65,7 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
         raise NotFoundError("Storage registry not found")
 
     # Keep registries assigned to active or cleanup-pending Organizations available.
-    if await session.scalar(select(Organization.id).where(Organization.storage_id == registry_id).limit(1)) is not None:
+    if await session.scalar(select(col(Organization.id)).where(col(Organization.storage_id) == registry_id).limit(1)) is not None:
         raise ConflictError("Storage registry is used by organizations")
 
     # Internal registries have no soft-delete or audit lifecycle.

@@ -1,4 +1,5 @@
 from uuid import UUID
+from sqlmodel import col
 from sqlalchemy import select, update
 from src.logger import logger
 from src.environments import env
@@ -60,9 +61,9 @@ async def reconcile(organization_id: UUID) -> None:
         await session.execute(
             update(Organization)
             .where(
-                Organization.id == organization.id,
-                Organization.deleted_at.is_(None),
-                Organization.status.in_((Status.creating, Status.failed)),
+                col(Organization.id) == organization.id,
+                col(Organization.deleted_at).is_(None),
+                col(Organization.status).in_((Status.creating, Status.failed)),
             )
             .values(status=Status.running)
         )
@@ -101,7 +102,7 @@ async def delete(organization_id: UUID) -> str | None:
     # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
     async with session_scope() as session:
         application_ids_result = await session.scalars(
-            select(Application.id).where(Application.organization_id == infrastructure.organization.id)
+            select(col(Application.id)).where(col(Application.organization_id) == infrastructure.organization.id)
         )
         application_ids = application_ids_result.all()
     logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
