@@ -83,7 +83,6 @@ jobs:
                   push: true
                   build-args: |
                       VERSION=${{ github.ref_name }}
-                      VITE_SITE_URL=https://longlink.dev
                   annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
                   tags: |

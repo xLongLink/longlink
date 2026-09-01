@@ -119,7 +119,10 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
                 headers={"Docker-Content-Digest": "sha256:deadbeef"},
             )
         if request.url.host == "ghcr.io":
+            assert request.headers["Authorization"] == "Bearer pull-token"
             return httpx2.Response(307, headers={"Location": "https://storage.example/config"})
+        assert request.url == "https://storage.example/config"
+        assert "Authorization" not in request.headers
         return httpx2.Response(200, json={"config": {"Labels": {}}})
 
     mock_async_client(monkeypatch, respond)

@@ -24,6 +24,48 @@ def test_render_mjml_template_rejects_compilation_errors(monkeypatch: pytest.Mon
         mail.render_mjml_template("password_reset.mjml", reset_url="https://example.com/reset")
 
 
+def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Escape text and attribute context before compiling an email template."""
+
+    # Arrange
+    compiled_sources: list[str] = []
+
+    class Result:
+        """Represent one successful MJML compilation."""
+
+        errors: list[str] = []
+        html = "rendered"
+
+    def compile_mjml(source: str) -> Result:
+        """Capture the fully interpolated MJML source."""
+
+        compiled_sources.append(source)
+        return Result()
+
+    monkeypatch.setattr(mail, "mjml_to_html", compile_mjml)
+    organization_name = "<Acme & Sons>"
+    role_label = 'owner "admin"'
+    invitation_url = 'https://example.test/invite?name="quoted"&next=<unsafe>'
+
+    # Act
+    rendered = mail.render_mjml_template(
+        "organization_invitation.mjml",
+        invitation_url=invitation_url,
+        organization_name=organization_name,
+        role_label=role_label,
+    )
+
+    # Assert
+    assert rendered == "rendered"
+    assert len(compiled_sources) == 1
+    source = compiled_sources[0]
+    assert organization_name not in source
+    assert role_label not in source
+    assert invitation_url not in source
+    assert "Join &lt;Acme &amp; Sons&gt; with owner &quot;admin&quot; access." in source
+    assert 'href="https://example.test/invite?name=&quot;quoted&quot;&amp;next=&lt;unsafe&gt;"' in source
+
+
 async def test_development_mail_logging_excludes_message_body(monkeypatch: pytest.MonkeyPatch) -> None:
     """Log development mail metadata without exposing bearer credentials."""
 

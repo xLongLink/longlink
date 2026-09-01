@@ -368,11 +368,12 @@ async def test_application_apply_reports_disappeared_deployment(monkeypatch: pyt
         )
 
 
-async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Retry rollout polling until the Deployment becomes ready."""
+async def test_application_apply_waits_for_route_after_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Retry rollout polling until the Deployment and HTTPRoute are ready."""
 
     # Arrange
     deployment_manifest = {"kind": "Deployment", "metadata": {"generation": 1}, "spec": {"replicas": 1}, "status": {}}
+    route_manifest: dict[str, object] = {"kind": "HTTPRoute", "status": {"parents": []}}
     sleeps: list[float] = []
 
     class Resource:
@@ -405,16 +406,21 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
         """Accept a resource without contacting Kubernetes."""
 
     async def sleep(delay: float) -> None:
-        """Make the Deployment ready for the next rollout poll."""
+        """Make each independent rollout gate ready in sequence."""
 
         sleeps.append(delay)
-        deployment_manifest["status"] = {
-            "observedGeneration": 1,
-            "replicas": 1,
-            "updatedReplicas": 1,
-            "readyReplicas": 1,
-            "availableReplicas": 1,
-        }
+        if len(sleeps) == 1:
+            deployment_manifest["status"] = {
+                "observedGeneration": 1,
+                "replicas": 1,
+                "updatedReplicas": 1,
+                "readyReplicas": 1,
+                "availableReplicas": 1,
+            }
+        else:
+            route_manifest["status"] = {
+                "parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]
+            }
 
     monkeypatch.setattr(
         applications.templates,
@@ -423,7 +429,7 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
             {"kind": "Job"},
             deployment_manifest,
             {"kind": "Service"},
-            {"kind": "HTTPRoute", "status": {"parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]}},
+            route_manifest,
         ),
     )
     monkeypatch.setattr(applications, "Secret", Resource)
@@ -440,7 +446,7 @@ async def test_application_apply_waits_for_deployment_readiness(monkeypatch: pyt
     )
 
     # Assert
-    assert sleeps == [5]
+    assert sleeps == [5, 5]
 
 
 async def test_application_logs_returns_failed_migration_logs(monkeypatch: pytest.MonkeyPatch) -> None:

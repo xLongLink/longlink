@@ -1,37 +1,9 @@
 import { useLocation } from 'react-router';
+import { documentationComponentSlugs } from '@/platform/docs';
 
 const siteUrl = new URL(import.meta.env.VITE_SITE_URL ?? 'https://longlink.dev').origin;
 const siteName = 'LongLink';
-const componentSlugs = new Set([
-    'action',
-    'avatar',
-    'badge',
-    'button',
-    'card',
-    'checkbox-input',
-    'dialog',
-    'divider',
-    'file-input',
-    'for',
-    'grid',
-    'heading',
-    'icon',
-    'link',
-    'menu',
-    'number-input',
-    'query',
-    'radio-list',
-    'selector',
-    'slider',
-    'stack',
-    'state',
-    'switch',
-    'tabs',
-    'table',
-    'text',
-    'text-area',
-    'text-input',
-]);
+const componentSlugs = new Set<string>(documentationComponentSlugs);
 
 type PageMetadata = {
     description: string;

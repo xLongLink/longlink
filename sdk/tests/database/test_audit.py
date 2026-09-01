@@ -4,7 +4,7 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import UTC, datetime
 from longlink import context as runtime_context
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
@@ -194,3 +194,48 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
             creator_id,
             updater_id,
         )
+
+
+async def test_audit_hook_preserves_ordinary_model_lifecycle(
+    audit_model_cleanup: Callable[[str], None],
+    _audit_engine: database_base.Database,
+) -> None:
+    """Leave ordinary SQLModel inserts, updates, and deletes unchanged."""
+
+    # Arrange
+    class PlainLifecycleItem(SQLModel, table=True):
+        """Temporary ordinary table used to verify audit listener scope."""
+
+        # Table metadata
+        __tablename__: ClassVar[str] = "plain_lifecycle_items"
+
+        # Item fields
+        id: int | None = Field(default=None, primary_key=True)
+        name: str
+
+    audit_model_cleanup(PlainLifecycleItem.__tablename__)
+
+    # Act
+    async with _audit_engine.session() as session:
+        item = PlainLifecycleItem(name="draft")
+        session.add(item)
+        await session.commit()
+        assert item.id is not None
+        item_id = item.id
+
+    async with _audit_engine.session() as session:
+        item = await session.get(PlainLifecycleItem, item_id)
+        assert item is not None
+        item.name = "published"
+        await session.commit()
+
+    async with _audit_engine.session() as session:
+        item = await session.get(PlainLifecycleItem, item_id)
+        assert item is not None
+        assert item.name == "published"
+        await session.delete(item)
+        await session.commit()
+
+    # Assert
+    async with _audit_engine.session() as session:
+        assert await session.get(PlainLifecycleItem, item_id) is None
