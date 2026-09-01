@@ -84,14 +84,11 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     items: list[OperationResponse] = []
     for operation in operations:
         resource_name = resource_names.get((operation.kind, operation.target_id))
-        resource = (
-            OperationResource(id=operation.target_id, name=resource_name) if resource_name is not None else None
-        )
         items.append(
             OperationResponse(
                 id=operation.id,
                 kind=operation.kind,
-                resource=resource,
+                resource=OperationResource(id=operation.target_id, name=resource_name) if resource_name is not None else None,
                 target_id=operation.target_id,
                 status=operation.status,
                 failed=operation.failed,
@@ -110,9 +107,7 @@ async def clear_expired_logs(session: AsyncSession) -> int:
 
     # Load only expired diagnostic payloads while retaining their Operation history.
     result = await session.scalars(
-        select(Operation)
-        .options(load_only(Operation.logs))
-        .where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
+        select(Operation).options(load_only(Operation.logs)).where(col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION)
     )
     expired_operations = result.all()
 

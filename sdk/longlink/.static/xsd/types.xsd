@@ -46,12 +46,6 @@
       <xsd:enumeration value="PUT"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="CompactSizeType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="sm"/>
-      <xsd:enumeration value="md"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="OrientationType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="horizontal"/>
@@ -94,13 +88,6 @@
       <xsd:enumeration value="fill"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="AlignType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="start"/>
-      <xsd:enumeration value="center"/>
-      <xsd:enumeration value="end"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="BoxAlignType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="start"/>
@@ -132,31 +119,10 @@
       <xsd:enumeration value="wrap-reverse"/>
     </xsd:restriction>
   </xsd:simpleType>
-  <xsd:simpleType name="TypographyType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="body"/>
-      <xsd:enumeration value="large"/>
-      <xsd:enumeration value="label"/>
-      <xsd:enumeration value="supporting"/>
-      <xsd:enumeration value="code"/>
-      <xsd:enumeration value="display-1"/>
-      <xsd:enumeration value="display-2"/>
-      <xsd:enumeration value="display-3"/>
-      <xsd:enumeration value="inherit"/>
-    </xsd:restriction>
-  </xsd:simpleType>
   <xsd:simpleType name="TextColorType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="primary"/>
       <xsd:enumeration value="secondary"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-  <xsd:simpleType name="FontWeightType">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="normal"/>
-      <xsd:enumeration value="medium"/>
-      <xsd:enumeration value="semibold"/>
-      <xsd:enumeration value="bold"/>
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="TextInputKindType">

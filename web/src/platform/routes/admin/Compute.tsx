@@ -28,6 +28,7 @@ export default function AdminCompute() {
     const [metadataCompute, setMetadataCompute] = useState<ComputeRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
+    const closeMetadataCompute = () => setMetadataCompute(null);
     const deleteCompute = useMutation({
         mutationFn: (computeId: string) => api(`/api/v1/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -123,14 +124,14 @@ export default function AdminCompute() {
                                 variant="ghost"
                                 onClick={() => {
                                     const compute = metadataCompute;
-                                    setMetadataCompute(null);
+                                    closeMetadataCompute();
                                     deleteDialog.openFor(compute);
                                 }}
                             />
-                            <Button label="Close" variant="primary" onClick={() => setMetadataCompute(null)} />
+                            <Button label="Close" variant="primary" onClick={closeMetadataCompute} />
                         </Stack>
                     }
-                    onClose={() => setMetadataCompute(null)}
+                    onClose={closeMetadataCompute}
                     title="Compute metadata"
                 >
                     <MetadataList>
