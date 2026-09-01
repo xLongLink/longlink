@@ -44,9 +44,9 @@ export default function VerifyEmail() {
                 return zEmailPayload.parse(await api('/api/v1/auth/register/setup').json());
             }
 
-            const response = await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST' });
-
-            return zEmailPayload.parse(await response.json());
+            return zEmailPayload.parse(
+                await api('/api/v1/auth/verify', { json: { token: registrationToken }, method: 'POST' }).json()
+            );
         },
         onError: (error) => {
             // Invalid credentials cannot become valid through another retry.
@@ -57,12 +57,12 @@ export default function VerifyEmail() {
     });
     const completion = useMutation({
         mutationFn: async (payload: RegistrationCompleteValues) => {
-            const response = await api('/api/v1/auth/register/complete', {
-                json: payload,
-                method: 'POST',
-            });
-
-            return zUserSummary.parse(await response.json());
+            return zUserSummary.parse(
+                await api('/api/v1/auth/register/complete', {
+                    json: payload,
+                    method: 'POST',
+                }).json()
+            );
         },
     });
     const { mutate: verifyToken } = verification;

@@ -37,7 +37,7 @@ export default function Login() {
         enabled: !user,
         staleTime: Infinity,
     });
-    const hasOAuthProvider = Boolean(oauthAvailability?.github || oauthAvailability?.google);
+    const hasOAuthProvider = oauthAvailability?.github || oauthAvailability?.google;
     const form = useForm({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         validationLogic: revalidateLogic(),

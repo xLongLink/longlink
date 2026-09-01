@@ -22,17 +22,18 @@ const menuEntryPropsSchema = z.object({
 export function Menu({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, menuPropsSchema);
-    const sections = nodes.filter((node) => isVisibleXmlNode(node, ctx));
 
     return (
         <ApplicationMenu gap={gap}>
-            {sections.map((section) => {
-                if (section.name !== 'MenuSection') {
-                    throw new Error('Menu only supports MenuSection children');
-                }
+            {nodes
+                .filter((node) => isVisibleXmlNode(node, ctx))
+                .map((section) => {
+                    if (section.name !== 'MenuSection') {
+                        throw new Error('Menu only supports MenuSection children');
+                    }
 
-                return renderSection(section, ctx);
-            })}
+                    return renderSection(section, ctx);
+                })}
         </ApplicationMenu>
     );
 }

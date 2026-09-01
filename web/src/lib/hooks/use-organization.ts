@@ -180,12 +180,12 @@ export function useUpdateOrganization(organizationId: string) {
 
     return useMutation({
         mutationFn: async ({ avatar }: OrganizationUpdate) => {
-            const response = await api(`/api/v1/organizations/${organizationId}`, {
-                json: { avatar },
-                method: 'PATCH',
-            });
-
-            return zOrganizationSummary.parse(await response.json());
+            return zOrganizationSummary.parse(
+                await api(`/api/v1/organizations/${organizationId}`, {
+                    json: { avatar },
+                    method: 'PATCH',
+                }).json()
+            );
         },
         // Refresh every response that embeds Organization metadata.
         onSuccess: () =>

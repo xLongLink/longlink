@@ -97,8 +97,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
         assert item.updated_at.tzinfo is UTC
         created_at = item.created_at
         updated_at = item.updated_at
-        assert (item.created_at, item.updated_at, item.created_id, item.updated_id) == (
-            created_at,
+        assert (item.updated_at, item.created_id, item.updated_id) == (
             created_at,
             creator_id,
             creator_id,

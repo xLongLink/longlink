@@ -39,7 +39,11 @@ export function useAuthenticatedUser() {
 /** Reads the current user profile and organization memberships. */
 export function useUserProfile() {
     const user = useAuthenticatedUser();
-    const organizations = useQuery({
+    const {
+        data: memberships,
+        error: organizationsError,
+        isLoading: isOrganizationsLoading,
+    } = useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: async ({ signal }) =>
             zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
@@ -47,9 +51,9 @@ export function useUserProfile() {
 
     return {
         user,
-        memberships: organizations.data ?? [],
-        isOrganizationsLoading: organizations.isLoading,
-        organizationsError: organizations.error,
+        memberships: memberships ?? [],
+        isOrganizationsLoading,
+        organizationsError,
     };
 }
 

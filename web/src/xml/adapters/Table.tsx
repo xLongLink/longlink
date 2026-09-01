@@ -41,7 +41,6 @@ export function Table({ props, nodes }: Props) {
                 tableColumnPropsSchema
             );
             const header = headerValue ?? field;
-            const cellNodes = node.children;
 
             return {
                 header,
@@ -50,7 +49,7 @@ export function Table({ props, nodes }: Props) {
                     const value = fieldParts.reduce(readSafeProperty, row);
 
                     // Shorthand columns render the resolved field value directly.
-                    if (cellNodes.length === 0) {
+                    if (node.children.length === 0) {
                         return String(value ?? '');
                     }
 
@@ -61,7 +60,7 @@ export function Table({ props, nodes }: Props) {
 
                     return (
                         <XmlContext.Provider value={{ scope: rowCtx, services }}>
-                            {renderNode(cellNodes, rowCtx)}
+                            {renderNode(node.children, rowCtx)}
                         </XmlContext.Provider>
                     );
                 },
