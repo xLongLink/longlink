@@ -24,10 +24,10 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
-    const [metadataComputeId, setMetadataComputeId] = useState<string | null>(null);
+    const [metadataCompute, setMetadataCompute] = useState<ComputeRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataCompute = () => setMetadataComputeId(null);
+    const closeMetadataCompute = () => setMetadataCompute(null);
     const deleteCompute = useMutation({
         mutationFn: (computeId: string) => api(`/api/v1/computes/${computeId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -41,7 +41,6 @@ export default function AdminCompute() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/computes', zPageComputeRegistryResponse, 5000);
-    const metadataCompute = computes.find((compute) => compute.id === metadataComputeId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete compute',
         mutation: deleteCompute,
@@ -109,7 +108,7 @@ export default function AdminCompute() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataComputeId(compute.id)}
+                            onClick={() => setMetadataCompute(compute)}
                         />
                     )}
                 </TableColumn>

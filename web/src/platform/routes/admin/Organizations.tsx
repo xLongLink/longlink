@@ -24,10 +24,10 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
-    const [metadataOrganizationId, setMetadataOrganizationId] = useState<string | null>(null);
+    const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataOrganization = () => setMetadataOrganizationId(null);
+    const closeMetadataOrganization = () => setMetadataOrganization(null);
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
@@ -45,8 +45,6 @@ export default function AdminOrganizations() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/organizations', zPageOrganizationSummary);
-    const metadataOrganization =
-        organizations.find((organization) => organization.id === metadataOrganizationId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete organization',
         mutation: deleteOrganization,
@@ -111,7 +109,7 @@ export default function AdminOrganizations() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataOrganizationId(organization.id)}
+                            onClick={() => setMetadataOrganization(organization)}
                         />
                     )}
                 </TableColumn>

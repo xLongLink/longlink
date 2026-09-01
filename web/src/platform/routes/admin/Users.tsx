@@ -18,9 +18,8 @@ import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList'
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
-    const [metadataUserId, setMetadataUserId] = useState<string | null>(null);
+    const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
-    const metadataUser = users.find((user) => user.id === metadataUserId) ?? null;
 
     if (isLoading) {
         return <PageLoading label="Loading users" />;
@@ -68,13 +67,13 @@ export default function AdminUsers() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataUserId(user.id)}
+                            onClick={() => setMetadataUser(user)}
                         />
                     )}
                 </TableColumn>
             </Table>
             {metadataUser && (
-                <MetadataDialog onClose={() => setMetadataUserId(null)} title="User metadata">
+                <MetadataDialog onClose={() => setMetadataUser(null)} title="User metadata">
                     <MetadataList>
                         <MetadataListItem label="Email">{metadataUser.email}</MetadataListItem>
                         <MetadataListItem label="Access">

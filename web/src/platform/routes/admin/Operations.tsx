@@ -39,17 +39,14 @@ const resourceLabels: Record<OperationResponse['kind'], string> = {
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const [logOperationId, setLogOperationId] = useState<string | null>(null);
-    const [metadataOperationId, setMetadataOperationId] = useState<string | null>(null);
+    const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
+    const [metadataOperation, setMetadataOperation] = useState<OperationResponse | null>(null);
     const {
         items: operations,
         error,
         isLoading,
         pagination,
     } = usePaginate('/api/v1/operations', zPageOperationResponse, 5000);
-    const logOperation = operations.find((operation) => operation.id === logOperationId) ?? null;
-    const metadataOperation = operations.find((operation) => operation.id === metadataOperationId) ?? null;
-
     if (isLoading) {
         return <PageLoading label="Loading operations" />;
     }
@@ -106,11 +103,11 @@ export default function AdminOperations() {
                             }}
                             hasChevron={false}
                             items={[
-                                { label: 'Metadata', onClick: () => setMetadataOperationId(operation.id) },
+                                { label: 'Metadata', onClick: () => setMetadataOperation(operation) },
                                 {
                                     isDisabled: operation.finished_at === null,
                                     label: 'Logs',
-                                    onClick: () => setLogOperationId(operation.id),
+                                    onClick: () => setLogOperation(operation),
                                 },
                             ]}
                         />
@@ -118,7 +115,7 @@ export default function AdminOperations() {
                 </TableColumn>
             </Table>
             {metadataOperation ? (
-                <MetadataDialog onClose={() => setMetadataOperationId(null)} title="Operation metadata">
+                <MetadataDialog onClose={() => setMetadataOperation(null)} title="Operation metadata">
                     <MetadataList>
                         <MetadataListItem label="Operation">{kindLabels[metadataOperation.kind]}</MetadataListItem>
                         <MetadataListItem label="Status">{statusLabels[metadataOperation.status]}</MetadataListItem>
@@ -143,7 +140,7 @@ export default function AdminOperations() {
                     kind="operation"
                     onOpenChange={(open) => {
                         if (!open) {
-                            setLogOperationId(null);
+                            setLogOperation(null);
                         }
                     }}
                     resourceId={logOperation.id}

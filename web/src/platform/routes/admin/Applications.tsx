@@ -25,8 +25,8 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const [metadataApplicationId, setMetadataApplicationId] = useState<string | null>(null);
-    const closeMetadataApplication = () => setMetadataApplicationId(null);
+    const [metadataApplication, setMetadataApplication] = useState<ApplicationResponse | null>(null);
+    const closeMetadataApplication = () => setMetadataApplication(null);
     const toast = useToast();
     const queryClient = useQueryClient();
     const deleteApplication = useMutation({
@@ -42,7 +42,6 @@ export default function AdminApplications() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/applications', zPageApplicationResponse, 5000);
-    const metadataApplication = applications.find((application) => application.id === metadataApplicationId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete application',
         mutation: deleteApplication,
@@ -111,7 +110,7 @@ export default function AdminApplications() {
                             tooltip="View metadata"
                             variant="ghost"
                             size="sm"
-                            onClick={() => setMetadataApplicationId(app.id)}
+                            onClick={() => setMetadataApplication(app)}
                         />
                     )}
                 </TableColumn>

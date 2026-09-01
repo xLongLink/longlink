@@ -23,10 +23,10 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
-    const [metadataStorageId, setMetadataStorageId] = useState<string | null>(null);
+    const [metadataStorage, setMetadataStorage] = useState<StorageRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataStorage = () => setMetadataStorageId(null);
+    const closeMetadataStorage = () => setMetadataStorage(null);
     const deleteStorage = useMutation({
         mutationFn: (storageId: string) => api(`/api/v1/storages/${storageId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -40,7 +40,6 @@ export default function AdminStorage() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/storages', zPageStorageRegistryResponse);
-    const metadataStorage = storages.find((storage) => storage.id === metadataStorageId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete storage',
         mutation: deleteStorage,
@@ -98,7 +97,7 @@ export default function AdminStorage() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataStorageId(storage.id)}
+                            onClick={() => setMetadataStorage(storage)}
                         />
                     )}
                 </TableColumn>

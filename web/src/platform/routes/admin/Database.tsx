@@ -23,10 +23,10 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
-    const [metadataDatabaseId, setMetadataDatabaseId] = useState<string | null>(null);
+    const [metadataDatabase, setMetadataDatabase] = useState<DatabaseRegistryResponse | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataDatabase = () => setMetadataDatabaseId(null);
+    const closeMetadataDatabase = () => setMetadataDatabase(null);
     const deleteDatabase = useMutation({
         mutationFn: (databaseId: string) => api(`/api/v1/databases/${databaseId}`, { method: 'DELETE' }),
         onSuccess: () => {
@@ -40,7 +40,6 @@ export default function AdminDatabase() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/databases', zPageDatabaseRegistryResponse);
-    const metadataDatabase = databases.find((database) => database.id === metadataDatabaseId) ?? null;
     const deleteDialog = useDeleteDialog({
         title: 'Delete database',
         mutation: deleteDatabase,
@@ -98,7 +97,7 @@ export default function AdminDatabase() {
                             size="sm"
                             tooltip="View metadata"
                             variant="ghost"
-                            onClick={() => setMetadataDatabaseId(database.id)}
+                            onClick={() => setMetadataDatabase(database)}
                         />
                     )}
                 </TableColumn>
