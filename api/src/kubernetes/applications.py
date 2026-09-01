@@ -1,6 +1,7 @@
 import json
 import asyncio
 import hashlib
+from copy import deepcopy
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
@@ -119,7 +120,22 @@ class Applications:
             namespace,
             image,
         )
-        migration_job = Job(migration, api=api)
+        migration_job = Job(deepcopy(migration), api=api)
+
+        # Replace a previous failed Job so the same desired release can retry its migration.
+        if await migration_job.exists():
+            await migration_job.refresh()
+            status = migration_job.raw.get("status")
+            conditions = status.get("conditions") if isinstance(status, dict) else []
+            if isinstance(conditions, list) and any(
+                isinstance(condition, dict) and condition.get("type") == "Failed" and condition.get("status") == "True"
+                for condition in conditions
+            ):
+                await migration_job.delete()
+                while await migration_job.exists():
+                    await asyncio.sleep(1)
+                migration_job = Job(deepcopy(migration), api=api)
+
         await apply(migration_job)
         try:
             await migration_job.wait(["condition=Complete", "condition=Failed"])

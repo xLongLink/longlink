@@ -73,6 +73,11 @@ async def test_application_apply_stops_after_failed_migration_job(monkeypatch: p
         name = "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
         namespace = "acme"
 
+        async def exists(self) -> bool:
+            """Report that the Job has not yet been created."""
+
+            return False
+
         async def wait(self, conditions: list[str]) -> None:
             """Accept the migration terminal conditions."""
 
@@ -271,6 +276,11 @@ async def test_application_apply_reports_quota_admission_failure(monkeypatch: py
     class MigrationJob(Resource):
         """Report a completed migration Job."""
 
+        async def exists(self) -> bool:
+            """Report that the Job has not yet been created."""
+
+            return False
+
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before the rollout failure."""
 
@@ -339,6 +349,11 @@ async def test_application_apply_reports_disappeared_deployment(monkeypatch: pyt
 
     class MigrationJob(Resource):
         """Report a completed migration Job."""
+
+        async def exists(self) -> bool:
+            """Report that the Job has not yet been created."""
+
+            return False
 
         async def wait(self, _conditions: list[str]) -> None:
             """Complete the migration before rollout polling."""
