@@ -12,11 +12,11 @@ pytestmark = pytest.mark.no_db
         ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db"),
         (
             "postgresql+asyncpg://control:secret@db:5432/longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=verify-full",
         ),
         (
-            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require&application_name=longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink&ssl=require",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=verify-full&application_name=longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink&ssl=verify-full",
         ),
     ],
 )

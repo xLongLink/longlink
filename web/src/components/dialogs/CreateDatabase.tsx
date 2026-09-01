@@ -21,7 +21,7 @@ const SSL_MODE_OPTIONS = zDatabaseSslMode.options.map((value) => ({ value, label
 /** Registers one database backend. */
 export default function CreateDatabase() {
     const dialog = useRegistryDialog({
-        defaultValues: { name: '', host: '', port: 5432, sslmode: 'require', username: '', password: '' },
+        defaultValues: { name: '', host: '', port: 5432, sslmode: 'verify-full', username: '', password: '' },
         endpoint: '/api/v1/databases',
         errorMessage: 'Failed to connect database',
         schema,

@@ -43,14 +43,7 @@ export const zComputeRegistryCreate = z.object({
  *
  * Supported PostgreSQL SSL modes.
  */
-export const zDatabaseSslMode = z.enum([
-    'disable',
-    'allow',
-    'prefer',
-    'require',
-    'verify-ca',
-    'verify-full'
-]);
+export const zDatabaseSslMode = z.enum(['disable', 'verify-full']);
 
 /**
  * DatabaseRegistryCreate

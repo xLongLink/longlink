@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
-import { useEffect, useRef } from 'react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -8,6 +7,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { fieldErrorStatus, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -18,6 +18,11 @@ const resetPasswordSchema = z.object({
 });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
+type VerificationRequest = {
+    signal: AbortSignal;
+    token: string;
+};
 
 /** Returns whether an API error reports an invalid or expired reset token. */
 function isBadTokenError(error: unknown): boolean {
@@ -36,7 +41,7 @@ export default function ResetPassword() {
         onSubmit: ({ value }) => handleResetPassword(value),
     });
     const verification = useMutation({
-        mutationFn: ({ signal, token: resetToken }: { signal: AbortSignal; token: string }) => {
+        mutationFn: ({ signal, token: resetToken }: VerificationRequest) => {
             if (!resetToken) {
                 return api('/api/v1/auth/reset-password/setup', { signal });
             }
@@ -47,10 +52,15 @@ export default function ResetPassword() {
                 signal,
             });
         },
-        onSuccess: () => sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY),
-        onError: (error) => {
+        onSuccess: (_data, variables) => {
+            // Ignore a request replaced by a newer verification attempt.
+            if (variables.signal === verificationController.current?.signal) {
+                sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
+            }
+        },
+        onError: (error, variables) => {
             // Invalid credentials cannot become valid through another retry.
-            if (isBadTokenError(error)) {
+            if (variables.signal === verificationController.current?.signal && isBadTokenError(error)) {
                 sessionStorage.removeItem(PASSWORD_RESET_TOKEN_KEY);
             }
         },
@@ -59,8 +69,17 @@ export default function ResetPassword() {
         mutationFn: (payload: ResetPasswordValues) =>
             api('/api/v1/auth/reset-password', { json: payload, method: 'POST' }),
     });
-    const { mutate: verifyToken } = verification;
     const hasTokenError = isBadTokenError(verification.error) || isBadTokenError(resetPassword.error);
+
+    /** Replaces the active credential exchange with a cancellable request. */
+    function startVerification(verificationToken: string) {
+        verificationController.current?.abort();
+        const controller = new AbortController();
+        verificationController.current = controller;
+        verification.mutate({ signal: controller.signal, token: verificationToken });
+    }
+
+    const startInitialVerification = useEffectEvent(startVerification);
 
     /** Saves the new password while keeping invalid-token failures inline. */
     async function handleResetPassword(payload: ResetPasswordValues) {
@@ -80,16 +99,14 @@ export default function ResetPassword() {
     }
 
     useEffect(() => {
-        verificationController.current?.abort();
-        const controller = new AbortController();
-        verificationController.current = controller;
-        verifyToken({ signal: controller.signal, token });
+        startInitialVerification(token);
 
         return () => {
-            verificationController.current?.abort();
+            const controller = verificationController.current;
             verificationController.current = null;
+            controller?.abort();
         };
-    }, [token, verifyToken]);
+    }, [token]);
 
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {
@@ -107,16 +124,7 @@ export default function ResetPassword() {
     if (verification.error) {
         return (
             <AuthLayout title="Set a new password" description="Please try again in a moment.">
-                <Button
-                    label="Retry"
-                    onClick={() => {
-                        verificationController.current?.abort();
-                        const controller = new AbortController();
-                        verificationController.current = controller;
-                        verification.mutate({ signal: controller.signal, token });
-                    }}
-                    variant="primary"
-                />
+                <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
             </AuthLayout>
         );
     }

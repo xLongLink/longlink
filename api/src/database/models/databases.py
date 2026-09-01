@@ -27,7 +27,7 @@ class DatabaseRegistry(PlatformModel, table=True):
     port: int
     password: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     sslmode: DatabaseSSLMode = Field(
-        default=DatabaseSSLMode.require,
+        default=DatabaseSSLMode.verify_full,
         sa_column=Column(
             Enum(
                 DatabaseSSLMode,

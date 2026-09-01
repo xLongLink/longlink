@@ -576,7 +576,7 @@ async def test_create_default_rejects_missing_storage_registry(users: tuple[User
                 port=5432,
                 username="admin",
                 password="secret",
-                sslmode=DatabaseSSLMode.require,
+                sslmode=DatabaseSSLMode.verify_full,
             )
         )
         await session.commit()

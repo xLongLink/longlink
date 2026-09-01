@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
-import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -12,6 +11,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { fieldErrorStatus, passwordSchema } from './validation';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
@@ -25,6 +25,11 @@ const registrationCompleteSchema = z.object({
 });
 
 type RegistrationCompleteValues = z.infer<typeof registrationCompleteSchema>;
+
+type VerificationRequest = {
+    signal: AbortSignal;
+    token: string;
+};
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
@@ -40,7 +45,7 @@ export default function VerifyEmail() {
         onSubmit: ({ value }) => handleComplete(value),
     });
     const verification = useMutation({
-        mutationFn: async ({ signal, token: registrationToken }: { signal: AbortSignal; token: string }) => {
+        mutationFn: async ({ signal, token: registrationToken }: VerificationRequest) => {
             if (!registrationToken) {
                 return zEmailPayload.parse(await api('/api/v1/auth/register/setup', { signal }).json());
             }
@@ -53,9 +58,13 @@ export default function VerifyEmail() {
                 }).json()
             );
         },
-        onError: (error) => {
+        onError: (error, variables) => {
             // Invalid credentials cannot become valid through another retry.
-            if (error instanceof ApiError && error.status === 400) {
+            if (
+                variables.signal === verificationController.current?.signal &&
+                error instanceof ApiError &&
+                error.status === 400
+            ) {
                 sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             }
         },
@@ -70,7 +79,16 @@ export default function VerifyEmail() {
             );
         },
     });
-    const { mutate: verifyToken } = verification;
+    /** Replaces the active credential exchange with a cancellable request. */
+    function startVerification(verificationToken: string) {
+        verificationController.current?.abort();
+        const controller = new AbortController();
+        verificationController.current = controller;
+        verification.mutate({ signal: controller.signal, token: verificationToken });
+    }
+
+    const startInitialVerification = useEffectEvent(startVerification);
+
     /** Creates the account and publishes only the new authenticated query state. */
     async function handleComplete(payload: RegistrationCompleteValues) {
         try {
@@ -83,10 +101,7 @@ export default function VerifyEmail() {
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
-                verificationController.current?.abort();
-                const controller = new AbortController();
-                verificationController.current = controller;
-                verification.mutate({ signal: controller.signal, token: '' });
+                startVerification('');
                 return;
             }
             if (error instanceof ApiError && error.status === 409) {
@@ -101,16 +116,14 @@ export default function VerifyEmail() {
     }
 
     useEffect(() => {
-        verificationController.current?.abort();
-        const controller = new AbortController();
-        verificationController.current = controller;
-        verifyToken({ signal: controller.signal, token });
+        startInitialVerification(token);
 
         return () => {
-            verificationController.current?.abort();
+            const controller = verificationController.current;
             verificationController.current = null;
+            controller?.abort();
         };
-    }, [token, verifyToken]);
+    }, [token]);
 
     const recoveryRegisterHref = verification.data?.email
         ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
@@ -125,16 +138,7 @@ export default function VerifyEmail() {
             <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
                 <Stack gap={3}>
                     {invalidToken ? null : (
-                        <Button
-                            label="Retry"
-                            onClick={() => {
-                                verificationController.current?.abort();
-                                const controller = new AbortController();
-                                verificationController.current = controller;
-                                verification.mutate({ signal: controller.signal, token });
-                            }}
-                            variant="primary"
-                        />
+                        <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
                     )}
                     <Button href={recoveryRegisterHref} label="Request a new registration link" />
                 </Stack>

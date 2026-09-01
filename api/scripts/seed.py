@@ -96,7 +96,7 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
                 "port": database_url.port or 5432,
                 "username": database_url.username or "",
                 "password": database_url.password or "",
-                "sslmode": database_url.query.get("sslmode", DatabaseSSLMode.require.value),
+                "sslmode": database_url.query.get("sslmode", DatabaseSSLMode.verify_full.value),
             }
         )
     except ValueError:

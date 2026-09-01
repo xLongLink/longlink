@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     ApplicationCreate,
+    OrganizationDetails,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
     OrganizationUpdate,
@@ -187,13 +188,20 @@ export function useUpdateOrganization(organizationId: string) {
                 }).json()
             );
         },
-        // Refresh every response that embeds Organization metadata.
-        onSuccess: () =>
-            Promise.all([
+        onSuccess: (updatedOrganization) => {
+            // Publish the saved Organization before background refreshes run.
+            queryClient.setQueryData<OrganizationDetails>(
+                ['api', `/api/v1/organizations/${organizationId}`],
+                (current) => (current ? { ...current, organization: updatedOrganization } : current)
+            );
+
+            // Refresh every response that embeds Organization metadata.
+            return Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
-            ]),
+            ]);
+        },
     });
 }

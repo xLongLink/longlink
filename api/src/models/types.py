@@ -12,10 +12,6 @@ class DatabaseSSLMode(StrEnum):
     """Supported PostgreSQL SSL modes."""
 
     disable = "disable"
-    allow = "allow"
-    prefer = "prefer"
-    require = "require"
-    verify_ca = "verify-ca"
     verify_full = "verify-full"
 
 

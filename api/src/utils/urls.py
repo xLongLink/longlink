@@ -88,7 +88,7 @@ def database(database_url: str) -> DatabaseConnection:
         raise ValueError("PostgreSQL database URL must use the lowercase ssl parameter")
 
     # Validate an explicit SSL mode or apply the secure deployment default.
-    sslmode = parsed_url.query.get("ssl", DatabaseSSLMode.require.value)
+    sslmode = parsed_url.query.get("ssl", DatabaseSSLMode.verify_full.value)
     if not isinstance(sslmode, str) or sslmode not in DatabaseSSLMode:
         raise ValueError("PostgreSQL database URL has an invalid SSL mode")
 

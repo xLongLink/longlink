@@ -4,6 +4,7 @@ from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
+from src.environments import env
 from src.models.types import DatabaseSSLMode
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +43,10 @@ async def create(
     session: AsyncSession, name: str, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode
 ) -> DatabaseRegistry:
     """Register one database backend."""
+
+    # Managed production databases must authenticate both their certificate chain and hostname.
+    if not env.DEVELOPMENT and sslmode != DatabaseSSLMode.verify_full:
+        raise ValueError("Production databases must use sslmode=verify-full")
 
     # Persist administrator credentials only at the registry control-plane boundary.
     registry = DatabaseRegistry(

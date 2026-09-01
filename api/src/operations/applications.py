@@ -3,6 +3,8 @@ from uuid import UUID
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
+from src.environments import env
+from src.models.types import DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -27,6 +29,10 @@ async def create(application_id: UUID) -> None:
         return
     organization = infrastructure.organization
     runtime_secrets = application.secrets
+
+    # Refuse legacy insecure database registrations before provisioning or applying a production workload.
+    if not env.DEVELOPMENT and infrastructure.database.sslmode != DatabaseSSLMode.verify_full:
+        raise RuntimeError("Production databases must use sslmode=verify-full")
 
     # Converge providers and the workload while the Application is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
