@@ -88,12 +88,12 @@ export function ApplicationRuntime({
               ),
           }
         : null;
-    const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
+    const tabPages = pages.filter((page) => page.route !== '/' && !page.route.includes('/:'));
     const firstTabPage = tabPages[0];
 
     // Let dynamic detail views share a tab with their matching list page.
     const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
-    const activePageTitle = activePage?.name || (activePage ? startCase(activePage.tab) : undefined);
+    const activePageTitle = activePage?.name ?? (activePage ? startCase(activePage.tab) : undefined);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: routePath.length > 0 && activePage !== undefined,
         queryKey: ['api', 'application-page', pagesUrl, activePage?.path],

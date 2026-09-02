@@ -13,6 +13,8 @@ import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 
 const integrationContextCount = 336_000_000;
+const homeDescription =
+    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
@@ -202,8 +204,7 @@ export default function Home() {
                 '@type': 'WebSite',
                 name: 'LongLink',
                 url: 'https://longlink.dev',
-                description:
-                    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.',
+                description: homeDescription,
             },
         ],
     };
@@ -211,7 +212,7 @@ export default function Home() {
     return (
         <>
             <Seo
-                description="LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python."
+                description={homeDescription}
                 structuredData={structuredData}
                 title="LongLink | Build and operate business applications"
             />
@@ -302,7 +303,7 @@ export default function Home() {
                         />
                         <PathCard
                             action="Build a new solution"
-                            description="Build a dedicated solution when the process is uniquely yours. LongLink handles the platform; you own the solution."
+                            description="Build a dedicated solution when the process is uniquely yours. We handle the platform; you own the solution."
                             isComingSoon={false}
                             title="Create"
                         />

@@ -2,6 +2,11 @@ import { useLocation } from 'react-router';
 
 const siteUrl = new URL(import.meta.env.VITE_SITE_URL ?? 'https://longlink.dev').origin;
 const siteName = 'LongLink';
+const breadcrumbLabels: Record<string, string> = {
+    api: 'Platform',
+    docs: 'Documentation',
+    sdk: 'Applications',
+};
 
 type SeoProps = {
     description?: string;
@@ -18,13 +23,7 @@ function canonicalPath(pathname: string): string {
 
 /** Formats a URL path segment for breadcrumb structured data. */
 function pathLabel(segment: string): string {
-    const labels: Record<string, string> = {
-        api: 'Platform',
-        docs: 'Documentation',
-        sdk: 'Applications',
-    };
-
-    return labels[segment] ?? segment.replaceAll('-', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+    return breadcrumbLabels[segment] ?? segment.replaceAll('-', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 /** Builds breadcrumb structured data for an article's current route. */
@@ -48,9 +47,8 @@ function breadcrumbs(pathname: string): object {
 /** Renders the document metadata declared by the active route. */
 export function Seo({ description, hasBreadcrumbs = false, isIndexable = true, structuredData, title }: SeoProps) {
     const { pathname } = useLocation();
-    const path = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
-    const canonicalUrl = `${siteUrl}${canonicalPath(path)}`;
-    const schema = structuredData ?? (hasBreadcrumbs ? breadcrumbs(path) : undefined);
+    const canonicalUrl = `${siteUrl}${canonicalPath(pathname)}`;
+    const schema = structuredData ?? (hasBreadcrumbs ? breadcrumbs(pathname) : undefined);
 
     return (
         <>
