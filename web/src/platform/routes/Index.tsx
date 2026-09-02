@@ -293,7 +293,8 @@ export default function Home() {
                             action="Explore existing solutions"
                             description={
                                 <>
-                                    An existing solutions as it is.
+                                    an existing solutions as it is.
+                                    <br />
                                     <br />
                                     Use a proven process without rebuilding what already exists.
                                 </>
@@ -305,7 +306,8 @@ export default function Home() {
                             action="Start from a foundation"
                             description={
                                 <>
-                                    And adapt an existing solution.
+                                    and adapt an existing solution.
+                                    <br />
                                     <br />
                                     Change its workflow, fields, rules, integrations, or interface around your
                                     requirements.
@@ -318,7 +320,8 @@ export default function Home() {
                             action="Build a new solution"
                             description={
                                 <>
-                                    A unique solution.
+                                    a unique solution.
+                                    <br />
                                     <br />
                                     The process is uniquely yours. We handle the infrastructure; you own the solution.
                                 </>
