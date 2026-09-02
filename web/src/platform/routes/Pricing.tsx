@@ -13,7 +13,7 @@ export default function Pricing() {
     return (
         <>
             <Seo
-                description="Explore LongLink plans for building and deploying dedicated business solutions."
+                description="Explore LongLink plans for building and deploying dedicated business software."
                 title="Pricing | LongLink"
             />
             <main>
@@ -57,10 +57,10 @@ export default function Pricing() {
                                             value="deploy-any-solution"
                                         >
                                             <Text type="supporting">
-                                                Deploy your solution or find free open-source solutions to start from.
+                                                Bring your own project or start from a free open-source one.
                                                 <br />
                                                 <br />
-                                                Solutions sleep automatically when inactive, and abuse-prevention
+                                                Runtimes sleep automatically when inactive, and abuse-prevention
                                                 safeguards help keep the shared platform reliable.
                                             </Text>
                                         </Collapsible>
@@ -68,13 +68,13 @@ export default function Pricing() {
                                             trigger={<Text type="supporting">100MB Database Space</Text>}
                                             value="database-space"
                                         >
-                                            <Text type="supporting">Shared across all solutions in the workspace.</Text>
+                                            <Text type="supporting">Shared across the workspace.</Text>
                                         </Collapsible>
                                         <Collapsible
                                             trigger={<Text type="supporting">2GB Object Storage Space</Text>}
                                             value="object-storage-space"
                                         >
-                                            <Text type="supporting">Shared across all solutions in the workspace.</Text>
+                                            <Text type="supporting">Shared across the workspace.</Text>
                                         </Collapsible>
                                     </CollapsibleGroup>
                                 </Stack>

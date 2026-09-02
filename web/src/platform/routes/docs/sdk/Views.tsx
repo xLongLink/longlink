@@ -75,7 +75,7 @@ function SummaryCard({
 const metadata = {
     seo: {
         title: 'Solution Views | LongLink Documentation',
-        description: 'Build solution interfaces with LongLink Solution Views and components.',
+        description: 'Build interfaces with LongLink Solution Views and components.',
     },
     toc: [
         { id: 'solution-views', label: 'Solution Views', level: 1 },
@@ -98,7 +98,7 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">
                     A Solution View is an XML interface definition associated with a browser route and rendered inside
-                    the LongLink Solution shell. Store Solution Views in <Code>src/views</Code> and compose them from{' '}
+                    the LongLink Solution shell. Store views in <Code>src/views</Code> and compose them from{' '}
                     <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
                         Astryx
                     </Link>

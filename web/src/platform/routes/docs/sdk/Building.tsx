@@ -8,8 +8,8 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 
 const metadata = {
     seo: {
-        title: 'Building Solutions | LongLink Documentation',
-        description: 'Build and package a LongLink solution for deployment.',
+        title: 'Building Projects | LongLink Documentation',
+        description: 'Build and package a LongLink project for deployment.',
     },
     toc: [
         { id: 'building', label: 'Building', level: 1 },
@@ -26,7 +26,9 @@ export default function DocsArticleRoute() {
                 <Heading id="building" level={1}>
                     Building
                 </Heading>
-                <Text as="p">Solutions are packaged into an image and pushed to a registry.</Text>
+                <Text as="p">
+                    The build command packages a project into an image, which can be pushed to a registry.
+                </Text>
                 <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
                 <Stack gap={2}>
                     <Heading id="metadata" level={2}>

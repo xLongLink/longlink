@@ -14,7 +14,7 @@ import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'l
 
 const integrationContextCount = 336_000_000;
 const homeDescription =
-    'LongLink is the open-source foundation for building, deploying, and operating dedicated business solutions in Python.';
+    'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
@@ -97,9 +97,9 @@ function IntegrationScale() {
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    With different regulations, data, and workflows,
+                    Regulations, data, and workflows vary.
                     <br />
-                    Each requires a unique solution.
+                    Each operating context needs dedicated software.
                 </Text>
             </Stack>
         </Section>
@@ -214,7 +214,7 @@ export default function Home() {
             <Seo
                 description={homeDescription}
                 structuredData={structuredData}
-                title="LongLink | Build and operate business solutions"
+                title="LongLink | Build and operate business software"
             />
             <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">

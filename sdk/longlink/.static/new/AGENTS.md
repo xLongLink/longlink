@@ -1,29 +1,29 @@
 # AGENTS.md
 
-You are working on a LongLink Solution:
+You are working on a LongLink Solution project:
 
-- Solution models and migrations own only the Solution schema.
+- Models and migrations own only this project's schema.
 - The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
-- Use `longlink.database.base.AuditTable` for Solution tables.
+- Use `longlink.database.base.AuditTable` for tables that need Platform-user attribution.
 
 ## Code structure
 
 ```
 ├── src/
-│   ├── models/       # SQLModel Solution tables
-│   ├── views/        # LongLink Solution Views
+│   ├── models/       # SQLModel database tables
+│   ├── views/        # Solution View files
 │   ├── routes/       # API routes
 │   ├── schemas/      # Pydantic schemas
-│   ├── services/     # Solution services
-│   └── envs.py       # Enviroments
-├── tests/            # Solution tests
+│   ├── services/     # Service modules
+│   └── envs.py       # Environments
+├── tests/            # Project tests
 ├── .env.sample       # Environment template
-└── main.py           # Solution entry pointn
+└── main.py           # Service entry point
 ```
 
-## XML Solution Views
+## XML views
 
-- LongLink Solution Views use XML, not HTML.
+- A Solution View uses XML, not HTML.
 - Run `longlink docs` to discover the supported XML components.
 - Run `longlink docs <component>` before using a component to inspect its attributes, children, and examples.
 - Do not invent XML elements or attributes that are absent from the component documentation.
@@ -46,4 +46,4 @@ You are working on a LongLink Solution:
 - Write tests only when instructed.
 - Test observable behavior with clear, deterministic assertions.
 - Use Arrange, Act, Assert sections for non-trivial tests.
-- Mock external boundaries, not Solution logic.
+- Mock external boundaries, not business logic.

@@ -122,8 +122,8 @@ function TermsContent() {
                 </Text>
                 <Text as="p">
                     These Terms form a binding agreement between you and LongLink SAGL. You accept them when you create
-                    an account, create or join an organization, deploy or access a solution, connect infrastructure, use
-                    the SDK, CLI, hosted platform, solution runtime, documentation, support channels, or otherwise use
+                    an account, create or join an organization, deploy or access a Solution, connect infrastructure, use
+                    the SDK, CLI, hosted platform, Solution runtime, documentation, support channels, or otherwise use
                     the Service.
                 </Text>
                 <Text as="p">
@@ -143,7 +143,7 @@ function TermsContent() {
                     2. Definitions and contract documents
                 </Heading>
                 <Text as="p">
-                    "Service" means the LongLink website, hosted platform, SDK, CLI, solution runtime, APIs, proxying,
+                    "Service" means the LongLink website, hosted platform, SDK, CLI, Solution runtime, APIs, proxying,
                     deployment tooling, documentation, templates, and related support. "Solution" means a LongLink
                     solution or workload that is built, registered, deployed, proxied, rendered, tested, or operated
                     through the Service.
@@ -171,7 +171,7 @@ function TermsContent() {
                 </Heading>
                 <Text as="p">
                     The Service provides tools for building, deploying, routing, operating, and observing custom
-                    business solutions. Features, APIs, SDK behavior, platform screens, XML components, templates,
+                    business software. Features, APIs, SDK behavior, platform screens, XML components, templates,
                     infrastructure adapters, and deployment behavior may change over time.
                 </Text>
                 <Text as="p">
@@ -199,12 +199,12 @@ function TermsContent() {
                 </Heading>
                 <Text as="p">
                     You must provide accurate account and organization information and keep it current. You are
-                    responsible for activity through your account, organizations, solutions, credentials, infrastructure
+                    responsible for activity through your account, organizations, Solutions, credentials, infrastructure
                     registries, and users whom you authorize.
                 </Text>
                 <Text as="p">
                     You must protect passwords, API credentials, deployment secrets, kubeconfigs, database credentials,
-                    object-storage keys, solution environment values, SSH keys, and other access materials. You must use
+                    object-storage keys, Solution environment values, SSH keys, and other access materials. You must use
                     reasonable access controls and notify{' '}
                     <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
                         info@longlink.dev
@@ -212,9 +212,9 @@ function TermsContent() {
                     promptly if you suspect compromise.
                 </Text>
                 <Text as="p">
-                    You are responsible for configuring and hardening solutions, applying updates, managing encryption
+                    You are responsible for configuring and hardening Solutions, applying updates, managing encryption
                     and keys, restricting network access, checking software licenses, validating deployments, and
-                    maintaining independent backups. We may isolate a solution, revoke credentials, stop proxying,
+                    maintaining independent backups. We may isolate a Solution, revoke credentials, stop proxying,
                     disable access, or suspend an organization where reasonably necessary to contain a security incident
                     or protect the Service.
                 </Text>
@@ -266,7 +266,7 @@ function TermsContent() {
                     <ListItem
                         label={
                             <Text>
-                                bypass or interfere with authentication, authorization, organization isolation, solution
+                                bypass or interfere with authentication, authorization, organization isolation, Solution
                                 isolation, security controls, logging, metering, rate limits, image verification,
                                 deployment checks, proxy controls, or platform protections;
                             </Text>
@@ -307,7 +307,7 @@ function TermsContent() {
                 </Text>
                 <Text as="p">
                     We have no general obligation to monitor Customer Content. We may review technical metadata and
-                    investigate, preserve, quarantine, restrict, disable, or remove Customer Content, solutions,
+                    investigate, preserve, quarantine, restrict, disable, or remove Customer Content, Solutions,
                     organizations, accounts, or infrastructure connections where reasonably and proportionately
                     necessary to address suspected abuse, fraud, security threats, or legal violations, protect users or
                     infrastructure, or comply with a binding legal request. Our handling of personal data is described
@@ -417,7 +417,7 @@ function TermsContent() {
                 <Text as="p">
                     LongLink storage, databases, deployments, local development environments, and connected
                     infrastructure are not backup services unless a written agreement expressly says so. Deleting,
-                    reinstalling, replacing, suspending, or terminating a solution, schema, bucket, organization,
+                    reinstalling, replacing, suspending, or terminating a Solution, schema, bucket, organization,
                     runtime, or infrastructure resource may erase Customer Content without a recovery period. You are
                     responsible for exporting Customer Content and, where possible, securely deleting it before deleting
                     or releasing resources.
@@ -438,7 +438,7 @@ function TermsContent() {
                 </Heading>
                 <Text as="p">
                     We and our licensors retain all rights in the Service, documentation, branding, templates, SDK,
-                    platform software, solution runtime, XML renderer, infrastructure adapters, and underlying
+                    platform software, Solution runtime, XML renderer, infrastructure adapters, and underlying
                     technology. These Terms grant only the limited right to use the Service during the agreement.
                 </Text>
                 <Text as="p">
@@ -454,7 +454,7 @@ function TermsContent() {
                 </Heading>
                 <Text as="p">
                     We may perform maintenance, restart services, rotate secrets, change network routes, migrate
-                    workloads, stop deployments, remove stale resources, or isolate solutions, organizations, or
+                    workloads, stop deployments, remove stale resources, or isolate Solutions, organizations, or
                     infrastructure connections to protect the Service, users, or connected infrastructure.
                 </Text>
                 <Text as="p">
@@ -496,7 +496,7 @@ function TermsContent() {
                 <Text as="p">
                     For business users, to the fullest extent permitted by law: (a) we are not liable for indirect,
                     incidental, special, consequential, or punitive loss, or for lost profit, revenue, business,
-                    opportunity, goodwill, anticipated savings, data, Customer Content, credentials, or solutions; and
+                    opportunity, goodwill, anticipated savings, data, Customer Content, credentials, or Solutions; and
                     (b) our total aggregate liability arising from or related to the Service is limited to the fees paid
                     or payable for the affected Service in the three months immediately before the event giving rise to
                     the claim, capped at CHF 1,000. Liability for auxiliaries is excluded to the extent permitted by
@@ -517,7 +517,7 @@ function TermsContent() {
                 <Text as="p">
                     If you are a business user, you will defend, indemnify, and hold harmless LongLink SAGL and its
                     personnel from third-party claims, damages, penalties, and reasonable legal costs arising from
-                    Customer Content, your solutions, your users, your connected infrastructure, your breach of these
+                    Customer Content, your Solutions, your users, your connected infrastructure, your breach of these
                     Terms, or your infringement of law or third-party rights. This does not apply to the extent the
                     claim was caused by our wilful misconduct or gross negligence.
                 </Text>
@@ -533,13 +533,13 @@ function TermsContent() {
                     14. Suspension, deletion and termination
                 </Heading>
                 <Text as="p">
-                    You may stop using the Service at any time and may request account closure. Deleting a solution,
+                    You may stop using the Service at any time and may request account closure. Deleting a Solution,
                     organization, schema, bucket, runtime, deployment, registry, or infrastructure connection may be
                     irreversible and may immediately erase Customer Content. You remain responsible for charges incurred
                     before deletion or termination and any outstanding balance.
                 </Text>
                 <Text as="p">
-                    We may immediately suspend access, stop proxying, disable or delete a solution, remove Customer
+                    We may immediately suspend access, stop proxying, disable or delete a Solution, remove Customer
                     Content, revoke credentials, suspend an organization, or terminate the agreement if you materially
                     breach these Terms, fail to pay, create a security or legal risk, use the Service fraudulently or
                     abusively, or if required by law. Where the issue is reasonably capable of cure and does not require

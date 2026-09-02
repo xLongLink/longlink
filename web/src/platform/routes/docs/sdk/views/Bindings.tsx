@@ -7,7 +7,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Bindings | LongLink Documentation',
-        description: 'Bind LongLink Solution View components to solution data and state.',
+        description: 'Bind LongLink Solution View components to runtime data and state.',
     },
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },

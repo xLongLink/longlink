@@ -1,10 +1,10 @@
 # Contributing to LongLink
 
-The LongLink Platform owns authentication, authorization, orchestration, storage, and solution routing.
+The LongLink Platform owns authentication, authorization, orchestration, storage, and routing for Solutions.
 
 The web package owns the shared frontend runtime and the XML rendering path used by both platform and SDK bundles.
 
-The SDK owns shared-schema models, migrations, and synchronization helpers alongside solution-facing Python helpers, solution migrations, CLI commands, database helpers, and packaged XML schema assets. The API executes shared migrations and writes with control-plane credentials; solution runtimes receive read-only shared access.
+The SDK owns shared-schema models, migrations, and synchronization helpers alongside Python helpers for Solution projects, project migrations, CLI commands, database helpers, and packaged XML schema assets. The API executes shared migrations and writes with control-plane credentials; Solution runtimes receive read-only shared access.
 
 <br />
 
@@ -52,5 +52,5 @@ make clear          # Remove local Compose volumes
 ## Test the SDK in development
 
 ```bash
-make sdk            # Build the SDK web bundle and run the generated SDK app
+make sdk            # Build the SDK web bundle and run the generated SDK service
 ```

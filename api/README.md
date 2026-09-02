@@ -29,24 +29,24 @@ Each organization is created with:
 - A `table` in the database, with a `shared` schema.
 - A `bucket` in the storage, with a `shared` folder.
 
-Resouce limits are manages at the `namespace`, `table` and `bucket` level.
+Resource limits are managed at the `namespace`, `table` and `bucket` level.
 
 <br />
 
 ## Solutions
 
-Each solution is deployed using the organization resources:
+LongLink deploys each Solution using the organization resources:
 
 - A `pod` in the organization namespace
 - A `schema` in the organization database
 - A `folder` in the organization bucket
 
-Each solution has:
+The runtime receives:
 
 - Read permission from the `shared` schema
-- Read and write permission from the solution schema
+- Read and write permission from the Solution schema
 - Read permission from the `shared` folder
-- Read and write permission from the solution folder
+- Read and write permission from the Solution folder
 
 <br />
 

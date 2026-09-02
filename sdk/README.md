@@ -35,7 +35,7 @@ longlink docs Button
 make sdk
 ```
 
-This builds the SDK web bundle, recreates `sdk/dev`, links that generated Solution to the local SDK source, and starts the SDK development Solution. Do not keep manual changes in `sdk/dev`; it is recreated by this command.
+This builds the SDK web bundle, recreates `sdk/dev`, links the generated project to the local SDK source, and starts its development service. Do not keep manual changes in `sdk/dev`; it is recreated by this command.
 
 > Requirements: Python 3.12 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
 

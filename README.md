@@ -17,9 +17,9 @@
 
 ## Introduction
 
-AI has changed the economics and cost structure of software creation. As solutions become faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
+AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
 
-LongLink provides that foundation. It turns real-world processes into well-structured, maintainable Python solutions while handling the common layer around every solution: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the solution logic.
+LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a LongLink Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
 
 Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
 
@@ -56,7 +56,7 @@ longlink dev
 ## Goals
 
 - **Keep it simple**: Processes are clear, easy to operate and cheap to maintain.
-- **Own the process**: Compliance, accountability and a solution that fit the needs.
+- **Own the process**: Retain control, accountability and software that fits the work.
 - **Separate responsibilities**: Clear distinction between a machine and a human task.
 
 LongLink aims to bring software-development principles to the way organisations design and operate their processes by creating a clear boundary between what is a computer task and what requires a human decision. This approach aligns with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and supports organisations working towards relevant ISO certifications and guidance, including [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 31000](https://www.iso.org/standard/65694.html), [ISO 37301](https://www.iso.org/standard/75080.html), and [ISO 37000](https://www.iso.org/standard/65036.html).

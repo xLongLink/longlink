@@ -11,7 +11,7 @@ const solutionPaths = ['Use', 'Adapt', 'Create'];
 const metadata = {
     seo: {
         title: 'Solutions | Platform Documentation | LongLink',
-        description: 'Learn how to create, deploy, and operate solutions on the LongLink Platform.',
+        description: 'Learn how to create, deploy, and operate Solutions on the LongLink Platform.',
     },
     toc: [{ id: 'solutions', label: 'Solutions', level: 1 }],
     lastUpdated: '2026-08-05',
@@ -26,32 +26,31 @@ export default function DocsArticleRoute() {
                     Solutions
                 </Heading>
                 <Text as="p">
-                    Solutions are dedicated tools for running a specific part of an organization’s work. LongLink makes
-                    them easy to deploy, access, and operate, so teams can focus on the process the solution is designed
-                    to support.
+                    A Solution is a dedicated tool for running a specific part of an organization’s work. LongLink makes
+                    it easy to deploy, access, and operate, so teams can focus on the process it supports.
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
                         Use
                     </Text>{' '}
-                    an existing solution when its process already reflects the way your organization works. LongLink
-                    provides a consistent way to deploy and operate it, while giving authorized users access to the
-                    solution and the resources it needs.
+                    an existing one when its process already reflects the way your organization works. LongLink provides
+                    a consistent way to deploy and operate it while making it available to authorized users and
+                    provisioning the resources it needs.
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
                         Adapt
                     </Text>{' '}
-                    an existing solution when the underlying process is familiar but the details differ. Teams can fork
-                    its Python code and adjust the workflows, rules, data model, Solution Views, and integrations to
-                    match their own requirements.
+                    an existing project when the underlying process is familiar but the details differ. Teams can fork
+                    its Python code and adjust the workflows, rules, data model, views, and integrations to match their
+                    own requirements.
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
                         Create
                     </Text>{' '}
-                    a new solution when a process needs a dedicated design from the start. Developers build the
-                    process-specific software as normal Python code, while LongLink provides the shared foundation for
+                    a new one when a process needs a dedicated design from the start. Developers write its
+                    process-specific logic as normal Python code, while LongLink provides the shared foundation for
                     identity, permissions, deployment, data, storage, and operations.
                 </Text>
                 <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>

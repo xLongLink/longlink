@@ -4,7 +4,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
-import { HowSlide } from '@/components/slides/How';
 import Platform from '@/platform/layouts/Platform';
 import { GoalSlide } from '@/components/slides/Goal';
 import { TeamSlide } from '@/components/slides/Team';
@@ -13,10 +12,11 @@ import { useLocation, useNavigate } from 'react-router';
 import { ProblemSlide } from '@/components/slides/Problem';
 import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, GitFork, Network, Target, TriangleAlert, Users, Wrench } from 'lucide-react';
+import { BookOpen, GitFork, Network, Target, TriangleAlert, Users } from 'lucide-react';
 
 const slides = [
     { component: PathsSlide, href: '/ppt?slide=paths', icon: GitFork, id: 'paths', label: 'Paths' },
+    { component: GoalSlide, href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
     {
         component: ArchitectureSlide,
         href: '/ppt?slide=architecture',
@@ -32,8 +32,6 @@ const slides = [
         label: 'Introduction',
     },
     { component: ProblemSlide, href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
-    { component: GoalSlide, href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
-    { component: HowSlide, href: '/ppt?slide=how', icon: Wrench, id: 'how', label: 'How' },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 const metadata = {
     seo: {
         title: 'Storage | LongLink Documentation',
-        description: 'Store and manage files in a LongLink solution.',
+        description: 'Store and manage files in a LongLink project.',
     },
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
@@ -39,7 +39,7 @@ export default function DocsArticleRoute() {
                     >
                         fsspec
                     </Link>
-                    . Solution code uses the same filesystem interface in local development, tests, and production.
+                    . Project source uses the same filesystem interface in local development, tests, and production.
                 </Text>
                 <Table>
                     <TableHeader>
