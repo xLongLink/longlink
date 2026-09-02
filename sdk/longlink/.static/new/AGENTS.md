@@ -20,6 +20,12 @@ You are working on a LongLink application:
 └── main.py           # Application entry pointn
 ```
 
+## XML pages
+
+- LongLink pages use XML, not HTML.
+- Run `longlink docs` to discover the supported XML components.
+- Run `longlink docs <component>` before using a component to inspect its attributes, children, and examples.
+- Do not invent XML elements or attributes that are absent from the component documentation.
 
 ## Python Guidelines
 

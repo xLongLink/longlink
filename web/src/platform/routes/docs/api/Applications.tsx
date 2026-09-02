@@ -34,23 +34,23 @@ export default function DocsArticleRoute() {
                     <Text size="lg" type="label" weight="bold">
                         Use
                     </Text>{' '}
-                    an existing application when its process already reflects the way your organization works. LongLink
+                    an existing solution when its process already reflects the way your organization works. LongLink
                     provides a consistent way to deploy and operate it, while giving authorized users access to the
-                    application and the resources it needs.
+                    solution and the resources it needs.
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
                         Adapt
                     </Text>{' '}
-                    an existing application when the underlying process is familiar but the details differ. Teams can
-                    fork its Python code and adjust the workflows, rules, data model, pages, and integrations to match
-                    their own requirements.
+                    an existing solution when the underlying process is familiar but the details differ. Teams can fork
+                    its Python code and adjust the workflows, rules, data model, pages, and integrations to match their
+                    own requirements.
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
                         Create
                     </Text>{' '}
-                    a new application when a process needs a dedicated design from the start. Developers build the
+                    a new solution when a process needs a dedicated design from the start. Developers build the
                     process-specific software as normal Python code, while LongLink provides the shared foundation for
                     identity, permissions, deployment, data, storage, and operations.
                 </Text>

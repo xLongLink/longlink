@@ -132,4 +132,36 @@
       <xsd:enumeration value="email"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="IconNameType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="close"/>
+      <xsd:enumeration value="chevronDown"/>
+      <xsd:enumeration value="chevronLeft"/>
+      <xsd:enumeration value="chevronRight"/>
+      <xsd:enumeration value="chevronsLeft"/>
+      <xsd:enumeration value="chevronsRight"/>
+      <xsd:enumeration value="check"/>
+      <xsd:enumeration value="success"/>
+      <xsd:enumeration value="error"/>
+      <xsd:enumeration value="warning"/>
+      <xsd:enumeration value="info"/>
+      <xsd:enumeration value="calendar"/>
+      <xsd:enumeration value="clock"/>
+      <xsd:enumeration value="externalLink"/>
+      <xsd:enumeration value="menu"/>
+      <xsd:enumeration value="moreHorizontal"/>
+      <xsd:enumeration value="search"/>
+      <xsd:enumeration value="arrowUp"/>
+      <xsd:enumeration value="arrowDown"/>
+      <xsd:enumeration value="arrowsUpDown"/>
+      <xsd:enumeration value="funnel"/>
+      <xsd:enumeration value="eyeSlash"/>
+      <xsd:enumeration value="viewColumns"/>
+      <xsd:enumeration value="copy"/>
+      <xsd:enumeration value="checkDouble"/>
+      <xsd:enumeration value="wrench"/>
+      <xsd:enumeration value="stop"/>
+      <xsd:enumeration value="microphone"/>
+    </xsd:restriction>
+  </xsd:simpleType>
 </xsd:schema>

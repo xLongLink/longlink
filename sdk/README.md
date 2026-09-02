@@ -20,6 +20,13 @@ longlink init
 
 > See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, routes, tests, and Docker image builds.
 
+Inspect the XML component catalog and individual component references from the CLI:
+
+```bash
+longlink docs
+longlink docs Button
+```
+
 <br/>
 
 ## Development

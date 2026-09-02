@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { Seo } from '@/components/Seo';
 import { startCase } from '@/lib/utils';
 import { pagesSchema } from '@/xml/pages';
 import type { ASTNode } from '@/xml/types';
@@ -92,6 +93,7 @@ export function ApplicationRuntime({
 
     // Let dynamic detail views share a tab with their matching list page.
     const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
+    const activePageTitle = activePage?.name || (activePage ? startCase(activePage.tab) : undefined);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: routePath.length > 0 && activePage !== undefined,
         queryKey: ['api', 'application-page', pagesUrl, activePage?.path],
@@ -168,5 +170,15 @@ export function ApplicationRuntime({
         content = loadingContent;
     }
 
-    return children({ content, tabs });
+    return children({
+        content: activePageTitle ? (
+            <>
+                <Seo isIndexable={false} title={`${activePageTitle} | LongLink`} />
+                {content}
+            </>
+        ) : (
+            content
+        ),
+        tabs,
+    });
 }

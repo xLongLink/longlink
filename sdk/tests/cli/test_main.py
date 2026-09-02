@@ -14,6 +14,7 @@ def test_cli_help_lists_all_supported_commands() -> None:
     assert result.exit_code == 0
     assert "build" in result.output
     assert "dev" in result.output
+    assert "docs" in result.output
     assert "init" in result.output
     assert "migrate" in result.output
 
