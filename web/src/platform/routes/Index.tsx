@@ -240,7 +240,7 @@ export default function Home() {
                             <Text className="tracking-[-0.012em]" display="block" type="inherit">
                                 The economics have shifted; flexibility now lives in code
                             </Text>
-                            <Text className="tracking-[0.018em]" display="block" type="inherit">
+                            <Text className="tracking-[0.026em]" display="block" type="inherit">
                                 Build the solution, not the workaround
                             </Text>
                             <Text className="tracking-[0.026em]" display="block" type="inherit">
