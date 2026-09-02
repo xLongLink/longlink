@@ -23,7 +23,10 @@ function canonicalPath(pathname: string): string {
 
 /** Formats a URL path segment for breadcrumb structured data. */
 function pathLabel(segment: string): string {
-    return breadcrumbLabels[segment] ?? segment.replaceAll('-', ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+    return (
+        breadcrumbLabels[segment] ??
+        segment.replaceAll('-', ' ').replace(/\b\w/g, (character) => character.toUpperCase())
+    );
 }
 
 /** Builds breadcrumb structured data for an article's current route. */
