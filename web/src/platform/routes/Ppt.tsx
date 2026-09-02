@@ -135,6 +135,7 @@ function PresentationSlide({
             }
             activeTab={slide.href}
             contentMinHeight="100%"
+            height="fill"
             isContentCentered
             isDevelopmentNoticeShown={false}
             tabs={slides}

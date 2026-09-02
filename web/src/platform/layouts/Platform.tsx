@@ -21,6 +21,7 @@ type PlatformProps = {
     activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
+    height?: 'auto' | 'fill';
     isContentCentered?: boolean;
     contentMinHeight?: string;
     isDevelopmentNoticeShown?: boolean;
@@ -47,6 +48,7 @@ export default function Platform({
     activeTab,
     breadcrumb,
     children,
+    height = 'auto',
     isContentCentered = false,
     contentMinHeight = 'calc(100dvh - var(--_app-shell-header-height, 0px))',
     isDevelopmentNoticeShown = true,
@@ -57,7 +59,7 @@ export default function Platform({
     return (
         <AppShell
             banner={isDevelopmentNoticeShown ? <DevelopmentNotice /> : undefined}
-            height="auto"
+            height={height}
             mobileNav={false}
             topNav={
                 <Stack>

@@ -6,10 +6,10 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
-import { useEffect, useRef, useState } from 'react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 
 const integrationContextCount = 336_000_000;
@@ -114,7 +114,7 @@ function PathCard({
     isComingSoon,
 }: {
     title: string;
-    description: string;
+    description: ReactNode;
     action: string;
     isComingSoon: boolean;
 }) {
@@ -291,19 +291,38 @@ export default function Home() {
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         <PathCard
                             action="Explore existing solutions"
-                            description="Get a proven process running without rebuilding what already exists."
+                            description={
+                                <>
+                                    An existing solutions as it is.
+                                    <br />
+                                    Use a proven process without rebuilding what already exists.
+                                </>
+                            }
                             isComingSoon
-                            title="Adopt an existing solutions as it is"
+                            title="Adopt"
                         />
                         <PathCard
                             action="Start from a foundation"
-                            description="Start from an existing solution and tailor it to your needs. Change the workflow, rules, data, integrations, or interface while keeping a proven foundation."
+                            description={
+                                <>
+                                    And adapt an existing solution.
+                                    <br />
+                                    Change its workflow, fields, rules, integrations, or interface around your
+                                    requirements.
+                                </>
+                            }
                             isComingSoon
                             title="Branch"
                         />
                         <PathCard
                             action="Build a new solution"
-                            description="Create a dedicated solution when your process is unique. Define exactly how the work should happen while LongLink handles the platform around it."
+                            description={
+                                <>
+                                    A unique solution.
+                                    <br />
+                                    The process is uniquely yours. We handle the infrastructure; you own the solution.
+                                </>
+                            }
                             isComingSoon={false}
                             title="Create"
                         />
