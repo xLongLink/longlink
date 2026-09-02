@@ -18,8 +18,8 @@ from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.models.pagination import Pagination
 from src.database.models.computes import ComputeRegistry
+from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -130,16 +130,16 @@ async def test_operations_service_enqueue_reraises_unresolved_insert_conflict(mo
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
     """Coalesce unfinished work by target and create successors after completion."""
 
-    first_application_id = uuid4()
+    first_solution_id = uuid4()
     organization_id = uuid4()
 
-    application = await queue(
-        kind=OperationKind.application_create,
-        target_id=first_application_id,
+    solution = await queue(
+        kind=OperationKind.solution_create,
+        target_id=first_solution_id,
     )
     duplicate = await queue(
-        kind=OperationKind.application_create,
-        target_id=first_application_id,
+        kind=OperationKind.solution_create,
+        target_id=first_solution_id,
     )
     await queue(
         kind=OperationKind.organization_create,
@@ -147,28 +147,28 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     )
     fetched = await fetch_operations()
 
-    assert duplicate.id == application.id
+    assert duplicate.id == solution.id
     assert len(fetched) == 2
     assert {(item.kind, item.target_id) for item in fetched} == {
-        (OperationKind.application_create, first_application_id),
+        (OperationKind.solution_create, first_solution_id),
         (OperationKind.organization_create, organization_id),
     }
 
     claimed = await claim_operation()
     assert claimed is not None
-    assert claimed.id == application.id
+    assert claimed.id == solution.id
     completed = await complete_operation(claimed.id)
     replacement = await queue(
-        kind=OperationKind.application_create,
-        target_id=first_application_id,
+        kind=OperationKind.solution_create,
+        target_id=first_solution_id,
     )
 
     assert completed is not None
-    assert replacement.id != application.id
+    assert replacement.id != solution.id
 
 
-async def test_operations_service_schedules_all_active_application_creation_once() -> None:
-    """Queue one reconciliation Operation for every Application lifecycle state."""
+async def test_operations_service_schedules_all_active_solution_creation_once() -> None:
+    """Queue one reconciliation Operation for every Solution lifecycle state."""
 
     infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
@@ -181,7 +181,7 @@ async def test_operations_service_schedules_all_active_application_creation_once
         )
         session.add(organization)
         await session.flush()
-        running = Application(
+        running = Solution(
             organization_id=organization.id,
             name="Dashboard",
             slug="dashboard",
@@ -189,7 +189,7 @@ async def test_operations_service_schedules_all_active_application_creation_once
             secrets={},
             status=Status.running,
         )
-        deleted = Application(
+        deleted = Solution(
             organization_id=organization.id,
             name="Deleted",
             slug="deleted",
@@ -210,13 +210,13 @@ async def test_operations_service_schedules_all_active_application_creation_once
     assert scheduled == {
         (OperationKind.compute_create, infrastructure.compute.id),
         (OperationKind.organization_create, organization.id),
-        (OperationKind.application_create, running.id),
-        (OperationKind.application_delete, deleted.id),
+        (OperationKind.solution_create, running.id),
+        (OperationKind.solution_delete, deleted.id),
     }
 
 
 async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
-    """Queue only parent cleanup when an Organization and its Applications are deleted."""
+    """Queue only parent cleanup when an Organization and its Solutions are deleted."""
 
     infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
@@ -230,7 +230,7 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
         )
         session.add(organization)
         await session.flush()
-        application = Application(
+        solution = Solution(
             organization_id=organization.id,
             name="Deleted Dashboard",
             slug="deleted-dashboard",
@@ -238,7 +238,7 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
             secrets={},
             deleted_at=utcnow(),
         )
-        session.add(application)
+        session.add(solution)
         await session.commit()
 
     async with session_scope() as session:
@@ -373,14 +373,14 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
         )
         session.add(organization)
         await session.flush()
-        application = Application(
+        solution = Solution(
             organization_id=organization.id,
             name="Dashboard",
             slug="dashboard",
             image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
             secrets={},
         )
-        session.add(application)
+        session.add(solution)
         await session.commit()
 
     compute_operation = await queue(kind=OperationKind.compute_create, target_id=compute.id)
@@ -395,17 +395,17 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert organization_claim.id == organization_operation.id
     assert await fail_operation(organization_operation.id, "organization creation failed") is not None
 
-    application_operation = await queue(kind=OperationKind.application_create, target_id=application.id)
-    application_claim = await claim_operation()
-    assert application_claim is not None
-    assert application_claim.id == application_operation.id
-    assert await fail_operation(application_operation.id, "application creation failed") is not None
+    solution_operation = await queue(kind=OperationKind.solution_create, target_id=solution.id)
+    solution_claim = await claim_operation()
+    assert solution_claim is not None
+    assert solution_claim.id == solution_operation.id
+    assert await fail_operation(solution_operation.id, "solution creation failed") is not None
 
     # Act
     async with session_scope() as session:
         compute_row = await session.get(ComputeRegistry, compute.id)
         organization_row = await session.get(Organization, organization.id)
-        application_row = await session.get(Application, application.id)
+        solution_row = await session.get(Solution, solution.id)
         items, total = await operations.fetch_page(session, Pagination())
 
     # Assert
@@ -413,14 +413,14 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert compute_row.status == Status.failed
     assert organization_row is not None
     assert organization_row.status == Status.failed
-    assert application_row is not None
-    assert application_row.status == Status.failed
+    assert solution_row is not None
+    assert solution_row.status == Status.failed
     assert total == 3
 
     items_by_kind = {item.kind: item for item in items}
     compute_item = items_by_kind[OperationKind.compute_create]
     organization_item = items_by_kind[OperationKind.organization_create]
-    application_item = items_by_kind[OperationKind.application_create]
+    solution_item = items_by_kind[OperationKind.solution_create]
     assert compute_item.resource is not None
     assert compute_item.resource.id == compute.id
     assert compute_item.resource.name == compute.name
@@ -429,10 +429,10 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert organization_item.resource.id == organization.id
     assert organization_item.resource.name == organization.name
     assert organization_item.status == OperationStatus.failed
-    assert application_item.resource is not None
-    assert application_item.resource.id == application.id
-    assert application_item.resource.name == application.name
-    assert application_item.status == OperationStatus.failed
+    assert solution_item.resource is not None
+    assert solution_item.resource.id == solution.id
+    assert solution_item.resource.name == solution.name
+    assert solution_item.status == OperationStatus.failed
 
 
 async def test_operations_service_creates_follow_up_after_claimed_work() -> None:

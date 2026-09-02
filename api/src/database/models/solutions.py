@@ -15,13 +15,13 @@ if TYPE_CHECKING:
     from src.database.models.organizations import Organization
 
 
-class Application(PlatformModel, table=True):
-    """Persist desired and observed runtime state for one Organization-owned LongLink Application.
+class Solution(PlatformModel, table=True):
+    """Persist desired and observed runtime state for one Organization-owned LongLink Solution.
 
-    A deletion tombstone remains until reconciliation removes the Application's external resources.
+    A deletion tombstone remains until reconciliation removes the Solution's external resources.
     """
 
-    __tablename__: ClassVar[str] = "applications"
+    __tablename__: ClassVar[str] = "solutions"
     __table_args__ = (UniqueConstraint("organization_id", "slug"),)
 
     # Identifier
@@ -45,7 +45,7 @@ class Application(PlatformModel, table=True):
     status: Status = Field(
         default=Status.creating,
         sa_column=Column(
-            Enum(Status, name="application_status_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            Enum(Status, name="solution_status_enum", native_enum=False, create_constraint=True, validate_strings=True),
             nullable=False,
         ),
     )

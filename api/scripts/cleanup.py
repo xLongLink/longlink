@@ -31,7 +31,7 @@ async def cleanup() -> None:
             text(
                 """
                 SELECT organizations.id,
-                       applications.id,
+                       solutions.id,
                        database_registries.host,
                        database_registries.port,
                        database_registries.username,
@@ -43,13 +43,13 @@ async def cleanup() -> None:
                 FROM organizations
                 JOIN database_registries ON database_registries.id = organizations.database_id
                 JOIN storage_registries ON storage_registries.id = organizations.storage_id
-                LEFT JOIN applications ON applications.organization_id = organizations.id
+                LEFT JOIN solutions ON solutions.organization_id = organizations.id
                 """
             )
         )
         for (
             organization_id,
-            application_id,
+            solution_id,
             database_host,
             database_port,
             database_username,
@@ -62,13 +62,13 @@ async def cleanup() -> None:
             organization = UUID(str(organization_id))
             managed_namespaces.add(organization.hex)
 
-            # Group Application credentials and the Organization bucket by storage registry.
+            # Group Solution credentials and the Organization bucket by storage registry.
             storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
-            storage_applications = storage_resources.setdefault(storage_key, set())
-            if application_id is not None:
-                storage_applications.add(UUID(str(application_id)))
+            storage_solutions = storage_resources.setdefault(storage_key, set())
+            if solution_id is not None:
+                storage_solutions.add(UUID(str(solution_id)))
 
-            # Group Application runtime identities and the Organization database by database registry.
+            # Group Solution runtime identities and the Organization database by database registry.
             sslmode = database_sslmode if isinstance(database_sslmode, DatabaseSSLMode) else DatabaseSSLMode(str(database_sslmode))
             database_key = (
                 str(database_host),
@@ -78,9 +78,9 @@ async def cleanup() -> None:
                 sslmode,
                 organization,
             )
-            database_applications = database_resources.setdefault(database_key, set())
-            if application_id is not None:
-                database_applications.add(UUID(str(application_id)))
+            database_solutions = database_resources.setdefault(database_key, set())
+            if solution_id is not None:
+                database_solutions.add(UUID(str(solution_id)))
 
     # Delete only namespaces selected by local seed configuration and tracked Platform state.
     existing_namespaces: dict[str, Namespace] = {}
@@ -112,35 +112,35 @@ async def cleanup() -> None:
     # Remove the cluster-scoped class after its LongLink Gateway and data plane are gone.
     await cluster.gateway.delete()
 
-    # Revoke Application credentials before emptying and deleting each Organization bucket.
-    for (endpoint_url, access_key_id, secret_access_key, organization), application_ids in storage_resources.items():
+    # Revoke Solution credentials before emptying and deleting each Organization bucket.
+    for (endpoint_url, access_key_id, secret_access_key, organization), solution_ids in storage_resources.items():
         storage = Exoscale(endpoint_url, access_key_id, secret_access_key)
-        for application in application_ids:
-            await storage.revoke(application.hex)
+        for solution in solution_ids:
+            await storage.revoke_solution(solution.hex)
         await storage.delete(organization.hex)
 
         # Verify both IAM and object-storage resources are absent before clearing Platform state.
-        remaining_credentials = [application for application in application_ids if await storage.credentials_exist(application.hex)]
+        remaining_credentials = [solution for solution in solution_ids if await storage.solution_credentials_exist(solution.hex)]
         if remaining_credentials:
-            names = ", ".join(str(application) for application in sorted(remaining_credentials))
-            raise RuntimeError(f"Exoscale Application credentials remain: {names}")
+            names = ", ".join(str(solution) for solution in sorted(remaining_credentials))
+            raise RuntimeError(f"Exoscale Solution credentials remain: {names}")
         if await storage.usage(organization.hex) is not None:
             raise RuntimeError(f"Exoscale Organization bucket remains: {organization}")
 
-    # Remove Application schemas and runtime identities before deleting each Organization database.
-    for (host, port, username, password, sslmode, organization), application_ids in database_resources.items():
+    # Remove Solution schemas and runtime identities before deleting each Organization database.
+    for (host, port, username, password, sslmode, organization), solution_ids in database_resources.items():
         database = Postgres(host, port, username, password, sslmode)
-        for application in application_ids:
-            await database.delete_schema(organization, application)
+        for solution in solution_ids:
+            await database.delete_solution_schema(organization, solution)
         await database.delete_database(organization)
 
         # Verify the database and every cluster-global runtime identity are absent.
         remaining_identities = [
-            application for application in application_ids if await database.application_runtime_identity_exists(organization, application)
+            solution for solution in solution_ids if await database.solution_runtime_identity_exists(organization, solution)
         ]
         if remaining_identities:
-            names = ", ".join(str(application) for application in sorted(remaining_identities))
-            raise RuntimeError(f"PostgreSQL Application runtime identities remain: {names}")
+            names = ", ".join(str(solution) for solution in sorted(remaining_identities))
+            raise RuntimeError(f"PostgreSQL Solution runtime identities remain: {names}")
         if await database.database_usage(organization.hex) is not None:
             raise RuntimeError(f"PostgreSQL Organization database remains: {organization}")
 
@@ -149,7 +149,7 @@ async def cleanup() -> None:
         "operations",
         "organization_invitations",
         "user_organizations",
-        "applications",
+        "solutions",
         "organizations",
         "compute_registries",
         "database_registries",

@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import select
-from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
+from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import func
 from urllib.parse import urlencode
 from sqlalchemy.exc import OperationalError
@@ -14,9 +14,9 @@ from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
+from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -175,13 +175,13 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization)
+    solution = await create_solution(organization)
 
     client = clients[0]
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}")
-    applications_response = await client.get(f"/api/v1/organizations/{organization.id}/applications")
+    solutions_response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
 
     # Assert
     assert response.status_code == 200
@@ -192,11 +192,11 @@ async def test_get_organization_returns_member_payload(
     assert payload["organization"]["name"] == "acme"
     assert payload["members"][0]["user"]["id"] == str(owner.id)
     assert payload["members"][0]["role"] == "owner"
-    assert applications_response.status_code == 200
-    assert applications_response.headers["cache-control"] == "no-store"
-    applications_payload = applications_response.json()
-    assert len(applications_payload) == 1
-    assert applications_payload[0]["id"] == str(application.id)
+    assert solutions_response.status_code == 200
+    assert solutions_response.headers["cache-control"] == "no-store"
+    solutions_payload = solutions_response.json()
+    assert len(solutions_payload) == 1
+    assert solutions_payload[0]["id"] == str(solution.id)
 
 
 async def test_update_organization_updates_metadata_for_administrator(
@@ -348,28 +348,28 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     assert deleted_organization.deleted_at is not None
 
 
-async def test_other_organization_user_cannot_delete_application(
+async def test_other_organization_user_cannot_delete_solution(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject Application deletion across Organization boundaries."""
+    """Reject Solution deletion across Organization boundaries."""
 
     # Create isolated organizations owned by different users.
     target_owner, other_owner, _ = users
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex")
-    target_application = await create_application(target_organization)
+    target_solution = await create_solution(target_organization)
     operation_ids = [operation.id for operation in await fetch_operations()]
     client = clients[1]
 
-    # Attempt Application deletion with only another organization's access.
-    delete_response = await client.delete(f"/api/v1/applications/{target_application.id}")
+    # Attempt Solution deletion with only another organization's access.
+    delete_response = await client.delete(f"/api/v1/solutions/{target_solution.id}")
 
-    # Verify the denied request leaves the target application and operation queue unchanged.
+    # Verify the denied request leaves the target solution and operation queue unchanged.
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
-        assert await session.get(Application, target_application.id) is not None
+        assert await session.get(Solution, target_solution.id) is not None
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 

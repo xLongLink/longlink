@@ -8,7 +8,7 @@ IDENTITY_TOKEN_LIFETIME_SECONDS = 300
 
 
 def create_identity_token(user_id: UUID, secret: str) -> str:
-    """Create one short-lived Platform identity assertion for an Application request."""
+    """Create one short-lived Platform identity assertion for a Solution request."""
 
     # Bind the assertion to one user and a fixed runtime-only token purpose.
     issued_at = datetime.now(UTC)

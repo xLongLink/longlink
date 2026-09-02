@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 
 def create_runtime_client() -> TestClient:
-    """Build an SDK runtime client from the current generated Application source tree."""
+    """Build an SDK runtime client from the current generated Solution source tree."""
 
     # Register the generated view catalog before serving requests.
     app = FastAPI()
@@ -19,8 +19,8 @@ def create_runtime_client() -> TestClient:
     return TestClient(app)
 
 
-@pytest.mark.usefixtures("application_source")
-def test_longlink_app_serves_runtime_routes_and_frontend() -> None:
+@pytest.mark.usefixtures("solution_source")
+def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     """Serve SDK runtime endpoints and the embedded frontend."""
 
     # Initialize the development runtime and its in-process client.
@@ -39,8 +39,8 @@ def test_longlink_app_serves_runtime_routes_and_frontend() -> None:
     assert health_response.json() == {"ok": True}
 
 
-@pytest.mark.usefixtures("application_source")
-def test_longlink_app_serves_runtime_routes_without_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.usefixtures("solution_source")
+def test_longlink_solution_serves_runtime_routes_without_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Keep SDK runtime routes available when package frontend assets are absent."""
 
     # Arrange
@@ -66,25 +66,25 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
     monkeypatch.setenv("LONGLINK_ENV", "production")
     monkeypatch.delenv("LONGLINK_DATABASE_HOST", raising=False)
 
-    # Reject startup before the application begins serving requests.
+    # Reject startup before the Solution begins serving requests.
     with pytest.raises(ValidationError, match="DATABASE_HOST"):
         LongLink(FastAPI())
 
 
-def test_startup_rejects_a_missing_application_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    """Require the generated Application view directory during startup."""
+def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    """Require the generated Solution View directory during startup."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)
 
     # Act and assert
-    with pytest.raises(ValueError, match=f"Application source directory is required: {tmp_path / 'src' / 'views'}"):
+    with pytest.raises(ValueError, match=f"Solution source directory is required: {tmp_path / 'src' / 'views'}"):
         LongLink(FastAPI())
 
 
-@pytest.mark.usefixtures("application_source")
+@pytest.mark.usefixtures("solution_source")
 def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch) -> None:
-    """Avoid duplicate Uvicorn access filtering across Application instances."""
+    """Avoid duplicate Uvicorn access filtering across Solution instances."""
 
     # Arrange
     access_logger = logging.getLogger("uvicorn.access")
@@ -134,7 +134,7 @@ def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch)
     ],
 )
 def test_xml_views_are_registered_from_default_views_directory(
-    application_source: Path,
+    solution_source: Path,
     relative_path: str,
     content: str,
     expected_metadata: dict[str, str],
@@ -142,7 +142,7 @@ def test_xml_views_are_registered_from_default_views_directory(
     """Expose root, nested, and dynamic XML views with derived metadata."""
 
     # Build the default view tree.
-    view_path = application_source / "views" / relative_path
+    view_path = solution_source / "views" / relative_path
     view_path.parent.mkdir(parents=True, exist_ok=True)
     view_path.write_text(content, encoding="utf-8")
 
@@ -158,11 +158,11 @@ def test_xml_views_are_registered_from_default_views_directory(
     assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.xml')}", **expected_metadata}]
 
 
-def test_xml_view_catalog_omits_blank_display_metadata(application_source: Path) -> None:
+def test_xml_view_catalog_omits_blank_display_metadata(solution_source: Path) -> None:
     """Normalize whitespace-only XML view metadata out of the public catalog."""
 
     # Arrange
-    (application_source / "views" / "dashboard.xml").write_text(
+    (solution_source / "views" / "dashboard.xml").write_text(
         '<longlink name="  " icon="\t">Dashboard</longlink>',
         encoding="utf-8",
     )
@@ -176,14 +176,14 @@ def test_xml_view_catalog_omits_blank_display_metadata(application_source: Path)
     assert response.json() == [{"path": "views/dashboard", "route": "/dashboard", "tab": "dashboard"}]
 
 
-def test_xml_view_catalog_uses_deterministic_path_order(application_source: Path) -> None:
+def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -> None:
     """Use lexical view paths for catalog output."""
 
     # Arrange
-    nested_directory = application_source / "views" / "admin"
+    nested_directory = solution_source / "views" / "admin"
     nested_directory.mkdir()
     (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
-    (application_source / "views" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
+    (solution_source / "views" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -200,12 +200,12 @@ def test_xml_view_catalog_uses_deterministic_path_order(application_source: Path
     assert root_response.headers["location"] == "/admin/alpha"
 
 
-def test_invalid_xml_view_fails_during_registration(application_source: Path) -> None:
+def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> None:
     """Validate SDK XML views against the bundled schema before registering routes."""
 
     # Create a valid view alongside an invalid catalog entry.
-    (application_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
-    (application_source / "views" / "broken.xml").write_text("<unknown />", encoding="utf-8")
+    (solution_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
+    (solution_source / "views" / "broken.xml").write_text("<unknown />", encoding="utf-8")
     app = FastAPI()
 
     # Reject the complete catalog before registering valid view endpoints.
@@ -223,28 +223,28 @@ def test_invalid_xml_view_fails_during_registration(application_source: Path) ->
         pytest.param("/views/{view}", 0, id="dynamic-route"),
     ],
 )
-def test_application_routes_colliding_with_view_endpoints_are_rejected(
-    application_source: Path,
+def test_solution_routes_colliding_with_view_endpoints_are_rejected(
+    solution_source: Path,
     route: str,
     expected_dashboard_routes: int,
 ) -> None:
-    """Reject view endpoints that would overlap an Application-owned route."""
+    """Reject view endpoints that would overlap a Solution-owned route."""
 
-    # Create a view whose endpoint is already owned by the Application.
-    (application_source / "views" / "dashboard.xml").write_text(
+    # Create a view whose endpoint is already owned by the Solution.
+    (solution_source / "views" / "dashboard.xml").write_text(
         "<longlink>Dashboard</longlink>",
         encoding="utf-8",
     )
     app = FastAPI()
 
     @app.get(route)
-    async def application_dashboard() -> dict[str, str]:
-        """Return the Application dashboard resource."""
+    async def solution_dashboard() -> dict[str, str]:
+        """Return the Solution dashboard resource."""
 
-        return {"source": "application"}
+        return {"source": "solution"}
 
     # Reject ambiguous ownership during runtime registration.
-    with pytest.raises(ValueError, match="overlaps an Application route"):
+    with pytest.raises(ValueError, match="Solution View endpoint.*overlaps a Solution route"):
         LongLink(app)
 
     # Assert LongLink did not register the colliding view endpoint.
@@ -264,7 +264,7 @@ def test_application_routes_colliding_with_view_endpoints_are_rejected(
     ],
 )
 def test_duplicate_browser_routes_are_rejected(
-    application_source: Path,
+    solution_source: Path,
     first_view: str,
     second_view: str,
     message: str,
@@ -272,8 +272,8 @@ def test_duplicate_browser_routes_are_rejected(
     """Reject distinct view files that resolve to one browser route."""
 
     # Arrange
-    first_path = application_source / "views" / first_view
-    second_path = application_source / "views" / second_view
+    first_path = solution_source / "views" / first_view
+    second_path = solution_source / "views" / second_view
     first_path.parent.mkdir(parents=True, exist_ok=True)
     second_path.parent.mkdir(parents=True, exist_ok=True)
     first_path.write_text("<longlink>First</longlink>", encoding="utf-8")

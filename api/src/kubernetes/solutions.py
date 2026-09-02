@@ -13,7 +13,7 @@ from src.kubernetes.utils import apply, deployment_is_ready
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
-APPLICATION_ID_LABEL = "longlink.io/application-id"
+SOLUTION_ID_LABEL = "longlink.io/solution-id"
 MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS = 10
 HTTPRouteResource = new_class("HTTPRoute", "gateway.networking.k8s.io/v1", asyncio=True, plural="httproutes")
 
@@ -71,26 +71,26 @@ async def _log_migration_diagnostics(migration_job: Job) -> None:
         logger.exception("Could not collect migration Job %s diagnostics", migration_id)
 
 
-class Applications:
-    """Manage explicit Application deployment, deletion, readiness, and logs."""
+class Solutions:
+    """Manage explicit Solution deployment, deletion, readiness, and logs."""
 
     def __init__(self, client: "Kubernetes") -> None:
-        """Initialize Application lifecycle access through shared cluster resources."""
+        """Initialize Solution lifecycle access through shared cluster resources."""
 
         self._client = client
 
-    async def apply(self, application_id: UUID, namespace: str, image: str, secrets: dict[str, str]) -> None:
-        """Deploy one Application and wait for its rollout."""
+    async def apply(self, solution_id: UUID, namespace: str, image: str, secrets: dict[str, str]) -> None:
+        """Deploy one Solution and wait for its rollout."""
 
         # Render workload resources before the first cluster mutation.
         revision = hashlib.sha256(
             json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
-        migration_id = f"{application_id}-migration-{revision[:8]}"
+        migration_id = f"{solution_id}-migration-{revision[:8]}"
         migration, deployment, service, route = templates.readyml_list(
-            files("src.kubernetes.templates").joinpath("application", "application.yml"),
-            application_id=str(application_id),
-            application_id_label=APPLICATION_ID_LABEL,
+            files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
+            solution_id=str(solution_id),
+            solution_id_label=SOLUTION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=revision,
@@ -99,23 +99,23 @@ class Applications:
 
         # Recreate the complete Kubernetes Secret from Platform-authoritative encrypted state.
         api = await self._client.api()
-        application_secret = Secret(
+        solution_secret = Secret(
             {
                 "metadata": {
-                    "name": str(application_id),
+                    "name": str(solution_id),
                     "namespace": namespace,
                 },
                 "stringData": secrets,
             },
             api=api,
         )
-        await apply(application_secret)
+        await apply(solution_secret)
 
         # Apply migrations once without restarting a failed migration container.
         logger.info(
-            "Starting migration Job %s for Application %s in namespace %s from image %s",
+            "Starting migration Job %s for Solution %s in namespace %s from image %s",
             migration_id,
-            application_id,
+            solution_id,
             namespace,
             image,
         )
@@ -134,12 +134,12 @@ class Applications:
             condition.get("type") == "Failed" and condition.get("status") == "True"
             for condition in migration_job.raw["status"]["conditions"]
         ):
-            logger.error("Migration Job %s failed for Application %s in namespace %s", migration_id, application_id, namespace)
+            logger.error("Migration Job %s failed for Solution %s in namespace %s", migration_id, solution_id, namespace)
             await _log_migration_diagnostics(migration_job)
-            raise RuntimeError(f"Application migration Job '{migration_id}' failed")
-        logger.info("Migration Job %s completed for Application %s in namespace %s", migration_id, application_id, namespace)
+            raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
+        logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, namespace)
 
-        # Create the Service and its owned HTTPRoute before starting Application Pods.
+        # Create the Service and its owned HTTPRoute before starting Solution Pods.
         service_resource = Service(service, api=api)
         await apply(service_resource)
         route_resource = HTTPRouteResource(route, api=api)
@@ -147,12 +147,12 @@ class Applications:
         deployed = Deployment(deployment, api=api)
         await apply(deployed)
 
-        # Poll rollout status without repeatedly applying the same Application revision.
+        # Poll rollout status without repeatedly applying the same Solution revision.
         while True:
             try:
                 await deployed.refresh()
             except NotFoundError as exc:
-                raise RuntimeError("Kubernetes Application Deployment disappeared during rollout") from exc
+                raise RuntimeError("Kubernetes Solution Deployment disappeared during rollout") from exc
 
             # Surface quota admission failures instead of waiting for an unavailable Pod indefinitely.
             status = deployed.raw.get("status")
@@ -165,7 +165,7 @@ class Applications:
                 and "exceeded quota" in condition["message"]
                 for condition in conditions
             ):
-                raise RuntimeError("Kubernetes Application capacity exhausted")
+                raise RuntimeError("Kubernetes Solution capacity exhausted")
             if not deployment_is_ready(deployed):
                 await asyncio.sleep(5)
                 continue
@@ -185,17 +185,17 @@ class Applications:
                 return
             await asyncio.sleep(5)
 
-    async def delete(self, application_id: UUID, namespace: str) -> None:
-        """Delete one Application and wait until its Pods have terminated."""
+    async def delete(self, solution_id: UUID, namespace: str) -> None:
+        """Delete one Solution and wait until its Pods have terminated."""
 
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
         namespace_resource = Namespace(namespace, api=api)
         resources = (
-            Deployment(str(application_id), namespace=namespace, api=api),
-            Service(f"app-{application_id}", namespace=namespace, api=api),
-            Secret(str(application_id), namespace=namespace, api=api),
-            HTTPRouteResource(str(application_id), namespace=namespace, api=api),
+            Deployment(str(solution_id), namespace=namespace, api=api),
+            Service(f"solution-{solution_id}", namespace=namespace, api=api),
+            Secret(str(solution_id), namespace=namespace, api=api),
+            HTTPRouteResource(str(solution_id), namespace=namespace, api=api),
         )
         while await namespace_resource.exists():
             remaining = False
@@ -206,8 +206,8 @@ class Applications:
                     if resource.metadata.get("deletionTimestamp") is None:
                         await resource.delete()
 
-            # Delete retained migration Jobs only when their Application is being removed.
-            async for candidate in Job.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+            # Delete retained migration Jobs only when their Solution is being removed.
+            async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 job = cast(Job, candidate)
                 remaining = True
                 if job.metadata.get("deletionTimestamp") is None:
@@ -215,7 +215,7 @@ class Applications:
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining:
-                async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+                async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                     pod = cast(Pod, candidate)
                     if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}:
                         break
@@ -223,15 +223,15 @@ class Applications:
                     return
             await asyncio.sleep(5)
 
-    async def logs(self, application_id: UUID, namespace: str) -> list[str]:
-        """Return recent logs for one managed Application Pod."""
+    async def logs(self, solution_id: UUID, namespace: str) -> list[str]:
+        """Return recent logs for one managed Solution Pod."""
 
-        # Scope the Application Pod lookup to its Organization Namespace.
+        # Scope the Solution Pod lookup to its Organization Namespace.
         try:
             api = await self._client.api()
             migration_pod: Pod | None = None
             migration_phase: str | None = None
-            async for candidate in Pod.list(api=api, namespace=namespace, label_selector={APPLICATION_ID_LABEL: str(application_id)}):
+            async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 pod = cast(Pod, candidate)
                 status = pod.raw.get("status")
                 phase = status.get("phase") if isinstance(status, dict) else None
@@ -247,7 +247,7 @@ class Applications:
                     logs = [f"Migration Pod {migration_name} failed:"]
                     logs.extend([line async for line in migration_pod.logs(tail_lines=200)])
                     return logs
-                return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Application Pod unavailable"]
-            raise RuntimeError("Application logs unavailable")
+                return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Solution Pod unavailable"]
+            raise RuntimeError("Solution logs unavailable")
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
-            raise RuntimeError("Application logs unavailable") from exc
+            raise RuntimeError("Solution logs unavailable") from exc

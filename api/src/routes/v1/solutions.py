@@ -4,45 +4,45 @@ from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
 from src.logger import logger
 from src.models.roles import OrganizationRoles
-from src.database.services import applications, organizations
+from src.models.solutions import SolutionCreate, SolutionResponse
+from src.database.services import solutions, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.database.models.users import User
 
 router = APIRouter()
 
 
-@router.get("/applications", response_model=Page[ApplicationResponse])
-async def list_applications(
+@router.get("/solutions", response_model=Page[SolutionResponse])
+async def list_solutions(
     _user: User = Depends(authadmin),
     pagination: Pagination = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return all applications for administrator views."""
+    """Return all solutions for administrator views."""
 
-    items, total = await applications.fetch_page(session, pagination)
+    items, total = await solutions.fetch_page(session, pagination)
     return {"items": items, "total": total}
 
 
-@router.post("/organizations/{organization_id}/applications", status_code=204)
-async def create_application(
+@router.post("/organizations/{organization_id}/solutions", status_code=204)
+async def create_solution(
     organization_id: UUID,
-    payload: ApplicationCreate,
+    payload: SolutionCreate,
     user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
 ):
-    """Create Application state and queue its explicit deployment lifecycle."""
+    """Create Solution state and queue its explicit deployment lifecycle."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = await organization_access(organization_id, user, session)
 
-    # Application creation provisions runtime resources, so it requires elevated organization permissions.
+    # Solution creation provisions runtime resources, so it requires elevated organization permissions.
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # Resolve immutable image metadata before creating durable Application state.
+    # Resolve immutable image metadata before creating durable Solution state.
     metadata = await images.metadata(payload.image)
     if metadata is None:
         raise HTTPException(status_code=404, detail="Image metadata not found")
@@ -52,10 +52,10 @@ async def create_application(
     if missing_envs:
         raise HTTPException(
             status_code=422,
-            detail=f"Application environment does not satisfy required image variables: {', '.join(missing_envs)}",
+            detail=f"Solution environment does not satisfy required image variables: {', '.join(missing_envs)}",
         )
 
-    await applications.create(
+    await solutions.create(
         session,
         organization_id,
         payload.name,
@@ -67,19 +67,19 @@ async def create_application(
     await session.commit()
 
 
-@router.get("/applications/{application_id}/logs", response_model=list[str])
-async def get_application_logs(
-    application_id: UUID,
+@router.get("/solutions/{solution_id}/logs", response_model=list[str])
+async def get_solution_logs(
+    solution_id: UUID,
     user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return recent pod logs for one managed application."""
+    """Return recent pod logs for one managed solution."""
 
-    # Resolve active Application access before enforcing runtime permissions.
-    access = await organizations.application_runtime_access(session, user.id, application_id)
+    # Resolve active Solution access before enforcing runtime permissions.
+    access = await organizations.solution_runtime_access(session, user.id, solution_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, role, registry = access
+    solution, role, registry = access
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
@@ -89,22 +89,22 @@ async def get_application_logs(
             registry.kubeconfig,
         )
         try:
-            return await cluster.applications.logs(application.id, application.organization_id.hex)
+            return await cluster.solutions.logs(solution.id, solution.organization_id.hex)
         finally:
             await cluster.aclose()
     except RuntimeError as exc:
-        logger.warning("Application logs unavailable for '%s': %s", application.id, exc)
-        raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
+        logger.warning("Solution logs unavailable for '%s': %s", solution.id, exc)
+        raise HTTPException(status_code=503, detail="Solution logs unavailable") from exc
 
 
-@router.delete("/applications/{application_id}", status_code=204)
-async def delete_application(
-    application_id: UUID,
+@router.delete("/solutions/{solution_id}", status_code=204)
+async def delete_solution(
+    solution_id: UUID,
     user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
 ):
-    """Mark one Application absent and queue explicit lifecycle cleanup."""
+    """Mark one Solution absent and queue explicit lifecycle cleanup."""
 
-    await applications.delete(session, application_id, user.id)
+    await solutions.delete(session, solution_id, user.id)
 
     await session.commit()

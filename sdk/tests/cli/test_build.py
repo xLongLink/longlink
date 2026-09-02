@@ -8,10 +8,10 @@ from click.testing import CliRunner
 
 @pytest.fixture
 def build_project(tmp_path: Path) -> Path:
-    """Create one minimal application project that can generate Docker artifacts."""
+    """Create one minimal Solution project that can generate Docker artifacts."""
 
     # Write the project metadata and configured environment model.
-    root = tmp_path / "app"
+    root = tmp_path / "solution"
     root.mkdir()
     root.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
@@ -31,13 +31,13 @@ def docker_build(monkeypatch: pytest.MonkeyPatch) -> tuple[list[list[str]], list
     commands: list[list[str]] = []
     contexts: list[Path] = []
 
-    def build_app(build_context: Path) -> tuple[str, str]:
+    def build_solution(build_context: Path) -> tuple[str, str]:
         """Record the generated context and return fixed project metadata."""
 
         contexts.append(build_context)
-        return "0.1.0", "Demo App"
+        return "0.1.0", "Demo Solution"
 
-    monkeypatch.setattr(build, "build_app", build_app)
+    monkeypatch.setattr(build, "build_solution", build_solution)
     monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     return commands, contexts
 
@@ -142,7 +142,7 @@ def test_read_env_spec_emits_supported_environment_metadata(
 
 
 def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
-    """Ignore dynamic aliases and descriptions without executing application code."""
+    """Ignore dynamic aliases and descriptions without executing Solution code."""
 
     # Arrange
     envs_path = tmp_path / "src" / "envs.py"
@@ -211,12 +211,12 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
         build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
 
-def test_build_app_generates_docker_artifacts_from_project_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_solution_generates_docker_artifacts_from_project_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo application"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
         encoding="utf-8",
     )
     build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
@@ -225,12 +225,12 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
     monkeypatch.chdir(build_project)
 
     # Act
-    version, name = build.build_app(build_context)
+    version, name = build.build_solution(build_context)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert (version, name) == ("0.1.0", "demo")
-    assert 'LABEL org.opencontainers.image.description="Demo application"' in dockerfile
+    assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
     assert ".env" in dockerignore
@@ -250,7 +250,7 @@ def test_build_app_generates_docker_artifacts_from_project_metadata(build_projec
         ),
     ],
 )
-def test_build_app_rejects_invalid_project_metadata_before_generating_artifacts(
+def test_build_solution_rejects_invalid_project_metadata_before_generating_artifacts(
     build_project: Path,
     monkeypatch: pytest.MonkeyPatch,
     project_data: str,
@@ -265,12 +265,12 @@ def test_build_app_rejects_invalid_project_metadata_before_generating_artifacts(
 
     # Act and assert
     with pytest.raises(click.ClickException) as error:
-        build.build_app(build_context)
+        build.build_solution(build_context)
     assert str(error.value) == message
     assert not build_context.exists()
 
 
-def test_build_app_uses_fallback_sdk_version_when_package_is_not_installed(
+def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
     build_project: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -288,17 +288,17 @@ def test_build_app_uses_fallback_sdk_version_when_package_is_not_installed(
     monkeypatch.setattr(build, "package_version", missing_package_version)
 
     # Act
-    build.build_app(build_context)
+    build.build_solution(build_context)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
 
 
-def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_solution_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Exclude linked files whose resolved targets are outside the build root."""
 
-    # Create a minimal application and a file outside its Docker build context.
+    # Create a minimal Solution and a file outside its Docker build context.
     outside_file = build_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
     build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
@@ -306,7 +306,7 @@ def test_build_app_does_not_follow_out_of_tree_symlinks(build_project: Path, mon
     monkeypatch.chdir(build_project)
 
     # Build the temporary context.
-    build.build_app(build_context)
+    build.build_solution(build_context)
 
     # Never materialize an out-of-tree linked file in the build context.
     assert not (build_context / "linked-secret.txt").exists()
@@ -321,10 +321,10 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
     transitive_dependency = build_project.parent / "common"
     transitive_dependency.mkdir()
     build_project.parent.joinpath("pyproject.toml").write_text(
-        '[tool.uv.workspace]\nmembers = ["app", "shared", "common"]\n', encoding="utf-8"
+        '[tool.uv.workspace]\nmembers = ["solution", "shared", "common"]\n', encoding="utf-8"
     )
     transitive_dependency.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../app" }\n', encoding="utf-8"
+        '[project]\nname = "common"\nversion = "0.1.0"\n\n[tool.uv.sources]\ndemo = { path = "../solution" }\n', encoding="utf-8"
     )
     dependency.joinpath("pyproject.toml").write_text(
         '[project]\nname = "shared"\nversion = "0.1.0"\n\n[tool.uv.sources]\ncommon = { path = "../common" }\n',
@@ -340,7 +340,7 @@ def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build
 
     # Assert
     assert source_root == build_project.parent
-    assert workdir == "/workspace/app"
+    assert workdir == "/workspace/solution"
     assert dependencies == [transitive_dependency, dependency]
 
 
@@ -352,7 +352,7 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build
     outside = workspace.parent / "outside"
     outside.mkdir()
     outside.joinpath("pyproject.toml").write_text('[project]\nname = "outside"\nversion = "0.1.0"\n', encoding="utf-8")
-    workspace.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["app"]\n', encoding="utf-8")
+    workspace.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution"]\n', encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.uv.sources]\noutside = { path = "../../outside" }\n',
         encoding="utf-8",
@@ -363,13 +363,13 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build
         build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
 
-def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep application secrets excluded when local dependencies widen the Docker context."""
+def test_build_solution_scopes_solution_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep Solution secrets excluded when local dependencies widen the Docker context."""
 
     # Arrange
     dependency = build_project.parent / "shared"
     dependency.mkdir()
-    build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["app", "shared"]\n', encoding="utf-8")
+    build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
     dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
@@ -383,17 +383,17 @@ def test_build_app_scopes_application_ignore_rules_to_an_expanded_context(build_
     monkeypatch.chdir(build_project)
 
     # Act
-    build.build_app(build_context)
+    build.build_solution(build_context)
 
     # Assert
-    assert build_context.joinpath("app", ".env").is_file()
-    assert build_context.joinpath("app", ".env.production").is_file()
+    assert build_context.joinpath("solution", ".env").is_file()
+    assert build_context.joinpath("solution", ".env.production").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        "app/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.env.*\n**/.pytest_cache\n"
+        "solution/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.env.*\n**/.pytest_cache\n"
     )
 
 
-def test_context_ignore_rules_scopes_negated_application_patterns(build_project: Path) -> None:
+def test_context_ignore_rules_scopes_negated_solution_patterns(build_project: Path) -> None:
     """Scope local Docker ignore rules without changing comments or negations."""
 
     # Arrange
@@ -404,7 +404,7 @@ def test_context_ignore_rules_scopes_negated_application_patterns(build_project:
     rules = build.context_ignore_rules(source, build_project, build_project.parent)
 
     # Assert
-    assert rules == "# Keep documentation\n\napp/build/\n!app/build/README.md\napp/.env"
+    assert rules == "# Keep documentation\n\nsolution/build/\n!solution/build/README.md\nsolution/.env"
 
 
 @pytest.mark.parametrize(
@@ -417,7 +417,7 @@ def test_context_ignore_rules_scopes_negated_application_patterns(build_project:
     ],
 )
 def test_resolve_docker_paths_ignores_invalid_uv_sources(build_project: Path, sources: str) -> None:
-    """Keep the application directory as context for unusable uv source metadata."""
+    """Keep the Solution directory as context for unusable uv source metadata."""
 
     # Arrange
     build_project.joinpath("pyproject.toml").write_text(
@@ -451,23 +451,23 @@ def test_resolve_docker_paths_ignores_local_directories_without_project_metadata
 
 
 @pytest.mark.parametrize(
-    ("app_name", "version", "registry", "expected"),
+    ("solution_name", "version", "registry", "expected"),
     [
-        pytest.param("Demo App", "0.1.0", None, "demo-app:0.1.0", id="default"),
-        pytest.param("Demo App", "dev", "ghcr.io/acme-org", "ghcr.io/acme-org/demo-app:dev", id="ghcr"),
-        pytest.param("Demo App", "dev", "localhost:15000/team", "localhost:15000/team/demo-app:dev", id="localhost"),
+        pytest.param("Demo Solution", "0.1.0", None, "demo-solution:0.1.0", id="default"),
+        pytest.param("Demo Solution", "dev", "ghcr.io/acme-org", "ghcr.io/acme-org/demo-solution:dev", id="ghcr"),
+        pytest.param("Demo Solution", "dev", "localhost:15000/team", "localhost:15000/team/demo-solution:dev", id="localhost"),
     ],
 )
-def test_resolve_image_tag_returns_valid_image_references(app_name: str, version: str, registry: str | None, expected: str) -> None:
+def test_resolve_image_tag_returns_valid_image_references(solution_name: str, version: str, registry: str | None, expected: str) -> None:
     """Build supported Docker image references from project metadata."""
 
-    assert build.resolve_image_tag(app_name, version, registry) == expected
+    assert build.resolve_image_tag(solution_name, version, registry) == expected
 
 
 @pytest.mark.parametrize(
-    ("app_name", "version", "registry", "message"),
+    ("solution_name", "version", "registry", "message"),
     [
-        pytest.param("Demo/App", "dev", None, "Invalid Docker image name", id="invalid-name"),
+        pytest.param("Demo/Solution", "dev", None, "Invalid Docker image name", id="invalid-name"),
         pytest.param("demo", "-dev", None, "Invalid Docker image tag", id="invalid-tag"),
         pytest.param("demo", "dev", "localhost:0", "Docker registry port is invalid", id="port-below-range"),
         pytest.param("demo", "dev", "localhost:65536", "Docker registry port is invalid", id="port-above-range"),
@@ -476,7 +476,7 @@ def test_resolve_image_tag_returns_valid_image_references(app_name: str, version
     ],
 )
 def test_resolve_image_tag_rejects_invalid_image_references(
-    app_name: str,
+    solution_name: str,
     version: str,
     registry: str | None,
     message: str,
@@ -484,7 +484,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
     """Reject image reference values outside the supported Docker boundary."""
 
     with pytest.raises(click.ClickException, match=message):
-        build.resolve_image_tag(app_name, version, registry)
+        build.resolve_image_tag(solution_name, version, registry)
 
 
 @pytest.mark.parametrize(
@@ -493,7 +493,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         pytest.param(
             ["--push"],
             ["/usr/bin/docker", "build"],
-            [["/usr/bin/docker", "push", "localhost:15000/demo-app:dev"]],
+            [["/usr/bin/docker", "push", "localhost:15000/demo-solution:dev"]],
             True,
             id="push",
         ),
@@ -539,14 +539,14 @@ def test_build_command_reports_built_image(
                 "-f",
                 str(temporary_context / "Dockerfile"),
                 "-t",
-                "localhost:15000/demo-app:dev",
+                "localhost:15000/demo-solution:dev",
                 str(temporary_context),
             ],
             *expected_commands,
         ]
     )
-    assert "- Built image: localhost:15000/demo-app:dev" in result.output
-    assert ("- Pushed image: localhost:15000/demo-app:dev" in result.output) is expected_push_output
+    assert "- Built image: localhost:15000/demo-solution:dev" in result.output
+    assert ("- Pushed image: localhost:15000/demo-solution:dev" in result.output) is expected_push_output
 
 
 def test_build_command_reports_docker_build_failure_without_pushing(

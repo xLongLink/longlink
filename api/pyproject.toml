@@ -65,7 +65,7 @@ py-modules = ['main']
 include = ['scripts*', 'src*']
 
 [tool.setuptools.package-data]
-"src.kubernetes.templates" = ["application/*.yml", "platform/*.yml"]
+"src.kubernetes.templates" = ["solution/*.yml", "platform/*.yml"]
 "src.utils" = ["templates/*.mjml"]
 
 [tool.ruff]

@@ -1,16 +1,16 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SolutionRuntime } from '@/components/Solution';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApplicationRuntime } from '@/components/Application';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const { apiRequest } = vi.hoisted(() => ({ apiRequest: vi.fn() }));
 
 vi.mock('@/lib/api', () => ({ api: apiRequest }));
 
-describe('ApplicationRuntime XML integration', () => {
+describe('SolutionRuntime XML integration', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
@@ -50,9 +50,9 @@ describe('ApplicationRuntime XML integration', () => {
                         <Routes>
                             <Route
                                 element={
-                                    <ApplicationRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
+                                    <SolutionRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
                                         {({ content }) => content}
-                                    </ApplicationRuntime>
+                                    </SolutionRuntime>
                                 }
                                 path="*"
                             />

@@ -138,9 +138,9 @@ def upgrade() -> None:
     op.create_index("ix_organizations_database_id", "organizations", ["database_id"])
     op.create_index("ix_organizations_storage_id", "organizations", ["storage_id"])
 
-    # Create applications after organizations.
+    # Create solutions after organizations.
     op.create_table(
-        "applications",
+        "solutions",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("organization_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
@@ -154,7 +154,7 @@ def upgrade() -> None:
                 "creating",
                 "failed",
                 "running",
-                name="application_status_enum",
+                name="solution_status_enum",
                 native_enum=False,
                 create_constraint=True,
                 validate_strings=True,
@@ -253,8 +253,8 @@ def upgrade() -> None:
             "kind",
             sa.Enum(
                 "compute.create",
-                "application.create",
-                "application.delete",
+                "solution.create",
+                "solution.delete",
                 "organization.create",
                 "organization.delete",
                 name="operation_kind_enum",
@@ -296,7 +296,7 @@ def downgrade() -> None:
     op.drop_table("operations")
     op.drop_table("user_organizations")
     op.drop_table("organization_invitations")
-    op.drop_table("applications")
+    op.drop_table("solutions")
     op.drop_table("organizations")
     op.drop_table("storage_registries")
     op.drop_table("database_registries")

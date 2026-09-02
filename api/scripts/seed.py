@@ -12,12 +12,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from src.models.computes import kubeconfig_mapping
 from src.database.session import session_scope
-from src.database.services import users, compute, storage, database, applications, organizations
+from src.database.services import users, compute, storage, database, solutions, organizations
 from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.database.models.applications import Application
+from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
@@ -28,7 +28,7 @@ class SeedSettings(BaseSettings):
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
 
     # Database registry
-    APPLICATION_DATABASE_URL: str | None = None
+    SOLUTION_DATABASE_URL: str | None = None
     LOCAL_DATABASE_PORT: int = Field(default=15432, ge=1, le=65535)
     LOCAL_DOCKER_NETWORK: str = Field(default="longlink-dev", min_length=1)
 
@@ -54,7 +54,7 @@ class SeedSettings(BaseSettings):
 
 
 def local_database_host(settings: SeedSettings) -> str:
-    """Return the local Docker host address reachable from k3d application pods."""
+    """Return the local Docker host address reachable from k3d solution pods."""
 
     # Resolve the current network gateway because Docker can change it after recreation.
     result = subprocess.run(
@@ -69,11 +69,11 @@ def local_database_host(settings: SeedSettings) -> str:
     return host
 
 
-def application_database_configuration(settings: SeedSettings) -> DatabaseConfiguration:
-    """Return the validated Application database registry configuration."""
+def solution_database_configuration(settings: SeedSettings) -> DatabaseConfiguration:
+    """Return the validated Solution database registry configuration."""
 
     # Use the isolated Docker PostgreSQL service when no remote database is configured.
-    if settings.APPLICATION_DATABASE_URL is None:
+    if settings.SOLUTION_DATABASE_URL is None:
         return DatabaseConfiguration(
             host=local_database_host(settings),
             port=settings.LOCAL_DATABASE_PORT,
@@ -83,9 +83,9 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
         )
 
     # Parse a PostgreSQL administrator URL with the supported connection option.
-    database_url = make_url(settings.APPLICATION_DATABASE_URL)
+    database_url = make_url(settings.SOLUTION_DATABASE_URL)
     if database_url.get_backend_name() != "postgresql" or set(database_url.query) - {"sslmode"}:
-        raise ValueError("Application database URL must use PostgreSQL and only supports the sslmode query option")
+        raise ValueError("Solution database URL must use PostgreSQL and only supports the sslmode query option")
 
     # Validate all connection fields before persisting administrator credentials.
     try:
@@ -99,7 +99,7 @@ def application_database_configuration(settings: SeedSettings) -> DatabaseConfig
             }
         )
     except ValueError:
-        raise ValueError("Application database URL has invalid connection settings") from None
+        raise ValueError("Solution database URL has invalid connection settings") from None
 
 
 async def seed_infrastructure(
@@ -110,8 +110,8 @@ async def seed_infrastructure(
     # Validate the configured Kubernetes compute before mutating Platform state.
     kubeconfig = kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8"))
 
-    # Resolve either the configured Application database or the local PostgreSQL service.
-    database_config = application_database_configuration(settings)
+    # Resolve either the configured Solution database or the local PostgreSQL service.
+    database_config = solution_database_configuration(settings)
 
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
@@ -155,7 +155,7 @@ async def seed_infrastructure(
 
 
 async def seed_local_development(settings: SeedSettings) -> None:
-    """Register local infrastructure and create the local example Organization and Application."""
+    """Register local infrastructure and create the local example Organization and Solution."""
 
     compute_registry, database_registry, storage_registry = await seed_infrastructure(
         settings,
@@ -179,20 +179,20 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 database_id=database_registry.id,
             )
 
-        application = await session.scalar(
-            select(Application).where(
-                col(Application.organization_id) == organization.id,
-                col(Application.slug) == "sample",
+        solution = await session.scalar(
+            select(Solution).where(
+                col(Solution.organization_id) == organization.id,
+                col(Solution.slug) == "sample",
             )
         )
-        if application is None:
-            await applications.create(
+        if solution is None:
+            await solutions.create(
                 session,
                 organization.id,
                 "Sample",
                 Image("localhost:15000/sample:dev"),
                 {},
-                "A sample application for local development.",
+                "A sample solution for local development.",
                 user_id=administrator.id,
             )
         await session.commit()
@@ -201,7 +201,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
 class CloudSeedSettings(SeedSettings):
     """Define the infrastructure connections registered by a cloud deployment."""
 
-    APPLICATION_DATABASE_URL: str
+    SOLUTION_DATABASE_URL: str
 
     model_config = SettingsConfigDict(extra="ignore")
 

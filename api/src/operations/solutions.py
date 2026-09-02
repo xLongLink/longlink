@@ -11,29 +11,29 @@ from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.applications import Application
+from src.database.models.solutions import Solution
 
 
-async def create(application_id: UUID) -> None:
-    """Converge one Application lifecycle target or running workload."""
+async def create(solution_id: UUID) -> None:
+    """Converge one Solution lifecycle target or running workload."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
-        target = await organizations.application_infrastructure(session, application_id)
+        target = await organizations.solution_infrastructure(session, solution_id)
         if target is None:
-            logger.info("Application %s no longer exists; skipping reconciliation", application_id)
+            logger.info("Solution %s no longer exists; skipping reconciliation", solution_id)
             return
-        application, infrastructure = target
-    if application.deleted_at is not None:
-        logger.info("Application %s is pending deletion; skipping reconciliation", application.id)
+        solution, infrastructure = target
+    if solution.deleted_at is not None:
+        logger.info("Solution %s is pending deletion; skipping reconciliation", solution.id)
         return
     organization = infrastructure.organization
-    runtime_secrets = application.secrets
+    runtime_secrets = solution.secrets
 
-    # Converge providers and the workload while the Application is not yet published.
+    # Converge providers and the workload while the Solution is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
-        # Build providers from the Application's immutable infrastructure assignments.
+        # Build providers from the Solution's immutable infrastructure assignments.
         object_storage = Exoscale(
             infrastructure.storage.endpoint_url,
             infrastructure.storage.access_key_id,
@@ -42,14 +42,14 @@ async def create(application_id: UUID) -> None:
 
         # Generate fresh credentials for the initial creation attempt.
         bucket = organization.id.hex
-        prefix = f"applications/{application.id.hex}/"
-        logger.info("Creating object storage credentials for Application %s", application.id)
-        credentials = await object_storage.credentials(application.id.hex, bucket, prefix)
+        prefix = f"solutions/{solution.id.hex}/"
+        logger.info("Creating object storage credentials for Solution %s", solution.id)
+        credentials = await object_storage.solution_credentials(solution.id.hex, bucket, prefix)
 
         # Revoke freshly-issued storage credentials if database provisioning cannot complete.
         database_password = secrets.token_urlsafe(24)
         try:
-            logger.info("Creating PostgreSQL schema for Application %s", application.id)
+            logger.info("Creating PostgreSQL schema for Solution %s", solution.id)
             database = Postgres(
                 infrastructure.database.host,
                 infrastructure.database.port,
@@ -57,12 +57,12 @@ async def create(application_id: UUID) -> None:
                 infrastructure.database.password,
                 infrastructure.database.sslmode,
             )
-            database_username = await database.schema(organization.id, application.id, database_password)
+            database_username = await database.solution_schema(organization.id, solution.id, database_password)
         except Exception:
             try:
-                await object_storage.revoke(application.id.hex)
+                await object_storage.revoke_solution(solution.id.hex)
             except Exception:
-                logger.exception("Could not revoke storage credentials for Application '%s'", application.id)
+                logger.exception("Could not revoke storage credentials for Solution '%s'", solution.id)
             raise
 
         # Build and commit the complete runtime contract before creating the workload.
@@ -73,7 +73,7 @@ async def create(application_id: UUID) -> None:
             "LONGLINK_DATABASE_NAME": organization.id.hex,
             "LONGLINK_DATABASE_PASSWORD": database_password,
             "LONGLINK_DATABASE_PORT": str(infrastructure.database.port),
-            "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+            "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
             "LONGLINK_DATABASE_SSLMODE": infrastructure.database.sslmode.value,
             "LONGLINK_DATABASE_USERNAME": database_username,
             "LONGLINK_STORAGE_BUCKET": bucket,
@@ -84,17 +84,17 @@ async def create(application_id: UUID) -> None:
             "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
         }
 
-    # Issue an application-specific key so only Platform-originated requests can assert an audit identity.
+    # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
     if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
-        logger.info("Persisting runtime credentials for Application %s", application.id)
+        logger.info("Persisting runtime credentials for Solution %s", solution.id)
         runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
         async with session_scope() as session:
-            # Persist credentials only while the Application remains active.
+            # Persist credentials only while the Solution remains active.
             result = await session.execute(
-                update(Application)
+                update(Solution)
                 .where(
-                    col(Application.id) == application.id,
-                    col(Application.deleted_at).is_(None),
+                    col(Solution.id) == solution.id,
+                    col(Solution.deleted_at).is_(None),
                 )
                 .values(secrets=runtime_secrets)
             )
@@ -106,48 +106,48 @@ async def create(application_id: UUID) -> None:
             await session.commit()
 
     # Apply the captured desired release so reconciliation repairs workload drift.
-    logger.info("Applying Kubernetes workload for Application %s", application.id)
+    logger.info("Applying Kubernetes workload for Solution %s", solution.id)
     cluster = Kubernetes(
         infrastructure.compute.kubeconfig,
     )
     try:
-        await cluster.applications.apply(application.id, organization.id.hex, application.image_desired, runtime_secrets)
+        await cluster.solutions.apply(solution.id, organization.id.hex, solution.image_desired, runtime_secrets)
     finally:
         await cluster.aclose()
 
     # Publish the applied release only after workload readiness.
-    if application.status in {Status.creating, Status.failed}:
-        logger.info("Publishing Application %s", application.id)
+    if solution.status in {Status.creating, Status.failed}:
+        logger.info("Publishing Solution %s", solution.id)
         async with session_scope() as session:
             await session.execute(
-                update(Application)
+                update(Solution)
                 .where(
-                    col(Application.id) == application.id,
-                    col(Application.deleted_at).is_(None),
-                    col(Application.status).in_((Status.creating, Status.failed)),
+                    col(Solution.id) == solution.id,
+                    col(Solution.deleted_at).is_(None),
+                    col(Solution.status).in_((Status.creating, Status.failed)),
                 )
                 .values(status=Status.running)
             )
             await session.commit()
 
 
-async def delete(application_id: UUID) -> None:
-    """Remove one Application route, runtime, provider state, and tombstone."""
+async def delete(solution_id: UUID) -> None:
+    """Remove one Solution route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
-        target = await organizations.application_infrastructure(session, application_id)
+        target = await organizations.solution_infrastructure(session, solution_id)
         if target is None:
-            logger.info("Application %s no longer exists; skipping deletion", application_id)
+            logger.info("Solution %s no longer exists; skipping deletion", solution_id)
             return
-        application, infrastructure = target
+        solution, infrastructure = target
     organization = infrastructure.organization
 
-    # Remove Application Kubernetes resources before revoking provider credentials.
-    logger.info("Deleting Kubernetes workload for Application %s", application.id)
+    # Remove Solution Kubernetes resources before revoking provider credentials.
+    logger.info("Deleting Kubernetes workload for Solution %s", solution.id)
     cluster = Kubernetes(infrastructure.compute.kubeconfig)
     try:
-        await cluster.applications.delete(application.id, organization.id.hex)
+        await cluster.solutions.delete(solution.id, organization.id.hex)
     finally:
         await cluster.aclose()
 
@@ -164,16 +164,16 @@ async def delete(application_id: UUID) -> None:
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
     )
-    logger.info("Deleting PostgreSQL schema for Application %s", application.id)
-    await db.delete_schema(organization.id, application.id)
-    logger.info("Revoking object storage credentials for Application %s", application.id)
-    await object_storage.revoke(application.id.hex)
-    logger.info("Deleting object storage objects for Application %s", application.id)
-    await object_storage.delete_prefix(organization.id.hex, f"applications/{application.id.hex}/")
+    logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
+    await db.delete_solution_schema(organization.id, solution.id)
+    logger.info("Revoking object storage credentials for Solution %s", solution.id)
+    await object_storage.revoke_solution(solution.id.hex)
+    logger.info("Deleting object storage objects for Solution %s", solution.id)
+    await object_storage.delete_prefix(organization.id.hex, f"solutions/{solution.id.hex}/")
 
     # Purge the tombstone only after all external resources are absent.
-    logger.info("Purging Application %s", application.id)
+    logger.info("Purging Solution %s", solution.id)
     async with session_scope() as session:
         # The delete statement locks the tombstone while making completed cleanup idempotent.
-        await session.execute(sql_delete(Application).where(col(Application.id) == application.id))
+        await session.execute(sql_delete(Solution).where(col(Solution.id) == solution.id))
         await session.commit()

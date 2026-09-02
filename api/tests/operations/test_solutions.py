@@ -2,50 +2,50 @@ import pytest
 from uuid import uuid4
 from factories import (
     claim_operation,
+    create_solution,
     complete_operation,
-    create_application,
     create_organization,
     create_ready_infrastructure,
 )
-from src.operations import applications as application_operations
+from src.operations import solutions as solution_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import applications
+from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
-from src.database.models.applications import Application
+from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
-async def create_deleted_application(owner: User) -> tuple[Organization, Application]:
-    """Create one Application tombstone with assigned infrastructure."""
+async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
+    """Create one Solution tombstone with assigned infrastructure."""
 
-    # Persist the complete deletion target used by Application cleanup tests.
+    # Persist the complete deletion target used by Solution cleanup tests.
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    application = await create_application(organization)
+    solution = await create_solution(organization)
     async with session_scope() as session:
-        await applications.delete(session, application.id, owner.id)
+        await solutions.delete(session, solution.id, owner.id)
         await session.commit()
 
-    return organization, application
+    return organization, solution
 
 
-async def test_application_delete_failure_stops_before_provider_credential_cleanup(
+async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Retain a tombstone when Kubernetes deletion fails before provider cleanup."""
 
-    # Queue deletion for an Application with real persisted infrastructure assignments.
+    # Queue deletion for a Solution with real persisted infrastructure assignments.
     owner = users[0]
-    organization, application = await create_deleted_application(owner)
+    organization, solution = await create_deleted_solution(owner)
 
-    # Complete the known Organization and Application creation operations before deletion.
+    # Complete the known Organization and Solution creation operations before deletion.
     for kind, target_id in (
         (OperationKind.organization_create, organization.id),
-        (OperationKind.application_create, application.id),
+        (OperationKind.solution_create, solution.id),
     ):
         setup_operation = await claim_operation()
         assert setup_operation is not None
@@ -54,15 +54,15 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
 
     claimed = await claim_operation()
     assert claimed is not None
-    assert claimed.target_id == application.id
+    assert claimed.target_id == solution.id
 
     class FailingKubernetes:
-        """Expose the failing Application workload client."""
+        """Expose the failing Solution workload client."""
 
         def __init__(self, _kubeconfig: str) -> None:
             """Initialize the fake Kubernetes client."""
 
-            self.applications = self
+            self.solutions = self
 
         async def delete(self, *_args: object) -> None:
             """Raise the Kubernetes deletion failure under test."""
@@ -77,9 +77,9 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
 
         raise AssertionError("provider cleanup ran before Kubernetes deletion completed")
 
-    monkeypatch.setattr(application_operations, "Kubernetes", FailingKubernetes)
-    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
+    monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
 
     # Execute the real worker transition around the failing deletion handler.
     failed = await execute(claimed)
@@ -87,33 +87,33 @@ async def test_application_delete_failure_stops_before_provider_credential_clean
     # The failed operation retains its tombstone and never reaches provider cleanup.
     assert failed.status == OperationStatus.failed
     async with session_scope() as session:
-        retained = await session.get(Application, application.id)
+        retained = await session.get(Solution, solution.id)
     assert retained is not None
     assert retained.deleted_at is not None
 
 
-async def test_application_delete_removes_provider_state_and_tombstone(
+async def test_solution_delete_removes_provider_state_and_tombstone(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Remove the workload, provider state, and tombstone after successful cleanup."""
 
     # Arrange
-    _, application = await create_deleted_application(users[0])
+    _, solution = await create_deleted_solution(users[0])
     calls: list[tuple[str, object]] = []
 
     class FakeKubernetes:
         """Record workload deletion."""
 
         def __init__(self, _kubeconfig: str) -> None:
-            """Expose the application lifecycle client."""
+            """Expose the solution lifecycle client."""
 
-            self.applications = self
+            self.solutions = self
 
-        async def delete(self, application_id: object, _organization_id: object) -> None:
+        async def delete(self, solution_id: object, _organization_id: object) -> None:
             """Record workload removal."""
 
-            calls.append(("workload", application_id))
+            calls.append(("workload", solution_id))
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -124,10 +124,10 @@ async def test_application_delete_removes_provider_state_and_tombstone(
         def __init__(self, *_args: object) -> None:
             """Accept provider configuration."""
 
-        async def delete_schema(self, _organization_id: object, application_id: object) -> None:
+        async def delete_solution_schema(self, _organization_id: object, solution_id: object) -> None:
             """Record schema removal."""
 
-            calls.append(("schema", application_id))
+            calls.append(("schema", solution_id))
 
     class FakeStorage:
         """Record object-storage cleanup."""
@@ -135,45 +135,45 @@ async def test_application_delete_removes_provider_state_and_tombstone(
         def __init__(self, *_args: object) -> None:
             """Accept provider configuration."""
 
-        async def revoke(self, application_id: str) -> None:
+        async def revoke_solution(self, solution_id: str) -> None:
             """Record credential revocation."""
 
-            calls.append(("revoke", application_id))
+            calls.append(("revoke", solution_id))
 
         async def delete_prefix(self, _bucket: str, prefix: str) -> None:
-            """Record application file removal."""
+            """Record solution file removal."""
 
             calls.append(("prefix", prefix))
 
-    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
-    monkeypatch.setattr(application_operations, "Postgres", FakePostgres)
-    monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
+    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Postgres", FakePostgres)
+    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
 
     # Act
-    await application_operations.delete(application.id)
+    await solution_operations.delete(solution.id)
 
     # Assert
     assert calls == [
-        ("workload", application.id),
-        ("schema", application.id),
-        ("revoke", application.id.hex),
-        ("prefix", f"applications/{application.id.hex}/"),
+        ("workload", solution.id),
+        ("schema", solution.id),
+        ("revoke", solution.id.hex),
+        ("prefix", f"solutions/{solution.id.hex}/"),
     ]
     async with session_scope() as session:
-        assert await session.get(Application, application.id) is None
+        assert await session.get(Solution, solution.id) is None
 
 
-async def test_application_creation_applies_user_and_managed_environment_values(
+async def test_solution_creation_applies_user_and_managed_environment_values(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Apply the complete persisted runtime environment on initial deployment."""
 
-    # Persist an Application with a user-owned runtime value.
+    # Persist a Solution with a user-owned runtime value.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    application = await create_application(organization, secrets={"API_KEY": "runtime-secret"})
+    solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
     database_passwords: list[str] = []
 
@@ -183,11 +183,11 @@ async def test_application_creation_applies_user_and_managed_environment_values(
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def schema(self, _organization_id: object, _application_id: object, password: str) -> str:
-            """Return the generated application database username."""
+        async def solution_schema(self, _organization_id: object, _solution_id: object, password: str) -> str:
+            """Return the generated solution database username."""
 
             database_passwords.append(password)
-            return "application"
+            return "solution"
 
     class FakeStorage:
         """Provide generated object-storage credentials without contacting storage."""
@@ -197,20 +197,20 @@ async def test_application_creation_applies_user_and_managed_environment_values(
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def credentials(self, *_args: object) -> dict[str, str]:
-            """Return application-scoped object-storage credentials."""
+        async def solution_credentials(self, *_args: object) -> dict[str, str]:
+            """Return solution-scoped object-storage credentials."""
 
-            return {"access_key_id": "application", "secret_access_key": "generated-secret"}
+            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
 
     class FakeKubernetes:
         """Capture the Kubernetes Secret submitted during deployment."""
 
         def __init__(self, *_args: object) -> None:
-            """Expose the application lifecycle client."""
+            """Expose the solution lifecycle client."""
 
-            self.applications = self
+            self.solutions = self
 
-        async def apply(self, _application_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
             """Capture the generated runtime environment."""
 
             captured["secrets"] = secrets
@@ -218,12 +218,12 @@ async def test_application_creation_applies_user_and_managed_environment_values(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(application_operations, "Postgres", FakePostgres)
-    monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
-    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Postgres", FakePostgres)
+    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
+    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Run the actual lifecycle handler with fake external providers.
-    await application_operations.create(application.id)
+    await solution_operations.create(solution.id)
 
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
@@ -232,15 +232,15 @@ async def test_application_creation_applies_user_and_managed_environment_values(
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
     assert captured["secrets"]["LONGLINK_DATABASE_PORT"] == str(infrastructure.database.port)
     assert captured["secrets"]["LONGLINK_DATABASE_SSLMODE"] == infrastructure.database.sslmode.value
-    assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "application"
+    assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "solution"
     async with session_scope() as session:
-        persisted = await session.get(Application, application.id)
+        persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
 
 
 @pytest.mark.parametrize("revoke_error", [None, RuntimeError("revoke failed")], ids=["success", "failure"])
-async def test_application_creation_preserves_schema_failure_during_credential_compensation(
+async def test_solution_creation_preserves_schema_failure_during_credential_compensation(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
     revoke_error: RuntimeError | None,
@@ -251,7 +251,7 @@ async def test_application_creation_preserves_schema_failure_during_credential_c
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(owner, infrastructure=infrastructure)
-    application = await create_application(organization)
+    solution = await create_solution(organization)
     calls: list[str] = []
 
     class FailingPostgres:
@@ -260,7 +260,7 @@ async def test_application_creation_preserves_schema_failure_during_credential_c
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def schema(self, *_args: object) -> str:
+        async def solution_schema(self, *_args: object) -> str:
             """Fail the database provisioning step."""
 
             raise RuntimeError("database unavailable")
@@ -271,30 +271,30 @@ async def test_application_creation_preserves_schema_failure_during_credential_c
         def __init__(self, *_args: object) -> None:
             """Accept the configured registry connection values."""
 
-        async def credentials(self, _name: str, _bucket: str, _prefix: str) -> dict[str, str]:
-            """Issue one application-scoped credential."""
+        async def solution_credentials(self, _name: str, _bucket: str, _prefix: str) -> dict[str, str]:
+            """Issue one solution-scoped credential."""
 
             calls.append("credentials")
-            return {"access_key_id": "application", "secret_access_key": "generated-secret"}
+            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
 
-        async def revoke(self, name: str) -> None:
+        async def revoke_solution(self, name: str) -> None:
             """Record credential revocation and optionally fail compensation."""
 
-            assert name == application.id.hex
+            assert name == solution.id.hex
             calls.append("revoke")
             if revoke_error is not None:
                 raise revoke_error
 
-    monkeypatch.setattr(application_operations, "Postgres", FailingPostgres)
-    monkeypatch.setattr(application_operations, "Exoscale", FakeStorage)
+    monkeypatch.setattr(solution_operations, "Postgres", FailingPostgres)
+    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="database unavailable"):
-        await application_operations.create(application.id)
+        await solution_operations.create(solution.id)
     assert calls == ["credentials", "revoke"]
 
 
-async def test_application_creation_retry_reuses_persisted_runtime_secrets(
+async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -303,7 +303,7 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
     # Arrange
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(
+    solution = await create_solution(
         organization,
         secrets={"API_KEY": "runtime-secret", "LONGLINK_ENV": "production"},
     )
@@ -318,11 +318,11 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
         """Capture the retry workload environment."""
 
         def __init__(self, *_args: object) -> None:
-            """Expose the application lifecycle client."""
+            """Expose the solution lifecycle client."""
 
-            self.applications = self
+            self.solutions = self
 
-        async def apply(self, _application_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
             """Capture the persisted runtime environment."""
 
             captured["secrets"] = secrets
@@ -330,12 +330,12 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Act
-    await application_operations.create(application.id)
+    await solution_operations.create(solution.id)
 
     # Assert
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
@@ -343,35 +343,35 @@ async def test_application_creation_retry_reuses_persisted_runtime_secrets(
     assert captured["secrets"]["LONGLINK_IDENTITY_SECRET"]
 
 
-async def test_application_creation_skips_removed_application_provider_construction(
+async def test_solution_creation_skips_removed_solution_provider_construction(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Treat a removed application as an already completed lifecycle target."""
+    """Treat a removed solution as an already completed lifecycle target."""
 
     # Arrange
-    _, application = await create_deleted_application(users[0])
+    _, solution = await create_deleted_solution(users[0])
 
     def unexpected_provider(*_args: object) -> object:
-        """Reject provider construction for a removed application."""
+        """Reject provider construction for a removed solution."""
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act
-    result = await application_operations.create(application.id)
+    result = await solution_operations.create(solution.id)
 
     # Assert
     assert result is None
 
 
-async def test_application_creation_skips_missing_application_without_constructing_providers(
+async def test_solution_creation_skips_missing_solution_without_constructing_providers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Treat a missing Application as an already completed lifecycle target."""
+    """Treat a missing Solution as an already completed lifecycle target."""
 
     # Arrange
     def unexpected_provider(*_args: object) -> object:
@@ -379,42 +379,42 @@ async def test_application_creation_skips_missing_application_without_constructi
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act and assert
-    assert await application_operations.create(uuid4()) is None
+    assert await solution_operations.create(uuid4()) is None
 
 
-async def test_application_creation_reuses_complete_runtime_secrets_for_running_application(
+async def test_solution_creation_reuses_complete_runtime_secrets_for_running_solution(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Apply running Applications without rotating their complete runtime contract."""
+    """Apply running Solutions without rotating their complete runtime contract."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(
+    solution = await create_solution(
         organization,
         secrets={"LONGLINK_ENV": "production", "LONGLINK_IDENTITY_SECRET": "persisted-secret"},
     )
     async with session_scope() as session:
-        persisted = await session.get(Application, application.id)
+        persisted = await session.get(Solution, solution.id)
         assert persisted is not None
         persisted.status = Status.running
         await session.commit()
     applied: list[dict[str, str]] = []
 
     class Kubernetes:
-        """Capture Application reconciliation without contacting Kubernetes."""
+        """Capture Solution reconciliation without contacting Kubernetes."""
 
         def __init__(self, *_args: object) -> None:
-            """Expose the Application lifecycle client."""
+            """Expose the Solution lifecycle client."""
 
-            self.applications = self
+            self.solutions = self
 
-        async def apply(self, _application_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
             """Capture the persisted runtime contract."""
 
             applied.append(secrets)
@@ -422,46 +422,46 @@ async def test_application_creation_reuses_complete_runtime_secrets_for_running_
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(application_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(solution_operations, "Kubernetes", Kubernetes)
 
     # Act
-    await application_operations.create(application.id)
+    await solution_operations.create(solution.id)
 
     # Assert
-    assert applied == [application.secrets]
+    assert applied == [solution.secrets]
     async with session_scope() as session:
-        persisted = await session.get(Application, application.id)
+        persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
     assert persisted.secrets["LONGLINK_IDENTITY_SECRET"] == "persisted-secret"
 
 
-async def test_application_creation_skips_deployment_when_deleted_before_credential_persistence(
+async def test_solution_creation_skips_deployment_when_deleted_before_credential_persistence(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Do not deploy credentials after the application is deleted concurrently."""
+    """Do not deploy credentials after the solution is deleted concurrently."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(organization)
+    solution = await create_solution(organization)
 
     class Postgres:
-        """Delete the application after its schema credentials are generated."""
+        """Delete the solution after its schema credentials are generated."""
 
         def __init__(self, *_args: object) -> None:
             """Accept the configured database connection values."""
 
-        async def schema(self, *_args: object) -> str:
+        async def solution_schema(self, *_args: object) -> str:
             """Delete the target before its runtime credentials are persisted."""
 
             async with session_scope() as session:
-                persisted = await session.get(Application, application.id)
+                persisted = await session.get(Solution, solution.id)
                 assert persisted is not None
                 await session.delete(persisted)
                 await session.commit()
-            return "application"
+            return "solution"
 
     class Storage:
         """Provide object-storage credentials without contacting storage."""
@@ -471,31 +471,31 @@ async def test_application_creation_skips_deployment_when_deleted_before_credent
         def __init__(self, *_args: object) -> None:
             """Accept the configured storage connection values."""
 
-        async def credentials(self, *_args: object) -> dict[str, str]:
-            """Return application-scoped object-storage credentials."""
+        async def solution_credentials(self, *_args: object) -> dict[str, str]:
+            """Return solution-scoped object-storage credentials."""
 
-            return {"access_key_id": "application", "secret_access_key": "generated-secret"}
+            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
 
     def unexpected_kubernetes(*_args: object) -> object:
         """Reject deployment after the concurrent deletion."""
 
-        raise AssertionError("deleted application must not be deployed")
+        raise AssertionError("deleted solution must not be deployed")
 
-    monkeypatch.setattr(application_operations, "Postgres", Postgres)
-    monkeypatch.setattr(application_operations, "Exoscale", Storage)
-    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_kubernetes)
+    monkeypatch.setattr(solution_operations, "Postgres", Postgres)
+    monkeypatch.setattr(solution_operations, "Exoscale", Storage)
+    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_kubernetes)
 
     # Act
-    result = await application_operations.create(application.id)
+    result = await solution_operations.create(solution.id)
 
     # Assert
     assert result is None
 
 
-async def test_application_deletion_skips_missing_application_without_constructing_providers(
+async def test_solution_deletion_skips_missing_solution_without_constructing_providers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Treat a missing Application tombstone as completed cleanup."""
+    """Treat a missing Solution tombstone as completed cleanup."""
 
     # Arrange
     def unexpected_provider(*_args: object) -> object:
@@ -503,9 +503,9 @@ async def test_application_deletion_skips_missing_application_without_constructi
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(application_operations, "Postgres", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Exoscale", unexpected_provider)
-    monkeypatch.setattr(application_operations, "Kubernetes", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
+    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act and assert
-    assert await application_operations.delete(uuid4()) is None
+    assert await solution_operations.delete(uuid4()) is None

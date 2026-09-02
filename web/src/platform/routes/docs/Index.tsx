@@ -6,7 +6,7 @@ import { Article } from '@/components/layouts/Article';
 const metadata = {
     seo: {
         title: 'Documentation | LongLink',
-        description: 'Learn how to build, deploy, and operate applications with LongLink.',
+        description: 'Learn how to build, deploy, and operate solutions with LongLink.',
     },
     toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
     lastUpdated: '2026-07-10',
@@ -35,20 +35,20 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     AI has lowered the cost of building software. When a process is well defined and its context is
                     available, teams can now develop tailored solutions more quickly. However, many existing platforms
-                    require applications to run within proprietary environments, data models, and deployment systems.
-                    This can limit portability, increase dependence on a vendor, and reduce the long-term value of
+                    require solutions to run within proprietary environments, data models, and deployment systems. This
+                    can limit portability, increase dependence on a vendor, and reduce the long-term value of
                     customization.
                 </Text>
                 <Text as="p">
                     LongLink is an open-source foundation for building, deploying, and operating dedicated business
-                    applications as normal Python software. The Platform provides common infrastructure, while each
-                    organization retains control of its application logic, data, workflows, and integrations. This
-                    enables teams to adapt their systems as requirements evolve without committing their software to a
+                    solutions as normal Python software. The Platform provides common infrastructure, while each
+                    organization retains control of its solution logic, data, workflows, and integrations. This enables
+                    teams to adapt their systems as requirements evolve without committing their software to a
                     proprietary runtime.
                 </Text>
                 <Text as="p">
                     As AI makes software easier to produce, quality becomes more important, not less. LongLink is
-                    designed to help teams build applications that are clear, reliable, adaptable, and maintainable over
+                    designed to help teams build solutions that are clear, reliable, adaptable, and maintainable over
                     time, combining AI-assisted development with a consistent Platform foundation.
                 </Text>
             </Stack>

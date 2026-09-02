@@ -425,11 +425,11 @@
         }
       }
     },
-    "/api/v1/applications": {
+    "/api/v1/solutions": {
       "get": {
-        "summary": "List Applications",
-        "description": "Return all applications for administrator views.",
-        "operationId": "list_applications_api_v1_applications_get",
+        "summary": "List Solutions",
+        "description": "Return all solutions for administrator views.",
+        "operationId": "list_solutions_api_v1_solutions_get",
         "parameters": [
           {
             "name": "page",
@@ -477,7 +477,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_ApplicationResponse_"
+                  "$ref": "#/components/schemas/Page_SolutionResponse_"
                 }
               }
             }
@@ -495,11 +495,11 @@
         }
       }
     },
-    "/api/v1/organizations/{organization_id}/applications": {
+    "/api/v1/organizations/{organization_id}/solutions": {
       "post": {
-        "summary": "Create Application",
-        "description": "Create Application state and queue its explicit deployment lifecycle.",
-        "operationId": "create_application_api_v1_organizations__organization_id__applications_post",
+        "summary": "Create Solution",
+        "description": "Create Solution state and queue its explicit deployment lifecycle.",
+        "operationId": "create_solution_api_v1_organizations__organization_id__solutions_post",
         "parameters": [
           {
             "name": "organization_id",
@@ -533,7 +533,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApplicationCreate"
+                "$ref": "#/components/schemas/SolutionCreate"
               }
             }
           }
@@ -555,9 +555,9 @@
         }
       },
       "get": {
-        "summary": "Get Organization Applications",
-        "description": "Return applications visible to the current organization member.",
-        "operationId": "get_organization_applications_api_v1_organizations__organization_id__applications_get",
+        "summary": "Get Organization Solutions",
+        "description": "Return solutions visible to the current organization member.",
+        "operationId": "get_organization_solutions_api_v1_organizations__organization_id__solutions_get",
         "parameters": [
           {
             "name": "organization_id",
@@ -594,9 +594,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/OrganizationApplicationSummary"
+                    "$ref": "#/components/schemas/OrganizationSolutionSummary"
                   },
-                  "title": "Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get"
+                  "title": "Response Get Organization Solutions Api V1 Organizations  Organization Id  Solutions Get"
                 }
               }
             }
@@ -614,20 +614,20 @@
         }
       }
     },
-    "/api/v1/applications/{application_id}/logs": {
+    "/api/v1/solutions/{solution_id}/logs": {
       "get": {
-        "summary": "Get Application Logs",
-        "description": "Return recent pod logs for one managed application.",
-        "operationId": "get_application_logs_api_v1_applications__application_id__logs_get",
+        "summary": "Get Solution Logs",
+        "description": "Return recent pod logs for one managed solution.",
+        "operationId": "get_solution_logs_api_v1_solutions__solution_id__logs_get",
         "parameters": [
           {
-            "name": "application_id",
+            "name": "solution_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Application Id"
+              "title": "Solution Id"
             }
           },
           {
@@ -657,7 +657,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "title": "Response Get Application Logs Api V1 Applications  Application Id  Logs Get"
+                  "title": "Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get"
                 }
               }
             }
@@ -675,20 +675,20 @@
         }
       }
     },
-    "/api/v1/applications/{application_id}": {
+    "/api/v1/solutions/{solution_id}": {
       "delete": {
-        "summary": "Delete Application",
-        "description": "Mark one Application absent and queue explicit lifecycle cleanup.",
-        "operationId": "delete_application_api_v1_applications__application_id__delete",
+        "summary": "Delete Solution",
+        "description": "Mark one Solution absent and queue explicit lifecycle cleanup.",
+        "operationId": "delete_solution_api_v1_solutions__solution_id__delete",
         "parameters": [
           {
-            "name": "application_id",
+            "name": "solution_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Application Id"
+              "title": "Solution Id"
             }
           },
           {
@@ -2610,102 +2610,6 @@
   },
   "components": {
     "schemas": {
-      "ApplicationCreate": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Name"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "envs": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Envs"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "image"
-        ],
-        "title": "ApplicationCreate",
-        "description": "Validate application creation payloads."
-      },
-      "ApplicationResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "organization": {
-            "$ref": "#/components/schemas/OrganizationIdentity"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "image_desired": {
-            "type": "string",
-            "title": "Image Desired"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "organization",
-          "name",
-          "slug",
-          "description",
-          "image_desired",
-          "status",
-          "created_at"
-        ],
-        "title": "ApplicationResponse",
-        "description": "Represent one application in API responses."
-      },
       "Body_request_password_reset_api_v1_auth_forgot_password_post": {
         "properties": {
           "email": {
@@ -2994,8 +2898,8 @@
         "type": "string",
         "enum": [
           "compute.create",
-          "application.create",
-          "application.delete",
+          "solution.create",
+          "solution.delete",
           "organization.create",
           "organization.delete"
         ],
@@ -3103,46 +3007,6 @@
         ],
         "title": "OperationStatus",
         "description": "Supported long-running operation lifecycle states."
-      },
-      "OrganizationApplicationSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "status"
-        ],
-        "title": "OrganizationApplicationSummary",
-        "description": "Represent a compact LongLink Application in nested Organization responses."
       },
       "OrganizationCreate": {
         "properties": {
@@ -3314,6 +3178,46 @@
         "title": "OrganizationRoles",
         "description": "Supported organization membership roles."
       },
+      "OrganizationSolutionSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status"
+        ],
+        "title": "OrganizationSolutionSummary",
+        "description": "Represent a compact LongLink Solution in nested Organization responses."
+      },
       "OrganizationStorageUsageResponse": {
         "properties": {
           "bucket_name": {
@@ -3393,28 +3297,6 @@
         ],
         "title": "OrganizationUpdate",
         "description": "Validate mutable organization settings."
-      },
-      "Page_ApplicationResponse_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/ApplicationResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Total"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
-        "title": "Page[ApplicationResponse]"
       },
       "Page_ComputeRegistryResponse_": {
         "properties": {
@@ -3503,6 +3385,28 @@
           "total"
         ],
         "title": "Page[OrganizationSummary]"
+      },
+      "Page_SolutionResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SolutionResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[SolutionResponse]"
       },
       "Page_StorageRegistryResponse_": {
         "properties": {
@@ -3609,6 +3513,102 @@
         ],
         "title": "RegistrationComplete",
         "description": "Validate profile and password setup after email authentication."
+      },
+      "SolutionCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "envs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Envs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "image"
+        ],
+        "title": "SolutionCreate",
+        "description": "Validate solution creation payloads."
+      },
+      "SolutionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "organization": {
+            "$ref": "#/components/schemas/OrganizationIdentity"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "image_desired": {
+            "type": "string",
+            "title": "Image Desired"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "organization",
+          "name",
+          "slug",
+          "description",
+          "image_desired",
+          "status",
+          "created_at"
+        ],
+        "title": "SolutionResponse",
+        "description": "Represent one solution in API responses."
       },
       "Status": {
         "type": "string",

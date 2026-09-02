@@ -25,7 +25,7 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 - Define constrained values with shared Enums (for example `Status`) instead of raw strings.
 - For fixed access levels, keep the role names in an Enum and store the chosen role on the membership row instead of creating a standalone roles table.
 - Use a `permissions` table for fine-grained capabilities and a `role_permissions` association table when mapping fixed roles to permissions.
-- Use association tables for `user -> organization` and `user -> application` membership records, including the role column on those rows.
+- Use association tables for `user -> organization` and `user -> solution` membership records, including the role column on those rows.
 - Use Pydantic models (`BaseModel`) to validate external JSON responses.
 - Use `model_validate()` (Pydantic v2) for parse + validation in one step.
 - Let FastAPI typing handle request/query validation automatically (for example `Status | None`).

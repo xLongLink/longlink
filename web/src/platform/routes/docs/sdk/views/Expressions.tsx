@@ -7,7 +7,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Expressions | LongLink Documentation',
-        description: 'Use expressions in LongLink XML views to render dynamic application interfaces.',
+        description: 'Use expressions in LongLink Solution Views to render dynamic solution interfaces.',
     },
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },

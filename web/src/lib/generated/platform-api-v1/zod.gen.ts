@@ -3,18 +3,6 @@
 import * as z from 'zod';
 
 /**
- * ApplicationCreate
- *
- * Validate application creation payloads.
- */
-export const zApplicationCreate = z.object({
-    name: z.string().min(1).max(100),
-    image: z.string(),
-    description: z.string().max(255).nullish(),
-    envs: z.record(z.string(), z.string()).optional()
-});
-
-/**
  * Body_request_password_reset_api_v1_auth_forgot_password_post
  */
 export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
@@ -122,8 +110,8 @@ export const zOAuthAvailability = z.object({
  */
 export const zOperationKind = z.enum([
     'compute.create',
-    'application.create',
-    'application.delete',
+    'solution.create',
+    'solution.delete',
     'organization.create',
     'organization.delete'
 ]);
@@ -287,6 +275,18 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
+ * SolutionCreate
+ *
+ * Validate solution creation payloads.
+ */
+export const zSolutionCreate = z.object({
+    name: z.string().min(1).max(100),
+    image: z.string(),
+    description: z.string().max(255).nullish(),
+    envs: z.record(z.string(), z.string()).optional()
+});
+
+/**
  * Status
  *
  * Lifecycle states shared by Platform-managed resources.
@@ -310,19 +310,6 @@ export const zComputeRegistryResponse = z.object({
 });
 
 /**
- * OrganizationApplicationSummary
- *
- * Represent a compact LongLink Application in nested Organization responses.
- */
-export const zOrganizationApplicationSummary = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    description: z.string().nullish(),
-    status: zStatus
-});
-
-/**
  * OrganizationIdentity
  *
  * Represent a compact Organization in nested API responses.
@@ -336,19 +323,16 @@ export const zOrganizationIdentity = z.object({
 });
 
 /**
- * ApplicationResponse
+ * OrganizationSolutionSummary
  *
- * Represent one application in API responses.
+ * Represent a compact LongLink Solution in nested Organization responses.
  */
-export const zApplicationResponse = z.object({
+export const zOrganizationSolutionSummary = z.object({
     id: z.uuid(),
-    organization: zOrganizationIdentity,
     name: z.string(),
     slug: z.string(),
-    description: z.string().nullable(),
-    image_desired: z.string(),
-    status: zStatus,
-    created_at: z.iso.datetime()
+    description: z.string().nullish(),
+    status: zStatus
 });
 
 /**
@@ -365,14 +349,6 @@ export const zOrganizationSummary = z.object({
 });
 
 /**
- * Page[ApplicationResponse]
- */
-export const zPageApplicationResponse = z.object({
-    items: z.array(zApplicationResponse),
-    total: z.int().gte(0)
-});
-
-/**
  * Page[ComputeRegistryResponse]
  */
 export const zPageComputeRegistryResponse = z.object({
@@ -385,6 +361,30 @@ export const zPageComputeRegistryResponse = z.object({
  */
 export const zPageOrganizationSummary = z.object({
     items: z.array(zOrganizationSummary),
+    total: z.int().gte(0)
+});
+
+/**
+ * SolutionResponse
+ *
+ * Represent one solution in API responses.
+ */
+export const zSolutionResponse = z.object({
+    id: z.uuid(),
+    organization: zOrganizationIdentity,
+    name: z.string(),
+    slug: z.string(),
+    description: z.string().nullable(),
+    image_desired: z.string(),
+    status: zStatus,
+    created_at: z.iso.datetime()
+});
+
+/**
+ * Page[SolutionResponse]
+ */
+export const zPageSolutionResponse = z.object({
+    items: z.array(zSolutionResponse),
     total: z.int().gte(0)
 });
 
@@ -574,7 +574,7 @@ export const zCompleteRegistrationApiV1AuthRegisterCompletePostBody = zRegistrat
  */
 export const zCompleteRegistrationApiV1AuthRegisterCompletePostResponse = zUserSummary;
 
-export const zListApplicationsApiV1ApplicationsGetQuery = z.object({
+export const zListSolutionsApiV1SolutionsGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),
     page_size: z.int().gte(1).lte(100).optional().default(25)
 });
@@ -582,49 +582,49 @@ export const zListApplicationsApiV1ApplicationsGetQuery = z.object({
 /**
  * Successful Response
  */
-export const zListApplicationsApiV1ApplicationsGetResponse = zPageApplicationResponse;
+export const zListSolutionsApiV1SolutionsGetResponse = zPageSolutionResponse;
 
-export const zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetPath = z.object({
+export const zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetPath = z.object({
     organization_id: z.uuid()
 });
 
 /**
- * Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get
+ * Response Get Organization Solutions Api V1 Organizations  Organization Id  Solutions Get
  *
  * Successful Response
  */
-export const zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse = z.array(zOrganizationApplicationSummary);
+export const zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse = z.array(zOrganizationSolutionSummary);
 
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostBody = zApplicationCreate;
+export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostBody = zSolutionCreate;
 
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostPath = z.object({
+export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostPath = z.object({
     organization_id: z.uuid()
 });
 
 /**
  * Successful Response
  */
-export const zCreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = z.void();
+export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = z.void();
 
-export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetPath = z.object({
-    application_id: z.uuid()
+export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
+    solution_id: z.uuid()
 });
 
 /**
- * Response Get Application Logs Api V1 Applications  Application Id  Logs Get
+ * Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get
  *
  * Successful Response
  */
-export const zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse = z.array(z.string());
+export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = z.array(z.string());
 
-export const zDeleteApplicationApiV1ApplicationsApplicationIdDeletePath = z.object({
-    application_id: z.uuid()
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
+    solution_id: z.uuid()
 });
 
 /**
  * Successful Response
  */
-export const zDeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = z.void();
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
 
 export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),

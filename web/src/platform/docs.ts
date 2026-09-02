@@ -35,7 +35,7 @@ export const documentationPaths = [
     '/docs',
     '/docs/api',
     '/docs/api/organizations',
-    '/docs/api/applications',
+    '/docs/api/solutions',
     '/docs/sdk',
     '/docs/sdk/environments',
     '/docs/sdk/routes',

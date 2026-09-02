@@ -22,7 +22,7 @@ def test_identity_token_user_returns_identity_from_created_token() -> None:
 
 
 def test_identity_token_user_rejects_empty_identity_secret() -> None:
-    """Reject identity verification when the Application secret is absent."""
+    """Reject identity verification when the Solution secret is absent."""
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError, match="Identity secret is required"):

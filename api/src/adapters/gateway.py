@@ -38,7 +38,7 @@ class GatewayClient:
     async def request(
         self,
         *,
-        application_id: UUID,
+        solution_id: UUID,
         user_id: UUID,
         method: str,
         path: str,
@@ -46,10 +46,10 @@ class GatewayClient:
         content_type: str | None,
         content: AsyncIterator[bytes],
     ) -> GatewayResponse:
-        """Start one streamed request through the authenticated application route."""
+        """Start one streamed request through the authenticated solution route."""
 
         headers = {
-            "x-longlink-application-id": str(application_id),
+            "x-longlink-solution-id": str(solution_id),
             "x-longlink-identity": identity.create_identity_token(user_id, self._identity_secret),
         }
         if content_type is not None:

@@ -12,19 +12,19 @@ from longlink.database import migrations as database_migrations
     ("arguments", "ci_paths", "project_name"),
     [
         pytest.param(
-            ["--folder", "sample-app"],
+            ["--folder", "sample-solution"],
             [],
-            "sample-app",
+            "sample-solution",
             id="default",
         ),
         pytest.param(
-            ["--folder", "sample-app", "--ci", "github"],
+            ["--folder", "sample-solution", "--ci", "github"],
             [".github/workflows/release.yml", ".github/workflows/tests.yml"],
-            "sample-app",
+            "sample-solution",
             id="github-ci",
         ),
         pytest.param(
-            ["--folder", "sample-app", "--name", "sample"],
+            ["--folder", "sample-solution", "--name", "sample"],
             [],
             "sample",
             id="name",
@@ -41,7 +41,7 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
         result = runner.invoke(init_command, arguments)
 
         # Assert
-        target = Path.cwd() / "sample-app"
+        target = Path.cwd() / "sample-solution"
         assert result.exit_code == 0
         for path in [
             "pyproject.toml",
@@ -70,11 +70,11 @@ def test_init_refuses_existing_folder() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
-        target = Path.cwd() / "sample-app"
+        target = Path.cwd() / "sample-solution"
         target.mkdir()
 
         # Act
-        result = runner.invoke(init_command, ["--folder", "sample-app"])
+        result = runner.invoke(init_command, ["--folder", "sample-solution"])
 
         # Assert
         assert result.exit_code == 1
@@ -89,12 +89,12 @@ def test_init_rejects_invalid_project_name_without_creating_folder() -> None:
 
     with runner.isolated_filesystem():
         # Act
-        result = runner.invoke(init_command, ["--folder", "sample-app", "--name", "../invalid"])
+        result = runner.invoke(init_command, ["--folder", "sample-solution", "--name", "../invalid"])
 
         # Assert
         assert result.exit_code == 1
         assert "Invalid project name: ../invalid" in result.output
-        assert not (Path.cwd() / "sample-app").exists()
+        assert not (Path.cwd() / "sample-solution").exists()
 
 
 def test_initialized_project_applies_bundled_migration_through_deployment_entrypoint(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,9 +105,9 @@ def test_initialized_project_applies_bundled_migration_through_deployment_entryp
     monkeypatch.setenv("LONGLINK_ENV", "development")
 
     with runner.isolated_filesystem():
-        result = runner.invoke(init_command, ["--folder", "sample-app"])
+        result = runner.invoke(init_command, ["--folder", "sample-solution"])
         assert result.exit_code == 0
-        target = Path.cwd() / "sample-app"
+        target = Path.cwd() / "sample-solution"
 
         # Act
         with chdir(target):

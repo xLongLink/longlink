@@ -11,30 +11,30 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useCreateOrganizationApplication } from '@/lib/hooks/use-organization';
+import { useCreateOrganizationSolution } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
 
-const createApplicationFormSchema = z.object({
+const createSolutionFormSchema = z.object({
     image: z.string().trim().min(1),
     name: z.string().trim(),
     description: z.string().trim(),
     envs: z.record(z.string(), z.string().optional()),
 });
 
-type CreateApplicationInput = z.input<typeof createApplicationFormSchema>;
+type CreateSolutionInput = z.input<typeof createSolutionFormSchema>;
 
-const defaultCreateApplicationValues: CreateApplicationInput = {
+const defaultCreateSolutionValues: CreateSolutionInput = {
     image: '',
     name: '',
     description: '',
     envs: {},
 };
 
-/** Renders the create-application dialog for an organization. */
-export default function CreateApplication({ organizationId }: { organizationId: string }) {
+/** Renders the create-solution dialog for an organization. */
+export default function CreateSolution({ organizationId }: { organizationId: string }) {
     const toast = useToast();
-    const createApplication = useCreateOrganizationApplication(organizationId);
+    const createSolution = useCreateOrganizationSolution(organizationId);
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
@@ -42,9 +42,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm({
-        defaultValues: defaultCreateApplicationValues,
+        defaultValues: defaultCreateSolutionValues,
         validators: {
-            onChange: createApplicationFormSchema,
+            onChange: createSolutionFormSchema,
         },
         onSubmit: async ({ value }) => {
             if (step === 'image') {
@@ -55,7 +55,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                     setStep('envs');
                 }
             } else {
-                await handleCreateApp(value);
+                await handleCreateSolution(value);
             }
         },
     });
@@ -63,12 +63,12 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
-        form.reset(defaultCreateApplicationValues);
+        form.reset(defaultCreateSolutionValues);
         setError(null);
     }
 
-    /** Inspect the image and advance to the app details step. */
-    async function handleInspectImage(payload: CreateApplicationInput) {
+    /** Inspect the image and advance to the solution details step. */
+    async function handleInspectImage(payload: CreateSolutionInput) {
         setError(null);
         setIsInspecting(true);
 
@@ -103,8 +103,8 @@ export default function CreateApplication({ organizationId }: { organizationId: 
         }
     }
 
-    /** Create the app after the image metadata has been reviewed. */
-    async function handleCreateApp(payload: CreateApplicationInput) {
+    /** Create the solution after the image metadata has been reviewed. */
+    async function handleCreateSolution(payload: CreateSolutionInput) {
         setError(null);
 
         // Collect configured environment values, dropping unset and empty fields.
@@ -116,9 +116,9 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             }
         }
 
-        // Submit the new app and close the dialog on success.
+        // Submit the new solution and close the dialog on success.
         try {
-            await createApplication.mutateAsync({
+            await createSolution.mutateAsync({
                 name: payload.name,
                 image: payload.image,
                 description: payload.description.length > 0 ? payload.description : null,
@@ -128,13 +128,13 @@ export default function CreateApplication({ organizationId }: { organizationId: 
             resetDialogState();
         } catch (mutationError) {
             toast({
-                body: mutationError instanceof Error ? mutationError.message : 'Failed to create application',
+                body: mutationError instanceof Error ? mutationError.message : 'Failed to create solution',
                 type: 'error',
             });
         }
     }
 
-    const handleOpenChange = createGuardedOpenChange(isInspecting || createApplication.isPending, (nextOpen) => {
+    const handleOpenChange = createGuardedOpenChange(isInspecting || createSolution.isPending, (nextOpen) => {
         setOpen(nextOpen);
 
         // Reset the wizard once the dialog is fully closed.
@@ -146,7 +146,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
     return (
         <>
             <Button
-                label="Create Application"
+                label="Create Solution"
                 isDisabled={organizationId.length === 0}
                 clickAction={() => setOpen(true)}
             />
@@ -163,7 +163,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                             isOpen={open}
                             onOpenChange={handleOpenChange}
                             aria-label={stepTitle}
-                            purpose={isInspecting || createApplication.isPending ? 'required' : 'form'}
+                            purpose={isInspecting || createSolution.isPending ? 'required' : 'form'}
                             width={step === 'envs' ? 520 : 640}
                             maxHeight="calc(100dvh - 2rem)"
                         >
@@ -227,7 +227,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                                     value={field.state.value}
                                                                     htmlName={field.name}
                                                                     isOptional
-                                                                    placeholder="Dashboard app"
+                                                                    placeholder="Dashboard solution"
                                                                     onBlur={field.handleBlur}
                                                                     onChange={field.handleChange}
                                                                 />
@@ -317,7 +317,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                 <Button
                                                     label="Back"
                                                     variant="ghost"
-                                                    isDisabled={createApplication.isPending}
+                                                    isDisabled={createSolution.isPending}
                                                     clickAction={() => {
                                                         setStep('metadata');
                                                         setError(null);
@@ -327,16 +327,16 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                                     <Button
                                                         label="Cancel"
                                                         variant="ghost"
-                                                        isDisabled={createApplication.isPending}
+                                                        isDisabled={createSolution.isPending}
                                                         clickAction={() => handleOpenChange(false)}
                                                     />
                                                     <Button
                                                         form={formId}
                                                         type="submit"
-                                                        label={createApplication.isPending ? 'Creating...' : 'Create'}
+                                                        label={createSolution.isPending ? 'Creating...' : 'Create'}
                                                         variant="primary"
                                                         isDisabled={!hasName || !isValid}
-                                                        isLoading={createApplication.isPending}
+                                                        isLoading={createSolution.isPending}
                                                     />
                                                 </Stack>
                                             </Stack>

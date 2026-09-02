@@ -7,7 +7,7 @@ import { PlatformFlowDiagram } from '@/components/PlatformFlowDiagram';
 const metadata = {
     seo: {
         title: 'Platform Documentation | LongLink',
-        description: 'Learn how LongLink Platform manages organizations, applications, and shared infrastructure.',
+        description: 'Learn how LongLink Platform manages organizations, solutions, and shared infrastructure.',
     },
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-07-20',
@@ -22,17 +22,17 @@ export default function DocsArticleRoute() {
                     Platform
                 </Heading>
                 <Text as="p">
-                    The LongLink Platform provides the shared foundation for running applications across an
-                    organization. It manages users, organizations, access, applications, deployments, and the
-                    infrastructure they depend on.
+                    The LongLink Platform provides the shared foundation for running solutions across an organization.
+                    It manages users, organizations, access, solutions, deployments, and the infrastructure they depend
+                    on.
                 </Text>
                 <Text as="p">
-                    Applications remain separate services with their own code and purpose. LongLink provides the layer
-                    around them: it controls access, prepares the resources each application needs, makes applications
+                    Solutions remain separate services with their own code and purpose. LongLink provides the layer
+                    around them: it controls access, prepares the resources each solution needs, makes solutions
                     available to the right users, and provides visibility into deployments, logs, and status.
                 </Text>
                 <Text as="p">
-                    This gives teams a consistent and governed way to operate many dedicated applications without
+                    This gives teams a consistent and governed way to operate many dedicated solutions without
                     rebuilding the same operational foundation for each one.
                 </Text>
                 <PlatformFlowDiagram />

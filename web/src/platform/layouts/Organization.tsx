@@ -15,7 +15,7 @@ export default function OrganizationLayout() {
             action={<ProfileMenu user={user} />}
             breadcrumb={<PageBreadcrumb />}
             tabs={[
-                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Applications' },
+                { href: `/orgs/${organization}`, icon: AppWindow, label: 'Solutions' },
                 { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
             ]}
         >

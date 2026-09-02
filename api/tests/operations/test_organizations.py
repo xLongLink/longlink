@@ -1,12 +1,12 @@
 import pytest
 from uuid import uuid4
 from datetime import UTC, datetime
-from factories import create_application, create_organization, create_ready_infrastructure
+from factories import create_solution, create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.applications import Application
+from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
@@ -266,7 +266,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_schema(self, organization_id: object, application_id: object) -> None:
+        async def delete_solution_schema(self, organization_id: object, solution_id: object) -> None:
             """Record unexpected schema deletion."""
 
             calls.append("schema")
@@ -318,14 +318,14 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 async def test_delete_tears_down_organization_boundaries_in_order(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Delete namespace, Application resources, providers, then the Organization tombstone."""
+    """Delete namespace, Solution resources, providers, then the Organization tombstone."""
 
     # Arrange a tombstoned Organization and an active sibling on the same infrastructure.
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(users[0], infrastructure=infrastructure)
-    application = await create_application(organization)
+    solution = await create_solution(organization)
     sibling_organization = await create_organization(users[1], name="sibling", infrastructure=infrastructure)
-    sibling_application = await create_application(sibling_organization)
+    sibling_solution = await create_solution(sibling_organization)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None
@@ -337,11 +337,11 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_schema(self, organization_id: object, application_id: object) -> None:
-            """Record Application schema deletion."""
+        async def delete_solution_schema(self, organization_id: object, solution_id: object) -> None:
+            """Record Solution schema deletion."""
 
             assert organization_id == organization.id
-            assert application_id == application.id
+            assert solution_id == solution.id
             calls.append("schema")
 
         async def delete_database(self, organization_id: object) -> None:
@@ -354,10 +354,10 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def revoke(self, name: str) -> None:
-            """Record Application credential revocation."""
+        async def revoke_solution(self, name: str) -> None:
+            """Record Solution credential revocation."""
 
-            assert name == application.id.hex
+            assert name == solution.id.hex
             calls.append("revoke")
 
         async def delete(self, bucket: str) -> None:
@@ -390,7 +390,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(
     assert await organization_operations.delete(organization.id) is None
     async with session_scope() as session:
         assert await session.get(Organization, organization.id) is None
-        assert await session.get(Application, application.id) is None
+        assert await session.get(Solution, solution.id) is None
         assert await session.get(Organization, sibling_organization.id) is not None
-        assert await session.get(Application, sibling_application.id) is not None
+        assert await session.get(Solution, sibling_solution.id) is not None
     assert calls == ["namespace", "schema", "revoke", "database", "bucket"]

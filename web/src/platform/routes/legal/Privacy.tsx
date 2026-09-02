@@ -87,8 +87,8 @@ function PrivacyContent() {
                 </Heading>
                 <Text as="p">
                     This Privacy Policy explains how LongLink handles personal data when you visit our website, create
-                    an account, join or manage an organization, add or deploy an application, connect infrastructure,
-                    use the platform, SDK, runtime, documentation, or support channels, or otherwise use the Service.
+                    an account, join or manage an organization, add or deploy a solution, connect infrastructure, use
+                    the platform, SDK, runtime, documentation, or support channels, or otherwise use the Service.
                 </Text>
                 <Text as="p">
                     The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent to{' '}
@@ -98,7 +98,7 @@ function PrivacyContent() {
                     .
                 </Text>
                 <Text as="p">
-                    In this Policy, "Service" means the LongLink website, hosted platform, SDK, application runtime,
+                    In this Policy, "Service" means the LongLink website, hosted platform, SDK, solution runtime,
                     deployment tooling, and related support. If a separate service agreement or data processing
                     agreement applies, its definitions and data-processing terms also apply where relevant.
                 </Text>
@@ -110,21 +110,21 @@ function PrivacyContent() {
                 </Heading>
                 <Text as="p">
                     We act as controller for personal data used to operate accounts, authentication, organizations,
-                    memberships, invitations, infrastructure registries, application records, support, security, abuse
+                    memberships, invitations, infrastructure registries, solution records, support, security, abuse
                     prevention, and our business. This Policy primarily describes those activities.
                 </Text>
                 <Text as="p">
-                    When a customer places personal data in an application, database schema, storage bucket, file, log,
-                    uploaded object, view definition, environment value, or other content processed through LongLink,
-                    the customer generally decides why and how that data is processed and is the controller. LongLink
-                    generally acts as processor for that Customer Content when we operate the hosted Service for the
-                    customer.
+                    When a customer places personal data in a solution, database schema, storage bucket, file, log,
+                    uploaded object, Solution View definition, environment value, or other content processed through
+                    LongLink, the customer generally decides why and how that data is processed and is the controller.
+                    LongLink generally acts as processor for that Customer Content when we operate the hosted Service
+                    for the customer.
                 </Text>
                 <Text as="p">
                     If LongLink is self-hosted or operated by another organization, that operator is responsible for its
                     own privacy notices, lawful basis, retention, provider choices, and user requests. Customers are
                     responsible for providing notices and establishing a lawful basis for personal data they process
-                    through applications built or deployed with LongLink.
+                    through solutions built or deployed with LongLink.
                 </Text>
             </Stack>
 
@@ -166,11 +166,11 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                Application and deployment data: application name, slug, image reference, image digest,
+                                Solution and deployment data: solution name, slug, image reference, image digest,
                                 version, SDK version, description, selected compute, database, and storage registries,
                                 environment values supplied for deployment, deployment status, operation status,
                                 operation errors, runtime status, pod, service, log, and proxy information needed to
-                                provision, route, monitor, and support applications.
+                                provision, route, monitor, and support solutions.
                             </Text>
                         }
                     />
@@ -188,7 +188,7 @@ function PrivacyContent() {
                         label={
                             <Text>
                                 Connection and log data: IP address, request method and path, timestamps, response
-                                status, duration, errors, session information, application or organization identifiers,
+                                status, duration, errors, session information, solution or organization identifiers,
                                 security events, operational diagnostics, and runtime logs exposed through connected
                                 infrastructure.
                             </Text>
@@ -216,8 +216,8 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                Customer Content: data stored or processed by applications, database schemas, storage
-                                buckets, files, XML view definitions, API routes, and runtime services. We do not
+                                Customer Content: data stored or processed by solutions, database schemas, storage
+                                buckets, files, Solution View definitions, API routes, and runtime services. We do not
                                 routinely inspect Customer Content, but authorized personnel may access it where
                                 reasonably necessary to provide requested support, investigate abuse or a security
                                 incident, enforce terms, or comply with law.
@@ -251,9 +251,7 @@ function PrivacyContent() {
                         }
                     />
                     <ListItem
-                        label={
-                            <Text>register, verify, provision, update, route, monitor, and delete applications;</Text>
-                        }
+                        label={<Text>register, verify, provision, update, route, monitor, and delete solutions;</Text>}
                     />
                     <ListItem
                         label={
@@ -265,7 +263,7 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                sync organization users into shared application database tables where needed by the
+                                sync organization users into shared solution database tables where needed by the
                                 runtime;
                             </Text>
                         }
@@ -319,7 +317,7 @@ function PrivacyContent() {
                             <Text>
                                 Infrastructure providers and connected registries: Kubernetes, database, object-storage,
                                 container registry, routing, DNS, and hosting providers receive the organization,
-                                application, runtime, secret, request, and configuration data needed to provision, run,
+                                solution, runtime, secret, request, and configuration data needed to provision, run,
                                 route, inspect, and delete resources.
                             </Text>
                         }
@@ -337,8 +335,8 @@ function PrivacyContent() {
                         label={
                             <Text>
                                 Logging and monitoring providers: incident investigation, security, and service
-                                reliability. Log data may include IP addresses, request paths, organization and
-                                application identifiers, runtime identifiers, and error information.
+                                reliability. Log data may include IP addresses, request paths, organization and solution
+                                identifiers, runtime identifiers, and error information.
                             </Text>
                         }
                     />
@@ -437,7 +435,7 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                organization, application, infrastructure registry, deployment, operation, and audit
+                                organization, solution, infrastructure registry, deployment, operation, and audit
                                 records are kept while needed to provide, secure, troubleshoot, and document the
                                 Service, and may be retained after deletion where needed for security, abuse
                                 investigations, disputes, or legal obligations;
@@ -447,7 +445,7 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                application, access, proxy, runtime, and security logs are generally kept for up to 12
+                                solution, access, proxy, runtime, and security logs are generally kept for up to 12
                                 months, but may be kept longer where necessary to investigate an incident, abuse,
                                 operational failure, or legal claim;
                             </Text>
@@ -474,15 +472,15 @@ function PrivacyContent() {
                         label={
                             <Text>
                                 infrastructure credentials and runtime configuration are kept while the related
-                                registry, organization, or application remains configured, and are deleted or rotated
-                                when no longer needed; and
+                                registry, organization, or solution remains configured, and are deleted or rotated when
+                                no longer needed; and
                             </Text>
                         }
                     />
                     <ListItem
                         label={
                             <Text>
-                                Customer Content may be erased without a recovery period when an application, database
+                                Customer Content may be erased without a recovery period when a solution, database
                                 schema, storage bucket, runtime, organization, or connected infrastructure resource is
                                 deleted, reinstalled, suspended, terminated, or released. You are responsible for
                                 backups and exporting Customer Content before deleting resources.
@@ -504,13 +502,13 @@ function PrivacyContent() {
                 <Text as="p">
                     The Service automatically performs operational actions such as authenticating sessions, checking
                     access roles, routing authorized requests, creating and deleting runtime resources, verifying
-                    application readiness, marking applications as running or failed, retrying queued operations, and
-                    synchronizing organization users into shared application database tables.
+                    solution readiness, marking solutions as running or failed, retrying queued operations, and
+                    synchronizing organization users into shared solution database tables.
                 </Text>
                 <Text as="p">
-                    These actions use account, organization, application, infrastructure, status, and operation data
-                    rather than behavioral profiling. Deleting or replacing applications, schemas, buckets, or
-                    organizations may cause loss of Customer Content. Contact{' '}
+                    These actions use account, organization, solution, infrastructure, status, and operation data rather
+                    than behavioral profiling. Deleting or replacing solutions, schemas, buckets, or organizations may
+                    cause loss of Customer Content. Contact{' '}
                     <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
                         info@longlink.dev
                     </Link>{' '}
@@ -531,7 +529,7 @@ function PrivacyContent() {
                     including access controls, password hashing, revocable session tokens, signed session cookies,
                     transport encryption, namespace, database-schema, and storage-bucket isolation, credential hashing
                     or encryption where appropriate, secret management, logging, and restricted administrative access.
-                    No system is completely secure, and you are responsible for securing your accounts, applications,
+                    No system is completely secure, and you are responsible for securing your accounts, solutions,
                     credentials, infrastructure, and Customer Content.
                 </Text>
                 <Text as="p">

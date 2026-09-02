@@ -12,6 +12,9 @@ export function TransparentBox({ className = '', ...props }: BoxSvgProps) {
             aria-labelledby={`${titleId} ${descriptionId}`}
             className={`box-art ${className}`.trim()}
             role="img"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="3"
             viewBox="0 0 340 300"
             {...props}
         >
@@ -29,10 +32,8 @@ export function TransparentBox({ className = '', ...props }: BoxSvgProps) {
                 d="M150 64H270V184L220 220H100V100L150 64M100 100H220L270 64M220 100V220L270 184"
                 fill="none"
                 stroke="currentColor"
-                strokeLinejoin="round"
-                strokeWidth="3"
             />
-            <g aria-hidden="true" fill="none" opacity="0.5" stroke="currentColor" strokeWidth="3">
+            <g aria-hidden="true" fill="none" opacity="0.5" stroke="currentColor">
                 <line x1="150" y1="64" x2="150" y2="184" />
                 <line x1="150" y1="184" x2="270" y2="184" />
                 <line x1="100" y1="220" x2="150" y2="184" />
@@ -51,6 +52,9 @@ export function BlackBox({ className = '', ...props }: BoxSvgProps) {
             aria-labelledby={`${titleId} ${descriptionId}`}
             className={`box-art ${className}`.trim()}
             role="img"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="3"
             viewBox="0 0 340 300"
             {...props}
         >
@@ -68,8 +72,6 @@ export function BlackBox({ className = '', ...props }: BoxSvgProps) {
                 d="M150 64H270V184L220 220H100V100L150 64M100 100H220L270 64M220 100V220L270 184"
                 fill="none"
                 stroke="currentColor"
-                strokeLinejoin="round"
-                strokeWidth="3"
             />
         </svg>
     );

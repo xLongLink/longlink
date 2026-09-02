@@ -12,7 +12,7 @@ def test_organization_template_limits_ephemeral_storage() -> None:
 
     # Arrange
     _, resource_quota, _ = templates.readyml_list(
-        files("src.kubernetes.templates").joinpath("application", "organization.yml"),
+        files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
         namespace="acme",
     )
 

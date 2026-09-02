@@ -8,14 +8,14 @@
     </xsd:attribute>
     <xsd:attribute name="path" type="xsd:string" use="required">
       <xsd:annotation>
-        <xsd:documentation>Application-relative JSON endpoint path.</xsd:documentation>
+        <xsd:documentation>Solution-relative JSON endpoint path.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Query" type="QueryType">
     <xsd:annotation>
-      <xsd:documentation>Use Query to bring the information an application view needs into scope, such as a list of orders or customer details.</xsd:documentation>
+      <xsd:documentation>Use Query to bring the information a Solution View needs into scope, such as a list of orders or customer details.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="query" category="State" lastUpdated="2026-07-21" source="adapters/Query.xsd"/>
         <longlink:example>&lt;Query id="orders" path="/api/orders" /&gt;</longlink:example>

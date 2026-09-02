@@ -27,7 +27,7 @@ requires-python = ">=3.12"
 authors = [
     {name = "LongLink SAGL", email = "info@longlink.ch"}
 ]
-description = "Python SDK for building and packaging LongLink applications."
+description = "Python SDK for building and packaging LongLink Solutions."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE*"]

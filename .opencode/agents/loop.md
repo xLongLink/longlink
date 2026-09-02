@@ -23,7 +23,7 @@ For each of the 5 findings return
 ## Focus
 
 - Security: authentication, authorization, tenant isolation, secret handling, unsafe redirects, SSRF, XSS, injection, path traversal, header handling, CORS, CSRF, dependency risk, and sensitive logging. Perform a static analysis, vulnerability research, and edge-case review for bugs, primitives, and patterns.
-- Permissions: organization access, application membership, role checks, user-controlled identifiers, resource ownership, and cross-tenant data access.
+- Permissions: organization and solution access, role checks, user-controlled identifiers, resource ownership, and cross-tenant data access.
 - Validation: request schemas, Pydantic constraints, XML parsing, environment variables, file uploads, URLs, enum handling, database constraints, and clear error responses.
 - Testing: missing regression tests, weak assertions, overfitted AI-generated tests, untested error paths, permission tests, migration tests, API contract tests, XML renderer tests, and frontend behavior tests.
 - Operations: migrations, deployment labels, Kubernetes manifests, retry behavior, idempotency, background operations, observability, logs, timeouts, rollback safety, and cleanup paths.

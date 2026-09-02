@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-SDK defines how applications are built on LongLink.
+SDK defines how Solutions are built on LongLink.
 
 ## Architecture
 
@@ -32,7 +32,7 @@ The build command writes an OCI description label when available. It also writes
 
 | Label                   | Value                     | Description                                          |
 | ----------------------- | ------------------------- | ---------------------------------------------------- |
-| `longlink.environments` | `<json-environment-list>` | App environment variables declared by `src/envs.py`. |
+| `longlink.environments` | `<json-environment-list>` | Solution environment variables declared by `src/envs.py`. |
 
 ## XML
 

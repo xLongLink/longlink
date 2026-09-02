@@ -8,15 +8,15 @@
     <State id="workflow" owner="manager" risk="medium" />
 
     <Stack>
-        <Heading level="1">Application settings</Heading>
-        <Text color="secondary">Configure application defaults with local XML state and Astryx form controls.</Text>
+        <Heading level="1">Solution settings</Heading>
+        <Text color="secondary">Configure Solution defaults with local XML state and Astryx form controls.</Text>
     </Stack>
 
     <Menu>
         <MenuSection title="Settings sections">
-        <MenuItem icon="viewColumns" label="Application">
-            <Heading level="2">Application</Heading>
-            <Text color="secondary">Edit the sample application's local owner, cost-center, and reviewer note fields.</Text>
+        <MenuItem icon="viewColumns" label="Solution">
+            <Heading level="2">Solution</Heading>
+            <Text color="secondary">Edit the sample Solution's local owner, cost-center, and reviewer note fields.</Text>
             <Card>
                 <Stack direction="horizontal" align="center">
                     <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />

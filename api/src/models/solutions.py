@@ -7,8 +7,8 @@ from src.models.statuses import Status
 from src.models.resources import OrganizationIdentity
 
 
-class ApplicationCreate(BaseModel):
-    """Validate application creation payloads."""
+class SolutionCreate(BaseModel):
+    """Validate solution creation payloads."""
 
     # Metadata
     name: str = Field(min_length=1, max_length=100)
@@ -21,11 +21,11 @@ class ApplicationCreate(BaseModel):
     @field_validator("envs")
     @classmethod
     def validate_environment_variables(cls, envs: dict[str, str]) -> dict[str, str]:
-        """Validate application environment names, ownership, and bounded value sizes."""
+        """Validate solution environment names, ownership, and bounded value sizes."""
 
-        # Limit the number of environment values accepted per application.
+        # Limit the number of environment values accepted per solution.
         if len(envs) > 100:
-            raise ValueError("Application environment contains too many variables")
+            raise ValueError("Solution environment contains too many variables")
 
         # Validate each environment name and value independently.
         for name, value in envs.items():
@@ -47,13 +47,13 @@ class ApplicationCreate(BaseModel):
 
         # Leave room for base64 expansion and Kubernetes Secret metadata.
         if sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items()) > 512 * 1024:
-            raise ValueError("Application environment is too large")
+            raise ValueError("Solution environment is too large")
 
         return envs
 
 
-class ApplicationResponse(BaseModel):
-    """Represent one application in API responses."""
+class SolutionResponse(BaseModel):
+    """Represent one solution in API responses."""
 
     model_config = ConfigDict(from_attributes=True)
 

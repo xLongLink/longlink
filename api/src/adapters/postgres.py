@@ -13,7 +13,7 @@ from sqlalchemy.sql.elements import quoted_name
 class Postgres:
     """Implement the database tenant topology on PostgreSQL using registry credentials for control-plane provisioning.
 
-    Runtime roles can write their application schema and read the organization's shared schema.
+    Runtime roles can write their solution schema and read the organization's shared schema.
     """
 
     def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> None:
@@ -106,7 +106,7 @@ class Postgres:
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
-        # SDK migrations create the organization schema before users or application schemas rely on it.
+        # SDK migrations create the organization schema before users or solution schemas rely on it.
         await shared_migrations.migrate_database(
             URL.create(
                 "postgresql+asyncpg",
@@ -126,20 +126,20 @@ class Postgres:
             await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
 
-    async def schema(self, organization: UUID, application: UUID, password: str) -> str:
-        """Converge one application schema and runtime role, rotating to the supplied password on every retry.
+    async def solution_schema(self, organization: UUID, solution: UUID, password: str) -> str:
+        """Converge one solution schema and runtime role, rotating to the supplied password on every retry.
 
-        Grant writes only to the application schema and reads to shared tables, then return the runtime username.
+        Grant writes only to the solution schema and reads to shared tables, then return the runtime username.
         """
 
-        # Derive the app-scoped role while the cluster-owned password remains stable across retries.
-        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
+        # Derive the solution-scoped role while the cluster-owned password remains stable across retries.
+        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
 
-        # Create the app schema and bind the runtime role inside the organization database.
+        # Create the solution schema and bind the runtime role inside the organization database.
         async with self._connection(organization.hex) as conn:
-            await conn.execute(CreateSchema(quoted_name(application.hex, True), if_not_exists=True))
+            await conn.execute(CreateSchema(quoted_name(solution.hex, True), if_not_exists=True))
 
-            # Create or rotate the app login role before granting schema permissions.
+            # Create or rotate the solution login role before granting schema permissions.
             role_exists = await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             role = self.quote(conn, runtime_username)
 
@@ -156,10 +156,10 @@ class Postgres:
 
             # Quote all identifiers before composing role and privilege statements.
             database = self.quote(conn, organization.hex)
-            schema = self.quote(conn, application.hex)
+            schema = self.quote(conn, solution.hex)
             shared_schema = self.quote(conn, "shared")
 
-            # App roles write to their own schema and read organization shared tables.
+            # Solution roles write to their own schema and read organization shared tables.
             await conn.exec_driver_sql(
                 f"""
                 GRANT CONNECT ON DATABASE {database} TO {role};
@@ -177,8 +177,8 @@ class Postgres:
 
         return runtime_username
 
-    async def delete_schema(self, organization: UUID, application: UUID) -> None:
-        """Delete an application schema and its runtime role when present."""
+    async def delete_solution_schema(self, organization: UUID, solution: UUID) -> None:
+        """Delete a solution schema and its runtime role when present."""
 
         # Skip cleanup when the organization database was already removed.
         async with self._connection("postgres", autocommit=True) as conn:
@@ -186,16 +186,16 @@ class Postgres:
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 return
 
-        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
+        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
 
-        # Drop app-owned objects before dropping the global role from the maintenance database.
+        # Drop solution-owned objects before dropping the global role from the maintenance database.
         async with self._connection(organization.hex) as conn:
-            schema = self.quote(conn, application.hex)
+            schema = self.quote(conn, solution.hex)
             role = self.quote(conn, runtime_username)
             database = self.quote(conn, organization.hex)
             shared_schema = self.quote(conn, "shared")
 
-            # Remove every grant and setting assigned during Application provisioning when its role exists.
+            # Remove every grant and setting assigned during Solution provisioning when its role exists.
             if await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username}) is not None:
                 await conn.exec_driver_sql(
                     f"""
@@ -234,11 +234,11 @@ class Postgres:
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
-    async def application_runtime_identity_exists(self, organization: UUID, application: UUID) -> bool:
-        """Return whether one Application runtime database identity remains in PostgreSQL."""
+    async def solution_runtime_identity_exists(self, organization: UUID, solution: UUID) -> bool:
+        """Return whether one Solution runtime database identity remains in PostgreSQL."""
 
         # Runtime roles are cluster-global and remain discoverable after their database is removed.
-        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
+        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
         async with self._connection("postgres") as conn:
             return (await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})) is not None
 

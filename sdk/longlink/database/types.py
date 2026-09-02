@@ -17,7 +17,7 @@ class UTCDateTime(TypeDecorator[datetime]):
         if value is None:
             return None
 
-        # Reject ambiguous application timestamps before database storage.
+        # Reject ambiguous Solution timestamps before database storage.
         if value.tzinfo is None or value.utcoffset() is None:
             raise ValueError("LongLink timestamps must include a timezone")
 

@@ -5,7 +5,8 @@ const siteName = 'LongLink';
 const breadcrumbLabels: Record<string, string> = {
     api: 'Platform',
     docs: 'Documentation',
-    sdk: 'Applications',
+    sdk: 'Solutions',
+    views: 'Solution Views',
 };
 
 type SeoProps = {

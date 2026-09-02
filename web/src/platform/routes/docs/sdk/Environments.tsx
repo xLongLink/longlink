@@ -8,7 +8,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Environments | LongLink Documentation',
-        description: 'Configure environments for local development and deployed LongLink applications.',
+        description: 'Configure environments for local development and deployed LongLink solutions.',
     },
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
@@ -35,7 +35,7 @@ export default function DocsArticleRoute() {
                     >
                         Pydantic Settings
                     </Link>{' '}
-                    to define and manage Application configuration.
+                    to define and manage Solution configuration.
                 </Text>
                 <Heading id="usage" level={2}>
                     Usage

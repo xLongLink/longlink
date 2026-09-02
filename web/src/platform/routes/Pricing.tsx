@@ -13,7 +13,7 @@ export default function Pricing() {
     return (
         <>
             <Seo
-                description="Explore LongLink plans for building and deploying dedicated business applications."
+                description="Explore LongLink plans for building and deploying dedicated business solutions."
                 title="Pricing | LongLink"
             />
             <main>
@@ -53,15 +53,14 @@ export default function Pricing() {
 
                                     <CollapsibleGroup className="px-4" hasDividers type="multiple">
                                         <Collapsible
-                                            trigger={<Text type="supporting">Deploy any Application</Text>}
-                                            value="deploy-any-application"
+                                            trigger={<Text type="supporting">Deploy any Solution</Text>}
+                                            value="deploy-any-solution"
                                         >
                                             <Text type="supporting">
-                                                Deploy your application or find free open-source applications to start
-                                                from.
+                                                Deploy your solution or find free open-source solutions to start from.
                                                 <br />
                                                 <br />
-                                                Applications sleep automatically when inactive, and abuse-prevention
+                                                Solutions sleep automatically when inactive, and abuse-prevention
                                                 safeguards help keep the shared platform reliable.
                                             </Text>
                                         </Collapsible>
@@ -69,13 +68,13 @@ export default function Pricing() {
                                             trigger={<Text type="supporting">100MB Database Space</Text>}
                                             value="database-space"
                                         >
-                                            <Text type="supporting">Shared across all apps in the workspace.</Text>
+                                            <Text type="supporting">Shared across all solutions in the workspace.</Text>
                                         </Collapsible>
                                         <Collapsible
                                             trigger={<Text type="supporting">2GB Object Storage Space</Text>}
                                             value="object-storage-space"
                                         >
-                                            <Text type="supporting">Shared across all apps in the workspace.</Text>
+                                            <Text type="supporting">Shared across all solutions in the workspace.</Text>
                                         </Collapsible>
                                     </CollapsibleGroup>
                                 </Stack>

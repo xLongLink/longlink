@@ -34,15 +34,15 @@ class RuntimeState:
 
 
 class LongLink:
-    """Install LongLink runtime services into one Application-owned FastAPI app."""
+    """Install LongLink runtime services into one Solution-owned FastAPI app."""
 
     def __init__(self, app: FastAPI) -> None:
-        """Install runtime services, routes, and the frontend fallback into an Application app."""
+        """Install runtime services, routes, and the frontend fallback into a Solution's FastAPI app."""
 
-        # Preserve Application routes so view collisions are rejected during discovery.
-        application_routes = list(app.router.routes)
+        # Preserve Solution routes so view collisions are rejected during discovery.
+        solution_routes = list(app.router.routes)
 
-        # Resolve the runtime environment and initialize application storage.
+        # Resolve the runtime environment and initialize Solution storage.
         settings = Envs()
         storage = create_fs(settings)
         database = Database(settings)
@@ -52,7 +52,7 @@ class LongLink:
 
         # Production containers attach API access filtering here.
         if settings.ENV == "production":
-            # Built app containers run plain uvicorn, so attach the SDK access filter here.
+            # Built Solution containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
 
             # Avoid installing the access filter more than once.
@@ -65,13 +65,13 @@ class LongLink:
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
-        # Applications provide XML views in the generated source layout.
+        # Solutions provide XML views in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
         if not views_directory.is_dir():
-            raise ValueError(f"Application source directory is required: {views_directory}")
+            raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before registering its routes and metadata.
-        discovered_views = self._discover_views(views_directory, application_routes)
+        discovered_views = self._discover_views(views_directory, solution_routes)
         app.state.longlink = RuntimeState(views=[definition for definition, _ in discovered_views], storage=storage, database=database)
         app.router.on_shutdown.append(database.dispose)
 
@@ -84,7 +84,7 @@ class LongLink:
                 include_in_schema=False,
             )
 
-        # Make the browser root URL resolve to the first navigable application view.
+        # Make the browser root URL resolve to the first navigable Solution View.
         first_tab_view = next(
             (definition for definition, _ in discovered_views if definition.route != "/" and ":" not in definition.route),
             None,
@@ -93,16 +93,16 @@ class LongLink:
 
             @app.get("/", include_in_schema=False)
             def redirect_root() -> RedirectResponse:
-                """Redirect the application root to its first static tab."""
+                """Redirect the Solution root to its first static tab."""
 
                 return RedirectResponse(first_tab_view.route)
 
-        # Serve the embedded frontend last so Application routes retain precedence.
+        # Serve the embedded frontend last so Solution routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
 
     @staticmethod
-    def _discover_views(views_directory: Path, application_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:
+    def _discover_views(views_directory: Path, solution_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:
         """Discover and validate all XML views before registering any route."""
 
         registered_route_keys: set[str] = set()
@@ -130,10 +130,10 @@ class LongLink:
             if route_key in registered_route_keys:
                 raise ValueError(f"Browser route '{view_route}' is already registered")
 
-            # Application routes take precedence, so ambiguous view endpoints are rejected.
+            # Solution routes take precedence, so ambiguous view endpoints are rejected.
             scope = {"type": "http", "method": "GET", "path": registered_path}
-            if any(application_route.matches(scope)[0] is Match.FULL for application_route in application_routes):
-                raise ValueError(f"View endpoint '{registered_path}' overlaps an Application route")
+            if any(solution_route.matches(scope)[0] is Match.FULL for solution_route in solution_routes):
+                raise ValueError(f"Solution View endpoint '{registered_path}' overlaps a Solution route")
 
             discovered_views.append(
                 (

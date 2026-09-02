@@ -29,10 +29,10 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import CreateSolution from '@/components/dialogs/CreateSolution';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { avatarUrlSchema } from '@/components/settings/validation';
-import CreateApplication from '@/components/dialogs/CreateApplication';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import {
@@ -40,14 +40,14 @@ import {
     zOrganizationStorageUsageResponse,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
-    useDeleteOrganizationApplication,
+    useDeleteOrganizationSolution,
     useOrganization,
-    useOrganizationApplications,
+    useOrganizationSolutions,
     useOrganizationMembers,
     useUpdateOrganization,
 } from '@/lib/hooks/use-organization';
 import type {
-    OrganizationApplicationSummary,
+    OrganizationSolutionSummary,
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
     OrganizationRoles,
@@ -58,7 +58,7 @@ export default function OrganizationSettings() {
     const { organization = '' } = useParams();
     const { hash } = useLocation();
     const toast = useToast();
-    const isApplicationsSectionActive = hash === '#applications';
+    const isSolutionsSectionActive = hash === '#solutions';
     const {
         organization: organizationDetails,
         members,
@@ -68,17 +68,17 @@ export default function OrganizationSettings() {
         error: organizationError,
     } = useOrganization(organization);
     const {
-        applications,
-        isLoading: isApplicationsLoading,
-        error: applicationsError,
-    } = useOrganizationApplications(organization, isApplicationsSectionActive);
-    const isLoading = isOrganizationLoading || isApplicationsLoading;
-    const error = organizationError ?? applicationsError;
+        solutions,
+        isLoading: isSolutionsLoading,
+        error: solutionsError,
+    } = useOrganizationSolutions(organization, isSolutionsSectionActive);
+    const isLoading = isOrganizationLoading || isSolutionsLoading;
+    const error = organizationError ?? solutionsError;
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
-    const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
+    const hasOrganizationSolutionAccess = hasMinimumRole(organizationRole, 'maintain');
     const [logsTargetId, setLogsTargetId] = useState<string | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -91,22 +91,22 @@ export default function OrganizationSettings() {
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
-    const deleteApplication = useDeleteOrganizationApplication(organizationId);
+    const deleteSolution = useDeleteOrganizationSolution(organizationId);
     const { inviteMember, revokeInvitation, changeMemberRole } = useOrganizationMembers(organizationId);
     const updateOrganization = useUpdateOrganization(organizationId);
     const deleteDialog = useDeleteDialog({
-        title: 'Delete application',
-        mutation: deleteApplication,
-        items: applications,
-        getId: (application) => application.id,
-        description: (application) => `Delete ${application.name} from this organization?`,
-        errorMessage: 'Failed to delete application',
-        fallbackDescription: 'Delete this application?',
+        title: 'Delete solution',
+        mutation: deleteSolution,
+        items: solutions,
+        getId: (solution) => solution.id,
+        description: (solution) => `Delete ${solution.name} from this organization?`,
+        errorMessage: 'Failed to delete solution',
+        fallbackDescription: 'Delete this solution?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
     const isOrganizationSectionActive = hash === '' || hash === '#organization';
     const avatar = editedAvatar ?? organizationAvatar;
-    const logsTarget = applications.find((application) => application.id === logsTargetId) ?? null;
+    const logsTarget = solutions.find((solution) => solution.id === logsTargetId) ?? null;
     const roleChangeMember =
         roleChangeTarget === null
             ? null
@@ -329,7 +329,7 @@ export default function OrganizationSettings() {
                                     <Heading level={2}>Invitations</Heading>
                                     <Button
                                         label="Invite"
-                                        isDisabled={organizationId.length === 0 || !hasOrganizationApplicationAccess}
+                                        isDisabled={organizationId.length === 0 || !hasOrganizationSolutionAccess}
                                         onClick={() => setInviteOpen(true)}
                                     />
                                 </Stack>
@@ -365,7 +365,7 @@ export default function OrganizationSettings() {
                                         >
                                             {(invitation) => dateFormatter.format(new Date(invitation.created_at))}
                                         </TableColumn>
-                                        {hasOrganizationApplicationAccess ? (
+                                        {hasOrganizationSolutionAccess ? (
                                             <TableColumn<OrganizationInvitationResponse>
                                                 align="end"
                                                 field="actions"
@@ -392,67 +392,67 @@ export default function OrganizationSettings() {
                             </Stack>
                         </MenuItem>
                     </MenuSubSection>
-                    <MenuItem icon="boxes" label="Applications">
+                    <MenuItem icon="boxes" label="Solutions">
                         <Stack gap={4}>
                             <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                                <Heading level={2}>Applications</Heading>
-                                {hasOrganizationApplicationAccess ? (
-                                    <CreateApplication organizationId={organizationId} />
+                                <Heading level={2}>Solutions</Heading>
+                                {hasOrganizationSolutionAccess ? (
+                                    <CreateSolution organizationId={organizationId} />
                                 ) : null}
                             </Stack>
                             <Divider />
 
-                            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
-                                <Banner status="error" title="Failed to load applications." />
+                            {isLoading && solutions.length === 0 ? null : error && solutions.length === 0 ? (
+                                <Banner status="error" title="Failed to load solutions." />
                             ) : (
                                 <Table
-                                    data={applications}
+                                    data={solutions}
                                     density="compact"
-                                    emptyState={<EmptyState title="No applications found." isCompact />}
+                                    emptyState={<EmptyState title="No solutions found." isCompact />}
                                     hasHover
                                     idKey="id"
                                 >
-                                    <TableColumn<OrganizationApplicationSummary>
+                                    <TableColumn<OrganizationSolutionSummary>
                                         field="name"
-                                        header="Application"
+                                        header="Solution"
                                         width={proportional(1)}
                                     >
-                                        {(application) => (
+                                        {(solution) => (
                                             <Stack>
                                                 <Stack direction="horizontal" gap={1} align="center">
                                                     <Link
-                                                        href={`/orgs/${organization}/apps/${application.slug}`}
+                                                        href={`/orgs/${organization}/solutions/${solution.slug}`}
                                                         weight="semibold"
                                                     >
-                                                        {application.name}
+                                                        {solution.name}
                                                     </Link>
-                                                    <StatusBadge status={application.status} />
+                                                    <StatusBadge status={solution.status} />
                                                 </Stack>
-                                                {application.description ? (
-                                                    <Text type="supporting">{application.description}</Text>
+                                                {solution.description ? (
+                                                    <Text type="supporting">{solution.description}</Text>
                                                 ) : null}
                                             </Stack>
                                         )}
                                     </TableColumn>
-                                    {hasOrganizationApplicationAccess ? (
-                                        <TableColumn<OrganizationApplicationSummary>
+                                    {hasOrganizationSolutionAccess ? (
+                                        <TableColumn<OrganizationSolutionSummary>
                                             align="end"
                                             field="action"
                                             header="Action"
                                             width={pixel(96)}
                                         >
-                                            {(application) => (
+                                            {(solution) => (
                                                 <MoreMenu
-                                                    label={`Open actions for ${application.name}`}
+                                                    label={`Open actions for ${solution.name}`}
                                                     size="sm"
                                                     items={[
                                                         {
                                                             label: 'Logs',
-                                                            onClick: () => setLogsTargetId(application.id),
+                                                            onClick: () => setLogsTargetId(solution.id),
                                                         },
                                                         {
                                                             label: 'Delete',
-                                                            onClick: () => deleteDialog.openFor(application),
+                                                            onClick: () => deleteDialog.openFor(solution),
                                                         },
                                                     ]}
                                                 />
@@ -467,7 +467,7 @@ export default function OrganizationSettings() {
             </Menu>
             {logsTarget ? (
                 <Logs
-                    kind="application"
+                    kind="solution"
                     onOpenChange={(open) => !open && setLogsTargetId(null)}
                     resourceId={logsTarget.id}
                 />
@@ -612,7 +612,7 @@ export default function OrganizationSettings() {
                                             type="submit"
                                             isLoading={inviteMember.isPending}
                                             isDisabled={
-                                                inviteEmail.trim().length === 0 || !hasOrganizationApplicationAccess
+                                                inviteEmail.trim().length === 0 || !hasOrganizationSolutionAccess
                                             }
                                         />
                                     </Stack>

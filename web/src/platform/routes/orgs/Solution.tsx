@@ -3,43 +3,43 @@ import { Card } from '@astryxdesign/core/Card';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
+import { SolutionRuntime } from '@/components/Solution';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import { ApplicationRuntime } from '@/components/Application';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useOrganizationApplications } from '@/lib/hooks/use-organization';
+import { useOrganizationSolutions } from '@/lib/hooks/use-organization';
 
-/** Renders one proxy-backed organization application after route authentication. */
-export default function OrganizationApplication() {
-    const { organization = '', application = '' } = useParams();
+/** Renders one proxy-backed organization solution after route authentication. */
+export default function OrganizationSolution() {
+    const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const { applications, isLoading, error } = useOrganizationApplications(organization);
-    const applicationAccess = applications.find((item) => item.slug === application);
+    const { solutions, isLoading, error } = useOrganizationSolutions(organization);
+    const solutionAccess = solutions.find((item) => item.slug === solution);
 
     if (isLoading) {
-        return <PageLoading label="Loading application" />;
+        return <PageLoading label="Loading solution" />;
     }
 
     if (error?.status === 404) {
         return <NotFoundLayout />;
     }
 
-    if (error && !applicationAccess) {
-        return <PageError description="We couldn't load this application." title="Unable to load application" />;
+    if (error && !solutionAccess) {
+        return <PageError description="We couldn't load this solution." title="Unable to load solution" />;
     }
 
-    if (!applicationAccess) {
+    if (!solutionAccess) {
         return <NotFoundLayout />;
     }
 
     const action = <ProfileMenu user={user} />;
-    const breadcrumb = <PageBreadcrumb applicationName={applicationAccess.name} />;
+    const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
 
-    if (applicationAccess.status === 'creating' || applicationAccess.status === 'failed') {
-        const isCreating = applicationAccess.status === 'creating';
+    if (solutionAccess.status === 'creating' || solutionAccess.status === 'failed') {
+        const isCreating = solutionAccess.status === 'creating';
 
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
@@ -53,7 +53,7 @@ export default function OrganizationApplication() {
                             }
                             headingLevel={1}
                             role="alert"
-                            title={isCreating ? 'Application is being deployed' : 'Application deployment failed'}
+                            title={isCreating ? 'Solution is being deployed' : 'Solution deployment failed'}
                         />
                     </Card>
                 </Center>
@@ -62,10 +62,10 @@ export default function OrganizationApplication() {
     }
 
     return (
-        <ApplicationRuntime
-            navigationBaseUrl={`/orgs/${organization}/apps/${application}`}
-            viewsUrl={`/api/v1/applications/${applicationAccess.id}/proxy/views.json`}
-            requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
+        <SolutionRuntime
+            navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
+            viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
+            requestBaseUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/`}
         >
             {({ content, tabs }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
@@ -74,6 +74,6 @@ export default function OrganizationApplication() {
                     </PageContainer>
                 </Platform>
             )}
-        </ApplicationRuntime>
+        </SolutionRuntime>
     );
 }

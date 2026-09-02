@@ -37,10 +37,10 @@ const viewSchema = z.object({
             } catch {
                 return false;
             }
-        }, 'View path must be app-relative'),
+        }, 'View path must be solution-relative'),
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
-    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized application path'),
+    route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized solution path'),
 });
 
 export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
@@ -48,7 +48,7 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const staticTabs = new Set<string>();
 
     for (const [index, view] of views.entries()) {
-        // Require each route to resolve one unambiguous application view.
+        // Require each route to resolve one unambiguous Solution View.
         if (routes.has(view.route)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }

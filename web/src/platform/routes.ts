@@ -8,7 +8,7 @@ export default [
             index('./routes/docs/Index.tsx'),
             ...prefix('api', [
                 index('./routes/docs/api/Index.tsx'),
-                route('applications', './routes/docs/api/Applications.tsx'),
+                route('solutions', './routes/docs/api/Solutions.tsx'),
                 route('organizations', './routes/docs/api/Organizations.tsx'),
             ]),
             ...prefix('sdk', [
@@ -54,7 +54,7 @@ export default [
         ...prefix('admin', [
             layout('./layouts/Admin.tsx', [
                 route('users', './routes/admin/Users.tsx'),
-                route('applications', './routes/admin/Applications.tsx'),
+                route('solutions', './routes/admin/Solutions.tsx'),
                 route('organizations', './routes/admin/Organizations.tsx'),
                 route('database', './routes/admin/Database.tsx'),
                 route('storage', './routes/admin/Storage.tsx'),
@@ -67,7 +67,7 @@ export default [
                 index('./routes/orgs/Organization.tsx'),
                 route('settings', './routes/orgs/Settings.tsx'),
             ]),
-            route('apps/:application/*', './routes/orgs/Application.tsx'),
+            route('solutions/:solution/*', './routes/orgs/Solution.tsx'),
         ]),
     ]),
 ] satisfies RouteConfig;

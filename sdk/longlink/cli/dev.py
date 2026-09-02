@@ -7,7 +7,7 @@ from longlink.logger import logger, log_config
 @click.command(name="dev")
 @click.option("--host", default="127.0.0.1", show_default=True, help="Host interface for the development server.")
 def dev_command(host: str) -> None:
-    """Run LongLink application locally with auto-reload enabled."""
+    """Run a LongLink Solution locally with auto-reload enabled."""
 
     # Make network exposure visible when the caller opts out of the loopback default.
     if host not in {"127.0.0.1", "::1", "localhost"}:

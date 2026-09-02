@@ -10,25 +10,25 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
     process.env.LONGLINK_WEB_TARGET = requestedMode;
 }
 
-const isApplication = process.env.LONGLINK_WEB_TARGET === 'sdk';
+const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
 const publicPagePaths = ['/', '/pricing', '/terms', '/impressum', '/privacy', ...documentationPaths];
 const outputDirectory = path.resolve(
     import.meta.dirname,
-    isApplication ? '../sdk/longlink/.static/web' : '../api/src/.static/web'
+    isSolution ? '../sdk/longlink/.static/web' : '../api/src/.static/web'
 );
 
 export default {
-    appDirectory: isApplication ? 'src/application' : 'src/platform',
-    buildDirectory: path.resolve(import.meta.dirname, 'build', isApplication ? 'sdk' : 'api'),
+    appDirectory: isSolution ? 'src/solution' : 'src/platform',
+    buildDirectory: path.resolve(import.meta.dirname, 'build', isSolution ? 'sdk' : 'api'),
     ssr: false,
-    prerender: isApplication ? undefined : publicPagePaths.map((pagePath) => (pagePath === '/' ? '/' : `${pagePath}/`)),
+    prerender: isSolution ? undefined : publicPagePaths.map((pagePath) => (pagePath === '/' ? '/' : `${pagePath}/`)),
 
     /** Adapts Framework Mode's output to the embedded FastAPI frontend contract. */
     async buildEnd({ reactRouterConfig }) {
         const clientDirectory = path.join(reactRouterConfig.buildDirectory, 'client');
 
-        // Applications do not publish Platform images.
-        if (isApplication) {
+        // Solutions do not publish Platform images.
+        if (isSolution) {
             await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
         } else {
             // Generate crawler configuration from the same inventory used for prerendering.

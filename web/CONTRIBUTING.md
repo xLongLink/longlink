@@ -6,7 +6,7 @@ The web folder contains the frontend runtime for LongLink. It owns the shared UI
 
 The combined repository architecture is maintained in `../AGENTS.md`.
 
-React Router Framework Mode builds two browser applications from the shared package. `src/platform/` contains the Platform routes and prerendered public pages, while `src/application/` contains the SPA embedded in LongLink Applications. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
+React Router Framework Mode builds two browser applications from the shared package. `src/platform/` contains the Platform routes and prerendered public pages, while `src/solution/` contains the SPA embedded in LongLink Solutions. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
 
 ## Routes
 
@@ -18,10 +18,10 @@ vp run routes
 
 ```bash
 vp run dev         # Starts the Platform development server
-vp run dev:sdk     # Starts the embedded Application development server
+vp run dev:sdk     # Starts the embedded Solution development server
 vp run routes      # Prints the generated Platform route tree
 vp run build:api   # Builds the Platform web bundle
-vp run build:sdk   # Builds the embedded Application web bundle
+vp run build:sdk   # Builds the embedded Solution web bundle
 vp run check       # Checks formatting, linting, and Vite+ types
 vp run typecheck   # Checks both React Router bundle modes
 vp fmt --write     # Formats the code
@@ -55,7 +55,7 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 
 ## XML
 
-- XML views are parsed by `src/xml/core/parser.ts` into an AST.
+- Solution Views are parsed by `src/xml/core/parser.ts` into an AST.
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
 - Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.

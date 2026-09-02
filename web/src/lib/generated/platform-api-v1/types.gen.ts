@@ -5,66 +5,6 @@ export type ClientOptions = {
 };
 
 /**
- * ApplicationCreate
- *
- * Validate application creation payloads.
- */
-export type ApplicationCreate = {
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    /**
-     * Envs
-     */
-    envs?: {
-        [key: string]: string;
-    };
-};
-
-/**
- * ApplicationResponse
- *
- * Represent one application in API responses.
- */
-export type ApplicationResponse = {
-    /**
-     * Id
-     */
-    id: string;
-    organization: OrganizationIdentity;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Slug
-     */
-    slug: string;
-    /**
-     * Description
-     */
-    description: string | null;
-    /**
-     * Image Desired
-     */
-    image_desired: string;
-    status: Status;
-    /**
-     * Created At
-     */
-    created_at: string;
-};
-
-/**
  * Body_request_password_reset_api_v1_auth_forgot_password_post
  */
 export type BodyRequestPasswordResetApiV1AuthForgotPasswordPost = {
@@ -269,7 +209,7 @@ export type OAuthAvailability = {
  *
  * Supported registered operation handlers.
  */
-export type OperationKind = 'compute.create' | 'application.create' | 'application.delete' | 'organization.create' | 'organization.delete';
+export type OperationKind = 'compute.create' | 'solution.create' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
  * OperationResource
@@ -324,31 +264,6 @@ export type OperationResponse = {
  * Supported long-running operation lifecycle states.
  */
 export type OperationStatus = 'active' | 'completed' | 'failed' | 'scheduled';
-
-/**
- * OrganizationApplicationSummary
- *
- * Represent a compact LongLink Application in nested Organization responses.
- */
-export type OrganizationApplicationSummary = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Slug
-     */
-    slug: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    status: Status;
-};
 
 /**
  * OrganizationCreate
@@ -465,6 +380,31 @@ export type OrganizationMemberUpdate = {
 export type OrganizationRoles = 'read' | 'write' | 'maintain' | 'admin' | 'owner';
 
 /**
+ * OrganizationSolutionSummary
+ *
+ * Represent a compact LongLink Solution in nested Organization responses.
+ */
+export type OrganizationSolutionSummary = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    status: Status;
+};
+
+/**
  * OrganizationStorageUsageResponse
  *
  * Represent live usage for one Organization bucket.
@@ -518,20 +458,6 @@ export type OrganizationUpdate = {
 };
 
 /**
- * Page[ApplicationResponse]
- */
-export type PageApplicationResponse = {
-    /**
-     * Items
-     */
-    items: Array<ApplicationResponse>;
-    /**
-     * Total
-     */
-    total: number;
-};
-
-/**
  * Page[ComputeRegistryResponse]
  */
 export type PageComputeRegistryResponse = {
@@ -581,6 +507,20 @@ export type PageOrganizationSummary = {
      * Items
      */
     items: Array<OrganizationSummary>;
+    /**
+     * Total
+     */
+    total: number;
+};
+
+/**
+ * Page[SolutionResponse]
+ */
+export type PageSolutionResponse = {
+    /**
+     * Items
+     */
+    items: Array<SolutionResponse>;
     /**
      * Total
      */
@@ -657,6 +597,66 @@ export type RegistrationComplete = {
      * Password
      */
     password: string;
+};
+
+/**
+ * SolutionCreate
+ *
+ * Validate solution creation payloads.
+ */
+export type SolutionCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+    /**
+     * Envs
+     */
+    envs?: {
+        [key: string]: string;
+    };
+};
+
+/**
+ * SolutionResponse
+ *
+ * Represent one solution in API responses.
+ */
+export type SolutionResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    organization: OrganizationIdentity;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Description
+     */
+    description: string | null;
+    /**
+     * Image Desired
+     */
+    image_desired: string;
+    status: Status;
+    /**
+     * Created At
+     */
+    created_at: string;
 };
 
 /**
@@ -1065,7 +1065,7 @@ export type CompleteRegistrationApiV1AuthRegisterCompletePostResponses = {
 
 export type CompleteRegistrationApiV1AuthRegisterCompletePostResponse = CompleteRegistrationApiV1AuthRegisterCompletePostResponses[keyof CompleteRegistrationApiV1AuthRegisterCompletePostResponses];
 
-export type ListApplicationsApiV1ApplicationsGetData = {
+export type ListSolutionsApiV1SolutionsGetData = {
     body?: never;
     path?: never;
     query?: {
@@ -1078,28 +1078,28 @@ export type ListApplicationsApiV1ApplicationsGetData = {
          */
         page_size?: number;
     };
-    url: '/api/v1/applications';
+    url: '/api/v1/solutions';
 };
 
-export type ListApplicationsApiV1ApplicationsGetErrors = {
+export type ListSolutionsApiV1SolutionsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListApplicationsApiV1ApplicationsGetError = ListApplicationsApiV1ApplicationsGetErrors[keyof ListApplicationsApiV1ApplicationsGetErrors];
+export type ListSolutionsApiV1SolutionsGetError = ListSolutionsApiV1SolutionsGetErrors[keyof ListSolutionsApiV1SolutionsGetErrors];
 
-export type ListApplicationsApiV1ApplicationsGetResponses = {
+export type ListSolutionsApiV1SolutionsGetResponses = {
     /**
      * Successful Response
      */
-    200: PageApplicationResponse;
+    200: PageSolutionResponse;
 };
 
-export type ListApplicationsApiV1ApplicationsGetResponse = ListApplicationsApiV1ApplicationsGetResponses[keyof ListApplicationsApiV1ApplicationsGetResponses];
+export type ListSolutionsApiV1SolutionsGetResponse = ListSolutionsApiV1SolutionsGetResponses[keyof ListSolutionsApiV1SolutionsGetResponses];
 
-export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetData = {
+export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetData = {
     body?: never;
     path: {
         /**
@@ -1108,31 +1108,31 @@ export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicati
         organization_id: string;
     };
     query?: never;
-    url: '/api/v1/organizations/{organization_id}/applications';
+    url: '/api/v1/organizations/{organization_id}/solutions';
 };
 
-export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors = {
+export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetError = GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors[keyof GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetErrors];
+export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetError = GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors[keyof GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors];
 
-export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses = {
+export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponses = {
     /**
-     * Response Get Organization Applications Api V1 Organizations  Organization Id  Applications Get
+     * Response Get Organization Solutions Api V1 Organizations  Organization Id  Solutions Get
      *
      * Successful Response
      */
-    200: Array<OrganizationApplicationSummary>;
+    200: Array<OrganizationSolutionSummary>;
 };
 
-export type GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse = GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses[keyof GetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponses];
+export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse = GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponses[keyof GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponses];
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostData = {
-    body: ApplicationCreate;
+export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostData = {
+    body: SolutionCreate;
     path: {
         /**
          * Organization Id
@@ -1140,88 +1140,88 @@ export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostDat
         organization_id: string;
     };
     query?: never;
-    url: '/api/v1/organizations/{organization_id}/applications';
+    url: '/api/v1/organizations/{organization_id}/solutions';
 };
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors = {
+export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostError = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostErrors];
+export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostError = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors];
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses = {
+export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses = {
     /**
      * Successful Response
      */
     204: void;
 };
 
-export type CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponse = CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses[keyof CreateApplicationApiV1OrganizationsOrganizationIdApplicationsPostResponses];
+export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses];
 
-export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetData = {
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetData = {
     body?: never;
     path: {
         /**
-         * Application Id
+         * Solution Id
          */
-        application_id: string;
+        solution_id: string;
     };
     query?: never;
-    url: '/api/v1/applications/{application_id}/logs';
+    url: '/api/v1/solutions/{solution_id}/logs';
 };
 
-export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetErrors = {
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetError = GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetErrors[keyof GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetErrors];
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetError = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors];
 
-export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses = {
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
     /**
-     * Response Get Application Logs Api V1 Applications  Application Id  Logs Get
+     * Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get
      *
      * Successful Response
      */
     200: Array<string>;
 };
 
-export type GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse = GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses[keyof GetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponses];
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteData = {
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
     body?: never;
     path: {
         /**
-         * Application Id
+         * Solution Id
          */
-        application_id: string;
+        solution_id: string;
     };
     query?: never;
-    url: '/api/v1/applications/{application_id}';
+    url: '/api/v1/solutions/{solution_id}';
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors = {
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteError = DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteErrors];
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses = {
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
     /**
      * Successful Response
      */
     204: void;
 };
 
-export type DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponse = DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses[keyof DeleteApplicationApiV1ApplicationsApplicationIdDeleteResponses];
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;

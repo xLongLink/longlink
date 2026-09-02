@@ -20,8 +20,8 @@ class OrganizationIdentity(BaseModel):
     status: Status
 
 
-class OrganizationApplicationSummary(BaseModel):
-    """Represent a compact LongLink Application in nested Organization responses."""
+class OrganizationSolutionSummary(BaseModel):
+    """Represent a compact LongLink Solution in nested Organization responses."""
 
     model_config = ConfigDict(from_attributes=True)
 

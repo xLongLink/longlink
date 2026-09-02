@@ -1,12 +1,12 @@
 import { Link } from '@astryxdesign/core/Link';
 import Platform from '@/platform/layouts/Platform';
+import { SolutionRuntime } from '@/components/Solution';
 import { PageContainer } from '@/components/PageContainer';
-import { ApplicationRuntime } from '@/components/Application';
 
-/** Renders an SDK application from its local view manifest. */
-export default function Application() {
+/** Renders an SDK solution from its local view manifest. */
+export default function Solution() {
     return (
-        <ApplicationRuntime>
+        <SolutionRuntime>
             {({ content, tabs }) => (
                 <Platform
                     action={
@@ -21,6 +21,6 @@ export default function Application() {
                     </PageContainer>
                 </Platform>
             )}
-        </ApplicationRuntime>
+        </SolutionRuntime>
     );
 }

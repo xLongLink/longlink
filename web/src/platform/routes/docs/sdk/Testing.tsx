@@ -8,7 +8,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Testing | LongLink Documentation',
-        description: 'Test LongLink applications and their XML views.',
+        description: 'Test LongLink solutions and their Solution Views.',
     },
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
@@ -26,7 +26,7 @@ export default function DocsArticleRoute() {
                     Testing
                 </Heading>
                 <Text as="p">
-                    Test LongLink applications with standard{' '}
+                    Test LongLink solutions with standard{' '}
                     <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
                         pytest
                     </Link>{' '}

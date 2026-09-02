@@ -15,8 +15,8 @@ import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
-type ApplicationRuntimeProps = {
-    children: (application: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
+type SolutionRuntimeProps = {
+    children: (solution: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
     requestBaseUrl?: string;
@@ -25,7 +25,7 @@ type ApplicationRuntimeProps = {
 const EMPTY_VIEWS = [] as const;
 
 /** Owns one XML runtime for the lifetime selected by its React key. */
-function ApplicationXmlRuntime({
+function SolutionXmlRuntime({
     ast,
     navigationBaseUrl,
     params,
@@ -40,7 +40,7 @@ function ApplicationXmlRuntime({
     const [runtime] = useState(() => {
         const context = createXmlContext(params);
 
-        // Keep XML-triggered application navigation within the client router.
+        // Keep XML-triggered solution navigation within the client router.
         context.services.navigate = (url) => {
             const destination = new URL(url, window.location.origin);
 
@@ -59,13 +59,13 @@ function ApplicationXmlRuntime({
     return <RenderXML ast={ast} ctx={runtime} />;
 }
 
-/** Resolves and renders the current manifest-defined application view. */
-export function ApplicationRuntime({
+/** Resolves and renders the current manifest-defined Solution View. */
+export function SolutionRuntime({
     children,
     navigationBaseUrl = '/',
     viewsUrl = '/views.json',
     requestBaseUrl = '/',
-}: ApplicationRuntimeProps) {
+}: SolutionRuntimeProps) {
     const { '*': routePath = '' } = useParams();
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
@@ -96,9 +96,9 @@ export function ApplicationRuntime({
     const activeViewTitle = activeView?.name ?? (activeView ? startCase(activeView.tab) : undefined);
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
-        queryKey: ['api', 'application-view', viewsUrl, activeView?.path],
+        queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
         queryFn: async ({ signal }) => {
-            if (!activeView) throw new Error('No active application view');
+            if (!activeView) throw new Error('No active Solution View');
 
             const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
             const content = await api(viewUrl, { headers: { Accept: 'application/xml' }, signal }).text();
@@ -107,7 +107,7 @@ export function ApplicationRuntime({
         },
         retry: false,
     });
-    // Build one static navigation target per runtime tab.
+    // Build one static navigation target per solution tab.
     const tabs = tabViews.map(
         (view) =>
             ({
@@ -131,13 +131,13 @@ export function ApplicationRuntime({
     } else if (viewsError) {
         content = (
             <PageError
-                description={viewsError.message || 'The application definition could not be loaded.'}
-                title="Unable to load this application"
+                description={viewsError.message || 'The solution definition could not be loaded.'}
+                title="Unable to load this solution"
             />
         );
     } else if (activeViewAst && activeView && activeRouteMatch) {
         content = (
-            <ApplicationXmlRuntime
+            <SolutionXmlRuntime
                 ast={activeViewAst}
                 key={JSON.stringify([
                     viewsUrl,
@@ -155,8 +155,8 @@ export function ApplicationRuntime({
     } else if (registeredViews && !activeView) {
         content = (
             <PageError
-                description="The application did not expose any views to render."
-                title="Unexpected application response"
+                description="The solution did not expose any views to render."
+                title="Unexpected solution response"
             />
         );
     } else if (activeViewError) {

@@ -5,7 +5,7 @@ from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, get_session
 from src.utils import roles
 from collections.abc import AsyncIterator
-from src.models.roles import APPLICATION_PROXY_METHOD_ROLES
+from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient
@@ -20,11 +20,11 @@ PROXY_REQUEST_TIMEOUT_SECONDS = 30
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 
 
-@router.api_route("/applications/{application_id}/proxy", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
-@router.api_route("/applications/{application_id}/proxy/{path:path}", methods=list(APPLICATION_PROXY_METHOD_ROLES), include_in_schema=False)
-async def proxy_application_request(
+@router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
+@router.api_route("/solutions/{solution_id}/proxy/{path:path}", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
+async def proxy_solution_request(
     request: Request,
-    application_id: UUID,
+    solution_id: UUID,
     path: str = "",
     user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
@@ -34,13 +34,13 @@ async def proxy_application_request(
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    # Resolve active Application access before proxying traffic to its runtime.
-    access = await organizations.application_runtime_access(session, user.id, application_id)
+    # Resolve active Solution access before proxying traffic to its runtime.
+    access = await organizations.solution_runtime_access(session, user.id, solution_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
-    application, role, registry = access
+    solution, role, registry = access
 
-    required_role = APPLICATION_PROXY_METHOD_ROLES[request.method]
+    required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     if not roles.atleast(role, required_role):
@@ -49,28 +49,28 @@ async def proxy_application_request(
             detail=f"Organization {required_role.value} access required",
         )
 
-    # Let the web runtime show a loading state while application creation is still pending.
-    if application.status != Status.running:
+    # Let the web runtime show a loading state while solution creation is still pending.
+    if solution.status != Status.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    identity_secret = application.secrets.get("LONGLINK_IDENTITY_SECRET")
+    identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
     if (
         registry.gateway_url is None
         or registry.gateway_certificate is None
         or registry.gateway_client_identity is None
         or not identity_secret
     ):
-        raise HTTPException(status_code=503, detail="Application gateway is not ready")
+        raise HTTPException(status_code=503, detail="Solution gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
-        """Stream one bounded request body to the application gateway."""
+        """Stream one bounded request body to the solution gateway."""
 
         # Count streamed bytes before forwarding each request chunk.
         size = 0
         async for chunk in request.stream():
             size += len(chunk)
             if size > PROXY_REQUEST_MAX_BYTES:
-                raise HTTPException(status_code=413, detail="Application proxy request body is too large")
+                raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
             yield chunk
 
     # Proxy only authenticated API requests through the mTLS compute gateway boundary.
@@ -83,7 +83,7 @@ async def proxy_application_request(
                 identity_secret,
             )
             gateway_response = await gateway.request(
-                application_id=application.id,
+                solution_id=solution.id,
                 user_id=user.id,
                 method=request.method,
                 path=path,
@@ -92,9 +92,9 @@ async def proxy_application_request(
                 content=request_content(),
             )
     except TimeoutError as exc:
-        raise HTTPException(status_code=504, detail="Application proxy request timed out") from exc
+        raise HTTPException(status_code=504, detail="Solution proxy request timed out") from exc
     except httpx2.HTTPError as exc:
-        raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
+        raise HTTPException(status_code=503, detail="Solution proxy request failed") from exc
 
     # Reject active documents before they can execute under the authenticated platform origin.
     response_content_type = gateway_response.response.headers.get("content-type")
@@ -102,7 +102,7 @@ async def proxy_application_request(
         value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
     ):
         await gateway_response.aclose()
-        raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
+        raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
 
     # Only content type crosses the runtime-to-browser boundary.
     response_headers = {

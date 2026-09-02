@@ -17,7 +17,7 @@ database_metadata = SQLModel.metadata
 
 
 class AuditTable(SQLModel):
-    """Base SQLModel for Application tables that track Platform users."""
+    """Base SQLModel for Solution tables that track Platform users."""
 
     model_config = SQLModel.model_config.copy()
     model_config["ignored_types"] = (declared_attr,)
@@ -84,10 +84,10 @@ def create_engine(env: Envs) -> AsyncEngine:
 
 
 class Database:
-    """Own one Application's lazy database engine and sessions."""
+    """Own one Solution's lazy database engine and sessions."""
 
     def __init__(self, env: Envs) -> None:
-        """Store the Application environment without opening a connection."""
+        """Store the Solution environment without opening a connection."""
 
         self._env = env
         self._engine: AsyncEngine | None = None
@@ -95,7 +95,7 @@ class Database:
         self._initialization_lock = asyncio.Lock()
 
     async def _session_factory(self) -> async_sessionmaker[AsyncSession]:
-        """Initialize and return the Application session factory."""
+        """Initialize and return the Solution session factory."""
 
         # Initialize the engine once when concurrent requests arrive before startup completes.
         if self._sessions is None:
@@ -123,14 +123,14 @@ class Database:
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession, None]:
-        """Yield one Application-owned database session."""
+        """Yield one Solution-owned database session."""
 
-        # Open one session from the lazy Application session factory.
+        # Open one session from the lazy Solution session factory.
         async with (await self._session_factory())() as session:
             yield session
 
     async def dispose(self) -> None:
-        """Release the Application database engine during shutdown."""
+        """Release the Solution database engine during shutdown."""
 
         # Detach state before disposal so a later startup can initialize a new engine.
         async with self._initialization_lock:

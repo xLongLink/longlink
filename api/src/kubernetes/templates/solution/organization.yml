@@ -8,7 +8,7 @@ metadata:
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-    name: longlink-applications
+    name: longlink-solutions
     namespace: '$namespace'
 spec:
     hard:
@@ -23,7 +23,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-    name: longlink-application-network-boundary
+    name: longlink-solution-network-boundary
     namespace: '$namespace'
 spec:
     podSelector: {}

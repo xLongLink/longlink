@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { SolutionRuntime } from '@/components/Solution';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApplicationRuntime } from '@/components/Application';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -28,7 +28,7 @@ vi.mock('@/xml', async (importOriginal) => {
     };
 });
 
-describe('ApplicationRuntime', () => {
+describe('SolutionRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
     let locationAssignDescriptor: PropertyDescriptor | undefined;
 
@@ -57,9 +57,7 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime();
 
         // Assert
-        await act(async () =>
-            vi.waitFor(() => expect(output.textContent).toContain('Unable to load this application'))
-        );
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
         expect(output.textContent).toContain('Manifest unavailable');
     });
 
@@ -91,10 +89,8 @@ describe('ApplicationRuntime', () => {
         const output = await renderRuntime();
 
         // Assert
-        await act(async () =>
-            vi.waitFor(() => expect(output.textContent).toContain('Unexpected application response'))
-        );
-        expect(output.textContent).toContain('The application did not expose any views to render.');
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unexpected solution response')));
+        expect(output.textContent).toContain('The solution did not expose any views to render.');
     });
 
     it('renders a view failure after loading the manifest', async () => {
@@ -129,9 +125,9 @@ describe('ApplicationRuntime', () => {
 
             // Assert
             await act(async () =>
-                vi.waitFor(() => expect(output.textContent).toContain('Unable to load this application'))
+                vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution'))
             );
-            expect(output.textContent).toContain('View path must be app-relative');
+            expect(output.textContent).toContain('View path must be solution-relative');
             expect(fetchRequest).toHaveBeenCalledOnce();
         }
     );
@@ -218,14 +214,14 @@ describe('ApplicationRuntime', () => {
                         <Routes>
                             <Route
                                 element={
-                                    <ApplicationRuntime>
+                                    <SolutionRuntime>
                                         {({ content, tabs }) => (
                                             <>
                                                 <Location tabs={tabs.map((tab) => tab.href).join(',')} />
                                                 {content}
                                             </>
                                         )}
-                                    </ApplicationRuntime>
+                                    </SolutionRuntime>
                                 }
                                 path="*"
                             />

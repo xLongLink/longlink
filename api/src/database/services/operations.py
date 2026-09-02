@@ -12,8 +12,8 @@ from src.models.operations import OperationKind, OperationResource, OperationRes
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
+from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 OPERATION_LOG_RETENTION = timedelta(days=30)
@@ -50,10 +50,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         for operation in operations
         if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
     }
-    application_target_ids = {
+    solution_target_ids = {
         operation.target_id
         for operation in operations
-        if operation.kind in {OperationKind.application_create, OperationKind.application_delete}
+        if operation.kind in {OperationKind.solution_create, OperationKind.solution_delete}
     }
 
     # Load compact resource details for each target type.
@@ -73,13 +73,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             resource_names[(OperationKind.organization_create, resource_id)] = name
             resource_names[(OperationKind.organization_delete, resource_id)] = name
 
-    if application_target_ids:
+    if solution_target_ids:
         result = await session.execute(
-            select(col(Application.id), col(Application.name)).where(col(Application.id).in_(application_target_ids))
+            select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids))
         )
         for resource_id, name in result.all():
-            resource_names[(OperationKind.application_create, resource_id)] = name
-            resource_names[(OperationKind.application_delete, resource_id)] = name
+            resource_names[(OperationKind.solution_create, resource_id)] = name
+            resource_names[(OperationKind.solution_delete, resource_id)] = name
 
     # Assemble response models with their resolved target resource.
     items: list[OperationResponse] = []
@@ -131,12 +131,12 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     )
     organization_rows = result.all()
     result = await session.execute(
-        select(col(Application.id), col(Application.deleted_at).is_not(None))
-        .join(Organization, col(Organization.id) == col(Application.organization_id))
+        select(col(Solution.id), col(Solution.deleted_at).is_not(None))
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(col(Organization.deleted_at).is_(None))
-        .order_by(col(Organization.compute_id), col(Application.id))
+        .order_by(col(Organization.compute_id), col(Solution.id))
     )
-    application_rows = result.all()
+    solution_rows = result.all()
 
     # Create or reuse every desired-state operation in one transaction.
     for compute_id in compute_ids:
@@ -147,11 +147,11 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
             kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
             target_id=organization_id,
         )
-    for application_id, deleted in application_rows:
+    for solution_id, deleted in solution_rows:
         await enqueue(
             session,
-            kind=OperationKind.application_delete if deleted else OperationKind.application_create,
-            target_id=application_id,
+            kind=OperationKind.solution_delete if deleted else OperationKind.solution_create,
+            target_id=solution_id,
         )
 
 
@@ -299,10 +299,10 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
             .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
             .values(status=Status.failed)
         )
-    elif operation.kind == OperationKind.application_create:
+    elif operation.kind == OperationKind.solution_create:
         await session.execute(
-            update(Application)
-            .where(col(Application.id) == operation.target_id, col(Application.status) == Status.creating)
+            update(Solution)
+            .where(col(Solution.id) == operation.target_id, col(Solution.status) == Status.creating)
             .values(status=Status.failed)
         )
 

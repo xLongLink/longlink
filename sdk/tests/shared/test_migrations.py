@@ -220,11 +220,11 @@ async def test_shared_audit_sync_disposes_engine_when_upsert_fails(
 async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: URL, postgres_engine: AsyncEngine) -> None:
     """Migrate shared tables into the isolated PostgreSQL shared schema."""
 
-    # Make an application schema the role default to prove migrations override it.
+    # Make a Solution schema the role default to prove migrations override it.
     async with postgres_engine.begin() as connection:
-        await connection.execute(text("CREATE SCHEMA application"))
+        await connection.execute(text("CREATE SCHEMA solution"))
         await connection.execute(
-            text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = application, public")
+            text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = solution, public")
         )
 
     # Exercise migration idempotency through the SDK-owned async entrypoint.

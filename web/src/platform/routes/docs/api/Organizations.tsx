@@ -14,17 +14,17 @@ const organizationRoles = [
     },
     {
         name: 'maintain',
-        access: 'Write access plus invitations, application creation, previews, and runtime access.',
+        access: 'Write access plus invitations, solution creation, previews, and runtime access.',
         icon: Wrench,
     },
     {
         name: 'admin',
-        access: 'Full access to roles, invitations, applications, previews, and runtime access.',
+        access: 'Full access to roles, invitations, solutions, previews, and runtime access.',
         icon: CheckCheck,
     },
     {
         name: 'owner',
-        access: 'Highest access to ownership, settings, members, applications, and resources.',
+        access: 'Highest access to ownership, settings, members, solutions, and resources.',
         icon: CheckCircle,
     },
 ];
@@ -32,7 +32,7 @@ const organizationRoles = [
 const metadata = {
     seo: {
         title: 'Organizations | Platform Documentation | LongLink',
-        description: 'Learn how organizations structure access and applications on the LongLink Platform.',
+        description: 'Learn how organizations structure access and solutions on the LongLink Platform.',
     },
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
@@ -50,20 +50,20 @@ export default function DocsArticleRoute() {
                     Organizations
                 </Heading>
                 <Text as="p">
-                    Organizations are the workspace boundary in LongLink. They bring together the people, applications,
-                    and shared resources needed to run an organization’s work, while membership determines who can
-                    access the workspace, manage users, deploy applications, and use the applications within it.
+                    Organizations are the workspace boundary in LongLink. They bring together the people, solutions, and
+                    shared resources needed to run an organization’s work, while membership determines who can access
+                    the workspace, manage users, deploy solutions, and use the solutions within it.
                 </Text>
                 <Text as="p">
                     Each organization receives its own dedicated database, storage, and compute space. This keeps its
-                    applications and operational data separate, giving teams a clear and reliable environment in which
-                    to deploy, run, and evolve their applications.
+                    solutions and operational data separate, giving teams a clear and reliable environment in which to
+                    deploy, run, and evolve their solutions.
                 </Text>
                 <Heading id="users" level={2}>
                     Users
                 </Heading>
                 <Text as="p">
-                    LongLink manages users and their access across the organization. Applications can access the users
+                    LongLink manages users and their access across the organization. Solutions can access the users
                     authorized to use them.
                 </Text>
                 <Table density="compact">

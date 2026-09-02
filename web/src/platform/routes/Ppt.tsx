@@ -11,11 +11,19 @@ import { TeamSlide } from '@/components/slides/Team';
 import { PathsSlide } from '@/components/slides/Paths';
 import { useLocation, useNavigate } from 'react-router';
 import { ProblemSlide } from '@/components/slides/Problem';
+import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, GitFork, Target, TriangleAlert, Users, Wrench } from 'lucide-react';
+import { BookOpen, GitFork, Network, Target, TriangleAlert, Users, Wrench } from 'lucide-react';
 
 const slides = [
     { component: PathsSlide, href: '/ppt?slide=paths', icon: GitFork, id: 'paths', label: 'Paths' },
+    {
+        component: ArchitectureSlide,
+        href: '/ppt?slide=architecture',
+        icon: Network,
+        id: 'architecture',
+        label: 'Architecture',
+    },
     {
         component: IntroductionSlide,
         href: '/ppt?slide=introduction',

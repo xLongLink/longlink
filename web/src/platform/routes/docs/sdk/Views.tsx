@@ -74,11 +74,11 @@ function SummaryCard({
 
 const metadata = {
     seo: {
-        title: 'Views | LongLink Documentation',
-        description: 'Build application interfaces with LongLink XML views and components.',
+        title: 'Solution Views | LongLink Documentation',
+        description: 'Build solution interfaces with LongLink Solution Views and components.',
     },
     toc: [
-        { id: 'views', label: 'Views', level: 1 },
+        { id: 'solution-views', label: 'Solution Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
         { id: 'action', label: 'Action', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
@@ -93,12 +93,12 @@ export default function DocsArticleRoute() {
     return (
         <Article page={metadata}>
             <Stack gap={5}>
-                <Heading id="views" level={1}>
-                    Views
+                <Heading id="solution-views" level={1}>
+                    Solution Views
                 </Heading>
                 <Text as="p">
-                    An Application View is an XML interface definition associated with a browser route and rendered
-                    inside the LongLink Application shell. Store views in <Code>src/views</Code> and compose them from{' '}
+                    A Solution View is an XML interface definition associated with a browser route and rendered inside
+                    the LongLink Solution shell. Store Solution Views in <Code>src/views</Code> and compose them from{' '}
                     <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
                         Astryx
                     </Link>

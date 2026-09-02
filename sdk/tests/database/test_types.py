@@ -29,7 +29,7 @@ def test_utc_datetime_normalizes_database_results_to_utc(value: datetime | None,
 
 
 def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
-    """Store aware application values in UTC."""
+    """Store aware Solution values in UTC."""
 
     # Arrange
     value = datetime(2026, 8, 22, 12, tzinfo=timezone(timedelta(hours=2)))
@@ -44,7 +44,7 @@ def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
 
 
 def test_utc_datetime_rejects_naive_values_before_writing() -> None:
-    """Reject ambiguous application timestamps before database storage."""
+    """Reject ambiguous Solution timestamps before database storage."""
 
     # Arrange
     value = datetime(2026, 8, 22, 10)

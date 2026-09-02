@@ -14,7 +14,7 @@ import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'l
 
 const integrationContextCount = 336_000_000;
 const homeDescription =
-    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.';
+    'LongLink is the open-source foundation for building, deploying, and operating dedicated business solutions in Python.';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
@@ -214,7 +214,7 @@ export default function Home() {
             <Seo
                 description={homeDescription}
                 structuredData={structuredData}
-                title="LongLink | Build and operate business applications"
+                title="LongLink | Build and operate business solutions"
             />
             <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">

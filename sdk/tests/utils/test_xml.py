@@ -129,9 +129,9 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
     "content", [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS]
 )
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
-    """Validate representative XML fragments through the application view schema."""
+    """Validate representative XML fragments through the Solution View schema."""
 
-    # Validate the fragment through the application view schema.
+    # Validate the fragment through the Solution View schema.
     validate_xml(content)
 
 
@@ -139,7 +139,7 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
     "content", [f"<longlink>{content}</longlink>" for _, content in INVALID_FRAGMENTS], ids=[case[0] for case in INVALID_FRAGMENTS]
 )
 def test_root_schema_rejects_invalid_fragments(content: str) -> None:
-    """Reject representative invalid XML fragments through the application view schema."""
+    """Reject representative invalid XML fragments through the Solution View schema."""
 
     # Require schema validation to reject the fragment.
     with pytest.raises(ValueError, match="XML is invalid"):

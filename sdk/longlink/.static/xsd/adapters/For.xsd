@@ -18,7 +18,7 @@
   </xsd:complexType>
   <xsd:element name="For" type="ForType">
     <xsd:annotation>
-      <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content in an application view.</xsd:documentation>
+      <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content in a Solution View.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="for" category="State" lastUpdated="2026-07-21" source="adapters/For.xsd"/>
         <longlink:example>&lt;For each="$orders.items" as="order"&gt;

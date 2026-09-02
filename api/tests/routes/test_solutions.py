@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import fetch_operations, create_application, create_organization
+from factories import create_solution, fetch_operations, create_organization
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -11,25 +11,25 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
+from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
-from src.database.models.applications import Application
 
 
 class FakeCompute:
     """Fake Kubernetes log client with a configured result."""
 
     def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
-        """Expose the application log client and its configured outcome."""
+        """Expose the solution log client and its configured outcome."""
 
-        self.applications = self
+        self.solutions = self
         self.outcome = outcome
         self.captured = captured
 
-    async def logs(self, application_id: UUID, namespace: str) -> list[str]:
+    async def logs(self, solution_id: UUID, namespace: str) -> list[str]:
         """Record a request and return or raise the configured outcome."""
 
-        self.captured["logs"] = application_id
+        self.captured["logs"] = solution_id
         self.captured["namespace"] = namespace
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
@@ -43,17 +43,17 @@ async def test_list_apps_returns_requested_page_for_admin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return only the requested administrator application page."""
+    """Return only the requested administrator solution page."""
 
     # Arrange
     user = users[0]
     acme = await create_organization(user)
     globex = await create_organization(user, name="globex")
-    await create_application(acme)
-    console = await create_application(globex, name="console")
+    await create_solution(acme)
+    console = await create_solution(globex, name="console")
 
     # Act
-    paged_response = await clients[0].get("/api/v1/applications?page=2&page_size=1")
+    paged_response = await clients[0].get("/api/v1/solutions?page=2&page_size=1")
 
     # Assert
     assert paged_response.status_code == 200
@@ -62,26 +62,26 @@ async def test_list_apps_returns_requested_page_for_admin(
     assert payload["total"] == 2
 
 
-async def test_list_apps_omits_deleted_applications_from_items_and_total(
+async def test_list_solutions_omits_deleted_solutions_from_items_and_total(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Exclude deleted Applications from administrator list results and totals."""
+    """Exclude deleted Solutions from administrator list results and totals."""
 
     # Arrange
     organization = await create_organization(users[0])
-    active_application = await create_application(organization, name="active")
-    deleted_application = await create_application(organization, name="deleted")
-    delete_response = await clients[0].delete(f"/api/v1/applications/{deleted_application.id}")
+    active_solution = await create_solution(organization, name="active")
+    deleted_solution = await create_solution(organization, name="deleted")
+    delete_response = await clients[0].delete(f"/api/v1/solutions/{deleted_solution.id}")
     assert delete_response.status_code == 204
 
     # Act
-    response = await clients[0].get("/api/v1/applications")
+    response = await clients[0].get("/api/v1/solutions")
 
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [item["id"] for item in payload["items"]] == [str(active_application.id)]
+    assert [item["id"] for item in payload["items"]] == [str(active_solution.id)]
     assert payload["total"] == 1
 
 
@@ -90,7 +90,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Persist Application desired state and queue its compute Operation."""
+    """Persist Solution desired state and queue its compute Operation."""
 
     # Arrange
     user = users[0]
@@ -104,11 +104,11 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             environments=[EnvironmentMetadata(name="API_KEY", required=True)],
         )
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
@@ -124,7 +124,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert response.status_code == 204
 
     async with session_scope() as session:
-        persisted = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
+        persisted = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
         assert persisted is not None
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
@@ -132,7 +132,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.application_create,
+                col(Operation.kind) == OperationKind.solution_create,
                 col(Operation.target_id) == persisted.id,
             )
         )
@@ -144,7 +144,7 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Allow three applications per organization and reject the fourth."""
+    """Allow three solutions per organization and reject the fourth."""
 
     # Arrange one Organization with image metadata available for every creation request.
     organization = await create_organization(users[0])
@@ -154,12 +154,12 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
 
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
 
     # Act
     responses = [
         await clients[0].post(
-            f"/api/v1/organizations/{organization.id}/applications",
+            f"/api/v1/organizations/{organization.id}/solutions",
             json={"name": f"dashboard-{number}", "image": "ghcr.io/longlink/dashboard:latest"},
         )
         for number in range(4)
@@ -168,12 +168,12 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
     # Assert
     assert [response.status_code for response in responses] == [204, 204, 204, 409]
     assert responses[-1].json() == {
-        "detail": "Application limit reached during the beta. Contact LongLink to request additional applications."
+        "detail": "Solution limit reached during the beta. Contact LongLink to request additional solutions."
     }
     async with session_scope() as session:
-        result = await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))
-        applications = result.all()
-    assert len(applications) == 3
+        result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
+        solutions = result.all()
+    assert len(solutions) == 3
 
 
 @pytest.mark.parametrize(
@@ -186,7 +186,7 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
                 environments=[EnvironmentMetadata(name="API_KEY", required=True)],
             ),
             422,
-            "Application environment does not satisfy required image variables: API_KEY",
+            "Solution environment does not satisfy required image variables: API_KEY",
             id="missing-required-environment",
         ),
     ],
@@ -209,12 +209,12 @@ async def test_create_app_rejects_invalid_image_metadata(
 
         return metadata
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
     operation_ids = [operation.id for operation in await fetch_operations()]
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
@@ -222,7 +222,7 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert response.status_code == expected_status
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
-        assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
@@ -239,13 +239,13 @@ async def test_create_app_validates_payload_before_checking_organization_access(
     async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
         """Fail if invalid input reaches remote image inspection."""
 
-        raise AssertionError("invalid application payload must not inspect image metadata")
+        raise AssertionError("invalid solution payload must not inspect image metadata")
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
 
     # Act
     response = await clients[1].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard"},
     )
 
@@ -257,7 +257,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject application creation before image inspection for non-members."""
+    """Reject solution creation before image inspection for non-members."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -265,7 +265,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
 
     # Act
     response = await clients[1].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
@@ -273,7 +273,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
     async with session_scope() as session:
-        assert await session.scalar(select(Application).where(col(Application.organization_id) == organization.id)) is None
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
@@ -282,57 +282,57 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject duplicate Application slugs without adding a lifecycle operation."""
+    """Reject duplicate Solution slugs without adding a lifecycle operation."""
 
     # Arrange
     organization = await create_organization(users[0])
-    await create_application(organization, name="Dashboard")
+    await create_solution(organization, name="Dashboard")
     operation_ids = [operation.id for operation in await fetch_operations()]
 
     async def inspect_image(_image: Image) -> LongLinkMetadata:
         """Return valid immutable image metadata."""
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "Application slug already exists"}
+    assert response.json() == {"detail": "Solution slug already exists"}
     async with session_scope() as session:
-        result = await session.scalars(select(Application).where(col(Application.organization_id) == organization.id))
-        applications = result.all()
-    assert len(applications) == 1
+        result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
+        solutions = result.all()
+    assert len(solutions) == 1
     assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
-async def test_application_responses_do_not_expose_environment_secrets(
+async def test_solution_responses_do_not_expose_environment_secrets(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Redact persisted Application environment values from every response surface."""
+    """Redact persisted Solution environment values from every response surface."""
 
-    # Persist one Application with a value that must remain runtime-only.
+    # Persist one Solution with a value that must remain runtime-only.
     owner = users[0]
     organization = await create_organization(owner)
-    await create_application(organization, secrets={"API_KEY": "runtime-secret"})
+    await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
 
-    # Read the administrator list and Organization application response surfaces.
-    list_response = await clients[0].get("/api/v1/applications")
-    organization_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/applications")
+    # Read the administrator list and Organization solution response surfaces.
+    list_response = await clients[0].get("/api/v1/solutions")
+    organization_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
 
     # Response models must omit both the secret field and its raw value.
     assert list_response.status_code == 200
     assert organization_response.status_code == 200
-    list_applications = list_response.json()["items"]
-    organization_applications = organization_response.json()
-    assert all("secrets" not in item and "envs" not in item for item in list_applications)
-    assert all("secrets" not in item and "envs" not in item for item in organization_applications)
+    list_solutions = list_response.json()["items"]
+    organization_solutions = organization_response.json()
+    assert all("secrets" not in item and "envs" not in item for item in list_solutions)
+    assert all("secrets" not in item and "envs" not in item for item in organization_solutions)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
 
@@ -341,7 +341,7 @@ async def test_create_app_returns_403_for_regular_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject application creation when the organization member lacks deployment permissions."""
+    """Reject solution creation when the organization member lacks deployment permissions."""
 
     # Arrange
     owner = users[0]
@@ -360,7 +360,7 @@ async def test_create_app_returns_403_for_regular_member(
 
     # Act
     response = await clients[1].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
@@ -374,7 +374,7 @@ async def test_create_app_allows_maintainer_and_queues_reconciliation(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Allow maintainers to create applications and queue their deployment."""
+    """Allow maintainers to create solutions and queue their deployment."""
 
     # Arrange
     owner, maintainer = users[0], users[1]
@@ -394,23 +394,23 @@ async def test_create_app_allows_maintainer_and_queues_reconciliation(
 
         return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[])
 
-    monkeypatch.setattr("src.routes.v1.applications.images.metadata", inspect_image)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
 
     # Act
     response = await clients[1].post(
-        f"/api/v1/organizations/{organization.id}/applications",
+        f"/api/v1/organizations/{organization.id}/solutions",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
     # Assert
     assert response.status_code == 204
     async with session_scope() as session:
-        application = await session.scalar(select(Application).where(col(Application.organization_id) == organization.id))
-        assert application is not None
+        solution = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        assert solution is not None
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.application_create,
-                col(Operation.target_id) == application.id,
+                col(Operation.kind) == OperationKind.solution_create,
+                col(Operation.target_id) == solution.id,
             )
         )
     assert operation is not None
@@ -426,12 +426,12 @@ async def test_get_app_logs_returns_pod_logs(
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    app = await create_application(organization)
+    app = await create_solution(organization)
     captured: dict[str, UUID | str] = {}
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -459,7 +459,7 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    app = await create_application(organization)
+    app = await create_solution(organization)
     if role is not None:
         async with session_scope() as session:
             session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=role))
@@ -470,10 +470,10 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
 
         raise AssertionError("Kubernetes client was constructed")
 
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", unexpected_kubernetes)
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unexpected_kubernetes)
 
     # Act
-    response = await clients[1].get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[1].get(f"/api/v1/solutions/{app.id}/logs")
 
     # Assert
     assert response.status_code == 403
@@ -490,84 +490,84 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     # Arrange
     owner = users[0]
     organization = await create_organization(owner)
-    app = await create_application(organization)
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {}))
+    app = await create_solution(organization)
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(RuntimeError("logs unavailable"), {}))
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{app.id}/logs")
+    response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": "Application logs unavailable"}
+    assert response.json() == {"detail": "Solution logs unavailable"}
 
 
-async def test_app_logs_reject_deleted_application_before_constructing_kubernetes(
+async def test_solution_logs_reject_deleted_solution_before_constructing_kubernetes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject runtime logs for deleted Applications before reaching Kubernetes."""
+    """Reject runtime logs for deleted Solutions before reaching Kubernetes."""
 
     # Arrange
     organization = await create_organization(users[0])
-    application = await create_application(organization)
-    delete_response = await clients[0].delete(f"/api/v1/applications/{application.id}")
+    solution = await create_solution(organization)
+    delete_response = await clients[0].delete(f"/api/v1/solutions/{solution.id}")
     assert delete_response.status_code == 204
 
     def unexpected_kubernetes(*_args: object) -> object:
-        """Fail if a deleted Application reaches the cluster boundary."""
+        """Fail if a deleted Solution reaches the cluster boundary."""
 
         raise AssertionError("Kubernetes client was constructed")
 
-    monkeypatch.setattr("src.routes.v1.applications.Kubernetes", unexpected_kubernetes)
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unexpected_kubernetes)
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{application.id}/logs")
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/logs")
 
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
 
 
-async def test_delete_application_soft_deletes_and_queues_reconciliation(
+async def test_delete_solution_soft_deletes_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an Application and queue its reconciliation operation."""
+    """Soft-delete a Solution and queue its reconciliation operation."""
 
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-    app = await create_application(organization)
+    app = await create_solution(organization)
 
     # Act
-    response = await clients[0].delete(f"/api/v1/applications/{app.id}")
+    response = await clients[0].delete(f"/api/v1/solutions/{app.id}")
 
     # Assert
     assert response.status_code == 204
     async with session_scope() as session:
-        deleted_application = await session.get(Application, app.id)
+        deleted_solution = await session.get(Solution, app.id)
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.application_delete,
+                col(Operation.kind) == OperationKind.solution_delete,
                 col(Operation.target_id) == app.id,
             )
         )
-        assert deleted_application is not None
-        assert deleted_application.deleted_at is not None
+        assert deleted_solution is not None
+        assert deleted_solution.deleted_at is not None
         assert operation is not None
 
 
-async def test_delete_application_rejects_write_member_without_mutating_application(
+async def test_delete_solution_rejects_write_member_without_mutating_solution(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject write members from deleting an Application or queueing cleanup."""
+    """Reject write members from deleting a Solution or queueing cleanup."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    app = await create_application(organization)
+    app = await create_solution(organization)
     async with session_scope() as session:
         session.add(
             UserOrganization(
@@ -579,19 +579,19 @@ async def test_delete_application_rejects_write_member_without_mutating_applicat
         await session.commit()
 
     # Act
-    response = await clients[1].delete(f"/api/v1/applications/{app.id}")
+    response = await clients[1].delete(f"/api/v1/solutions/{app.id}")
 
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
     async with session_scope() as session:
-        application = await session.get(Application, app.id)
+        solution = await session.get(Solution, app.id)
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.application_delete,
+                col(Operation.kind) == OperationKind.solution_delete,
                 col(Operation.target_id) == app.id,
             )
         )
-        assert application is not None
-        assert application.deleted_at is None
+        assert solution is not None
+        assert solution.deleted_at is None
         assert operation is None

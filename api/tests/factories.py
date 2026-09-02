@@ -5,14 +5,14 @@ from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import operations, applications, organizations
+from src.database.services import solutions, operations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -142,13 +142,13 @@ async def create_organization(
         return organization
 
 
-async def create_application(
+async def create_solution(
     organization: Organization,
     name: str = "dashboard",
     image: str = "ghcr.io/longlink/dashboard:latest",
     secrets: dict[str, str] | None = None,
-) -> Application:
-    """Create one Application with the specified Organization."""
+) -> Solution:
+    """Create one Solution with the specified Organization."""
 
     parsed_image = Image(image)
     resolved_image = parsed_image if "@" in image else Image(f"{parsed_image.registry}/{parsed_image.repository}@sha256:test")
@@ -156,7 +156,7 @@ async def create_application(
         raise ValueError("Test organization must have a creator")
 
     async with session_scope() as session:
-        application = await applications.create(
+        solution = await solutions.create(
             session,
             organization.id,
             name,
@@ -165,4 +165,4 @@ async def create_application(
             user_id=organization.created_id,
         )
         await session.commit()
-        return application
+        return solution

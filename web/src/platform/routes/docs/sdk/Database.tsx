@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 const metadata = {
     seo: {
         title: 'Database | LongLink Documentation',
-        description: 'Use database services in a LongLink application.',
+        description: 'Use database services in a LongLink solution.',
     },
     toc: [
         { id: 'database', label: 'Database', level: 1 },
@@ -31,11 +31,11 @@ export default function DocsArticleRoute() {
                     Database
                 </Heading>
                 <Text as="p">
-                    Applications use standard{' '}
+                    Solutions use standard{' '}
                     <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
                         SQLModel
                     </Link>{' '}
-                    tables. The SDK adds <Code>database.session()</Code> for an Application-scoped async{' '}
+                    tables. The SDK adds <Code>database.session()</Code> for a Solution-scoped async{' '}
                     <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
                         SQLAlchemy
                     </Link>{' '}
@@ -86,7 +86,7 @@ export default function DocsArticleRoute() {
                                         <Text weight="semibold">Production</Text>
                                     </Stack>
                                     <Text type="supporting">
-                                        <Code>PostgreSQL</Code> database scoped to the application schema.
+                                        <Code>PostgreSQL</Code> database scoped to the solution schema.
                                     </Text>
                                 </Stack>
                             </TableCell>
@@ -114,8 +114,8 @@ async def create_project() -> None:
                     Timezone
                 </Heading>
                 <Text as="p">
-                    Use LongLink&apos;s <Code>UTCDateTime</Code> type for application-defined datetime fields. It
-                    requires a timezone-aware value and stores it in UTC.
+                    Use LongLink&apos;s <Code>UTCDateTime</Code> type for solution-defined datetime fields. It requires
+                    a timezone-aware value and stores it in UTC.
                 </Text>
                 <CodeBlock
                     code={`from datetime import UTC, datetime
@@ -133,8 +133,8 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     Audit table
                 </Heading>
                 <Text as="p">
-                    Use <Code>database.AuditTable</Code> only when an Application table needs Platform-user attribution.
-                    It adds creation, update, and deletion timestamps; the matching Platform user identifiers; and
+                    Use <Code>database.AuditTable</Code> only when a Solution table needs Platform-user attribution. It
+                    adds creation, update, and deletion timestamps; the matching Platform user identifiers; and
                     read-only user relationships.
                 </Text>
                 <CodeBlock
@@ -155,7 +155,7 @@ print(approval.status)  # pending
                     Migrations
                 </Heading>
                 <Text as="p">
-                    After you add or change Application models, run migrations to keep the database schema aligned:
+                    After you add or change Solution models, run migrations to keep the database schema aligned:
                 </Text>
                 <CodeBlock code="uv run longlink migrate" language="bash" />
             </Stack>
