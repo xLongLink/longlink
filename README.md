@@ -55,7 +55,7 @@ longlink dev
 
 ## Goals
 
-- **Keep it simple**: Process are clear, easy to operate and cheap to maintain.
+- **Keep it simple**: Processes are clear, easy to operate and cheap to maintain.
 - **Own the process**: Compliance, accountability and a solution that fit the needs.
 - **Separate responsibilities**: Clear distinction between a machine and a human task.
 

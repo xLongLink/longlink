@@ -36,7 +36,6 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
     # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
     if bucket_path is not None:
-        path = bucket_path / prefix_path if prefix_path is not None else bucket_path
-        return DirFileSystem(path=path.as_posix(), fs=filesystem)
+        return DirFileSystem(path=(bucket_path / prefix_path if prefix_path is not None else bucket_path).as_posix(), fs=filesystem)
 
     return filesystem

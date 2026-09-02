@@ -202,6 +202,7 @@ function validateSetupNode(node: ASTNode): string {
     if (!id || !isSafePropertyName(id)) {
         throw new Error(`${node.name} id must be a safe property name`);
     }
+    if (id === 'params') throw new Error(`${node.name} id params is reserved`);
 
     // Validate state declarations.
     if (node.name === 'State') {

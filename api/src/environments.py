@@ -54,6 +54,10 @@ class Env(BaseSettings):
         if not self.DEVELOPMENT and not self.PUBLIC_URL.startswith("https://"):
             raise ValueError("PUBLIC_URL must use HTTPS outside development")
 
+        # Production authentication workflows require a usable email-delivery host.
+        if not self.DEVELOPMENT and (self.SMTP_HOST is None or not self.SMTP_HOST.strip()):
+            raise ValueError("SMTP_HOST is required outside development")
+
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")

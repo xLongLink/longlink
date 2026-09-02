@@ -7,6 +7,10 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const metadata = {
+    seo: {
+        title: 'Routes | LongLink Documentation',
+        description: 'Define API routes in a LongLink application.',
+    },
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },

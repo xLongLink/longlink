@@ -4,6 +4,10 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
 const metadata = {
+    seo: {
+        title: 'Documentation | LongLink',
+        description: 'Learn how to build, deploy, and operate applications with LongLink.',
+    },
     toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',

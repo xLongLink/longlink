@@ -133,7 +133,7 @@ async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monke
         def __init__(self, _name: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
-        async def exists(self) -> bool:
+        async def refresh(self) -> None:
             """Report an unexpected Kubernetes API failure."""
 
             raise KubernetesError(500)
@@ -162,7 +162,7 @@ async def test_gateway_install_fetches_manifest_after_gateway_class_not_found(mo
         def __init__(self, _name: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
-        async def exists(self) -> bool:
+        async def refresh(self) -> None:
             """Return the Kubernetes not-found response."""
 
             raise KubernetesError
@@ -257,10 +257,13 @@ async def test_gateway_install_filters_admission_resources_from_verified_manifes
         def __init__(self, _name: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
-        async def exists(self) -> bool:
-            """Report no existing GatewayClass."""
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
+            }
 
-            return False
+        async def refresh(self) -> None:
+            """Keep the rejected GatewayClass state current."""
 
     class Response:
         """Return a deterministic verified manifest."""
@@ -374,10 +377,13 @@ async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: py
         def __init__(self, _name: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
-        async def exists(self) -> bool:
-            """Report no existing GatewayClass."""
+            self.raw = {
+                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
+                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
+            }
 
-            return False
+        async def refresh(self) -> None:
+            """Keep the rejected GatewayClass state current."""
 
     class Response:
         """Return a deterministic verified manifest."""

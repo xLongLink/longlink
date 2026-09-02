@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
@@ -176,7 +177,6 @@ function HowPyramid() {
 
 const printStyles = `
     .ppt-screen-slide {
-        display: flex;
         width: 100%;
         height: 100dvh;
         align-items: center;
@@ -190,7 +190,6 @@ const printStyles = `
             calc((100dvh - var(--ppt-screen-margin) * 2) * 16 / 9)
         );
         aspect-ratio: 16 / 9;
-        box-sizing: border-box;
         border-radius: var(--radius-none);
         overflow: hidden;
     }
@@ -233,8 +232,6 @@ const printStyles = `
         .ppt-print-title-slide {
             width: var(--ppt-print-slide-width);
             height: var(--ppt-print-slide-height);
-            margin: 0;
-            box-sizing: border-box;
             overflow: hidden;
             break-inside: avoid;
             break-after: page;
@@ -500,6 +497,7 @@ export default function Ppt() {
 
     return (
         <>
+            <Seo isIndexable={false} />
             <style>{printStyles}</style>
             <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">

@@ -120,8 +120,6 @@ async def proxy_application_request(
             async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
                 async for chunk in gateway_response.response.aiter_bytes():
                     yield chunk
-        except TimeoutError:
-            return
         finally:
             await gateway_response.aclose()
 

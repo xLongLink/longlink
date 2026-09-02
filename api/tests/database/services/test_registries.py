@@ -20,7 +20,7 @@ FetchRegistry = Callable[[AsyncSession, Pagination], Awaitable[tuple[Sequence[Re
 
 
 @pytest.mark.parametrize(
-    ("delete",),
+    "delete",
     [
         pytest.param(compute.delete, id="compute"),
         pytest.param(database.delete, id="database"),

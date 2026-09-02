@@ -22,7 +22,7 @@ type RegistryDialogProps<TValues extends Record<string, unknown>> = {
     dialog: ReturnType<typeof useRegistryDialog<TValues>>;
     subtitle: string;
     title: string;
-    triggerLabel: string;
+    triggerLabel?: string;
     width: number;
 };
 
@@ -36,14 +36,17 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     const toast = useToast();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
+    const closeDialog = () => {
+        setOpen(false);
+        form.reset();
+    };
     const mutation = useMutation({
         mutationFn: (payload: TValues) => api(endpoint, { json: payload, method: 'POST' }),
         onError: (error) => {
             toast({ body: error.message, type: 'error' });
         },
         onSuccess: () => {
-            setOpen(false);
-            form.reset();
+            closeDialog();
             return Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', endpoint] }),
                 ...additionalInvalidateKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
@@ -56,12 +59,12 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         onSubmit: ({ value }) => mutation.mutate(value),
     });
     const handleOpenChange = createGuardedOpenChange(mutation.isPending, (nextOpen) => {
-        setOpen(nextOpen);
-
-        // Reset the form once the dialog is fully closed.
         if (!nextOpen) {
-            form.reset();
+            closeDialog();
+            return;
         }
+
+        setOpen(true);
     });
 
     return {
@@ -79,7 +82,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
     dialog,
     subtitle,
     title,
-    triggerLabel,
+    triggerLabel = title,
     width,
 }: RegistryDialogProps<TValues>) {
     const formId = useId();

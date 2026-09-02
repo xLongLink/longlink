@@ -28,10 +28,11 @@ export function Avatar({ props }: Props) {
         avatarPropsSchema
     );
     const src = resolveAnchorUrl(services.requestBaseUrl, source ?? '') || undefined;
-    const fallbackSrc = resolveAnchorUrl(services.requestBaseUrl, fallbackSource ?? '') || undefined;
     if (kind === 'organization') {
         return <UiAvatar kind="organization" name={name ?? ''} src={src} />;
     }
+
+    const fallbackSrc = resolveAnchorUrl(services.requestBaseUrl, fallbackSource ?? '') || undefined;
 
     return <UiAvatar alt={alt} fallbackSrc={fallbackSrc} name={name} src={src} />;
 }

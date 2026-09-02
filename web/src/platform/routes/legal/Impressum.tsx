@@ -5,6 +5,10 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
 const metadata = {
+    seo: {
+        title: 'Impressum | LongLink',
+        description: 'Read the LongLink legal notice and company information.',
+    },
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },

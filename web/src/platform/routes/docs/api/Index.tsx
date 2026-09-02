@@ -5,6 +5,10 @@ import { Article } from '@/components/layouts/Article';
 import { PlatformFlowDiagram } from '@/components/PlatformFlowDiagram';
 
 const metadata = {
+    seo: {
+        title: 'Platform Documentation | LongLink',
+        description: 'Learn how LongLink Platform manages organizations, applications, and shared infrastructure.',
+    },
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Index.tsx',

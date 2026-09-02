@@ -22,7 +22,7 @@ def load_application_models() -> None:
     root = Path.cwd()
 
     # Load each discovered model module exactly once.
-    model_path = root / "src" / "database" / "models"
+    model_path = root / "src" / "models"
     for py_file in sorted(py_file for py_file in model_path.rglob("*.py") if not py_file.name.startswith("__")):
         module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
 
@@ -84,7 +84,7 @@ def apply_migrations() -> None:
 
     # Production images must include committed application migrations.
     migrations_path = Path.cwd() / "migrations"
-    if Envs().ENV == "production" and not any(path.name != "__init__.py" for path in migrations_path.glob("*.py")):
+    if Envs().ENV == "production" and all(path.name == "__init__.py" for path in migrations_path.glob("*.py")):
         raise RuntimeError(f"Production applications require migrations in {migrations_path}")
     migrations_path.mkdir(exist_ok=True)
 

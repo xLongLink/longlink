@@ -6,6 +6,10 @@ import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
 const metadata = {
+    seo: {
+        title: 'Terms of Service | LongLink',
+        description: 'Read the LongLink terms of service.',
+    },
     toc: [
         { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
         {

@@ -1,4 +1,5 @@
 import runpy
+import pytest
 from click.testing import CliRunner
 from longlink.cli.main import main
 
@@ -13,11 +14,12 @@ def test_cli_help_lists_all_supported_commands() -> None:
     assert result.exit_code == 0
     assert "build" in result.output
     assert "dev" in result.output
+    assert "docs" in result.output
     assert "init" in result.output
     assert "migrate" in result.output
 
 
-def test_module_execution_invokes_cli_entrypoint(monkeypatch) -> None:
+def test_module_execution_invokes_cli_entrypoint(monkeypatch: pytest.MonkeyPatch) -> None:
     """Run the CLI when the SDK package is executed as a module."""
 
     # Arrange

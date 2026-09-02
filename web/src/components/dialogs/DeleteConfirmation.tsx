@@ -83,7 +83,7 @@ export function useDeleteDialog<TItem>({
     onError,
 }: UseDeleteDialogOptions<TItem>) {
     const [targetId, setTargetId] = useState<string | null>(null);
-    const target = targetId === null ? null : (items.find((item) => getId(item) === targetId) ?? null);
+    const target = targetId === null ? null : items.find((item) => getId(item) === targetId);
 
     return {
         openFor: (item: TItem) => {

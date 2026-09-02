@@ -1,5 +1,6 @@
 import sys
 import pytest
+import alembic
 import importlib
 import importlib.util
 import pytest_asyncio
@@ -25,8 +26,6 @@ def load_shared_migration_environment(monkeypatch: pytest.MonkeyPatch, context: 
     """Execute the shared Alembic environment with an isolated context module."""
 
     # Replace Alembic's runtime proxy before the environment selects its execution mode.
-    import alembic
-
     module_name = "tests.shared.alembic_environment"
     environment_path = Path(shared_migrations.__file__).parent / "alembic" / "env.py"
     specification = importlib.util.spec_from_file_location(module_name, environment_path)

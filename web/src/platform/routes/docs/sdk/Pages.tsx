@@ -56,7 +56,7 @@ function SummaryCard({
             <Card aria-hidden="true" inert padding={padding} variant="muted">
                 <Center
                     className="scale-90"
-                    axis={padding === 3 ? 'vertical' : 'both'}
+                    axis={padding === 3 ? 'vertical' : undefined}
                     minHeight={padding === 3 ? 166 : 190}
                 >
                     {children}
@@ -73,6 +73,10 @@ function SummaryCard({
 }
 
 const metadata = {
+    seo: {
+        title: 'Pages | LongLink Documentation',
+        description: 'Build application interfaces with LongLink XML pages and components.',
+    },
     toc: [
         { id: 'pages', label: 'Pages', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },

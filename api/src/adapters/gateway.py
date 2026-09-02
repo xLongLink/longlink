@@ -48,8 +48,6 @@ class GatewayClient:
     ) -> GatewayResponse:
         """Start one streamed request through the authenticated application route."""
 
-        # Preserve the existing gateway path and query contract.
-        url = f"{self._url}/{path}{'?' + query if query else ''}"
         headers = {
             "x-longlink-application-id": str(application_id),
             "x-longlink-identity": identity.create_identity_token(user_id, self._identity_secret),
@@ -70,7 +68,7 @@ class GatewayClient:
         )
         try:
             response = await client.send(
-                client.build_request(method, url, content=content, headers=headers),
+                client.build_request(method, f"{self._url}/{path}{'?' + query if query else ''}", content=content, headers=headers),
                 stream=True,
             )
         except BaseException:

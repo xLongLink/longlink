@@ -14,12 +14,6 @@ import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './valid
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const showToast = useToast();
-    const form = useForm({
-        defaultValues: { email: '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: emailPayloadSchema },
-        onSubmit: ({ value }) => requestReset.mutate(value),
-    });
     const requestReset = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
         onError: (error) => {
@@ -28,6 +22,12 @@ export default function ForgotPassword() {
                 type: 'error',
             });
         },
+    });
+    const form = useForm({
+        defaultValues: { email: '' },
+        validationLogic: revalidateLogic(),
+        validators: { onDynamic: emailPayloadSchema },
+        onSubmit: ({ value }) => requestReset.mutate(value),
     });
 
     return (

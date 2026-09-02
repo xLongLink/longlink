@@ -101,8 +101,8 @@ async def test_create_rejects_missing_organization(users: tuple[User, User, User
             )
 
 
-async def test_create_revalidates_maintainer_access_after_membership_revocation(users: tuple[User, User, User]) -> None:
-    """Reject a deployment after its maintainer access has been revoked while preserving owner access."""
+async def test_create_refreshes_cached_maintainer_access_before_authorizing(users: tuple[User, User, User]) -> None:
+    """Reject a deployment after cached maintainer access is demoted while preserving owner access."""
 
     # Arrange a current owner and a maintainer whose request authorization could become stale.
     owner, maintainer = users[1], users[2]
@@ -111,16 +111,21 @@ async def test_create_revalidates_maintainer_access_after_membership_revocation(
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
         await session.commit()
 
-    # Revoke the maintainer after their request would have passed the initial membership dependency.
+    # Cache the maintainer as the route dependency does before awaiting external image metadata.
     async with session_scope() as session:
-        membership = await session.get(UserOrganization, (maintainer.id, organization.id))
-        assert membership is not None
-        membership.deleted_at = membership.updated_at
-        await session.commit()
+        cached_membership = await organizations.membership(session, maintainer.id, organization.id)
+        assert cached_membership is not None
+        assert cached_membership.role == OrganizationRoles.maintain
 
-    # Act and assert the revoked maintainer cannot create an Application, while the owner still can.
-    async with session_scope() as session:
-        with pytest.raises(ForbiddenError, match="Access required"):
+        # Demote the maintainer in a concurrent transaction after the request cached its authorization state.
+        async with session_scope() as concurrent_session:
+            membership = await concurrent_session.get(UserOrganization, (maintainer.id, organization.id))
+            assert membership is not None
+            membership.role = OrganizationRoles.read
+            await concurrent_session.commit()
+
+        # Act and assert the demoted maintainer cannot create an Application, while the owner still can.
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await applications.create(
                 session,
                 organization.id,

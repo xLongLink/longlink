@@ -302,12 +302,12 @@ async def test_application_proxy_times_out_before_gateway_response(
     assert response.json() == {"detail": "Application proxy request timed out"}
 
 
-async def test_application_proxy_closes_timed_out_response_stream(
+async def test_application_proxy_propagates_timed_out_response_stream(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Close the gateway connection when an application response streams too slowly."""
+    """Report and close an application response that streams too slowly."""
 
     # Arrange a running Application and an upstream response that misses the stream deadline.
     application, _infrastructure = await create_running_application(users[0])
@@ -335,12 +335,9 @@ async def test_application_proxy_closes_timed_out_response_stream(
     monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
     monkeypatch.setattr(proxy_routes, "PROXY_RESPONSE_TIMEOUT_SECONDS", 0.001)
 
-    # Act
-    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.content == b""
+    # Act and assert
+    with pytest.raises(TimeoutError):
+        await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
     assert close_count == 1
 
 

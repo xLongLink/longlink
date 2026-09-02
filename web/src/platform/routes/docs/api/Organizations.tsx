@@ -30,6 +30,10 @@ const organizationRoles = [
 ];
 
 const metadata = {
+    seo: {
+        title: 'Organizations | Platform Documentation | LongLink',
+        description: 'Learn how organizations structure access and applications on the LongLink Platform.',
+    },
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },

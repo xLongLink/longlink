@@ -35,26 +35,24 @@ export function Dialog({ props, nodes }: Props) {
     }
 
     return (
-        <>
+        <DialogCloseContext.Provider value={() => binding.setValue(false)}>
             {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
-            <DialogCloseContext.Provider value={() => binding.setValue(false)}>
-                <AstryxDialog isOpen={binding.value} onOpenChange={binding.setValue} purpose={purpose}>
-                    <Layout
-                        header={
-                            <DialogHeader
-                                onOpenChange={purpose === 'required' ? undefined : binding.setValue}
-                                subtitle={subtitle}
-                                title={title}
-                            />
-                        }
-                        content={
-                            <LayoutContent>
-                                <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
-                            </LayoutContent>
-                        }
-                    />
-                </AstryxDialog>
-            </DialogCloseContext.Provider>
-        </>
+            <AstryxDialog isOpen={binding.value} onOpenChange={binding.setValue} purpose={purpose}>
+                <Layout
+                    header={
+                        <DialogHeader
+                            onOpenChange={purpose === 'required' ? undefined : binding.setValue}
+                            subtitle={subtitle}
+                            title={title}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
+                        </LayoutContent>
+                    }
+                />
+            </AstryxDialog>
+        </DialogCloseContext.Provider>
     );
 }

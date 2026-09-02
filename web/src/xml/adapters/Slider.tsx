@@ -14,7 +14,12 @@ const sliderPropsSchema = z.object({
 
 export function Slider({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, (value) => (typeof value === 'number' ? value : 0));
+
+    // Convert XML's string-backed state while rejecting nonnumeric runtime values.
+    const binding = useBindableValue(props, 'value', ctx, (value) => {
+        const numericValue = typeof value === 'string' || typeof value === 'number' ? Number(value) : Number.NaN;
+        return Number.isFinite(numericValue) ? numericValue : 0;
+    });
     const { label, max, min, step } = resolveXmlProps(
         props,
         ctx,

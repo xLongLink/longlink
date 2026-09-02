@@ -1,7 +1,8 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
+from longlink.database.base import AuditTable
 
 
-class Item(SQLModel, table=True):
+class Item(AuditTable, table=True):
     """Item table owned by this application schema."""
 
     # Item fields

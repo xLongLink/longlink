@@ -1,13 +1,14 @@
 import { api } from '@/lib/api';
+import { Seo } from '@/components/Seo';
 import { startCase } from '@/lib/utils';
 import { pagesSchema } from '@/xml/pages';
 import type { ASTNode } from '@/xml/types';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
-import { useMemo, useState, type ReactNode } from 'react';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
@@ -71,29 +72,28 @@ export function ApplicationRuntime({
         queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
     });
     const pages = registeredPages ?? EMPTY_PAGES;
-    const activeRouteMatch = useMemo(() => {
-        const match = matchRoutes(
-            pages.map((page) => ({
-                path: page.route,
-                page,
-            })),
-            `/${routePath}`
-        )?.[0];
+    const match = matchRoutes(
+        pages.map((page) => ({
+            path: page.route,
+            page,
+        })),
+        `/${routePath}`
+    )?.[0];
 
-        if (!match) return null;
-
-        return {
-            page: match.route.page,
-            params: Object.fromEntries(
-                Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
-            ),
-        };
-    }, [pages, routePath]);
+    const activeRouteMatch = match
+        ? {
+              page: match.route.page,
+              params: Object.fromEntries(
+                  Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
+              ),
+          }
+        : null;
     const tabPages = pages.filter((page) => page.route !== '/' && !/(?:^|\/):/.test(page.route));
     const firstTabPage = tabPages[0];
 
     // Let dynamic detail views share a tab with their matching list page.
     const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
+    const activePageTitle = activePage?.name || (activePage ? startCase(activePage.tab) : undefined);
     const { data: activePageAst, error: activePageError } = useQuery({
         enabled: routePath.length > 0 && activePage !== undefined,
         queryKey: ['api', 'application-page', pagesUrl, activePage?.path],
@@ -170,5 +170,15 @@ export function ApplicationRuntime({
         content = loadingContent;
     }
 
-    return children({ content, tabs });
+    return children({
+        content: activePageTitle ? (
+            <>
+                <Seo isIndexable={false} title={`${activePageTitle} | LongLink`} />
+                {content}
+            </>
+        ) : (
+            content
+        ),
+        tabs,
+    });
 }

@@ -4,11 +4,11 @@ from pathlib import PurePosixPath
 from longlink import Context, data
 from sqlmodel import select
 from collections.abc import Sequence
+from src.models.items import Item
 from src.schemas.items import (
     ItemCreate,
     ItemAttachmentRead,
 )
-from src.database.models.items import Item
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/api")

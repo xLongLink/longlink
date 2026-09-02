@@ -9,6 +9,10 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const metadata = {
+    seo: {
+        title: 'Database | LongLink Documentation',
+        description: 'Use database services in a LongLink application.',
+    },
     toc: [
         { id: 'database', label: 'Database', level: 1 },
         { id: 'basic-usage', label: 'Basic usage', level: 2 },

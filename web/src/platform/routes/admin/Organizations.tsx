@@ -26,7 +26,6 @@ export default function AdminOrganizations() {
     const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
     const toast = useToast();
     const queryClient = useQueryClient();
-    const closeMetadataOrganization = () => setMetadataOrganization(null);
     const deleteOrganization = useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
         onSuccess: async () => {
@@ -115,7 +114,7 @@ export default function AdminOrganizations() {
             </Table>
             {metadataOrganization && (
                 <MetadataDialog
-                    onClose={closeMetadataOrganization}
+                    onClose={() => setMetadataOrganization(null)}
                     onDelete={() => deleteDialog.openFor(metadataOrganization)}
                     title="Organization metadata"
                 >

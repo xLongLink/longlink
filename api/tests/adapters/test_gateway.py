@@ -62,7 +62,7 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
         async def send(self, request: object, stream: bool) -> None:
             """Cancel request submission."""
 
-            raise asyncio.CancelledError()
+            raise asyncio.CancelledError
 
         async def aclose(self) -> None:
             """Record client cleanup."""

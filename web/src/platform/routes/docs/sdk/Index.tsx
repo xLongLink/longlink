@@ -8,6 +8,10 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
 const metadata = {
+    seo: {
+        title: 'Application SDK Documentation | LongLink',
+        description: 'Build LongLink applications as normal Python and FastAPI services with the Application SDK.',
+    },
     toc: [
         { id: 'application-sdk', label: 'Applications', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },
@@ -78,7 +82,7 @@ export default function DocsArticleRoute() {
                 <Text as="p">It creates an Application scaffold with everything you need to get started.</Text>
                 <CodeBlock
                     code={
-                        '├── src/\n│   ├── database/         # Database models and services\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
+                        '├── src/                  # Application source code\n│   ├── models/           # SQLModel application tables\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Application services\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
                     }
                     language="plaintext"
                 />

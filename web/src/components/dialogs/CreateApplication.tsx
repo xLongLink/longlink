@@ -155,18 +155,14 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                 {([image, name, isValid]) => {
                     const hasImage = image.trim().length > 0;
                     const hasName = name.trim().length > 0;
+                    const stepTitle =
+                        step === 'image' ? 'Inspect image' : step === 'metadata' ? 'Review metadata' : 'Review envs';
 
                     return (
                         <Dialog
                             isOpen={open}
                             onOpenChange={handleOpenChange}
-                            aria-label={
-                                step === 'image'
-                                    ? 'Inspect image'
-                                    : step === 'metadata'
-                                      ? 'Review metadata'
-                                      : 'Review envs'
-                            }
+                            aria-label={stepTitle}
                             purpose={isInspecting || createApplication.isPending ? 'required' : 'form'}
                             width={step === 'envs' ? 520 : 640}
                             maxHeight="calc(100dvh - 2rem)"
@@ -175,13 +171,7 @@ export default function CreateApplication({ organizationId }: { organizationId: 
                                 header={
                                     <DialogHeader
                                         hasDivider
-                                        title={
-                                            step === 'image'
-                                                ? 'Inspect image'
-                                                : step === 'metadata'
-                                                  ? 'Review metadata'
-                                                  : 'Review envs'
-                                        }
+                                        title={stepTitle}
                                         subtitle="1. Image / 2. Metadata / 3. Envs"
                                         onOpenChange={handleOpenChange}
                                     />

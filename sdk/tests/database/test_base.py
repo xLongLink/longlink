@@ -42,6 +42,41 @@ class VerificationEngine:
         self.disposed = True
 
 
+class SchemaEngine:
+    """Provide a failing SQLite schema initialization boundary."""
+
+    url = make_url("sqlite+aiosqlite:///:memory:")
+
+    def __init__(self, failure: Exception) -> None:
+        """Configure the schema failure and cleanup observation."""
+
+        self.failure = failure
+        self.disposed = False
+
+    def begin(self) -> "SchemaEngine":
+        """Return the schema transaction context."""
+
+        return self
+
+    async def __aenter__(self) -> "SchemaEngine":
+        """Yield the fake schema connection."""
+
+        return self
+
+    async def __aexit__(self, *_args: object) -> None:
+        """Complete the fake schema transaction."""
+
+    async def run_sync(self, _operation: object) -> None:
+        """Raise the configured schema initialization failure."""
+
+        raise self.failure
+
+    async def dispose(self) -> None:
+        """Record release of the engine resources."""
+
+        self.disposed = True
+
+
 @pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
 def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
@@ -276,6 +311,24 @@ async def test_session_retries_initialization_after_database_connection_failure(
             assert database_session is not None
     finally:
         await database.dispose()
+
+
+async def test_session_disposes_sqlite_engine_after_schema_initialization_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Release SQLite resources when automatic schema creation fails."""
+
+    # Arrange
+    engine = SchemaEngine(RuntimeError("schema unavailable"))
+    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
+    database = database_base.Database(Envs(ENV="testing"))
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="schema unavailable"):
+        async with database.session():
+            pass
+    assert database._sessions is None
+    assert engine.disposed
 
 
 async def test_session_verifies_non_sqlite_connection_before_yielding_session(

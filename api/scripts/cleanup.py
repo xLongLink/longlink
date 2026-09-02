@@ -83,25 +83,24 @@ async def cleanup() -> None:
                 database_applications.add(UUID(str(application_id)))
 
     # Delete only namespaces selected by local seed configuration and tracked Platform state.
-    existing_namespaces: set[str] = set()
+    existing_namespaces: dict[str, Namespace] = {}
     for namespace in sorted(managed_namespaces):
         namespace_resource = Namespace(namespace, api=api)
         if not await namespace_resource.exists():
             continue
-        existing_namespaces.add(namespace)
+        existing_namespaces[namespace] = namespace_resource
 
     # Stop all managed workloads before revoking the credentials they can consume.
     removed_namespaces = len(existing_namespaces)
     for namespace in sorted(existing_namespaces):
-        resource = Namespace(namespace, api=api)
-        await resource.delete()
+        await existing_namespaces[namespace].delete()
     try:
         async with asyncio.timeout(10 * 60):
             while existing_namespaces:
-                remaining: set[str] = set()
-                for namespace in existing_namespaces:
-                    if await Namespace(namespace, api=api).exists():
-                        remaining.add(namespace)
+                remaining: dict[str, Namespace] = {}
+                for namespace, resource in existing_namespaces.items():
+                    if await resource.exists():
+                        remaining[namespace] = resource
                 if not remaining:
                     break
                 existing_namespaces = remaining

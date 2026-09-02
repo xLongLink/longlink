@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Globe } from '@/components/Globe';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -10,59 +11,6 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
-
-const paths = [
-    {
-        title: 'Use',
-        description:
-            'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
-        action: 'Explore existing apps',
-        isComingSoon: true,
-    },
-    {
-        title: 'Adapt',
-        description:
-            'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
-        action: 'Start from a foundation',
-        isComingSoon: true,
-    },
-    {
-        title: 'Create',
-        description:
-            'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
-        action: 'Build a new app',
-        isComingSoon: false,
-    },
-] as const;
-
-const platformCapabilities = [
-    {
-        title: 'Build',
-        description: 'Build complete applications in code using your favorite developer tools.',
-        icon: Code2,
-    },
-    {
-        title: 'Operate',
-        description:
-            'Run applications with authentication, permissions, deployment, storage, routing, and logging built in.',
-        icon: ServerCog,
-    },
-    {
-        title: 'Keep it simple',
-        description: 'Processes are clear, easy to operate, and cheap to maintain.',
-        icon: Sparkles,
-    },
-    {
-        title: 'Own the process',
-        description: 'Keep compliance, accountability, and a solution that fits your needs.',
-        icon: ShieldCheck,
-    },
-    {
-        title: 'Separate responsibilities',
-        description: 'Keep a clear distinction between machine tasks and human tasks.',
-        icon: Workflow,
-    },
-] as const;
 
 const integrationContextCount = 336_000_000;
 
@@ -147,20 +95,127 @@ function IntegrationScale() {
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Each market has different regulations, data, and workflows.
+                    With different regulations, data, and workflows,
                     <br />
-                    Each requires a specific solution.
+                    Each requires a unique solution.
                 </Text>
             </Stack>
         </Section>
     );
 }
 
+/** Renders a navigation card for one solution path. */
+function PathCard({
+    title,
+    description,
+    action,
+    isComingSoon,
+}: {
+    title: string;
+    description: string;
+    action: string;
+    isComingSoon: boolean;
+}) {
+    return (
+        <Stack width="100%">
+            <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
+                <Banner container="section" status="warning" title={<Text type="supporting">Coming Soon</Text>} />
+            </Stack>
+            <ClickableCard
+                className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
+                href="/docs"
+                label={action}
+                padding={6}
+            >
+                <Stack
+                    aria-hidden="true"
+                    className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
+                />
+                <Stack className="relative z-10" height="100%" gap={8} justify="between">
+                    <Stack gap={4}>
+                        <Heading
+                            level={2}
+                            type="display-1"
+                            textWrap="nowrap"
+                            className="text-6xl tracking-tighter sm:text-7xl"
+                        >
+                            {title}
+                        </Heading>
+                        <Text as="p" color="secondary" textWrap="pretty">
+                            {description}
+                        </Text>
+                    </Stack>
+                    <Stack
+                        direction="horizontal"
+                        hAlign="between"
+                        vAlign="center"
+                        width="100%"
+                        className="whitespace-nowrap"
+                    >
+                        <Text weight="medium">{action}</Text>
+                        <ArrowRight
+                            aria-hidden="true"
+                            className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
+                        />
+                    </Stack>
+                </Stack>
+                <Stack
+                    aria-hidden="true"
+                    className="path-navigation-cue absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+                />
+            </ClickableCard>
+        </Stack>
+    );
+}
+
+/** Renders a platform capability card. */
+function CapabilityCard({ title, description, icon }: { title: string; description: string; icon: typeof Code2 }) {
+    return (
+        <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={240} padding={6}>
+            <Stack height="100%" justify="between">
+                <Icon color="tertiary" icon={icon} size="lg" />
+                <Stack gap={3}>
+                    <Heading className="text-base" level={2}>
+                        {title}
+                    </Heading>
+                    <Text as="p" color="secondary" textWrap="pretty">
+                        {description}
+                    </Text>
+                </Stack>
+            </Stack>
+        </Card>
+    );
+}
+
 /** Renders the public home page. */
 export default function Home() {
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'Organization',
+                name: 'LongLink',
+                url: 'https://longlink.dev',
+                sameAs: ['https://github.com/xLongLink/longlink', 'https://www.linkedin.com/company/longlink'],
+            },
+            {
+                '@type': 'WebSite',
+                name: 'LongLink',
+                url: 'https://longlink.dev',
+                description:
+                    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.',
+            },
+        ],
+    };
+
     return (
         <>
-            <main className="relative -mt-21 flex min-h-screen w-full overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
+            <Seo
+                description="LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python."
+                structuredData={structuredData}
+                title="LongLink | Build and operate business applications"
+            />
+            <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
                     <Globe />
                 </Stack>
@@ -185,8 +240,8 @@ export default function Home() {
                             <Text className="tracking-[-0.012em]" display="block" type="inherit">
                                 The economics have shifted; flexibility now lives in code
                             </Text>
-                            <Text className="tracking-[0.018em]" display="block" type="inherit">
-                                Build the process, not the workaround
+                            <Text className="tracking-[0.026em]" display="block" type="inherit">
+                                Build the solution, not the workaround
                             </Text>
                             <Text className="tracking-[0.026em]" display="block" type="inherit">
                                 Start from solid foundations
@@ -201,107 +256,56 @@ export default function Home() {
             <IntegrationScale />
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
-                    {platformCapabilities.slice(0, 2).map(({ title, description, icon }) => (
-                        <Card
-                            key={title}
-                            className="-mb-px -mr-px rounded-none bg-transparent"
-                            minHeight={240}
-                            padding={6}
-                        >
-                            <Stack height="100%" justify="between">
-                                <Icon color="tertiary" icon={icon} size="lg" />
-                                <Stack gap={3}>
-                                    <Heading className="text-base" level={2}>
-                                        {title}
-                                    </Heading>
-                                    <Text as="p" color="secondary" textWrap="pretty">
-                                        {description}
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                        </Card>
-                    ))}
+                    <CapabilityCard
+                        description="Build complete solutions as code using your favorite developer tools."
+                        icon={Code2}
+                        title="Build"
+                    />
+                    <CapabilityCard
+                        description="We manage authentication, permissions, deployment, storage, routing, and logging."
+                        icon={ServerCog}
+                        title="Operate"
+                    />
                 </Grid>
                 <Grid className="mx-auto" columns={{ minWidth: 240, max: 3 }} gap={0} maxWidth={1000}>
-                    {platformCapabilities.slice(2).map(({ title, description, icon }) => (
-                        <Card
-                            key={title}
-                            className="-mb-px -mr-px rounded-none bg-transparent"
-                            minHeight={240}
-                            padding={6}
-                        >
-                            <Stack height="100%" justify="between">
-                                <Icon color="tertiary" icon={icon} size="lg" />
-                                <Stack gap={3}>
-                                    <Heading className="text-base" level={2}>
-                                        {title}
-                                    </Heading>
-                                    <Text as="p" color="secondary" textWrap="pretty">
-                                        {description}
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                        </Card>
-                    ))}
+                    <CapabilityCard
+                        description="Processes are clear, easy to operate, and cheap to maintain."
+                        icon={Sparkles}
+                        title="Keep it simple"
+                    />
+                    <CapabilityCard
+                        description="Compliance, accountability and a solution that fit the needs."
+                        icon={ShieldCheck}
+                        title="Own the process"
+                    />
+                    <CapabilityCard
+                        description="Clear distinction between a machine and a human task."
+                        icon={Workflow}
+                        title="Separate responsibilities"
+                    />
                 </Grid>
             </Section>
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
-                        {paths.map(({ title, description, action, isComingSoon }) => (
-                            <Stack key={title} width="100%">
-                                <Stack aria-hidden={!isComingSoon} className={isComingSoon ? undefined : 'invisible'}>
-                                    <Banner
-                                        container="section"
-                                        status="warning"
-                                        title={<Text type="supporting">Coming Soon</Text>}
-                                    />
-                                </Stack>
-                                <ClickableCard
-                                    className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
-                                    href="/docs"
-                                    label={action}
-                                    padding={6}
-                                >
-                                    <Stack
-                                        aria-hidden="true"
-                                        className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
-                                    />
-                                    <Stack className="relative z-10" height="100%" gap={8} justify="between">
-                                        <Stack gap={4}>
-                                            <Heading
-                                                level={2}
-                                                type="display-1"
-                                                textWrap="nowrap"
-                                                className="text-6xl tracking-tighter sm:text-7xl"
-                                            >
-                                                {title}
-                                            </Heading>
-                                            <Text as="p" color="secondary" textWrap="pretty">
-                                                {description}
-                                            </Text>
-                                        </Stack>
-                                        <Stack
-                                            direction="horizontal"
-                                            hAlign="between"
-                                            vAlign="center"
-                                            width="100%"
-                                            className="whitespace-nowrap"
-                                        >
-                                            <Text weight="medium">{action}</Text>
-                                            <ArrowRight
-                                                aria-hidden="true"
-                                                className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
-                                            />
-                                        </Stack>
-                                    </Stack>
-                                    <Stack
-                                        aria-hidden="true"
-                                        className="path-navigation-cue absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
-                                    />
-                                </ClickableCard>
-                            </Stack>
-                        ))}
+                        <PathCard
+                            action="Explore existing solutions"
+                            description="Deploy an existing solution as it is. Get a proven process running without rebuilding what already exists."
+                            isComingSoon
+                            title="Use"
+                        />
+                        <PathCard
+                            action="Start from a foundation"
+                            description="Fork an existing solution and change its workflow, fields, rules, integrations, or interface around your requirements."
+                            isComingSoon
+                            title="Adapt"
+                        />
+                        <PathCard
+                            action="Build a new solution"
+                            description="Build a dedicated solution when the process is uniquely yours. LongLink handles the platform; you own the solution."
+                            isComingSoon={false}
+                            title="Create"
+                        />
                     </Grid>
                 </Stack>
             </Section>

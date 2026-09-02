@@ -53,7 +53,7 @@ def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.Monke
         storage_base.create_fs(Envs())
 
 
-def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch) -> None:
+def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 
     # Capture S3 configuration and the scoped filesystem path.
@@ -132,11 +132,8 @@ def test_nonproduction_storage_selects_local_filesystem(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
 
-    # Act
-    result = storage_base.create_fs(Envs(ENV=environment))
-
     # Assert
-    assert result is filesystem
+    assert storage_base.create_fs(Envs(ENV=environment)) is filesystem
     assert protocols == [expected_protocol]
 
 

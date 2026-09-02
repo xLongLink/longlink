@@ -1,7 +1,6 @@
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
-from sqlalchemy.exc import OperationalError
 from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
@@ -246,12 +245,13 @@ class Postgres:
     async def database_usage(self, database_name: str) -> int | None:
         """Return physical size for one database when it exists."""
 
-        # Read the exact Organization database size and normalize connection failures to no usage.
-        try:
-            async with self._connection(database_name) as conn:
-                return int(await conn.scalar(text("SELECT pg_database_size(current_database())")))
-        except OperationalError:
-            return None
+        # Query through the maintenance database so only a missing catalog row means absence.
+        async with self._connection("postgres") as conn:
+            usage = await conn.scalar(
+                text("SELECT pg_database_size(datname) FROM pg_database WHERE datname = :database_name"),
+                {"database_name": database_name},
+            )
+        return int(usage) if usage is not None else None
 
     async def usage(self) -> int:
         """Return the total non-system database size in bytes."""

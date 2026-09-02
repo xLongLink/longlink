@@ -37,7 +37,7 @@ function record(value: XsdNode | undefined): XsdRecord | undefined {
 
 function nodes(value: XsdRecord | undefined, name: string): XsdRecord[] {
     const child = value?.[name];
-    const entries = Array.isArray(child) ? child : child == null ? [] : [child];
+    const entries = Array.isArray(child) ? child : [child];
 
     return entries.flatMap((entry) => {
         const childRecord = record(entry);
