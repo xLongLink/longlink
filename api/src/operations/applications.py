@@ -50,13 +50,14 @@ async def create(application_id: UUID) -> None:
         database_password = secrets.token_urlsafe(24)
         try:
             logger.info("Creating PostgreSQL schema for Application %s", application.id)
-            database_username = await Postgres(
+            database = Postgres(
                 infrastructure.database.host,
                 infrastructure.database.port,
                 infrastructure.database.username,
                 infrastructure.database.password,
                 infrastructure.database.sslmode,
-            ).schema(organization.id, application.id, database_password)
+            )
+            database_username = await database.schema(organization.id, application.id, database_password)
         except Exception:
             try:
                 await object_storage.revoke(application.id.hex)

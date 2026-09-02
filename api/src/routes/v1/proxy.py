@@ -76,12 +76,13 @@ async def proxy_application_request(
     # Proxy only authenticated API requests through the mTLS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
-            gateway_response = await GatewayClient(
+            gateway = GatewayClient(
                 registry.gateway_url,
                 registry.gateway_certificate,
                 registry.gateway_client_identity,
                 identity_secret,
-            ).request(
+            )
+            gateway_response = await gateway.request(
                 application_id=application.id,
                 user_id=user.id,
                 method=request.method,

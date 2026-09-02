@@ -291,19 +291,19 @@ export default function Home() {
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         <PathCard
                             action="Explore existing solutions"
-                            description="Deploy an existing solution as it is. Get a proven process running without rebuilding what already exists."
+                            description="Get a proven process running without rebuilding what already exists."
                             isComingSoon
-                            title="Use"
+                            title="Adopt an existing solutions as it is"
                         />
                         <PathCard
                             action="Start from a foundation"
-                            description="Fork an existing solution and change its workflow, fields, rules, integrations, or interface around your requirements."
+                            description="Start from an existing solution and tailor it to your needs. Change the workflow, rules, data, integrations, or interface while keeping a proven foundation."
                             isComingSoon
-                            title="Adapt"
+                            title="Branch"
                         />
                         <PathCard
                             action="Build a new solution"
-                            description="Build a dedicated solution when the process is uniquely yours. We handle the platform; you own the solution."
+                            description="Create a dedicated solution when your process is unique. Define exactly how the work should happen while LongLink handles the platform around it."
                             isComingSoon={false}
                             title="Create"
                         />

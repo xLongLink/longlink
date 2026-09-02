@@ -44,17 +44,17 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     operations = result.all()
 
     # Group targets by their concrete resource table.
-    compute_target_ids = [operation.target_id for operation in operations if operation.kind == OperationKind.compute_create]
-    organization_target_ids = [
+    compute_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.compute_create}
+    organization_target_ids = {
         operation.target_id
         for operation in operations
         if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
-    ]
-    application_target_ids = [
+    }
+    application_target_ids = {
         operation.target_id
         for operation in operations
         if operation.kind in {OperationKind.application_create, OperationKind.application_delete}
-    ]
+    }
 
     # Load compact resource details for each target type.
     resource_names: dict[tuple[OperationKind, UUID], str] = {}

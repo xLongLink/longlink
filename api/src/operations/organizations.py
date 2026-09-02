@@ -26,21 +26,23 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     logger.info("Preparing PostgreSQL database for Organization %s", organization.id)
-    await Postgres(
+    database = Postgres(
         infrastructure.database.host,
         infrastructure.database.port,
         infrastructure.database.username,
         infrastructure.database.password,
         infrastructure.database.sslmode,
-    ).prepare_organization_database(organization.id)
+    )
+    await database.prepare_organization_database(organization.id)
 
     # Converge the Organization bucket before Applications receive scoped credentials.
     logger.info("Creating object storage bucket for Organization %s", organization.id)
-    await Exoscale(
+    object_storage = Exoscale(
         infrastructure.storage.endpoint_url,
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
-    ).create(organization.id.hex)
+    )
+    await object_storage.create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and network boundary.
     logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
