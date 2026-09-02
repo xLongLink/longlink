@@ -9,7 +9,7 @@ def application_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
 
     # Create the source directories required by the runtime.
     source_directory = tmp_path / "src"
-    (source_directory / "pages").mkdir(parents=True)
+    (source_directory / "views").mkdir(parents=True)
     monkeypatch.chdir(tmp_path)
 
     return source_directory

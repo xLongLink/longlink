@@ -115,7 +115,7 @@ function PrivacyContent() {
                 </Text>
                 <Text as="p">
                     When a customer places personal data in an application, database schema, storage bucket, file, log,
-                    uploaded object, page definition, environment value, or other content processed through LongLink,
+                    uploaded object, view definition, environment value, or other content processed through LongLink,
                     the customer generally decides why and how that data is processed and is the controller. LongLink
                     generally acts as processor for that Customer Content when we operate the hosted Service for the
                     customer.
@@ -217,7 +217,7 @@ function PrivacyContent() {
                         label={
                             <Text>
                                 Customer Content: data stored or processed by applications, database schemas, storage
-                                buckets, files, XML page definitions, API routes, and runtime services. We do not
+                                buckets, files, XML view definitions, API routes, and runtime services. We do not
                                 routinely inspect Customer Content, but authorized personnel may access it where
                                 reasonably necessary to provide requested support, investigate abuse or a security
                                 incident, enforce terms, or comply with law.

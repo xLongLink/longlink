@@ -64,7 +64,7 @@ export default function OrganizationApplication() {
     return (
         <ApplicationRuntime
             navigationBaseUrl={`/orgs/${organization}/apps/${application}`}
-            pagesUrl={`/api/v1/applications/${applicationAccess.id}/proxy/pages.json`}
+            viewsUrl={`/api/v1/applications/${applicationAccess.id}/proxy/views.json`}
             requestBaseUrl={`/api/v1/applications/${applicationAccess.id}/proxy/`}
         >
             {({ content, tabs }) => (

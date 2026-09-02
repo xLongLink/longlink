@@ -87,10 +87,10 @@ export default function Documentation() {
                                 label="Database"
                             />
                             <SideNavItem
-                                href="/docs/sdk/pages"
+                                href="/docs/sdk/views"
                                 icon={<FileCode2 aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/pages'}
-                                label="Pages"
+                                isSelected={pathname === '/docs/sdk/views'}
+                                label="Views"
                             />
                             <SideNavItem
                                 href="/docs/sdk/testing"

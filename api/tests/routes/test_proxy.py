@@ -557,7 +557,7 @@ async def test_application_proxy_allows_organization_read_members(
     client = clients[1]
 
     # Request the Application through the member's Organization access.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/views.json")
 
     # Verify read access reaches the configured compute gateway.
     assert response.status_code == 200
@@ -585,7 +585,7 @@ async def test_application_proxy_rejects_cross_organization_access(
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Request the other Organization's runtime through an authenticated session.
-    response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
+    response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/views.json")
 
     # Verify authorization rejects the request.
     assert response.status_code == 403
@@ -694,7 +694,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Request runtime content before the Application is ready.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/v1/applications/{app.id}/proxy/views.json")
 
     # Verify the loading response is empty and cannot be cached.
     assert response.status_code == 503
@@ -733,7 +733,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_requirement_is
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    response = await clients[0].get(f"/api/v1/applications/{app.id}/proxy/views.json")
 
     # Assert
     assert response.status_code == 503

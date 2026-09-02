@@ -7,14 +7,14 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Bindings | LongLink Documentation',
-        description: 'Bind LongLink XML page components to application data and state.',
+        description: 'Bind LongLink XML view components to application data and state.',
     },
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
     lastUpdated: '2026-07-21',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/pages/Bindings.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views/Bindings.tsx',
 };
 
 export default function DocsArticleRoute() {

@@ -3,7 +3,7 @@ import Platform from '@/platform/layouts/Platform';
 import { PageContainer } from '@/components/PageContainer';
 import { ApplicationRuntime } from '@/components/Application';
 
-/** Renders an SDK application from its local page manifest. */
+/** Renders an SDK application from its local view manifest. */
 export default function Application() {
     return (
         <ApplicationRuntime>

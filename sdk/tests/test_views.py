@@ -1,9 +1,9 @@
 import pytest
-from longlink.pages import page_stem_route
+from longlink.views import view_stem_route
 
 
 @pytest.mark.parametrize(
-    ("page_stem", "expected_route"),
+    ("view_stem", "expected_route"),
     [
         pytest.param("index", "/", id="root-index"),
         pytest.param("admin/index", "/admin", id="nested-index"),
@@ -11,18 +11,18 @@ from longlink.pages import page_stem_route
         pytest.param("settings/profile", "/settings/profile", id="nested-static-segments"),
     ],
 )
-def test_page_stem_route_converts_valid_page_paths(page_stem: str, expected_route: str) -> None:
-    """Convert supported filesystem page names into exact browser routes."""
+def test_view_stem_route_converts_valid_view_paths(view_stem: str, expected_route: str) -> None:
+    """Convert supported filesystem view names into exact browser routes."""
 
     # Act
-    route = page_stem_route(page_stem)
+    route = view_stem_route(view_stem)
 
     # Assert
     assert route == expected_route
 
 
 @pytest.mark.parametrize(
-    ("page_stem", "message"),
+    ("view_stem", "message"),
     [
         pytest.param("", "include a file name", id="empty"),
         pytest.param("issues/[]", "cannot be empty", id="empty-parameter"),
@@ -39,8 +39,8 @@ def test_page_stem_route_converts_valid_page_paths(page_stem: str, expected_rout
         pytest.param("admin/..", "URL-safe file names", id="parent-directory"),
     ],
 )
-def test_page_stem_route_rejects_invalid_route_segments(page_stem: str, message: str) -> None:
-    """Reject filesystem page names that could create ambiguous browser routes."""
+def test_view_stem_route_rejects_invalid_route_segments(view_stem: str, message: str) -> None:
+    """Reject filesystem view names that could create ambiguous browser routes."""
 
     with pytest.raises(ValueError, match=message):
-        page_stem_route(page_stem)
+        view_stem_route(view_stem)

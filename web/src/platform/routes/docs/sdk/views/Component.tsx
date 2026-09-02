@@ -32,7 +32,7 @@ export default function DocsArticleRoute() {
     const metadata = {
         seo: {
             title: `${component.name} XML Component | LongLink Documentation`,
-            description: `Reference documentation for the ${component.name} XML component in LongLink application pages.`,
+            description: `Reference documentation for the ${component.name} XML component in LongLink application views.`,
         },
         lastUpdated: component.lastUpdated,
         toc: [

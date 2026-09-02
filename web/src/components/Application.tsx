@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { Seo } from '@/components/Seo';
 import { startCase } from '@/lib/utils';
-import { pagesSchema } from '@/xml/pages';
+import { viewsSchema } from '@/xml/views';
 import type { ASTNode } from '@/xml/types';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
@@ -18,11 +18,11 @@ import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 type ApplicationRuntimeProps = {
     children: (application: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
     navigationBaseUrl?: string;
-    pagesUrl?: string;
+    viewsUrl?: string;
     requestBaseUrl?: string;
 };
 
-const EMPTY_PAGES = [] as const;
+const EMPTY_VIEWS = [] as const;
 
 /** Owns one XML runtime for the lifetime selected by its React key. */
 function ApplicationXmlRuntime({
@@ -59,61 +59,61 @@ function ApplicationXmlRuntime({
     return <RenderXML ast={ast} ctx={runtime} />;
 }
 
-/** Resolves and renders the current manifest-defined application page. */
+/** Resolves and renders the current manifest-defined application view. */
 export function ApplicationRuntime({
     children,
     navigationBaseUrl = '/',
-    pagesUrl = '/pages.json',
+    viewsUrl = '/views.json',
     requestBaseUrl = '/',
 }: ApplicationRuntimeProps) {
     const { '*': routePath = '' } = useParams();
-    const { data: registeredPages, error } = useQuery({
-        queryKey: ['api', pagesUrl],
-        queryFn: async ({ signal }) => pagesSchema.parse(await api(pagesUrl, { signal }).json()),
+    const { data: registeredViews, error: viewsError } = useQuery({
+        queryKey: ['api', viewsUrl],
+        queryFn: async ({ signal }) => viewsSchema.parse(await api(viewsUrl, { signal }).json()),
     });
-    const pages = registeredPages ?? EMPTY_PAGES;
+    const views = registeredViews ?? EMPTY_VIEWS;
     const match = matchRoutes(
-        pages.map((page) => ({
-            path: page.route,
-            page,
+        views.map((view) => ({
+            path: view.route,
+            view,
         })),
         `/${routePath}`
     )?.[0];
 
     const activeRouteMatch = match
         ? {
-              page: match.route.page,
+              view: match.route.view,
               params: Object.fromEntries(
                   Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
               ),
           }
         : null;
-    const tabPages = pages.filter((page) => page.route !== '/' && !page.route.includes('/:'));
-    const firstTabPage = tabPages[0];
+    const tabViews = views.filter((view) => view.route !== '/' && !view.route.includes('/:'));
+    const firstTabView = tabViews[0];
 
-    // Let dynamic detail views share a tab with their matching list page.
-    const activePage = !routePath ? firstTabPage : activeRouteMatch?.page;
-    const activePageTitle = activePage?.name ?? (activePage ? startCase(activePage.tab) : undefined);
-    const { data: activePageAst, error: activePageError } = useQuery({
-        enabled: routePath.length > 0 && activePage !== undefined,
-        queryKey: ['api', 'application-page', pagesUrl, activePage?.path],
+    // Let dynamic detail views share a tab with their matching list view.
+    const activeView = !routePath ? firstTabView : activeRouteMatch?.view;
+    const activeViewTitle = activeView?.name ?? (activeView ? startCase(activeView.tab) : undefined);
+    const { data: activeViewAst, error: activeViewError } = useQuery({
+        enabled: routePath.length > 0 && activeView !== undefined,
+        queryKey: ['api', 'application-view', viewsUrl, activeView?.path],
         queryFn: async ({ signal }) => {
-            if (!activePage) throw new Error('No active application page');
+            if (!activeView) throw new Error('No active application view');
 
-            const pageUrl = resolveRequestUrl(requestBaseUrl, activePage.path);
-            const content = await api(pageUrl, { headers: { Accept: 'application/xml' }, signal }).text();
+            const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
+            const content = await api(viewUrl, { headers: { Accept: 'application/xml' }, signal }).text();
 
             return parseXML(content);
         },
         retry: false,
     });
     // Build one static navigation target per runtime tab.
-    const tabs = tabPages.map(
-        (page) =>
+    const tabs = tabViews.map(
+        (view) =>
             ({
-                href: resolveNavigationUrl(navigationBaseUrl, page.route),
-                icon: page.icon ? getIconComponent(page.icon) : undefined,
-                label: page.name || startCase(page.tab),
+                href: resolveNavigationUrl(navigationBaseUrl, view.route),
+                icon: view.icon ? getIconComponent(view.icon) : undefined,
+                label: view.name || startCase(view.tab),
             }) satisfies NavigationTab
     );
 
@@ -124,27 +124,27 @@ export function ApplicationRuntime({
     );
     let content: ReactNode;
 
-    if (!routePath && firstTabPage) {
-        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabPage.route)} />;
-    } else if (registeredPages && routePath && !activeRouteMatch) {
+    if (!routePath && firstTabView) {
+        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabView.route)} />;
+    } else if (registeredViews && routePath && !activeRouteMatch) {
         content = <NotFoundLayout />;
-    } else if (error) {
+    } else if (viewsError) {
         content = (
             <PageError
-                description={error.message || 'The application definition could not be loaded.'}
+                description={viewsError.message || 'The application definition could not be loaded.'}
                 title="Unable to load this application"
             />
         );
-    } else if (activePageAst && activePage && activeRouteMatch) {
+    } else if (activeViewAst && activeView && activeRouteMatch) {
         content = (
             <ApplicationXmlRuntime
-                ast={activePageAst}
+                ast={activeViewAst}
                 key={JSON.stringify([
-                    pagesUrl,
+                    viewsUrl,
                     navigationBaseUrl,
                     requestBaseUrl,
-                    activePage.route,
-                    activePage.path,
+                    activeView.route,
+                    activeView.path,
                     routePath,
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
@@ -152,18 +152,18 @@ export function ApplicationRuntime({
                 requestBaseUrl={requestBaseUrl}
             />
         );
-    } else if (registeredPages && !activePage) {
+    } else if (registeredViews && !activeView) {
         content = (
             <PageError
-                description="The application did not expose any pages to render."
+                description="The application did not expose any views to render."
                 title="Unexpected application response"
             />
         );
-    } else if (activePageError) {
+    } else if (activeViewError) {
         content = (
             <PageError
-                description={activePageError.message || 'Failed to load page'}
-                title="Unable to load this page"
+                description={activeViewError.message || 'Failed to load view'}
+                title="Unable to load this view"
             />
         );
     } else {
@@ -171,9 +171,9 @@ export function ApplicationRuntime({
     }
 
     return children({
-        content: activePageTitle ? (
+        content: activeViewTitle ? (
             <>
-                <Seo isIndexable={false} title={`${activePageTitle} | LongLink`} />
+                <Seo isIndexable={false} title={`${activeViewTitle} | LongLink`} />
                 {content}
             </>
         ) : (

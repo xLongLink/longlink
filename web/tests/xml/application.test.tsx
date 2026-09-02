@@ -66,8 +66,8 @@ describe('ApplicationRuntime', () => {
     it('redirects an empty route to the first non-index static tab', async () => {
         // Arrange
         stubFetch((url) =>
-            url.endsWith('/pages.json')
-                ? jsonResponse([page('index', '/'), page('home', '/home')])
+            url.endsWith('/views.json')
+                ? jsonResponse([view('index', '/'), view('home', '/home')])
                 : xmlResponse('<Text>Home</Text>')
         );
 
@@ -94,33 +94,33 @@ describe('ApplicationRuntime', () => {
         await act(async () =>
             vi.waitFor(() => expect(output.textContent).toContain('Unexpected application response'))
         );
-        expect(output.textContent).toContain('The application did not expose any pages to render.');
+        expect(output.textContent).toContain('The application did not expose any views to render.');
     });
 
-    it('renders a page failure after loading the manifest', async () => {
+    it('renders a view failure after loading the manifest', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home')]);
-            return new Response(JSON.stringify({ detail: 'Page unavailable' }), { status: 503 });
+            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
+            return new Response(JSON.stringify({ detail: 'View unavailable' }), { status: 503 });
         });
 
         // Act
         const output = await renderRuntime('/home');
 
         // Assert
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this page')));
-        expect(output.textContent).toContain('Page unavailable');
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this view')));
+        expect(output.textContent).toContain('View unavailable');
     });
 
-    it.each(['https://example.com/page.xml', '//example.com/page.xml'])(
-        'rejects external manifest page paths before fetching the page: %s',
+    it.each(['https://example.com/view.xml', '//example.com/view.xml'])(
+        'rejects external manifest view paths before fetching the view: %s',
         async (path) => {
             // Arrange
             const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
                 const url = input instanceof Request ? input.url : String(input);
 
-                if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home', path)]);
-                throw new Error('Page fetch must not occur');
+                if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home', path)]);
+                throw new Error('View fetch must not occur');
             });
             vi.stubGlobal('fetch', fetchRequest);
 
@@ -131,7 +131,7 @@ describe('ApplicationRuntime', () => {
             await act(async () =>
                 vi.waitFor(() => expect(output.textContent).toContain('Unable to load this application'))
             );
-            expect(output.textContent).toContain('Page path must be app-relative');
+            expect(output.textContent).toContain('View path must be app-relative');
             expect(fetchRequest).toHaveBeenCalledOnce();
         }
     );
@@ -139,7 +139,7 @@ describe('ApplicationRuntime', () => {
     it('renders dynamic route parameters', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/pages.json')) return jsonResponse([page('issue', '/issues/:issueId')]);
+            if (url.endsWith('/views.json')) return jsonResponse([view('issue', '/issues/:issueId')]);
             return xmlResponse('<longlink />');
         });
 
@@ -153,7 +153,7 @@ describe('ApplicationRuntime', () => {
     it('rejects unmatched routes', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/pages.json')) return jsonResponse([page('issue', '/issues/:issueId')]);
+            if (url.endsWith('/views.json')) return jsonResponse([view('issue', '/issues/:issueId')]);
             return xmlResponse('<longlink />');
         });
 
@@ -167,7 +167,7 @@ describe('ApplicationRuntime', () => {
     it('navigates same-origin XML destinations through the client router', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home')]);
+            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
             return xmlResponse('<longlink />');
         });
         navigation.destination = '/next';
@@ -190,7 +190,7 @@ describe('ApplicationRuntime', () => {
         locationAssignDescriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
         Object.defineProperty(window.location, 'assign', { configurable: true, value: assign });
         stubFetch((url) => {
-            if (url.endsWith('/pages.json')) return jsonResponse([page('home', '/home')]);
+            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
             return xmlResponse('<longlink />');
         });
         navigation.destination = 'https://example.com/next';
@@ -246,8 +246,8 @@ function Location({ tabs }: { tabs: string }) {
     return <output data-path={`${location.pathname}${location.search}${location.hash}`} data-tabs={tabs} />;
 }
 
-/** Creates a minimal manifest page. */
-function page(tab: string, route: string, path = `${tab}.xml`) {
+/** Creates a minimal manifest view. */
+function view(tab: string, route: string, path = `${tab}.xml`) {
     return { name: tab, path, route, tab };
 }
 

@@ -11,7 +11,7 @@ You are working on a LongLink application:
 ```
 ├── src/
 │   ├── models/       # SQLModel application tables
-│   ├── pages/        # LongLink pages
+│   ├── views/        # LongLink application views
 │   ├── routes/       # API routes
 │   ├── schemas/      # Pydantic schemas
 │   ├── services/     # Application services
@@ -21,9 +21,9 @@ You are working on a LongLink application:
 └── main.py           # Application entry pointn
 ```
 
-## XML pages
+## XML views
 
-- LongLink pages use XML, not HTML.
+- LongLink application views use XML, not HTML.
 - Run `longlink docs` to discover the supported XML components.
 - Run `longlink docs <component>` before using a component to inspect its attributes, children, and examples.
 - Do not invent XML elements or attributes that are absent from the component documentation.

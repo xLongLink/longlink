@@ -37,9 +37,9 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     The SDK adds the parts that connect an Application to LongLink when you need them. It can provide
                     database and storage access, identify the signed-in user, package the Application for deployment,
-                    and expose XML pages to the LongLink control plane. XML pages describe an Application interface in a
+                    and expose XML views to the LongLink control plane. XML views describe an Application interface in a
                     structured way, so the Platform can display it consistently while the Application continues to own
-                    the information and actions behind each page.
+                    the information and actions behind each view.
                 </Text>
                 <Stack direction="horizontal" gap={8} align="center" justify="center" paddingBlock={4} width="100%">
                     <Stack hAlign="end" width="calc((100% - (var(--spacing-6) * 2)) / 3)">
@@ -82,7 +82,7 @@ export default function DocsArticleRoute() {
                 <Text as="p">It creates an Application scaffold with everything you need to get started.</Text>
                 <CodeBlock
                     code={
-                        '├── src/                  # Application source code\n│   ├── models/           # SQLModel application tables\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Application services\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
+                        '├── src/                  # Application source code\n│   ├── models/           # SQLModel application tables\n│   ├── views/            # XML view definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Application services\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
                     }
                     language="plaintext"
                 />

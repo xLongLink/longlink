@@ -45,7 +45,7 @@ function SummaryCard({
     path?: string;
 }) {
     const component = componentDocumentation.find((candidate) => candidate.name === name);
-    const destination = component ? `/docs/sdk/pages/${component.slug}` : path;
+    const destination = component ? `/docs/sdk/views/${component.slug}` : path;
 
     if (destination === undefined) {
         throw new Error(`Missing documentation route for ${name}`);
@@ -74,11 +74,11 @@ function SummaryCard({
 
 const metadata = {
     seo: {
-        title: 'Pages | LongLink Documentation',
-        description: 'Build application interfaces with LongLink XML pages and components.',
+        title: 'Views | LongLink Documentation',
+        description: 'Build application interfaces with LongLink XML views and components.',
     },
     toc: [
-        { id: 'pages', label: 'Pages', level: 1 },
+        { id: 'views', label: 'Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
         { id: 'action', label: 'Action', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
@@ -86,23 +86,23 @@ const metadata = {
         { id: 'layout', label: 'Layout', level: 2 },
     ],
     lastUpdated: '2026-07-21',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Pages.tsx',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Views.tsx',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={metadata}>
             <Stack gap={5}>
-                <Heading id="pages" level={1}>
-                    Pages
+                <Heading id="views" level={1}>
+                    Views
                 </Heading>
                 <Text as="p">
-                    Pages define the XML UI returned by SDK page handlers and are based on{' '}
+                    An Application View is an XML interface definition associated with a browser route and rendered
+                    inside the LongLink Application shell. Store views in <Code>src/views</Code> and compose them from{' '}
                     <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
                         Astryx
                     </Link>
-                    . Use this page as the component map for LongLink Applications: start with LongLink state elements,
-                    then compose the screen with supported XML components.
+                    components and LongLink state elements. Use this page as the component map.
                 </Text>
                 <CodeBlock code={'<longlink>\n  Welcome\n</longlink>'} language="xml" />
                 <Stack gap={3}>
@@ -110,22 +110,22 @@ export default function DocsArticleRoute() {
                         Runtime
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Expressions" path="/docs/sdk/pages/expressions">
+                        <SummaryCard name="Expressions" path="/docs/sdk/views/expressions">
                             <Code>{'${order.total > 0}'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Bindings" path="/docs/sdk/pages/bindings">
+                        <SummaryCard name="Bindings" path="/docs/sdk/views/bindings">
                             <Code>{'value="$form.name"'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="State" path="/docs/sdk/pages/state">
+                        <SummaryCard name="State" path="/docs/sdk/views/state">
                             <Code>{'<State />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Query" path="/docs/sdk/pages/query">
+                        <SummaryCard name="Query" path="/docs/sdk/views/query">
                             <Code>{'<Query />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Action" path="/docs/sdk/pages/action">
+                        <SummaryCard name="Action" path="/docs/sdk/views/action">
                             <Code>{'<Action />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="For" path="/docs/sdk/pages/for">
+                        <SummaryCard name="For" path="/docs/sdk/views/for">
                             <Code>{'<For />'}</Code>
                         </SummaryCard>
                     </Grid>
@@ -143,7 +143,7 @@ export default function DocsArticleRoute() {
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Link">
-                            <Link href="/docs/sdk/pages/link" type="inherit" hasUnderline>
+                            <Link href="/docs/sdk/views/link" type="inherit" hasUnderline>
                                 Docs
                             </Link>
                         </SummaryCard>

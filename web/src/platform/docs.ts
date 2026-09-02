@@ -41,8 +41,8 @@ export const documentationPaths = [
     '/docs/sdk/routes',
     '/docs/sdk/storage',
     '/docs/sdk/database',
-    '/docs/sdk/pages',
-    ...documentationComponentSlugs.map((slug) => `/docs/sdk/pages/${slug}`),
+    '/docs/sdk/views',
+    ...documentationComponentSlugs.map((slug) => `/docs/sdk/views/${slug}`),
     '/docs/sdk/testing',
     '/docs/sdk/building',
 ];

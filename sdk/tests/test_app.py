@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 def create_runtime_client() -> TestClient:
     """Build an SDK runtime client from the current generated Application source tree."""
 
-    # Register the generated page catalog before serving requests.
+    # Register the generated view catalog before serving requests.
     app = FastAPI()
     LongLink(app)
     return TestClient(app)
@@ -50,12 +50,12 @@ def test_longlink_app_serves_runtime_routes_without_embedded_frontend(monkeypatc
     client = TestClient(app)
 
     # Act
-    pages_response = client.get("/pages.json")
+    views_response = client.get("/views.json")
     frontend_response = client.get("/", headers={"accept": "text/html"})
 
     # Assert
-    assert pages_response.status_code == 200
-    assert pages_response.json() == []
+    assert views_response.status_code == 200
+    assert views_response.json() == []
     assert frontend_response.status_code == 404
 
 
@@ -71,14 +71,14 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
         LongLink(FastAPI())
 
 
-def test_startup_rejects_a_missing_application_pages_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    """Require the generated Application page directory during startup."""
+def test_startup_rejects_a_missing_application_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    """Require the generated Application view directory during startup."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)
 
     # Act and assert
-    with pytest.raises(ValueError, match=f"Application source directory is required: {tmp_path / 'src' / 'pages'}"):
+    with pytest.raises(ValueError, match=f"Application source directory is required: {tmp_path / 'src' / 'views'}"):
         LongLink(FastAPI())
 
 
@@ -133,105 +133,105 @@ def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch)
         ),
     ],
 )
-def test_xml_pages_are_registered_from_default_pages_directory(
+def test_xml_views_are_registered_from_default_views_directory(
     application_source: Path,
     relative_path: str,
     content: str,
     expected_metadata: dict[str, str],
 ) -> None:
-    """Expose root, nested, and dynamic XML pages with derived metadata."""
+    """Expose root, nested, and dynamic XML views with derived metadata."""
 
-    # Build the default page tree.
-    page_path = application_source / "pages" / relative_path
-    page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text(content, encoding="utf-8")
+    # Build the default view tree.
+    view_path = application_source / "views" / relative_path
+    view_path.parent.mkdir(parents=True, exist_ok=True)
+    view_path.write_text(content, encoding="utf-8")
 
-    # Start LongLink and request the registered page and page catalog.
+    # Start LongLink and request the registered view and view catalog.
     client = create_runtime_client()
-    response = client.get(f"/pages/{relative_path.removesuffix('.xml')}")
-    pages_response = client.get("/pages.json")
+    response = client.get(f"/views/{relative_path.removesuffix('.xml')}")
+    views_response = client.get("/views.json")
 
-    # Verify content and metadata came from the default page tree.
+    # Verify content and metadata came from the default view tree.
     assert response.status_code == 200
     assert "application/xml" in response.headers["content-type"]
     assert response.text == content
-    assert pages_response.json() == [{"path": f"pages/{relative_path.removesuffix('.xml')}", **expected_metadata}]
+    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.xml')}", **expected_metadata}]
 
 
-def test_xml_page_catalog_omits_blank_display_metadata(application_source: Path) -> None:
-    """Normalize whitespace-only XML page metadata out of the public catalog."""
+def test_xml_view_catalog_omits_blank_display_metadata(application_source: Path) -> None:
+    """Normalize whitespace-only XML view metadata out of the public catalog."""
 
     # Arrange
-    (application_source / "pages" / "dashboard.xml").write_text(
+    (application_source / "views" / "dashboard.xml").write_text(
         '<longlink name="  " icon="\t">Dashboard</longlink>',
         encoding="utf-8",
     )
     client = create_runtime_client()
 
     # Act
-    response = client.get("/pages.json")
+    response = client.get("/views.json")
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [{"path": "pages/dashboard", "route": "/dashboard", "tab": "dashboard"}]
+    assert response.json() == [{"path": "views/dashboard", "route": "/dashboard", "tab": "dashboard"}]
 
 
-def test_xml_page_catalog_uses_deterministic_path_order(application_source: Path) -> None:
-    """Use lexical page paths for catalog output."""
+def test_xml_view_catalog_uses_deterministic_path_order(application_source: Path) -> None:
+    """Use lexical view paths for catalog output."""
 
     # Arrange
-    nested_directory = application_source / "pages" / "admin"
+    nested_directory = application_source / "views" / "admin"
     nested_directory.mkdir()
     (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
-    (application_source / "pages" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
+    (application_source / "views" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
-    catalog_response = client.get("/pages.json")
+    catalog_response = client.get("/views.json")
     root_response = client.get("/", follow_redirects=False)
 
     # Assert
     assert catalog_response.status_code == 200
     assert catalog_response.json() == [
-        {"path": "pages/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
-        {"path": "pages/zebra", "route": "/zebra", "tab": "zebra"},
+        {"path": "views/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
+        {"path": "views/zebra", "route": "/zebra", "tab": "zebra"},
     ]
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/admin/alpha"
 
 
-def test_invalid_xml_page_fails_during_registration(application_source: Path) -> None:
-    """Validate SDK XML pages against the bundled schema before registering routes."""
+def test_invalid_xml_view_fails_during_registration(application_source: Path) -> None:
+    """Validate SDK XML views against the bundled schema before registering routes."""
 
-    # Create a valid page alongside an invalid catalog entry.
-    (application_source / "pages" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
-    (application_source / "pages" / "broken.xml").write_text("<unknown />", encoding="utf-8")
+    # Create a valid view alongside an invalid catalog entry.
+    (application_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
+    (application_source / "views" / "broken.xml").write_text("<unknown />", encoding="utf-8")
     app = FastAPI()
 
-    # Reject the complete catalog before registering valid page endpoints.
+    # Reject the complete catalog before registering valid view endpoints.
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink(app)
 
     # Assert
-    assert not any(getattr(route, "path", None) == "/pages/valid" for route in app.router.routes)
+    assert not any(getattr(route, "path", None) == "/views/valid" for route in app.router.routes)
 
 
 @pytest.mark.parametrize(
     ("route", "expected_dashboard_routes"),
     [
-        pytest.param("/pages/dashboard", 1, id="static-route"),
-        pytest.param("/pages/{page}", 0, id="dynamic-route"),
+        pytest.param("/views/dashboard", 1, id="static-route"),
+        pytest.param("/views/{view}", 0, id="dynamic-route"),
     ],
 )
-def test_application_routes_colliding_with_page_endpoints_are_rejected(
+def test_application_routes_colliding_with_view_endpoints_are_rejected(
     application_source: Path,
     route: str,
     expected_dashboard_routes: int,
 ) -> None:
-    """Reject page endpoints that would overlap an Application-owned route."""
+    """Reject view endpoints that would overlap an Application-owned route."""
 
-    # Create a page whose endpoint is already owned by the Application.
-    (application_source / "pages" / "dashboard.xml").write_text(
+    # Create a view whose endpoint is already owned by the Application.
+    (application_source / "views" / "dashboard.xml").write_text(
         "<longlink>Dashboard</longlink>",
         encoding="utf-8",
     )
@@ -247,12 +247,12 @@ def test_application_routes_colliding_with_page_endpoints_are_rejected(
     with pytest.raises(ValueError, match="overlaps an Application route"):
         LongLink(app)
 
-    # Assert LongLink did not register the colliding page endpoint.
-    assert sum(getattr(item, "path", None) == "/pages/dashboard" for item in app.router.routes) == expected_dashboard_routes
+    # Assert LongLink did not register the colliding view endpoint.
+    assert sum(getattr(item, "path", None) == "/views/dashboard" for item in app.router.routes) == expected_dashboard_routes
 
 
 @pytest.mark.parametrize(
-    ("first_page", "second_page", "message"),
+    ("first_view", "second_view", "message"),
     [
         pytest.param(
             "issues/[id].xml",
@@ -265,15 +265,15 @@ def test_application_routes_colliding_with_page_endpoints_are_rejected(
 )
 def test_duplicate_browser_routes_are_rejected(
     application_source: Path,
-    first_page: str,
-    second_page: str,
+    first_view: str,
+    second_view: str,
     message: str,
 ) -> None:
-    """Reject distinct page files that resolve to one browser route."""
+    """Reject distinct view files that resolve to one browser route."""
 
     # Arrange
-    first_path = application_source / "pages" / first_page
-    second_path = application_source / "pages" / second_page
+    first_path = application_source / "views" / first_view
+    second_path = application_source / "views" / second_view
     first_path.parent.mkdir(parents=True, exist_ok=True)
     second_path.parent.mkdir(parents=True, exist_ok=True)
     first_path.write_text("<longlink>First</longlink>", encoding="utf-8")
@@ -286,4 +286,4 @@ def test_duplicate_browser_routes_are_rejected(
         LongLink(app)
 
     # Assert
-    assert not any(getattr(route, "path", "").startswith("/pages/") for route in app.router.routes)
+    assert not any(getattr(route, "path", "").startswith("/views/") for route in app.router.routes)

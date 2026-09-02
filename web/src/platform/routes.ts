@@ -19,11 +19,11 @@ export default [
                 route('routes', './routes/docs/sdk/Routes.tsx'),
                 route('storage', './routes/docs/sdk/Storage.tsx'),
                 route('testing', './routes/docs/sdk/Testing.tsx'),
-                ...prefix('pages', [
-                    index('./routes/docs/sdk/Pages.tsx'),
-                    route('bindings', './routes/docs/sdk/pages/Bindings.tsx'),
-                    route('expressions', './routes/docs/sdk/pages/Expressions.tsx'),
-                    route(':component', './routes/docs/sdk/pages/Component.tsx'),
+                ...prefix('views', [
+                    index('./routes/docs/sdk/Views.tsx'),
+                    route('bindings', './routes/docs/sdk/views/Bindings.tsx'),
+                    route('expressions', './routes/docs/sdk/views/Expressions.tsx'),
+                    route(':component', './routes/docs/sdk/views/Component.tsx'),
                 ]),
             ]),
             route('*', '../components/layouts/NotFound.tsx', { id: 'docs-not-found' }),

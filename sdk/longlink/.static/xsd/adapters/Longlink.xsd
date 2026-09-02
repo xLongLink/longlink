@@ -2,7 +2,7 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="LonglinkType" mixed="true">
     <xsd:annotation>
-      <xsd:documentation>Contains one LongLink XML page. Page name and icon are metadata.</xsd:documentation>
+      <xsd:documentation>Contains one LongLink XML application view. View name and icon are metadata.</xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
@@ -12,7 +12,7 @@
   </xsd:complexType>
   <xsd:element name="longlink" type="LonglinkType">
     <xsd:annotation>
-      <xsd:documentation>Defines a LongLink XML page.</xsd:documentation>
+      <xsd:documentation>Defines a LongLink XML application view.</xsd:documentation>
     </xsd:annotation>
   </xsd:element>
 </xsd:schema>

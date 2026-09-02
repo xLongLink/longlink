@@ -24,7 +24,7 @@ function isRoute(route: string): boolean {
         });
 }
 
-const pageSchema = z.object({
+const viewSchema = z.object({
     tab: z.string().trim().min(1),
     path: z
         .string()
@@ -37,30 +37,30 @@ const pageSchema = z.object({
             } catch {
                 return false;
             }
-        }, 'Page path must be app-relative'),
+        }, 'View path must be app-relative'),
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
     route: z.string().trim().min(1).refine(isRoute, 'Route must be a normalized application path'),
 });
 
-export const pagesSchema = z.array(pageSchema).superRefine((pages, context) => {
+export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const routes = new Set<string>();
     const staticTabs = new Set<string>();
 
-    for (const [index, page] of pages.entries()) {
-        // Require each route to resolve one unambiguous application page.
-        if (routes.has(page.route)) {
+    for (const [index, view] of views.entries()) {
+        // Require each route to resolve one unambiguous application view.
+        if (routes.has(view.route)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }
-        routes.add(page.route);
+        routes.add(view.route);
 
-        // Dynamic detail routes may share the navigation tab of their static list page.
-        const isDynamicRoute = page.route.includes('/:');
+        // Dynamic detail routes may share the navigation tab of their static list view.
+        const isDynamicRoute = view.route.includes('/:');
         if (!isDynamicRoute) {
-            if (staticTabs.has(page.tab)) {
-                context.addIssue({ code: 'custom', message: 'Static page tabs must be unique', path: [index, 'tab'] });
+            if (staticTabs.has(view.tab)) {
+                context.addIssue({ code: 'custom', message: 'Static view tabs must be unique', path: [index, 'tab'] });
             }
-            staticTabs.add(page.tab);
+            staticTabs.add(view.tab);
         }
     }
 });

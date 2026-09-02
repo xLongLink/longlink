@@ -4,7 +4,7 @@ from pathlib import Path
 from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
-from longlink.pages import PageDefinition, page_stem_route
+from longlink.views import ViewDefinition, view_stem_route
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.context import install_context_middleware
@@ -18,8 +18,8 @@ from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
-def render_page(content: str) -> Response:
-    """Return one static XML page."""
+def render_view(content: str) -> Response:
+    """Return one static XML view."""
 
     return Response(content, media_type="application/xml")
 
@@ -28,7 +28,7 @@ def render_page(content: str) -> Response:
 class RuntimeState:
     """Hold mutable SDK state for one FastAPI application."""
 
-    pages: list[PageDefinition]
+    views: list[ViewDefinition]
     storage: AbstractFileSystem
     database: Database
 
@@ -39,7 +39,7 @@ class LongLink:
     def __init__(self, app: FastAPI) -> None:
         """Install runtime services, routes, and the frontend fallback into an Application app."""
 
-        # Preserve Application routes so page collisions are rejected during discovery.
+        # Preserve Application routes so view collisions are rejected during discovery.
         application_routes = list(app.router.routes)
 
         # Resolve the runtime environment and initialize application storage.
@@ -65,88 +65,88 @@ class LongLink:
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
-        # Applications provide XML pages in the generated source layout.
-        pages_directory = Path.cwd() / "src" / "pages"
-        if not pages_directory.is_dir():
-            raise ValueError(f"Application source directory is required: {pages_directory}")
+        # Applications provide XML views in the generated source layout.
+        views_directory = Path.cwd() / "src" / "views"
+        if not views_directory.is_dir():
+            raise ValueError(f"Application source directory is required: {views_directory}")
 
         # Validate the complete catalog before registering its routes and metadata.
-        discovered_pages = self._discover_pages(pages_directory, application_routes)
-        app.state.longlink = RuntimeState(pages=[definition for definition, _ in discovered_pages], storage=storage, database=database)
+        discovered_views = self._discover_views(views_directory, application_routes)
+        app.state.longlink = RuntimeState(views=[definition for definition, _ in discovered_views], storage=storage, database=database)
         app.router.on_shutdown.append(database.dispose)
 
-        # Pages are registered once before the frontend mount is installed.
-        for definition, content in discovered_pages:
+        # Views are registered once before the frontend mount is installed.
+        for definition, content in discovered_views:
             app.add_api_route(
                 f"/{definition.path}",
-                partial(render_page, content),
+                partial(render_view, content),
                 methods=["GET"],
                 include_in_schema=False,
             )
 
-        # Make the browser root URL resolve to the first navigable application page.
-        first_tab_page = next(
-            (definition for definition, _ in discovered_pages if definition.route != "/" and ":" not in definition.route),
+        # Make the browser root URL resolve to the first navigable application view.
+        first_tab_view = next(
+            (definition for definition, _ in discovered_views if definition.route != "/" and ":" not in definition.route),
             None,
         )
-        if first_tab_page is not None:
+        if first_tab_view is not None:
 
             @app.get("/", include_in_schema=False)
             def redirect_root() -> RedirectResponse:
                 """Redirect the application root to its first static tab."""
 
-                return RedirectResponse(first_tab_page.route)
+                return RedirectResponse(first_tab_view.route)
 
         # Serve the embedded frontend last so Application routes retain precedence.
         if (ROOT / ".static" / "web").exists():
             app.frontend("/", directory=ROOT / ".static" / "web")
 
     @staticmethod
-    def _discover_pages(pages_directory: Path, application_routes: list[BaseRoute]) -> list[tuple[PageDefinition, str]]:
-        """Discover and validate all XML pages before registering any route."""
+    def _discover_views(views_directory: Path, application_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:
+        """Discover and validate all XML views before registering any route."""
 
         registered_route_keys: set[str] = set()
-        discovered_pages: list[tuple[PageDefinition, str]] = []
+        discovered_views: list[tuple[ViewDefinition, str]] = []
 
-        # Discover XML page files in deterministic order.
-        for page_file in sorted(pages_directory.rglob("*.xml")):
-            path_without_suffix = page_file.relative_to(pages_directory).as_posix().removesuffix(".xml")
+        # Discover XML view files in deterministic order.
+        for view_file in sorted(views_directory.rglob("*.xml")):
+            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".xml")
 
-            page_path = f"pages/{path_without_suffix}"
-            registered_path = f"/{page_path}"
+            view_path = f"views/{path_without_suffix}"
+            registered_path = f"/{view_path}"
 
-            # Validate XML pages and extract optional display metadata.
-            content = page_file.read_text(encoding="utf-8")
-            page_root = validate_xml(content)
-            page_name = page_root.get("name", "").strip() or None
-            page_icon = page_root.get("icon", "").strip() or None
+            # Validate XML views and extract optional display metadata.
+            content = view_file.read_text(encoding="utf-8")
+            view_root = validate_xml(content)
+            view_name = view_root.get("name", "").strip() or None
+            view_icon = view_root.get("icon", "").strip() or None
 
-            page_route = page_stem_route(path_without_suffix)
-            relative_route = page_route.removeprefix("/")
+            view_route = view_stem_route(path_without_suffix)
+            relative_route = view_route.removeprefix("/")
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
             tab = relative_route.split("/:", 1)[0] or "index"
 
-            # Page endpoints and browser routes must remain unique across all directories.
+            # View endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:
-                raise ValueError(f"Browser route '{page_route}' is already registered")
+                raise ValueError(f"Browser route '{view_route}' is already registered")
 
-            # Application routes take precedence, so ambiguous page endpoints are rejected.
+            # Application routes take precedence, so ambiguous view endpoints are rejected.
             scope = {"type": "http", "method": "GET", "path": registered_path}
             if any(application_route.matches(scope)[0] is Match.FULL for application_route in application_routes):
-                raise ValueError(f"Page endpoint '{registered_path}' overlaps an Application route")
+                raise ValueError(f"View endpoint '{registered_path}' overlaps an Application route")
 
-            discovered_pages.append(
+            discovered_views.append(
                 (
-                    PageDefinition(
-                        path=page_path,
-                        route=page_route,
+                    ViewDefinition(
+                        path=view_path,
+                        route=view_route,
                         tab=tab,
-                        name=page_name,
-                        icon=page_icon,
+                        name=view_name,
+                        icon=view_icon,
                     ),
                     content,
                 )
             )
             registered_route_keys.add(route_key)
 
-        return discovered_pages
+        return discovered_views

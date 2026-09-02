@@ -8,7 +8,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Testing | LongLink Documentation',
-        description: 'Test LongLink applications and their XML pages.',
+        description: 'Test LongLink applications and their XML views.',
     },
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },

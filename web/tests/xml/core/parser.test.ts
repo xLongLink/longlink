@@ -16,7 +16,7 @@ describe('parseXML', () => {
         ]);
     });
 
-    it('parses page structure', () => {
+    it('parses view structure', () => {
         expect(
             parseXML(
                 `<?xml version="1.0"?>
@@ -69,7 +69,7 @@ describe('parseXML', () => {
     });
 
     it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {
-        expect(() => parseDocument(xml)).toThrow('XML pages must contain exactly one longlink root');
+        expect(() => parseDocument(xml)).toThrow('XML views must contain exactly one longlink root');
     });
 
     it.each([

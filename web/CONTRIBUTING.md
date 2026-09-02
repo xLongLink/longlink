@@ -55,7 +55,7 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 
 ## XML
 
-- XML pages are parsed by `src/xml/core/parser.ts` into an AST.
+- XML views are parsed by `src/xml/core/parser.ts` into an AST.
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
 - Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.

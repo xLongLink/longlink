@@ -152,7 +152,7 @@ function TermsContent() {
                     "Organization" means a workspace or tenant boundary in LongLink. "Connected Infrastructure" means
                     compute, database, storage, identity, registry, routing, DNS, monitoring, email, or other
                     infrastructure connected to or managed through LongLink. "Customer Content" means data, code,
-                    configuration, environment values, credentials, files, objects, database records, logs, XML page
+                    configuration, environment values, credentials, files, objects, database records, logs, XML view
                     definitions, API responses, and other material that you or your users upload, create, connect,
                     deploy, store, proxy, or process through the Service.
                 </Text>

@@ -43,7 +43,7 @@ export default function DocsArticleRoute() {
                         Adapt
                     </Text>{' '}
                     an existing solution when the underlying process is familiar but the details differ. Teams can fork
-                    its Python code and adjust the workflows, rules, data model, pages, and integrations to match their
+                    its Python code and adjust the workflows, rules, data model, views, and integrations to match their
                     own requirements.
                 </Text>
                 <Text as="p">
