@@ -11,9 +11,8 @@ import { TeamSlide } from '@/components/slides/Team';
 import { PathsSlide } from '@/components/slides/Paths';
 import { useLocation, useNavigate } from 'react-router';
 import { ProblemSlide } from '@/components/slides/Problem';
-import { CompetitorsSlide } from '@/components/slides/Competitors';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, GitFork, Swords, Target, TriangleAlert, Users, Wrench } from 'lucide-react';
+import { BookOpen, GitFork, Target, TriangleAlert, Users, Wrench } from 'lucide-react';
 
 const slides = [
     { component: PathsSlide, href: '/ppt?slide=paths', icon: GitFork, id: 'paths', label: 'Paths' },
@@ -25,13 +24,6 @@ const slides = [
         label: 'Introduction',
     },
     { component: ProblemSlide, href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
-    {
-        component: CompetitorsSlide,
-        href: '/ppt?slide=competitors',
-        icon: Swords,
-        id: 'competitors',
-        label: 'Competitors',
-    },
     { component: GoalSlide, href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
     { component: HowSlide, href: '/ppt?slide=how', icon: Wrench, id: 'how', label: 'How' },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
@@ -157,7 +149,7 @@ function PresentationSlide({
     );
 }
 
-/** Renders a nine-slide dashboard presentation. */
+/** Renders the dashboard presentation. */
 export default function Ppt() {
     const { search } = useLocation();
     const navigate = useNavigate();
