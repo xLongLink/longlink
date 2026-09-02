@@ -95,7 +95,7 @@ function IntegrationScale() {
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Each market has different regulations, data, and workflows.
+                    With different regulations, data, and workflows,
                     <br />
                     Each requires a unique solution.
                 </Text>
@@ -257,12 +257,12 @@ export default function Home() {
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
-                        description="Build complete applications in code using your favorite developer tools."
+                        description="Build complete solutions as code using your favorite developer tools."
                         icon={Code2}
                         title="Build"
                     />
                     <CapabilityCard
-                        description="Run applications with authentication, permissions, deployment, storage, routing, and logging built in."
+                        description="We manage authentication, permissions, deployment, storage, routing, and logging."
                         icon={ServerCog}
                         title="Operate"
                     />
@@ -274,12 +274,12 @@ export default function Home() {
                         title="Keep it simple"
                     />
                     <CapabilityCard
-                        description="Keep compliance, accountability, and a solution that fits your needs."
+                        description="Compliance, accountability and a solution that fit the needs."
                         icon={ShieldCheck}
                         title="Own the process"
                     />
                     <CapabilityCard
-                        description="Keep a clear distinction between machine tasks and human tasks."
+                        description="Clear distinction between a machine and a human task."
                         icon={Workflow}
                         title="Separate responsibilities"
                     />

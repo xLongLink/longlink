@@ -1,6 +1,7 @@
 # AGENTS.md
 
 You are working on a LongLink application:
+
 - Application models and migrations own only the application schema.
 - The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
 - Use `longlink.database.base.AuditTable` for application tables.
