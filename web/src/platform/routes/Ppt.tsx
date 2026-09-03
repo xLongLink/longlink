@@ -8,7 +8,7 @@ import Platform from '@/platform/layouts/Platform';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
 import { TargetSlide } from '@/components/slides/Target';
-import { ProblemSlide } from '@/components/slides/Problem';
+import { PlatformSlide } from '@/components/slides/Platform';
 import { PrinciplesSlide } from '@/components/slides/Principles';
 import { IntroductionSlide } from '@/components/slides/Introduction';
 import { Blocks, BookOpen, Network, Target, Users } from 'lucide-react';
@@ -36,11 +36,11 @@ const slides = [
         label: 'Principles',
     },
     {
-        component: ProblemSlide,
-        href: '/ppt?slide=problem',
+        component: PlatformSlide,
+        href: '/ppt?slide=platform',
         icon: Network,
-        id: 'problem',
-        label: 'Problem',
+        id: 'platform',
+        label: 'Platform',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;

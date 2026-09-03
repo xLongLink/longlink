@@ -6,6 +6,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
@@ -330,6 +331,36 @@ export default function Home() {
                             title="Create"
                         />
                     </Grid>
+                </Stack>
+            </Section>
+            <Section className="relative z-20 bg-body" padding={6} paddingBlock={10} variant="transparent">
+                <Stack
+                    className="mx-auto text-center"
+                    gap={6}
+                    hAlign="center"
+                    maxWidth={1000}
+                    paddingBlock={8}
+                    width="100%"
+                >
+                    <Text aria-hidden="true" className="text-xl leading-none">
+                        🇨🇭
+                    </Text>
+                    <Stack gap={2} hAlign="center">
+                        <Heading level={2} textWrap="balance" type="display-2" justify="center">
+                            Built and deployed in Switzerland.
+                        </Heading>
+                        <Text as="p" color="secondary">
+                            And it's open source.
+                        </Text>
+                    </Stack>
+                    <Button
+                        endContent={<ArrowRight aria-hidden="true" size={16} />}
+                        href="https://github.com/xLongLink/longlink"
+                        label="Leave a star on GitHub"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                        variant="primary"
+                    />
                 </Stack>
             </Section>
         </>

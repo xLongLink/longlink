@@ -1,8 +1,8 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 
-/** Renders the problem slide. */
-export function ProblemSlide() {
+/** Renders the LongLink platform slide. */
+export function PlatformSlide() {
     return (
         <Stack align="center" className="relative" height="100%" justify="center" width="100%">
             <img
@@ -17,7 +17,7 @@ export function ProblemSlide() {
                 type="large"
                 weight="semibold"
             >
-                Is SaaS dead?
+                What is LongLink?
             </Text>
         </Stack>
     );
