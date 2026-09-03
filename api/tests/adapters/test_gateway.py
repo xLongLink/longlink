@@ -82,7 +82,7 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
     # Cancellation must propagate after the owning client has closed.
     with pytest.raises(asyncio.CancelledError):
         await client.request(
-            application_id=uuid4(),
+            solution_id=uuid4(),
             user_id=uuid4(),
             method="GET",
             path="status",
@@ -97,7 +97,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
     """Return the streamed gateway response until its caller finishes it."""
 
     # Arrange
-    application_id = uuid4()
+    solution_id = uuid4()
     user_id = uuid4()
     captured: dict[str, object] = {}
 
@@ -145,7 +145,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
 
     # Act
     response = await client.request(
-        application_id=application_id,
+        solution_id=solution_id,
         user_id=user_id,
         method="POST",
         path="health",
@@ -164,7 +164,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         "url": "https://gateway.example/health?verbose=true",
         "content": request_content,
         "headers": {
-            "x-longlink-application-id": str(application_id),
+            "x-longlink-solution-id": str(solution_id),
             "x-longlink-identity": "identity-token",
             "content-type": "application/json",
         },

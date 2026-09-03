@@ -15,7 +15,7 @@ _current_identity: ContextVar[UUID | None] = ContextVar("current_identity", defa
 
 @dataclass(frozen=True, slots=True)
 class Context:
-    """Hold Platform data and services for one Application request."""
+    """Hold Platform data and services for one Solution request."""
 
     user: Audit | None
     storage: AbstractFileSystem
@@ -25,7 +25,7 @@ class Context:
 async def data(request: Request) -> AsyncGenerator[Context, None]:
     """Yield the request context for a FastAPI dependency."""
 
-    # Open one Application-owned database session and resolve the authenticated shared user for this request.
+    # Open one Solution-owned database session and resolve the authenticated shared user for this request.
     async with request.app.state.longlink.database.session() as database:
         user_id = request.state.longlink_identity
         user = await database.get(Audit, user_id) if user_id is not None else None
@@ -37,9 +37,9 @@ def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
 
     @app.middleware("http")
     async def context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-        """Attach request identity before application routes run."""
+        """Attach request identity before Solution routes run."""
 
-        # Verify the Platform-signed user assertion before making it available to application code.
+        # Verify the Platform-signed user assertion before making it available to Solution code.
         try:
             user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
         except jwt.PyJWTError:

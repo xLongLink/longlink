@@ -9,7 +9,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 const metadata = {
     seo: {
         title: 'Routes | LongLink Documentation',
-        description: 'Define API routes in a LongLink application.',
+        description: 'Define API routes in a LongLink project.',
     },
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
@@ -27,12 +27,12 @@ export default function DocsArticleRoute() {
                     Routes
                 </Heading>
                 <Text as="p">
-                    LongLink Applications use a pure{' '}
+                    LongLink projects use standard{' '}
                     <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
                         FastAPI
-                    </Link>{' '}
-                    implementation. Define routes with <Code>APIRouter</Code> and add them to the application as you
-                    would in any FastAPI project.
+                    </Link>
+                    . Define routes with <Code>APIRouter</Code> and add them to the application as you would in any
+                    FastAPI project.
                 </Text>
                 <Heading id="usage" level={2}>
                     Usage

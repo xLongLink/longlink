@@ -157,7 +157,7 @@ async function executeAction(
     }
 }
 
-/** Sends one configured app-relative request. */
+/** Sends one configured solution-relative request. */
 async function executeRequest(
     props: ASTProps,
     ctx: Scope,

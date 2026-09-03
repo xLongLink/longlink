@@ -130,7 +130,7 @@ local\:resources:
 	@printf "Local registry is ready.\n"
 
 
-# Initialize local infrastructure and build the local sample Application image.
+# Initialize local infrastructure and build the local sample Solution image.
 up: local\:resources
 	$(MAKE) local:image
 
@@ -160,7 +160,7 @@ api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
-# Build and push the local sample Application image into the development registry.
+# Build and push the local sample Solution image into the development registry.
 local\:image: sdk\:build
 	@docker buildx inspect "$(DEV_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_BUILDER)" --driver docker-container
 	rm -rf sdk/dev
@@ -169,7 +169,7 @@ local\:image: sdk\:build
 	cd sdk/dev && uv run longlink build --builder "$(DEV_BUILDER)" --registry localhost:15000 --push --tag dev
 
 
-# Seed local infrastructure and create the local example Organization and Application.
+# Seed local infrastructure and create the local example Organization and Solution.
 seed:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release

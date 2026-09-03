@@ -10,7 +10,7 @@ Development tools
 ## k3d local cluster
 
 `make up` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, creates the k3d
-cluster, and builds the local sample Application image. Host-facing ports bind to loopback, while k3d reaches PostgreSQL
+cluster, and builds the local sample Solution image. Host-facing ports bind to loopback, while k3d reaches PostgreSQL
 and the registry through the private bridge gateway. They are not exposed to the local network.
 
 ```bash
@@ -59,11 +59,11 @@ EXOSCALE_API_SECRET=replace-with-the-api-secret
 EXOSCALE_STORAGE_ENDPOINT_URL=https://sos-ch-gva-2.exo.io
 ```
 
-To test Organization and Application database provisioning against a remote PostgreSQL server instead of the local
+To test Organization and Solution database provisioning against a remote PostgreSQL server instead of the local
 service, set its administrator URL in the same ignored file:
 
 ```bash
-APPLICATION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=require
+SOLUTION_DATABASE_URL=postgresql://admin:secret@db.example.com:5432/postgres?sslmode=require
 ```
 
 The local Compose PostgreSQL service intentionally uses `sslmode=disable`. Production managed PostgreSQL databases
@@ -100,7 +100,7 @@ make clean
 ```
 
 LongLink resolves the pulled tag through the registry and deploys its immutable digest.
-LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make clean` to remove those
+LongLink creates short-lived Exoscale buckets and scoped Solution IAM credentials. Run `make clean` to remove those
 resources before local Platform state is deleted. PostgreSQL remains local by default because it matches the production
 PostgreSQL contract without provisioning a remote database.
 

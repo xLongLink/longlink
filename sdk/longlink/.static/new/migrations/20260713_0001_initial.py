@@ -11,7 +11,7 @@ depends_on = None
 def upgrade() -> None:
     """Apply the initial item schema."""
 
-    # Create the Application-owned item table.
+    # Create the Solution-owned item table.
     op.create_table(
         "item",
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=True),
@@ -33,5 +33,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Remove the initial item schema."""
 
-    # Remove the Application-owned item table.
+    # Remove the Solution-owned item table.
     op.drop_table("item")

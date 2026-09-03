@@ -9,7 +9,7 @@ from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
-from src.models.resources import OrganizationApplicationSummary
+from src.models.resources import OrganizationSolutionSummary
 from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.models.pagination import Page, Pagination
@@ -79,14 +79,14 @@ async def get_organization(
     }
 
 
-@router.get("/organizations/{organization_id}/applications", response_model=list[OrganizationApplicationSummary])
-async def get_organization_applications(
+@router.get("/organizations/{organization_id}/solutions", response_model=list[OrganizationSolutionSummary])
+async def get_organization_solutions(
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return applications visible to the current organization member."""
+    """Return solutions visible to the current organization member."""
 
-    return await organizations.applications(session, membership.organization_id)
+    return await organizations.solutions(session, membership.organization_id)
 
 
 @router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)

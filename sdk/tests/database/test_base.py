@@ -77,7 +77,7 @@ class SchemaEngine:
         self.disposed = True
 
 
-@pytest.mark.parametrize("database_schema", ["application-schema", "public; DROP SCHEMA shared", '"application"'])
+@pytest.mark.parametrize("database_schema", ["solution-schema", "public; DROP SCHEMA shared", '"solution"'])
 def test_production_settings_reject_invalid_database_schema(database_schema: str) -> None:
     """Reject production database schemas that are not PostgreSQL identifiers."""
 
@@ -90,9 +90,9 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
         "DATABASE_PORT": 5432,
         "DATABASE_SCHEMA": database_schema,
         "DATABASE_PASSWORD": "secret",
-        "DATABASE_USERNAME": "app",
+        "DATABASE_USERNAME": "solution",
         "STORAGE_BUCKET": "organization",
-        "STORAGE_PREFIX": "applications/application",
+        "STORAGE_PREFIX": "solutions/solution",
         "STORAGE_REGION": "region",
         "STORAGE_PASSWORD": "secret",
         "STORAGE_USERNAME": "key",
@@ -121,7 +121,7 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     # Inspect the inherited columns and their foreign-key targets.
     table = database_base.database_metadata.tables[FeatureAuditItem.__tablename__]
     try:
-        # Verify audit fields and user relationships are available to Applications.
+        # Verify audit fields and user relationships are available to Solutions.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
         assert {
             column_name: {foreign_key.target_fullname for foreign_key in table.c[column_name].foreign_keys}
@@ -142,17 +142,17 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     [
         pytest.param("sqlite+aiosqlite:///:memory:", None, None, {}, id="sqlite"),
         pytest.param(
-            "postgresql+asyncpg://app:secret@db/longlink",
+            "postgresql+asyncpg://solution:secret@db/longlink",
             None,
             None,
             {"server_settings": {"timezone": "UTC"}},
             id="postgresql-defaults",
         ),
         pytest.param(
-            "postgresql+asyncpg://app:secret@db/longlink",
-            "application",
+            "postgresql+asyncpg://solution:secret@db/longlink",
+            "solution",
             "disable",
-            {"server_settings": {"timezone": "UTC", "search_path": '"application", shared'}, "ssl": "disable"},
+            {"server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}, "ssl": "disable"},
             id="postgresql-schema-and-ssl",
         ),
     ],
@@ -191,12 +191,12 @@ def test_connect_args_returns_driver_specific_settings(
                 DATABASE_HOST="db",
                 DATABASE_NAME="longlink",
                 DATABASE_PORT=5432,
-                DATABASE_SCHEMA="application",
+                DATABASE_SCHEMA="solution",
                 DATABASE_SSLMODE="require",
                 DATABASE_PASSWORD="secret",
-                DATABASE_USERNAME="app",
+                DATABASE_USERNAME="solution",
                 STORAGE_BUCKET="organization",
-                STORAGE_PREFIX="applications/application",
+                STORAGE_PREFIX="solutions/solution",
                 STORAGE_REGION="region",
                 STORAGE_PASSWORD="secret",
                 STORAGE_USERNAME="key",
@@ -204,7 +204,7 @@ def test_connect_args_returns_driver_specific_settings(
             ),
             URL.create(
                 "postgresql+asyncpg",
-                username="app",
+                username="solution",
                 password="secret",
                 host="db",
                 port=5432,
@@ -214,7 +214,7 @@ def test_connect_args_returns_driver_specific_settings(
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"ssl": "require", "server_settings": {"timezone": "UTC", "search_path": '"application", shared'}},
+                "connect_args": {"ssl": "require", "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
             },
             id="production",
         ),
@@ -334,14 +334,14 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
 async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify a non-SQLite connection before yielding an Application session."""
+    """Verify a non-SQLite connection before yielding a Solution session."""
 
     # Arrange
     class AvailableSession:
         """Provide the initialized session through an async context manager."""
 
         async def __aenter__(self) -> str:
-            """Return the observable application session value."""
+            """Return the observable Solution session value."""
 
             return "session"
 

@@ -21,7 +21,7 @@ async def postgres_adapter() -> AsyncIterator[tuple[Postgres, UUID, UUID]]:
 
     with postgres_container("longlink", "secret", "postgres") as container:
         organization_id = UUID("33333333-3333-3333-3333-333333333333")
-        application_id = UUID("44444444-4444-4444-4444-444444444444")
+        solution_id = UUID("44444444-4444-4444-4444-444444444444")
         adapter = Postgres(
             host=container.get_container_host_ip(),
             port=container.get_exposed_port(5432),
@@ -31,9 +31,9 @@ async def postgres_adapter() -> AsyncIterator[tuple[Postgres, UUID, UUID]]:
         )
 
         try:
-            yield adapter, organization_id, application_id
+            yield adapter, organization_id, solution_id
         finally:
-            await adapter.delete_schema(organization_id, application_id)
+            await adapter.delete_solution_schema(organization_id, solution_id)
             await adapter.delete_database(organization_id)
 
 
@@ -44,7 +44,7 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
     """Provision a runtime schema with stable credentials and read-only audit access."""
 
     # Arrange
-    adapter, organization_id, application_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_adapter
     active_user = Audit(
         id=UUID("11111111-1111-1111-1111-111111111111"),
         name="Owner User",
@@ -61,8 +61,8 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
     runtime_password = "stable-runtime-password"
 
     # Act
-    runtime_username = await adapter.schema(organization_id, application_id, runtime_password)
-    retried_runtime_username = await adapter.schema(organization_id, application_id, runtime_password)
+    runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
+    retried_runtime_username = await adapter.solution_schema(organization_id, solution_id, runtime_password)
     runtime_url = adapter.url(organization_id.hex).set(username=runtime_username, password=runtime_password)
     runtime_engine = create_async_engine(runtime_url)
     try:
@@ -124,15 +124,15 @@ async def test_postgres_adapter_removes_runtime_identity_and_tolerates_repeated_
     """Remove runtime roles and schemas without requiring the role to remain present."""
 
     # Arrange
-    adapter, organization_id, application_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_adapter
     await adapter.prepare_organization_database(organization_id)
-    await adapter.schema(organization_id, application_id, "stable-runtime-password")
+    await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
 
     # Act
-    exists_before_cleanup = await adapter.application_runtime_identity_exists(organization_id, application_id)
-    await adapter.delete_schema(organization_id, application_id)
-    exists_after_cleanup = await adapter.application_runtime_identity_exists(organization_id, application_id)
-    await adapter.delete_schema(organization_id, application_id)
+    exists_before_cleanup = await adapter.solution_runtime_identity_exists(organization_id, solution_id)
+    await adapter.delete_solution_schema(organization_id, solution_id)
+    exists_after_cleanup = await adapter.solution_runtime_identity_exists(organization_id, solution_id)
+    await adapter.delete_solution_schema(organization_id, solution_id)
 
     # Assert
     assert exists_before_cleanup is True
@@ -146,13 +146,13 @@ async def test_postgres_adapter_rejects_schema_provisioning_without_string_liter
     """Fail before composing a role password when the active dialect cannot quote strings."""
 
     # Arrange
-    adapter, organization_id, application_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_adapter
     await adapter.prepare_organization_database(organization_id)
     monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
 
     # Act and assert
     with pytest.raises(ValueError, match=r"^PostgreSQL string literal processing is unavailable$"):
-        await adapter.schema(organization_id, application_id, "stable-runtime-password")
+        await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
 
 
 @pytest.mark.integration
@@ -162,15 +162,15 @@ async def test_postgres_adapter_reports_usage_before_and_after_cleanup(
     """Report nonzero usage for provisioned resources and zero after deletion."""
 
     # Arrange
-    adapter, organization_id, application_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_adapter
     database_name = organization_id.hex
     await adapter.prepare_organization_database(organization_id)
-    await adapter.schema(organization_id, application_id, "stable-runtime-password")
+    await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
 
     # Act
     database_usage = await adapter.database_usage(database_name)
     server_usage = await adapter.usage()
-    await adapter.delete_schema(organization_id, application_id)
+    await adapter.delete_solution_schema(organization_id, solution_id)
     await adapter.delete_database(organization_id)
     database_usage_after_delete = await adapter.database_usage(database_name)
     server_usage_after_delete = await adapter.usage()

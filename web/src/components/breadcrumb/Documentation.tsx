@@ -3,8 +3,8 @@ import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 const routeLabels: Record<string, string> = {
     docs: 'Documentation',
     api: 'Platform',
-    sdk: 'Applications',
-    pages: 'Pages',
+    sdk: 'Solutions',
+    views: 'Solution Views',
 };
 
 /** Renders breadcrumbs for the current documentation URL. */

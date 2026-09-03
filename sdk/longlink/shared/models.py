@@ -10,9 +10,9 @@ Email = Annotated[EmailStr, AfterValidator(str.lower)]
 
 
 class Audit(SQLModel, table=True):
-    """Represent one Platform-owned Organization user shared across all Organization Applications.
+    """Represent one Platform-owned Organization user shared across all Organization Solutions.
 
-    Applications have read-only access to this shared-schema projection.
+    Solutions have read-only access to this shared-schema projection.
     """
 
     # Identifier

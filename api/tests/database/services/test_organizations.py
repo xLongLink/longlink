@@ -2,21 +2,21 @@ import pytest
 from uuid import uuid4
 from datetime import timedelta
 from sqlmodel import col
-from factories import fetch_operations, create_application, create_organization, create_ready_infrastructure
+from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, applications, organizations
+from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -87,22 +87,22 @@ async def test_membership_returns_active_membership_with_organization(users: tup
     assert membership.role == OrganizationRoles.owner
 
 
-async def test_application_runtime_access_returns_member_and_compute_assignment(users: tuple[User, User, User]) -> None:
+async def test_solution_runtime_access_returns_member_and_compute_assignment(users: tuple[User, User, User]) -> None:
     """Return active runtime access with the assigned compute registry."""
 
     # Arrange
     organization = await create_organization(users[0])
-    application = await create_application(organization)
+    solution = await create_solution(organization)
 
     # Act
     async with session_scope() as session:
-        access = await organizations.application_runtime_access(session, users[0].id, application.id)
+        access = await organizations.solution_runtime_access(session, users[0].id, solution.id)
 
     # Assert
     assert access is not None
-    resolved_application, role, compute = access
-    assert resolved_application.id == application.id
-    assert resolved_application.organization_id == organization.id
+    resolved_solution, role, compute = access
+    assert resolved_solution.id == solution.id
+    assert resolved_solution.organization_id == organization.id
     assert role == OrganizationRoles.owner
     assert compute.id == organization.compute_id
 
@@ -125,21 +125,21 @@ async def test_infrastructure_returns_all_organization_registry_assignments(user
     assert resolved.storage.id == organization.storage_id
 
 
-async def test_application_infrastructure_returns_application_registry_assignments(users: tuple[User, User, User]) -> None:
-    """Return an Application together with its Organization infrastructure."""
+async def test_solution_infrastructure_returns_solution_registry_assignments(users: tuple[User, User, User]) -> None:
+    """Return a Solution together with its Organization infrastructure."""
 
     # Arrange
     organization = await create_organization(users[0])
-    application = await create_application(organization)
+    solution = await create_solution(organization)
 
     # Act
     async with session_scope() as session:
-        resolved = await organizations.application_infrastructure(session, application.id)
+        resolved = await organizations.solution_infrastructure(session, solution.id)
 
     # Assert
     assert resolved is not None
-    resolved_application, infrastructure = resolved
-    assert resolved_application.id == application.id
+    resolved_solution, infrastructure = resolved
+    assert resolved_solution.id == solution.id
     assert infrastructure.organization.id == organization.id
     assert infrastructure.compute.id == organization.compute_id
     assert infrastructure.database.id == organization.database_id
@@ -695,15 +695,15 @@ async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tu
     assert updated.updated_id == users[0].id
 
 
-async def test_soft_delete_tombstones_applications_and_retains_memberships(users: tuple[User, User, User]) -> None:
-    """Tombstone applications while retaining Organization memberships until purge."""
+async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:
+    """Tombstone solutions while retaining Organization memberships until purge."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
         await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=Status.running))
-        application = await applications.create(
+        solution = await solutions.create(
             session,
             organization.id,
             "Dashboard",
@@ -726,7 +726,7 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
         result = await organizations.soft_delete(session, organization.id, owner)
         await session.commit()
         deleted_organization = await session.get(Organization, organization.id)
-        deleted_application = await session.get(Application, application.id)
+        deleted_solution = await session.get(Solution, solution.id)
         second_delete = await organizations.soft_delete(session, organization.id, owner)
         missing_delete = await organizations.soft_delete(session, uuid4(), owner)
         await session.commit()
@@ -739,11 +739,11 @@ async def test_soft_delete_tombstones_applications_and_retains_memberships(users
     async with session_scope() as session:
         members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []
-        assert await organizations.applications(session, organization.id) == []
-        assert all(operation.target_id != application.id for operation in await fetch_operations())
+        assert await organizations.solutions(session, organization.id) == []
+        assert all(operation.target_id != solution.id for operation in await fetch_operations())
     assert {member.user_id for member in members} == {owner.id, member.id}
-    assert deleted_application is not None
-    assert deleted_application.deleted_at is not None
+    assert deleted_solution is not None
+    assert deleted_solution.deleted_at is not None
     assert second_delete is not None
     assert second_delete.id == result.id
     assert missing_delete is None

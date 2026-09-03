@@ -9,7 +9,7 @@ from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.applications import Application
+from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
@@ -26,21 +26,23 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     logger.info("Preparing PostgreSQL database for Organization %s", organization.id)
-    await Postgres(
+    database = Postgres(
         infrastructure.database.host,
         infrastructure.database.port,
         infrastructure.database.username,
         infrastructure.database.password,
         infrastructure.database.sslmode,
-    ).prepare_organization_database(organization.id)
+    )
+    await database.prepare_organization_database(organization.id)
 
-    # Converge the Organization bucket before Applications receive scoped credentials.
+    # Converge the Organization bucket before Solutions receive scoped credentials.
     logger.info("Creating object storage bucket for Organization %s", organization.id)
-    await Exoscale(
+    object_storage = Exoscale(
         infrastructure.storage.endpoint_url,
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
-    ).create(organization.id.hex)
+    )
+    await object_storage.create(organization.id.hex)
 
     # Apply release changes to the Organization Namespace, quota, and network boundary.
     logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
@@ -69,7 +71,7 @@ async def reconcile(organization_id: UUID) -> None:
 
 
 async def delete(organization_id: UUID) -> str | None:
-    """Remove one Organization's routes, Applications, Namespace, providers, and tombstone."""
+    """Remove one Organization's routes, Solutions, Namespace, providers, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
@@ -94,21 +96,21 @@ async def delete(organization_id: UUID) -> str | None:
         infrastructure.storage.secret_access_key,
     )
 
-    # Namespace deletion cascades every Application Kubernetes resource and waits for all Pods to terminate.
+    # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
     async with session_scope() as session:
-        application_ids_result = await session.scalars(
-            select(col(Application.id)).where(col(Application.organization_id) == infrastructure.organization.id)
+        solution_ids_result = await session.scalars(
+            select(col(Solution.id)).where(col(Solution.organization_id) == infrastructure.organization.id)
         )
-        application_ids = application_ids_result.all()
+        solution_ids = solution_ids_result.all()
     logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
     try:
         await cluster.organizations.delete(infrastructure.organization.id.hex)
     finally:
         await cluster.aclose()
-    for application_id in application_ids:
-        logger.info("Deleting provider resources for Application %s", application_id)
-        await db.delete_schema(infrastructure.organization.id, application_id)
-        await object_storage.revoke(application_id.hex)
+    for solution_id in solution_ids:
+        logger.info("Deleting provider resources for Solution %s", solution_id)
+        await db.delete_solution_schema(infrastructure.organization.id, solution_id)
+        await object_storage.revoke_solution(solution_id.hex)
 
     logger.info("Deleting PostgreSQL database for Organization %s", infrastructure.organization.id)
     await db.delete_database(infrastructure.organization.id)

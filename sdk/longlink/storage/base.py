@@ -6,7 +6,7 @@ from fsspec.implementations.dirfs import DirFileSystem
 
 
 def create_fs(settings: Envs) -> AbstractFileSystem:
-    """Create the active Application filesystem from runtime settings."""
+    """Create the active Solution filesystem from runtime settings."""
 
     bucket_path = PurePosixPath(settings.STORAGE_BUCKET) if settings.STORAGE_BUCKET else None
     prefix_path = PurePosixPath(settings.STORAGE_PREFIX) if settings.STORAGE_PREFIX else None

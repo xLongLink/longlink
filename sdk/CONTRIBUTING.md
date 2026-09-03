@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-SDK defines how applications are built on LongLink.
+The SDK provides the conventions and tooling used to build LongLink Solutions.
 
 ## Architecture
 
@@ -30,9 +30,9 @@ uv run pytest --cov --cov-report=term-missing  # Run tests with branch coverage
 
 The build command writes an OCI description label when available. It also writes this LongLink-specific label:
 
-| Label                   | Value                     | Description                                          |
-| ----------------------- | ------------------------- | ---------------------------------------------------- |
-| `longlink.environments` | `<json-environment-list>` | App environment variables declared by `src/envs.py`. |
+| Label                   | Value                     | Description                                      |
+| ----------------------- | ------------------------- | ------------------------------------------------ |
+| `longlink.environments` | `<json-environment-list>` | Environment variables declared by `src/envs.py`. |
 
 ## XML
 

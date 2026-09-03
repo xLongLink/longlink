@@ -11,7 +11,7 @@
   </xsd:complexType>
   <xsd:element name="State" type="StateType">
     <xsd:annotation>
-      <xsd:documentation>Use State for information that changes while someone uses a page, such as form entries or selected options.</xsd:documentation>
+      <xsd:documentation>Use State for information that changes while someone uses a Solution View, such as form entries or selected options.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="state" category="State" lastUpdated="2026-07-21" source="adapters/State.xsd"/>
         <longlink:example>&lt;State id="form" name="" active="true" /&gt;

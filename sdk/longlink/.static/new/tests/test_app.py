@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-def test_application_serves_health_check(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_solution_serves_health_check(monkeypatch: pytest.MonkeyPatch) -> None:
     """Serve the LongLink runtime health check."""
 
     # Arrange

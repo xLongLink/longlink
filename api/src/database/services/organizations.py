@@ -24,10 +24,10 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
-from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -77,20 +77,20 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
     return await session.scalar(statement)
 
 
-async def application_runtime_access(
-    session: AsyncSession, user_id: UUID, application_id: UUID
-) -> tuple[Application, OrganizationRoles, ComputeRegistry] | None:
-    """Return one user's active application access with its compute registry."""
+async def solution_runtime_access(
+    session: AsyncSession, user_id: UUID, solution_id: UUID
+) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
+    """Return one user's active solution access with its compute registry."""
 
-    # Load Application access and its gateway secret in one query.
+    # Load Solution access and its gateway secret in one query.
     result = await session.execute(
-        select(Application, col(UserOrganization.role), ComputeRegistry)
+        select(Solution, col(UserOrganization.role), ComputeRegistry)
         .options(
             load_only(
-                Application.id,
-                Application.organization_id,
-                Application.secrets,
-                Application.status,
+                Solution.id,
+                Solution.organization_id,
+                Solution.secrets,
+                Solution.status,
             ),
             load_only(
                 ComputeRegistry.id,
@@ -100,12 +100,12 @@ async def application_runtime_access(
                 ComputeRegistry.gateway_client_identity,
             ),
         )
-        .join(Organization, col(Organization.id) == col(Application.organization_id))
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Organization.id))
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
         .where(
-            col(Application.id) == application_id,
-            col(Application.deleted_at).is_(None),
+            col(Solution.id) == solution_id,
+            col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.deleted_at).is_(None),
@@ -131,24 +131,24 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
-async def application_infrastructure(session: AsyncSession, application_id: UUID) -> tuple[Application, Infrastructure] | None:
-    """Return one Application and its assigned infrastructure."""
+async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Infrastructure] | None:
+    """Return one Solution and its assigned infrastructure."""
 
-    # Load the Application and its infrastructure in one lifecycle query.
+    # Load the Solution and its infrastructure in one lifecycle query.
     statement = (
-        select(Application, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
-        .join(Organization, col(Organization.id) == col(Application.organization_id))
+        select(Solution, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
         .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
         .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
-        .where(col(Application.id) == application_id)
+        .where(col(Solution.id) == solution_id)
     )
     result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    application, organization, compute, database, storage = row
-    return application, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
+    solution, organization, compute, database, storage = row
+    return solution, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
@@ -169,18 +169,18 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def applications(session: AsyncSession, organization_id: UUID) -> Sequence[Application]:
-    """Return applications for one organization."""
+async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[Solution]:
+    """Return solutions for one organization."""
 
-    # Query active organization applications in one session.
+    # Query active organization solutions in one session.
     statement = (
-        select(Application)
-        .options(defer(Application.secrets))
+        select(Solution)
+        .options(defer(Solution.secrets))
         .where(
-            col(Application.organization_id) == organization_id,
-            col(Application.deleted_at).is_(None),
+            col(Solution.organization_id) == organization_id,
+            col(Solution.deleted_at).is_(None),
         )
-        .order_by(col(Application.created_at).asc())
+        .order_by(col(Solution.created_at).asc())
     )
     result = await session.scalars(statement)
     return result.all()
@@ -624,21 +624,21 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.updated_at = now
         organization.updated_id = user.id
 
-        # Tombstone every active Application without loading each object.
+        # Tombstone every active Solution without loading each object.
         await session.execute(
-            sql_update(Application)
+            sql_update(Solution)
             .where(
-                col(Application.organization_id) == organization_id,
-                col(Application.deleted_at).is_(None),
+                col(Solution.organization_id) == organization_id,
+                col(Solution.deleted_at).is_(None),
             )
             .values(deleted_at=now, updated_at=now)
         )
 
-        # Organization cleanup supersedes unleased Application lifecycle work.
+        # Organization cleanup supersedes unleased Solution lifecycle work.
         await session.execute(
             delete(Operation).where(
-                col(Operation.kind).in_((OperationKind.application_create, OperationKind.application_delete)),
-                col(Operation.target_id).in_(select(col(Application.id)).where(col(Application.organization_id) == organization_id)),
+                col(Operation.kind).in_((OperationKind.solution_create, OperationKind.solution_delete)),
+                col(Operation.target_id).in_(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id)),
                 col(Operation.finished_at).is_(None),
                 col(Operation.lease_expires_at).is_(None),
             )

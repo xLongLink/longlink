@@ -21,7 +21,7 @@ class ColorFormatter(logging.Formatter):
 
 
 class ApiAccessFilter(logging.Filter):
-    """Allow access logs for application requests while hiding frontend noise."""
+    """Allow access logs for Solution requests while hiding frontend noise."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Return True when the request should remain visible in access logs."""
@@ -65,10 +65,10 @@ log_config["formatters"]["access"] = {
     "fmt": "%(levelname)s:     %(message)s",
 }
 
-# Keep uvicorn access logs focused on application API traffic.
+# Keep uvicorn access logs focused on Solution API traffic.
 log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
-# Configure the shared LongLink application logger.
+# Configure the shared LongLink Solution logger.
 logger = configure_logger("longlink")

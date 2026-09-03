@@ -7,22 +7,22 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import {
-    zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse,
+    zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
     zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const EMPTY_LOG_LINES: readonly string[] = [];
 
 type LogsProps = {
-    kind: 'application' | 'operation';
+    kind: 'solution' | 'operation';
     onOpenChange: (open: boolean) => void;
     resourceId: string;
 };
 
 /** Renders a resource's captured logs in a controlled dialog. */
 export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
-    const isApplication = kind === 'application';
-    const details = isApplication
+    const isSolution = kind === 'solution';
+    const details = isSolution
         ? {
               emptyMessage: 'No logs available.',
               title: 'Pod logs',
@@ -31,11 +31,9 @@ export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
               emptyMessage: 'No logs were recorded.',
               title: 'Operation logs',
           };
-    const logsPath = isApplication
-        ? `/api/v1/applications/${resourceId}/logs`
-        : `/api/v1/operations/${resourceId}/logs`;
-    const schema = isApplication
-        ? zGetApplicationLogsApiV1ApplicationsApplicationIdLogsGetResponse
+    const logsPath = isSolution ? `/api/v1/solutions/${resourceId}/logs` : `/api/v1/operations/${resourceId}/logs`;
+    const schema = isSolution
+        ? zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
         : zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse;
     const {
         data: logLines = EMPTY_LOG_LINES,

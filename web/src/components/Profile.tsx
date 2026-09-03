@@ -95,8 +95,8 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                                     startContent={<Users aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
-                                    href="/admin/applications"
-                                    label="Applications"
+                                    href="/admin/solutions"
+                                    label="Solutions"
                                     onClickCapture={closeMenu}
                                     startContent={<AppWindow aria-hidden="true" className="text-secondary" size={16} />}
                                 />

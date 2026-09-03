@@ -27,7 +27,7 @@ def test_environments_prioritizes_process_variables_over_dotenv_files(monkeypatc
 
 
 def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Load dotenv values from the application file instead of its sample."""
+    """Load dotenv values from the Solution file instead of its sample."""
 
     # Arrange
     tmp_path.joinpath(".env.sample").write_text("API_KEY=sample\n", encoding="utf-8")
@@ -42,7 +42,7 @@ def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch: pytest.Mo
     assert environments.api_key == "file"
 
 
-def test_environments_loads_sample_file_without_application_dotenv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_environments_loads_sample_file_without_solution_dotenv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Load declared defaults from the sample dotenv file."""
 
     # Arrange

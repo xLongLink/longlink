@@ -1,14 +1,14 @@
 import { api } from '@/lib/api';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
-    ApplicationCreate,
+    SolutionCreate,
     OrganizationDetails,
     OrganizationInvitationCreate,
     OrganizationMemberUpdate,
     OrganizationUpdate,
 } from '@/lib/generated/platform-api-v1/types.gen';
 import {
-    zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse,
+    zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
     zOrganizationDetails,
     zOrganizationSummary,
     zUserOrganizationMembership,
@@ -32,13 +32,13 @@ function useOrganizationMembership(organizationSlug: string) {
     return { organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
 }
 
-/** Invalidates cached organization application collections. */
-function invalidateOrganizationApplicationQueries(queryClient: QueryClient, organizationId: string) {
+/** Invalidates cached organization solution collections. */
+function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organizationId: string) {
     return Promise.all([
         queryClient.invalidateQueries({
-            queryKey: ['api', `/api/v1/organizations/${organizationId}/applications`],
+            queryKey: ['api', `/api/v1/organizations/${organizationId}/solutions`],
         }),
-        queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
     ]);
 }
 
@@ -73,34 +73,34 @@ export function useOrganization(organizationSlug: string) {
     };
 }
 
-/** Fetches organization applications without loading people-management data. */
-export function useOrganizationApplications(organizationSlug: string, enabled = true) {
+/** Fetches organization solutions without loading people-management data. */
+export function useOrganizationSolutions(organizationSlug: string, enabled = true) {
     const {
         organizationId,
         role,
         isLoading: isMembershipLoading,
         error: membershipError,
     } = useOrganizationMembership(organizationSlug);
-    const applicationsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/applications` : null;
-    const applicationsQuery = useQuery({
-        queryKey: ['api', applicationsPath],
-        queryFn: applicationsPath
+    const solutionsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
+    const solutionsQuery = useQuery({
+        queryKey: ['api', solutionsPath],
+        queryFn: solutionsPath
             ? async ({ signal }) =>
-                  zGetOrganizationApplicationsApiV1OrganizationsOrganizationIdApplicationsGetResponse.parse(
-                      await api(applicationsPath, { signal }).json()
+                  zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
+                      await api(solutionsPath, { signal }).json()
                   )
             : skipToken,
         refetchInterval: (query) =>
-            query.state.data?.some((application) => application.status === 'creating') ? 5000 : false,
+            query.state.data?.some((solution) => solution.status === 'creating') ? 5000 : false,
         retry: false,
     });
-    const error: (Error & { status?: number }) | null = applicationsQuery.error ?? membershipError;
+    const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipError;
 
     return {
-        applications: applicationsQuery.data ?? [],
+        solutions: solutionsQuery.data ?? [],
         organizationId: organizationId ?? '',
         role,
-        isLoading: isMembershipLoading || applicationsQuery.isLoading,
+        isLoading: isMembershipLoading || solutionsQuery.isLoading,
         error,
     };
 }
@@ -137,24 +137,24 @@ export function useOrganizationMembers(organizationId: string) {
     return { inviteMember, revokeInvitation, changeMemberRole };
 }
 
-/** Creates one application and refreshes organization application data. */
-export function useCreateOrganizationApplication(organizationId: string) {
+/** Creates one solution and refreshes organization solution data. */
+export function useCreateOrganizationSolution(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: ApplicationCreate) =>
-            api(`/api/v1/organizations/${organizationId}/applications`, { json: payload, method: 'POST' }),
-        onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
+        mutationFn: (payload: SolutionCreate) =>
+            api(`/api/v1/organizations/${organizationId}/solutions`, { json: payload, method: 'POST' }),
+        onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
     });
 }
 
-/** Deletes one application and refreshes organization application data. */
-export function useDeleteOrganizationApplication(organizationId: string) {
+/** Deletes one solution and refreshes organization solution data. */
+export function useDeleteOrganizationSolution(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (applicationId: string) => api(`/api/v1/applications/${applicationId}`, { method: 'DELETE' }),
-        onSuccess: () => invalidateOrganizationApplicationQueries(queryClient, organizationId),
+        mutationFn: (solutionId: string) => api(`/api/v1/solutions/${solutionId}`, { method: 'DELETE' }),
+        onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
     });
 }
 
@@ -181,7 +181,7 @@ export function useUpdateOrganization(organizationId: string) {
             // Refresh every response that embeds Organization metadata.
             return Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/applications'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
             ]);

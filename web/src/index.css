@@ -1,5 +1,6 @@
 @layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
 
+@import '@fontsource-variable/caveat';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import '@astryxdesign/core/reset.css';

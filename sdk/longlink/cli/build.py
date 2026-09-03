@@ -28,7 +28,7 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 ENV UV_PYTHON=/usr/local/bin/python
 ENV UV_PYTHON_DOWNLOADS=never
 
-# Install locked remote dependencies before application source changes can invalidate this layer.
+# Install locked remote dependencies before Solution source changes can invalidate this layer.
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-install-local
 
 COPY . /workspace
@@ -58,7 +58,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level"
 
 
 def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict[str, object]]:
-    """Parse the configured Application environment model."""
+    """Parse the configured Solution environment model."""
 
     # Require the project configuration that selects the environment model.
     tool_data = pyproject_data.get("tool")
@@ -67,7 +67,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     if not isinstance(environment_import, str) or not environment_import.strip():
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
-    # Parse the configured module and class names without importing application code.
+    # Parse the configured module and class names without importing Solution code.
     module_name, separator, class_name = environment_import.strip().partition(":")
     module_parts = module_name.split(".")
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
@@ -78,7 +78,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     if not envs_path.is_file():
         raise click.ClickException(f"Environment model not found: {envs_path}")
 
-    # Locate the configured settings class without executing application code.
+    # Locate the configured settings class without executing Solution code.
     module = ast.parse(envs_path.read_text(encoding="utf-8"))
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
@@ -149,7 +149,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
 
 def read_pyproject(root: Path) -> dict[str, object]:
-    """Read and parse the application `pyproject.toml`."""
+    """Read and parse the Solution `pyproject.toml`."""
 
     # Resolve and require the project file before parsing metadata.
     pyproject = root / "pyproject.toml"
@@ -166,7 +166,7 @@ def read_pyproject(root: Path) -> dict[str, object]:
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
     """Resolve Docker build context and in-container working directory."""
 
-    # Require an explicit UV workspace before expanding the build context beyond the application root.
+    # Require an explicit UV workspace before expanding the build context beyond the Solution root.
     workspace_root = root
     for candidate in (root, *root.parents):
         candidate_pyproject = candidate / "pyproject.toml"
@@ -179,7 +179,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
             workspace_root = candidate
             break
 
-    # Validate the application root and initialize local dependency traversal.
+    # Validate the Solution root and initialize local dependency traversal.
     pending_paths: list[Path] = [root]
     seen_paths: set[Path] = set()
 
@@ -234,7 +234,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     common_root = Path(os.path.commonpath(seen_paths))
     workdir = "/workspace"
 
-    # Use a nested workdir when the app is below the common root.
+    # Use a nested workdir when the Solution is below the common root.
     if root != common_root:
         relative_root = root.relative_to(common_root)
         workdir = f"/workspace/{relative_root.as_posix()}"
@@ -245,14 +245,14 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 def context_ignore_rules(source: Path | None, root: Path, source_root: Path) -> str:
     """Return Docker ignore rules relative to the generated build context."""
 
-    # Preserve repository-root rules and scope application-local rules to their copied directory.
+    # Preserve repository-root rules and scope Solution-local rules to their copied directory.
     rules = source.read_text(encoding="utf-8") if source is not None else ""
     if source is None or source.parent == source_root:
         return rules
     relative_root = root.relative_to(source_root).as_posix()
     rewritten_rules = []
 
-    # Prefix patterns so application rules retain their original directory boundary.
+    # Prefix patterns so Solution rules retain their original directory boundary.
     for rule in rules.splitlines():
         if not rule or rule.startswith("#"):
             rewritten_rules.append(rule)
@@ -264,8 +264,8 @@ def context_ignore_rules(source: Path | None, root: Path, source_root: Path) -> 
     return "\n".join(rewritten_rules)
 
 
-def build_app(build_context: Path) -> tuple[str, str]:
-    """Create Docker build artifacts for the current app."""
+def build_solution(build_context: Path) -> tuple[str, str]:
+    """Create Docker build artifacts for the current Solution."""
 
     # Resolve build paths and collect project metadata for the image.
     root = Path.cwd().resolve()
@@ -317,7 +317,7 @@ def build_app(build_context: Path) -> tuple[str, str]:
         ignore=ignore_out_of_tree_symlinks,
     )
 
-    # Scope application-local ignore rules to the expanded Docker context.
+    # Scope Solution-local ignore rules to the expanded Docker context.
     source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
     rules = context_ignore_rules(source, root, source_root)
     build_context.joinpath(".dockerignore").write_text(
@@ -345,15 +345,15 @@ def build_app(build_context: Path) -> tuple[str, str]:
     return project_version, project_name
 
 
-def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
-    """Return the Docker image tag for an app name, version, and optional registry."""
+def resolve_image_tag(solution_name: str, version: str, registry: str | None = None) -> str:
+    """Return the Docker image tag for a Solution name, version, and optional registry."""
 
-    image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
+    image_name = solution_name.strip().lower().replace(" ", "-").replace("_", "-")
     registry_prefix = (registry or "").strip().rstrip("/")
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
-        raise click.ClickException(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
+        raise click.ClickException(f"Invalid Docker image name '{image_name}' generated from project name '{solution_name}'")
 
     # Reject invalid Docker tags.
     if not DOCKER_TAG_PATTERN.fullmatch(version):
@@ -404,11 +404,11 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        project_version, app_name = build_app(build_context)
+        project_version, solution_name = build_solution(build_context)
 
         # Resolve and validate the final image tag.
         version = tag or project_version
-        image_tag = resolve_image_tag(app_name, version, registry)
+        image_tag = resolve_image_tag(solution_name, version, registry)
 
         # Require a Docker client on PATH.
         docker_command = shutil.which("docker")

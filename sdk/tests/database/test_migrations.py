@@ -15,9 +15,9 @@ from longlink.database.base import database_metadata
 
 @pytest.fixture
 def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[Path, Callable[[str, str], None]], None, None]:
-    """Provide an isolated application model file and clean up its global import state."""
+    """Provide an isolated Solution model file and clean up its global import state."""
 
-    # Create the model path in a temporary application project.
+    # Create the model path in a temporary Solution project.
     root = tmp_path / "src" / "models" / "catalog"
     model_path = root / "inventory.py"
     root.mkdir(parents=True)
@@ -41,12 +41,12 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
     sys.modules.pop("src.models.catalog.inventory", None)
 
 
-def test_migration_loader_discovers_nested_application_models(
+def test_migration_loader_discovers_nested_solution_models(
     isolated_model: tuple[Path, Callable[[str, str], None]],
 ) -> None:
-    """Load nested application model modules for Alembic metadata."""
+    """Load nested Solution model modules for Alembic metadata."""
 
-    # Create a nested Application model in an isolated project tree.
+    # Create a nested Solution model in an isolated project tree.
     table_name = "nested_inventory_items"
     _, write_model = isolated_model
     write_model(
@@ -62,7 +62,7 @@ def test_migration_loader_discovers_nested_application_models(
     )
 
     # Load project models and verify their metadata registration.
-    database_migrations.load_application_models()
+    database_migrations.load_solution_models()
 
     assert table_name in database_metadata.tables
 
@@ -71,7 +71,7 @@ def test_migration_loader_skips_already_imported_models(
     isolated_model: tuple[Path, Callable[[str, str], None]],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Avoid executing model modules that the application already loaded."""
+    """Avoid executing model modules that the Solution already loaded."""
 
     # Arrange
     _, write_model = isolated_model
@@ -87,19 +87,19 @@ def test_migration_loader_skips_already_imported_models(
     monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", unexpected_spec)
 
     # Act
-    database_migrations.load_application_models()
+    database_migrations.load_solution_models()
 
 
 @pytest.mark.parametrize(
     ("name", "type_", "expected"),
     [
         pytest.param("audit", "table", False, id="shared-audit-table"),
-        pytest.param("inventory", "table", True, id="application-table"),
+        pytest.param("inventory", "table", True, id="solution-table"),
         pytest.param("audit", "index", True, id="audit-index"),
     ],
 )
 def test_include_object_excludes_only_platform_owned_audit_table(name: str, type_: str, expected: bool) -> None:
-    """Keep Platform-owned audit tables out of Application Alembic revisions."""
+    """Keep Platform-owned audit tables out of Solution Alembic revisions."""
 
     # Act
     included = database_migrations.include_object(object(), name, type_, False, None)
@@ -126,7 +126,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
 
     # Arrange
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "load_application_models", lambda: None)
+    monkeypatch.setattr(database_migrations, "load_solution_models", lambda: None)
     original_directives = list(directives)
 
     def fake_revision(
@@ -150,7 +150,7 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
 
 
 def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fail production startup without committed application revisions."""
+    """Fail production startup without committed Solution revisions."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)
@@ -158,7 +158,7 @@ def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path
     monkeypatch.setattr(
         database_migrations.command,
         "upgrade",
-        lambda *_: pytest.fail("Alembic upgrade must not run without application migrations"),
+        lambda *_: pytest.fail("Alembic upgrade must not run without Solution migrations"),
     )
 
     # Act and assert
@@ -201,8 +201,8 @@ def test_migrations_upgrade_head_when_revisions_are_available_or_development(
     assert config.get_main_option("version_locations") == str(migrations_path)
 
 
-def test_apply_migrations_initializes_the_application_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Run the packaged Alembic environment against a development Application database."""
+def test_apply_migrations_initializes_the_solution_version_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the packaged Alembic environment against a development Solution database."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)

@@ -5,7 +5,7 @@ from uuid import UUID
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from typing import TypedDict
-from factories import Infrastructure, create_application, create_organization, create_ready_infrastructure
+from factories import Infrastructure, create_solution, create_organization, create_ready_infrastructure
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
@@ -13,8 +13,8 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
+from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-from src.database.models.applications import Application
 
 
 class ProxyCapture(TypedDict, total=False):
@@ -25,7 +25,7 @@ class ProxyCapture(TypedDict, total=False):
     url: str
     content: bytes
     content_type: str
-    application_id: str
+    solution_id: str
     user_id: str
 
 
@@ -73,42 +73,42 @@ def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitab
     return request
 
 
-async def create_running_application(user: User) -> tuple[Application, Infrastructure]:
-    """Create one Application with the running state required for gateway tests."""
+async def create_running_solution(user: User) -> tuple[Solution, Infrastructure]:
+    """Create one Solution with the running state required for gateway tests."""
 
-    # Arrange an assignable gateway target and its running Application.
+    # Arrange an assignable gateway target and its running Solution.
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(user, infrastructure=infrastructure)
-    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 
     # Set lifecycle state directly because proxy tests do not exercise reconciliation.
     async with session_scope() as session:
-        persisted_application = await session.get(Application, application.id)
-        assert persisted_application is not None
-        persisted_application.secrets = {
-            **persisted_application.secrets,
+        persisted_solution = await session.get(Solution, solution.id)
+        assert persisted_solution is not None
+        persisted_solution.secrets = {
+            **persisted_solution.secrets,
             "LONGLINK_IDENTITY_SECRET": "test-identity-secret-01234567890",
         }
-        persisted_application.status = Status.running
+        persisted_solution.status = Status.running
         await session.commit()
 
-    return application, infrastructure
+    return solution, infrastructure
 
 
-async def test_application_proxy_forwards_safe_content(
+async def test_solution_proxy_forwards_safe_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Forward an authenticated request through the Organization's compute gateway."""
 
-    # Prepare a running remote Application and capture gateway traffic.
+    # Prepare a running remote Solution and capture gateway traffic.
     user = users[0]
-    app, _ = await create_running_application(user)
+    solution, _ = await create_running_solution(user)
     captured: ProxyCapture = {}
 
     class FakeProxyResponse:
-        """Stream one fake upstream application response."""
+        """Stream one fake upstream solution response."""
 
         status_code = 201
         headers = {
@@ -136,7 +136,7 @@ async def test_application_proxy_forwards_safe_content(
         async def request(
             self,
             *,
-            application_id: UUID,
+            solution_id: UUID,
             user_id: UUID,
             method: str,
             path: str,
@@ -151,7 +151,7 @@ async def test_application_proxy_forwards_safe_content(
             captured["url"] = f"https://gateway.example/{path}?{query}"
             captured["content"] = b"".join([chunk async for chunk in content])
             captured["content_type"] = content_type
-            captured["application_id"] = str(application_id)
+            captured["solution_id"] = str(solution_id)
             captured["user_id"] = str(user_id)
 
             def close() -> None:
@@ -166,7 +166,7 @@ async def test_application_proxy_forwards_safe_content(
 
     # Proxy a request with a content type and request body.
     response = await client.post(
-        f"/api/v1/applications/{app.id}/proxy/anything?answer=42",
+        f"/api/v1/solutions/{solution.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
             "content-type": "text/plain",
@@ -187,13 +187,13 @@ async def test_application_proxy_forwards_safe_content(
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
-    assert captured.get("application_id") == str(app.id)
+    assert captured.get("solution_id") == str(solution.id)
     assert captured.get("user_id") == str(user.id)
     assert captured.get("content_type") == "text/plain"
 
 
 @pytest.mark.parametrize("origin", [None, "https://attacker.example"])
-async def test_application_proxy_rejects_untrusted_origin_before_gateway_request(
+async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -201,8 +201,8 @@ async def test_application_proxy_rejects_untrusted_origin_before_gateway_request
 ) -> None:
     """Reject missing and foreign origins before an authenticated write reaches the gateway."""
 
-    # Arrange a running Application and fail if CSRF protection is bypassed.
-    application, _ = await create_running_application(users[0])
+    # Arrange a running Solution and fail if CSRF protection is bypassed.
+    solution, _ = await create_running_solution(users[0])
 
     def unexpected_gateway(*_args: object) -> object:
         """Fail when an untrusted browser request reaches the compute boundary."""
@@ -217,7 +217,7 @@ async def test_application_proxy_rejects_untrusted_origin_before_gateway_request
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/applications/{application.id}/proxy/tasks",
+        f"/api/v1/solutions/{solution.id}/proxy/tasks",
         headers={} if origin is None else {"origin": origin},
     )
 
@@ -226,7 +226,7 @@ async def test_application_proxy_rejects_untrusted_origin_before_gateway_request
     assert response.json() == {"detail": "Origin required"}
 
 
-async def test_application_proxy_streams_response_without_upstream_content_type(
+async def test_solution_proxy_streams_response_without_upstream_content_type(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -234,7 +234,7 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     """Keep proxy safety headers when the gateway omits a content type."""
 
     # Arrange
-    application, _ = await create_running_application(users[0])
+    solution, _ = await create_running_solution(users[0])
     close_count = 0
 
     class FakeProxyResponse:
@@ -258,7 +258,7 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
 
     # Assert
     assert response.status_code == 201
@@ -269,15 +269,15 @@ async def test_application_proxy_streams_response_without_upstream_content_type(
     assert close_count == 1
 
 
-async def test_application_proxy_times_out_before_gateway_response(
+async def test_solution_proxy_times_out_before_gateway_response(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject a gateway request that does not produce response headers in time."""
 
-    # Arrange a running Application and a gateway that delays its initial response.
-    application, _infrastructure = await create_running_application(users[0])
+    # Arrange a running Solution and a gateway that delays its initial response.
+    solution, _infrastructure = await create_running_solution(users[0])
 
     class Gateway:
         """Delay the gateway response beyond the proxy request deadline."""
@@ -295,22 +295,22 @@ async def test_application_proxy_times_out_before_gateway_response(
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_TIMEOUT_SECONDS", 0.001)
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
 
     # Assert
     assert response.status_code == 504
-    assert response.json() == {"detail": "Application proxy request timed out"}
+    assert response.json() == {"detail": "Solution proxy request timed out"}
 
 
-async def test_application_proxy_propagates_timed_out_response_stream(
+async def test_solution_proxy_propagates_timed_out_response_stream(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Report and close an application response that streams too slowly."""
+    """Report and close a solution response that streams too slowly."""
 
-    # Arrange a running Application and an upstream response that misses the stream deadline.
-    application, _infrastructure = await create_running_application(users[0])
+    # Arrange a running Solution and an upstream response that misses the stream deadline.
+    solution, _infrastructure = await create_running_solution(users[0])
     close_count = 0
 
     class SlowProxyResponse:
@@ -337,7 +337,7 @@ async def test_application_proxy_propagates_timed_out_response_stream(
 
     # Act and assert
     with pytest.raises(TimeoutError):
-        await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+        await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
     assert close_count == 1
 
 
@@ -349,7 +349,7 @@ async def test_application_proxy_propagates_timed_out_response_stream(
         "application/json, text/html; charset=utf-8",
     ],
 )
-async def test_application_proxy_rejects_active_content(
+async def test_solution_proxy_rejects_active_content(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
@@ -358,11 +358,11 @@ async def test_application_proxy_rejects_active_content(
     """Reject active upstream documents and close their gateway resources."""
 
     # Arrange
-    application, _ = await create_running_application(users[0])
+    solution, _ = await create_running_solution(users[0])
     closed = False
 
     class FakeProxyResponse:
-        """Represent an active document returned by the upstream application."""
+        """Represent an active document returned by the upstream solution."""
 
         status_code = 200
         headers = {"content-type": content_type}
@@ -377,15 +377,15 @@ async def test_application_proxy_rejects_active_content(
     monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
 
     # Assert
     assert response.status_code == 502
-    assert response.json() == {"detail": "Application proxy returned an unsupported content type"}
+    assert response.json() == {"detail": "Solution proxy returned an unsupported content type"}
     assert closed
 
 
-async def test_application_proxy_closes_gateway_response_when_upstream_stream_fails(
+async def test_solution_proxy_closes_gateway_response_when_upstream_stream_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -393,7 +393,7 @@ async def test_application_proxy_closes_gateway_response_when_upstream_stream_fa
     """Release gateway resources when an upstream response fails mid-stream."""
 
     # Arrange
-    application, _ = await create_running_application(users[0])
+    solution, _ = await create_running_solution(users[0])
     close_count = 0
 
     class FakeProxyResponse:
@@ -419,19 +419,19 @@ async def test_application_proxy_closes_gateway_response_when_upstream_stream_fa
 
     # Act and assert
     with pytest.raises(RuntimeError, match="upstream interrupted"):
-        await clients[0].get(f"/api/v1/applications/{application.id}/proxy")
+        await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
     assert close_count == 1
 
 
-async def test_application_proxy_rejects_oversized_request_body(
+async def test_solution_proxy_rejects_oversized_request_body(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject request bodies larger than the configured proxy limit."""
 
-    # Arrange a running Application and consume its guarded request stream at the gateway boundary.
-    app, _infrastructure = await create_running_application(users[0])
+    # Arrange a running Solution and consume its guarded request stream at the gateway boundary.
+    solution, _infrastructure = await create_running_solution(users[0])
 
     async def request(*_args: object, content, **_kwargs: object) -> None:
         """Consume the request body so the route's size guard executes."""
@@ -444,14 +444,14 @@ async def test_application_proxy_rejects_oversized_request_body(
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
     # Act
-    response = await clients[0].post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1025)
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=b"x" * 1025)
 
     # Assert
     assert response.status_code == 413
-    assert response.json() == {"detail": "Application proxy request body is too large"}
+    assert response.json() == {"detail": "Solution proxy request body is too large"}
 
 
-async def test_application_proxy_forwards_request_body_at_configured_limit(
+async def test_solution_proxy_forwards_request_body_at_configured_limit(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -459,7 +459,7 @@ async def test_application_proxy_forwards_request_body_at_configured_limit(
     """Forward request bodies equal to the configured proxy byte limit."""
 
     # Arrange
-    app, infrastructure = await create_running_application(users[0])
+    solution, infrastructure = await create_running_solution(users[0])
     captured: list[bytes] = []
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
@@ -505,7 +505,7 @@ async def test_application_proxy_forwards_request_body_at_configured_limit(
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
     # Act
-    response = await clients[0].post(f"/api/v1/applications/{app.id}/proxy/upload", content=b"x" * 1024)
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=b"x" * 1024)
 
     # Assert
     assert response.status_code == 200
@@ -513,17 +513,17 @@ async def test_application_proxy_forwards_request_body_at_configured_limit(
     assert captured == [b"x" * 1024]
 
 
-async def test_application_proxy_allows_organization_read_members(
+async def test_solution_proxy_allows_organization_read_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Allow app proxy access inherited from Organization read membership."""
+    """Allow solution proxy access inherited from Organization read membership."""
 
     # Give a regular Organization member read access.
     owner = users[0]
     user = users[1]
-    app, _infrastructure = await create_running_application(owner)
+    solution, _infrastructure = await create_running_solution(owner)
     called = False
 
     class FakeProxyResponse:
@@ -549,15 +549,15 @@ async def test_application_proxy_allows_organization_read_members(
         session.add(
             UserOrganization(
                 user_id=user.id,
-                organization_id=app.organization_id,
+                organization_id=solution.organization_id,
                 role=OrganizationRoles.read,
             )
         )
         await session.commit()
     client = clients[1]
 
-    # Request the Application through the member's Organization access.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    # Request the Solution through the member's Organization access.
+    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Verify read access reaches the configured compute gateway.
     assert response.status_code == 200
@@ -565,17 +565,17 @@ async def test_application_proxy_allows_organization_read_members(
     assert called
 
 
-async def test_application_proxy_rejects_cross_organization_access(
+async def test_solution_proxy_rejects_cross_organization_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject a tenant's request to another Organization's Application."""
+    """Reject a tenant's request to another Organization's Solution."""
 
-    # Create an Application owned by a separate Organization.
+    # Create a Solution owned by a separate Organization.
     owner = users[0]
     organization = await create_organization(owner)
-    application = await create_application(organization, image="ghcr.io/xlonglink/sample:latest")
+    solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 
     def unexpected_gateway(*_args: object) -> object:
         """Fail if an unauthorized request reaches the gateway boundary."""
@@ -585,28 +585,28 @@ async def test_application_proxy_rejects_cross_organization_access(
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Request the other Organization's runtime through an authenticated session.
-    response = await clients[1].get(f"/api/v1/applications/{application.id}/proxy/pages.json")
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Verify authorization rejects the request.
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
 
 
-async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
+async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
     """Return unavailable when the authenticated cluster gateway request fails."""
 
-    # Prepare a running Application and a gateway client that fails transport.
+    # Prepare a running Solution and a gateway client that fails transport.
     user = users[0]
-    app, _ = await create_running_application(user)
+    solution, _ = await create_running_solution(user)
 
     tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
 
     class FailingProxyClient:
-        """Fake upstream HTTP client that fails application proxy requests."""
+        """Fake upstream HTTP client that fails solution proxy requests."""
 
         def __init__(self, **_kwargs: object) -> None:
             """Accept gateway client construction options."""
@@ -629,11 +629,11 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     client = clients[0]
 
     # Proxy a request through the failing gateway client.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/i18n/en.json")
+    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/i18n/en.json")
 
     # Verify transport failure is translated without losing the target URL.
     assert response.status_code == 503
-    assert response.json() == {"detail": "Application proxy request failed"}
+    assert response.json() == {"detail": "Solution proxy request failed"}
 
 
 @pytest.mark.parametrize(
@@ -645,7 +645,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         pytest.param("DELETE", "Organization maintain access required", id="delete"),
     ],
 )
-async def test_application_proxy_enforces_method_role(
+async def test_solution_proxy_enforces_method_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     method: str,
@@ -656,10 +656,10 @@ async def test_application_proxy_enforces_method_role(
 
     # Restrict the caller to Organization read access.
     user = users[0]
-    app, _ = await create_running_application(user)
+    solution, _ = await create_running_solution(user)
 
     async with session_scope() as session:
-        organization_membership = await session.get(UserOrganization, (user.id, app.organization_id))
+        organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
         assert organization_membership is not None
         organization_membership.role = OrganizationRoles.read
         await session.commit()
@@ -673,28 +673,28 @@ async def test_application_proxy_enforces_method_role(
 
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
-    # Attempt a mutating Application proxy request.
-    response = await client.request(method, f"/api/v1/applications/{app.id}/proxy/api/tasks")
+    # Attempt a mutating Solution proxy request.
+    response = await client.request(method, f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
 
     # Verify the HTTP method requires its Organization role before reaching the gateway.
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
 
 
-async def test_application_proxy_shows_loading_when_app_is_not_ready(
+async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return a loading response while application reconciliation is pending."""
+    """Return a loading response while solution reconciliation is pending."""
 
-    # Prepare an Application whose reconciliation is still pending.
+    # Prepare a Solution whose reconciliation is still pending.
     owner = users[0]
     organization = await create_organization(owner)
-    app = await create_application(organization)
+    solution = await create_solution(organization)
     client = clients[0]
 
-    # Request runtime content before the Application is ready.
-    response = await client.get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    # Request runtime content before the Solution is ready.
+    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Verify the loading response is empty and cannot be cached.
     assert response.status_code == 503
@@ -704,7 +704,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 
 
 @pytest.mark.parametrize("missing", ["gateway_url", "gateway_certificate", "gateway_client_identity", "identity_secret"])
-async def test_application_proxy_returns_unavailable_when_gateway_requirement_is_missing(
+async def test_solution_proxy_returns_unavailable_when_gateway_requirement_is_missing(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
@@ -712,13 +712,13 @@ async def test_application_proxy_returns_unavailable_when_gateway_requirement_is
 ) -> None:
     """Return unavailable when any required compute gateway value is absent."""
 
-    # Arrange a running Application with one persisted readiness requirement omitted.
-    app, infrastructure = await create_running_application(users[0])
+    # Arrange a running Solution with one persisted readiness requirement omitted.
+    solution, infrastructure = await create_running_solution(users[0])
     async with session_scope() as session:
         if missing == "identity_secret":
-            application = await session.get(Application, app.id)
-            assert application is not None
-            application.secrets = {}
+            persisted_solution = await session.get(Solution, solution.id)
+            assert persisted_solution is not None
+            persisted_solution.secrets = {}
         else:
             registry = await session.get(ComputeRegistry, infrastructure.compute.id)
             assert registry is not None
@@ -733,8 +733,8 @@ async def test_application_proxy_returns_unavailable_when_gateway_requirement_is
     monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
 
     # Act
-    response = await clients[0].get(f"/api/v1/applications/{app.id}/proxy/pages.json")
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": "Application gateway is not ready"}
+    assert response.json() == {"detail": "Solution gateway is not ready"}

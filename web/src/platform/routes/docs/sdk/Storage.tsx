@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 const metadata = {
     seo: {
         title: 'Storage | LongLink Documentation',
-        description: 'Store and manage files in a LongLink application.',
+        description: 'Store and manage files in a LongLink project.',
     },
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
@@ -30,7 +30,7 @@ export default function DocsArticleRoute() {
                     Storage
                 </Heading>
                 <Text as="p">
-                    The SDK creates an application-scoped <Code>storage</Code> filesystem backed by{' '}
+                    The SDK creates a solution-scoped <Code>storage</Code> filesystem backed by{' '}
                     <Link
                         href="https://filesystem-spec.readthedocs.io/en/latest/"
                         hasUnderline
@@ -39,7 +39,7 @@ export default function DocsArticleRoute() {
                     >
                         fsspec
                     </Link>
-                    . Application code uses the same filesystem interface in local development, tests, and production.
+                    . Project source uses the same filesystem interface in local development, tests, and production.
                 </Text>
                 <Table>
                     <TableHeader>
@@ -82,8 +82,8 @@ export default function DocsArticleRoute() {
                                         <Text weight="semibold">Production</Text>
                                     </Stack>
                                     <Text type="supporting">
-                                        <Code>s3</Code> backend using application and shared prefixes in one
-                                        Organization bucket.
+                                        <Code>s3</Code> backend using solution and shared prefixes in one Organization
+                                        bucket.
                                     </Text>
                                 </Stack>
                             </TableCell>

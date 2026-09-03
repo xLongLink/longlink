@@ -9,9 +9,9 @@ PRODUCTION_SETTINGS = {
     "LONGLINK_DATABASE_HOST": "db",
     "LONGLINK_DATABASE_NAME": "longlink",
     "LONGLINK_DATABASE_PORT": "5432",
-    "LONGLINK_DATABASE_SCHEMA": "application",
+    "LONGLINK_DATABASE_SCHEMA": "solution",
     "LONGLINK_DATABASE_PASSWORD": "secret",
-    "LONGLINK_DATABASE_USERNAME": "app",
+    "LONGLINK_DATABASE_USERNAME": "solution",
     "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.runtime.longlink.internal:19000",
     "LONGLINK_STORAGE_PASSWORD": "secret@key",
     "LONGLINK_STORAGE_REGION": "ch-gva-2",
@@ -36,10 +36,10 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
         ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
-        (".", "applications/dashboard", "Storage buckets must be bucket names"),
-        ("..", "applications/dashboard", "Storage buckets must be bucket names"),
-        ("/acme", "applications/dashboard", "Storage buckets must be bucket names"),
-        ("acme/../shared", "applications/dashboard", "Storage buckets must be bucket names"),
+        (".", "solutions/dashboard", "Storage buckets must be bucket names"),
+        ("..", "solutions/dashboard", "Storage buckets must be bucket names"),
+        ("/acme", "solutions/dashboard", "Storage buckets must be bucket names"),
+        ("acme/../shared", "solutions/dashboard", "Storage buckets must be bucket names"),
     ],
 )
 def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.MonkeyPatch, bucket: str, prefix: str, message: str) -> None:
@@ -77,9 +77,9 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
     monkeypatch.setattr(storage_base, "DirFileSystem", fake_dir_filesystem)
-    configure_production_environment(monkeypatch, "acme", "applications/dashboard/")
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard/")
 
-    # Build production storage for a scoped Application prefix.
+    # Build production storage for a scoped Solution prefix.
     assert storage_base.create_fs(Envs()) is scoped_filesystem
 
     # Verify both path isolation and S3 connection settings.
@@ -91,7 +91,7 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
             "secret": "secret@key",
             "client_kwargs": {"region_name": "ch-gva-2"},
         },
-        "path": "acme/applications/dashboard",
+        "path": "acme/solutions/dashboard",
         "filesystem": backing_filesystem,
     }
 
@@ -142,7 +142,7 @@ def test_production_settings_reject_blank_required_values(monkeypatch: pytest.Mo
     """Reject blank values in the production runtime contract."""
 
     # Arrange
-    configure_production_environment(monkeypatch, "acme", "applications/dashboard")
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
     monkeypatch.setenv(f"LONGLINK_{name}", "   ")
 
     # Act

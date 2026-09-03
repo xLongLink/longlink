@@ -17,8 +17,8 @@ class OperationKind(StrEnum):
     """Supported registered operation handlers."""
 
     compute_create = "compute.create"
-    application_create = "application.create"
-    application_delete = "application.delete"
+    solution_create = "solution.create"
+    solution_delete = "solution.delete"
     organization_create = "organization.create"
     organization_delete = "organization.delete"
 

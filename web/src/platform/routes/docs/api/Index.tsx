@@ -7,7 +7,7 @@ import { PlatformFlowDiagram } from '@/components/PlatformFlowDiagram';
 const metadata = {
     seo: {
         title: 'Platform Documentation | LongLink',
-        description: 'Learn how LongLink Platform manages organizations, applications, and shared infrastructure.',
+        description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',
     },
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-07-20',
@@ -22,18 +22,17 @@ export default function DocsArticleRoute() {
                     Platform
                 </Heading>
                 <Text as="p">
-                    The LongLink Platform provides the shared foundation for running applications across an
-                    organization. It manages users, organizations, access, applications, deployments, and the
-                    infrastructure they depend on.
+                    The LongLink Platform provides the shared foundation for running Solutions across an organization.
+                    It manages organizations, users, access, deployments, and their supporting infrastructure.
                 </Text>
                 <Text as="p">
-                    Applications remain separate services with their own code and purpose. LongLink provides the layer
-                    around them: it controls access, prepares the resources each application needs, makes applications
-                    available to the right users, and provides visibility into deployments, logs, and status.
+                    Each Solution has its own source and purpose and runs as a separate service. LongLink provides the
+                    surrounding layer: it controls access, prepares required resources, makes the service available to
+                    authorized users, and provides visibility into deployments, logs, and status.
                 </Text>
                 <Text as="p">
-                    This gives teams a consistent and governed way to operate many dedicated applications without
-                    rebuilding the same operational foundation for each one.
+                    This gives teams a consistent and governed operating model without rebuilding the same foundation
+                    for every service.
                 </Text>
                 <PlatformFlowDiagram />
             </Stack>

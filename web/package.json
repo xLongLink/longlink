@@ -26,11 +26,13 @@
     },
     "dependencies": {
         "@astryxdesign/core": "0.5.1",
+        "@fontsource-variable/caveat": "^5.3.0",
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/react-form": "^1.33.5",
         "@tanstack/react-query": "^5.102.0",
         "acorn": "^8.17.0",
         "fast-xml-parser": "^5.11.0",
+        "isbot": "^5",
         "ky": "^2.0.2",
         "lucide-react": "^1.33.0",
         "react": "^19.2.8",
@@ -38,8 +40,7 @@
         "react-router": "8.3.0",
         "tailwindcss": "^4.3.3",
         "valtio": "^2.3.2",
-        "zod": "^4.4.3",
-        "isbot": "^5"
+        "zod": "^4.4.3"
     },
     "devDependencies": {
         "@astryxdesign/cli": "0.5.1",

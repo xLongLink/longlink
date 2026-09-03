@@ -11,7 +11,7 @@ from src.database.models.base import PlatformModel
 class ComputeRegistry(PlatformModel, table=True):
     """Persist one Compute target and its authenticated Envoy Gateway state.
 
-    The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Application traffic.
+    The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Solution traffic.
     """
 
     __tablename__: ClassVar[str] = "compute_registries"

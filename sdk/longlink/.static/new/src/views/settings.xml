@@ -1,0 +1,67 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Settings" icon="settings-2">
+    <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
+    <State id="reviewer" name="Mira Tanner" initials="MT" badge="Approver" avatarUrl="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner" />
+    <State id="emailUpdates" value="${true}" />
+    <State id="notifications" value="${true}" />
+    <State id="budgetLimit" value="${2500}" />
+    <State id="workflow" owner="manager" risk="medium" />
+
+    <Stack>
+        <Heading level="1">Solution settings</Heading>
+        <Text color="secondary">Configure Solution defaults with local XML state and Astryx form controls.</Text>
+    </Stack>
+
+    <Menu>
+        <MenuSection title="Settings sections">
+        <MenuItem icon="viewColumns" label="Solution">
+            <Heading level="2">Solution</Heading>
+            <Text color="secondary">Edit the sample Solution's local owner, cost-center, and reviewer note fields.</Text>
+            <Card>
+                <Stack direction="horizontal" align="center">
+                    <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" />
+                    <Stack>
+                        Default reviewer
+                        $reviewer.initials
+                    </Stack>
+                    <Badge>$reviewer.badge</Badge>
+                </Stack>
+            </Card>
+            <Stack>
+                <TextInput label="Workflow owner" value="$profile.owner" />
+                <TextInput label="Cost center" value="$profile.costCenter" />
+                <TextArea label="Approval note" value="$profile.note" />
+            </Stack>
+        </MenuItem>
+
+        <MenuItem icon="wrench" label="Preferences">
+            <Heading level="2">Preferences</Heading>
+            <Text color="secondary">Toggle notification controls and adjust a slider-backed approval threshold.</Text>
+            <Stack>
+                <CheckboxInput label="Email updates" value="$emailUpdates" />
+                <Switch label="In-app notifications" value="$notifications" />
+                <Slider label="Auto-approval limit" min="500" max="10000" step="500" value="$budgetLimit" />
+            </Stack>
+            <Text color="secondary">${`Auto-approve up to CHF ${budgetLimit.value}`}</Text>
+        </MenuItem>
+
+        <MenuItem icon="arrowsUpDown" label="Workflow">
+            <Heading level="2">Workflow</Heading>
+            <Text color="secondary">Use radio lists and selectors to model workflow defaults.</Text>
+            <Stack>
+                <RadioList label="Default approver" value="$workflow.owner">
+                    <Option value="manager" label="Manager" />
+                    <Option value="finance" label="Finance" />
+                    <Option value="owner" label="Owner" />
+                </RadioList>
+                <Selector label="Risk level" value="$workflow.risk">
+                    <Option value="low" label="Low" />
+                    <Option value="medium" label="Medium" />
+                    <Option value="high" label="High" />
+                </Selector>
+            </Stack>
+        </MenuItem>
+
+        </MenuSection>
+    </Menu>
+</longlink>

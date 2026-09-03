@@ -88,7 +88,7 @@ describe('core/context', () => {
                 ],
                 ctx
             )
-        ).rejects.toThrow('XML request URL must be app-relative');
+        ).rejects.toThrow('XML request URL must be solution-relative');
 
         expect(fetchImpl).not.toHaveBeenCalled();
     });

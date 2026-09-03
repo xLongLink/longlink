@@ -146,7 +146,7 @@ export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps
     return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
 }
 
-/** Resolves supported application icon names to Lucide components. */
+/** Resolves supported solution icon names to Lucide components. */
 export function getIconComponent(name: string): LucideIcon | undefined {
     return iconComponents[name];
 }

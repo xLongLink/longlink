@@ -8,7 +8,7 @@ def connect_args(database_url: str | URL, schema: str | None = None, ssl: str | 
     if make_url(database_url).drivername != "postgresql+asyncpg":
         return {}
 
-    # Configure UTC and the Application schema for PostgreSQL connections.
+    # Configure UTC and the Solution schema for PostgreSQL connections.
     server_settings = {"timezone": "UTC"}
     if schema is not None:
         server_settings["search_path"] = f'"{schema}", shared'

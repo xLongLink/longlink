@@ -3,7 +3,7 @@ from longlink.database.base import AuditTable
 
 
 class Item(AuditTable, table=True):
-    """Item table owned by this application schema."""
+    """Item table owned by this Solution schema."""
 
     # Item fields
     id: int | None = Field(default=None, primary_key=True)

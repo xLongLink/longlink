@@ -6,13 +6,16 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
-import { useEffect, useRef, useState } from 'react';
+import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 
 const integrationContextCount = 336_000_000;
+const homeDescription =
+    'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
 
 /** Renders the integration-scale callout and counts up when it enters the viewport. */
 function IntegrationScale() {
@@ -95,9 +98,9 @@ function IntegrationScale() {
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    With different regulations, data, and workflows,
+                    Regulations, data, and workflows vary.
                     <br />
-                    Each requires a unique solution.
+                    Each operating context needs dedicated software.
                 </Text>
             </Stack>
         </Section>
@@ -112,7 +115,7 @@ function PathCard({
     isComingSoon,
 }: {
     title: string;
-    description: string;
+    description: ReactNode;
     action: string;
     isComingSoon: boolean;
 }) {
@@ -202,8 +205,7 @@ export default function Home() {
                 '@type': 'WebSite',
                 name: 'LongLink',
                 url: 'https://longlink.dev',
-                description:
-                    'LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python.',
+                description: homeDescription,
             },
         ],
     };
@@ -211,9 +213,9 @@ export default function Home() {
     return (
         <>
             <Seo
-                description="LongLink is the open-source foundation for building, deploying, and operating dedicated business applications in Python."
+                description={homeDescription}
                 structuredData={structuredData}
-                title="LongLink | Build and operate business applications"
+                title="LongLink | Build and operate business software"
             />
             <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
@@ -290,23 +292,75 @@ export default function Home() {
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         <PathCard
                             action="Explore existing solutions"
-                            description="Deploy an existing solution as it is. Get a proven process running without rebuilding what already exists."
+                            description={
+                                <>
+                                    an existing solutions as it is.
+                                    <br />
+                                    <br />
+                                    Use a proven process without rebuilding what already exists.
+                                </>
+                            }
                             isComingSoon
-                            title="Use"
+                            title="Adopt"
                         />
                         <PathCard
                             action="Start from a foundation"
-                            description="Fork an existing solution and change its workflow, fields, rules, integrations, or interface around your requirements."
+                            description={
+                                <>
+                                    and adapt an existing solution.
+                                    <br />
+                                    <br />
+                                    Change its workflow, fields, rules, integrations, or interface around your
+                                    requirements.
+                                </>
+                            }
                             isComingSoon
-                            title="Adapt"
+                            title="Branch"
                         />
                         <PathCard
                             action="Build a new solution"
-                            description="Build a dedicated solution when the process is uniquely yours. LongLink handles the platform; you own the solution."
+                            description={
+                                <>
+                                    a unique solution.
+                                    <br />
+                                    <br />
+                                    The process is uniquely yours. We handle the infrastructure; you own the solution.
+                                </>
+                            }
                             isComingSoon={false}
                             title="Create"
                         />
                     </Grid>
+                </Stack>
+            </Section>
+            <Section className="relative z-20 bg-body" padding={6} paddingBlock={10} variant="transparent">
+                <Stack
+                    className="mx-auto text-center"
+                    gap={6}
+                    hAlign="center"
+                    maxWidth={1000}
+                    paddingBlock={8}
+                    width="100%"
+                >
+                    <Text aria-hidden="true" className="text-xl leading-none">
+                        🇨🇭
+                    </Text>
+                    <Stack gap={2} hAlign="center">
+                        <Heading level={2} textWrap="balance" type="display-2" justify="center">
+                            Built and deployed in Switzerland.
+                        </Heading>
+                        <Text as="p" color="secondary">
+                            And it's open source.
+                        </Text>
+                    </Stack>
+                    <Button
+                        endContent={<ArrowRight aria-hidden="true" size={16} />}
+                        href="https://github.com/xLongLink/longlink"
+                        label="Leave a star on GitHub"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                        variant="primary"
+                    />
                 </Stack>
             </Section>
         </>

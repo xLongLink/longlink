@@ -114,7 +114,7 @@ async def test_exoscale_usage_aggregates_bucket(monkeypatch: pytest.MonkeyPatch)
 
 
 async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Issue Exoscale runtime credentials scoped to one Organization bucket and Application prefixes."""
+    """Issue Exoscale runtime credentials scoped to one Organization bucket and Solution prefixes."""
 
     calls: list[tuple[str, object]] = []
 
@@ -186,7 +186,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act
-    credentials = await storage.credentials("dashboard", "acme", "apps/dashboard/")
+    credentials = await storage.solution_credentials("dashboard", "acme", "solutions/dashboard/")
 
     # Assert
     role_call = next(value for name, value in calls if name == "create-iam-role")
@@ -200,7 +200,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     assert "identity.org.uuid == '11111111-1111-1111-1111-111111111111'" in str(policy)
     assert "acme" in str(policy)
     assert "shared/" in str(policy)
-    assert "apps/dashboard/" in str(policy)
+    assert "solutions/dashboard/" in str(policy)
     assert ("create-api-key", {"name": "longlink-dashboard", "role_id": "runtime-role"}) in calls
 
 
@@ -259,7 +259,7 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
 
     # Act and assert
     with pytest.raises(RuntimeError, match="key generation failed"):
-        await storage.credentials("dashboard", "acme", "apps/dashboard/")
+        await storage.solution_credentials("dashboard", "acme", "solutions/dashboard/")
     assert calls == ["list-api-keys", "list-api-keys"]
 
 
@@ -326,7 +326,7 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
-    # Delete only the requested Application prefix across all S3 resource types.
+    # Delete only the requested Solution prefix across all S3 resource types.
     await storage.delete_prefix("acme", "apps/dashboard/")
     assert calls == [
         ("abort", {"Bucket": "acme", "Key": "apps/dashboard/a", "UploadId": "upload"}),
@@ -492,7 +492,7 @@ async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
     expected: bool,
     expected_calls: list[str],
 ) -> None:
-    """Treat either generated credential resource as remaining Application state."""
+    """Treat either generated credential resource as remaining Solution state."""
 
     # Arrange
     calls: list[str] = []
@@ -526,7 +526,7 @@ async def test_exoscale_credentials_exist_checks_api_keys_and_roles(
     monkeypatch.setattr(exoscale, "AsyncClient", Client)
 
     # Act
-    exists = await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").credentials_exist("dashboard")
+    exists = await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").solution_credentials_exist("dashboard")
 
     # Assert
     assert exists is expected
@@ -739,7 +739,7 @@ async def test_exoscale_credentials_rejects_invalid_organization_response(monkey
 
     # Act and assert
     with pytest.raises(RuntimeError, match="invalid 'id'"):
-        await storage.credentials("dashboard", "acme", "apps/dashboard/")
+        await storage.solution_credentials("dashboard", "acme", "solutions/dashboard/")
     assert cleanup_passes == 2
 
 
@@ -788,7 +788,7 @@ async def test_exoscale_revoke_rejects_invalid_provider_inventory(
 
     # Act and assert
     with pytest.raises(RuntimeError, match=expected):
-        await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").revoke("dashboard")
+        await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").revoke_solution("dashboard")
 
 
 @pytest.mark.parametrize(
@@ -838,10 +838,10 @@ async def test_exoscale_revoke_handles_provider_delete_responses(
 
     # Act and assert
     if expected_exception is None:
-        await storage.revoke("dashboard")
+        await storage.revoke_solution("dashboard")
     else:
         with pytest.raises(expected_exception, match="delete failed"):
-            await storage.revoke("dashboard")
+            await storage.revoke_solution("dashboard")
 
 
 async def test_exoscale_credentials_exist_rejects_invalid_inventory(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -876,7 +876,7 @@ async def test_exoscale_credentials_exist_rejects_invalid_inventory(monkeypatch:
 
     # Act and assert
     with pytest.raises(RuntimeError, match="api-keys inventory response is invalid"):
-        await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").credentials_exist("dashboard")
+        await exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret").solution_credentials_exist("dashboard")
 
 
 @pytest.mark.parametrize(

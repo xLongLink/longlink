@@ -49,13 +49,13 @@ export default function Documentation() {
                                 label="Organizations"
                             />
                             <SideNavItem
-                                href="/docs/api/applications"
+                                href="/docs/api/solutions"
                                 icon={<AppWindow aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/api/applications'}
-                                label="Applications"
+                                isSelected={pathname === '/docs/api/solutions'}
+                                label="Solutions"
                             />
                         </SideNavSection>
-                        <SideNavSection title="Applications">
+                        <SideNavSection title="Solutions">
                             <SideNavItem
                                 href="/docs/sdk"
                                 icon={<Package aria-hidden size={16} />}
@@ -87,10 +87,10 @@ export default function Documentation() {
                                 label="Database"
                             />
                             <SideNavItem
-                                href="/docs/sdk/pages"
+                                href="/docs/sdk/views"
                                 icon={<FileCode2 aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/pages'}
-                                label="Pages"
+                                isSelected={pathname === '/docs/sdk/views'}
+                                label="Solution Views"
                             />
                             <SideNavItem
                                 href="/docs/sdk/testing"

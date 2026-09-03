@@ -22,7 +22,7 @@ export default function Admin() {
             breadcrumb={<PageBreadcrumb />}
             tabs={[
                 { href: '/admin/users', icon: Users, label: 'Users' },
-                { href: '/admin/applications', icon: AppWindow, label: 'Applications' },
+                { href: '/admin/solutions', icon: AppWindow, label: 'Solutions' },
                 { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
                 { href: '/admin/database', icon: Database, label: 'Database' },
                 { href: '/admin/storage', icon: HardDrive, label: 'Storage' },

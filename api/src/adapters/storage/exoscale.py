@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class StorageRuntimeCredentials(TypedDict):
-    """Describe access keys injected into one application runtime."""
+    """Describe access keys injected into one solution runtime."""
 
     access_key_id: str
     secret_access_key: str
@@ -169,8 +169,8 @@ class Exoscale:
             details = ", ".join(f"{item.get('Key', '<unknown>')}: {item.get('Code', 'unknown error')}" for item in errors)
             raise RuntimeError(f"S3 object deletion failed for {details}")
 
-    async def credentials(self, name: str, bucket: str, write_prefix: str) -> StorageRuntimeCredentials:
-        """Replace prior IAM material and issue a key scoped to one Application's prefixes.
+    async def solution_credentials(self, name: str, bucket: str, write_prefix: str) -> StorageRuntimeCredentials:
+        """Replace prior IAM material and issue a key scoped to one Solution's prefixes.
 
         Cleanup-first provisioning makes retries converge without accumulating active keys or roles.
         """
@@ -178,7 +178,7 @@ class Exoscale:
         credential_name = f"longlink-{name}"
 
         # Remove an incomplete prior attempt so deterministic names make retries converge without leaked keys.
-        await self.revoke(name)
+        await self.revoke_solution(name)
 
         # Keep role and key provisioning in one managed async client session.
         try:
@@ -195,7 +195,7 @@ class Exoscale:
 
                 operation = await api.create_iam_role(
                     name=credential_name,
-                    description=f"LongLink Application storage access for {name}",
+                    description=f"LongLink Solution storage access for {name}",
                     editable=False,
                     policy=self._bucket_policy(bucket, write_prefix, organization_id),
                 )
@@ -210,11 +210,11 @@ class Exoscale:
         except Exception:
             # Name-scoped compensation removes an incomplete deterministic credential generation.
             with suppress(Exception):
-                await self.revoke(name)
+                await self.revoke_solution(name)
             raise
 
-    async def revoke(self, name: str) -> None:
-        """Delete Exoscale API keys and IAM roles created for one Application."""
+    async def revoke_solution(self, name: str) -> None:
+        """Delete Exoscale API keys and IAM roles created for one Solution."""
 
         credential_name = f"longlink-{name}"
 
@@ -248,8 +248,8 @@ class Exoscale:
                     else:
                         await api.wait(self._string(operation, "id"), max_wait_time=10)
 
-    async def credentials_exist(self, name: str) -> bool:
-        """Return whether scoped Exoscale credentials remain for one Application."""
+    async def solution_credentials_exist(self, name: str) -> bool:
+        """Return whether scoped Exoscale credentials remain for one Solution."""
 
         # Inspect both generated resource types because interrupted provisioning can leave either one.
         credential_name = f"longlink-{name}"
@@ -279,9 +279,9 @@ class Exoscale:
 
     @staticmethod
     def _bucket_policy(bucket: str, write_prefix: str, organization_id: UUID) -> IamPolicy:
-        """Build one IAM policy for shared reads and private Application writes."""
+        """Build one IAM policy for shared reads and private Solution writes."""
 
-        # Application writes are also readable, while shared prefixes remain read-only.
+        # Solution writes are also readable, while shared prefixes remain read-only.
         readable_prefixes = ("shared/", write_prefix)
         readable_keys = " || ".join(
             f"parameters.key == {prefix.rstrip('/')!r} || parameters.key.startsWith({prefix!r})" for prefix in readable_prefixes
@@ -290,7 +290,7 @@ class Exoscale:
         organization_match = f"identity.org.uuid == '{organization_id}'"
         bucket_match = f"parameters.bucket == {bucket!r}"
 
-        # Restrict SOS access to the Organization bucket and granted Application prefixes.
+        # Restrict SOS access to the Organization bucket and granted Solution prefixes.
         return {
             "default-service-strategy": "deny",
             "services": {

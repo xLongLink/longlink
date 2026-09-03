@@ -21,7 +21,7 @@ describe('Button', () => {
     it('navigates to its destination resolved against the navigation base URL', async () => {
         const ctx = createContext();
         ctx.services.navigate = vi.fn();
-        ctx.services.navigationBaseUrl = '/orgs/acme/apps/tracker';
+        ctx.services.navigationBaseUrl = '/orgs/acme/solutions/tracker';
         const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -40,6 +40,6 @@ describe('Button', () => {
 
         await act(async () => button.click());
 
-        expect(ctx.services.navigate).toHaveBeenCalledWith('/orgs/acme/apps/tracker/issues/123');
+        expect(ctx.services.navigate).toHaveBeenCalledWith('/orgs/acme/solutions/tracker/issues/123');
     });
 });

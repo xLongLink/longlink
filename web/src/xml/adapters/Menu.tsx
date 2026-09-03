@@ -5,10 +5,10 @@ import type { ASTNode, Props, Scope } from '../types';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
 import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 import {
-    Menu as ApplicationMenu,
-    MenuItem as ApplicationMenuItem,
-    MenuSection as ApplicationMenuSection,
-    MenuSubSection as ApplicationMenuSubSection,
+    Menu as SolutionMenu,
+    MenuItem as SolutionMenuItem,
+    MenuSection as SolutionMenuSection,
+    MenuSubSection as SolutionMenuSubSection,
 } from '@/components/ui/Menu';
 
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
@@ -18,13 +18,13 @@ const menuEntryPropsSchema = z.object({
     label: xmlNonblankStringSchema,
 });
 
-/** Renders the application menu from XML sections and items. */
+/** Renders the solution menu from XML sections and items. */
 export function Menu({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, menuPropsSchema);
 
     return (
-        <ApplicationMenu gap={gap}>
+        <SolutionMenu gap={gap}>
             {nodes
                 .filter((node) => isVisibleXmlNode(node, ctx))
                 .map((section) => {
@@ -34,11 +34,11 @@ export function Menu({ props, nodes }: Props) {
 
                     return renderSection(section, ctx);
                 })}
-        </ApplicationMenu>
+        </SolutionMenu>
     );
 }
 
-/** Converts an XML menu section into the application menu marker. */
+/** Converts an XML menu section into the solution menu marker. */
 function renderSection(node: ASTNode, ctx: Scope) {
     const { isHeaderHidden, title } = resolveXmlProps(
         node.params,
@@ -48,27 +48,27 @@ function renderSection(node: ASTNode, ctx: Scope) {
     );
 
     return (
-        <ApplicationMenuSection isHeaderHidden={isHeaderHidden} key={title} title={title}>
+        <SolutionMenuSection isHeaderHidden={isHeaderHidden} key={title} title={title}>
             {node.children.filter((child) => isVisibleXmlNode(child, ctx)).map((child) => renderEntry(child, ctx))}
-        </ApplicationMenuSection>
+        </SolutionMenuSection>
     );
 }
 
-/** Converts an XML menu item or subsection into an application menu marker. */
+/** Converts an XML menu item or subsection into the solution menu marker. */
 function renderEntry(node: ASTNode, ctx: Scope) {
     const { icon, label } = resolveXmlProps(node.params, ctx, { icon: 'scalar', label: 'raw' }, menuEntryPropsSchema);
 
     if (node.name === 'MenuItem') {
         return (
-            <ApplicationMenuItem icon={icon} key={label} label={label}>
+            <SolutionMenuItem icon={icon} key={label} label={label}>
                 {renderNode(node.children, ctx)}
-            </ApplicationMenuItem>
+            </SolutionMenuItem>
         );
     }
 
     if (node.name === 'MenuSubSection') {
         return (
-            <ApplicationMenuSubSection icon={icon} key={label} label={label}>
+            <SolutionMenuSubSection icon={icon} key={label} label={label}>
                 {node.children
                     .filter((child) => isVisibleXmlNode(child, ctx))
                     .map((child) => {
@@ -78,14 +78,14 @@ function renderEntry(node: ASTNode, ctx: Scope) {
 
                         return renderEntry(child, ctx);
                     })}
-            </ApplicationMenuSubSection>
+            </SolutionMenuSubSection>
         );
     }
 
     throw new Error(`MenuSection does not support ${node.name} children`);
 }
 
-/** Returns whether a value identifies an icon supported by the application menu. */
+/** Returns whether a value identifies an icon supported by the solution menu. */
 function isStoneIconName(value: string): value is StoneIconName {
     return Object.hasOwn(stoneIconComponents, value);
 }

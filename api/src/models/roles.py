@@ -11,7 +11,7 @@ class OrganizationRoles(StrEnum):
     owner = "owner"
 
 
-APPLICATION_PROXY_METHOD_ROLES = {
+SOLUTION_PROXY_METHOD_ROLES = {
     "DELETE": OrganizationRoles.maintain,
     "GET": OrganizationRoles.read,
     "PATCH": OrganizationRoles.write,

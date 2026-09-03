@@ -32,7 +32,7 @@ export function useXmlRuntime(): XmlRuntime {
     return runtime;
 }
 
-/** Resolves validated State and Query nodes before rendering the page tree. */
+/** Resolves validated State and Query nodes before rendering the Solution View tree. */
 export async function setupContext(nodes: ASTNode[], runtime: XmlRuntime, signal?: AbortSignal): Promise<void> {
     const { scope, services } = runtime;
 

@@ -36,16 +36,16 @@ const capabilities = {
         icon: ShieldCheck,
     },
     theming: { name: 'Theming', icon: Palette },
-    applicationShell: {
-        name: 'Application shell',
+    solutionShell: {
+        name: 'Solution shell',
         icon: PanelTop,
     },
-    applicationContract: {
-        name: 'Application contract',
+    solutionContract: {
+        name: 'Solution contract',
         icon: AppWindow,
     },
-    applicationLogic: {
-        name: 'Application logic',
+    solutionLogic: {
+        name: 'Solution logic',
         icon: Code2,
     },
     databases: {
@@ -95,7 +95,7 @@ export function PlatformFlowDiagram() {
                         </Stack>
                         <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
                             <CapabilityIcon {...capabilities.theming} />
-                            <CapabilityIcon {...capabilities.applicationShell} />
+                            <CapabilityIcon {...capabilities.solutionShell} />
                         </Stack>
                     </Stack>
                 </Card>
@@ -126,20 +126,16 @@ export function PlatformFlowDiagram() {
                 </Stack>
             </Card>
             <Stack direction="horizontal" gap={6} align="center">
-                <ArrowLeftRight
-                    aria-label="Platform and application request flow"
-                    className="text-secondary"
-                    size={16}
-                />
+                <ArrowLeftRight aria-label="Platform and solution request flow" className="text-secondary" size={16} />
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
-                        <CapabilityIcon {...capabilities.applicationContract} className="text-accent" size={20} />
+                        <CapabilityIcon {...capabilities.solutionContract} className="text-accent" size={20} />
                         <Stack align="center">
-                            <Text weight="semibold">Application</Text>
+                            <Text weight="semibold">Solution</Text>
                             <Text type="supporting">Runtime</Text>
                         </Stack>
                         <Stack paddingBlockEnd={3} direction="horizontal" gap={3} justify="center">
-                            <CapabilityIcon {...capabilities.applicationLogic} />
+                            <CapabilityIcon {...capabilities.solutionLogic} />
                             <CapabilityIcon {...capabilities.databases} />
                             <CapabilityIcon {...capabilities.storage} />
                         </Stack>

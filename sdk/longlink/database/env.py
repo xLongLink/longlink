@@ -9,14 +9,14 @@ from longlink.database.migrations import include_object
 settings = Envs()
 engine = create_engine(settings)
 
-# Keep Application migration state out of the shared schema resolved by the production search path.
+# Keep Solution migration state out of the shared schema resolved by the production search path.
 version_table_schema = settings.DATABASE_SCHEMA if settings.ENV == "production" else None
 
 
 def _configure_migrations(
     *, connection: Connection | None = None, url: str | None = None, literal_binds: bool = False
 ) -> None:
-    """Configure shared application migration behavior for one Alembic execution mode."""
+    """Configure shared Solution migration behavior for one Alembic execution mode."""
 
     # Keep online and offline schema comparison behavior aligned.
     context.configure(

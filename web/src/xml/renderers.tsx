@@ -71,7 +71,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             unsubscribers = [];
         }
 
-        /** Subscribes the renderer to every Valtio-backed state in the current page context. */
+        /** Subscribes the renderer to every Valtio-backed state in the current Solution View context. */
         function subscribeToStateValues() {
             // Ignore asynchronous continuations after this renderer releases ownership.
             if (!mounted) return;

@@ -2,7 +2,7 @@
 
 <img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-Application Scaffolding
+LongLink Solution Scaffold
 
 </div>
 

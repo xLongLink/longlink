@@ -1,0 +1,71 @@
+import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Article } from '@/components/layouts/Article';
+
+const solutionPaths = ['Use', 'Adapt', 'Create'];
+
+const metadata = {
+    seo: {
+        title: 'Solutions | Platform Documentation | LongLink',
+        description: 'Learn how to create, deploy, and operate Solutions on the LongLink Platform.',
+    },
+    toc: [{ id: 'solutions', label: 'Solutions', level: 1 }],
+    lastUpdated: '2026-08-05',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Solutions.tsx',
+};
+
+export default function DocsArticleRoute() {
+    return (
+        <Article page={metadata}>
+            <Stack gap={5}>
+                <Heading id="solutions" level={1}>
+                    Solutions
+                </Heading>
+                <Text as="p">
+                    A Solution is a dedicated tool for running a specific part of an organization’s work. LongLink makes
+                    it easy to deploy, access, and operate, so teams can focus on the process it supports.
+                </Text>
+                <Text as="p">
+                    <Text size="lg" type="label" weight="bold">
+                        Use
+                    </Text>{' '}
+                    an existing one when its process already reflects the way your organization works. LongLink provides
+                    a consistent way to deploy and operate it while making it available to authorized users and
+                    provisioning the resources it needs.
+                </Text>
+                <Text as="p">
+                    <Text size="lg" type="label" weight="bold">
+                        Adapt
+                    </Text>{' '}
+                    an existing project when the underlying process is familiar but the details differ. Teams can fork
+                    its Python code and adjust the workflows, rules, data model, views, and integrations to match their
+                    own requirements.
+                </Text>
+                <Text as="p">
+                    <Text size="lg" type="label" weight="bold">
+                        Create
+                    </Text>{' '}
+                    a new one when a process needs a dedicated design from the start. Developers write its
+                    process-specific logic as normal Python code, while LongLink provides the shared foundation for
+                    identity, permissions, deployment, data, storage, and operations.
+                </Text>
+                <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                    {solutionPaths.map((path) => (
+                        <Stack key={path} gap={2}>
+                            <Card height={190} padding={0} variant="muted">
+                                <Center height="100%">
+                                    <Heading level={2}>{path}</Heading>
+                                </Center>
+                            </Card>
+                            <Text type="supporting">{path}</Text>
+                        </Stack>
+                    ))}
+                </Grid>
+            </Stack>
+        </Article>
+    );
+}

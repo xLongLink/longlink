@@ -1,0 +1,43 @@
+# Template for one owned Organization Namespace, quota, and network boundary.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: '$namespace'
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+    name: longlink-solutions
+    namespace: '$namespace'
+spec:
+    hard:
+        limits.cpu: '2'
+        limits.ephemeral-storage: 2Gi
+        limits.memory: 1Gi
+        pods: '4'
+        requests.cpu: 400m
+        requests.ephemeral-storage: 1Gi
+        requests.memory: 512Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-solution-network-boundary
+    namespace: '$namespace'
+spec:
+    podSelector: {}
+    policyTypes:
+        - Ingress
+    ingress:
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: envoy-gateway-system
+                podSelector:
+                    matchLabels:
+                        gateway.envoyproxy.io/owning-gateway-name: longlink
+                        gateway.envoyproxy.io/owning-gateway-namespace: longlink-system
+          ports:
+              - protocol: TCP
+                port: 8000

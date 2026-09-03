@@ -22,7 +22,7 @@ class Organizations:
 
         # Render and apply only the requested Organization boundary.
         namespace_manifest, resource_quota, network_policy = templates.readyml_list(
-            files("src.kubernetes.templates").joinpath("application", "organization.yml"),
+            files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
             namespace=namespace,
         )
 

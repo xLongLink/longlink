@@ -7,7 +7,7 @@ export function parseXML(xml: string): ASTNode {
     const [root] = ast;
 
     if (ast.length !== 1 || root?.name !== 'longlink') {
-        throw new Error('XML pages must contain exactly one longlink root');
+        throw new Error('XML views must contain exactly one longlink root');
     }
 
     return root;

@@ -39,7 +39,7 @@ async def items_post_endpoint(payload: ItemCreate, ctx: Context = Depends(data))
 
 @router.get("/items/{item_id}", response_model=Item)
 async def item_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> Item:
-    """Return one catalog item for a dynamic XML detail page."""
+    """Return one catalog item for a dynamic XML Solution View."""
 
     return await _require_item(item_id, ctx.database)
 
