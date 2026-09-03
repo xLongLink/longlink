@@ -33,7 +33,7 @@
         "acorn": "^8.17.0",
         "fast-xml-parser": "^5.11.0",
         "isbot": "^5",
-        "ky": "^2.0.2",
+        "ky": "^2.1.0",
         "lucide-react": "^1.33.0",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
