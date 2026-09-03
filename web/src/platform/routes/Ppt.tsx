@@ -8,9 +8,10 @@ import Platform from '@/platform/layouts/Platform';
 import { GoalSlide } from '@/components/slides/Goal';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
-import { BookOpen, Network, Target, Users } from 'lucide-react';
+import { ApplicationsSlide } from '@/components/slides/Applications';
 import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
+import { Blocks, BookOpen, Network, Target, Users } from 'lucide-react';
 
 const slides = [
     {
@@ -27,6 +28,13 @@ const slides = [
         icon: Network,
         id: 'architecture',
         label: 'Architecture',
+    },
+    {
+        component: ApplicationsSlide,
+        href: '/ppt?slide=applications',
+        icon: Blocks,
+        id: 'applications',
+        label: 'Applications',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
