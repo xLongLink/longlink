@@ -26,7 +26,12 @@ export function IntroductionSlide() {
                     Vibe Coding
                 </Text>
             </Stack>
-            <Text className="absolute bottom-12 start-12" hasCapsize type="large" weight="semibold">
+            <Text
+                className="ppt-slide-standard-font absolute bottom-12 start-12"
+                hasCapsize
+                type="large"
+                weight="semibold"
+            >
                 Where are we headed?
             </Text>
         </Stack>

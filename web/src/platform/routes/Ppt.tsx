@@ -7,9 +7,9 @@ import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
+import { TargetSlide } from '@/components/slides/Target';
+import { ProblemSlide } from '@/components/slides/Problem';
 import { PrinciplesSlide } from '@/components/slides/Principles';
-import { ApplicationsSlide } from '@/components/slides/Applications';
-import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
 import { Blocks, BookOpen, Network, Target, Users } from 'lucide-react';
 
@@ -22,6 +22,13 @@ const slides = [
         label: 'Introduction',
     },
     {
+        component: TargetSlide,
+        href: '/ppt?slide=target',
+        icon: Blocks,
+        id: 'target',
+        label: 'Target',
+    },
+    {
         component: PrinciplesSlide,
         href: '/ppt?slide=principles',
         icon: Target,
@@ -29,23 +36,26 @@ const slides = [
         label: 'Principles',
     },
     {
-        component: ArchitectureSlide,
-        href: '/ppt?slide=architecture',
+        component: ProblemSlide,
+        href: '/ppt?slide=problem',
         icon: Network,
-        id: 'architecture',
-        label: 'Architecture',
-    },
-    {
-        component: ApplicationsSlide,
-        href: '/ppt?slide=applications',
-        icon: Blocks,
-        id: 'applications',
-        label: 'Applications',
+        id: 'problem',
+        label: 'Problem',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 
 const printStyles = `
+    .ppt-slide-content {
+        --font-family-body: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-heading: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+    }
+
+    .ppt-slide-standard-font {
+        --font-family-body: Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --font-family-heading: Montserrat, Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
     .ppt-screen-slide {
         width: 100%;
         height: 100dvh;
@@ -148,7 +158,9 @@ function PresentationSlide({
             isDevelopmentNoticeShown={false}
             tabs={slides}
         >
-            <Slide />
+            <Stack align="center" className="ppt-slide-content" height="100%" justify="center" width="100%">
+                <Slide />
+            </Stack>
         </Platform>
     );
 

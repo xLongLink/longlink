@@ -5,7 +5,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 /** Renders the presentation team slide. */
 export function TeamSlide() {
     return (
-        <Stack align="center" gap={3}>
+        <Stack align="center" className="ppt-slide-standard-font" gap={3}>
             <Text as="h1" hasCapsize type="display-3" weight="semibold">
                 Leonardo Saurwein
             </Text>
