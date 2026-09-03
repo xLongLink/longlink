@@ -7,15 +7,19 @@ import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
 import { GoalSlide } from '@/components/slides/Goal';
 import { TeamSlide } from '@/components/slides/Team';
-import { PathsSlide } from '@/components/slides/Paths';
 import { useLocation, useNavigate } from 'react-router';
-import { ProblemSlide } from '@/components/slides/Problem';
+import { BookOpen, Network, Target, Users } from 'lucide-react';
 import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, GitFork, Network, Target, TriangleAlert, Users } from 'lucide-react';
 
 const slides = [
-    { component: PathsSlide, href: '/ppt?slide=paths', icon: GitFork, id: 'paths', label: 'Paths' },
+    {
+        component: IntroductionSlide,
+        href: '/ppt?slide=introduction',
+        icon: BookOpen,
+        id: 'introduction',
+        label: 'Introduction',
+    },
     { component: GoalSlide, href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
     {
         component: ArchitectureSlide,
@@ -24,14 +28,6 @@ const slides = [
         id: 'architecture',
         label: 'Architecture',
     },
-    {
-        component: IntroductionSlide,
-        href: '/ppt?slide=introduction',
-        icon: BookOpen,
-        id: 'introduction',
-        label: 'Introduction',
-    },
-    { component: ProblemSlide, href: '/ppt?slide=problem', icon: TriangleAlert, id: 'problem', label: 'Problem' },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
 
