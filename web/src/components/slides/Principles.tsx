@@ -3,8 +3,8 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { GitFork, LockKeyhole, Minimize2 } from 'lucide-react';
 import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
 
-/** Renders the presentation goals. */
-export function GoalSlide() {
+/** Renders the presentation principles. */
+export function PrinciplesSlide() {
     return (
         <Stack className="relative" height="100%" width="100%">
             <img

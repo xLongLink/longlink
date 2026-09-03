@@ -11,21 +11,24 @@ export function IntroductionSlide() {
                 draggable={false}
                 src="/images/paths.png"
             />
-            <Stack className="absolute start-1/4 top-1/2 -translate-x-1/2 -translate-y-10">
+            <Stack className="absolute start-1/4 top-1/2 -translate-x-1/2 -translate-y-8">
                 <Text hasCapsize type="display-3" weight="semibold">
                     Classical Coding
                 </Text>
             </Stack>
-            <Stack className="absolute start-5/6 top-10 -translate-x-1/2">
+            <Stack className="absolute start-4/5 top-5/12 -translate-x-1/2">
                 <Text hasCapsize type="display-3" weight="semibold">
                     Hybrid Coding
                 </Text>
             </Stack>
-            <Stack className="absolute bottom-10 start-5/6 -translate-x-1/2">
+            <Stack className="absolute bottom-24 start-4/5 -translate-x-1/2">
                 <Text hasCapsize type="display-3" weight="semibold">
                     Vibe Coding
                 </Text>
             </Stack>
+            <Text className="absolute bottom-12 start-12" hasCapsize type="large" weight="semibold">
+                Where are we headed?
+            </Text>
         </Stack>
     );
 }

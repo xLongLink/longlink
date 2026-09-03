@@ -19,9 +19,6 @@ export function TeamSlide() {
                     <Text color="secondary" type="large">
                         Strongly belive in open source
                     </Text>
-                    <Text color="secondary" type="large">
-                        Against free labour
-                    </Text>
                 </Stack>
             </Stack>
         </Stack>

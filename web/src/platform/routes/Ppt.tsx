@@ -5,9 +5,9 @@ import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
-import { GoalSlide } from '@/components/slides/Goal';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
+import { PrinciplesSlide } from '@/components/slides/Principles';
 import { ApplicationsSlide } from '@/components/slides/Applications';
 import { ArchitectureSlide } from '@/components/slides/Architecture';
 import { IntroductionSlide } from '@/components/slides/Introduction';
@@ -21,7 +21,13 @@ const slides = [
         id: 'introduction',
         label: 'Introduction',
     },
-    { component: GoalSlide, href: '/ppt?slide=goal', icon: Target, id: 'goal', label: 'Goal' },
+    {
+        component: PrinciplesSlide,
+        href: '/ppt?slide=principles',
+        icon: Target,
+        id: 'principles',
+        label: 'Principles',
+    },
     {
         component: ArchitectureSlide,
         href: '/ppt?slide=architecture',
