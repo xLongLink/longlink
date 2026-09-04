@@ -62,6 +62,9 @@ export function Footer() {
                                 <Link href="/" color="secondary" type="supporting" weight="medium">
                                     Home
                                 </Link>
+                                <Link href="/blog" color="secondary" type="supporting" weight="medium">
+                                    Blog
+                                </Link>
                                 <Link href="/docs" color="secondary" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
