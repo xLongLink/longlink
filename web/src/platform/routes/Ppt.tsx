@@ -246,7 +246,7 @@ export default function Ppt() {
                     justify="center"
                     align="center"
                 >
-                    <Wordmark size="heading" />
+                    <Wordmark size="display" />
                 </Stack>
                 {slides.map((slide, printSlideIndex) => (
                     <PresentationSlide className="ppt-print-slide" key={slide.id} slideIndex={printSlideIndex} />
@@ -258,9 +258,12 @@ export default function Ppt() {
                     justify="center"
                     align="center"
                 >
-                    <Text hasCapsize type="display-3" weight="semibold">
-                        longlink.dev
-                    </Text>
+                    <Stack align="center" gap={4}>
+                        <Wordmark size="display" />
+                        <Text hasCapsize type="large" weight="semibold">
+                            longlink.dev
+                        </Text>
+                    </Stack>
                 </Stack>
             </Stack>
         </>
