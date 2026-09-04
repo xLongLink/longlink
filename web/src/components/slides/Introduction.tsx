@@ -17,12 +17,12 @@ export function IntroductionSlide() {
                         Classical Coding
                     </Text>
                 </Stack>
-                <Stack className="absolute start-4/5 top-5/12 -translate-x-1/2">
+                <Stack className="absolute start-5/6 top-5/12 translate-y-2 -translate-x-1/2">
                     <Text hasCapsize type="display-3" weight="semibold">
                         Hybrid Coding
                     </Text>
                 </Stack>
-                <Stack className="absolute start-4/5 top-13/15 -translate-x-1/2">
+                <Stack className="absolute start-5/6 top-13/15 -translate-x-1/2">
                     <Text hasCapsize type="display-3" weight="semibold">
                         Vibe Coding
                     </Text>

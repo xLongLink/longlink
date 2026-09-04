@@ -11,7 +11,7 @@ import { TargetSlide } from '@/components/slides/Target';
 import { PlatformSlide } from '@/components/slides/Platform';
 import { PrinciplesSlide } from '@/components/slides/Principles';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { Blocks, BookOpen, Network, Target, Users } from 'lucide-react';
+import { BookOpen, ListChecks, Server, Target, Users } from 'lucide-react';
 
 const slides = [
     {
@@ -24,21 +24,21 @@ const slides = [
     {
         component: TargetSlide,
         href: '/ppt?slide=target',
-        icon: Blocks,
+        icon: Target,
         id: 'target',
         label: 'Target',
     },
     {
         component: PrinciplesSlide,
         href: '/ppt?slide=principles',
-        icon: Target,
+        icon: ListChecks,
         id: 'principles',
         label: 'Principles',
     },
     {
         component: PlatformSlide,
         href: '/ppt?slide=platform',
-        icon: Network,
+        icon: Server,
         id: 'platform',
         label: 'Platform',
     },
