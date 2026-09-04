@@ -70,7 +70,7 @@ export function TargetSlide() {
                 type="large"
                 weight="semibold"
             >
-                Where this applies?
+                What are we building for?
             </Text>
         </Stack>
     );
