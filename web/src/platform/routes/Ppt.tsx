@@ -5,13 +5,14 @@ import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
+import { PlanSlide } from '@/components/slides/Plan';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
 import { TargetSlide } from '@/components/slides/Target';
 import { PlatformSlide } from '@/components/slides/Platform';
 import { PrinciplesSlide } from '@/components/slides/Principles';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, ListChecks, Server, Target, Users } from 'lucide-react';
+import { BookOpen, CalendarRange, ListChecks, Server, Target, Users } from 'lucide-react';
 
 const slides = [
     {
@@ -41,6 +42,13 @@ const slides = [
         icon: Server,
         id: 'platform',
         label: 'Platform',
+    },
+    {
+        component: PlanSlide,
+        href: '/ppt?slide=plan',
+        icon: CalendarRange,
+        id: 'plan',
+        label: 'Plan',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
