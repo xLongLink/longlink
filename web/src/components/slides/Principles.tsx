@@ -1,7 +1,6 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { GitFork, LockKeyhole, Minimize2 } from 'lucide-react';
-import humanRobotHands from '@/components/svg/HumanRobotHands.svg';
 
 /** Renders the presentation principles. */
 export function PrinciplesSlide() {
@@ -11,7 +10,7 @@ export function PrinciplesSlide() {
                 alt="Human and robot hands reaching toward each other"
                 className="w-full -translate-y-4 pointer-events-none select-none object-contain"
                 draggable={false}
-                src={humanRobotHands}
+                src="/images/human-robot-hands.png"
             />
             <Stack className="absolute bottom-16 start-12">
                 <Stack gap={8}>
