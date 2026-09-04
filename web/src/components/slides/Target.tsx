@@ -9,14 +9,14 @@ export function TargetSlide() {
         <Stack align="center" className="relative" height="100%" justify="center" width="100%">
             <Stack align="center" gap={2} maxWidth={832} width="100%">
                 <Grid columns={2} gap={2} justify="center" maxWidth={552} width="100%">
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Legacy systems
                             </Text>
                         </Stack>
                     </Card>
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Low-code platforms
@@ -25,21 +25,21 @@ export function TargetSlide() {
                     </Card>
                 </Grid>
                 <Grid columns={3} gap={2} justify="center" width="100%">
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 SaaS applications
                             </Text>
                         </Stack>
                     </Card>
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Excel
                             </Text>
                         </Stack>
                     </Card>
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Vibe tools
@@ -48,14 +48,14 @@ export function TargetSlide() {
                     </Card>
                 </Grid>
                 <Grid columns={2} gap={2} justify="center" maxWidth={552} width="100%">
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Manual workflows
                             </Text>
                         </Stack>
                     </Card>
-                    <Card height={120} variant="muted" width={272}>
+                    <Card className="ppt-brittle-brick" height={120} variant="muted" width={272}>
                         <Stack align="center" height="100%" justify="center">
                             <Text size="2xl" type="large" weight="semibold">
                                 Workarounds

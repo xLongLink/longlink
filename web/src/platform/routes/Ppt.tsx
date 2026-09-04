@@ -56,6 +56,30 @@ const printStyles = `
         --font-family-heading: Montserrat, Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
+    .ppt-brittle-brick {
+        position: relative;
+        isolation: isolate;
+        border-radius: var(--radius-none);
+        clip-path: polygon(
+            0 0,
+            38% 0,
+            42% 7%,
+            47% 0,
+            100% 0,
+            100% 57%,
+            95% 64%,
+            100% 73%,
+            100% 100%,
+            62% 100%,
+            57% 93%,
+            52% 100%,
+            0 100%,
+            0 64%,
+            5% 57%,
+            0 49%
+        );
+    }
+
     .ppt-screen-slide {
         width: 100%;
         height: 100dvh;
@@ -87,7 +111,7 @@ const printStyles = `
 
     @page {
         size: 13.333in 7.5in;
-        margin: 0.25in;
+        margin: 0;
     }
 
     @media print {
@@ -104,14 +128,12 @@ const printStyles = `
 
         .ppt-print-slides {
             display: block;
-            --ppt-print-slide-height: 7in;
-            --ppt-print-slide-width: 12.833in;
         }
 
         .ppt-print-slide,
         .ppt-print-title-slide {
-            width: var(--ppt-print-slide-width);
-            height: var(--ppt-print-slide-height);
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
             break-inside: avoid;
             break-after: page;
