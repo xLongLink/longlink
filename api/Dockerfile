@@ -12,7 +12,7 @@ ARG VITE_SITE_URL=https://longlink.dev
 ENV VITE_SITE_URL=${VITE_SITE_URL}
 RUN vp run build:api
 
-FROM python:3.14.6-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
+FROM python:3.14.7-slim@sha256:cad9a2c871761c413caa6fdd6441c783451e740a48aaeba60ae62a8b53525ef6
 
 ARG VERSION=v0.0.0
 
