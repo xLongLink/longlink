@@ -27,12 +27,7 @@ export default function CreateDatabase() {
     });
 
     return (
-        <RegistryDialog
-            dialog={dialog}
-            subtitle="Register a database backend for the LongLink Platform."
-            title="Connect database"
-            width={520}
-        >
+        <RegistryDialog dialog={dialog} title="Connect database" width={520}>
             <FormLayout>
                 <dialog.form.Field name="name">
                     {(field) => (

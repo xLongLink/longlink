@@ -168,14 +168,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             maxHeight="calc(100dvh - 2rem)"
                         >
                             <Layout
-                                header={
-                                    <DialogHeader
-                                        hasDivider
-                                        title={stepTitle}
-                                        subtitle="1. Image / 2. Metadata / 3. Envs"
-                                        onOpenChange={handleOpenChange}
-                                    />
-                                }
+                                header={<DialogHeader hasDivider title={stepTitle} onOpenChange={handleOpenChange} />}
                                 content={
                                     <LayoutContent>
                                         <form
