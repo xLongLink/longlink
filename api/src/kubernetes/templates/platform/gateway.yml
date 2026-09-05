@@ -1,4 +1,4 @@
-# LongLink requires Envoy Gateway v1.8 and owns one authenticated Gateway per Compute.
+# LongLink owns one authenticated Envoy Gateway per Compute.
 apiVersion: v1
 kind: Namespace
 metadata:

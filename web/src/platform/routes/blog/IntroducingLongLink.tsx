@@ -67,12 +67,49 @@ export default function IntroducingLongLink() {
                                     solution. This keeps the development process transparent, making assumptions,
                                     trade-offs, and errors easier to understand and audit.
                                 </Text>
-                                <Card className="overflow-hidden" padding={0} variant="transparent">
+                                <Card
+                                    className="handwritten-diagram relative overflow-hidden"
+                                    padding={0}
+                                    variant="transparent"
+                                >
                                     <img
-                                        alt="Two development paths leading to a transparent white box and an opaque black box"
+                                        alt="Classical coding splitting into hybrid coding and vibe coding paths"
                                         className="aspect-video w-full object-contain"
                                         src="/images/paths.png"
                                     />
+                                    <Stack className="absolute start-1/4 top-1/2 -translate-x-1/2 -translate-y-3 sm:-translate-y-6 md:-translate-y-8">
+                                        <Text
+                                            className="text-sm sm:text-xl md:text-2xl"
+                                            hasCapsize
+                                            textWrap="nowrap"
+                                            type="display-3"
+                                            weight="semibold"
+                                        >
+                                            Classical Coding
+                                        </Text>
+                                    </Stack>
+                                    <Stack className="absolute bottom-1/6 start-5/6 top-5/12 translate-y-2 -translate-x-1/2">
+                                        <Text
+                                            className="text-sm sm:text-xl md:text-2xl"
+                                            hasCapsize
+                                            textWrap="nowrap"
+                                            type="display-3"
+                                            weight="semibold"
+                                        >
+                                            Hybrid Coding
+                                        </Text>
+                                        <Stack className="absolute start-0 top-full -translate-y-1">
+                                            <Text
+                                                className="text-sm sm:text-xl md:text-2xl"
+                                                hasCapsize
+                                                textWrap="nowrap"
+                                                type="display-3"
+                                                weight="semibold"
+                                            >
+                                                Vibe Coding
+                                            </Text>
+                                        </Stack>
+                                    </Stack>
                                 </Card>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                     Initial implementation speed can come at the cost of long-term maintainability.
@@ -142,17 +179,26 @@ export default function IntroducingLongLink() {
                                     The Vision
                                 </Heading>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Most companies currently bridge the gaps between their systems with spreadsheets,
-                                    forms, dashboards, email, scripts, and AI-generated tools. The pieces may work, but
-                                    the business logic becomes distributed across them. Processes grow harder to
-                                    understand, govern, and maintain.
+                                    These principles are combined with the core idea of modern software development:
+                                    work is performed locally, while code, history, collaboration, and validation exist
+                                    in the cloud. This creates a shared space where software lives and its evolution can
+                                    be understood, reviewed, and controlled.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Other platforms can make custom software faster to assemble, but often require the
-                                    result to stay within proprietary environments, data models, or deployment systems.
-                                    LongLink instead lets organizations retain control of their source code, data,
-                                    workflows, and integrations. The value created through customization remains
-                                    available, portable, and adaptable as requirements change.
+                                    This environment was designed to integrate easily with external tools and services.
+                                    A repository contains all the context required to complete a task, reducing the
+                                    guesswork required by AI agents and improving their accuracy.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Outside the development environment, this model breaks down. Data and processes are
+                                    fragmented across legacy systems, low-code platforms, spreadsheets, databases,
+                                    documents, and disconnected applications.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    LongLink brings the same integrated model to business applications: a shared
+                                    platform where processes, logic, data, and workflows live together. It provides the
+                                    infrastructure needed to build, deploy, operate, and govern solutions, giving
+                                    developers, business users, and agents a structured working environment.
                                 </Text>
                             </Stack>
 
@@ -167,12 +213,34 @@ export default function IntroducingLongLink() {
                                         describes a process from the shared services required to run that code reliably.
                                     </Text>
                                 </Stack>
-                                <Card className="overflow-hidden" padding={0} variant="transparent">
+                                <Card
+                                    className="handwritten-diagram relative overflow-hidden"
+                                    padding={0}
+                                    variant="transparent"
+                                >
                                     <img
                                         alt="An AI assistant connected to a LongLink solution, services, and infrastructure"
                                         className="aspect-video w-full object-contain"
                                         src="/images/platform.png"
                                     />
+                                    <Text
+                                        className="absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                                        hasCapsize
+                                        textWrap="nowrap"
+                                        type="display-3"
+                                        weight="semibold"
+                                    >
+                                        Services
+                                    </Text>
+                                    <Text
+                                        className="absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                                        hasCapsize
+                                        textWrap="nowrap"
+                                        type="display-3"
+                                        weight="semibold"
+                                    >
+                                        Deployment
+                                    </Text>
                                 </Card>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                     Each project becomes a LongLink Solution: a standard Python and FastAPI service
@@ -190,13 +258,25 @@ export default function IntroducingLongLink() {
                                     What next
                                 </Heading>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    LongLink is in active development. The immediate work is to strengthen the Platform,
-                                    expand the Solution SDK, and prove the model through real systems. The project is
-                                    open source so its foundations, tradeoffs, and progress remain visible.
+                                    The core architecture is complete, and the public beta is live. Try it, test it, and
+                                    break it.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    The goal is simple: make dedicated software a durable option for the real-world
-                                    processes that are too important to remain a collection of workarounds.
+                                    LongLink is open source. Leave us a{' '}
+                                    <Link
+                                        hasUnderline
+                                        href="https://github.com/xLongLink/longlink"
+                                        isExternalLink
+                                        type="inherit"
+                                    >
+                                        star
+                                    </Link>{' '}
+                                    and help us build what comes next. For questions, feedback, or collaboration, reach
+                                    out at{' '}
+                                    <Link hasUnderline href="mailto:info@longlink.dev" type="inherit">
+                                        info@longlink.dev
+                                    </Link>
+                                    .
                                 </Text>
                             </Stack>
                         </Stack>

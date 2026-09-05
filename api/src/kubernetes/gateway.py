@@ -336,13 +336,13 @@ class Gateway:
             async with asyncio.timeout(5 * 60):
                 for resource in resources:
                     # Recreate the Helm hook Job because Kubernetes Job pod templates are immutable.
-                    if resource is certgen_job and await resource.exists():
+                    if resource is certgen_job:
                         try:
                             await resource.delete()
                         except NotFoundError:
                             pass
-                        while await resource.exists():
-                            await asyncio.sleep(1)
+                        else:
+                            await resource.wait("delete")
 
                     await apply(resource)
                     if isinstance(resource, CustomResourceDefinition):

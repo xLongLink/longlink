@@ -1,8 +1,10 @@
 import asyncio
+from kr8s import NotFoundError
 from uuid import UUID
+from pathlib import Path
 from sqlalchemy import text
-from scripts.seed import SeedSettings
 from src.models.types import DatabaseSSLMode
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Namespace
 from src.database.session import session_scope
@@ -11,11 +13,24 @@ from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
 
 
+class CleanupSettings(BaseSettings):
+    """Define the Kubernetes connection used for development resource cleanup."""
+
+    # Compute registry
+    KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
+
+    model_config = SettingsConfigDict(
+        env_file=".env.seed",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
 async def cleanup() -> None:
     """Delete and verify all resources owned by the configured seed environment."""
 
     # Validate cleanup configuration before inventorying or mutating external resources.
-    settings = SeedSettings()
+    settings = CleanupSettings()
     kubeconfig = settings.KUBECONFIG.resolve()
     if not kubeconfig.is_file():
         raise ValueError(f"Kubeconfig not found: {kubeconfig}")
@@ -82,31 +97,31 @@ async def cleanup() -> None:
             if solution_id is not None:
                 database_solutions.add(UUID(str(solution_id)))
 
-    # Delete only namespaces selected by local seed configuration and tracked Platform state.
-    existing_namespaces: dict[str, Namespace] = {}
+    # Stop all managed workloads before revoking the credentials they can consume.
+    deleting_namespaces: dict[str, Namespace] = {}
     for namespace in sorted(managed_namespaces):
         namespace_resource = Namespace(namespace, api=api)
-        if not await namespace_resource.exists():
+        try:
+            await namespace_resource.delete()
+        except NotFoundError:
             continue
-        existing_namespaces[namespace] = namespace_resource
+        deleting_namespaces[namespace] = namespace_resource
 
-    # Stop all managed workloads before revoking the credentials they can consume.
-    removed_namespaces = len(existing_namespaces)
-    for namespace in sorted(existing_namespaces):
-        await existing_namespaces[namespace].delete()
+    # Wait for every accepted deletion before removing provider credentials.
+    removed_namespaces = len(deleting_namespaces)
     try:
         async with asyncio.timeout(10 * 60):
-            while existing_namespaces:
+            while deleting_namespaces:
                 remaining: dict[str, Namespace] = {}
-                for namespace, resource in existing_namespaces.items():
+                for namespace, resource in deleting_namespaces.items():
                     if await resource.exists():
                         remaining[namespace] = resource
                 if not remaining:
                     break
-                existing_namespaces = remaining
+                deleting_namespaces = remaining
                 await asyncio.sleep(5)
     except TimeoutError:
-        names = ", ".join(sorted(existing_namespaces))
+        names = ", ".join(sorted(deleting_namespaces))
         raise RuntimeError(f"Kubernetes namespaces did not terminate: {names}") from None
 
     # Remove the cluster-scoped class after its LongLink Gateway and data plane are gone.
