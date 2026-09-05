@@ -11,13 +11,13 @@ The Platform manages authentication, permissions, organizations, infrastructure 
 
 Managed resources are connected to the platform:
 
-- Compute: `KaaS` (Kubernetes as a Service) using `kubeconfig.yaml`. LongLink installs Envoy Gateway v1.8 from its checksummed upstream manifest when it registers the Compute.
+- Compute: `KaaS` (Kubernetes as a Service) using `kubeconfig.yaml`. LongLink installs and upgrades Envoy Gateway from the pinned release bundled with the Platform API.
 - Database: `DBaaS` (Database as a Service) using `admin credentials`.
 - Storage: `STaaS` (Storage as a Service) using `provider API key`.
 
 Compute and Database works independently of the provider, the storage need a adapter layer since the IAM is unique for each datacenter
 
-The Compute kubeconfig must allow LongLink to create namespaces, custom resource definitions, and cluster-scoped resources. LongLink then installs Envoy Gateway and owns the shared `Gateway`, API-key policy, and Solution `HTTPRoute` resources.
+The Compute kubeconfig must allow LongLink to create namespaces, custom resource definitions, and cluster-scoped resources. LongLink owns the Envoy Gateway installation, shared `Gateway`, mTLS policy, and Solution `HTTPRoute` resources. Platform releases reconcile every registered Compute to their tested Envoy Gateway version; LongLink never follows an unpinned latest version.
 
 <br />
 

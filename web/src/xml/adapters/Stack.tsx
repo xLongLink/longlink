@@ -9,7 +9,7 @@ import { BOX_ALIGNS, ORIENTATIONS, STACK_JUSTIFICATIONS, STACK_WRAPS } from '../
 const stackPropsSchema = z.object({
     align: z.enum(BOX_ALIGNS).optional(),
     direction: z.enum(ORIENTATIONS).optional(),
-    gap: xmlSpacingSchema.default(3),
+    gap: xmlSpacingSchema.default(0),
     justify: z.enum(STACK_JUSTIFICATIONS).optional(),
     wrap: z.enum(STACK_WRAPS).optional(),
 });

@@ -45,7 +45,7 @@ export default function Blog() {
                                     <Stack gap={4} padding={6}>
                                         <Stack gap={3}>
                                             <Text color="secondary" type="supporting">
-                                                September 4, 2026 | 6 min read
+                                                September 4, 2026 | 4 min read
                                             </Text>
                                             <Heading level={2} textWrap="balance" type="display-3">
                                                 Introducing LongLink

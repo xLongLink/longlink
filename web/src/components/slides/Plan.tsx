@@ -32,7 +32,7 @@ export function PlanSlide() {
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
                             <Text hasCapsize type="display-3" weight="semibold">
-                                Placeholder
+                                Pilots
                             </Text>
                             <Text color="secondary" type="large">
                                 Q4 2026
