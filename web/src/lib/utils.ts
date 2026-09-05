@@ -35,7 +35,7 @@ export function startCase(value: string): string {
 
     return spaced
         .split(/[^a-zA-Z0-9]+/)
-        .filter((word) => word.length > 0)
+        .filter(Boolean)
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }

@@ -6,10 +6,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import {
-    zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
-    zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
+import { zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const EMPTY_LOG_LINES: readonly string[] = [];
 
@@ -32,9 +29,6 @@ export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
               title: 'Operation logs',
           };
     const logsPath = isSolution ? `/api/v1/solutions/${resourceId}/logs` : `/api/v1/operations/${resourceId}/logs`;
-    const schema = isSolution
-        ? zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse
-        : zGetOperationLogsApiV1OperationsOperationIdLogsGetResponse;
     const {
         data: logLines = EMPTY_LOG_LINES,
         error,
@@ -44,7 +38,7 @@ export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
         queryFn: async ({ signal }) => {
             const response = await api(logsPath, { signal }).json();
 
-            return schema.parse(response);
+            return zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse.parse(response);
         },
     });
 

@@ -24,6 +24,11 @@
     .article-content p {
         opacity: 0.9;
     }
+
+    .handwritten-diagram {
+        --font-family-body: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-heading: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+    }
 }
 
 @keyframes path-navigation-cue {

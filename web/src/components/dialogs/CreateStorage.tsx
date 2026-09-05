@@ -24,12 +24,7 @@ export default function CreateStorage() {
     });
 
     return (
-        <RegistryDialog
-            dialog={dialog}
-            subtitle="Register an Exoscale SOS backend."
-            title="Connect storage"
-            width={520}
-        >
+        <RegistryDialog dialog={dialog} title="Connect storage" width={520}>
             <FormLayout>
                 <dialog.form.Field name="name">
                     {(field) => (

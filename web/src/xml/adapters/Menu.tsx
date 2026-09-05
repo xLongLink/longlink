@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/Menu';
 
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
-const menuPropsSchema = z.object({ gap: xmlSpacingSchema.optional() });
+const menuPropsSchema = z.object({ gap: xmlSpacingSchema.default(3) });
 const menuEntryPropsSchema = z.object({
     icon: z.string().refine(isStoneIconName, 'must be a supported icon name').optional(),
     label: xmlNonblankStringSchema,

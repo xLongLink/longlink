@@ -1,27 +1,21 @@
-import type { ReactNode } from 'react';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 
-/** Centers one full-page state indicator. */
-function PageState({ children }: { children: ReactNode }) {
-    return <Center minHeight="70dvh">{children}</Center>;
-}
-
 /** Renders a full-page loading indicator. */
 export function PageLoading({ label }: { label: string }) {
     return (
-        <PageState>
+        <Center minHeight="70dvh">
             <Spinner label={label} />
-        </PageState>
+        </Center>
     );
 }
 
 /** Renders a full-page unavailable state. */
 export function PageError({ description, title }: { description: string; title: string }) {
     return (
-        <PageState>
+        <Center minHeight="70dvh">
             <EmptyState description={description} headingLevel={1} title={title} />
-        </PageState>
+        </Center>
     );
 }

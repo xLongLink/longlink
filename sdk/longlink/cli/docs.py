@@ -113,14 +113,19 @@ def docs_command(component: str | None) -> None:
         if node.get("name")
     }
     metadata_path = f"{XSD}annotation/{XSD}appinfo/{DOCS}docs"
-    documented = [(element, element.find(metadata_path)) for element in elements.values() if element.find(metadata_path) is not None]
+    documented = [
+        (element, metadata)
+        for element in elements.values()
+        if (metadata := element.find(metadata_path)) is not None
+    ]
     # A missing component prints the grouped discovery catalog.
     if component is None:
         lines = ["LongLink XML components"]
-        for category in sorted({metadata.get("category", "") for _, metadata in documented if metadata is not None}):
+        documented = sorted(documented, key=lambda entry: entry[0].get("name", ""))
+        for category in sorted({metadata.get("category", "") for _, metadata in documented}):
             lines.extend(["", category])
-            for element, metadata in sorted(documented, key=lambda entry: entry[0].get("name", "")):
-                if metadata is not None and metadata.get("category") == category:
+            for element, metadata in documented:
+                if metadata.get("category") == category:
                     description = _text(element, f"{XSD}annotation/{XSD}documentation")
                     lines.append(f"- {element.get('name')} - {description}")
         click.echo("\n".join([*lines, "", "Run `longlink docs <component>` for attributes and examples."]))
@@ -129,7 +134,7 @@ def docs_command(component: str | None) -> None:
     # Resolve either the XML element name or documentation slug.
     normalized = component.casefold()
     match = next(
-        ((element, metadata) for element, metadata in documented if metadata is not None and normalized in {
+        ((element, metadata) for element, metadata in documented if normalized in {
             element.get("name", "").casefold(), metadata.get("slug", "").casefold()
         }),
         None,

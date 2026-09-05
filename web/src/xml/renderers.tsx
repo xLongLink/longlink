@@ -153,7 +153,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     return (
         <XmlErrorBoundary ast={ast}>
             <XmlContext.Provider value={ctx}>
-                <Stack gap={8}>{renderNode(ast.children, ctx.scope)}</Stack>
+                <Stack gap={3}>{renderNode(ast.children, ctx.scope)}</Stack>
             </XmlContext.Provider>
         </XmlErrorBoundary>
     );
@@ -215,16 +215,16 @@ function validateSetupNode(node: ASTNode): string {
 
         // Keep State declarations leaf-only.
         if (node.children.length > 0) throw new Error('State cannot have children');
+
+        return id;
     }
 
     // Validate query declarations.
-    else {
-        // Require a query source path.
-        if (!node.params.path) throw new Error('Query requires a string path');
+    // Require a query source path.
+    if (!node.params.path) throw new Error('Query requires a string path');
 
-        // Keep Query declarations leaf-only.
-        if (node.children.length > 0) throw new Error('Query cannot have children');
-    }
+    // Keep Query declarations leaf-only.
+    if (node.children.length > 0) throw new Error('Query cannot have children');
 
     return id;
 }

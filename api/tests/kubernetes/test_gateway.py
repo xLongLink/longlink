@@ -1,444 +1,278 @@
 import pytest
 import ipaddress
+from kr8s import NotFoundError
 from uuid import UUID
 from conftest import FakeKubernetes
 from cryptography import x509
 from src.kubernetes import gateway
-from kr8s.asyncio.objects import APIObject
 from cryptography.x509.oid import ExtendedKeyUsageOID
 from src.kubernetes.gateway import generate_gateway_tls
 
 pytestmark = pytest.mark.no_db
 
 
-def test_gateway_tls_covers_the_compute_address() -> None:
-    """Generate server and Platform client certificates trusted by one Compute CA."""
+@pytest.mark.parametrize(
+    ("address", "san_type", "expected_san"),
+    [
+        pytest.param("192.0.2.1", x509.IPAddress, ipaddress.ip_address("192.0.2.1"), id="IPv4"),
+        pytest.param("gateway.example.test", x509.DNSName, "gateway.example.test", id="DNS"),
+    ],
+)
+def test_gateway_tls_covers_the_compute_address(
+    address: str,
+    san_type: type[x509.IPAddress] | type[x509.DNSName],
+    expected_san: ipaddress.IPv4Address | str,
+) -> None:
+    """Generate endpoint-bound server and Platform client certificates trusted by one Compute CA."""
 
-    # Generate material for one IPv4 compute gateway address.
-    address = "192.0.2.1"
+    # Generate material for one compute Gateway endpoint.
     tls = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), address)
 
-    # Verify both leaf certificates preserve their issuing CA and intended extended usage.
+    # Verify both leaf certificates preserve their issuer and intended usage, and the server covers the endpoint.
     ca_certificate = x509.load_pem_x509_certificate(tls.ca_certificate.encode("ascii"))
     server_certificate = x509.load_pem_x509_certificate(tls.server_certificate.encode("ascii"))
     client_certificate = x509.load_pem_x509_certificate(tls.client_certificate.encode("ascii"))
     names = server_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
     assert server_certificate.issuer == ca_certificate.subject
     assert client_certificate.issuer == ca_certificate.subject
-    assert names.get_values_for_type(x509.IPAddress) == [ipaddress.ip_address(address)]
+    assert names.get_values_for_type(san_type) == [expected_san]
     assert list(server_certificate.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value) == [ExtendedKeyUsageOID.SERVER_AUTH]
     assert list(client_certificate.extensions.get_extension_for_class(x509.ExtendedKeyUsage).value) == [ExtendedKeyUsageOID.CLIENT_AUTH]
 
 
-def test_gateway_tls_covers_a_hostname() -> None:
-    """Generate a server certificate with the compute hostname as its DNS SAN."""
+async def test_gateway_install_rejects_an_unmanaged_controller(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject an existing Envoy Gateway deployment not owned by LongLink."""
 
     # Arrange
-    address = "gateway.example.test"
+    class Deployment:
+        def __init__(self, _name: str, namespace: str, api: object) -> None:
+            """Expose an unrelated controller Deployment."""
 
-    # Act
-    tls = generate_gateway_tls(UUID("00000000-0000-4000-8000-000000000001"), address)
-    server_certificate = x509.load_pem_x509_certificate(tls.server_certificate.encode("ascii"))
-
-    # Assert
-    names = server_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
-    assert names.get_values_for_type(x509.DNSName) == [address]
-
-
-async def test_gateway_install_skips_manifest_when_controller_is_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reuse an accepted GatewayClass without fetching or applying the controller manifest."""
-
-    # Return a GatewayClass which has already been accepted by Envoy Gateway.
-    class GatewayClass:
-        def __init__(self, name: str, api: object) -> None:
-            """Initialize the accepted GatewayClass."""
-
-            self.raw = {
-                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
-                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
-            }
-
-        async def exists(self) -> bool:
-            """Report an existing GatewayClass."""
-
-            return True
+            self.raw = {"metadata": {}}
 
         async def refresh(self) -> None:
-            """Keep the accepted status current."""
+            """Keep the unrelated Deployment current."""
 
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-
-    def unexpected_http_client(**_kwargs: object) -> object:
-        """Fail when the accepted controller path attempts a manifest request."""
-
-        raise AssertionError("Accepted GatewayClass must not fetch a manifest")
-
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", unexpected_http_client)
-
-    # The accepted terminal state returns before any network manifest fetch.
-    await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
-
-
-async def test_gateway_install_rejects_an_accepted_foreign_controller(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject an accepted GatewayClass owned by a different controller."""
-
-    # Arrange
-    class GatewayClass:
-        def __init__(self, _name: str, api: object) -> None:
-            """Expose an accepted GatewayClass owned by another controller."""
-
-            self.raw = {
-                "spec": {"controllerName": "example.com/gateway-controller"},
-                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
-            }
-
-        async def exists(self) -> bool:
-            """Report an existing GatewayClass."""
-
-            return True
-
-        async def refresh(self) -> None:
-            """Keep the GatewayClass state current."""
-
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway, "Deployment", Deployment)
 
     # Act and assert
-    with pytest.raises(ValueError, match="longlink-envoy is not controlled by Envoy Gateway"):
-        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="Envoy Gateway is not managed by LongLink"):
+        await gateway.Gateway(FakeKubernetes())._install_controller()
 
 
-async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Propagate GatewayClass API errors other than an absent resource."""
+async def test_gateway_install_propagates_controller_lookup_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Propagate controller Deployment API errors other than absence."""
 
     # Arrange
-    class Response:
-        """Expose the HTTP status from a Kubernetes API error."""
-
-        def __init__(self, status_code: int) -> None:
-            """Store the failed HTTP status."""
-
-            self.status_code = status_code
-
     class KubernetesError(Exception):
-        """Represent a Kubernetes API error with an HTTP response."""
+        """Represent an unexpected Kubernetes API error."""
 
-        def __init__(self, status_code: int) -> None:
-            """Store the response status used by controller installation."""
+    class Deployment:
+        """Fail while checking whether the controller exists."""
 
-            self.response = Response(status_code)
-
-    class GatewayClass:
-        """Fail while checking whether the GatewayClass exists."""
-
-        def __init__(self, _name: str, api: object) -> None:
+        def __init__(self, _name: str, namespace: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
         async def refresh(self) -> None:
             """Report an unexpected Kubernetes API failure."""
 
-            raise KubernetesError(500)
+            raise KubernetesError
 
-    monkeypatch.setattr(gateway, "ServerError", KubernetesError)
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
+    monkeypatch.setattr(gateway, "Deployment", Deployment)
 
     # Act and assert
-    with pytest.raises(KubernetesError) as error:
-        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
-    assert error.value.response.status_code == 500
+    with pytest.raises(KubernetesError):
+        await gateway.Gateway(FakeKubernetes())._install_controller()
 
 
-async def test_gateway_install_fetches_manifest_after_gateway_class_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Install the controller when the GatewayClass lookup returns HTTP 404."""
+async def test_gateway_install_validates_the_complete_bundle_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a malformed bundled manifest before changing the cluster."""
 
     # Arrange
-    class KubernetesError(Exception):
-        """Represent a Kubernetes API error with an HTTP response."""
+    class Deployment:
+        """Report that the controller Deployment does not exist."""
 
-        response = type("Response", (), {"status_code": 404})()
-
-    class GatewayClass:
-        """Report that the GatewayClass does not exist."""
-
-        def __init__(self, _name: str, api: object) -> None:
+        def __init__(self, _name: str, namespace: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
         async def refresh(self) -> None:
-            """Return the Kubernetes not-found response."""
+            """Report the controller as absent."""
 
-            raise KubernetesError
+            raise NotFoundError("Deployment missing")
 
-    def http_client(**_kwargs: object) -> object:
-        """Confirm installation continues to the manifest request."""
+    async def unexpected_apply(_resource: object) -> None:
+        """Reject cluster changes after malformed bundle input."""
 
-        raise AssertionError("GatewayClass 404 must fetch the controller manifest")
+        raise AssertionError("Malformed bundle must not be applied")
 
-    monkeypatch.setattr(gateway, "ServerError", KubernetesError)
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", http_client)
-
-    # Act and assert
-    with pytest.raises(AssertionError, match="GatewayClass 404 must fetch the controller manifest"):
-        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
-
-
-async def test_gateway_install_rejects_tampered_manifest_before_applying(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject a controller manifest that does not match its pinned checksum."""
-
-    # Arrange
-    class GatewayClass:
-        """Report a GatewayClass not accepted by the controller."""
-
-        def __init__(self, _name: str, api: object) -> None:
-            """Expose the rejected GatewayClass status."""
-
-            self.raw = {
-                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
-                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
-            }
-
-        async def exists(self) -> bool:
-            """Report an existing but unaccepted GatewayClass."""
-
-            return True
-
-        async def refresh(self) -> None:
-            """Keep the rejected GatewayClass status current."""
-
-    class Response:
-        """Return a deterministic altered manifest."""
-
-        content = b"tampered manifest"
-
-        def raise_for_status(self) -> None:
-            """Report a successful transport response."""
-
-    class HttpClient:
-        """Provide the altered manifest through the HTTP boundary."""
-
-        def __init__(self, **_kwargs: object) -> None:
-            """Accept client configuration."""
-
-        async def __aenter__(self) -> "HttpClient":
-            """Enter the HTTP client context."""
-
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Exit the HTTP client context."""
-
-        async def get(self, _url: str) -> Response:
-            """Return the altered manifest."""
-
-            return Response()
-
-    def unexpected_safe_load_all(_manifest: bytes) -> object:
-        """Fail if parsing begins before checksum verification."""
-
-        raise AssertionError("tampered manifest was parsed")
-
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
-    monkeypatch.setattr(gateway.yaml, "safe_load_all", unexpected_safe_load_all)
+    monkeypatch.setattr(gateway, "Deployment", Deployment)
+    monkeypatch.setattr(
+        gateway.gzip,
+        "decompress",
+        lambda _manifest: b"apiVersion: v1\nkind: Service\nmetadata:\n  name: valid\n---\n- invalid",
+    )
+    monkeypatch.setattr(gateway, "apply", unexpected_apply)
 
     # Act and assert
-    with pytest.raises(ValueError, match=r"Envoy Gateway v1.8.3 manifest checksum does not match"):
-        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="manifest must contain mapping documents"):
+        await gateway.Gateway(FakeKubernetes())._install_controller()
 
 
-async def test_gateway_install_filters_admission_resources_from_verified_manifest(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Apply only controller resources needed by LongLink from a verified manifest."""
+@pytest.mark.parametrize(
+    ("installed_version", "certgen_exists"),
+    [
+        pytest.param(None, True, id="fresh-partial"),
+        pytest.param("v1.7.0", False, id="managed-upgrade-partial"),
+    ],
+)
+async def test_gateway_install_applies_the_bundled_controller_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+    installed_version: str | None,
+    certgen_exists: bool,
+) -> None:
+    """Reconcile the complete controller bundle across independent partial installations."""
 
     # Arrange
     applied: list[dict[str, object]] = []
+    certgen_events: list[str] = []
 
-    class GatewayClass:
-        """Report that the controller still needs installation."""
+    class Deployment:
+        """Expose an absent or older managed controller before a ready rollout."""
 
-        def __init__(self, _name: str, api: object) -> None:
-            """Accept the Kubernetes API client."""
+        def __init__(self, _name: str, namespace: str, api: object) -> None:
+            """Initialize one controller lookup."""
 
             self.raw = {
-                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
-                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
+                "metadata": {
+                    "annotations": ({gateway.ENVOY_GATEWAY_VERSION_ANNOTATION: installed_version} if installed_version is not None else {}),
+                    "generation": 1,
+                },
+                "spec": {"replicas": 1},
+                "status": {
+                    "observedGeneration": 1,
+                    "replicas": 1,
+                    "updatedReplicas": 1,
+                    "readyReplicas": 1,
+                    "availableReplicas": 1,
+                },
             }
+            self.metadata = self.raw["metadata"]
+            self.spec = self.raw["spec"]
+            self.refreshes = 0
 
         async def refresh(self) -> None:
-            """Keep the rejected GatewayClass state current."""
+            """Report fresh-install absence once, then a ready rollout."""
 
-    class Response:
-        """Return a deterministic verified manifest."""
+            self.refreshes += 1
+            if installed_version is None and self.refreshes == 1:
+                raise NotFoundError("Deployment missing")
 
-        content = b"""
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: gateways.gateway.networking.k8s.io
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
-metadata:
-  name: envoy-gateway
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: envoy-gateway
----
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicy
-metadata:
-  name: envoy-gateway
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicyBinding
-metadata:
-  name: envoy-gateway
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: envoy-gateway
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: envoy-gateway
-"""
+    class Resource:
+        """Represent one parsed controller resource."""
 
-        def raise_for_status(self) -> None:
-            """Report a successful transport response."""
+        def __init__(self, raw: dict[str, object]) -> None:
+            """Keep the desired resource manifest."""
 
-    class HttpClient:
-        """Provide the verified manifest through the HTTP boundary."""
+            self.raw = raw
 
-        def __init__(self, **_kwargs: object) -> None:
-            """Accept client configuration."""
+        async def delete(self) -> None:
+            """Delete the previous immutable certificate Job when installed."""
 
-        async def __aenter__(self) -> "HttpClient":
-            """Enter the HTTP client context."""
+            certgen_events.append("delete")
+            if not certgen_exists:
+                raise NotFoundError("Job missing")
 
-            return self
+        async def refresh(self) -> None:
+            """Keep the fake resource current."""
 
-        async def __aexit__(self, *_args: object) -> None:
-            """Exit the HTTP client context."""
+        async def wait(self, conditions: list[str] | str) -> None:
+            """Complete Job deletion or certificate generation."""
 
-        async def get(self, _url: str) -> Response:
-            """Return the verified manifest."""
+            if conditions == "delete":
+                certgen_events.append("wait-delete")
+                return
+            assert conditions == ["condition=Complete", "condition=Failed"]
+            certgen_events.append("wait-complete")
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-            return Response()
+    class CustomResourceDefinition(Resource):
+        """Identify CRDs that require establishment."""
 
-    class Digest:
-        """Return the pinned checksum for the deterministic manifest."""
+        async def refresh(self) -> None:
+            """Mark the CRD established after it is applied."""
 
-        def hexdigest(self) -> str:
-            """Return the expected Envoy Gateway manifest checksum."""
+            self.raw["status"] = {"conditions": [{"type": "Established", "status": "True"}]}
 
-            return "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781"
+    def object_from_spec(document: dict[str, object], api: object) -> Resource:
+        """Construct a deterministic fake resource."""
 
-    async def apply(resource: APIObject) -> None:
+        if document.get("kind") == "CustomResourceDefinition":
+            return CustomResourceDefinition(document)
+        return Resource(document)
+
+    async def apply(resource: Resource) -> None:
         """Record each resource sent to Kubernetes."""
 
         applied.append(resource.raw)
+        if resource.raw.get("kind") == "Job":
+            certgen_events.append("apply")
 
-    def sha256(manifest: bytes) -> Digest:
-        """Verify the expected deterministic manifest bytes."""
-
-        assert manifest == Response.content
-        return Digest()
-
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
-    monkeypatch.setattr(gateway.hashlib, "sha256", sha256)
+    monkeypatch.setattr(gateway, "Deployment", Deployment)
+    monkeypatch.setattr(gateway, "CustomResourceDefinition", CustomResourceDefinition)
+    monkeypatch.setattr(gateway, "MutatingWebhookConfigurationResource", lambda document, api: Resource(document))
+    monkeypatch.setattr(gateway, "object_from_spec", object_from_spec)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act
-    await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+    await gateway.Gateway(FakeKubernetes())._install_controller()
 
     # Assert
-    assert applied == [
-        {
-            "apiVersion": "apiextensions.k8s.io/v1",
-            "kind": "CustomResourceDefinition",
-            "metadata": {"name": "gateways.gateway.networking.k8s.io"},
-        },
-        {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": "envoy-gateway"}},
-        {"apiVersion": "v1", "kind": "Service", "metadata": {"name": "envoy-gateway"}},
-    ]
+    kinds = [resource.get("kind") for resource in applied]
+    last_crd = max(index for index, kind in enumerate(kinds) if kind == "CustomResourceDefinition")
+    first_regular_resource = next(index for index, kind in enumerate(kinds) if kind != "CustomResourceDefinition")
+    assert last_crd < first_regular_resource
+    assert gateway.ENVOY_GATEWAY_IGNORED_KINDS.isdisjoint(kinds)
+    assert "MutatingWebhookConfiguration" in kinds
+    assert kinds[-1] == "Job"
+
+    deployment = next(resource for resource in applied if resource.get("kind") == "Deployment")
+    metadata = deployment.get("metadata")
+    assert isinstance(metadata, dict)
+    annotations = metadata.get("annotations")
+    assert isinstance(annotations, dict)
+    assert annotations[gateway.ENVOY_GATEWAY_VERSION_ANNOTATION] == gateway.ENVOY_GATEWAY_VERSION
+    expected_events = ["delete", "apply", "wait-complete"]
+    if certgen_exists:
+        expected_events.insert(1, "wait-delete")
+    assert certgen_events == expected_events
 
 
 async def test_gateway_install_translates_resource_apply_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Report the manifest resource when applying it exceeds the controller timeout."""
+    """Report when the bundled controller cannot be applied before its deadline."""
 
     # Arrange
-    class GatewayClass:
-        """Report that the controller still needs installation."""
+    class Deployment:
+        """Report that the controller Deployment does not exist."""
 
-        def __init__(self, _name: str, api: object) -> None:
+        def __init__(self, _name: str, namespace: str, api: object) -> None:
             """Accept the Kubernetes API client."""
 
-            self.raw = {
-                "spec": {"controllerName": "gateway.envoyproxy.io/gatewayclass-controller"},
-                "status": {"conditions": [{"type": "Accepted", "status": "False"}]},
-            }
-
         async def refresh(self) -> None:
-            """Keep the rejected GatewayClass state current."""
+            """Report the controller as absent."""
 
-    class Response:
-        """Return a deterministic verified manifest."""
+            raise NotFoundError("Deployment missing")
 
-        content = b"apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: envoy-gateway\n"
-
-        def raise_for_status(self) -> None:
-            """Report a successful transport response."""
-
-    class HttpClient:
-        """Provide the verified manifest through the HTTP boundary."""
-
-        def __init__(self, **_kwargs: object) -> None:
-            """Accept client configuration."""
-
-        async def __aenter__(self) -> "HttpClient":
-            """Enter the HTTP client context."""
-
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Exit the HTTP client context."""
-
-        async def get(self, _url: str) -> Response:
-            """Return the verified manifest."""
-
-            return Response()
-
-    class Digest:
-        """Return the pinned checksum for the deterministic manifest."""
-
-        def hexdigest(self) -> str:
-            """Return the expected Envoy Gateway manifest checksum."""
-
-            return "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781"
-
-    async def apply(resource: object) -> None:
+    async def apply(_resource: object) -> None:
         """Simulate a Kubernetes apply timeout."""
 
         raise TimeoutError
 
-    def sha256(manifest: bytes) -> Digest:
-        """Verify the expected deterministic manifest bytes."""
-
-        assert manifest == Response.content
-        return Digest()
-
-    monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", HttpClient)
-    monkeypatch.setattr(gateway.hashlib, "sha256", sha256)
+    monkeypatch.setattr(gateway, "Deployment", Deployment)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Timed out applying Envoy Gateway Deployment/envoy-gateway"):
-        await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
+    with pytest.raises(RuntimeError, match=f"Envoy Gateway {gateway.ENVOY_GATEWAY_VERSION} did not become ready"):
+        await gateway.Gateway(FakeKubernetes())._install_controller()
 
 
 async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -451,29 +285,20 @@ async def test_gateway_delete_waits_for_gateway_class_termination(monkeypatch: p
         def __init__(self, name: str, api: object) -> None:
             """Initialize the fake GatewayClass."""
 
-            self.metadata: dict[str, object] = {}
-
-        async def exists(self) -> bool:
-            """Report presence until deletion has been requested."""
-
-            return not deleted
-
-        async def refresh(self) -> None:
-            """Refresh the fake resource."""
-
         async def delete(self) -> None:
             """Record deletion."""
 
             deleted.append(True)
 
-    async def sleep(delay: float) -> None:
-        """Avoid waiting in the polling test."""
+        async def wait(self, conditions: str) -> None:
+            """Complete GatewayClass deletion."""
+
+            assert conditions == "delete"
 
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
 
-    # The absent terminal state completes without a second delete request.
-    await gateway.Gateway(FakeKubernetes()).delete()  # type: ignore[arg-type]
+    # The terminal state completes without a second delete request.
+    await gateway.Gateway(FakeKubernetes()).delete()
     assert deleted == [True]
 
 
@@ -481,85 +306,32 @@ async def test_gateway_delete_translates_termination_timeout(monkeypatch: pytest
     """Report GatewayClass termination when its deletion deadline expires."""
 
     # Arrange
-    class Timeout:
-        """Provide the Gateway deletion deadline context."""
-
-        async def __aenter__(self) -> "Timeout":
-            """Start the simulated deletion deadline."""
-
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Allow the polling timeout to propagate."""
-
     class GatewayClass:
         """Keep the GatewayClass present while Kubernetes deletes it."""
 
         def __init__(self, _name: str, api: object) -> None:
             """Initialize the pending GatewayClass."""
 
-            self.metadata: dict[str, object] = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
+        async def delete(self) -> None:
+            """Accept the GatewayClass deletion request."""
 
-        async def exists(self) -> bool:
-            """Report that GatewayClass deletion has not finished."""
+        async def wait(self, conditions: str) -> None:
+            """Expire the deletion deadline while waiting."""
 
-            return True
+            assert conditions == "delete"
+            raise TimeoutError
 
-        async def refresh(self) -> None:
-            """Keep the pending deletion state unchanged."""
-
-    async def sleep(_delay: float) -> None:
-        """Expire the deletion deadline during polling."""
-
-        raise TimeoutError
-
-    monkeypatch.setattr(gateway.asyncio, "timeout", lambda _delay: Timeout())
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
-    monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Kubernetes GatewayClass did not terminate: longlink-envoy"):
-        await gateway.Gateway(FakeKubernetes()).delete()  # type: ignore[arg-type]
-
-
-async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Publish the first Gateway address only after all readiness conditions are terminal."""
-
-    # Supply ready Gateway and policy resources without connecting to Kubernetes.
-    class Resource:
-        def __init__(self, raw: dict[str, object], api: object) -> None:
-            """Keep rendered resource state."""
-
-            self.raw = raw
-
-        async def refresh(self) -> None:
-            """Keep the ready resource state."""
-
-    async def install(self: gateway.Gateway) -> None:
-        """Skip controller installation for readiness testing."""
-
-    async def apply(resource: object) -> None:
-        """Accept rendered Kubernetes resources."""
-
-    monkeypatch.setattr(gateway.Gateway, "install_controller", install)
-    monkeypatch.setattr(gateway.templates, "readyml_list", lambda path: ({}, {}, {"status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": [{"value": "192.0.2.1"}]}}, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}))
-    monkeypatch.setattr(gateway, "GatewayResource", Resource)
-    monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
-    monkeypatch.setattr(gateway, "Namespace", Resource)
-    monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
-    monkeypatch.setattr(gateway, "apply", apply)
-
-    # All readiness conditions produce the externally reachable Gateway endpoint.
-    assert await gateway.Gateway(FakeKubernetes()).apply() == "192.0.2.1"  # type: ignore[arg-type]
+        await gateway.Gateway(FakeKubernetes()).delete()
 
 
 async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep polling when ready Gateway resources have no external address yet."""
+    """Wait for controller class acceptance and an allocated Gateway address."""
 
     # Arrange
-    gateway_manifest: dict[str, object] = {
-        "status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": {}}
-    }
     sleeps: list[float] = []
 
     class Resource:
@@ -569,47 +341,79 @@ async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.
             """Keep the resource status used for readiness polling."""
 
             self.raw = raw
+            metadata = raw.get("metadata")
+            self.metadata = metadata if isinstance(metadata, dict) else {}
+            self.metadata["generation"] = 1
+            kind = raw.get("kind")
+            assert isinstance(kind, str)
+            resources[kind] = self
+
+            # Supply only status fields that Kubernetes adds to the committed desired manifest.
+            if kind == "GatewayClass":
+                self.raw["status"] = {"conditions": [{"type": "Accepted", "status": "False", "observedGeneration": 1}]}
+            elif kind == "Gateway":
+                self.raw["status"] = {
+                    "conditions": [{"type": "Programmed", "status": "True", "observedGeneration": 1}],
+                    "listeners": [
+                        {
+                            "name": "https",
+                            "conditions": [
+                                {"type": condition_type, "status": "True", "observedGeneration": 1}
+                                for condition_type in ("Accepted", "Programmed", "ResolvedRefs")
+                            ],
+                        }
+                    ],
+                    "addresses": {},
+                }
+            elif kind == "ClientTrafficPolicy":
+                self.raw["status"] = {
+                    "ancestors": [
+                        {
+                            "ancestorRef": {"name": "longlink", "namespace": "longlink-system"},
+                            "controllerName": "gateway.envoyproxy.io/gatewayclass-controller",
+                            "conditions": [{"type": "Accepted", "status": "True", "observedGeneration": 1}],
+                        }
+                    ]
+                }
 
         async def refresh(self) -> None:
             """Keep the resource status current."""
 
+    resources: dict[str, Resource] = {}
+
     async def install(self: gateway.Gateway) -> None:
         """Skip controller installation for readiness polling."""
 
-    async def apply(_resource: Resource) -> None:
+    async def apply(_resource: gateway.APIObject | Resource) -> None:
         """Accept a rendered Kubernetes resource."""
 
     async def sleep(delay: float) -> None:
-        """Allocate the address after the first readiness poll."""
+        """Accept the class before allocating the Gateway address."""
 
         sleeps.append(delay)
-        status = gateway_manifest["status"]
+        if len(sleeps) == 1:
+            resources["GatewayClass"].raw["status"] = {"conditions": [{"type": "Accepted", "status": "True", "observedGeneration": 1}]}
+            return
+        status = resources["Gateway"].raw["status"]
         assert isinstance(status, dict)
-        status["addresses"] = [{"value": ""}] if len(sleeps) == 1 else [{"value": "192.0.2.1"}]
+        status["addresses"] = [{"value": ""}] if len(sleeps) == 2 else [{"value": "192.0.2.1"}]
 
-    monkeypatch.setattr(gateway.Gateway, "install_controller", install)
-    monkeypatch.setattr(
-        gateway.templates,
-        "readyml_list",
-        lambda _path: ({}, {}, gateway_manifest, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}),
-    )
+    monkeypatch.setattr(gateway.Gateway, "_install_controller", install)
     monkeypatch.setattr(gateway, "GatewayResource", Resource)
     monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
-    monkeypatch.setattr(gateway, "Namespace", Resource)
     monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
     monkeypatch.setattr(gateway, "apply", apply)
     monkeypatch.setattr(gateway.asyncio, "sleep", sleep)
 
     # Act
-    address = await gateway.Gateway(FakeKubernetes()).apply()  # type: ignore[arg-type]
+    address = await gateway.Gateway(FakeKubernetes()).apply()
 
     # Assert
     assert address == "192.0.2.1"
-    assert sleeps == [5, 5]
 
 
-async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Apply both Gateway TLS Secrets before the Gateway and its policy."""
+async def test_gateway_apply_applies_tls_and_policy_before_the_gateway(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apply Gateway TLS Secrets and the policy before exposing the Gateway."""
 
     # Arrange
     applied: list[dict[str, object]] = []
@@ -621,108 +425,115 @@ async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkey
             """Keep rendered resource state for apply assertions."""
 
             self.raw = raw
+            metadata = raw.get("metadata")
+            self.metadata = metadata if isinstance(metadata, dict) else {}
+            self.metadata["generation"] = 1
 
         async def refresh(self) -> None:
-            """Keep the ready resource state."""
+            """Add the ready runtime status for this resource."""
+
+            if self.raw.get("kind") == "GatewayClass":
+                self.raw["status"] = {"conditions": [{"type": "Accepted", "status": "True", "observedGeneration": 1}]}
+            elif self.raw.get("kind") == "Gateway":
+                self.raw["status"] = {
+                    "conditions": [{"type": "Programmed", "status": "True", "observedGeneration": 1}],
+                    "listeners": [
+                        {
+                            "name": "https",
+                            "conditions": [
+                                {"type": condition_type, "status": "True", "observedGeneration": 1}
+                                for condition_type in ("Accepted", "Programmed", "ResolvedRefs")
+                            ],
+                        }
+                    ],
+                    "addresses": [{"value": "192.0.2.1"}],
+                }
+            elif self.raw.get("kind") == "ClientTrafficPolicy":
+                self.raw["status"] = {
+                    "ancestors": [
+                        {
+                            "ancestorRef": {"name": "longlink", "namespace": "longlink-system"},
+                            "controllerName": "gateway.envoyproxy.io/gatewayclass-controller",
+                            "conditions": [{"type": "Accepted", "status": "True", "observedGeneration": 1}],
+                        }
+                    ]
+                }
 
     async def install(self: gateway.Gateway) -> None:
         """Skip controller installation for TLS application testing."""
 
-    async def apply(resource: Resource) -> None:
+    async def apply(resource: gateway.APIObject | Resource) -> None:
         """Record the resource sent to Kubernetes."""
 
         applied.append(resource.raw)
 
-    monkeypatch.setattr(gateway.Gateway, "install_controller", install)
-    monkeypatch.setattr(
-        gateway.templates,
-        "readyml_list",
-        lambda _path: (
-            {"kind": "Namespace", "metadata": {"name": "longlink-system"}},
-            {"kind": "GatewayClass", "metadata": {"name": "longlink-envoy"}},
-            {
-                "kind": "Gateway",
-                "status": {
-                    "conditions": [{"type": "Programmed", "status": "True"}],
-                    "addresses": [{"value": "192.0.2.1"}],
-                },
-            },
-            {"kind": "ClientTrafficPolicy", "status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}},
-        ),
-    )
+    monkeypatch.setattr(gateway.Gateway, "_install_controller", install)
     monkeypatch.setattr(gateway, "GatewayResource", Resource)
     monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
-    monkeypatch.setattr(gateway, "Namespace", Resource)
     monkeypatch.setattr(gateway, "GatewayClassResource", Resource)
-    monkeypatch.setattr(gateway, "Secret", Resource)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act
-    address = await gateway.Gateway(FakeKubernetes()).apply(  # type: ignore[arg-type]
+    address = await gateway.Gateway(FakeKubernetes()).apply(
         gateway.GatewayTLS("ca certificate", "server certificate", "server private key")
     )
 
     # Assert
     assert address == "192.0.2.1"
-    assert applied == [
-        {"kind": "Namespace", "metadata": {"name": "longlink-system"}},
-        {"kind": "GatewayClass", "metadata": {"name": "longlink-envoy"}},
-        {
-            "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-            "stringData": {"tls.crt": "server certificate", "tls.key": "server private key"},
-            "type": "kubernetes.io/tls",
-        },
-        {
-            "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
-            "stringData": {"ca.crt": "ca certificate"},
-            "type": "Opaque",
-        },
-        {
-            "kind": "Gateway",
-            "status": {
-                "conditions": [{"type": "Programmed", "status": "True"}],
-                "addresses": [{"value": "192.0.2.1"}],
-            },
-        },
-        {"kind": "ClientTrafficPolicy", "status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}},
+    assert [resource.get("kind") for resource in applied] == [
+        "Namespace",
+        "GatewayClass",
+        "Secret",
+        "Secret",
+        "ClientTrafficPolicy",
+        "Gateway",
     ]
+    assert applied[2] == {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+        "stringData": {"tls.crt": "server certificate", "tls.key": "server private key"},
+        "type": "kubernetes.io/tls",
+    }
+    assert applied[3] == {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+        "stringData": {"ca.crt": "ca certificate"},
+        "type": "Opaque",
+    }
 
 
 async def test_gateway_replace_tls_applies_server_and_client_ca_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace the Gateway server and client CA Secret payloads in order."""
+    """Replace the Gateway server identity and client CA Secrets."""
 
     # Arrange
     applied: list[dict[str, object]] = []
 
-    class Secret:
-        """Represent a Kubernetes Secret without reaching a cluster."""
-
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Keep the Secret payload for apply assertions."""
-
-            self.raw = raw
-
-    async def apply(resource: Secret) -> None:
+    async def apply(resource: gateway.APIObject) -> None:
         """Record the Secret sent to Kubernetes."""
 
         applied.append(resource.raw)
 
-    monkeypatch.setattr(gateway, "Secret", Secret)
     monkeypatch.setattr(gateway, "apply", apply)
 
     # Act
-    await gateway.Gateway(FakeKubernetes()).replace_tls(  # type: ignore[arg-type]
+    await gateway.Gateway(FakeKubernetes()).replace_tls(
         gateway.GatewayTLS("replacement CA", "replacement certificate", "replacement private key")
     )
 
     # Assert
     assert applied == [
         {
+            "apiVersion": "v1",
+            "kind": "Secret",
             "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
             "stringData": {"tls.crt": "replacement certificate", "tls.key": "replacement private key"},
             "type": "kubernetes.io/tls",
         },
         {
+            "apiVersion": "v1",
+            "kind": "Secret",
             "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
             "stringData": {"ca.crt": "replacement CA"},
             "type": "Opaque",

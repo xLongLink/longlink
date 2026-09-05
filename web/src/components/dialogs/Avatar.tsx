@@ -33,7 +33,7 @@ export function AvatarDialog({
     return (
         <Dialog isOpen={isOpen} purpose="form" onOpenChange={onOpenChange}>
             <Layout
-                header={<DialogHeader title={title} subtitle="Use an HTTP(S) image URL." onOpenChange={onOpenChange} />}
+                header={<DialogHeader title={title} onOpenChange={onOpenChange} />}
                 content={
                     <LayoutContent>
                         <form

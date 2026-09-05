@@ -105,6 +105,23 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
     };
 }
 
+/** Deletes one organization and refreshes organization access data. */
+export function useDeleteOrganization(onSuccess?: () => void) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
+                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
+            ]);
+            onSuccess?.();
+        },
+    });
+}
+
 /** Provides mutations for organization members and invitations. */
 export function useOrganizationMembers(organizationId: string) {
     const queryClient = useQueryClient();

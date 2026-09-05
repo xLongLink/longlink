@@ -180,7 +180,7 @@ async def solutions(session: AsyncSession, organization_id: UUID) -> Sequence[So
             col(Solution.organization_id) == organization_id,
             col(Solution.deleted_at).is_(None),
         )
-        .order_by(col(Solution.created_at).asc())
+        .order_by(col(Solution.created_at))
     )
     result = await session.scalars(statement)
     return result.all()
@@ -613,7 +613,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
             raise ForbiddenError("Access required")
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise ForbiddenError("Permission required")
-    elif organization.deleted_at is not None and not user.administrator and organization.deleted_id != user.id:
+    elif not user.administrator and organization.deleted_id != user.id:
         raise ForbiddenError("Access required")
 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.

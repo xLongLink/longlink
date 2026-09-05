@@ -1,25 +1,31 @@
+import gzip
 import yaml
-import httpx2
 import asyncio
-import hashlib
 import ipaddress
-from kr8s import ServerError
+from kr8s import NotFoundError
 from uuid import UUID
-from typing import TYPE_CHECKING, Literal, overload
+from typing import Protocol, overload
 from datetime import UTC, datetime, timedelta
 from src.utils import templates
 from dataclasses import dataclass
 from cryptography import x509
 from kr8s.asyncio import Api
 from importlib.resources import files
-from kr8s.asyncio.objects import Secret, Namespace, new_class, object_from_spec
-from src.kubernetes.utils import apply
+from kr8s.asyncio.objects import Secret, APIObject, Namespace, Deployment, CustomResourceDefinition, new_class, object_from_spec
+from src.kubernetes.utils import apply, deployment_is_ready
 from cryptography.x509.oid import NameOID, ObjectIdentifier, ExtendedKeyUsageOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-if TYPE_CHECKING:
-    from src.kubernetes.client import Kubernetes
+
+class _KubernetesClient(Protocol):
+    """Provide access to one Compute Kubernetes API."""
+
+    async def api(self) -> Api:
+        """Return the Compute Kubernetes API client."""
+
+        ...
+
 
 GatewayClassResource = new_class(
     "GatewayClass",
@@ -35,6 +41,20 @@ ClientTrafficPolicyResource = new_class(
     asyncio=True,
     plural="clienttrafficpolicies",
 )
+MutatingWebhookConfigurationResource = new_class(
+    "MutatingWebhookConfiguration",
+    "admissionregistration.k8s.io/v1",
+    asyncio=True,
+    namespaced=False,
+    plural="mutatingwebhookconfigurations",
+)
+
+ENVOY_GATEWAY_VERSION = "v1.8.4"
+ENVOY_GATEWAY_VERSION_ANNOTATION = "longlink.dev/envoy-gateway-version"
+ENVOY_GATEWAY_IGNORED_KINDS = {
+    "ValidatingAdmissionPolicy",
+    "ValidatingAdmissionPolicyBinding",
+}
 
 
 @dataclass(slots=True)
@@ -54,7 +74,7 @@ class GatewayClientTLS(GatewayTLS):
     client_private_key: str
 
 
-def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
+def _gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     """Build the Kubernetes Secret for one Gateway server identity."""
 
     # Keep the private server identity only in the Compute cluster.
@@ -71,7 +91,7 @@ def gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
     )
 
 
-def gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
+def _gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
     """Build the Kubernetes Secret containing the Gateway client certificate authority."""
 
     return Secret(
@@ -84,7 +104,19 @@ def gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
     )
 
 
-def leaf_certificate_builder(
+def _condition_is_current(conditions: object, condition_type: str, generation: object) -> bool:
+    """Return whether a Kubernetes condition is true for the current generation."""
+
+    return isinstance(conditions, list) and isinstance(generation, int) and any(
+        isinstance(condition, dict)
+        and condition.get("type") == condition_type
+        and condition.get("status") == "True"
+        and condition.get("observedGeneration") == generation
+        for condition in conditions
+    )
+
+
+def _leaf_certificate_builder(
     ca_name: x509.Name,
     ca_key: rsa.RSAPrivateKey,
     key: rsa.RSAPrivateKey,
@@ -124,14 +156,14 @@ def leaf_certificate_builder(
 
 
 @overload
-def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: Literal[False]) -> GatewayTLS: ...
+def _generate_gateway_tls(compute_id: UUID, address: None) -> GatewayTLS: ...
 
 
 @overload
-def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: Literal[True]) -> GatewayClientTLS: ...
+def _generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS: ...
 
 
-def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool) -> GatewayTLS | GatewayClientTLS:
+def _generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS | GatewayClientTLS:
     """Generate a private CA with a Gateway server identity and optional Platform client identity."""
 
     # Create a private CA and Gateway server identity for this Compute.
@@ -168,7 +200,7 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
     )
 
     # Bind the final certificate to the controller-published IP address or hostname.
-    builder = leaf_certificate_builder(
+    builder = _leaf_certificate_builder(
         ca_name,
         ca_key,
         server_key,
@@ -191,7 +223,7 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
         serialization.PrivateFormat.PKCS8,
         serialization.NoEncryption(),
     ).decode("ascii")
-    if not client:
+    if address is None:
         return GatewayTLS(
             ca_certificate=ca_pem,
             server_certificate=server_pem,
@@ -200,7 +232,7 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
 
     # Bind the Platform client identity to this Compute CA without exposing the CA private key.
     client_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    client_certificate = leaf_certificate_builder(
+    client_certificate = _leaf_certificate_builder(
         ca_name,
         ca_key,
         client_key,
@@ -225,142 +257,225 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None, *, client: bool
 def generate_gateway_bootstrap_tls(compute_id: UUID) -> GatewayTLS:
     """Generate server-only TLS material used until the Gateway receives its endpoint."""
 
-    return _generate_gateway_tls(compute_id, None, client=False)
+    return _generate_gateway_tls(compute_id, None)
 
 
 def generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS:
     """Generate endpoint-bound Gateway and Platform client TLS identities."""
 
-    return _generate_gateway_tls(compute_id, address, client=True)
+    return _generate_gateway_tls(compute_id, address)
 
 
 class Gateway:
     """Manage the shared Envoy Gateway API resources for one Compute."""
 
-    def __init__(self, client: "Kubernetes") -> None:
+    def __init__(self, client: _KubernetesClient) -> None:
         """Initialize Gateway lifecycle access through the Compute Kubernetes API."""
 
         self._client = client
 
-    async def install_controller(self) -> None:
-        """Install the Envoy Gateway controller required by every Compute."""
+    async def _install_controller(self) -> None:
+        """Install or upgrade LongLink's pinned Envoy Gateway controller."""
 
-        # Reuse a controller that has already accepted LongLink's GatewayClass.
+        # Validate ownership before mutating an existing controller installation.
         api = await self._client.api()
-        gateway_class = GatewayClassResource("longlink-envoy", api=api)
+        deployment = Deployment("envoy-gateway", namespace="envoy-gateway-system", api=api)
         try:
-            await gateway_class.refresh()
-            status = gateway_class.raw.get("status")
-            conditions = status.get("conditions", []) if isinstance(status, dict) else []
-            spec = gateway_class.raw.get("spec")
-            if not isinstance(spec, dict) or spec.get("controllerName") != "gateway.envoyproxy.io/gatewayclass-controller":
-                raise ValueError("Kubernetes GatewayClass longlink-envoy is not controlled by Envoy Gateway")
-            if any(
-                isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
-                for condition in conditions
-            ):
-                return
-        except ServerError as exc:
-            if exc.response is None or exc.response.status_code != 404:
-                raise
+            await deployment.refresh()
+        except NotFoundError:
+            pass
+        else:
+            metadata = deployment.raw.get("metadata")
+            annotations = metadata.get("annotations", {}) if isinstance(metadata, dict) else {}
+            if not isinstance(annotations, dict) or annotations.get(ENVOY_GATEWAY_VERSION_ANNOTATION) is None:
+                raise ValueError("Envoy Gateway is not managed by LongLink")
 
-        # Verify the pinned upstream manifest before applying its CRDs and controller resources.
-        async with httpx2.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-            response = await client.get("https://github.com/envoyproxy/gateway/releases/download/v1.8.3/install.yaml")
-            response.raise_for_status()
-        manifest = response.content
-        if hashlib.sha256(manifest).hexdigest() != "37a62afe9bb07d87e86c5c2cff32f046f17397cb4fca9f2a741165826212d781":
-            raise ValueError("Envoy Gateway v1.8.3 manifest checksum does not match")
-
-        # Construct resources in manifest order while ignoring empty YAML documents.
-        for spec in yaml.safe_load_all(manifest):
-            if spec is None:
+        # Parse the complete bundled release before making any cluster changes.
+        manifest_path = files("src.kubernetes.templates").joinpath(
+            "platform", f"envoy-gateway-{ENVOY_GATEWAY_VERSION}.yml.gz"
+        )
+        manifest = gzip.decompress(manifest_path.read_bytes())
+        resources: list[APIObject] = []
+        certgen_job: APIObject | None = None
+        for document in yaml.safe_load_all(manifest):
+            if document is None:
                 continue
-            resource = object_from_spec(spec, api=api, allow_unknown_type=True)
-
-            # LongLink-generated resources do not need Envoy's optional admission policies or webhooks.
-            if resource.raw.get("kind") in {
-                "MutatingWebhookConfiguration",
-                "ValidatingAdmissionPolicy",
-                "ValidatingAdmissionPolicyBinding",
-                "ValidatingWebhookConfiguration",
-            }:
+            if not isinstance(document, dict):
+                raise ValueError("Envoy Gateway manifest must contain mapping documents")
+            kind = document.get("kind")
+            metadata = document.get("metadata")
+            if not isinstance(kind, str) or not isinstance(metadata, dict):
+                raise ValueError("Envoy Gateway manifest resources require kind and metadata")
+            if kind in ENVOY_GATEWAY_IGNORED_KINDS:
                 continue
-            try:
-                async with asyncio.timeout(30):
+            if kind == "Deployment" and metadata.get("name") == "envoy-gateway":
+                annotations = metadata.setdefault("annotations", {})
+                if not isinstance(annotations, dict):
+                    raise ValueError("Envoy Gateway Deployment annotations must be a mapping")
+                annotations[ENVOY_GATEWAY_VERSION_ANNOTATION] = ENVOY_GATEWAY_VERSION
+            if kind == "MutatingWebhookConfiguration":
+                resource = MutatingWebhookConfigurationResource(document, api=api)
+            else:
+                resource = object_from_spec(document, api=api)
+            resources.append(resource)
+            if kind == "Job" and metadata.get("name") == "eg-gateway-helm-certgen":
+                certgen_job = resource
+        if certgen_job is None:
+            raise ValueError("Envoy Gateway manifest did not contain the certificate generation Job")
+
+        # Preserve dependencies that Helm hook ordering supplied in the upstream release.
+        resources.sort(
+            key=lambda resource: {
+                "CustomResourceDefinition": 0,
+                "Job": 2,
+            }.get(resource.raw.get("kind"), 1)
+        )
+
+        # Apply CRDs first, wait until each API is available, then apply the remaining inventory.
+        try:
+            async with asyncio.timeout(5 * 60):
+                for resource in resources:
+                    # Recreate the Helm hook Job because Kubernetes Job pod templates are immutable.
+                    if resource is certgen_job:
+                        try:
+                            await resource.delete()
+                        except NotFoundError:
+                            pass
+                        else:
+                            await resource.wait("delete")
+
                     await apply(resource)
-            except TimeoutError:
-                metadata = resource.raw.get("metadata")
-                name = metadata.get("name", "unknown") if isinstance(metadata, dict) else "unknown"
-                raise RuntimeError(f"Timed out applying Envoy Gateway {resource.raw.get('kind', 'resource')}/{name}") from None
+                    if isinstance(resource, CustomResourceDefinition):
+                        while True:
+                            await resource.refresh()
+                            status = resource.raw.get("status")
+                            conditions = status.get("conditions") if isinstance(status, dict) else None
+                            if any(
+                                isinstance(condition, dict)
+                                and condition.get("type") == "Established"
+                                and condition.get("status") == "True"
+                                for condition in conditions or []
+                            ):
+                                break
+                            await asyncio.sleep(1)
+
+                # Require certificate generation and the current controller rollout.
+                await certgen_job.wait(["condition=Complete", "condition=Failed"])
+                status = certgen_job.raw.get("status")
+                conditions = status.get("conditions", []) if isinstance(status, dict) else []
+                if any(
+                    isinstance(condition, dict)
+                    and condition.get("type") == "Failed"
+                    and condition.get("status") == "True"
+                    for condition in conditions
+                ):
+                    raise RuntimeError("Envoy Gateway certificate generation failed")
+
+                while True:
+                    await deployment.refresh()
+                    if deployment_is_ready(deployment):
+                        return
+                    await asyncio.sleep(5)
+        except TimeoutError:
+            raise RuntimeError(f"Envoy Gateway {ENVOY_GATEWAY_VERSION} did not become ready") from None
 
     async def apply(self, tls: GatewayTLS | None = None) -> str:
         """Apply the shared Gateway and wait for its authenticated endpoint."""
 
         # Every registered kubeconfig gets the controller before LongLink creates Gateway API resources.
-        await self.install_controller()
+        await self._install_controller()
 
         # Render LongLink resources that target the required Envoy Gateway controller.
         namespace, gateway_class, gateway, client_traffic_policy = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
         api = await self._client.api()
+        gateway_class_resource = GatewayClassResource(gateway_class, api=api)
         gateway_resource = GatewayResource(gateway, api=api)
         policy_resource = ClientTrafficPolicyResource(client_traffic_policy, api=api)
         await apply(Namespace(namespace, api=api))
-        await apply(GatewayClassResource(gateway_class, api=api))
+        await apply(gateway_class_resource)
+
+        # Wait for Envoy Gateway to accept LongLink's class before creating dependent resources.
+        try:
+            async with asyncio.timeout(2 * 60):
+                while True:
+                    await gateway_class_resource.refresh()
+                    status = gateway_class_resource.raw.get("status")
+                    conditions = status.get("conditions", []) if isinstance(status, dict) else []
+                    if _condition_is_current(conditions, "Accepted", gateway_class_resource.metadata.get("generation")):
+                        break
+                    await asyncio.sleep(5)
+        except TimeoutError:
+            raise RuntimeError("Envoy Gateway did not accept GatewayClass longlink-envoy") from None
+
         if tls is not None:
-            await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-            await apply(gateway_client_ca_secret(tls.ca_certificate, api))
-        await apply(gateway_resource)
+            await apply(_gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
+            await apply(_gateway_client_ca_secret(tls.ca_certificate, api))
         await apply(policy_resource)
+        await apply(gateway_resource)
 
         # Require the controller, Gateway, policy, and external address before publishing readiness.
-        while True:
-            await gateway_resource.refresh()
-            await policy_resource.refresh()
-            gateway_status = gateway_resource.raw.get("status")
-            gateway_conditions = gateway_status.get("conditions", []) if isinstance(gateway_status, dict) else []
-            addresses = gateway_status.get("addresses", []) if isinstance(gateway_status, dict) else []
-            policy_status = policy_resource.raw.get("status")
-            ancestors = policy_status.get("ancestors", []) if isinstance(policy_status, dict) else []
-            programmed = any(
-                isinstance(condition, dict) and condition.get("type") == "Programmed" and condition.get("status") == "True"
-                for condition in gateway_conditions
-            )
-            authenticated = any(
-                condition.get("type") == "Accepted" and condition.get("status") == "True"
-                for ancestor in ancestors
-                if isinstance(ancestor, dict)
-                for condition in ancestor.get("conditions", [])
-                if isinstance(condition, dict)
-            )
-            if programmed and authenticated and isinstance(addresses, list):
-                for address in addresses:
-                    value = address.get("value") if isinstance(address, dict) else None
-                    if isinstance(value, str) and value:
-                        return value
-            await asyncio.sleep(5)
+        try:
+            async with asyncio.timeout(5 * 60):
+                while True:
+                    await gateway_resource.refresh()
+                    await policy_resource.refresh()
+                    gateway_status = gateway_resource.raw.get("status")
+                    gateway_conditions = gateway_status.get("conditions", []) if isinstance(gateway_status, dict) else []
+                    listeners = gateway_status.get("listeners", []) if isinstance(gateway_status, dict) else []
+                    addresses = gateway_status.get("addresses", []) if isinstance(gateway_status, dict) else []
+                    gateway_generation = gateway_resource.metadata.get("generation")
+                    programmed = _condition_is_current(gateway_conditions, "Programmed", gateway_generation)
+                    listener_ready = any(
+                        listener.get("name") == "https"
+                        and all(
+                            _condition_is_current(listener.get("conditions"), condition_type, gateway_generation)
+                            for condition_type in ("Accepted", "Programmed", "ResolvedRefs")
+                        )
+                        for listener in listeners
+                        if isinstance(listener, dict)
+                    )
+
+                    policy_status = policy_resource.raw.get("status")
+                    ancestors = policy_status.get("ancestors", []) if isinstance(policy_status, dict) else []
+                    policy_generation = policy_resource.metadata.get("generation")
+                    authenticated = any(
+                        ancestor.get("controllerName") == "gateway.envoyproxy.io/gatewayclass-controller"
+                        and isinstance(ancestor.get("ancestorRef"), dict)
+                        and ancestor["ancestorRef"].get("name") == "longlink"
+                        and ancestor["ancestorRef"].get("namespace") == "longlink-system"
+                        and _condition_is_current(ancestor.get("conditions"), "Accepted", policy_generation)
+                        for ancestor in ancestors
+                        if isinstance(ancestor, dict)
+                    )
+                    if programmed and listener_ready and authenticated:
+                        for address in addresses:
+                            value = address.get("value") if isinstance(address, dict) else None
+                            if isinstance(value, str) and value:
+                                return value
+                    await asyncio.sleep(5)
+        except TimeoutError:
+            raise RuntimeError("LongLink Gateway did not become ready") from None
 
     async def replace_tls(self, tls: GatewayTLS) -> None:
         """Replace Gateway TLS identities after endpoint allocation."""
 
         # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.
         api = await self._client.api()
-        await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-        await apply(gateway_client_ca_secret(tls.ca_certificate, api))
+        await apply(_gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
+        await apply(_gateway_client_ca_secret(tls.ca_certificate, api))
 
     async def delete(self) -> None:
         """Delete the cluster-scoped LongLink GatewayClass and wait for completion."""
 
-        # Issue deletion once and then poll only the GatewayClass state.
+        # Issue deletion once and wait for GatewayClass finalizers to complete.
         try:
             async with asyncio.timeout(10 * 60):
                 gateway_class = GatewayClassResource("longlink-envoy", api=await self._client.api())
-                while await gateway_class.exists():
-                    await gateway_class.refresh()
-                    if gateway_class.metadata.get("deletionTimestamp") is None:
-                        await gateway_class.delete()
-                    await asyncio.sleep(5)
+                await gateway_class.delete()
+                await gateway_class.wait("delete")
+        except NotFoundError:
+            return
         except TimeoutError:
             raise RuntimeError("Kubernetes GatewayClass did not terminate: longlink-envoy") from None

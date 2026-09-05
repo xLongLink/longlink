@@ -18,12 +18,7 @@ export default function CreateCompute() {
     });
 
     return (
-        <RegistryDialog
-            dialog={dialog}
-            subtitle="Register a compute backend for orchestration."
-            title="Connect compute"
-            width={640}
-        >
+        <RegistryDialog dialog={dialog} title="Connect compute" width={640}>
             <FormLayout>
                 <dialog.form.Field name="name">
                     {(field) => (

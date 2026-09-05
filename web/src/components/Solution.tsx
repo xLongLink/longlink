@@ -93,7 +93,7 @@ export function SolutionRuntime({
 
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = !routePath ? firstTabView : activeRouteMatch?.view;
-    const activeViewTitle = activeView?.name ?? (activeView ? startCase(activeView.tab) : undefined);
+    const activeViewTitle = activeView ? (activeView.name ?? startCase(activeView.tab)) : undefined;
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
@@ -113,7 +113,7 @@ export function SolutionRuntime({
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
                 icon: view.icon ? getIconComponent(view.icon) : undefined,
-                label: view.name || startCase(view.tab),
+                label: view.name ?? startCase(view.tab),
             }) satisfies NavigationTab
     );
 

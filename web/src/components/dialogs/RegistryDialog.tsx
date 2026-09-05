@@ -20,7 +20,6 @@ type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
 type RegistryDialogProps<TValues extends Record<string, unknown>> = {
     children: ReactNode;
     dialog: ReturnType<typeof useRegistryDialog<TValues>>;
-    subtitle: string;
     title: string;
     triggerLabel?: string;
     width: number;
@@ -80,7 +79,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
 export function RegistryDialog<TValues extends Record<string, unknown>>({
     children,
     dialog,
-    subtitle,
     title,
     triggerLabel = title,
     width,
@@ -98,7 +96,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                 maxHeight="calc(100dvh - 2rem)"
             >
                 <Layout
-                    header={<DialogHeader title={title} subtitle={subtitle} onOpenChange={dialog.handleOpenChange} />}
+                    header={<DialogHeader title={title} onOpenChange={dialog.handleOpenChange} />}
                     content={
                         <LayoutContent>
                             <form

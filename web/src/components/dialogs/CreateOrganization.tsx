@@ -17,13 +17,7 @@ export default function CreateOrganization() {
     });
 
     return (
-        <RegistryDialog
-            dialog={dialog}
-            subtitle="Create a new workspace for your account."
-            title="New organization"
-            triggerLabel="Create Organization"
-            width={640}
-        >
+        <RegistryDialog dialog={dialog} title="New organization" triggerLabel="Create Organization" width={640}>
             <FormLayout>
                 <dialog.form.Field name="name">
                     {(field) => (

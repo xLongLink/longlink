@@ -10,7 +10,13 @@ The SDK owns shared-schema models, migrations, and synchronization helpers along
 
 ## Development
 
-Install [Vite+](https://viteplus.dev) before running the web commands:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [Vite+](https://viteplus.dev) before running the development commands:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Restart your shell after installing `uv`, then install Vite+:
 
 ```bash
 curl -fsSL https://vite.plus | bash
@@ -53,4 +59,30 @@ make clear          # Remove local Compose volumes
 
 ```bash
 make sdk            # Build the SDK web bundle and run the generated SDK service
+```
+
+## Theme
+
+Use the Astryx theme primitives rather than custom color or spacing values:
+
+```text
+background  # Page background color
+primary     # Default text color
+accent      # Interactive and emphasized content color
+muted       # Secondary content color
+radius      # none | small | medium | large
+```
+
+## Images
+
+```xml
+<image>
+  <style>
+    Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
+  </style>
+
+  <content>
+  </content>
+</image>
+
 ```

@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Avatar } from '@/components/ui/Avatar';
 import { dateTimeFormatter } from '@/lib/utils';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import { OrganizationCell } from '@/components/Cells';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -92,18 +92,7 @@ export default function AdminSolutions() {
                     )}
                 </TableColumn>
                 <TableColumn<SolutionResponse> field="organization" header="Organization" width={proportional(1)}>
-                    {(solution) => (
-                        <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar
-                                kind="organization"
-                                src={solution.organization.avatar}
-                                name={solution.organization.name}
-                            />
-                            <Link href={`/orgs/${solution.organization.slug}`} weight="semibold">
-                                {solution.organization.name}
-                            </Link>
-                        </Stack>
-                    )}
+                    {(solution) => <OrganizationCell organization={solution.organization} />}
                 </TableColumn>
                 <TableColumn<SolutionResponse> align="end" field="metadata" header="" width={pixel(56)}>
                     {(solution) => (

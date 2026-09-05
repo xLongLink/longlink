@@ -221,7 +221,9 @@ export default function Ppt() {
         if (event.key === 'ArrowLeft') {
             event.preventDefault();
             navigate(slides[Math.max(0, slideIndex - 1)].href);
-        } else if (event.key === 'ArrowRight') {
+            return;
+        }
+        if (event.key === 'ArrowRight') {
             event.preventDefault();
             navigate(slides[Math.min(slides.length - 1, slideIndex + 1)].href);
         }
