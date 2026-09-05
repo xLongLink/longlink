@@ -42,8 +42,18 @@ class LongLink:
         # Preserve Solution routes so view collisions are rejected during discovery.
         solution_routes = list(app.router.routes)
 
-        # Resolve the runtime environment and initialize Solution storage.
+        # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
+
+        # Solutions provide XML views in the generated source layout.
+        views_directory = Path.cwd() / "src" / "views"
+        if not views_directory.is_dir():
+            raise ValueError(f"Solution source directory is required: {views_directory}")
+
+        # Validate the complete catalog before installing runtime services.
+        discovered_views = self._discover_views(views_directory, solution_routes)
+
+        # Initialize Solution storage and database connections.
         storage = create_fs(settings)
         database = Database(settings)
 
@@ -65,13 +75,6 @@ class LongLink:
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
-        # Solutions provide XML views in the generated source layout.
-        views_directory = Path.cwd() / "src" / "views"
-        if not views_directory.is_dir():
-            raise ValueError(f"Solution source directory is required: {views_directory}")
-
-        # Validate the complete catalog before registering its routes and metadata.
-        discovered_views = self._discover_views(views_directory, solution_routes)
         app.state.longlink = RuntimeState(views=[definition for definition, _ in discovered_views], storage=storage, database=database)
         app.router.on_shutdown.append(database.dispose)
 

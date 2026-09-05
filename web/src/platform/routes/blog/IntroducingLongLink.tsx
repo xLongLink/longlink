@@ -3,6 +3,7 @@ import { Card } from '@astryxdesign/core/Card';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -41,10 +42,10 @@ export default function IntroducingLongLink() {
                         <Stack as="header" gap={6}>
                             <Stack gap={3}>
                                 <Text color="accent" type="supporting" weight="semibold">
-                                    September 4, 2026 | 4 min read
+                                    September 4, 2026 | 3 min read
                                 </Text>
                                 <Heading level={1} textWrap="balance" type="display-1">
-                                    Introducing LongLink
+                                    Introducing <Wordmark size="inherit" />
                                 </Heading>
                             </Stack>
                         </Stack>
@@ -52,38 +53,42 @@ export default function IntroducingLongLink() {
                         <Stack as="section" gap={6}>
                             <Stack gap={4}>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    AI has made useful software faster and cheaper to create. Workflows that once had to
-                                    fit inside a spreadsheet, a general-purpose SaaS product, or a manual workaround can
-                                    increasingly be expressed directly in code. Dedicated software is becoming practical
-                                    for more organizations and more specific problems.
+                                    Generative AI has changed how software is built.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Those problems are rarely generic. Every organization works within its own
-                                    regulatory, organizational, and technical context. Roles, data requirements,
-                                    approvals, integrations, terminology, and exceptions all shape how the work needs to
-                                    happen.
+                                    Two narratives have emerged. In one direction, we fully delegate the work to an
+                                    agent and simply trust its implementation, hoping that tomorrow&apos;s model will
+                                    fix today&apos;s issues. This approach can be dangerous, as the solution gradually
+                                    becomes a black box that is difficult to audit, debug, and maintain.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Creating the first version is only part of the cost. Without a sound engineering
-                                    foundation, early speed becomes complexity, fragility, and technical debt. AI can
-                                    accelerate implementation, but it does not replace clear design, review,
-                                    accountability, or maintenance.
+                                    The other path sees AI as a tool rather than a replacement for human judgment.
+                                    Humans remain responsible for the key decisions, architecture, and validation of the
+                                    solution. This keeps the development process transparent, making assumptions,
+                                    trade-offs, and errors easier to understand and audit.
+                                </Text>
+                                <Card className="overflow-hidden" padding={0} variant="transparent">
+                                    <img
+                                        alt="Two development paths leading to a transparent white box and an opaque black box"
+                                        className="aspect-video w-full object-contain"
+                                        src="/images/paths.png"
+                                    />
+                                </Card>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Initial implementation speed can come at the cost of long-term maintainability.
+                                    Technical debt is key to understanding this trade-off: AI can dramatically
+                                    accelerate development, but without sufficient human oversight, complexity
+                                    accumulates and the initial speed advantage is gradually offset by higher
+                                    maintenance costs.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    This idea is at the core of LongLink. In particular, three fundamental principles
+                                    have guided its design and development:
                                 </Text>
                             </Stack>
                         </Stack>
 
                         <Stack as="section" gap={6}>
-                            <Card className="overflow-hidden" padding={0} variant="transparent">
-                                <img
-                                    alt="Human and robot hands reaching toward each other"
-                                    className="w-full object-contain"
-                                    src="/images/human-robot-hands.png"
-                                />
-                            </Card>
-                            <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                LongLink is guided by three principles intended to keep each Solution useful long after
-                                its first release.
-                            </Text>
                             <Stack gap={4}>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
                                     <Icon className="mt-1" color="accent" icon={Minimize2} size="lg" />
@@ -92,7 +97,9 @@ export default function IntroducingLongLink() {
                                             Keep it simple:
                                         </Text>
                                         <br />
-                                        Processes should be clear, easy to operate, and economical to maintain.
+                                        In a world of growing complexity, simplicity becomes a luxury. A clear and
+                                        simple process is easier to operate, reason about, and audit, and less expensive
+                                        to maintain.
                                     </Text>
                                 </Stack>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
@@ -102,7 +109,9 @@ export default function IntroducingLongLink() {
                                             Own the process:
                                         </Text>
                                         <br />
-                                        Retain control, accountability, and software that fits the work.
+                                        Ownership, control, and accountability are fundamental to building resilient
+                                        infrastructure. They matter even more amid geopolitical uncertainty, where
+                                        control over data and workflows matters more than ever.
                                     </Text>
                                 </Stack>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
@@ -112,10 +121,19 @@ export default function IntroducingLongLink() {
                                             Separate responsibilities:
                                         </Text>
                                         <br />
-                                        Make a clear distinction between machine tasks and human decisions.
+                                        Responsibilities should be clearly separated between human decisions and
+                                        machine-executed tasks, and between technical implementation and business
+                                        requirements.
                                     </Text>
                                 </Stack>
                             </Stack>
+                            <Card className="overflow-hidden" padding={0} variant="transparent">
+                                <img
+                                    alt="Human and robot hands reaching toward each other"
+                                    className="w-full object-contain"
+                                    src="/images/human-robot-hands.png"
+                                />
+                            </Card>
                         </Stack>
 
                         <Stack gap={10} paddingBlockStart={6}>

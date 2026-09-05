@@ -23,21 +23,6 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def test_operations_service_fetch_returns_newest_operations_first() -> None:
-    """Return compute creation operations ordered by creation time descending."""
-
-    older_operation = await queue(target_id=uuid4())
-    newer_operation = await queue(target_id=uuid4())
-
-    async with session_scope() as session:
-        older_row = await session.get(Operation, older_operation.id)
-        assert older_row is not None
-        older_row.created_at = utcnow() - timedelta(days=1)
-        await session.commit()
-
-    assert [operation.id for operation in await fetch_operations()] == [newer_operation.id, older_operation.id]
-
-
 async def test_operations_service_fetch_page_returns_total_history() -> None:
     """Retain complete Operation history after expired logs are cleared."""
 

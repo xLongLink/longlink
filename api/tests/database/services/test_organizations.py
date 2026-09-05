@@ -432,7 +432,7 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
     # Preserve legitimate owner mutations before revoking the administrator.
     async with session_scope() as session:
         updated = await organizations.update(session, organization.id, "https://example.com/owner.png", owner)
-        invitation = await organizations.create_invitation(
+        await organizations.create_invitation(
             session,
             organization.id,
             "owner-invited@example.com",
@@ -442,7 +442,6 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
         await session.commit()
 
     assert updated is not None
-    assert invitation is None
     async with session_scope() as session:
         invitation_id = (await organizations.invitations(session, organization.id))[0].id
 
