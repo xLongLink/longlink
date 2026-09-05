@@ -9,6 +9,9 @@ on:
             version:
                 required: true
                 type: string
+        secrets:
+            SAMPLE_REPOSITORY_TOKEN:
+                required: true
     workflow_dispatch:
         inputs:
             channel:
@@ -26,12 +29,16 @@ permissions:
     contents: read
 
 concurrency:
-    group: sync-sample
-    cancel-in-progress: true
+    group: sync-sample-${{ inputs.channel }}
+    cancel-in-progress: false
 
 jobs:
     sync:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+
+        environment:
+            name: ${{ inputs.channel == 'main' && 'release' || 'nightly' }}
 
         env:
             SYNC_CHANNEL: ${{ inputs.channel }}
@@ -43,14 +50,42 @@ jobs:
 
             - name: Setup Python
               uses: ./.github/actions/setup-python
+              with:
+                  cache-dependency-glob: sdk/uv.lock
 
             - name: Generate scaffold
               run: |
                   set -euo pipefail
                   uv sync --locked --project sdk
-                  uv run --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
+                  uv run --locked --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
                   perl -0pi -e 's/^version = "0\.0\.0"$/version = "$ENV{SAMPLE_VERSION}"/m' "$RUNNER_TEMP/sample/pyproject.toml"
-                  uv lock --project "$RUNNER_TEMP/sample"
+
+                  if [ "$SYNC_CHANNEL" = main ]; then
+                      sdk_version="${SAMPLE_VERSION#v}"
+                      SDK_VERSION="$sdk_version" perl -0pi -e 's/"longlink"/"longlink==$ENV{SDK_VERSION}"/' "$RUNNER_TEMP/sample/pyproject.toml"
+                  fi
+
+                  for attempt in 1 2 3 4 5; do
+                      if uv lock --project "$RUNNER_TEMP/sample"; then
+                          break
+                      fi
+                      if [ "$attempt" = 5 ]; then
+                          exit 1
+                      fi
+                      sleep 10
+                  done
+
+            - name: Validate scaffold
+              run: |
+                  set -euo pipefail
+
+                  uv sync --locked --project "$RUNNER_TEMP/sample" --group dev
+                  uv run --locked --project "$RUNNER_TEMP/sample" ruff check .
+                  uv run --locked --project "$RUNNER_TEMP/sample" pytest
+
+            - name: Build scaffold image
+              working-directory: ${{ runner.temp }}/sample
+              run: uv run --locked longlink build --tag ci
 
             - name: Replace sample history
               env:
@@ -68,10 +103,11 @@ jobs:
                           ;;
                   esac
 
-                  git clone "https://x-access-token:${SAMPLE_REPOSITORY_TOKEN}@github.com/xlongLink/sample.git" sample
+                  gh auth setup-git
+                  git clone https://github.com/xlongLink/sample.git sample
                   cd sample
                   git switch --orphan scaffold
-                   git rm -rf --ignore-unmatch .
+                  git rm -rf --ignore-unmatch .
                   git clean -ffdx
                   cp -a "$RUNNER_TEMP/sample/." .
                   git add --all
@@ -82,12 +118,4 @@ jobs:
                   if gh release view "$SAMPLE_VERSION" >/dev/null 2>&1; then
                       gh release delete "$SAMPLE_VERSION" --yes --cleanup-tag
                   fi
-                   gh release create "$SAMPLE_VERSION" --target "$sample_branch" --title "$SAMPLE_VERSION" --generate-notes
-
-                  while IFS=$'\t' read -r _ reference; do
-                      branch="${reference#refs/heads/}"
-                      case "$branch" in
-                          main|nightly) ;;
-                          *) git push origin --delete "$branch" ;;
-                      esac
-                  done < <(git ls-remote --heads origin)
+                  gh release create "$SAMPLE_VERSION" --target "$sample_branch" --title "$SAMPLE_VERSION" --generate-notes

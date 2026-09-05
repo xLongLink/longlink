@@ -1,6 +1,7 @@
 name: Tests
 
 on:
+    workflow_call:
     pull_request:
         branches:
             - main
@@ -8,9 +9,17 @@ on:
         branches:
             - main
 
+permissions:
+    contents: read
+
+concurrency:
+    group: solution-tests-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
     tests:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
 
         steps:
             - name: Check out repository
@@ -19,15 +28,23 @@ jobs:
             - name: Install uv
               uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
               with:
+                  enable-cache: true
+                  cache-dependency-glob: uv.lock
                   version: '0.11.32'
 
             - name: Set up Python
               uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
               with:
-                  python-version-file: pyproject.toml
+                  python-version: '3.12.13'
+
+            - name: Verify lockfile
+              run: test -f uv.lock || { printf 'Run uv sync and commit uv.lock before enabling CI.\n' >&2; exit 1; }
 
             - name: Install dependencies
-              run: uv sync --group dev
+              run: uv sync --locked --group dev
+
+            - name: Lint project
+              run: uv run --locked ruff check .
 
             - name: Run tests
-              run: uv run pytest
+              run: uv run --locked pytest

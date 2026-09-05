@@ -13,6 +13,8 @@ uv sync
 uv run longlink dev
 ```
 
+Commit the generated `uv.lock` before enabling CI or creating a release.
+
 <br />
 
 ## Migrate changes
@@ -28,6 +30,7 @@ uv run longlink migrate
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
+gh release create v0.1.0 --generate-notes
 ```
 
 <br />

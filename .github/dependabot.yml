@@ -16,3 +16,13 @@ updates:
       directory: '/web'
       schedule:
           interval: 'weekly'
+
+    - package-ecosystem: 'docker'
+      directory: '/api'
+      schedule:
+          interval: 'weekly'
+
+    - package-ecosystem: 'docker-compose'
+      directory: '/dev'
+      schedule:
+          interval: 'weekly'

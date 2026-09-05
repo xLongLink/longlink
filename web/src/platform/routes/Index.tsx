@@ -215,7 +215,7 @@ export default function Home() {
             <Seo
                 description={homeDescription}
                 structuredData={structuredData}
-                title="LongLink | Build and operate business software"
+                title="LongLink | Build and Operate business solutions"
             />
             <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
                 <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">

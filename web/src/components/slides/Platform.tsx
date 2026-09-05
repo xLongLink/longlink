@@ -26,7 +26,7 @@ export function PlatformSlide() {
                     type="display-3"
                     weight="semibold"
                 >
-                    Infrastructure
+                    Deployment
                 </Text>
             </Stack>
             <Text
