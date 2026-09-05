@@ -57,7 +57,7 @@
         "topojson-client": "^3.1.0",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
-        "vite-plus": "0.2.9",
+        "vite-plus": "0.3.0",
         "world-atlas": "^2.0.2"
     },
     "overrides": {
