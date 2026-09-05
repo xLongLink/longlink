@@ -3,7 +3,7 @@ import httpx2
 import asyncio
 import hashlib
 import ipaddress
-from kr8s import ServerError
+from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING, Literal, overload
 from datetime import UTC, datetime, timedelta
@@ -260,6 +260,8 @@ class Gateway:
                 for condition in conditions
             ):
                 return
+        except NotFoundError:
+            pass
         except ServerError as exc:
             if exc.response is None or exc.response.status_code != 404:
                 raise
@@ -305,10 +307,24 @@ class Gateway:
             files("src.kubernetes.templates").joinpath("platform", "gateway.yml")
         )
         api = await self._client.api()
+        gateway_class_resource = GatewayClassResource(gateway_class, api=api)
         gateway_resource = GatewayResource(gateway, api=api)
         policy_resource = ClientTrafficPolicyResource(client_traffic_policy, api=api)
         await apply(Namespace(namespace, api=api))
-        await apply(GatewayClassResource(gateway_class, api=api))
+        await apply(gateway_class_resource)
+
+        # Wait for Envoy Gateway to accept LongLink's class before creating dependent resources.
+        while True:
+            await gateway_class_resource.refresh()
+            status = gateway_class_resource.raw.get("status")
+            conditions = status.get("conditions", []) if isinstance(status, dict) else []
+            if any(
+                isinstance(condition, dict) and condition.get("type") == "Accepted" and condition.get("status") == "True"
+                for condition in conditions
+            ):
+                break
+            await asyncio.sleep(5)
+
         if tls is not None:
             await apply(gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
             await apply(gateway_client_ca_secret(tls.ca_certificate, api))

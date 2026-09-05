@@ -76,15 +76,14 @@ radius      # none | small | medium | large
 ## Images
 
 ```xml
-<image> 
-    <style> 
-        Minimalist monochrome line-art; hand-drawn white-pencil strokes; slightly irregular, organic contours; fully transparent background; sparse fine hatching for subtle depth; simple geometric forms and clear silhouettes; generous negative space; technical sketch aesthetic; highly simplified, precise, and uncluttered; no gradients, shadows, decoration, text, or visual noise.
-        Simple, Futuristic, technical, analytical, controlled, efficient, and clear.
-    </style>
+<image>
+  <style>
+    Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
+  </style>
 
-    <content>
-    
-    </content>
+  <content>
+  </content>
 </image>
+
 ```
 

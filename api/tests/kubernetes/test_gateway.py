@@ -1,5 +1,6 @@
 import pytest
 import ipaddress
+from kr8s import NotFoundError
 from uuid import UUID
 from conftest import FakeKubernetes
 from cryptography import x509
@@ -148,14 +149,9 @@ async def test_gateway_install_reraises_non_not_found_gateway_class_errors(monke
 
 
 async def test_gateway_install_fetches_manifest_after_gateway_class_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Install the controller when the GatewayClass lookup returns HTTP 404."""
+    """Install the controller when the GatewayClass lookup reports absence."""
 
     # Arrange
-    class KubernetesError(Exception):
-        """Represent a Kubernetes API error with an HTTP response."""
-
-        response = type("Response", (), {"status_code": 404})()
-
     class GatewayClass:
         """Report that the GatewayClass does not exist."""
 
@@ -163,21 +159,20 @@ async def test_gateway_install_fetches_manifest_after_gateway_class_not_found(mo
             """Accept the Kubernetes API client."""
 
         async def refresh(self) -> None:
-            """Return the Kubernetes not-found response."""
+            """Report the GatewayClass as absent."""
 
-            raise KubernetesError
+            raise NotFoundError("GatewayClass missing")
 
     def http_client(**_kwargs: object) -> object:
-        """Confirm installation continues to the manifest request."""
+        """Confirm installation continues to fetch the controller manifest."""
 
-        raise AssertionError("GatewayClass 404 must fetch the controller manifest")
+        raise AssertionError("Missing GatewayClass must fetch the controller manifest")
 
-    monkeypatch.setattr(gateway, "ServerError", KubernetesError)
     monkeypatch.setattr(gateway, "GatewayClassResource", GatewayClass)
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", http_client)
 
     # Act and assert
-    with pytest.raises(AssertionError, match="GatewayClass 404 must fetch the controller manifest"):
+    with pytest.raises(AssertionError, match="Missing GatewayClass must fetch the controller manifest"):
         await gateway.Gateway(FakeKubernetes()).install_controller()  # type: ignore[arg-type]
 
 
@@ -542,7 +537,16 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
         """Accept rendered Kubernetes resources."""
 
     monkeypatch.setattr(gateway.Gateway, "install_controller", install)
-    monkeypatch.setattr(gateway.templates, "readyml_list", lambda path: ({}, {}, {"status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": [{"value": "192.0.2.1"}]}}, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}))
+    monkeypatch.setattr(
+        gateway.templates,
+        "readyml_list",
+        lambda path: (
+            {},
+            {"status": {"conditions": [{"type": "Accepted", "status": "True"}]}},
+            {"status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": [{"value": "192.0.2.1"}]}},
+            {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}},
+        ),
+    )
     monkeypatch.setattr(gateway, "GatewayResource", Resource)
     monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
     monkeypatch.setattr(gateway, "Namespace", Resource)
@@ -554,9 +558,12 @@ async def test_gateway_apply_returns_when_programmed_authenticated_and_addressed
 
 
 async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep polling when ready Gateway resources have no external address yet."""
+    """Wait for controller class acceptance and an allocated Gateway address."""
 
     # Arrange
+    gateway_class_manifest: dict[str, object] = {
+        "status": {"conditions": [{"type": "Accepted", "status": "False"}]}
+    }
     gateway_manifest: dict[str, object] = {
         "status": {"conditions": [{"type": "Programmed", "status": "True"}], "addresses": {}}
     }
@@ -580,18 +587,26 @@ async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.
         """Accept a rendered Kubernetes resource."""
 
     async def sleep(delay: float) -> None:
-        """Allocate the address after the first readiness poll."""
+        """Accept the class before allocating the Gateway address."""
 
         sleeps.append(delay)
+        if len(sleeps) == 1:
+            gateway_class_manifest["status"] = {"conditions": [{"type": "Accepted", "status": "True"}]}
+            return
         status = gateway_manifest["status"]
         assert isinstance(status, dict)
-        status["addresses"] = [{"value": ""}] if len(sleeps) == 1 else [{"value": "192.0.2.1"}]
+        status["addresses"] = [{"value": ""}] if len(sleeps) == 2 else [{"value": "192.0.2.1"}]
 
     monkeypatch.setattr(gateway.Gateway, "install_controller", install)
     monkeypatch.setattr(
         gateway.templates,
         "readyml_list",
-        lambda _path: ({}, {}, gateway_manifest, {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}}),
+        lambda _path: (
+            {},
+            gateway_class_manifest,
+            gateway_manifest,
+            {"status": {"ancestors": [{"conditions": [{"type": "Accepted", "status": "True"}]}]}},
+        ),
     )
     monkeypatch.setattr(gateway, "GatewayResource", Resource)
     monkeypatch.setattr(gateway, "ClientTrafficPolicyResource", Resource)
@@ -605,7 +620,7 @@ async def test_gateway_apply_waits_for_an_allocated_address(monkeypatch: pytest.
 
     # Assert
     assert address == "192.0.2.1"
-    assert sleeps == [5, 5]
+    assert sleeps == [5, 5, 5]
 
 
 async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -639,7 +654,11 @@ async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkey
         "readyml_list",
         lambda _path: (
             {"kind": "Namespace", "metadata": {"name": "longlink-system"}},
-            {"kind": "GatewayClass", "metadata": {"name": "longlink-envoy"}},
+            {
+                "kind": "GatewayClass",
+                "metadata": {"name": "longlink-envoy"},
+                "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+            },
             {
                 "kind": "Gateway",
                 "status": {
@@ -666,7 +685,11 @@ async def test_gateway_apply_applies_tls_secrets_before_gateway_resources(monkey
     assert address == "192.0.2.1"
     assert applied == [
         {"kind": "Namespace", "metadata": {"name": "longlink-system"}},
-        {"kind": "GatewayClass", "metadata": {"name": "longlink-envoy"}},
+        {
+            "kind": "GatewayClass",
+            "metadata": {"name": "longlink-envoy"},
+            "status": {"conditions": [{"type": "Accepted", "status": "True"}]},
+        },
         {
             "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
             "stringData": {"tls.crt": "server certificate", "tls.key": "server private key"},
