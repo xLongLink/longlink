@@ -1,6 +1,6 @@
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { GitFork, LockKeyhole, Minimize2 } from 'lucide-react';
+import { Minimize2, ShieldCheck, Split } from 'lucide-react';
 
 /** Renders the presentation principles. */
 export function PrinciplesSlide() {
@@ -21,13 +21,13 @@ export function PrinciplesSlide() {
                         </Text>
                     </Stack>
                     <Stack align="center" direction="horizontal" gap={3}>
-                        <GitFork aria-hidden className="text-accent" size={24} />
+                        <Split aria-hidden className="text-accent" size={24} />
                         <Text hasCapsize type="display-3" weight="semibold">
                             Separate responsibilities
                         </Text>
                     </Stack>
                     <Stack align="center" direction="horizontal" gap={3}>
-                        <LockKeyhole aria-hidden className="text-accent" size={24} />
+                        <ShieldCheck aria-hidden className="text-accent" size={24} />
                         <Text hasCapsize type="display-3" weight="semibold">
                             Own the process
                         </Text>

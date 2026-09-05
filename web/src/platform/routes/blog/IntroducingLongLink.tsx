@@ -9,7 +9,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
-import { ArrowLeft, ArrowRight, GitFork, LockKeyhole, Minimize2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Minimize2, ShieldCheck, Split } from 'lucide-react';
 
 const articleDescription =
     'LongLink is an open-source foundation for turning real-world processes into maintainable business software built with Python.';
@@ -152,14 +152,14 @@ export default function IntroducingLongLink() {
                                         </Text>
                                     </Stack>
                                     <Stack gap={3}>
-                                        <Icon color="accent" icon={GitFork} size="lg" />
+                                        <Icon color="accent" icon={Split} size="lg" />
                                         <Heading level={3}>Separate responsibilities</Heading>
                                         <Text as="p" color="secondary" textWrap="pretty">
                                             Make a clear distinction between a machine task and a human decision.
                                         </Text>
                                     </Stack>
                                     <Stack gap={3}>
-                                        <Icon color="accent" icon={LockKeyhole} size="lg" />
+                                        <Icon color="accent" icon={ShieldCheck} size="lg" />
                                         <Heading level={3}>Own the process</Heading>
                                         <Text as="p" color="secondary" textWrap="pretty">
                                             Retain control, accountability, and software that fits the work.

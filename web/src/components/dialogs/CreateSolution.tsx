@@ -92,12 +92,12 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                 inspectError.status !== 429
             ) {
                 setError(inspectError.message);
-            } else {
-                toast({
-                    body: inspectError instanceof Error ? inspectError.message : 'Failed to inspect image',
-                    type: 'error',
-                });
+                return;
             }
+            toast({
+                body: inspectError instanceof Error ? inspectError.message : 'Failed to inspect image',
+                type: 'error',
+            });
         } finally {
             setIsInspecting(false);
         }

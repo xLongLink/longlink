@@ -11,7 +11,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { ArrowRight, Code2, ServerCog, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
+import { ArrowRight, Code2, Minimize2, ServerCog, ShieldCheck, Split } from 'lucide-react';
 
 const integrationContextCount = 336_000_000;
 const homeDescription =
@@ -272,7 +272,7 @@ export default function Home() {
                 <Grid className="mx-auto" columns={{ minWidth: 240, max: 3 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
                         description="Processes are clear, easy to operate, and cheap to maintain."
-                        icon={Sparkles}
+                        icon={Minimize2}
                         title="Keep it simple"
                     />
                     <CapabilityCard
@@ -282,7 +282,7 @@ export default function Home() {
                     />
                     <CapabilityCard
                         description="Clear distinction between a machine and a human task."
-                        icon={Workflow}
+                        icon={Split}
                         title="Separate responsibilities"
                     />
                 </Grid>

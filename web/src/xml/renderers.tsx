@@ -215,16 +215,16 @@ function validateSetupNode(node: ASTNode): string {
 
         // Keep State declarations leaf-only.
         if (node.children.length > 0) throw new Error('State cannot have children');
+
+        return id;
     }
 
     // Validate query declarations.
-    else {
-        // Require a query source path.
-        if (!node.params.path) throw new Error('Query requires a string path');
+    // Require a query source path.
+    if (!node.params.path) throw new Error('Query requires a string path');
 
-        // Keep Query declarations leaf-only.
-        if (node.children.length > 0) throw new Error('Query cannot have children');
-    }
+    // Keep Query declarations leaf-only.
+    if (node.children.length > 0) throw new Error('Query cannot have children');
 
     return id;
 }
