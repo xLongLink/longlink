@@ -86,4 +86,3 @@ radius      # none | small | medium | large
 </image>
 
 ```
-
