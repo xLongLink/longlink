@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink name="Items" icon="package">
+<longlink name="Items" icon="box">
     <Query id="items" path="/api/items" />
     <State id="draft" />
 
@@ -9,20 +9,18 @@
             <Text color="secondary">Track catalog items and their supporting files.</Text>
         </Stack>
         <Dialog title="New item" triggerLabel="New item" purpose="form">
-            <Stack>
-                <TextInput label="Name" value="$draft.name" />
-                <NumberInput label="Price" value="$draft.price" min="0" />
-                <Action>
-                    <Request
-                        url="/api/items"
-                        method="POST"
-                        closeDialog="true"
-                        json="${{ name: draft.name, price: draft.price }}"
-                    />
-                    <Patch state="items" invalidate="true" />
-                    <Button variant="primary">Create item</Button>
-                </Action>
-            </Stack>
+            <TextInput label="Name" value="$draft.name" />
+            <NumberInput label="Price" value="$draft.price" min="0" />
+            <Action>
+                <Request
+                    url="/api/items"
+                    method="POST"
+                    closeDialog="true"
+                    json="${{ name: draft.name, price: draft.price }}"
+                />
+                <Patch state="items" invalidate="true" />
+                <Button variant="primary">Create item</Button>
+            </Action>
         </Dialog>
     </Stack>
 

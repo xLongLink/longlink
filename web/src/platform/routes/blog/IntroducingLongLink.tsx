@@ -69,11 +69,10 @@ export default function IntroducingLongLink() {
                                     accelerate implementation, but it does not replace clear design, review,
                                     accountability, or maintenance.
                                 </Text>
-                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    LongLink is guided by three principles intended to keep each Solution useful long
-                                    after its first release.
-                                </Text>
                             </Stack>
+                        </Stack>
+
+                        <Stack as="section" gap={6}>
                             <Card className="overflow-hidden" padding={0} variant="transparent">
                                 <img
                                     alt="Human and robot hands reaching toward each other"
@@ -81,6 +80,10 @@ export default function IntroducingLongLink() {
                                     src="/images/human-robot-hands.png"
                                 />
                             </Card>
+                            <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                LongLink is guided by three principles intended to keep each Solution useful long after
+                                its first release.
+                            </Text>
                             <Stack gap={4}>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
                                     <Icon className="mt-1" color="accent" icon={Minimize2} size="lg" />
@@ -115,11 +118,30 @@ export default function IntroducingLongLink() {
                             </Stack>
                         </Stack>
 
-                        <Stack gap={10}>
-                            <Stack as="section" gap={6}>
+                        <Stack gap={10} paddingBlockStart={6}>
+                            <Stack as="section" gap={4}>
+                                <Heading level={2} textWrap="balance" type="display-3">
+                                    The Vision
+                                </Heading>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Most companies currently bridge the gaps between their systems with spreadsheets,
+                                    forms, dashboards, email, scripts, and AI-generated tools. The pieces may work, but
+                                    the business logic becomes distributed across them. Processes grow harder to
+                                    understand, govern, and maintain.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Other platforms can make custom software faster to assemble, but often require the
+                                    result to stay within proprietary environments, data models, or deployment systems.
+                                    LongLink instead lets organizations retain control of their source code, data,
+                                    workflows, and integrations. The value created through customization remains
+                                    available, portable, and adaptable as requirements change.
+                                </Text>
+                            </Stack>
+
+                            <Stack as="section" gap={6} paddingBlockStart={2}>
                                 <Stack gap={4}>
                                     <Heading level={2} textWrap="balance" type="display-3">
-                                        A foundation for dedicated software
+                                        How does it work
                                     </Heading>
                                     <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                         LongLink is an open-source foundation for building, deploying, and operating
@@ -145,28 +167,9 @@ export default function IntroducingLongLink() {
                                 </Text>
                             </Stack>
 
-                            <Stack as="section" gap={4}>
+                            <Stack as="section" gap={4} paddingBlockStart={2}>
                                 <Heading level={2} textWrap="balance" type="display-3">
-                                    From fragmented tools to an owned system
-                                </Heading>
-                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Most companies currently bridge the gaps between their systems with spreadsheets,
-                                    forms, dashboards, email, scripts, and AI-generated tools. The pieces may work, but
-                                    the business logic becomes distributed across them. Processes grow harder to
-                                    understand, govern, and maintain.
-                                </Text>
-                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Other platforms can make custom software faster to assemble, but often require the
-                                    result to stay within proprietary environments, data models, or deployment systems.
-                                    LongLink instead lets organizations retain control of their source code, data,
-                                    workflows, and integrations. The value created through customization remains
-                                    available, portable, and adaptable as requirements change.
-                                </Text>
-                            </Stack>
-
-                            <Stack as="section" gap={4}>
-                                <Heading level={2} textWrap="balance" type="display-3">
-                                    Building for the long term
+                                    What next
                                 </Heading>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                     LongLink is in active development. The immediate work is to strengthen the Platform,
