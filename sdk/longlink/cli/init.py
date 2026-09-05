@@ -31,7 +31,11 @@ def init_command(folder: str, project_name: str | None, ci_provider: str | None)
         raise click.ClickException(f"Target already exists: {target}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
-    shutil.copytree(ROOT / ".static" / "new", target, ignore=shutil.ignore_patterns("__pycache__", ".ruff_cache", ".venv"))
+    shutil.copytree(
+        ROOT / ".static" / "new",
+        target,
+        ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", ".ruff_cache", ".venv"),
+    )
 
     # Set the generated project metadata before resolving its dependencies.
     pyproject = target / "pyproject.toml"

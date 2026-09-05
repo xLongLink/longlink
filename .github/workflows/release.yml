@@ -7,8 +7,37 @@ on:
 
 permissions: {}
 
+concurrency:
+    group: release
+    cancel-in-progress: false
+
 jobs:
+    validate-release:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+
+        permissions:
+            contents: read
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Verify release commit
+              env:
+                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+              run: |
+                  set -euo pipefail
+
+                  if ! git merge-base --is-ancestor "${GITHUB_SHA}^{commit}" "origin/${DEFAULT_BRANCH}"; then
+                      printf 'Release tag must point to a commit on %s.\n' "$DEFAULT_BRANCH" >&2
+                      exit 1
+                  fi
+
     tests:
+        needs: validate-release
         permissions:
             contents: read
         uses: ./.github/workflows/tests.yml
@@ -16,7 +45,8 @@ jobs:
     # The SDK is published to PyPI.
     publish-sdk:
         needs: tests
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
 
         environment:
             name: release
@@ -34,6 +64,8 @@ jobs:
 
             - name: Setup Python
               uses: ./.github/actions/setup-python
+              with:
+                  cache-dependency-glob: sdk/uv.lock
 
             - name: Setup Vite+
               uses: ./.github/actions/setup-vite
@@ -55,7 +87,11 @@ jobs:
     # The API is packaged into a container, so we will publish the image to GHCR on each release.
     publish-api-image:
         needs: tests
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        environment:
+            name: release
 
         permissions:
             contents: read
@@ -85,9 +121,9 @@ jobs:
                       VERSION=${{ github.ref_name }}
                   annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
-                  tags: |
-                      ghcr.io/xlonglink/longlink:latest
-                      ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                  tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
 
     sync-sample:
         needs: [publish-sdk, publish-api-image]
@@ -97,11 +133,16 @@ jobs:
         with:
             channel: main
             version: ${{ github.ref_name }}
-        secrets: inherit
+        secrets:
+            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
 
     publish-github-release:
         needs: [publish-sdk, publish-api-image, sync-sample]
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+
+        environment:
+            name: release
 
         permissions:
             contents: write

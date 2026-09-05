@@ -11,7 +11,16 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
-const publicPagePaths = ['/', '/pricing', '/terms', '/impressum', '/privacy', ...documentationPaths];
+const publicPagePaths = [
+    '/',
+    '/blog',
+    '/blog/introducing-longlink',
+    '/pricing',
+    '/terms',
+    '/impressum',
+    '/privacy',
+    ...documentationPaths,
+];
 const outputDirectory = path.resolve(
     import.meta.dirname,
     isSolution ? '../sdk/longlink/.static/web' : '../api/src/.static/web'

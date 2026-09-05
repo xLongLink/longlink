@@ -9,7 +9,7 @@ permissions: {}
 
 concurrency:
     group: nightly-api-image
-    cancel-in-progress: true
+    cancel-in-progress: false
 
 jobs:
     tests:
@@ -19,10 +19,15 @@ jobs:
 
     publish-api-image:
         needs: tests
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        environment:
+            name: nightly
 
         outputs:
             platform_version: ${{ steps.platform.outputs.version }}
+            publish: ${{ steps.nightly.outputs.publish }}
 
         env:
             IMAGE: ghcr.io/xlonglink/longlink-nightly:nightly
@@ -59,6 +64,7 @@ jobs:
                   PLATFORM_VERSION: ${{ steps.platform.outputs.version }}
               run: |
                   set -euo pipefail
+                  # shellcheck disable=SC2153
 
                   image="$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Image}}' 2>/dev/null || true)"
                   revision="$(jq -r '.config.Labels["org.opencontainers.image.revision"] // empty' <<< "$image")"
@@ -86,6 +92,8 @@ jobs:
                   annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
                   tags: ${{ env.IMAGE }}
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
 
             - name: Remove old nightly API image versions
               uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
@@ -97,10 +105,12 @@ jobs:
 
     sync-sample:
         needs: publish-api-image
+        if: needs.publish-api-image.outputs.publish == 'true'
         permissions:
             contents: read
         uses: ./.github/workflows/sync-sample.yml
         with:
             channel: nightly
             version: ${{ needs.publish-api-image.outputs.platform_version }}
-        secrets: inherit
+        secrets:
+            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}

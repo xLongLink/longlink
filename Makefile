@@ -1,4 +1,4 @@
-.PHONY: up local\:resources local\:image down clear build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test ty api\:ty sdk\:ty
+.PHONY: up local\:resources local\:image down clear check build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test web\:test ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
@@ -22,6 +22,15 @@ sdk\:install:
 # Install web JavaScript dependencies.
 web\:install:
 	cd web && vp install --frozen-lockfile
+
+
+# Run the same source checks and test suites required by CI.
+check: test ty
+	cd api && uv run --locked ruff check .
+	cd sdk && uv run --locked ruff check .
+	cd web && vp run check
+	cd web && vp run check:platform-api
+	cd web && vp run typecheck
 
 
 # Format API, SDK, and web/docs code.
@@ -52,18 +61,23 @@ web\:format: web\:install
 ty: api\:ty sdk\:ty
 
 
-# Run API and SDK tests with coverage.
-test: api\:test sdk\:test
+# Run API, SDK, and web tests.
+test: api\:test sdk\:test web\:test
 
 
 # Run API tests with coverage.
-api\:test: api\:install
+api\:test: api\:install api\:build
 	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 
 
 # Run SDK tests with coverage.
-sdk\:test: sdk\:install
+sdk\:test: sdk\:install sdk\:build
 	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
+
+
+# Run web tests.
+web\:test: web\:install
+	cd web && vp run test
 
 
 # Run API ty checks.

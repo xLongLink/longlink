@@ -138,7 +138,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                             </Text>
                                             {page.editUrl ? (
                                                 <Link href={page.editUrl} hasUnderline isExternalLink type="supporting">
-                                                    Edit this page in GitHub
+                                                    Edit this page
                                                 </Link>
                                             ) : null}
                                         </Stack>

@@ -2,16 +2,25 @@ name: Tests
 
 on:
     pull_request:
+    push:
+        branches:
+            - main
+    merge_group:
     workflow_dispatch:
     workflow_call:
 
 permissions:
     contents: read
 
+concurrency:
+    group: tests-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
     # The API is packaged into a container, so test it on the supported Python runtime.
     api-tests:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
 
         steps:
             - name: Checkout repository
@@ -19,6 +28,8 @@ jobs:
 
             - name: Setup Python environment
               uses: ./.github/actions/setup-python
+              with:
+                  cache-dependency-glob: api/uv.lock
 
             - name: Setup web environment
               uses: ./.github/actions/setup-vite
@@ -27,9 +38,12 @@ jobs:
               working-directory: api
               run: uv sync --locked --extra dev
 
-            - name: Check API formatting
+            - name: Lint API
               working-directory: api
               run: uv run --locked ruff check .
+
+            - name: Verify Docker daemon
+              run: docker info
 
             - name: Check Platform API client generation
               working-directory: web
@@ -41,7 +55,7 @@ jobs:
 
             - name: Run tests
               working-directory: api
-              run: uv run --locked pytest tests
+              run: uv run --locked pytest tests --cov=main --cov=src --cov-report=term-missing
 
             - name: Run type checks
               working-directory: api
@@ -49,7 +63,14 @@ jobs:
 
     # The SDK requires Python 3.12 or newer.
     sdk-tests:
-        runs-on: ubuntu-latest
+        name: SDK tests (Python ${{ matrix.python-version }})
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ['3.12.13', '3.14.6']
 
         steps:
             - name: Checkout repository
@@ -57,6 +78,9 @@ jobs:
 
             - name: Setup Python environment
               uses: ./.github/actions/setup-python
+              with:
+                  cache-dependency-glob: sdk/uv.lock
+                  python-version: ${{ matrix.python-version }}
 
             - name: Setup web environment
               uses: ./.github/actions/setup-vite
@@ -65,9 +89,12 @@ jobs:
               working-directory: sdk
               run: uv sync --locked --group dev
 
-            - name: Check SDK formatting
+            - name: Lint SDK
               working-directory: sdk
               run: uv run --locked ruff check .
+
+            - name: Verify Docker daemon
+              run: docker info
 
             - name: Build SDK web bundle
               working-directory: web
@@ -75,19 +102,76 @@ jobs:
 
             - name: Run tests
               working-directory: sdk
-              run: uv run --locked pytest tests
+              run: uv run --locked pytest tests --cov --cov-report=term-missing
 
             - name: Run type checks
               working-directory: sdk
               run: uv run --locked --group dev ty check
 
             - name: Build SDK distribution
+              if: matrix.python-version == '3.14.6'
               working-directory: sdk
               run: uv build
 
+            - name: Smoke test SDK wheel
+              if: matrix.python-version == '3.14.6'
+              working-directory: sdk
+              run: uv run --isolated --no-project --with ./dist/*.whl python -c "from importlib.resources import files; assert files('longlink').joinpath('.static/web').is_dir()"
+
+    # Build the production image independently so publishing cannot discover Docker-only failures.
+    api-image:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+            - name: Build API image
+              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+              with:
+                  context: .
+                  file: api/Dockerfile
+                  load: true
+                  push: false
+                  tags: longlink-api:test
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
+
+            - name: Smoke test API image
+              run: |
+                  set -euo pipefail
+
+                  container=longlink-api-smoke
+                  trap 'docker logs longlink-api-smoke || true; docker rm --force longlink-api-smoke >/dev/null 2>&1 || true' EXIT
+
+                  docker run --detach --name "$container" --publish 127.0.0.1:18000:8000 \
+                      --env DEVELOPMENT=true \
+                      --env SESSION_KEY=ci-session-key-with-at-least-32-characters \
+                      --env ADMIN_NAME=Administrator \
+                      --env ADMIN_EMAIL=administrator@example.com \
+                      --env ADMIN_PASSWORD=ci-password \
+                      --env ENCRYPTION_KEY=ci-encryption-key-with-at-least-32-characters \
+                      --env DATABASE_URL=sqlite+aiosqlite:////tmp/longlink.db \
+                      longlink-api:test \
+                      sh -c 'alembic upgrade head && exec uvicorn main:app --host 0.0.0.0 --port 8000'
+
+                  for _ in {1..60}; do
+                      if curl --fail --silent http://127.0.0.1:18000/api/v1/healthz >/dev/null; then
+                          exit 0
+                      fi
+                      sleep 1
+                  done
+
+                  exit 1
+
     # The web package uses Vite+ and Bun, so run its checks separately.
     web-tests:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
 
         steps:
             - name: Checkout repository

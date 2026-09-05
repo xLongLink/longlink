@@ -56,9 +56,11 @@ export default function DocsArticleRoute() {
                 <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                     {solutionPaths.map((path) => (
                         <Stack key={path} gap={2}>
-                            <Card height={190} padding={0} variant="muted">
-                                <Center height="100%">
-                                    <Heading level={2}>{path}</Heading>
+                            <Card padding={0} variant="muted">
+                                <Center height={190}>
+                                    <Heading className="mt-0" level={2}>
+                                        {path}
+                                    </Heading>
                                 </Center>
                             </Card>
                             <Text type="supporting">{path}</Text>

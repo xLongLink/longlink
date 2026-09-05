@@ -5,13 +5,14 @@ import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
+import { PlanSlide } from '@/components/slides/Plan';
 import { TeamSlide } from '@/components/slides/Team';
 import { useLocation, useNavigate } from 'react-router';
 import { TargetSlide } from '@/components/slides/Target';
 import { PlatformSlide } from '@/components/slides/Platform';
 import { PrinciplesSlide } from '@/components/slides/Principles';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { Blocks, BookOpen, Network, Target, Users } from 'lucide-react';
+import { BookOpen, CalendarRange, ListChecks, Server, Target, Users } from 'lucide-react';
 
 const slides = [
     {
@@ -24,23 +25,30 @@ const slides = [
     {
         component: TargetSlide,
         href: '/ppt?slide=target',
-        icon: Blocks,
+        icon: Target,
         id: 'target',
         label: 'Target',
     },
     {
         component: PrinciplesSlide,
         href: '/ppt?slide=principles',
-        icon: Target,
+        icon: ListChecks,
         id: 'principles',
         label: 'Principles',
     },
     {
         component: PlatformSlide,
         href: '/ppt?slide=platform',
-        icon: Network,
+        icon: Server,
         id: 'platform',
         label: 'Platform',
+    },
+    {
+        component: PlanSlide,
+        href: '/ppt?slide=plan',
+        icon: CalendarRange,
+        id: 'plan',
+        label: 'Plan',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
 ] as const;
@@ -54,6 +62,30 @@ const printStyles = `
     .ppt-slide-standard-font {
         --font-family-body: Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         --font-family-heading: Montserrat, Figtree, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .ppt-brittle-brick {
+        position: relative;
+        isolation: isolate;
+        border-radius: var(--radius-none);
+        clip-path: polygon(
+            0 0,
+            38% 0,
+            42% 7%,
+            47% 0,
+            100% 0,
+            100% 57%,
+            95% 64%,
+            100% 73%,
+            100% 100%,
+            62% 100%,
+            57% 93%,
+            52% 100%,
+            0 100%,
+            0 64%,
+            5% 57%,
+            0 49%
+        );
     }
 
     .ppt-screen-slide {
@@ -87,7 +119,7 @@ const printStyles = `
 
     @page {
         size: 13.333in 7.5in;
-        margin: 0.25in;
+        margin: 0;
     }
 
     @media print {
@@ -104,14 +136,12 @@ const printStyles = `
 
         .ppt-print-slides {
             display: block;
-            --ppt-print-slide-height: 7in;
-            --ppt-print-slide-width: 12.833in;
         }
 
         .ppt-print-slide,
         .ppt-print-title-slide {
-            width: var(--ppt-print-slide-width);
-            height: var(--ppt-print-slide-height);
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
             break-inside: avoid;
             break-after: page;
@@ -216,7 +246,7 @@ export default function Ppt() {
                     justify="center"
                     align="center"
                 >
-                    <Wordmark size="heading" />
+                    <Wordmark size="display" />
                 </Stack>
                 {slides.map((slide, printSlideIndex) => (
                     <PresentationSlide className="ppt-print-slide" key={slide.id} slideIndex={printSlideIndex} />
@@ -228,9 +258,12 @@ export default function Ppt() {
                     justify="center"
                     align="center"
                 >
-                    <Text hasCapsize type="display-3" weight="semibold">
-                        longlink.dev
-                    </Text>
+                    <Stack align="center" gap={4}>
+                        <Wordmark size="display" />
+                        <Text hasCapsize type="large" weight="semibold">
+                            longlink.dev
+                        </Text>
+                    </Stack>
                 </Stack>
             </Stack>
         </>
