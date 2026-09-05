@@ -1,8 +1,8 @@
 from .base import AuditTable
-from datetime import UTC, datetime
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
 from longlink.context import _current_identity
+from longlink.utils.time import utcnow
 
 # ---------------------------------------------------------------------
 # SQLModel audit hook
@@ -18,7 +18,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
     """
 
     # Capture one timestamp and actor for every row changed in this flush.
-    now = datetime.now(UTC)
+    now = utcnow()
     user_id = _current_identity.get()
 
     # Apply audit fields to newly tracked rows.

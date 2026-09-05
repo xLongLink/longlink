@@ -1,4 +1,3 @@
-import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
@@ -15,7 +14,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteOrganization } from '@/lib/hooks/use-organization';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
@@ -25,18 +24,7 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 export default function AdminOrganizations() {
     const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
     const toast = useToast();
-    const queryClient = useQueryClient();
-    const deleteOrganization = useMutation({
-        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
-        onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
-            ]);
-            toast({ body: 'Organization deleted' });
-        },
-    });
+    const deleteOrganization = useDeleteOrganization(() => toast({ body: 'Organization deleted' }));
     const {
         items: organizations,
         error,

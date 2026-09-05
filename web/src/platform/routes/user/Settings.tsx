@@ -19,6 +19,7 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteOrganization } from '@/lib/hooks/use-organization';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
@@ -42,15 +43,7 @@ export default function Settings() {
             queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
         },
     });
-    const deleteOrganization = useMutation({
-        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
-        onSuccess: () =>
-            Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
-            ]),
-    });
+    const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
     const [editedAvatar, setEditedAvatar] = useState<string | null>(null);

@@ -36,10 +36,6 @@ import { avatarUrlSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import {
-    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
-    zOrganizationStorageUsageResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
-import {
     useDeleteOrganizationSolution,
     useOrganization,
     useOrganizationSolutions,
@@ -52,6 +48,10 @@ import type {
     OrganizationMemberAccessResponse,
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
+import {
+    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
+    zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the organization settings page. */
 export default function OrganizationSettings() {
@@ -196,7 +196,9 @@ export default function OrganizationSettings() {
             storagePath === null
                 ? skipToken
                 : async ({ signal }) =>
-                      zOrganizationStorageUsageResponse.nullable().parse(await api(storagePath, { signal }).json()),
+                      zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse.parse(
+                          await api(storagePath, { signal }).json()
+                      ),
         retry: false,
     });
     // Hide missing or inaccessible orgs behind the shared 404 page.
