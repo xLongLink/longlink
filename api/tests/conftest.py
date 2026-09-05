@@ -3,8 +3,10 @@ import pytest
 import pytest_asyncio
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
+from typing import cast
 from pathlib import Path
 from contextlib import AsyncExitStack
+from kr8s.asyncio import Api
 from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -45,10 +47,10 @@ from src.database.models.users import User
 class FakeKubernetes:
     """Provide an opaque Kubernetes API client."""
 
-    async def api(self) -> object:
+    async def api(self) -> Api:
         """Return the fake API client used by resource fakes."""
 
-        return object()
+        return cast(Api, object())
 
 
 @pytest.fixture

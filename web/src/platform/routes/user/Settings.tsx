@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -8,6 +7,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { OrganizationCell } from '@/components/Cells';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { AvatarDialog } from '@/components/dialogs/Avatar';
@@ -207,25 +207,10 @@ export default function Settings() {
                                         width={proportional(1)}
                                     >
                                         {(membership) => (
-                                            <Stack direction="horizontal" gap={3} align="center">
-                                                <Avatar
-                                                    kind="organization"
-                                                    src={membership.organization.avatar}
-                                                    name={membership.organization.name}
-                                                />
-                                                <Stack>
-                                                    <Stack direction="horizontal" gap={2} align="center">
-                                                        <Link
-                                                            href={`/orgs/${membership.organization.slug}`}
-                                                            weight="semibold"
-                                                        >
-                                                            {membership.organization.name}
-                                                        </Link>
-                                                        <Badge label={membership.role} />
-                                                    </Stack>
-                                                    <Text type="supporting">Organization</Text>
-                                                </Stack>
-                                            </Stack>
+                                            <OrganizationCell
+                                                endContent={<Badge label={membership.role} />}
+                                                organization={membership.organization}
+                                            />
                                         )}
                                     </TableColumn>
                                     <TableColumn<(typeof memberships)[number]>

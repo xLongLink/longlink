@@ -1,8 +1,7 @@
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { OrganizationCell } from '@/components/Cells';
 import { proportional } from '@astryxdesign/core/Table';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageContainer } from '@/components/PageContainer';
@@ -50,22 +49,10 @@ export default function Organizations() {
             >
                 <TableColumn<UserOrganizationMembership> field="name" header="Name" width={proportional(1)}>
                     {(membership) => (
-                        <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar
-                                kind="organization"
-                                src={membership.organization.avatar}
-                                name={membership.organization.name}
-                            />
-                            <Stack>
-                                <Stack direction="horizontal" gap={1} align="center">
-                                    <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                                        {membership.organization.name}
-                                    </Link>
-                                    <StatusBadge status={membership.organization.status} />
-                                </Stack>
-                                <Text type="supporting">Organization</Text>
-                            </Stack>
-                        </Stack>
+                        <OrganizationCell
+                            endContent={<StatusBadge status={membership.organization.status} />}
+                            organization={membership.organization}
+                        />
                     )}
                 </TableColumn>
             </Table>

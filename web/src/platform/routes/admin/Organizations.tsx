@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
+import { OrganizationCell } from '@/components/Cells';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import MetadataDialog from '@/components/dialogs/Metadata';
 import { Table, TableColumn } from '@/components/ui/Table';
@@ -73,18 +72,10 @@ export default function AdminOrganizations() {
             >
                 <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
                     {(organization) => (
-                        <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar kind="organization" src={organization.avatar} name={organization.name} />
-                            <Stack align="start">
-                                <Stack direction="horizontal" gap={1} align="center">
-                                    <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                                        {organization.name}
-                                    </Link>
-                                    <StatusBadge status={organization.status} />
-                                </Stack>
-                                <Text type="supporting">Organization</Text>
-                            </Stack>
-                        </Stack>
+                        <OrganizationCell
+                            endContent={<StatusBadge status={organization.status} />}
+                            organization={organization}
+                        />
                     )}
                 </TableColumn>
                 <TableColumn<OrganizationSummary> align="end" field="metadata" header="" width={pixel(56)}>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
+import { UserCell } from '@/components/Cells';
 import { Text } from '@astryxdesign/core/Text';
-import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
@@ -47,16 +47,10 @@ export default function AdminUsers() {
             >
                 <TableColumn<UserSummary> field="user" header="User" width={pixel(400)}>
                     {(user) => (
-                        <Stack direction="horizontal" gap={3} align="center">
-                            <Avatar src={user.avatar} name={user.name} />
-                            <Stack>
-                                <Stack direction="horizontal" gap={1} align="center">
-                                    <Text weight="semibold">{user.name}</Text>
-                                    <Badge label={user.administrator ? 'Administrator' : 'User'} />
-                                </Stack>
-                                <Text type="supporting">{user.email}</Text>
-                            </Stack>
-                        </Stack>
+                        <UserCell
+                            endContent={<Badge label={user.administrator ? 'Administrator' : 'User'} />}
+                            user={user}
+                        />
                     )}
                 </TableColumn>
                 <TableColumn<UserSummary> align="end" field="actions" header="" width={pixel(56)}>

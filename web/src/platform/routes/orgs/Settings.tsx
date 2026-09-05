@@ -1,6 +1,7 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
 import Logs from '@/components/dialogs/Logs';
+import { UserCell } from '@/components/Cells';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
@@ -283,15 +284,7 @@ export default function OrganizationSettings() {
                                             header="User"
                                             width={proportional(1)}
                                         >
-                                            {(member) => (
-                                                <Stack direction="horizontal" gap={3} align="center">
-                                                    <Avatar src={member.user.avatar} name={member.user.name} />
-                                                    <Stack>
-                                                        <Text weight="semibold">{member.user.name}</Text>
-                                                        <Text type="supporting">{member.user.email}</Text>
-                                                    </Stack>
-                                                </Stack>
-                                            )}
+                                            {(member) => <UserCell user={member.user} />}
                                         </TableColumn>
                                         <TableColumn<OrganizationMemberAccessResponse>
                                             field="membership"
