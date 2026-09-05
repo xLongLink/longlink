@@ -45,7 +45,7 @@
     "devDependencies": {
         "@astryxdesign/cli": "0.5.1",
         "@hey-api/openapi-ts": "0.99.0",
-        "@react-router/dev": "8.3.0",
+        "@react-router/dev": "8.3.1",
         "@types/d3-geo": "^3.1.1",
         "@types/node": "^26.2.0",
         "@types/react": "^19.2.18",
