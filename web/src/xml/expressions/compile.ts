@@ -1,6 +1,6 @@
+import type { Expression } from 'acorn';
 import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute } from '../types';
-import type { ExpressionNode } from './types';
 
 /** Compiles an XML attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string): ASTAttribute {
@@ -23,7 +23,7 @@ export function compileAttribute(value: string): ASTAttribute {
 
     // Compile mixed text and expressions into segments that render as text.
     if (input.includes('${')) {
-        const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }> = [];
+        const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: Expression }> = [];
         let cursor = 0;
 
         // Scan the string for interpolation starts.
@@ -56,7 +56,7 @@ function readInterpolationSegment(input: string, start: number) {
     try {
         const node = parseExpressionAt(input, start + 2, {
             ecmaVersion: 'latest',
-        }) as unknown as ExpressionNode & { end: number };
+        });
         let end = node.end;
 
         // Skip whitespace before the closing brace.

@@ -9,7 +9,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationSolution } from '@/lib/hooks/use-organization';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -168,7 +168,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             maxHeight="calc(100dvh - 2rem)"
                         >
                             <Layout
-                                header={<DialogHeader hasDivider title={stepTitle} onOpenChange={handleOpenChange} />}
+                                header={<DialogHeader title={stepTitle} onOpenChange={handleOpenChange} />}
                                 content={
                                     <LayoutContent>
                                         <form

@@ -7,7 +7,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { coerceXmlBoolean, useBindableValue } from '../core/binding';
-import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog as AstryxDialog, DialogHeader } from '@/components/ui/Dialog';
 import { resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 
 const dialogPropsSchema = z.object({

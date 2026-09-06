@@ -9,6 +9,49 @@
 - Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.
 
+## Project Architecture
+
+This section is a navigation aid, not a specification. The code is the source of truth for current behavior, contracts, configuration, and commands. Update this overview when architectural boundaries change; do not duplicate implementation details here.
+
+### Terminology
+
+- **LongLink (Platform):** Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
+- **Solution:** Business application owning its Python/FastAPI logic, models, migrations, and Views.
+- **View:** XML interface definition rendered by the shared Web runtime.
+- **Organization:** Membership and resource boundary grouping users and Solutions.
+
+### Packages
+
+- **API (`api/`):** FastAPI control plane for authentication, memberships, infrastructure registrations, lifecycle operations, and authorized Solution proxying. Routes validate requests, database services manage Platform state, and durable operations coordinate infrastructure changes.
+- **SDK (`sdk/`):** Python application toolkit, not a Platform API client. Integrates with Solution-owned FastAPI apps, supplies request identity and database/storage context, validates and serves XML views, and provides scaffolding, migrations, and container-build tooling. Solutions run as separate services, not in-process Platform plugins.
+- **Web (`web/`):** React/TypeScript Platform interface and shared XML view renderer. Builds two browser applications: the Platform UI embedded in the API and a standalone Solution shell embedded in the SDK. Python serves the production assets; public Platform pages are prerendered at build time.
+
+### Main Flows
+
+1. **Deploy:** SDK tooling packages a Solution as a container image. The API records the requested deployment and queues a durable operation to provision scoped resources, run Solution migrations, and start its Kubernetes workload.
+2. **Use:** Browser requests pass through the Platform API, which checks the session and organization permissions before proxying to the Solution with signed user identity. The Solution executes business logic using its database/storage context. Business-specific authorization remains the Solution's responsibility.
+3. **Render:** Web loads the Solution's view manifest, matches a browser route, fetches XML, and renders registered React components. XML state, queries, and actions drive interaction with Solution endpoints. Hosted views use the API proxy; standalone SDK views call the Solution directly. Browser navigation paths and backend request paths are separate.
+
+### Boundaries and Contracts
+
+- Platform metadata is separate from Solution business data. Organizations receive a Kubernetes namespace, PostgreSQL database, and storage bucket; Solutions receive scoped schemas, credentials, and storage prefixes within them.
+- The Platform projects user/membership data into an organization-shared schema for Solutions to read. This is one-way synchronization, not a cross-database transaction. Platform, shared-schema, and Solution migrations have distinct owners.
+- API OpenAPI definitions generate Web TypeScript/Zod contracts. SDK XSD schemas define and document XML views, while Web implements their browser behavior. Contract changes must stay aligned across packages; generated files are not the editing source.
+- XML is a restricted declarative UI language, not arbitrary HTML or JavaScript. Frontend access controls do not replace backend authorization, and SDK identity context does not independently enforce all access rules.
+
+### Source Entry Points
+
+| Concern | Start Here |
+| --- | --- |
+| API composition and request boundaries | `api/main.py`, `api/src/routes/v1/` |
+| Platform state and deployment lifecycle | `api/src/database/services/`, `api/src/operations/`, `api/src/kubernetes/` |
+| Hosted Solution authorization | `api/src/routes/v1/proxy.py` |
+| SDK integration and request context | `sdk/longlink/app.py`, `sdk/longlink/context.py` |
+| Solution tooling | `sdk/longlink/cli/` |
+| Web targets and Platform routes | `web/react-router.config.ts`, `web/src/platform/routes.ts` |
+| Shared View runtime | `web/src/components/Solution.tsx`, `web/src/xml/` |
+| Web API contract generation | `web/openapi-ts.config.ts` |
+
 ## Python Guidelines
 
 - Avoid renaming imports.

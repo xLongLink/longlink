@@ -1,4 +1,4 @@
-import type { ExpressionNode } from './types';
+import type { AnyNode } from 'acorn';
 import type { ASTAttribute, Scope } from '../types';
 import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 
@@ -11,7 +11,7 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
 };
 
 /** Evaluates a supported AST node against the current scope. */
-function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
+function evaluateNode(node: AnyNode, ctx: Scope): unknown {
     // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
@@ -172,7 +172,7 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
         }
 
         default:
-            throw new Error(`Unsupported node: ${(node as { type: string }).type}`);
+            throw new Error(`Unsupported node: ${node.type}`);
     }
 }
 

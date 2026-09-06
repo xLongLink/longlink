@@ -133,11 +133,12 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
         _cfg: object,
         autogenerate: bool,
         process_revision_directives: Callable[[object, object, list[MigrationScript]], None],
-    ) -> None:
-        """Run Alembic's callback with the supplied directives."""
+    ) -> object:
+        """Run Alembic's callback and return a revision placeholder or an empty list."""
 
         assert autogenerate is True
         process_revision_directives(object(), object(), directives)
+        return object() if directives else []
 
     monkeypatch.setattr(database_migrations.command, "revision", fake_revision)
 

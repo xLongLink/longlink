@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 

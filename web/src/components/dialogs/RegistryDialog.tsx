@@ -6,7 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
 import { useId, useState, type ReactNode } from 'react';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 

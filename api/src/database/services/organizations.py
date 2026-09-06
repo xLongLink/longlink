@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles
-from sqlalchemy import func, delete, select
+from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -114,17 +114,13 @@ async def solution_runtime_access(
     return result.tuples().one_or_none()
 
 
-async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
-    """Return one Organization and a consistent snapshot of its infrastructure assignments."""
+def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry]]:
+    """Select one Organization's provider connections for lifecycle work."""
 
-    # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
-    result = await session.execute(
+    # Keep provider projections and assignment joins shared across lifecycle targets.
+    return (
         select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
         .options(
-            load_only(
-                Organization.id,
-                Organization.deleted_at,
-            ),
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.kubeconfig,
@@ -147,8 +143,19 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
         .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
         .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
+    )
+
+
+async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
+    """Return one Organization and a consistent snapshot of its infrastructure assignments."""
+
+    # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
+    statement = (
+        _infrastructure_query()
+        .options(load_only(Organization.id, Organization.deleted_at))
         .where(col(Organization.id) == organization_id)
     )
+    result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
@@ -161,7 +168,9 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
 
     # Load the Solution and its infrastructure in one lifecycle query.
     statement = (
-        select(Solution, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        _infrastructure_query()
+        .add_columns(Solution)
+        .join_from(Organization, Solution, col(Solution.organization_id) == col(Organization.id))
         .options(
             load_only(
                 Solution.id,
@@ -171,36 +180,14 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
                 Solution.deleted_at,
             ),
             load_only(Organization.id),
-            load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.kubeconfig,
-            ),
-            load_only(
-                DatabaseRegistry.id,
-                DatabaseRegistry.host,
-                DatabaseRegistry.port,
-                DatabaseRegistry.password,
-                DatabaseRegistry.sslmode,
-                DatabaseRegistry.username,
-            ),
-            load_only(
-                StorageRegistry.id,
-                StorageRegistry.endpoint_url,
-                StorageRegistry.access_key_id,
-                StorageRegistry.secret_access_key,
-            ),
         )
-        .join(Organization, col(Organization.id) == col(Solution.organization_id))
-        .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-        .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-        .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
         .where(col(Solution.id) == solution_id)
     )
     result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    solution, organization, compute, database, storage = row
+    organization, compute, database, storage, solution = row
     return solution, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
 
 
@@ -329,6 +316,25 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
 
 
+async def _locked_membership(
+    session: AsyncSession, user_id: UUID, organization_id: UUID, minimum_role: OrganizationRoles
+) -> UserOrganization:
+    """Refresh and authorize a membership after the caller has locked its Organization."""
+
+    # Lock and refresh caller access so previously loaded memberships cannot authorize revoked users.
+    membership = await session.get(
+        UserOrganization,
+        (user_id, organization_id),
+        populate_existing=True,
+        with_for_update=True,
+    )
+    if membership is None or membership.deleted_at is not None:
+        raise ForbiddenError("Access required")
+    if not roles.atleast(membership.role, minimum_role):
+        raise ForbiddenError("Permission required")
+    return membership
+
+
 async def update_member_role(
     session: AsyncSession,
     organization_id: UUID,
@@ -342,16 +348,7 @@ async def update_member_role(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    caller_membership = await session.get(
-        UserOrganization,
-        (user.id, organization_id),
-        populate_existing=True,
-        with_for_update=True,
-    )
-    if caller_membership is None or caller_membership.deleted_at is not None:
-        raise ForbiddenError("Access required")
-    if not roles.atleast(caller_membership.role, OrganizationRoles.admin):
-        raise ForbiddenError("Permission required")
+    caller_membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.admin)
 
     # Lock the member role after locking the Organization and caller access.
     statement = (
@@ -573,16 +570,7 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
         return None
 
     # Revalidate the caller while the Organization is locked to reject revoked administrators.
-    membership = await session.get(
-        UserOrganization,
-        (user.id, organization_id),
-        populate_existing=True,
-        with_for_update=True,
-    )
-    if membership is None or membership.deleted_at is not None:
-        raise ForbiddenError("Access required")
-    if not roles.atleast(membership.role, OrganizationRoles.admin):
-        raise ForbiddenError("Permission required")
+    await _locked_membership(session, user.id, organization_id, OrganizationRoles.admin)
     if organization.avatar != avatar:
         organization.avatar = avatar
         organization.updated_id = user.id
@@ -603,16 +591,7 @@ async def create_invitation(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await session.get(
-        UserOrganization,
-        (user.id, organization_id),
-        populate_existing=True,
-        with_for_update=True,
-    )
-    if membership is None or membership.deleted_at is not None:
-        raise ForbiddenError("Access required")
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Permission required")
+    membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.maintain)
     if not roles.atleast(membership.role, role):
         raise ForbiddenError("Invitation role permissions required")
 
@@ -627,16 +606,7 @@ async def revoke_invitation(session: AsyncSession, organization_id: UUID, invita
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await session.get(
-        UserOrganization,
-        (user.id, organization_id),
-        populate_existing=True,
-        with_for_update=True,
-    )
-    if membership is None or membership.deleted_at is not None:
-        raise ForbiddenError("Access required")
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Permission required")
+    membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.maintain)
 
     # Resolve only an invitation belonging to the locked Organization.
     invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)

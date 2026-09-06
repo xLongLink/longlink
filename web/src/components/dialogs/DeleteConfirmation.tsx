@@ -3,7 +3,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { useState, type ReactNode } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
 type DeleteConfirmationProps = {

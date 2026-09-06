@@ -1,7 +1,7 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
 type AvatarDialogProps = {
