@@ -142,7 +142,7 @@ def _google_identity(payload: object) -> OAuthIdentity | None:
     if not isinstance(payload, dict) or payload.get("email_verified") is not True:
         return None
     subject = _text(payload, "sub", 255)
-    email = _email(payload, "email")
+    email = _email(payload)
     if subject is None or email is None:
         return None
     return OAuthIdentity(
@@ -170,7 +170,7 @@ def _github_identity(profile: object, emails: object) -> OAuthIdentity | None:
             if isinstance(item, dict)
             and item.get("primary") is True
             and item.get("verified") is True
-            and (verified_email := _email(item, "email")) is not None
+            and (verified_email := _email(item)) is not None
         ),
         None,
     )
@@ -184,11 +184,11 @@ def _github_identity(profile: object, emails: object) -> OAuthIdentity | None:
     )
 
 
-def _email(payload: object, field: str) -> Email | None:
+def _email(payload: object) -> Email | None:
     """Return one valid email field from an untrusted provider response."""
 
     # Apply the same canonical email validation used at LongLink's HTTP boundaries.
-    value = _text(payload, field, 254)
+    value = _text(payload, "email", 254)
     if value is None:
         return None
     try:

@@ -155,29 +155,20 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
             # Inspect Field keyword arguments.
             for keyword in statement.value.keywords:
-                # Use explicit aliases as environment names.
-                if keyword.arg == "validation_alias":
-                    # Safely evaluate static alias expressions.
+                # Read static string aliases and descriptions.
+                if keyword.arg in ("validation_alias", "description"):
+                    # Safely evaluate static metadata expressions.
                     try:
-                        alias = ast.literal_eval(keyword.value)
+                        value = ast.literal_eval(keyword.value)
                     except ValueError:
-                        alias = None
+                        value = None
 
-                    # Store string aliases only.
-                    if isinstance(alias, str):
-                        env_entry["name"] = alias or field_name
-
-                # Capture static descriptions.
-                elif keyword.arg == "description":
-                    # Safely evaluate static descriptions.
-                    try:
-                        description = ast.literal_eval(keyword.value)
-                    except ValueError:
-                        description = None
-
-                    # Store string descriptions only.
-                    if isinstance(description, str):
-                        env_entry["description"] = description
+                    # Store strings while preserving the empty-alias fallback.
+                    if isinstance(value, str):
+                        if keyword.arg == "validation_alias":
+                            env_entry["name"] = value or field_name
+                        else:
+                            env_entry["description"] = value
 
                 # Defaults and factories make the field optional.
                 elif keyword.arg in ("default", "default_factory"):
@@ -333,7 +324,11 @@ def build_solution(build_context: Path) -> tuple[str, str]:
             path = Path(directory, name)
 
             # Exclude known sensitive and generated paths before copying any content.
-            if is_ignored(path) or path.parent == source_root and name in {"Dockerfile", ".dockerignore"}:
+            if (
+                any(fnmatch(name, pattern) for pattern in CONTEXT_IGNORE_PATTERNS)
+                or path.parent == source_root
+                and name in {"Dockerfile", ".dockerignore"}
+            ):
                 ignored.add(name)
                 continue
 

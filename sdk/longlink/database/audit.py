@@ -59,7 +59,7 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
             obj.deleted_id = user_id
 
     # Convert hard deletes into soft deletes.
-    for obj in tuple(session.deleted):
+    for obj in session.deleted:
         if not isinstance(obj, AuditTable):
             continue
 
