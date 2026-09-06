@@ -1,4 +1,5 @@
 import { Seo } from '@/components/Seo';
+import { siteName, siteUrl } from '@/site';
 import { Card } from '@astryxdesign/core/Card';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -24,9 +25,9 @@ export default function IntroducingLongLink() {
         datePublished: '2026-09-04',
         description: articleDescription,
         headline: 'Introducing LongLink',
-        image: 'https://longlink.dev/images/paths.png',
-        mainEntityOfPage: 'https://longlink.dev/blog/introducing-longlink/',
-        publisher: { '@type': 'Organization', name: 'LongLink', url: 'https://longlink.dev' },
+        image: `${siteUrl}/images/paths.png`,
+        mainEntityOfPage: `${siteUrl}/blog/introducing-longlink/`,
+        publisher: { '@type': 'Organization', name: siteName, url: siteUrl },
     };
 
     return (
@@ -42,7 +43,7 @@ export default function IntroducingLongLink() {
                         <Stack as="header" gap={6}>
                             <Stack gap={3}>
                                 <Text color="accent" type="supporting" weight="semibold">
-                                    September 4, 2026 | 3 min read
+                                    September 4, 2026 | 4 min read
                                 </Text>
                                 <Heading level={1} textWrap="balance" type="display-1">
                                     Introducing <Wordmark size="inherit" />
@@ -63,10 +64,10 @@ export default function IntroducingLongLink() {
                                     debug, and maintain.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    The other path keeps human judgment at the center. AI accelerates the work, while
-                                    humans remain responsible for key decisions, architecture, and validation. This
-                                    keeps the development process transparent, making assumptions, trade-offs, and
-                                    errors easier to identify and understand.
+                                    The other path keeps human judgment at the center. AI serves as a tool that
+                                    accelerates the work, while humans remain responsible for key decisions,
+                                    architecture, and validation. This keeps the development process transparent, making
+                                    assumptions, trade-offs, and errors easier to identify and understand.
                                 </Text>
                                 <Card
                                     className="handwritten-diagram relative overflow-hidden"

@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -7,11 +8,7 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
-const metadata = {
-    seo: {
-        title: 'Solution SDK Documentation | LongLink',
-        description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
-    },
+const article = {
     toc: [
         { id: 'solution-sdk', label: 'Solutions', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },
@@ -23,7 +20,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK."
+                hasBreadcrumbs
+                title="Solution SDK Documentation | LongLink"
+            />
             <Stack gap={5}>
                 <Heading id="solution-sdk" level={1}>
                     Solutions

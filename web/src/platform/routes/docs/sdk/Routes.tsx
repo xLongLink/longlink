@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -6,11 +7,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-const metadata = {
-    seo: {
-        title: 'Routes | LongLink Documentation',
-        description: 'Define API routes in a LongLink project.',
-    },
+const article = {
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -21,7 +18,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Define API routes in a LongLink project."
+                hasBreadcrumbs
+                title="Routes | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="routes" level={1}>
                     Routes

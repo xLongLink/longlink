@@ -1,5 +1,6 @@
 import { Seo } from '@/components/Seo';
 import { Globe } from '@/components/Globe';
+import { siteName, siteUrl } from '@/site';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -197,14 +198,14 @@ export default function Home() {
         '@graph': [
             {
                 '@type': 'Organization',
-                name: 'LongLink',
-                url: 'https://longlink.dev',
+                name: siteName,
+                url: siteUrl,
                 sameAs: ['https://github.com/xLongLink/longlink', 'https://www.linkedin.com/company/longlink'],
             },
             {
                 '@type': 'WebSite',
-                name: 'LongLink',
-                url: 'https://longlink.dev',
+                name: siteName,
+                url: siteUrl,
                 description: homeDescription,
             },
         ],

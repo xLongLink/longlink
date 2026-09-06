@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import Logs from '@/components/dialogs/Logs';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
@@ -52,16 +53,28 @@ export default function AdminOperations() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/operations', zPageOperationResponse, 5000);
+    const pageMetadata = <NoIndex title="Operations | LongLink" />;
     if (isLoading) {
-        return <PageLoading label="Loading operations" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageLoading label="Loading operations" />
+            </>
+        );
     }
 
     if (error && operations.length === 0) {
-        return <PageError description="We couldn't load the platform operations." title="Unable to load operations" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageError description="We couldn't load the platform operations." title="Unable to load operations" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            {pageMetadata}
             <Stack>
                 <Heading level={1}>Operations</Heading>
                 <Text as="p" color="secondary">

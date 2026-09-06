@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -35,6 +36,7 @@ export default function ForgotPassword() {
             title="Reset your password"
             description="Enter your account email and LongLink will send password reset instructions."
         >
+            <NoIndex title="Reset Your Password | LongLink" />
             {requestReset.isSuccess ? (
                 <Stack gap={4}>
                     <Banner

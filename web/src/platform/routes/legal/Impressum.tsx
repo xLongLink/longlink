@@ -1,14 +1,11 @@
+import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
-const metadata = {
-    seo: {
-        title: 'Impressum | LongLink',
-        description: 'Read the LongLink legal notice and company information.',
-    },
+const article = {
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },
@@ -21,7 +18,12 @@ const metadata = {
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Read the LongLink legal notice and company information."
+                hasBreadcrumbs
+                title="Impressum | LongLink"
+            />
             <ImpressumContent />
         </Article>
     );

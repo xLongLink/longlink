@@ -83,6 +83,10 @@ longlink = [
     ".static/new/.venv",
     ".static/new/.venv/*",
     ".static/new/.venv/**",
+    ".static/new/.pytest_cache/**",
+    ".static/new/.coverage",
+    ".static/new/coverage/**",
+    ".static/new/htmlcov/**",
     ".static/**/__pycache__/**",
     ".static/**/*.py[cod]",
     ".static/**/.ruff_cache/**",
@@ -93,7 +97,7 @@ line-length = 140
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["UP", "D300", "I"]
+select = ["F", "UP", "D300", "I"]
 
 [tool.ruff.lint.isort]
 no-sections = true

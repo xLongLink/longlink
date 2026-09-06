@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react';
+import { Seo } from '@/components/Seo';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
@@ -72,11 +73,7 @@ function SummaryCard({
     );
 }
 
-const metadata = {
-    seo: {
-        title: 'Solution Views | LongLink Documentation',
-        description: 'Build interfaces with LongLink Solution Views and components.',
-    },
+const article = {
     toc: [
         { id: 'solution-views', label: 'Solution Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
@@ -91,7 +88,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Build interfaces with LongLink Solution Views and components."
+                hasBreadcrumbs
+                title="Solution Views | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="solution-views" level={1}>
                     Solution Views

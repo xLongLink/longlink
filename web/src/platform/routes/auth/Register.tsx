@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -30,6 +31,7 @@ export default function Register() {
 
     return (
         <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
+            <NoIndex title="Create Account | LongLink" />
             <Stack gap={3}>
                 <AuthForm gap={3} onSubmit={form.handleSubmit}>
                     <form.Field

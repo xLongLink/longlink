@@ -74,36 +74,6 @@ class GatewayClientTLS(GatewayTLS):
     client_private_key: str
 
 
-def _gateway_tls_secret(certificate: str, private_key: str, api: Api) -> Secret:
-    """Build the Kubernetes Secret for one Gateway server identity."""
-
-    # Keep the private server identity only in the Compute cluster.
-    return Secret(
-        {
-            "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
-            "stringData": {
-                "tls.crt": certificate,
-                "tls.key": private_key,
-            },
-            "type": "kubernetes.io/tls",
-        },
-        api=api,
-    )
-
-
-def _gateway_client_ca_secret(certificate: str, api: Api) -> Secret:
-    """Build the Kubernetes Secret containing the Gateway client certificate authority."""
-
-    return Secret(
-        {
-            "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
-            "stringData": {"ca.crt": certificate},
-            "type": "Opaque",
-        },
-        api=api,
-    )
-
-
 def _condition_is_current(conditions: object, condition_type: str, generation: object) -> bool:
     """Return whether a Kubernetes condition is true for the current generation."""
 
@@ -410,8 +380,7 @@ class Gateway:
             raise RuntimeError("Envoy Gateway did not accept GatewayClass longlink-envoy") from None
 
         if tls is not None:
-            await apply(_gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-            await apply(_gateway_client_ca_secret(tls.ca_certificate, api))
+            await self.replace_tls(tls)
         await apply(policy_resource)
         await apply(gateway_resource)
 
@@ -459,12 +428,33 @@ class Gateway:
             raise RuntimeError("LongLink Gateway did not become ready") from None
 
     async def replace_tls(self, tls: GatewayTLS) -> None:
-        """Replace Gateway TLS identities after endpoint allocation."""
+        """Apply Gateway TLS identities for bootstrap or endpoint allocation."""
 
-        # Envoy Gateway watches these Secrets and reloads the final mTLS configuration.
+        # Keep the private server identity only in the Compute cluster.
         api = await self._client.api()
-        await apply(_gateway_tls_secret(tls.server_certificate, tls.server_private_key, api))
-        await apply(_gateway_client_ca_secret(tls.ca_certificate, api))
+        server_secret = Secret(
+            {
+                "metadata": {"name": "longlink-gateway-tls", "namespace": "longlink-system"},
+                "stringData": {
+                    "tls.crt": tls.server_certificate,
+                    "tls.key": tls.server_private_key,
+                },
+                "type": "kubernetes.io/tls",
+            },
+            api=api,
+        )
+        await apply(server_secret)
+
+        # Envoy Gateway watches the client CA Secret to reload its mTLS trust configuration.
+        client_ca_secret = Secret(
+            {
+                "metadata": {"name": "longlink-gateway-client-ca", "namespace": "longlink-system"},
+                "stringData": {"ca.crt": tls.ca_certificate},
+                "type": "Opaque",
+            },
+            api=api,
+        )
+        await apply(client_ca_secret)
 
     async def delete(self) -> None:
         """Delete the cluster-scoped LongLink GatewayClass and wait for completion."""

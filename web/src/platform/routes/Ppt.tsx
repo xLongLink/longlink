@@ -1,4 +1,4 @@
-import { Seo } from '@/components/Seo';
+import { NoIndex } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Wordmark } from '@/components/Wordmark';
@@ -237,7 +237,7 @@ export default function Ppt() {
 
     return (
         <>
-            <Seo isIndexable={false} />
+            <NoIndex title="Presentation | LongLink" />
             <style>{printStyles}</style>
             <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">

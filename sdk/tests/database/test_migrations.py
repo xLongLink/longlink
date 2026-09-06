@@ -166,20 +166,16 @@ def test_production_migrations_rejects_missing_revisions_before_upgrade(tmp_path
         database_migrations.apply_migrations()
 
 
-@pytest.mark.parametrize(("environment", "committed_revision"), [("production", True), ("development", False)])
-def test_migrations_upgrade_head_when_revisions_are_available_or_development(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, environment: str, committed_revision: bool
-) -> None:
-    """Apply revisions in production with a committed file and initialize development storage."""
+def test_production_migrations_upgrade_head_with_committed_revision(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apply committed Solution revisions in production."""
 
     # Arrange
     migrations_path = tmp_path / "migrations"
-    if committed_revision:
-        migrations_path.mkdir()
-        migrations_path.joinpath("001_initial.py").write_text("", encoding="utf-8")
+    migrations_path.mkdir()
+    migrations_path.joinpath("001_initial.py").write_text("", encoding="utf-8")
     captured: dict[str, Config | str] = {}
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV=environment))
+    monkeypatch.setattr(database_migrations, "Envs", lambda: SimpleNamespace(ENV="production"))
 
     def upgrade(config: Config, target: str) -> None:
         """Capture the Alembic configuration and revision target."""

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { UserCell } from '@/components/Cells';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -20,17 +21,29 @@ import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList'
 export default function AdminUsers() {
     const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
+    const pageMetadata = <NoIndex title="Users | LongLink" />;
 
     if (isLoading) {
-        return <PageLoading label="Loading users" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageLoading label="Loading users" />
+            </>
+        );
     }
 
     if (error && users.length === 0) {
-        return <PageError description="We couldn't load the platform users." title="Unable to load users" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageError description="We couldn't load the platform users." title="Unable to load users" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            {pageMetadata}
             <Stack>
                 <Heading level={1}>Users</Heading>
                 <Text as="p" color="secondary">

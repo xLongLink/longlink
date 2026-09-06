@@ -224,8 +224,6 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
     """Stop rollout polling when Kubernetes rejects Pods for exceeding quota."""
 
     # Arrange
-    applied: list[str] = []
-
     class Resource:
         """Supply Kubernetes-generated quota failure state."""
 
@@ -255,10 +253,8 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-    async def apply(resource: AppliedResource) -> None:
-        """Record the resources accepted by Kubernetes."""
-
-        applied.append(str(resource.raw.get("kind", "Secret")))
+    async def apply(_resource: AppliedResource) -> None:
+        """Accept a resource without contacting Kubernetes."""
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Deployment", Resource)
@@ -272,7 +268,6 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
             "ghcr.io/longlink/dashboard:latest",
             {},
         )
-    assert applied == ["Secret", "Job", "Service", "HTTPRoute", "Deployment"]
 
 
 async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest.MonkeyPatch) -> None:

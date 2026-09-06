@@ -60,7 +60,12 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
     """Delete an unused object-storage registry."""
 
     # Lock the registry while checking immutable Organization assignments.
-    registry = await session.get(StorageRegistry, registry_id, with_for_update=True)
+    registry = await session.get(
+        StorageRegistry,
+        registry_id,
+        options=(load_only(StorageRegistry.id),),
+        with_for_update=True,
+    )
     if registry is None:
         raise NotFoundError("Storage registry not found")
 

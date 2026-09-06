@@ -140,4 +140,4 @@ class Database:
 
 
 # Register shared audit listeners after AuditTable is fully defined.
-from longlink.database import audit
+from longlink.database import audit  # noqa: F401

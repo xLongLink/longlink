@@ -278,22 +278,15 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
         return None
 
     # Expose failed creation work on its target without changing deletion lifecycle state.
-    if operation.kind == OperationKind.compute_create:
+    model = {
+        OperationKind.compute_create: ComputeRegistry,
+        OperationKind.organization_create: Organization,
+        OperationKind.solution_create: Solution,
+    }.get(operation.kind)
+    if model is not None:
         await session.execute(
-            update(ComputeRegistry)
-            .where(col(ComputeRegistry.id) == operation.target_id, col(ComputeRegistry.status) == Status.creating)
-            .values(status=Status.failed)
-        )
-    elif operation.kind == OperationKind.organization_create:
-        await session.execute(
-            update(Organization)
-            .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
-            .values(status=Status.failed)
-        )
-    elif operation.kind == OperationKind.solution_create:
-        await session.execute(
-            update(Solution)
-            .where(col(Solution.id) == operation.target_id, col(Solution.status) == Status.creating)
+            update(model)
+            .where(col(model.id) == operation.target_id, col(model.status) == Status.creating)
             .values(status=Status.failed)
         )
 

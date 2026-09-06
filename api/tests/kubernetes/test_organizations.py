@@ -68,10 +68,9 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
         """Represent a Namespace through deletion and terminal absence."""
 
         def __init__(self, name: str, **_kwargs: object) -> None:
-            """Store Namespace metadata used by the deletion loop."""
+            """Validate the Namespace and initialize its polling state."""
 
             assert name == "acme"
-            self.metadata: dict[str, str] = {}
             self.checks = 0
 
         async def exists(self) -> bool:
@@ -79,12 +78,6 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
 
             self.checks += 1
             return self.checks < 3
-
-        async def refresh(self) -> None:
-            """Expose a deletion timestamp after the initial delete request."""
-
-            if deleted:
-                self.metadata["deletionTimestamp"] = "2026-08-23T00:00:00Z"
 
         async def delete(self) -> None:
             """Record the single deletion request."""

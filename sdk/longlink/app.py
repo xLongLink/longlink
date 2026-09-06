@@ -18,7 +18,7 @@ from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
-def render_view(content: str) -> Response:
+async def render_view(content: str) -> Response:
     """Return one static XML view."""
 
     return Response(content, media_type="application/xml")
@@ -40,7 +40,7 @@ class LongLink:
         """Install runtime services, routes, and the frontend fallback into a Solution's FastAPI app."""
 
         # Preserve Solution routes so view collisions are rejected during discovery.
-        solution_routes = list(app.router.routes)
+        solution_routes = list(app.routes)
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
@@ -76,7 +76,7 @@ class LongLink:
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
         app.state.longlink = RuntimeState(views=[definition for definition, _ in discovered_views], storage=storage, database=database)
-        app.router.on_shutdown.append(database.dispose)
+        app.router.add_event_handler("shutdown", database.dispose)
 
         # Views are registered once before the frontend mount is installed.
         for definition, content in discovered_views:
@@ -95,7 +95,7 @@ class LongLink:
         if first_tab_view is not None:
 
             @app.get("/", include_in_schema=False)
-            def redirect_root() -> RedirectResponse:
+            async def redirect_root() -> RedirectResponse:
                 """Redirect the Solution root to its first static tab."""
 
                 return RedirectResponse(first_tab_view.route)

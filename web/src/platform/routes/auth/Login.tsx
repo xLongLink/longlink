@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -50,7 +51,12 @@ export default function Login() {
 
     // Keep authenticated users out of the sign-in page.
     if (user) {
-        return <Navigate replace to="/user/organizations" />;
+        return (
+            <>
+                <NoIndex title="LongLink" />
+                <Navigate replace to="/user/organizations" />
+            </>
+        );
     }
 
     /** Signs in with an email and password. */
@@ -68,6 +74,7 @@ export default function Login() {
 
     return (
         <AuthLayout title={<WelcomeTitle />} description={null}>
+            <NoIndex title="Sign In | LongLink" />
             <Stack gap={4}>
                 {oauthError ? (
                     <Banner

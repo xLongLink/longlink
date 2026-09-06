@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { NoIndex } from '@/components/Seo';
 import Logs from '@/components/dialogs/Logs';
 import { UserCell } from '@/components/Cells';
 import { Link } from '@astryxdesign/core/Link';
@@ -209,6 +210,7 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8} padding={2}>
+            <NoIndex title="Organization Settings | LongLink" />
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <IconButton
                     className="size-12"
@@ -308,7 +310,10 @@ export default function OrganizationSettings() {
                                                         (role) => ({
                                                             label: `Grant ${roleLabel(role)} permission`,
                                                             onClick: () =>
-                                                                setRoleChangeTarget({ memberId: member.user.id, role }),
+                                                                setRoleChangeTarget({
+                                                                    memberId: member.user.id,
+                                                                    role,
+                                                                }),
                                                         })
                                                     )}
                                                 />
@@ -567,7 +572,10 @@ export default function OrganizationSettings() {
 
                                     // Submit the invitation and surface any failure.
                                     try {
-                                        await inviteMember.mutateAsync({ email: inviteEmail.trim(), role: inviteRole });
+                                        await inviteMember.mutateAsync({
+                                            email: inviteEmail.trim(),
+                                            role: inviteRole,
+                                        });
                                         setInviteOpen(false);
                                         setInviteEmail('');
                                         setInviteRole('write');

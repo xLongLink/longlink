@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,11 +9,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
-const metadata = {
-    seo: {
-        title: 'Storage | LongLink Documentation',
-        description: 'Store and manage files in a LongLink project.',
-    },
+const article = {
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -24,7 +21,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Store and manage files in a LongLink project."
+                hasBreadcrumbs
+                title="Storage | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="storage" level={1}>
                     Storage

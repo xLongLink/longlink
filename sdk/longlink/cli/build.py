@@ -7,6 +7,7 @@ import shutil
 import tomllib
 import tempfile
 import subprocess
+from fnmatch import fnmatch
 from pathlib import Path
 from collections.abc import Mapping
 from importlib.metadata import PackageNotFoundError
@@ -14,6 +15,51 @@ from importlib.metadata import version as package_version
 
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
+CONTEXT_IGNORE_PATTERNS = (
+    ".git",
+    ".hg",
+    ".svn",
+    ".env",
+    ".env.*",
+    ".envrc",
+    ".venv",
+    "venv",
+    ".direnv",
+    ".cache",
+    "__pycache__",
+    "*.py[cod]",
+    ".hypothesis",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".pyre",
+    ".pytype",
+    ".ruff_cache",
+    ".tox",
+    ".nox",
+    ".coverage",
+    ".coverage.*",
+    "coverage",
+    "coverage.xml",
+    "htmlcov",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg-info",
+    "*.db",
+    "*.db-*",
+    "*.sqlite",
+    "*.sqlite-*",
+    "*.sqlite3",
+    "*.sqlite3-*",
+    "node_modules",
+)
+DOCKER_CONTEXT_IGNORE_RULES = (
+    ".git",
+    ".hg",
+    ".svn",
+    "Dockerfile",
+    ".dockerignore",
+)
 
 DOCKERFILE_TEMPLATE = """FROM python:3.12.13-bookworm@sha256:9bed8554e926c07c6f908841d5ee88c33e8df9236b191526bbce81a9062ab43a AS builder
 
@@ -82,7 +128,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     module = ast.parse(envs_path.read_text(encoding="utf-8"))
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
-        raise click.ClickException(f"Environment model must define Env: {envs_path}")
+        raise click.ClickException(f"Environment model must define {class_name}: {envs_path}")
 
     environments: list[dict[str, object]] = []
 
@@ -93,16 +139,19 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
             continue
 
         field_name = statement.target.id
-        field_info: dict[str, object] = {"required": statement.value is None}
+        env_entry: dict[str, object] = {
+            "name": field_name,
+            "required": statement.value is None,
+        }
 
         # Inspect pydantic Field calls for metadata.
         if isinstance(statement.value, ast.Call) and isinstance(statement.value.func, ast.Name) and statement.value.func.id == "Field":
-            field_info["required"] = True
+            env_entry["required"] = True
 
             # Positional Field defaults use ellipsis for required values and any other value as optional.
             if statement.value.args:
                 first_argument = statement.value.args[0]
-                field_info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
+                env_entry["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
 
             # Inspect Field keyword arguments.
             for keyword in statement.value.keywords:
@@ -116,7 +165,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
                     # Store string aliases only.
                     if isinstance(alias, str):
-                        field_info["env_name"] = alias
+                        env_entry["name"] = alias or field_name
 
                 # Capture static descriptions.
                 elif keyword.arg == "description":
@@ -128,20 +177,11 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
                     # Store string descriptions only.
                     if isinstance(description, str):
-                        field_info["description"] = description
+                        env_entry["description"] = description
 
                 # Defaults and factories make the field optional.
                 elif keyword.arg in ("default", "default_factory"):
-                    field_info["required"] = False
-
-        env_entry: dict[str, object] = {
-            "name": field_info.get("env_name") or field_name,
-            "required": field_info["required"],
-        }
-
-        # Preserve optional descriptions when present.
-        if isinstance(field_info.get("description"), str):
-            env_entry["description"] = field_info["description"]
+                    env_entry["required"] = False
 
         environments.append(env_entry)
 
@@ -242,28 +282,6 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
-def context_ignore_rules(source: Path | None, root: Path, source_root: Path) -> str:
-    """Return Docker ignore rules relative to the generated build context."""
-
-    # Preserve repository-root rules and scope Solution-local rules to their copied directory.
-    rules = source.read_text(encoding="utf-8") if source is not None else ""
-    if source is None or source.parent == source_root:
-        return rules
-    relative_root = root.relative_to(source_root).as_posix()
-    rewritten_rules = []
-
-    # Prefix patterns so Solution rules retain their original directory boundary.
-    for rule in rules.splitlines():
-        if not rule or rule.startswith("#"):
-            rewritten_rules.append(rule)
-            continue
-        negated = rule.startswith("!")
-        pattern = rule[1:] if negated else rule
-        rewritten_rules.append(f"{'!' if negated else ''}{relative_root}/{pattern.lstrip('/')}")
-
-    return "\n".join(rewritten_rules)
-
-
 def build_solution(build_context: Path) -> tuple[str, str]:
     """Create Docker build artifacts for the current Solution."""
 
@@ -298,14 +316,54 @@ def build_solution(build_context: Path) -> tuple[str, str]:
     if environments:
         labels.append(f"LABEL longlink.environments={json.dumps(json.dumps(environments, separators=(',', ':')))}")
 
-    def ignore_out_of_tree_symlinks(directory: str, contents: list[str]) -> set[str]:
-        """Return symlinks that resolve outside the source root."""
+    # Apply a fixed context policy without interpreting project-specific ignore syntax.
+    context_root = build_context.resolve()
+
+    def is_ignored(path: Path) -> bool:
+        """Return whether any path component matches the fixed context policy."""
+
+        relative_path = path.relative_to(source_root)
+        return any(fnmatch(part, pattern) for part in relative_path.parts for pattern in CONTEXT_IGNORE_PATTERNS)
+
+    def ignore_context_paths(directory: str, contents: list[str]) -> set[str]:
+        """Return ignored paths and unsafe or ignored symlinks."""
 
         ignored = set()
         for name in contents:
             path = Path(directory, name)
-            if path.is_symlink() and not path.resolve().is_relative_to(source_root):
+
+            # Exclude known sensitive and generated paths before copying any content.
+            if is_ignored(path) or path.parent == source_root and name in {"Dockerfile", ".dockerignore"}:
                 ignored.add(name)
+                continue
+
+            # Keep only relative links that remain in-tree after context relocation.
+            if path.is_symlink():
+                link_target = path.readlink()
+                if link_target.is_absolute():
+                    ignored.add(name)
+                    continue
+
+                relative_path = path.relative_to(source_root)
+                relocated_target = Path(os.path.abspath(context_root / relative_path.parent / link_target))
+                if not relocated_target.is_relative_to(context_root):
+                    ignored.add(name)
+                    continue
+
+                # Exclude links whose original resolved targets are unsafe or ignored.
+                try:
+                    target = path.resolve(strict=True)
+                except (OSError, RuntimeError):
+                    ignored.add(name)
+                    continue
+                if not target.is_relative_to(source_root):
+                    ignored.add(name)
+                    continue
+                if target.is_dir() and target in path.parents:
+                    ignored.add(name)
+                    continue
+                if is_ignored(target):
+                    ignored.add(name)
 
         return ignored
 
@@ -314,15 +372,12 @@ def build_solution(build_context: Path) -> tuple[str, str]:
         source_root,
         build_context,
         dirs_exist_ok=True,
-        ignore=ignore_out_of_tree_symlinks,
+        symlinks=True,
+        ignore=ignore_context_paths,
     )
 
-    # Scope Solution-local ignore rules to the expanded Docker context.
-    source = next((candidate / ".gitignore" for candidate in (root, *root.parents) if (candidate / ".gitignore").is_file()), None)
-    rules = context_ignore_rules(source, root, source_root)
-    build_context.joinpath(".dockerignore").write_text(
-        f"{rules}\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.env.*\n**/.pytest_cache\n", encoding="utf-8"
-    )
+    # Keep Docker's final filter conservative because physical pruning is authoritative.
+    build_context.joinpath(".dockerignore").write_text(f"{'\n'.join(DOCKER_CONTEXT_IGNORE_RULES)}\n", encoding="utf-8")
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = "" if root == source_root else f"{root.relative_to(source_root).as_posix()}/"

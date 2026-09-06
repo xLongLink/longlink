@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import { S3 } from '@/components/svg/S3';
+import { NoIndex } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -48,17 +49,29 @@ export default function AdminStorage() {
         fallbackDescription: 'Delete this storage registry?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+    const pageMetadata = <NoIndex title="Storage | LongLink" />;
 
     if (isLoading) {
-        return <PageLoading label="Loading storage registries" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageLoading label="Loading storage registries" />
+            </>
+        );
     }
 
     if (error && storages.length === 0) {
-        return <PageError description="We couldn't load the storage registries." title="Unable to load storage" />;
+        return (
+            <>
+                {pageMetadata}
+                <PageError description="We couldn't load the storage registries." title="Unable to load storage" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            {pageMetadata}
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Storage</Heading>

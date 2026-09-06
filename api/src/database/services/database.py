@@ -73,7 +73,12 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
     """Delete an unused database registry."""
 
     # Lock the registry while checking immutable Organization assignments.
-    registry = await session.get(DatabaseRegistry, registry_id, with_for_update=True)
+    registry = await session.get(
+        DatabaseRegistry,
+        registry_id,
+        options=(load_only(DatabaseRegistry.id),),
+        with_for_update=True,
+    )
     if registry is None:
         raise NotFoundError("Database registry not found")
 

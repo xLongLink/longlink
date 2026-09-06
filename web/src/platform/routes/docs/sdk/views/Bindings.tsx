@@ -1,14 +1,11 @@
+import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-const metadata = {
-    seo: {
-        title: 'Bindings | LongLink Documentation',
-        description: 'Bind LongLink Solution View components to runtime data and state.',
-    },
+const article = {
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -19,7 +16,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Bind LongLink Solution View components to runtime data and state."
+                hasBreadcrumbs
+                title="Bindings | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     Bindings

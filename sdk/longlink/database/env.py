@@ -56,12 +56,12 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_migrations_online() -> None:
     """Run Alembic migrations in online mode."""
 
-    # Run synchronous Alembic work through the async database connection.
-    async with engine.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-
-    # Release migration-engine resources after the online run completes.
-    await engine.dispose()
+    # Release migration-engine resources even when the migration fails.
+    try:
+        async with engine.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+    finally:
+        await engine.dispose()
 
 
 # Use Alembic's offline path when the migration context requests it.

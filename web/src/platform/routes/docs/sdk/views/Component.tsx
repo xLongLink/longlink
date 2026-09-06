@@ -1,9 +1,11 @@
+import { Seo } from '@/components/Seo';
 import { useParams } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import NotFoundLayout from '@/components/layouts/NotFound';
 import { proportional, Table } from '@astryxdesign/core/Table';
 import { componentDocumentation, type ComponentDocumentation } from '@/lib/xsd';
 
@@ -26,14 +28,10 @@ export default function DocsArticleRoute() {
     const component = componentDocumentation.find((candidate) => candidate.slug === slug);
 
     if (!component) {
-        throw new Response('Not found', { status: 404 });
+        return <NotFoundLayout />;
     }
 
-    const metadata = {
-        seo: {
-            title: `${component.name} XML Component | LongLink Documentation`,
-            description: `Reference documentation for the ${component.name} XML component in LongLink Solution Views.`,
-        },
+    const article = {
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
@@ -44,7 +42,12 @@ export default function DocsArticleRoute() {
     };
 
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description={`Reference documentation for the ${component.name} XML component in LongLink Solution Views.`}
+                hasBreadcrumbs
+                title={`${component.name} XML Component | LongLink Documentation`}
+            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     {component.name}
