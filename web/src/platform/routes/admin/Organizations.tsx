@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -41,11 +41,12 @@ export default function AdminOrganizations() {
         fallbackDescription: 'Delete this organization?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+    const pageMetadata = <NoIndex title="Organizations | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                <Seo isIndexable={false} title="Organizations | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading organizations" />
             </>
         );
@@ -54,7 +55,7 @@ export default function AdminOrganizations() {
     if (error && organizations.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Organizations | LongLink" />
+                {pageMetadata}
                 <PageError
                     description="We couldn't load the platform organizations."
                     title="Unable to load organizations"
@@ -65,7 +66,7 @@ export default function AdminOrganizations() {
 
     return (
         <Stack gap={8}>
-            <Seo isIndexable={false} title="Organizations | LongLink" />
+            {pageMetadata}
             <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">

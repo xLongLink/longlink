@@ -1,5 +1,5 @@
-import { Seo } from '@/components/Seo';
 import { useParams } from 'react-router';
+import { NoIndex } from '@/components/Seo';
 import { hasMinimumRole } from '@/lib/roles';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -21,6 +21,7 @@ export default function Organization() {
     const { organization = '' } = useParams();
     const { solutions, organizationId, role, isLoading, error } = useOrganizationSolutions(organization);
     const canManageSolutions = hasMinimumRole(role, 'maintain');
+    const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
@@ -30,7 +31,7 @@ export default function Organization() {
     if (isLoading && solutions.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Organization Solutions | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading solutions" />
             </>
         );
@@ -39,7 +40,7 @@ export default function Organization() {
     if (error && solutions.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Organization Solutions | LongLink" />
+                {pageMetadata}
                 <PageError
                     description="We couldn't load the solutions for this organization."
                     title="Unable to load solutions"
@@ -51,7 +52,7 @@ export default function Organization() {
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8} padding={2}>
-            <Seo isIndexable={false} title="Organization Solutions | LongLink" />
+            {pageMetadata}
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Solutions</Heading>

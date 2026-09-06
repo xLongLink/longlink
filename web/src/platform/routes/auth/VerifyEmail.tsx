@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { Seo } from '@/components/Seo';
 import { api, ApiError } from '@/lib/api';
+import { NoIndex } from '@/components/Seo';
 import { useNavigate } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -129,6 +129,7 @@ export default function VerifyEmail() {
     const recoveryRegisterHref = verification.data?.email
         ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
         : '/auth/register';
+    const pageMetadata = <NoIndex title="Verify Your Email | LongLink" />;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -137,7 +138,7 @@ export default function VerifyEmail() {
 
         return (
             <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
-                <Seo isIndexable={false} title="Verify Your Email | LongLink" />
+                {pageMetadata}
                 <Stack gap={3}>
                     {invalidToken ? null : (
                         <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
@@ -152,7 +153,7 @@ export default function VerifyEmail() {
     if (!verification.data) {
         return (
             <AuthLayout title="Verify your email" description="Verifying your email...">
-                <Seo isIndexable={false} title="Verify Your Email | LongLink" />
+                {pageMetadata}
                 <Button isLoading label="Verifying your email..." variant="primary" />
             </AuthLayout>
         );
@@ -162,7 +163,7 @@ export default function VerifyEmail() {
     if (completion.error instanceof ApiError && completion.error.status === 409) {
         return (
             <AuthLayout title="Complete your account" description={completion.error.message}>
-                <Seo isIndexable={false} title="Verify Your Email | LongLink" />
+                {pageMetadata}
                 <Button href={recoveryRegisterHref} label="Request a new registration link" />
             </AuthLayout>
         );
@@ -170,7 +171,7 @@ export default function VerifyEmail() {
 
     return (
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
-            <Seo isIndexable={false} title="Verify Your Email | LongLink" />
+            {pageMetadata}
             <Stack gap={4}>
                 <AuthForm gap={3} onSubmit={form.handleSubmit}>
                     <form.Field

@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -49,11 +49,12 @@ export default function AdminDatabase() {
         fallbackDescription: 'Delete this database?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+    const pageMetadata = <NoIndex title="Database | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                <Seo isIndexable={false} title="Database | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading databases" />
             </>
         );
@@ -62,7 +63,7 @@ export default function AdminDatabase() {
     if (error && databases.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Database | LongLink" />
+                {pageMetadata}
                 <PageError description="We couldn't load the database registries." title="Unable to load databases" />
             </>
         );
@@ -70,7 +71,7 @@ export default function AdminDatabase() {
 
     return (
         <Stack gap={8}>
-            <Seo isIndexable={false} title="Database | LongLink" />
+            {pageMetadata}
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Database</Heading>

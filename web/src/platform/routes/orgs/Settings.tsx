@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Seo } from '@/components/Seo';
+import { NoIndex } from '@/components/Seo';
 import Logs from '@/components/dialogs/Logs';
 import { UserCell } from '@/components/Cells';
 import { Link } from '@astryxdesign/core/Link';
@@ -210,7 +210,7 @@ export default function OrganizationSettings() {
 
     return (
         <PageContainer gap={8} padding={2}>
-            <Seo isIndexable={false} title="Organization Settings | LongLink" />
+            <NoIndex title="Organization Settings | LongLink" />
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <IconButton
                     className="size-12"

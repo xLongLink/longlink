@@ -8,19 +8,13 @@ import { useState, type ReactNode } from 'react';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { getIconComponent } from '@/components/ui/Icon';
-import NotFoundLayout from '@/components/layouts/NotFound';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type SolutionRuntimeProps = {
-    children: (solution: {
-        content: ReactNode;
-        isNotFound: boolean;
-        tabs: readonly NavigationTab[];
-        title?: string;
-    }) => ReactNode;
+    children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
     requestBaseUrl?: string;
@@ -37,12 +31,15 @@ function SolutionXmlRuntime({
 }: {
     ast: ASTNode;
     navigationBaseUrl: string;
-    params: Record<string, string>;
+    params: Record<string, string | undefined>;
     requestBaseUrl: string;
 }) {
     const navigate = useNavigate();
     const [runtime] = useState(() => {
-        const context = createXmlContext(params);
+        // Normalize route params only when creating this keyed XML runtime.
+        const context = createXmlContext(
+            Object.fromEntries(Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null))
+        );
 
         // Keep XML-triggered solution navigation within the client router.
         context.services.navigate = (url) => {
@@ -84,21 +81,13 @@ export function SolutionRuntime({
         `/${routePath}`
     )?.[0];
 
-    const activeRouteMatch = match
-        ? {
-              view: match.route.view,
-              params: Object.fromEntries(
-                  Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
-              ),
-          }
-        : null;
     const tabViews = views.filter((view) => view.route !== '/' && !view.route.includes('/:'));
     const firstTabView = tabViews[0];
 
     // Let dynamic detail views share a tab with their matching list view.
-    const activeView = !routePath ? firstTabView : activeRouteMatch?.view;
+    const activeView = !routePath ? firstTabView : match?.route.view;
     const activeViewTitle = activeView ? (activeView.name ?? startCase(activeView.tab)) : undefined;
-    const isNotFound = registeredViews !== undefined && routePath.length > 0 && activeRouteMatch === null;
+    const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
@@ -132,7 +121,9 @@ export function SolutionRuntime({
     if (!routePath && firstTabView) {
         content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabView.route)} />;
     } else if (isNotFound) {
-        content = <NotFoundLayout />;
+        content = (
+            <PageError description="This page doesn't exist or isn't available." title="We can't find that page" />
+        );
     } else if (viewsError) {
         content = (
             <PageError
@@ -140,7 +131,7 @@ export function SolutionRuntime({
                 title="Unable to load this solution"
             />
         );
-    } else if (activeViewAst && activeView && activeRouteMatch) {
+    } else if (activeViewAst && activeView && match) {
         content = (
             <SolutionXmlRuntime
                 ast={activeViewAst}
@@ -153,7 +144,7 @@ export function SolutionRuntime({
                     routePath,
                 ])}
                 navigationBaseUrl={navigationBaseUrl}
-                params={activeRouteMatch.params}
+                params={match.params}
                 requestBaseUrl={requestBaseUrl}
             />
         );
@@ -177,8 +168,7 @@ export function SolutionRuntime({
 
     return children({
         content,
-        isNotFound,
         tabs,
-        title: activeViewTitle,
+        title: isNotFound ? 'Page Not Found' : activeViewTitle,
     });
 }

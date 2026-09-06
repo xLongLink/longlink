@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api';
-import { Seo } from '@/components/Seo';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Navigate, Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -12,10 +12,11 @@ import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {
     const { user, isLoading, error, refetch } = useCurrentUser();
+    const pageMetadata = <NoIndex title="LongLink" />;
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
-        return <Seo isIndexable={false} title="LongLink" />;
+        return pageMetadata;
     }
 
     // Keep authenticated users from seeing a sign-in prompt during profile API failures.
@@ -29,7 +30,7 @@ export default function AuthenticatedLayout() {
                 }
                 tabs={[]}
             >
-                <Seo isIndexable={false} title="Unable to Load Account | LongLink" />
+                <NoIndex title="Unable to Load Account | LongLink" />
                 <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
                     <Stack gap={4} align="center">
                         <Banner status="error" title={error.message} />
@@ -44,7 +45,7 @@ export default function AuthenticatedLayout() {
     if (!user) {
         return (
             <>
-                <Seo isIndexable={false} title="LongLink" />
+                {pageMetadata}
                 <Navigate replace to="/login" />
             </>
         );

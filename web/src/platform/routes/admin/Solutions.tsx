@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { dateTimeFormatter } from '@/lib/utils';
@@ -51,11 +51,12 @@ export default function AdminSolutions() {
         fallbackDescription: 'Delete this solution?',
         onError: (message) => toast({ body: message, type: 'error' }),
     });
+    const pageMetadata = <NoIndex title="Solutions | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                <Seo isIndexable={false} title="Solutions | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading solutions" />
             </>
         );
@@ -64,7 +65,7 @@ export default function AdminSolutions() {
     if (error && solutions.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Solutions | LongLink" />
+                {pageMetadata}
                 <PageError description="We couldn't load the platform solutions." title="Unable to load solutions" />
             </>
         );
@@ -72,7 +73,7 @@ export default function AdminSolutions() {
 
     return (
         <Stack gap={8}>
-            <Seo isIndexable={false} title="Solutions | LongLink" />
+            {pageMetadata}
             <Stack>
                 <Heading level={1}>Solutions</Heading>
                 <Text as="p" color="secondary">

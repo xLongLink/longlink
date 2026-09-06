@@ -1,5 +1,5 @@
-import { Seo } from '@/components/Seo';
 import { useParams } from 'react-router';
+import { NoIndex } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
@@ -19,11 +19,12 @@ export default function OrganizationSolution() {
     const user = useAuthenticatedUser();
     const { solutions, isLoading, error } = useOrganizationSolutions(organization);
     const solutionAccess = solutions.find((item) => item.slug === solution);
+    const pageMetadata = <NoIndex title="Solution | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                <Seo isIndexable={false} title="Solution | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading solution" />
             </>
         );
@@ -36,7 +37,7 @@ export default function OrganizationSolution() {
     if (error && !solutionAccess) {
         return (
             <>
-                <Seo isIndexable={false} title="Solution | LongLink" />
+                {pageMetadata}
                 <PageError description="We couldn't load this solution." title="Unable to load solution" />
             </>
         );
@@ -54,7 +55,7 @@ export default function OrganizationSolution() {
 
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
-                <Seo isIndexable={false} title={`${solutionAccess.name} | LongLink`} />
+                <NoIndex title={`${solutionAccess.name} | LongLink`} />
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <Card maxWidth={576} padding={6} width="100%">
                         <EmptyState
@@ -79,11 +80,9 @@ export default function OrganizationSolution() {
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
             requestBaseUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/`}
         >
-            {({ content, isNotFound, tabs, title }) => (
+            {({ content, tabs, title }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>
-                    {isNotFound ? null : (
-                        <Seo isIndexable={false} title={`${title ?? solutionAccess.name} | LongLink`} />
-                    )}
+                    <NoIndex title={`${title ?? solutionAccess.name} | LongLink`} />
                     <PageContainer minHeight="100%" padding={2}>
                         {content}
                     </PageContainer>

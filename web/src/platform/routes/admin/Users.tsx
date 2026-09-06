@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
+import { NoIndex } from '@/components/Seo';
 import { UserCell } from '@/components/Cells';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -21,11 +21,12 @@ import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList'
 export default function AdminUsers() {
     const [metadataUser, setMetadataUser] = useState<UserSummary | null>(null);
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
+    const pageMetadata = <NoIndex title="Users | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                <Seo isIndexable={false} title="Users | LongLink" />
+                {pageMetadata}
                 <PageLoading label="Loading users" />
             </>
         );
@@ -34,7 +35,7 @@ export default function AdminUsers() {
     if (error && users.length === 0) {
         return (
             <>
-                <Seo isIndexable={false} title="Users | LongLink" />
+                {pageMetadata}
                 <PageError description="We couldn't load the platform users." title="Unable to load users" />
             </>
         );
@@ -42,7 +43,7 @@ export default function AdminUsers() {
 
     return (
         <Stack gap={8}>
-            <Seo isIndexable={false} title="Users | LongLink" />
+            {pageMetadata}
             <Stack>
                 <Heading level={1}>Users</Heading>
                 <Text as="p" color="secondary">

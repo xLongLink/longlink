@@ -1,3 +1,4 @@
+import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
@@ -46,11 +47,11 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Apply release changes to the Organization Namespace, quota, and network boundary.
     logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
-    cluster = Kubernetes(infrastructure.compute.kubeconfig)
-    try:
+    cluster = Kubernetes(
+        infrastructure.compute.kubeconfig,
+    )
+    async with contextlib.aclosing(cluster):
         await cluster.organizations.apply(organization.id.hex)
-    finally:
-        await cluster.aclose()
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     logger.info("Publishing Organization %s", organization.id)
@@ -81,7 +82,9 @@ async def delete(organization_id: UUID) -> str | None:
         return None
     if infrastructure.organization.deleted_at is None:
         return "Active Organizations cannot be deleted by lifecycle cleanup"
-    cluster = Kubernetes(infrastructure.compute.kubeconfig)
+    cluster = Kubernetes(
+        infrastructure.compute.kubeconfig,
+    )
 
     db = Postgres(
         infrastructure.database.host,
@@ -103,10 +106,8 @@ async def delete(organization_id: UUID) -> str | None:
         )
         solution_ids = solution_ids_result.all()
     logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
-    try:
+    async with contextlib.aclosing(cluster):
         await cluster.organizations.delete(infrastructure.organization.id.hex)
-    finally:
-        await cluster.aclose()
     for solution_id in solution_ids:
         logger.info("Deleting provider resources for Solution %s", solution_id)
         await db.delete_solution_schema(infrastructure.organization.id, solution_id)

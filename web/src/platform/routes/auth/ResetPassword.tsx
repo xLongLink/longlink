@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { Seo } from '@/components/Seo';
 import { api, ApiError } from '@/lib/api';
+import { NoIndex } from '@/components/Seo';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -109,6 +109,8 @@ export default function ResetPassword() {
         };
     }, [token]);
 
+    const pageMetadata = <NoIndex title="Set a New Password | LongLink" />;
+
     // Invalid and expired credentials require a replacement email.
     if (hasTokenError) {
         return (
@@ -116,7 +118,7 @@ export default function ResetPassword() {
                 title="Set a new password"
                 description="This password reset link is invalid or expired. Request a new link to continue."
             >
-                <Seo isIndexable={false} title="Set a New Password | LongLink" />
+                {pageMetadata}
                 <Button href="/auth/forgot-password" label="Request another reset link" variant="primary" />
             </AuthLayout>
         );
@@ -126,7 +128,7 @@ export default function ResetPassword() {
     if (verification.error) {
         return (
             <AuthLayout title="Set a new password" description="Please try again in a moment.">
-                <Seo isIndexable={false} title="Set a New Password | LongLink" />
+                {pageMetadata}
                 <Button label="Retry" onClick={() => startVerification(token)} variant="primary" />
             </AuthLayout>
         );
@@ -134,7 +136,7 @@ export default function ResetPassword() {
 
     return (
         <AuthLayout title="Set a new password" description="Choose a new password for your LongLink account.">
-            <Seo isIndexable={false} title="Set a New Password | LongLink" />
+            {pageMetadata}
             {!verification.isSuccess ? (
                 <Button isLoading label="Reset password" variant="primary" />
             ) : resetPassword.isSuccess ? (

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { Seo } from '@/components/Seo';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -53,7 +53,7 @@ export default function Login() {
     if (user) {
         return (
             <>
-                <Seo isIndexable={false} title="LongLink" />
+                <NoIndex title="LongLink" />
                 <Navigate replace to="/user/organizations" />
             </>
         );
@@ -74,7 +74,7 @@ export default function Login() {
 
     return (
         <AuthLayout title={<WelcomeTitle />} description={null}>
-            <Seo isIndexable={false} title="Sign In | LongLink" />
+            <NoIndex title="Sign In | LongLink" />
             <Stack gap={4}>
                 {oauthError ? (
                     <Banner

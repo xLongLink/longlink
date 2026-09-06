@@ -1,4 +1,4 @@
-import { Seo } from '@/components/Seo';
+import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import Platform from '@/platform/layouts/Platform';
 import { SolutionRuntime } from '@/components/Solution';
@@ -11,7 +11,7 @@ export const meta = () => [];
 export default function Solution() {
     return (
         <SolutionRuntime>
-            {({ content, isNotFound, tabs, title }) => (
+            {({ content, tabs, title }) => (
                 <Platform
                     action={
                         <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
@@ -20,7 +20,7 @@ export default function Solution() {
                     }
                     tabs={tabs}
                 >
-                    {isNotFound ? null : <Seo isIndexable={false} title={title ? `${title} | LongLink` : 'LongLink'} />}
+                    <NoIndex title={title ? `${title} | LongLink` : 'LongLink'} />
                     <PageContainer minHeight="100%" padding={2}>
                         {content}
                     </PageContainer>

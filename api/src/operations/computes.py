@@ -1,4 +1,5 @@
 import ipaddress
+import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import update
@@ -30,9 +31,11 @@ async def create(compute_id: UUID) -> str | None:
     if registry is None:
         logger.info("Compute %s no longer exists; skipping reconciliation", compute_id)
         return None
-    cluster = Kubernetes(registry.kubeconfig)
+    cluster = Kubernetes(
+        registry.kubeconfig,
+    )
 
-    try:
+    async with contextlib.aclosing(cluster):
         # Reapply static Gateway resources without rotating published mTLS credentials.
         if (
             registry.status == Status.running
@@ -75,5 +78,3 @@ async def create(compute_id: UUID) -> str | None:
             if result.rowcount != 1:
                 return "Compute gateway state was not recorded"
             await session.commit()
-    finally:
-        await cluster.aclose()

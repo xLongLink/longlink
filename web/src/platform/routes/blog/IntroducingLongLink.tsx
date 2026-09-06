@@ -1,4 +1,5 @@
 import { Seo } from '@/components/Seo';
+import { siteName, siteUrl } from '@/site';
 import { Card } from '@astryxdesign/core/Card';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -24,9 +25,9 @@ export default function IntroducingLongLink() {
         datePublished: '2026-09-04',
         description: articleDescription,
         headline: 'Introducing LongLink',
-        image: 'https://longlink.dev/images/paths.png',
-        mainEntityOfPage: 'https://longlink.dev/blog/introducing-longlink/',
-        publisher: { '@type': 'Organization', name: 'LongLink', url: 'https://longlink.dev' },
+        image: `${siteUrl}/images/paths.png`,
+        mainEntityOfPage: `${siteUrl}/blog/introducing-longlink/`,
+        publisher: { '@type': 'Organization', name: siteName, url: siteUrl },
     };
 
     return (

@@ -1,5 +1,6 @@
 import asyncio
 import secrets
+import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
@@ -110,10 +111,8 @@ async def create(solution_id: UUID) -> None:
     cluster = Kubernetes(
         infrastructure.compute.kubeconfig,
     )
-    try:
+    async with contextlib.aclosing(cluster):
         await cluster.solutions.apply(solution.id, organization.id.hex, solution.image_desired, runtime_secrets)
-    finally:
-        await cluster.aclose()
 
     # Publish the applied release only after workload readiness.
     if solution.status in {Status.creating, Status.failed}:
@@ -145,11 +144,11 @@ async def delete(solution_id: UUID) -> None:
 
     # Remove Solution Kubernetes resources before revoking provider credentials.
     logger.info("Deleting Kubernetes workload for Solution %s", solution.id)
-    cluster = Kubernetes(infrastructure.compute.kubeconfig)
-    try:
+    cluster = Kubernetes(
+        infrastructure.compute.kubeconfig,
+    )
+    async with contextlib.aclosing(cluster):
         await cluster.solutions.delete(solution.id, organization.id.hex)
-    finally:
-        await cluster.aclose()
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = Postgres(

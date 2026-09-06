@@ -139,16 +139,19 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
             continue
 
         field_name = statement.target.id
-        field_info: dict[str, object] = {"required": statement.value is None}
+        env_entry: dict[str, object] = {
+            "name": field_name,
+            "required": statement.value is None,
+        }
 
         # Inspect pydantic Field calls for metadata.
         if isinstance(statement.value, ast.Call) and isinstance(statement.value.func, ast.Name) and statement.value.func.id == "Field":
-            field_info["required"] = True
+            env_entry["required"] = True
 
             # Positional Field defaults use ellipsis for required values and any other value as optional.
             if statement.value.args:
                 first_argument = statement.value.args[0]
-                field_info["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
+                env_entry["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
 
             # Inspect Field keyword arguments.
             for keyword in statement.value.keywords:
@@ -162,7 +165,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
                     # Store string aliases only.
                     if isinstance(alias, str):
-                        field_info["env_name"] = alias
+                        env_entry["name"] = alias or field_name
 
                 # Capture static descriptions.
                 elif keyword.arg == "description":
@@ -174,20 +177,11 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
                     # Store string descriptions only.
                     if isinstance(description, str):
-                        field_info["description"] = description
+                        env_entry["description"] = description
 
                 # Defaults and factories make the field optional.
                 elif keyword.arg in ("default", "default_factory"):
-                    field_info["required"] = False
-
-        env_entry: dict[str, object] = {
-            "name": field_info.get("env_name") or field_name,
-            "required": field_info["required"],
-        }
-
-        # Preserve optional descriptions when present.
-        if isinstance(field_info.get("description"), str):
-            env_entry["description"] = field_info["description"]
+                    env_entry["required"] = False
 
         environments.append(env_entry)
 

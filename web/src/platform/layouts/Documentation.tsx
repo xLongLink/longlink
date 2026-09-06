@@ -21,6 +21,7 @@ import {
 /** Renders documentation content with the fixed documentation navigation. */
 export default function Documentation() {
     const { pathname } = useLocation();
+    const pagePath = pathname.replace(/\/+$/, '') || '/';
 
     return (
         <SideLayout
@@ -31,7 +32,7 @@ export default function Documentation() {
                             <SideNavItem
                                 href="/docs"
                                 icon={<BookOpen aria-hidden size={16} />}
-                                isSelected={pathname === '/docs'}
+                                isSelected={pagePath === '/docs'}
                                 label="Introduction"
                             />
                         </SideNavSection>
@@ -39,19 +40,19 @@ export default function Documentation() {
                             <SideNavItem
                                 href="/docs/api"
                                 icon={<ShieldCheck aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/api'}
+                                isSelected={pagePath === '/docs/api'}
                                 label="Overview"
                             />
                             <SideNavItem
                                 href="/docs/api/organizations"
                                 icon={<Building2 aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/api/organizations'}
+                                isSelected={pagePath === '/docs/api/organizations'}
                                 label="Organizations"
                             />
                             <SideNavItem
                                 href="/docs/api/solutions"
                                 icon={<AppWindow aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/api/solutions'}
+                                isSelected={pagePath === '/docs/api/solutions'}
                                 label="Solutions"
                             />
                         </SideNavSection>
@@ -59,49 +60,49 @@ export default function Documentation() {
                             <SideNavItem
                                 href="/docs/sdk"
                                 icon={<Package aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk'}
+                                isSelected={pagePath === '/docs/sdk'}
                                 label="Overview"
                             />
                             <SideNavItem
                                 href="/docs/sdk/environments"
                                 icon={<Globe aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/environments'}
+                                isSelected={pagePath === '/docs/sdk/environments'}
                                 label="Environments"
                             />
                             <SideNavItem
                                 href="/docs/sdk/routes"
                                 icon={<Waypoints aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/routes'}
+                                isSelected={pagePath === '/docs/sdk/routes'}
                                 label="Routes"
                             />
                             <SideNavItem
                                 href="/docs/sdk/storage"
                                 icon={<HardDrive aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/storage'}
+                                isSelected={pagePath === '/docs/sdk/storage'}
                                 label="Storage"
                             />
                             <SideNavItem
                                 href="/docs/sdk/database"
                                 icon={<Database aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/database'}
+                                isSelected={pagePath === '/docs/sdk/database'}
                                 label="Database"
                             />
                             <SideNavItem
                                 href="/docs/sdk/views"
                                 icon={<FileCode2 aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/views'}
+                                isSelected={pagePath === '/docs/sdk/views'}
                                 label="Solution Views"
                             />
                             <SideNavItem
                                 href="/docs/sdk/testing"
                                 icon={<FlaskConical aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/testing'}
+                                isSelected={pagePath === '/docs/sdk/testing'}
                                 label="Testing"
                             />
                             <SideNavItem
                                 href="/docs/sdk/building"
                                 icon={<Rocket aria-hidden size={16} />}
-                                isSelected={pathname === '/docs/sdk/building'}
+                                isSelected={pagePath === '/docs/sdk/building'}
                                 label="Building"
                             />
                         </SideNavSection>

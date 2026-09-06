@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { siteUrl } from './src/site';
 import type { Config } from '@react-router/dev/config';
 import { documentationPaths } from './src/platform/docs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
@@ -41,12 +42,6 @@ export default {
             await rm(path.join(clientDirectory, 'images'), { force: true, recursive: true });
         } else {
             // Generate crawler configuration from the same inventory used for prerendering.
-            const configuredSiteUrl = import.meta.env.VITE_SITE_URL ?? 'https://longlink.dev';
-            const siteUrl = new URL(configuredSiteUrl);
-            if (siteUrl.pathname !== '/' || siteUrl.search || siteUrl.hash) {
-                throw new Error('VITE_SITE_URL must contain only the public site origin.');
-            }
-
             const urls = publicPagePaths
                 .map(
                     (pagePath) =>

@@ -25,8 +25,9 @@ type ArticlePage = {
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const navigate = useNavigate();
-    const Breadcrumb = pathname.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
-    const currentPage = documentationPaths.indexOf(pathname);
+    const pagePath = pathname.replace(/\/+$/, '') || '/';
+    const Breadcrumb = pagePath.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
+    const currentPage = documentationPaths.indexOf(pagePath);
     const previousPage = documentationPaths[currentPage - 1];
     const nextPage = documentationPaths[currentPage + 1];
 
