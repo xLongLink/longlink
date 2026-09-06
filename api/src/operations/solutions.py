@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 from uuid import UUID
 from sqlmodel import col
@@ -57,10 +58,12 @@ async def create(solution_id: UUID) -> None:
                 infrastructure.database.sslmode,
             )
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
-        except BaseException:
+        except (Exception, asyncio.CancelledError):
             try:
                 await object_storage.revoke_solution(solution.id.hex)
-            except BaseException:
+            except asyncio.CancelledError:
+                raise
+            except Exception:
                 logger.exception("Could not revoke storage credentials for Solution '%s'", solution.id)
             raise
 
