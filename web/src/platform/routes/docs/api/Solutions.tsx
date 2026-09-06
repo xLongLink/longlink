@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,11 +9,7 @@ import { Article } from '@/components/layouts/Article';
 
 const solutionPaths = ['Use', 'Adapt', 'Create'];
 
-const metadata = {
-    seo: {
-        title: 'Solutions | Platform Documentation | LongLink',
-        description: 'Learn how to create, deploy, and operate Solutions on the LongLink Platform.',
-    },
+const article = {
     toc: [{ id: 'solutions', label: 'Solutions', level: 1 }],
     lastUpdated: '2026-08-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Solutions.tsx',
@@ -20,7 +17,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Learn how to create, deploy, and operate Solutions on the LongLink Platform."
+                hasBreadcrumbs
+                title="Solutions | Platform Documentation | LongLink"
+            />
             <Stack gap={5}>
                 <Heading id="solutions" level={1}>
                     Solutions

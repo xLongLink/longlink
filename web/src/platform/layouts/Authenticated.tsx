@@ -15,7 +15,7 @@ export default function AuthenticatedLayout() {
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
-        return null;
+        return <Seo isIndexable={false} title="LongLink" />;
     }
 
     // Keep authenticated users from seeing a sign-in prompt during profile API failures.
@@ -29,7 +29,7 @@ export default function AuthenticatedLayout() {
                 }
                 tabs={[]}
             >
-                <Seo isIndexable={false} />
+                <Seo isIndexable={false} title="Unable to Load Account | LongLink" />
                 <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
                     <Stack gap={4} align="center">
                         <Banner status="error" title={error.message} />
@@ -44,7 +44,7 @@ export default function AuthenticatedLayout() {
     if (!user) {
         return (
             <>
-                <Seo isIndexable={false} />
+                <Seo isIndexable={false} title="LongLink" />
                 <Navigate replace to="/login" />
             </>
         );
@@ -52,7 +52,6 @@ export default function AuthenticatedLayout() {
 
     return (
         <AuthenticatedUserContext.Provider value={user}>
-            <Seo isIndexable={false} />
             <Outlet />
         </AuthenticatedUserContext.Provider>
     );

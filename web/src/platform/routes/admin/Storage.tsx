@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { S3 } from '@/components/svg/S3';
 import { Text } from '@astryxdesign/core/Text';
@@ -50,15 +51,26 @@ export default function AdminStorage() {
     });
 
     if (isLoading) {
-        return <PageLoading label="Loading storage registries" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Storage | LongLink" />
+                <PageLoading label="Loading storage registries" />
+            </>
+        );
     }
 
     if (error && storages.length === 0) {
-        return <PageError description="We couldn't load the storage registries." title="Unable to load storage" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Storage | LongLink" />
+                <PageError description="We couldn't load the storage registries." title="Unable to load storage" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Storage | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Storage</Heading>

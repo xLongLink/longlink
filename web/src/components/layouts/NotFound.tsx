@@ -5,7 +5,7 @@ import { PageError } from '@/components/Utils';
 export default function NotFoundLayout() {
     return (
         <>
-            <Seo isIndexable={false} />
+            <Seo isIndexable={false} title="Page Not Found | LongLink" />
             <PageError description="This page doesn't exist or isn't available." title="We can't find that page" />
         </>
     );

@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -29,11 +30,7 @@ const organizationRoles = [
     },
 ];
 
-const metadata = {
-    seo: {
-        title: 'Organizations | Platform Documentation | LongLink',
-        description: 'Learn how organizations structure access to Solutions on the LongLink Platform.',
-    },
+const article = {
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },
@@ -44,7 +41,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Learn how organizations structure access to Solutions on the LongLink Platform."
+                hasBreadcrumbs
+                title="Organizations | Platform Documentation | LongLink"
+            />
             <Stack gap={5}>
                 <Heading id="organizations" level={1}>
                     Organizations

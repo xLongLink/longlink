@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -50,15 +51,26 @@ export default function AdminDatabase() {
     });
 
     if (isLoading) {
-        return <PageLoading label="Loading databases" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Database | LongLink" />
+                <PageLoading label="Loading databases" />
+            </>
+        );
     }
 
     if (error && databases.length === 0) {
-        return <PageError description="We couldn't load the database registries." title="Unable to load databases" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Database | LongLink" />
+                <PageError description="We couldn't load the database registries." title="Unable to load databases" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Database | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Database</Heading>

@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -6,11 +7,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
-const metadata = {
-    seo: {
-        title: 'Privacy Policy | LongLink',
-        description: 'Read the LongLink privacy policy.',
-    },
+const article = {
     toc: [
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },
@@ -67,7 +64,8 @@ const metadata = {
 /** Renders the privacy policy. */
 export default function Privacy() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo description="Read the LongLink privacy policy." hasBreadcrumbs title="Privacy Policy | LongLink" />
             <PrivacyContent />
         </Article>
     );

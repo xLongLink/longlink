@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -42,20 +43,29 @@ export default function AdminOrganizations() {
     });
 
     if (isLoading) {
-        return <PageLoading label="Loading organizations" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Organizations | LongLink" />
+                <PageLoading label="Loading organizations" />
+            </>
+        );
     }
 
     if (error && organizations.length === 0) {
         return (
-            <PageError
-                description="We couldn't load the platform organizations."
-                title="Unable to load organizations"
-            />
+            <>
+                <Seo isIndexable={false} title="Organizations | LongLink" />
+                <PageError
+                    description="We couldn't load the platform organizations."
+                    title="Unable to load organizations"
+                />
+            </>
         );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Organizations | LongLink" />
             <Stack>
                 <Heading level={1}>Organizations</Heading>
                 <Text as="p" color="secondary">

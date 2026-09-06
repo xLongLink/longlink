@@ -63,10 +63,10 @@ export default function IntroducingLongLink() {
                                     debug, and maintain.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    The other path keeps human judgment at the center. AI accelerates the work, while
-                                    humans remain responsible for key decisions, architecture, and validation. This
-                                    keeps the development process transparent, making assumptions, trade-offs, and
-                                    errors easier to identify and understand.
+                                    The other path keeps human judgment at the center. AI serves as a tool that
+                                    accelerates the work, while humans remain responsible for key decisions,
+                                    architecture, and validation. This keeps the development process transparent, making
+                                    assumptions, trade-offs, and errors easier to identify and understand.
                                 </Text>
                                 <Card
                                     className="handwritten-diagram relative overflow-hidden"

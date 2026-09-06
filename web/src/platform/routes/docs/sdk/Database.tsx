@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,11 +9,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
-const metadata = {
-    seo: {
-        title: 'Database | LongLink Documentation',
-        description: 'Use database services in a LongLink project.',
-    },
+const article = {
     toc: [
         { id: 'database', label: 'Database', level: 1 },
         { id: 'basic-usage', label: 'Basic usage', level: 2 },
@@ -25,7 +22,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Use database services in a LongLink project."
+                hasBreadcrumbs
+                title="Database | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="database" level={1}>
                     Database

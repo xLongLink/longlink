@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -53,15 +54,26 @@ export default function AdminCompute() {
     });
 
     if (isLoading) {
-        return <PageLoading label="Loading compute registries" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Compute | LongLink" />
+                <PageLoading label="Loading compute registries" />
+            </>
+        );
     }
 
     if (error && computes.length === 0) {
-        return <PageError description="We couldn't load the compute registries." title="Unable to load compute" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Compute | LongLink" />
+                <PageError description="We couldn't load the compute registries." title="Unable to load compute" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Compute | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Compute</Heading>

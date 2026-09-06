@@ -237,7 +237,7 @@ export default function Ppt() {
 
     return (
         <>
-            <Seo isIndexable={false} />
+            <Seo isIndexable={false} title="Presentation | LongLink" />
             <style>{printStyles}</style>
             <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">

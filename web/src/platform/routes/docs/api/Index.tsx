@@ -1,14 +1,11 @@
+import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { PlatformFlowDiagram } from '@/components/PlatformFlowDiagram';
 
-const metadata = {
-    seo: {
-        title: 'Platform Documentation | LongLink',
-        description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',
-    },
+const article = {
     toc: [{ id: 'platform', label: 'Platform', level: 1 }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Index.tsx',
@@ -16,7 +13,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure."
+                hasBreadcrumbs
+                title="Platform Documentation | LongLink"
+            />
             <Stack gap={5}>
                 <Heading id="platform" level={1}>
                     Platform

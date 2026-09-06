@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -140,6 +141,7 @@ export default function Settings() {
     });
     return (
         <PageContainer gap={8} padding={2}>
+            <Seo isIndexable={false} title="Account Settings | LongLink" />
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <IconButton
                     className="size-12"

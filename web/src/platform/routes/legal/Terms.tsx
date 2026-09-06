@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -5,11 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
-const metadata = {
-    seo: {
-        title: 'Terms of Service | LongLink',
-        description: 'Read the LongLink terms of service.',
-    },
+const article = {
     toc: [
         { id: 'terms-of-service', label: 'Terms of Service', level: 1 },
         {
@@ -94,7 +91,8 @@ const metadata = {
 /** Renders the terms of service. */
 export default function Terms() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo description="Read the LongLink terms of service." hasBreadcrumbs title="Terms of Service | LongLink" />
             <TermsContent />
         </Article>
     );

@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { useParams } from 'react-router';
 import { hasMinimumRole } from '@/lib/roles';
 import { Link } from '@astryxdesign/core/Link';
@@ -27,21 +28,30 @@ export default function Organization() {
     }
 
     if (isLoading && solutions.length === 0) {
-        return <PageLoading label="Loading solutions" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Organization Solutions | LongLink" />
+                <PageLoading label="Loading solutions" />
+            </>
+        );
     }
 
     if (error && solutions.length === 0) {
         return (
-            <PageError
-                description="We couldn't load the solutions for this organization."
-                title="Unable to load solutions"
-            />
+            <>
+                <Seo isIndexable={false} title="Organization Solutions | LongLink" />
+                <PageError
+                    description="We couldn't load the solutions for this organization."
+                    title="Unable to load solutions"
+                />
+            </>
         );
     }
 
     // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8} padding={2}>
+            <Seo isIndexable={false} title="Organization Solutions | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Solutions</Heading>

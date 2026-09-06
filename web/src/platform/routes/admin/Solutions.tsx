@@ -1,5 +1,6 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -52,15 +53,26 @@ export default function AdminSolutions() {
     });
 
     if (isLoading) {
-        return <PageLoading label="Loading solutions" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Solutions | LongLink" />
+                <PageLoading label="Loading solutions" />
+            </>
+        );
     }
 
     if (error && solutions.length === 0) {
-        return <PageError description="We couldn't load the platform solutions." title="Unable to load solutions" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Solutions | LongLink" />
+                <PageError description="We couldn't load the platform solutions." title="Unable to load solutions" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Solutions | LongLink" />
             <Stack>
                 <Heading level={1}>Solutions</Heading>
                 <Text as="p" color="secondary">

@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -17,20 +18,29 @@ export default function Organizations() {
     const { memberships, isOrganizationsLoading, organizationsError } = useUserOrganizations();
 
     if (isOrganizationsLoading) {
-        return <PageLoading label="Loading organizations" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Organizations | LongLink" />
+                <PageLoading label="Loading organizations" />
+            </>
+        );
     }
 
     if (memberships.length === 0 && organizationsError) {
         return (
-            <PageError
-                description="We couldn't load the organizations available to your account."
-                title="Unable to load organizations"
-            />
+            <>
+                <Seo isIndexable={false} title="Organizations | LongLink" />
+                <PageError
+                    description="We couldn't load the organizations available to your account."
+                    title="Unable to load organizations"
+                />
+            </>
         );
     }
 
     return (
         <PageContainer gap={8} padding={2}>
+            <Seo isIndexable={false} title="Organizations | LongLink" />
             <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
                 <Stack>
                     <Heading level={1}>Organizations</Heading>

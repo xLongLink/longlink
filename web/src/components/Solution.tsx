@@ -1,5 +1,4 @@
 import { api } from '@/lib/api';
-import { Seo } from '@/components/Seo';
 import { startCase } from '@/lib/utils';
 import { viewsSchema } from '@/xml/views';
 import type { ASTNode } from '@/xml/types';
@@ -16,7 +15,12 @@ import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type SolutionRuntimeProps = {
-    children: (solution: { content: ReactNode; tabs: readonly NavigationTab[] }) => ReactNode;
+    children: (solution: {
+        content: ReactNode;
+        isNotFound: boolean;
+        tabs: readonly NavigationTab[];
+        title?: string;
+    }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
     requestBaseUrl?: string;
@@ -94,6 +98,7 @@ export function SolutionRuntime({
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = !routePath ? firstTabView : activeRouteMatch?.view;
     const activeViewTitle = activeView ? (activeView.name ?? startCase(activeView.tab)) : undefined;
+    const isNotFound = registeredViews !== undefined && routePath.length > 0 && activeRouteMatch === null;
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
@@ -126,7 +131,7 @@ export function SolutionRuntime({
 
     if (!routePath && firstTabView) {
         content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabView.route)} />;
-    } else if (registeredViews && routePath && !activeRouteMatch) {
+    } else if (isNotFound) {
         content = <NotFoundLayout />;
     } else if (viewsError) {
         content = (
@@ -171,14 +176,9 @@ export function SolutionRuntime({
     }
 
     return children({
-        content: activeViewTitle ? (
-            <>
-                <Seo isIndexable={false} title={`${activeViewTitle} | LongLink`} />
-                {content}
-            </>
-        ) : (
-            content
-        ),
+        content,
+        isNotFound,
         tabs,
+        title: activeViewTitle,
     });
 }

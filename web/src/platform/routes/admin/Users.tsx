@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Seo } from '@/components/Seo';
 import { Ellipsis } from 'lucide-react';
 import { UserCell } from '@/components/Cells';
 import { Text } from '@astryxdesign/core/Text';
@@ -22,15 +23,26 @@ export default function AdminUsers() {
     const { items: users, error, isLoading, pagination } = usePaginate('/api/v1/users', zPageUserSummary);
 
     if (isLoading) {
-        return <PageLoading label="Loading users" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Users | LongLink" />
+                <PageLoading label="Loading users" />
+            </>
+        );
     }
 
     if (error && users.length === 0) {
-        return <PageError description="We couldn't load the platform users." title="Unable to load users" />;
+        return (
+            <>
+                <Seo isIndexable={false} title="Users | LongLink" />
+                <PageError description="We couldn't load the platform users." title="Unable to load users" />
+            </>
+        );
     }
 
     return (
         <Stack gap={8}>
+            <Seo isIndexable={false} title="Users | LongLink" />
             <Stack>
                 <Heading level={1}>Users</Heading>
                 <Text as="p" color="secondary">

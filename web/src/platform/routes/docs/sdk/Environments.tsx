@@ -1,3 +1,4 @@
+import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -5,11 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
-const metadata = {
-    seo: {
-        title: 'Environments | LongLink Documentation',
-        description: 'Configure environments for local development and deployed LongLink services.',
-    },
+const article = {
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -20,7 +17,12 @@ const metadata = {
 
 export default function DocsArticleRoute() {
     return (
-        <Article page={metadata}>
+        <Article page={article}>
+            <Seo
+                description="Configure environments for local development and deployed LongLink services."
+                hasBreadcrumbs
+                title="Environments | LongLink Documentation"
+            />
             <Stack gap={5}>
                 <Heading id="environments" level={1}>
                     Environments
