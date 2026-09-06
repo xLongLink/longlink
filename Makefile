@@ -184,8 +184,7 @@ local\:image: sdk\:build
 
 
 # Seed local infrastructure and create the local example Organization and Solution.
-seed:
-	cd api && uv sync --locked --extra dev
+seed: api\:install
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked python -m scripts.seed
 

@@ -59,7 +59,12 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
     """Remove an unused compute registration without modifying external resources."""
 
     # Lock the target before checking assignments and deleting it.
-    registry = await session.get(ComputeRegistry, registry_id, with_for_update=True)
+    registry = await session.get(
+        ComputeRegistry,
+        registry_id,
+        options=(load_only(ComputeRegistry.id),),
+        with_for_update=True,
+    )
     if registry is None:
         raise NotFoundError("Compute registry not found")
 

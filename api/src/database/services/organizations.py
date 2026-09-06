@@ -117,8 +117,33 @@ async def solution_runtime_access(
 async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
+    # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
     result = await session.execute(
         select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        .options(
+            load_only(
+                Organization.id,
+                Organization.deleted_at,
+            ),
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.kubeconfig,
+            ),
+            load_only(
+                DatabaseRegistry.id,
+                DatabaseRegistry.host,
+                DatabaseRegistry.port,
+                DatabaseRegistry.password,
+                DatabaseRegistry.sslmode,
+                DatabaseRegistry.username,
+            ),
+            load_only(
+                StorageRegistry.id,
+                StorageRegistry.endpoint_url,
+                StorageRegistry.access_key_id,
+                StorageRegistry.secret_access_key,
+            ),
+        )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
         .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
         .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
@@ -137,6 +162,34 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
     # Load the Solution and its infrastructure in one lifecycle query.
     statement = (
         select(Solution, Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        .options(
+            load_only(
+                Solution.id,
+                Solution.image_desired,
+                Solution.secrets,
+                Solution.status,
+                Solution.deleted_at,
+            ),
+            load_only(Organization.id),
+            load_only(
+                ComputeRegistry.id,
+                ComputeRegistry.kubeconfig,
+            ),
+            load_only(
+                DatabaseRegistry.id,
+                DatabaseRegistry.host,
+                DatabaseRegistry.port,
+                DatabaseRegistry.password,
+                DatabaseRegistry.sslmode,
+                DatabaseRegistry.username,
+            ),
+            load_only(
+                StorageRegistry.id,
+                StorageRegistry.endpoint_url,
+                StorageRegistry.access_key_id,
+                StorageRegistry.secret_access_key,
+            ),
+        )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
         .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))

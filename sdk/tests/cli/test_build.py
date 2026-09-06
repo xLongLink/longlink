@@ -182,10 +182,10 @@ def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
         ),
         pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
         pytest.param(
-            '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+            '[tool.longlink]\nenvironment = "src.envs:Settings"\n',
             "src/envs.py",
             "class Other:\n    pass\n",
-            "Environment model must define Env",
+            "Environment model must define Settings",
             id="missing-class",
         ),
     ],
@@ -221,6 +221,14 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(build_p
     )
     build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
     build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
+    build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
+    build_project.joinpath(".pytest_cache").mkdir()
+    build_project.joinpath(".pytest_cache", "CACHEDIR.TAG").write_text("cache", encoding="utf-8")
+    build_project.joinpath(".cache").mkdir()
+    build_project.joinpath(".cache", "artifact").write_text("cache", encoding="utf-8")
+    build_project.joinpath("tests").mkdir()
+    build_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
@@ -233,8 +241,12 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(build_p
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
-    assert ".env" in dockerignore
-    assert "*.db" in dockerignore
+    assert dockerignore.splitlines() == list(build.DOCKER_CONTEXT_IGNORE_RULES)
+    assert not build_context.joinpath(".env").exists()
+    assert not build_context.joinpath("dev.db").exists()
+    assert not build_context.joinpath(".pytest_cache").exists()
+    assert not build_context.joinpath(".cache").exists()
+    assert build_context.joinpath("tests", "test_app.py").is_file()
 
 
 @pytest.mark.parametrize(
@@ -295,21 +307,42 @@ def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
 
 
-def test_build_solution_does_not_follow_out_of_tree_symlinks(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Exclude linked files whose resolved targets are outside the build root."""
+def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Preserve allowed in-tree links while excluding unsafe and ignored targets."""
 
-    # Create a minimal Solution and a file outside its Docker build context.
+    # Create allowed, ignored, absolute, recursive, cyclic, relocated-outside, and out-of-tree links.
     outside_file = build_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
     build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
+    build_project.joinpath("linked-envs.py").symlink_to("src/envs.py")
+    build_project.joinpath("absolute-envs.py").symlink_to(build_project / "src" / "envs.py")
+    build_project.joinpath("root-link").symlink_to(".")
+    build_project.joinpath("cycle-a").symlink_to("cycle-b")
+    build_project.joinpath("cycle-b").symlink_to("cycle-a")
+    build_project.joinpath("broken-link").symlink_to("missing.py")
+    build_project.joinpath("src", "parent-link").symlink_to("..")
+    build_project.joinpath("relocated-envs.py").symlink_to("../solution/src/envs.py")
+    build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
+    build_project.joinpath("linked-database").symlink_to("dev.db")
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
     # Build the temporary context.
     build.build_solution(build_context)
 
-    # Never materialize an out-of-tree linked file in the build context.
-    assert not (build_context / "linked-secret.txt").exists()
+    # Preserve the allowed link itself without copying ignored or out-of-tree aliases.
+    assert build_context.joinpath("linked-envs.py").is_symlink()
+    assert build_context.joinpath("linked-envs.py").readlink() == Path("src/envs.py")
+    assert not build_context.joinpath("dev.db").exists()
+    assert not build_context.joinpath("linked-database").is_symlink()
+    assert not build_context.joinpath("absolute-envs.py").is_symlink()
+    assert not build_context.joinpath("root-link").is_symlink()
+    assert not build_context.joinpath("cycle-a").is_symlink()
+    assert not build_context.joinpath("cycle-b").is_symlink()
+    assert not build_context.joinpath("broken-link").is_symlink()
+    assert not build_context.joinpath("src", "parent-link").is_symlink()
+    assert not build_context.joinpath("relocated-envs.py").is_symlink()
+    assert not build_context.joinpath("linked-secret.txt").is_symlink()
 
 
 def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build_project: Path) -> None:
@@ -363,22 +396,26 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build
         build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
 
-def test_build_solution_scopes_solution_ignore_rules_to_an_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Keep Solution secrets excluded when local dependencies widen the Docker context."""
+def test_build_solution_filters_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apply the fixed exclusion policy across an expanded context."""
 
     # Arrange
     dependency = build_project.parent / "shared"
     dependency.mkdir()
     build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
     dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    dependency.joinpath("nested").mkdir()
+    dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
         '[tool.uv.sources]\nshared = { path = "../shared" }\n',
         encoding="utf-8",
     )
-    build_project.joinpath(".gitignore").write_text(".env\n", encoding="utf-8")
     build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
     build_project.joinpath(".env.production").write_text("SECRET=production-value\n", encoding="utf-8")
+    build_project.joinpath("nested").mkdir()
+    build_project.joinpath("nested", "drop.db").write_text("local database", encoding="utf-8")
+    build_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
@@ -386,25 +423,12 @@ def test_build_solution_scopes_solution_ignore_rules_to_an_expanded_context(buil
     build.build_solution(build_context)
 
     # Assert
-    assert build_context.joinpath("solution", ".env").is_file()
-    assert build_context.joinpath("solution", ".env.production").is_file()
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8") == (
-        "solution/.env\n.git\nDockerfile\n.dockerignore\n**/.venv\n**/.env\n**/.env.*\n**/.pytest_cache\n"
-    )
-
-
-def test_context_ignore_rules_scopes_negated_solution_patterns(build_project: Path) -> None:
-    """Scope local Docker ignore rules without changing comments or negations."""
-
-    # Arrange
-    source = build_project / ".gitignore"
-    source.write_text("# Keep documentation\n\n/build/\n!/build/README.md\n.env\n", encoding="utf-8")
-
-    # Act
-    rules = build.context_ignore_rules(source, build_project, build_project.parent)
-
-    # Assert
-    assert rules == "# Keep documentation\n\nsolution/build/\n!solution/build/README.md\nsolution/.env"
+    assert not build_context.joinpath("solution", ".env").exists()
+    assert not build_context.joinpath("solution", ".env.production").exists()
+    assert not build_context.joinpath("solution", "nested", "drop.db").exists()
+    assert build_context.joinpath("solution", "nested", "source.py").is_file()
+    assert not build_context.joinpath("shared", "nested", ".env").exists()
+    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8").splitlines() == list(build.DOCKER_CONTEXT_IGNORE_RULES)
 
 
 @pytest.mark.parametrize(
@@ -531,20 +555,17 @@ def test_build_command_reports_built_image(
     assert result.exit_code == 0
     assert len(contexts) == 1
     temporary_context = contexts[0]
-    assert (
-        commands
-        == [
-            [
-                *expected_build_command,
-                "-f",
-                str(temporary_context / "Dockerfile"),
-                "-t",
-                "localhost:15000/demo-solution:dev",
-                str(temporary_context),
-            ],
-            *expected_commands,
-        ]
-    )
+    assert commands == [
+        [
+            *expected_build_command,
+            "-f",
+            str(temporary_context / "Dockerfile"),
+            "-t",
+            "localhost:15000/demo-solution:dev",
+            str(temporary_context),
+        ],
+        *expected_commands,
+    ]
     assert "- Built image: localhost:15000/demo-solution:dev" in result.output
     assert ("- Pushed image: localhost:15000/demo-solution:dev" in result.output) is expected_push_output
 

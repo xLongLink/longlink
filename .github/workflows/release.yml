@@ -72,7 +72,7 @@ jobs:
 
             - name: Build web assets for SDK
               working-directory: web
-              run: vp run build:sdk --logLevel warn
+              run: vp run build:sdk:bundle --logLevel warn
               env:
                   VERSION: ${{ github.ref_name }}
 

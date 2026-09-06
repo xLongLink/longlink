@@ -42,7 +42,7 @@ export default function IntroducingLongLink() {
                         <Stack as="header" gap={6}>
                             <Stack gap={3}>
                                 <Text color="accent" type="supporting" weight="semibold">
-                                    September 4, 2026 | 3 min read
+                                    September 4, 2026 | 4 min read
                                 </Text>
                                 <Heading level={1} textWrap="balance" type="display-1">
                                     Introducing <Wordmark size="inherit" />

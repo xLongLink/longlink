@@ -76,6 +76,7 @@ jobs:
                   done
 
             - name: Validate scaffold
+              working-directory: ${{ runner.temp }}/sample
               run: |
                   set -euo pipefail
 

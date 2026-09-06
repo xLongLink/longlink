@@ -4,7 +4,7 @@ from pwdlib import PasswordHash
 from sqlmodel import col
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import load_only, contains_eager
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
@@ -34,7 +34,21 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     """Return one ordered page of Platform users for administrators."""
 
     # Preserve the existing administrator list visibility, including tombstoned users.
-    statement = select(User).order_by(col(User.name), col(User.id)).offset(pagination.offset).limit(pagination.page_size)
+    statement = (
+        select(User)
+        .options(
+            load_only(
+                User.id,
+                User.name,
+                User.email,
+                User.avatar,
+                User.administrator,
+            )
+        )
+        .order_by(col(User.name), col(User.id))
+        .offset(pagination.offset)
+        .limit(pagination.page_size)
+    )
     result = await session.scalars(statement)
 
     # Count every Platform user visible in the administrator list.
