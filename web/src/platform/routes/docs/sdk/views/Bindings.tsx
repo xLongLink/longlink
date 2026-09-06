@@ -18,7 +18,7 @@ export default function DocsArticleRoute() {
     return (
         <Article page={article}>
             <Seo
-                description="Bind LongLink Solution View components to runtime data and state."
+                description="Bind LongLink View components to runtime data and state."
                 hasBreadcrumbs
                 title="Bindings | LongLink Documentation"
             />

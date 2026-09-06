@@ -91,7 +91,7 @@ export default function Documentation() {
                                 href="/docs/sdk/views"
                                 icon={<FileCode2 aria-hidden size={16} />}
                                 isSelected={pagePath === '/docs/sdk/views'}
-                                label="Solution Views"
+                                label="Views"
                             />
                             <SideNavItem
                                 href="/docs/sdk/testing"

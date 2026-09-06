@@ -1,10 +1,9 @@
 import { Text } from '@astryxdesign/core/Text';
+import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useState, type ReactNode } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
-import { Dialog, DialogHeader } from '@/components/ui/Dialog';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
 type DeleteConfirmationProps = {
     open: boolean;
@@ -38,35 +37,19 @@ export function DeleteConfirmation({
     const handleOpenChange = createGuardedOpenChange(isPending, onOpenChange);
 
     return (
-        <Dialog isOpen={open} onOpenChange={handleOpenChange} purpose={isPending ? 'required' : 'form'}>
-            <Layout
-                header={<DialogHeader title={title} onOpenChange={handleOpenChange} />}
-                content={
-                    <LayoutContent>
-                        <Text as="div" color="secondary">
-                            {description}
-                        </Text>
-                    </LayoutContent>
-                }
-                footer={
-                    <LayoutFooter>
-                        <Stack direction="horizontal" gap={2} justify="end">
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={isPending}
-                                clickAction={() => handleOpenChange(false)}
-                            />
-                            <Button
-                                label="Delete"
-                                variant="destructive"
-                                isLoading={isPending}
-                                clickAction={onConfirm}
-                            />
-                        </Stack>
-                    </LayoutFooter>
-                }
-            />
+        <Dialog isOpen={open} onOpenChange={handleOpenChange} purpose={isPending ? 'required' : 'form'} title={title}>
+            <Text as="div" color="secondary">
+                {description}
+            </Text>
+            <Stack direction="horizontal" gap={2} justify="end">
+                <Button
+                    label="Cancel"
+                    variant="ghost"
+                    isDisabled={isPending}
+                    clickAction={() => handleOpenChange(false)}
+                />
+                <Button label="Delete" variant="destructive" isLoading={isPending} clickAction={onConfirm} />
+            </Stack>
         </Dialog>
     );
 }

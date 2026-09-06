@@ -19,7 +19,7 @@ export default function DocsArticleRoute() {
     return (
         <Article page={article}>
             <Seo
-                description="Test LongLink projects and their Solution Views."
+                description="Test LongLink projects and their Views."
                 hasBreadcrumbs
                 title="Testing | LongLink Documentation"
             />

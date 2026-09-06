@@ -48,7 +48,7 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const staticTabs = new Set<string>();
 
     for (const [index, view] of views.entries()) {
-        // Require each route to resolve one unambiguous Solution View.
+        // Require each route to resolve one unambiguous View.
         if (routes.has(view.route)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }

@@ -113,10 +113,10 @@ function PrivacyContent() {
                 </Text>
                 <Text as="p">
                     When a customer places personal data in a solution, database schema, storage bucket, file, log,
-                    uploaded object, Solution View definition, environment value, or other content processed through
-                    LongLink, the customer generally decides why and how that data is processed and is the controller.
-                    LongLink generally acts as processor for that Customer Content when we operate the hosted Service
-                    for the customer.
+                    uploaded object, View definition, environment value, or other content processed through LongLink,
+                    the customer generally decides why and how that data is processed and is the controller. LongLink
+                    generally acts as processor for that Customer Content when we operate the hosted Service for the
+                    customer.
                 </Text>
                 <Text as="p">
                     If LongLink is self-hosted or operated by another organization, that operator is responsible for its
@@ -215,10 +215,10 @@ function PrivacyContent() {
                         label={
                             <Text>
                                 Customer Content: data stored or processed by solutions, database schemas, storage
-                                buckets, files, Solution View definitions, API routes, and runtime services. We do not
-                                routinely inspect Customer Content, but authorized personnel may access it where
-                                reasonably necessary to provide requested support, investigate abuse or a security
-                                incident, enforce terms, or comply with law.
+                                buckets, files, View definitions, API routes, and runtime services. We do not routinely
+                                inspect Customer Content, but authorized personnel may access it where reasonably
+                                necessary to provide requested support, investigate abuse or a security incident,
+                                enforce terms, or comply with law.
                             </Text>
                         }
                     />

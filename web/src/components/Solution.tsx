@@ -60,7 +60,7 @@ function SolutionXmlRuntime({
     return <RenderXML ast={ast} ctx={runtime} />;
 }
 
-/** Resolves and renders the current manifest-defined Solution View. */
+/** Resolves and renders the current manifest-defined View. */
 export function SolutionRuntime({
     children,
     navigationBaseUrl = '/',
@@ -92,7 +92,7 @@ export function SolutionRuntime({
         enabled: routePath.length > 0 && activeView !== undefined,
         queryKey: ['api', 'solution-view', viewsUrl, activeView?.path],
         queryFn: async ({ signal }) => {
-            if (!activeView) throw new Error('No active Solution View');
+            if (!activeView) throw new Error('No active View');
 
             const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
             const content = await api(viewUrl, { headers: { Accept: 'application/xml' }, signal }).text();

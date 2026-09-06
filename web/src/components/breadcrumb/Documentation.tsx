@@ -4,7 +4,7 @@ const routeLabels: Record<string, string> = {
     docs: 'Documentation',
     api: 'Platform',
     sdk: 'Solutions',
-    views: 'Solution Views',
+    views: 'Views',
 };
 
 /** Renders breadcrumbs for the current documentation URL. */

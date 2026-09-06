@@ -39,7 +39,7 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     The SDK connects that service to LongLink when needed. It provides database and storage access,
                     identifies the signed-in user, packages the source for deployment, and exposes XML interfaces to the
-                    LongLink control plane. These interfaces are called Solution Views. The Platform displays each view
+                    LongLink control plane. These interfaces are called Views. The Platform displays each view
                     consistently while the service owns the information and actions behind it.
                 </Text>
                 <Stack direction="horizontal" gap={8} align="center" justify="center" paddingBlock={4} width="100%">
@@ -83,7 +83,7 @@ export default function DocsArticleRoute() {
                 <Text as="p">The command creates a project scaffold with everything needed to get started.</Text>
                 <CodeBlock
                     code={
-                        '├── src/                  # Project source code\n│   ├── models/           # SQLModel database tables\n│   ├── views/            # Solution View definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Service modules\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic migrations\n├── tests/                # Project tests\n├── main.py               # Service entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Project agent guide\n└── README.md'
+                        '├── src/                  # Project source code\n│   ├── models/           # SQLModel database tables\n│   ├── views/            # View definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Service modules\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic migrations\n├── tests/                # Project tests\n├── main.py               # Service entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Project agent guide\n└── README.md'
                     }
                     language="plaintext"
                 />

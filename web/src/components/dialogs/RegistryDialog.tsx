@@ -1,14 +1,13 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { useForm } from '@tanstack/react-form';
+import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
 import { useId, useState, type ReactNode } from 'react';
-import { Dialog, DialogHeader } from '@/components/ui/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 
 type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
     defaultValues: TValues;
@@ -92,49 +91,39 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                 isOpen={dialog.open}
                 onOpenChange={dialog.handleOpenChange}
                 purpose={dialog.isPending ? 'required' : 'form'}
+                title={title}
                 width={width}
                 maxHeight="calc(100dvh - 2rem)"
             >
-                <Layout
-                    header={<DialogHeader title={title} onOpenChange={dialog.handleOpenChange} />}
-                    content={
-                        <LayoutContent>
-                            <form
-                                id={formId}
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    void dialog.form.handleSubmit();
-                                }}
-                            >
-                                {children}
-                            </form>
-                        </LayoutContent>
-                    }
-                    footer={
-                        <LayoutFooter>
-                            <Stack direction="horizontal" gap={2} justify="end">
-                                <Button
-                                    label="Cancel"
-                                    variant="ghost"
-                                    isDisabled={dialog.isPending}
-                                    clickAction={() => dialog.handleOpenChange(false)}
-                                />
-                                <dialog.form.Subscribe selector={(state) => state.isValid}>
-                                    {(isValid) => (
-                                        <Button
-                                            form={formId}
-                                            type="submit"
-                                            label={dialog.isPending ? 'Creating...' : 'Create'}
-                                            variant="primary"
-                                            isDisabled={!isValid}
-                                            isLoading={dialog.isPending}
-                                        />
-                                    )}
-                                </dialog.form.Subscribe>
-                            </Stack>
-                        </LayoutFooter>
-                    }
-                />
+                <form
+                    id={formId}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void dialog.form.handleSubmit();
+                    }}
+                >
+                    {children}
+                </form>
+                <Stack direction="horizontal" gap={2} justify="end">
+                    <Button
+                        label="Cancel"
+                        variant="ghost"
+                        isDisabled={dialog.isPending}
+                        clickAction={() => dialog.handleOpenChange(false)}
+                    />
+                    <dialog.form.Subscribe selector={(state) => state.isValid}>
+                        {(isValid) => (
+                            <Button
+                                form={formId}
+                                type="submit"
+                                label={dialog.isPending ? 'Creating...' : 'Create'}
+                                variant="primary"
+                                isDisabled={!isValid}
+                                isLoading={dialog.isPending}
+                            />
+                        )}
+                    </dialog.form.Subscribe>
+                </Stack>
             </Dialog>
         </>
     );

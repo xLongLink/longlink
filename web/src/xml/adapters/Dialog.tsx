@@ -5,9 +5,8 @@ import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Dialog as AstryxDialog } from '@/components/ui/Dialog';
 import { coerceXmlBoolean, useBindableValue } from '../core/binding';
-import { Dialog as AstryxDialog, DialogHeader } from '@/components/ui/Dialog';
 import { resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 
 const dialogPropsSchema = z.object({
@@ -37,21 +36,14 @@ export function Dialog({ props, nodes }: Props) {
     return (
         <DialogCloseContext.Provider value={() => binding.setValue(false)}>
             {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
-            <AstryxDialog isOpen={binding.value} onOpenChange={binding.setValue} purpose={purpose}>
-                <Layout
-                    header={
-                        <DialogHeader
-                            onOpenChange={purpose === 'required' ? undefined : binding.setValue}
-                            subtitle={subtitle}
-                            title={title}
-                        />
-                    }
-                    content={
-                        <LayoutContent>
-                            <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
-                        </LayoutContent>
-                    }
-                />
+            <AstryxDialog
+                isOpen={binding.value}
+                purpose={purpose}
+                subtitle={subtitle}
+                title={title}
+                onOpenChange={binding.setValue}
+            >
+                <Stack gap={gap}>{renderNode(nodes, ctx)}</Stack>
             </AstryxDialog>
         </DialogCloseContext.Provider>
     );

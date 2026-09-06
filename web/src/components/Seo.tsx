@@ -5,7 +5,7 @@ const breadcrumbLabels: Record<string, string> = {
     api: 'Platform',
     docs: 'Documentation',
     sdk: 'Solutions',
-    views: 'Solution Views',
+    views: 'Views',
 };
 
 type SeoProps = {

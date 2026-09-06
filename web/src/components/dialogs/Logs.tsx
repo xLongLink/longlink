@@ -1,11 +1,10 @@
 import { api } from '@/lib/api';
+import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Dialog, DialogHeader } from '@/components/ui/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const EMPTY_LOG_LINES: readonly string[] = [];
@@ -43,28 +42,21 @@ export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
     });
 
     return (
-        <Dialog isOpen onOpenChange={onOpenChange} width={768} maxHeight="85vh">
-            <Layout
-                header={<DialogHeader title={details.title} onOpenChange={onOpenChange} />}
-                content={
-                    <LayoutContent>
-                        {isFetching ? (
-                            <Stack align="center" padding={6}>
-                                <Spinner />
-                            </Stack>
-                        ) : error ? (
-                            <Banner status="error" title={error.message || 'Failed to load logs'} />
-                        ) : (
-                            <CodeBlock
-                                code={logLines.length > 0 ? logLines.join('\n') : details.emptyMessage}
-                                isWrapped
-                                maxHeight="60vh"
-                                size="sm"
-                            />
-                        )}
-                    </LayoutContent>
-                }
-            />
+        <Dialog isOpen title={details.title} onOpenChange={onOpenChange} width={768} maxHeight="85vh">
+            {isFetching ? (
+                <Stack align="center" padding={6}>
+                    <Spinner />
+                </Stack>
+            ) : error ? (
+                <Banner status="error" title={error.message || 'Failed to load logs'} />
+            ) : (
+                <CodeBlock
+                    code={logLines.length > 0 ? logLines.join('\n') : details.emptyMessage}
+                    isWrapped
+                    maxHeight="60vh"
+                    size="sm"
+                />
+            )}
         </Dialog>
     );
 }
