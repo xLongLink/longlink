@@ -1,4 +1,5 @@
 import asyncio
+from kr8s import NotFoundError
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
@@ -36,8 +37,10 @@ class Organizations:
 
         # Issue deletion once and then poll only the Namespace state.
         resource = Namespace(namespace, api=await self._client.api())
+        try:
+            await resource.delete()
+        except NotFoundError:
+            return
+
         while await resource.exists():
-            await resource.refresh()
-            if resource.metadata.get("deletionTimestamp") is None:
-                await resource.delete()
             await asyncio.sleep(5)

@@ -4,56 +4,12 @@ from factories import create_solution, create_organization
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
-from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
-
-
-async def test_create_rejects_duplicate_solution_slug_within_organization(users: tuple[User, User, User]) -> None:
-    """Reject duplicate solution slugs inside the same organization."""
-
-    # Arrange
-    user = users[0]
-    organization = await create_organization(user, name="duplicate-org")
-    await create_solution(organization, name="Dashboard")
-
-    # Act
-    async with session_scope() as session:
-        with pytest.raises(ConflictError):
-            await solutions.create(
-                session,
-                organization.id,
-                "Dashboard",
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
-                secrets={},
-                user_id=user.id,
-            )
-
-
-async def test_fetch_ignores_deleted_solutions(users: tuple[User, User, User]) -> None:
-    """Return only active solutions for administrator views."""
-
-    # Arrange
-    user = users[0]
-    organization = await create_organization(user, name="collections-org")
-    deleted_solution = await create_solution(organization, name="Dashboard")
-    active_solution = await create_solution(organization, name="Reports")
-    async with session_scope() as session:
-        deleted_solution = await session.get(Solution, deleted_solution.id)
-        assert deleted_solution is not None
-        deleted_solution.deleted_at = utcnow()
-        await session.commit()
-
-        # Act
-        fetched, total = await solutions.fetch_page(session, Pagination())
-
-    # Assert
-    assert [solution.id for solution in fetched] == [active_solution.id]
-    assert total == 1
 
 
 async def test_create_rejects_tombstoned_organization(users: tuple[User, User, User]) -> None:

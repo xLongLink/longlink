@@ -1,8 +1,8 @@
+import asyncio
 import aioboto3
 import itertools
 from uuid import UUID
 from typing import TYPE_CHECKING, TypedDict, cast
-from contextlib import suppress
 from collections.abc import Mapping
 from exoscale.api.v2 import AsyncClient
 from botocore.exceptions import ClientError
@@ -207,10 +207,14 @@ class Exoscale:
                     "access_key_id": self._string(key, "key"),
                     "secret_access_key": self._string(key, "secret"),
                 }
-        except Exception:
+        except (Exception, asyncio.CancelledError):
             # Name-scoped compensation removes an incomplete deterministic credential generation.
-            with suppress(Exception):
+            try:
                 await self.revoke_solution(name)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                pass
             raise
 
     async def revoke_solution(self, name: str) -> None:

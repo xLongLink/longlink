@@ -61,14 +61,11 @@ def create_engine(env: Envs) -> AsyncEngine:
             database=env.DATABASE_NAME,
         )
 
-    # Configure connection health checks for every database backend.
-    engine_kwargs: dict[str, object] = {
-        "pool_pre_ping": True,
-        "pool_recycle": 20,
-    }
-
-    # Enable LIFO pooling for network database connections.
+    # Configure connection health checks and reuse only for network databases.
+    engine_kwargs: dict[str, object] = {}
     if dburl.get_backend_name() != "sqlite":
+        engine_kwargs["pool_pre_ping"] = True
+        engine_kwargs["pool_recycle"] = 20
         engine_kwargs["pool_use_lifo"] = True
 
     # Preserve the Platform-selected TLS mode and configure UTC PostgreSQL sessions.

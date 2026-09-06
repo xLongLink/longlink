@@ -31,44 +31,30 @@ def test_organization_template_limits_ephemeral_storage() -> None:
         "requests.memory": "512Mi",
     }
 
+
 async def test_organization_apply_creates_namespace_boundary_resources(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply the Namespace, quota, and network policy for one Organization."""
 
     # Arrange
-    applied: list[str] = []
+    applied: list[dict[str, object]] = []
 
-    class Resource:
-        """Keep one rendered resource manifest for assertions."""
+    async def apply(resource: organizations.Namespace | organizations.ResourceQuota | organizations.NetworkPolicy) -> None:
+        """Record the committed resource rendered for Kubernetes."""
 
-        def __init__(self, raw: dict[str, str], **_kwargs: object) -> None:
-            """Store the manifest supplied to the resource constructor."""
+        applied.append(resource.raw)
 
-            self.raw = raw
-
-    async def apply(resource: Resource) -> None:
-        """Record the resource accepted by Kubernetes."""
-
-        applied.append(resource.raw["kind"])
-
-    monkeypatch.setattr(
-        organizations.templates,
-        "readyml_list",
-        lambda *_args, **kwargs: (
-            {"kind": "Namespace", "namespace": kwargs["namespace"]},
-            {"kind": "ResourceQuota", "namespace": kwargs["namespace"]},
-            {"kind": "NetworkPolicy", "namespace": kwargs["namespace"]},
-        ),
-    )
-    monkeypatch.setattr(organizations, "Namespace", Resource)
-    monkeypatch.setattr(organizations, "ResourceQuota", Resource)
-    monkeypatch.setattr(organizations, "NetworkPolicy", Resource)
     monkeypatch.setattr(organizations, "apply", apply)
 
     # Act
     await organizations.Organizations(FakeKubernetes()).apply("acme")  # type: ignore[arg-type]
 
     # Assert
-    assert applied == ["Namespace", "ResourceQuota", "NetworkPolicy"]
+    assert [resource["kind"] for resource in applied] == ["Namespace", "ResourceQuota", "NetworkPolicy"]
+    assert applied[0]["metadata"] == {"name": "acme"}
+    for resource in applied[1:]:
+        metadata = resource["metadata"]
+        assert isinstance(metadata, dict)
+        assert metadata["namespace"] == "acme"
 
 
 async def test_organization_delete_waits_for_namespace_termination(monkeypatch: pytest.MonkeyPatch) -> None:

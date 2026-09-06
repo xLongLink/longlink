@@ -117,7 +117,6 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
             changed_organization_ids.add(invitation.organization_id)
         elif membership.deleted_at is not None:
             membership.role = invitation.role
-            membership.updated_at = utcnow()
             membership.updated_id = user.id
             membership.deleted_at = None
             membership.deleted_id = None

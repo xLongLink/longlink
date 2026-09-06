@@ -117,7 +117,6 @@ async def complete_oauth_login(
         changed_organization_ids = await invitations.accept(session, user)
         await session.commit()
     except IntegrityError:
-        await session.rollback()
         return oauth_failure_response()
 
     # Complete pending membership projection before publishing the signed browser credential.
@@ -326,7 +325,6 @@ async def complete_registration(
         changed_organization_ids = await invitations.accept(session, user)
         await session.commit()
     except IntegrityError as exc:
-        await session.rollback()
         raise HTTPException(
             status_code=409,
             detail="An account with this email already exists. Sign in or reset your password to continue.",

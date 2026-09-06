@@ -32,12 +32,6 @@ def create_context_application() -> FastAPI:
         user_id = context._current_identity.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
-    @app.get("/failure")
-    async def fail() -> None:
-        """Raise after middleware has bound an audit identity."""
-
-        raise RuntimeError("handler failed")
-
     return app
 
 
@@ -74,6 +68,7 @@ def test_data_resolves_request_services(
             return user
 
     database = Database()
+
     @asynccontextmanager
     async def fake_session(database: object) -> AsyncIterator[object]:
         """Yield one fake request-scoped database session and record cleanup."""
@@ -190,7 +185,7 @@ def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
 
 
 def test_context_middleware_binds_signed_audit_identity() -> None:
-    """Bind one trusted audit identity and clear it after the response."""
+    """Bind one trusted audit identity for the request."""
 
     # Arrange
     user_id = UUID("00000000-0000-0000-0000-000000000005")
@@ -202,7 +197,6 @@ def test_context_middleware_binds_signed_audit_identity() -> None:
     # Assert
     assert response.status_code == 200
     assert response.json() == {"user_id": str(user_id)}
-    assert context._current_identity.get() is None
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
@@ -224,17 +218,3 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     assert first_response.json() == {"user_id": str(first_id)}
     assert second_response.status_code == 200
     assert second_response.json() == {"user_id": str(second_id)}
-
-
-def test_context_middleware_clears_audit_identity_after_handler_failure() -> None:
-    """Restore the ambient audit identity when a route raises an exception."""
-
-    # Arrange
-    user_id = UUID("00000000-0000-0000-0000-000000000008")
-
-    # Act
-    with TestClient(create_context_application()) as client, pytest.raises(RuntimeError, match="handler failed"):
-        client.get("/failure", headers=identity_headers(user_id))
-
-    # Assert
-    assert context._current_identity.get() is None

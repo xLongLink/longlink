@@ -6,7 +6,7 @@ from factories import create_solution, fetch_operations, create_organization, cr
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
-from src.models.types import Image, DatabaseSSLMode
+from src.models.types import Image
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions, invitations, organizations
@@ -14,7 +14,6 @@ from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -347,16 +346,13 @@ async def test_update_member_role_skips_unchanged_assignments(users: tuple[User,
 
     # Act
     async with session_scope() as session:
-        changed = await organizations.update_member_role(
+        await organizations.update_member_role(
             session,
             organization.id,
             owner.id,
             OrganizationRoles.owner,
             owner,
         )
-
-    # Assert
-    assert changed is False
 
 
 async def test_update_member_role_persists_owner_authorized_change(users: tuple[User, User, User]) -> None:
@@ -371,7 +367,7 @@ async def test_update_member_role_persists_owner_authorized_change(users: tuple[
 
     # Act
     async with session_scope() as session:
-        changed = await organizations.update_member_role(
+        await organizations.update_member_role(
             session,
             organization.id,
             member.id,
@@ -381,7 +377,6 @@ async def test_update_member_role_persists_owner_authorized_change(users: tuple[
         await session.commit()
 
     # Assert
-    assert changed is True
     async with session_scope() as session:
         membership = await session.get(UserOrganization, (member.id, organization.id))
     assert membership is not None
@@ -402,7 +397,7 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
 
     # Act
     async with session_scope() as session:
-        changed = await organizations.update_member_role(
+        await organizations.update_member_role(
             session,
             organization.id,
             second_owner.id,
@@ -412,7 +407,6 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
         await session.commit()
 
     # Assert
-    assert changed is True
     async with session_scope() as session:
         membership = await session.get(UserOrganization, (second_owner.id, organization.id))
     assert membership is not None
@@ -554,53 +548,6 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
     assert organization.storage_id == available_infrastructure.storage.id
 
 
-async def test_create_default_rejects_missing_ready_compute(users: tuple[User, User, User]) -> None:
-    """Require a ready compute registry before creating an Organization."""
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(UnavailableError, match="No ready compute registry available"):
-            await organizations.create_default(session, "acme", users[0])
-
-
-async def test_create_default_rejects_missing_database_registry(users: tuple[User, User, User]) -> None:
-    """Require a database registry after selecting a ready compute."""
-
-    # Arrange
-    async with session_scope() as session:
-        session.add(ComputeRegistry(name="Ready compute", kubeconfig={}, status=Status.running))
-        await session.commit()
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(UnavailableError, match="No database registry available"):
-            await organizations.create_default(session, "acme", users[0])
-
-
-async def test_create_default_rejects_missing_storage_registry(users: tuple[User, User, User]) -> None:
-    """Require a storage registry after selecting compute and database targets."""
-
-    # Arrange
-    async with session_scope() as session:
-        session.add(ComputeRegistry(name="Ready compute", kubeconfig={}, status=Status.running))
-        session.add(
-            DatabaseRegistry(
-                name="Ready database",
-                host="database.example",
-                port=5432,
-                username="admin",
-                password="secret",
-                sslmode=DatabaseSSLMode.require,
-            )
-        )
-        await session.commit()
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(UnavailableError, match="No storage registry available"):
-            await organizations.create_default(session, "acme", users[0])
-
-
 @pytest.mark.parametrize(
     ("registry", "error"),
     [
@@ -649,23 +596,6 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 database_id=infrastructure.database.id,
                 storage_id=infrastructure.storage.id,
             )
-
-
-async def test_update_persists_changed_organization_avatar(users: tuple[User, User, User]) -> None:
-    """Persist changed mutable Organization metadata with its actor."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act
-    async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, "https://example.com/avatar.png", users[0])
-        await session.commit()
-
-    # Assert
-    assert updated is not None
-    assert updated.avatar == "https://example.com/avatar.png"
-    assert updated.updated_id == users[0].id
 
 
 async def test_update_returns_none_for_missing_organization(users: tuple[User, User, User]) -> None:

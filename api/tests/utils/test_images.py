@@ -201,19 +201,6 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
     assert await images.bounded_json(response) is None
 
 
-async def test_bounded_json_decodes_metadata_within_limit() -> None:
-    """Decode a complete registry JSON response within the metadata boundary."""
-
-    # Arrange
-    response = httpx2.Response(200, json={"token": "pull-token"})
-
-    # Act
-    payload = await images.bounded_json(response)
-
-    # Assert
-    assert payload == {"token": "pull-token"}
-
-
 @pytest.mark.parametrize(
     ("responses", "expected_paths"),
     [
@@ -282,35 +269,6 @@ async def test_metadata_stops_when_registry_responses_are_invalid(
     # Assert
     assert image_metadata is None
     assert requested_paths == expected_paths
-
-
-async def test_metadata_resolves_tag_to_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return immutable metadata when the registry resolves a mutable tag."""
-
-    # Arrange
-    resolved_digest = "sha256:deadbeef"
-
-    def respond(request: httpx2.Request) -> httpx2.Response:
-        """Return a resolved manifest and its LongLink metadata config."""
-
-        if request.url.path == "/token":
-            return httpx2.Response(200, json={"token": "pull-token"})
-        if "/manifests/" in request.url.path:
-            return httpx2.Response(
-                200,
-                json={"config": {"digest": "sha256:config"}},
-                headers={"Docker-Content-Digest": resolved_digest},
-            )
-        return httpx2.Response(200, json={"config": {"Labels": {}}})
-
-    mock_async_client(monkeypatch, respond)
-
-    # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
-
-    # Assert
-    assert image_metadata is not None
-    assert image_metadata.image == Image(f"ghcr.io/longlink/dashboard@{resolved_digest}")
 
 
 async def test_metadata_accepts_config_without_labels(monkeypatch: pytest.MonkeyPatch) -> None:

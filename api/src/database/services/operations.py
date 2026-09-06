@@ -5,7 +5,6 @@ from sqlalchemy import String, or_, case, cast, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
-from sqlalchemy.engine import CursorResult
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.models.operations import OperationKind, OperationResource, OperationResponse
@@ -51,9 +50,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
     }
     solution_target_ids = {
-        operation.target_id
-        for operation in operations
-        if operation.kind in {OperationKind.solution_create, OperationKind.solution_delete}
+        operation.target_id for operation in operations if operation.kind in {OperationKind.solution_create, OperationKind.solution_delete}
     }
 
     # Load compact resource details for each target type.
@@ -74,9 +71,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             resource_names[(OperationKind.organization_delete, resource_id)] = name
 
     if solution_target_ids:
-        result = await session.execute(
-            select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids))
-        )
+        result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
         for resource_id, name in result.all():
             resource_names[(OperationKind.solution_create, resource_id)] = name
             resource_names[(OperationKind.solution_delete, resource_id)] = name
@@ -115,8 +110,6 @@ async def clear_expired_logs(session: AsyncSession) -> int:
         )
         .values(logs=[])
     )
-    if not isinstance(result, CursorResult):
-        raise TypeError("Expected a cursor result")
     return result.rowcount
 
 
@@ -221,8 +214,6 @@ async def claim(session: AsyncSession) -> Operation | None:
         )
         .values(lease_expires_at=now + timedelta(minutes=30))
     )
-    if not isinstance(result, CursorResult):
-        raise TypeError("Expected a cursor result")
     if result.rowcount != 1:
         return None
 
