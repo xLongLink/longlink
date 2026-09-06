@@ -1,6 +1,6 @@
 import asyncio
 import contextlib
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from pathlib import Path
 from src.utils import jobs
 from src.errors import ServiceError
@@ -9,7 +9,6 @@ from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
 from longlink.middleware import FrontendMiddleware
-from starlette.responses import Response
 from src.database.session import session_scope
 from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware

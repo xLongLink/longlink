@@ -4,7 +4,6 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
-from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
@@ -58,10 +57,10 @@ async def create(solution_id: UUID) -> None:
                 infrastructure.database.sslmode,
             )
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
-        except Exception:
+        except BaseException:
             try:
                 await object_storage.revoke_solution(solution.id.hex)
-            except Exception:
+            except BaseException:
                 logger.exception("Could not revoke storage credentials for Solution '%s'", solution.id)
             raise
 
@@ -98,8 +97,6 @@ async def create(solution_id: UUID) -> None:
                 )
                 .values(secrets=runtime_secrets)
             )
-            if not isinstance(result, CursorResult):
-                raise TypeError("Expected a cursor result")
             if result.rowcount != 1:
                 return
 

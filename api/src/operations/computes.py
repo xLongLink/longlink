@@ -3,7 +3,6 @@ from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import update
 from src.logger import logger
-from sqlalchemy.engine import CursorResult
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.kubernetes.client import Kubernetes
@@ -73,8 +72,6 @@ async def create(compute_id: UUID) -> str | None:
                     status=Status.running,
                 )
             )
-            if not isinstance(result, CursorResult):
-                raise TypeError("Expected a cursor result")
             if result.rowcount != 1:
                 return "Compute gateway state was not recorded"
             await session.commit()

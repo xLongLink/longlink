@@ -37,19 +37,17 @@ def get_session() -> async_sessionmaker[AsyncSession]:
 
     connection = urls.database(env.DATABASE_URL)
 
-    engine_kwargs: dict[str, object] = {
-        "connect_args": connection.connect_args,
-        "pool_pre_ping": True,
-        "pool_recycle": 20,
-    }
+    engine_kwargs: dict[str, object] = {"connect_args": connection.connect_args}
+
+    # Keep connection health checks and reuse policies limited to network databases.
+    if not connection.url.drivername.startswith("sqlite+"):
+        engine_kwargs["pool_pre_ping"] = True
+        engine_kwargs["pool_recycle"] = 20
+        engine_kwargs["pool_use_lifo"] = True
 
     # Match PostgreSQL semantics and avoid InnoDB absent-key gap-lock deadlocks.
     if connection.url.drivername == "mysql+aiomysql":
         engine_kwargs["isolation_level"] = "READ COMMITTED"
-
-    # Enable LIFO pooling for network database connections.
-    if not connection.url.drivername.startswith("sqlite+"):
-        engine_kwargs["pool_use_lifo"] = True
 
     engine = create_async_engine(connection.url, **engine_kwargs)
 

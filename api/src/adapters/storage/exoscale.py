@@ -207,9 +207,9 @@ class Exoscale:
                     "access_key_id": self._string(key, "key"),
                     "secret_access_key": self._string(key, "secret"),
                 }
-        except Exception:
+        except BaseException:
             # Name-scoped compensation removes an incomplete deterministic credential generation.
-            with suppress(Exception):
+            with suppress(BaseException):
                 await self.revoke_solution(name)
             raise
 

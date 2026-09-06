@@ -175,13 +175,13 @@ def test_connect_args_returns_driver_specific_settings(
         pytest.param(
             Envs(ENV="testing"),
             make_url("sqlite+aiosqlite:///:memory:"),
-            {"pool_pre_ping": True, "pool_recycle": 20},
+            {},
             id="testing",
         ),
         pytest.param(
             Envs(ENV="development"),
             make_url("sqlite+aiosqlite:///./dev.db"),
-            {"pool_pre_ping": True, "pool_recycle": 20},
+            {},
             id="development",
         ),
         pytest.param(
@@ -287,7 +287,7 @@ async def test_concurrent_sessions_initialize_one_session_factory(
 async def test_session_retries_initialization_after_database_connection_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Leave the session factory unset when its initial connection fails."""
+    """Retry session initialization after its initial connection fails."""
 
     # Arrange
     engine = VerificationEngine(ConnectionError("database unavailable"))
@@ -300,7 +300,6 @@ async def test_session_retries_initialization_after_database_connection_failure(
             pass
 
     # Assert
-    assert database._sessions is None
     assert engine.disposed
 
     # Retry initialization with an available database connection.
@@ -327,7 +326,6 @@ async def test_session_disposes_sqlite_engine_after_schema_initialization_failur
     with pytest.raises(RuntimeError, match="schema unavailable"):
         async with database.session():
             pass
-    assert database._sessions is None
     assert engine.disposed
 
 

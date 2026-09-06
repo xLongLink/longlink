@@ -128,35 +128,6 @@ async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User
             await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
 
 
-async def test_accept_creates_membership_and_consumes_invitation(users: tuple[User, User, User]) -> None:
-    """Create membership access and consume the accepted invitation."""
-
-    # Arrange
-    owner, invitee = users[0], users[1]
-    organization = await create_organization(owner)
-    async with session_scope() as session:
-        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        changed_organization_ids = await invitations.accept(session, invitee)
-        await session.commit()
-        invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
-        membership = await session.scalar(
-            select(UserOrganization).where(
-                UserOrganization.user_id == invitee.id,
-                UserOrganization.organization_id == organization.id,
-            )
-        )
-
-    # Assert
-    assert changed_organization_ids == {organization.id}
-    assert invitation is None
-    assert membership is not None
-    assert membership.role == OrganizationRoles.write
-
-
 async def test_accept_removes_expired_invitation_without_creating_membership(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:

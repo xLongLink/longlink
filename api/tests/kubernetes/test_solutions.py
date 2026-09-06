@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID
-from typing import ClassVar
+from typing import ClassVar, Protocol
 from conftest import FakeKubernetes
 from src.utils import templates
 from src.kubernetes import solutions
@@ -8,6 +8,12 @@ from collections.abc import AsyncIterator
 from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
+
+
+class AppliedResource(Protocol):
+    """Expose the desired manifest sent to Kubernetes."""
+
+    raw: dict[str, object]
 
 
 def test_solution_template_limits_ephemeral_storage() -> None:
@@ -59,23 +65,23 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
     applied: list[str] = []
     logged: list[str] = []
 
-    class Resource:
-        """Represent a Kubernetes resource without reaching a cluster."""
-
-        def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Keep the resource manifest for apply assertions."""
-
-            self.raw = raw
-            self.api = _kwargs.get("api")
-
-    class MigrationJob(Resource):
+    class MigrationJob:
         """Report a terminally failed migration Job."""
 
-        name = "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
-        namespace = "acme"
+        def __init__(self, raw: dict[str, object], *, api: object) -> None:
+            """Keep the desired Job and expose its rendered identity."""
+
+            metadata = raw.get("metadata")
+            assert isinstance(metadata, dict)
+            assert isinstance(metadata.get("name"), str)
+            assert isinstance(metadata.get("namespace"), str)
+            self.raw = raw
+            self.api = api
+            self.name = metadata["name"]
+            self.namespace = metadata["namespace"]
 
         async def wait(self, conditions: list[str]) -> None:
-            """Accept the migration terminal conditions."""
+            """Supply the failed status returned by Kubernetes."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
             self.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
@@ -92,9 +98,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             """Yield the failed migration Pod selected by its Job label."""
 
             assert kwargs["namespace"] == "acme"
-            assert kwargs["label_selector"] == {
-                "job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840"
-            }
+            assert kwargs["label_selector"] == {"job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840"}
             yield cls()
 
         async def logs(self, tail_lines: int) -> AsyncIterator[str]:
@@ -113,7 +117,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             if False:
                 yield cls()
 
-    async def apply(resource: Resource) -> None:
+    async def apply(resource: AppliedResource) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
@@ -123,23 +127,9 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
 
         logged.append(message % args)
 
-    monkeypatch.setattr(
-        solutions.templates,
-        "readyml_list",
-        lambda *_args, **_kwargs: (
-            {"kind": "Job"},
-            {"kind": "Deployment"},
-            {"kind": "Service"},
-            {"kind": "HTTPRoute"},
-        ),
-    )
-    monkeypatch.setattr(solutions, "Secret", Resource)
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Pod", MigrationPod)
     monkeypatch.setattr(solutions, "Event", MigrationEvent)
-    monkeypatch.setattr(solutions, "Service", Resource)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
     monkeypatch.setattr(solutions.logger, "error", log_error)
 
@@ -162,58 +152,33 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
     applied: list[str] = []
 
     class Resource:
-        """Represent a ready Kubernetes resource without reaching a cluster."""
+        """Supply Kubernetes-generated rollout state for desired resources."""
 
         def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
             """Expose the resource fields queried during rollout."""
 
+            metadata = raw.get("metadata")
+            spec = raw.get("spec")
+            assert isinstance(metadata, dict)
+            assert isinstance(spec, dict)
             self.raw = raw
-            self.metadata = raw.get("metadata", {})
-            self.spec = raw.get("spec", {})
-
-        async def exists(self) -> bool:
-            """Keep the resource present during rollout."""
-
-            return True
+            self.metadata = metadata
+            self.spec = spec
 
         async def refresh(self) -> None:
-            """Keep the ready resource state unchanged."""
+            """Supply ready controller status for the committed manifest."""
 
-    class MigrationJob(Resource):
-        """Report a completed migration Job."""
-
-        async def wait(self, conditions: list[str]) -> None:
-            """Accept the migration terminal conditions."""
-
-            assert conditions == ["condition=Complete", "condition=Failed"]
-            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
-
-    async def apply(resource: Resource) -> None:
-        """Record the resources accepted by Kubernetes."""
-
-        applied.append(str(resource.raw.get("kind", "Secret")))
-
-    monkeypatch.setattr(
-        solutions.templates,
-        "readyml_list",
-        lambda *_args, **_kwargs: (
-            {"kind": "Job"},
-            {
-                "kind": "Deployment",
-                "metadata": {"generation": 1},
-                "spec": {"replicas": 1},
-                "status": {
+            if self.raw.get("kind") == "Deployment":
+                self.metadata["generation"] = 1
+                self.raw["status"] = {
                     "observedGeneration": 1,
                     "replicas": 1,
                     "updatedReplicas": 1,
                     "readyReplicas": 1,
                     "availableReplicas": 1,
-                },
-            },
-            {"kind": "Service"},
-            {
-                "kind": "HTTPRoute",
-                "status": {
+                }
+            elif self.raw.get("kind") == "HTTPRoute":
+                self.raw["status"] = {
                     "parents": [
                         {
                             "conditions": [
@@ -222,13 +187,23 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
                             ]
                         }
                     ]
-                },
-            },
-        ),
-    )
-    monkeypatch.setattr(solutions, "Secret", Resource)
+                }
+
+    class MigrationJob(Resource):
+        """Report a completed migration Job."""
+
+        async def wait(self, conditions: list[str]) -> None:
+            """Supply the completed status returned by Kubernetes."""
+
+            assert conditions == ["condition=Complete", "condition=Failed"]
+            self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
+
+    async def apply(resource: AppliedResource) -> None:
+        """Record the resources accepted by Kubernetes."""
+
+        applied.append(str(resource.raw.get("kind", "Secret")))
+
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Service", Resource)
     monkeypatch.setattr(solutions, "Deployment", Resource)
     monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
@@ -252,22 +227,25 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
     applied: list[str] = []
 
     class Resource:
-        """Represent a Kubernetes resource without reaching a cluster."""
+        """Supply Kubernetes-generated quota failure state."""
 
         def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
             """Expose the resource fields queried during rollout."""
 
             self.raw = raw
-            self.metadata = raw.get("metadata", {})
-            self.spec = raw.get("spec", {})
-
-        async def exists(self) -> bool:
-            """Keep the Deployment present during rollout."""
-
-            return True
 
         async def refresh(self) -> None:
-            """Keep the quota-failure state unchanged."""
+            """Supply the quota admission failure returned by Kubernetes."""
+
+            self.raw["status"] = {
+                "conditions": [
+                    {
+                        "type": "ReplicaFailure",
+                        "reason": "FailedCreate",
+                        "message": "exceeded quota: solution Pods",
+                    }
+                ]
+            }
 
     class MigrationJob(Resource):
         """Report a completed migration Job."""
@@ -277,37 +255,13 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-    async def apply(resource: Resource) -> None:
+    async def apply(resource: AppliedResource) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
 
-    monkeypatch.setattr(
-        solutions.templates,
-        "readyml_list",
-        lambda *_args, **_kwargs: (
-            {"kind": "Job"},
-            {
-                "kind": "Deployment",
-                "status": {
-                    "conditions": [
-                        {
-                            "type": "ReplicaFailure",
-                            "reason": "FailedCreate",
-                            "message": "exceeded quota: solution Pods",
-                        }
-                    ]
-                },
-            },
-            {"kind": "Service"},
-            {"kind": "HTTPRoute"},
-        ),
-    )
-    monkeypatch.setattr(solutions, "Secret", Resource)
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Service", Resource)
     monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
 
     # Act and assert
@@ -346,19 +300,11 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-    async def apply(_resource: Resource) -> None:
+    async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
-    monkeypatch.setattr(
-        solutions.templates,
-        "readyml_list",
-        lambda *_args, **_kwargs: ({"kind": "Job"}, {"kind": "Deployment"}, {"kind": "Service"}, {"kind": "HTTPRoute"}),
-    )
-    monkeypatch.setattr(solutions, "Secret", Resource)
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Service", Resource)
     monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
 
     # Act and assert
@@ -372,24 +318,26 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
     """Retry rollout polling until the Deployment and HTTPRoute are ready."""
 
     # Arrange
-    deployment_manifest = {"kind": "Deployment", "metadata": {"generation": 1}, "spec": {"replicas": 1}, "status": {}}
-    route_manifest: dict[str, object] = {"kind": "HTTPRoute", "status": {"parents": []}}
     sleeps: list[float] = []
 
     class Resource:
         """Represent a Kubernetes resource without reaching a cluster."""
 
         def __init__(self, raw: dict[str, object], **_kwargs: object) -> None:
-            """Expose the resource fields queried during rollout."""
+            """Keep one committed manifest for generated status updates."""
 
+            metadata = raw.get("metadata")
+            spec = raw.get("spec")
+            assert isinstance(metadata, dict)
+            assert isinstance(spec, dict)
             self.raw = raw
-            self.metadata = raw.get("metadata", {})
-            self.spec = raw.get("spec", {})
-
-        async def exists(self) -> bool:
-            """Keep the Deployment present during rollout."""
-
-            return True
+            self.metadata = metadata
+            self.spec = spec
+            kind = raw.get("kind")
+            assert isinstance(kind, str)
+            resources[kind] = self
+            if kind == "Deployment":
+                self.metadata["generation"] = 1
 
         async def refresh(self) -> None:
             """Keep resource state current between polling attempts."""
@@ -402,7 +350,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
-    async def apply(_resource: Resource) -> None:
+    async def apply(_resource: AppliedResource) -> None:
         """Accept a resource without contacting Kubernetes."""
 
     async def sleep(delay: float) -> None:
@@ -410,7 +358,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
         sleeps.append(delay)
         if len(sleeps) == 1:
-            deployment_manifest["status"] = {
+            resources["Deployment"].raw["status"] = {
                 "observedGeneration": 1,
                 "replicas": 1,
                 "updatedReplicas": 1,
@@ -418,23 +366,13 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
                 "availableReplicas": 1,
             }
         else:
-            route_manifest["status"] = {
+            resources["HTTPRoute"].raw["status"] = {
                 "parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]
             }
 
-    monkeypatch.setattr(
-        solutions.templates,
-        "readyml_list",
-        lambda *_args, **_kwargs: (
-            {"kind": "Job"},
-            deployment_manifest,
-            {"kind": "Service"},
-            route_manifest,
-        ),
-    )
-    monkeypatch.setattr(solutions, "Secret", Resource)
+    resources: dict[str, Resource] = {}
+
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Service", Resource)
     monkeypatch.setattr(solutions, "Deployment", Resource)
     monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)

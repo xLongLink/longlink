@@ -53,19 +53,20 @@ export default function IntroducingLongLink() {
                         <Stack as="section" gap={6}>
                             <Stack gap={4}>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Generative AI has changed how software is built.
+                                    Generative AI has changed how software is built, opening two paths from traditional
+                                    coding.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Two narratives have emerged. In one direction, we fully delegate the work to an
-                                    agent and simply trust its implementation, hoping that tomorrow&apos;s model will
-                                    fix today&apos;s issues. This approach can be dangerous, as the solution gradually
-                                    becomes a black box that is difficult to audit, debug, and maintain.
+                                    In one direction, we delegate the work to an agent and trust its implementation,
+                                    hoping that tomorrow&apos;s model will fix today&apos;s issues. Without careful
+                                    review, the solution can gradually become a black box that is difficult to audit,
+                                    debug, and maintain.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    The other path sees AI as a tool rather than a replacement for human judgment.
-                                    Humans remain responsible for the key decisions, architecture, and validation of the
-                                    solution. This keeps the development process transparent, making assumptions,
-                                    trade-offs, and errors easier to understand and audit.
+                                    The other path keeps human judgment at the center. AI accelerates the work, while
+                                    humans remain responsible for key decisions, architecture, and validation. This
+                                    keeps the development process transparent, making assumptions, trade-offs, and
+                                    errors easier to identify and understand.
                                 </Text>
                                 <Card
                                     className="handwritten-diagram relative overflow-hidden"
@@ -73,7 +74,7 @@ export default function IntroducingLongLink() {
                                     variant="transparent"
                                 >
                                     <img
-                                        alt="Classical coding splitting into hybrid coding and vibe coding paths"
+                                        alt="Classical coding branches into hybrid coding and vibe coding"
                                         className="aspect-video w-full object-contain"
                                         src="/images/paths.png"
                                     />
@@ -112,15 +113,14 @@ export default function IntroducingLongLink() {
                                     </Stack>
                                 </Card>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Initial implementation speed can come at the cost of long-term maintainability.
-                                    Technical debt is key to understanding this trade-off: AI can dramatically
-                                    accelerate development, but without sufficient human oversight, complexity
-                                    accumulates and the initial speed advantage is gradually offset by higher
-                                    maintenance costs.
+                                    The difference becomes clearer over time. A fast initial implementation can come at
+                                    the cost of long-term maintainability. Without sound engineering and sufficient
+                                    oversight, technical debt accumulates, and the initial speed advantage can be eroded
+                                    by the cost of maintaining and changing the software.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    This idea is at the core of LongLink. In particular, three fundamental principles
-                                    have guided its design and development:
+                                    LongLink is built around this challenge. Three fundamental principles guide its
+                                    design and development.
                                 </Text>
                             </Stack>
                         </Stack>
@@ -131,36 +131,37 @@ export default function IntroducingLongLink() {
                                     <Icon className="mt-1" color="accent" icon={Minimize2} size="lg" />
                                     <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                         <Text color="primary" weight="semibold">
-                                            Keep it simple:
+                                            Keep it simple
                                         </Text>
                                         <br />
-                                        In a world of growing complexity, simplicity becomes a luxury. A clear and
-                                        simple process is easier to operate, reason about, and audit, and less expensive
-                                        to maintain.
+                                        A clear, simple process is easier to operate, understand, and audit. It is also
+                                        less expensive to maintain. As complexity grows, keeping things simple requires
+                                        deliberate choices.
                                     </Text>
                                 </Stack>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
                                     <Icon className="mt-1" color="accent" icon={ShieldCheck} size="lg" />
                                     <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                         <Text color="primary" weight="semibold">
-                                            Own the process:
+                                            Own the process
                                         </Text>
                                         <br />
-                                        Ownership, control, and accountability are fundamental to building resilient
-                                        infrastructure. They matter even more amid geopolitical uncertainty, where
-                                        control over data and workflows matters more than ever.
+                                        Ownership means retaining control over your data, workflows, and the software
+                                        that supports them. It also means being accountable for how the process works
+                                        and ensuring it fits your requirements. Geopolitical uncertainty makes
+                                        understanding and managing these dependencies even more important.
                                     </Text>
                                 </Stack>
                                 <Stack direction="horizontal" gap={3} vAlign="start">
                                     <Icon className="mt-1" color="accent" icon={Split} size="lg" />
                                     <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                         <Text color="primary" weight="semibold">
-                                            Separate responsibilities:
+                                            Separate responsibilities
                                         </Text>
                                         <br />
-                                        Responsibilities should be clearly separated between human decisions and
-                                        machine-executed tasks, and between technical implementation and business
-                                        requirements.
+                                        People remain responsible for decisions and judgment; machines execute clearly
+                                        defined tasks. Business users define how the work should happen, while
+                                        developers translate those requirements into reliable software.
                                     </Text>
                                 </Stack>
                             </Stack>
@@ -176,41 +177,61 @@ export default function IntroducingLongLink() {
                         <Stack gap={10} paddingBlockStart={6}>
                             <Stack as="section" gap={4}>
                                 <Heading level={2} textWrap="balance" type="display-3">
-                                    The Vision
+                                    The vision
                                 </Heading>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    These principles are combined with the core idea of modern software development:
-                                    work is performed locally, while code, history, collaboration, and validation exist
-                                    in the cloud. This creates a shared space where software lives and its evolution can
-                                    be understood, reviewed, and controlled.
+                                    Modern software development provides a useful model. Developers can work locally,
+                                    while shared repositories and cloud services bring together code, history,
+                                    collaboration, and automated checks. Changes can be understood, reviewed, tested,
+                                    and traced over time.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    This environment was designed to integrate easily with external tools and services.
-                                    A repository contains all the context required to complete a task, reducing the
-                                    guesswork required by AI agents and improving their accuracy.
+                                    A well-maintained repository brings implementation, documentation, and tests into
+                                    one place. Combined with access to relevant tools and services, this gives both
+                                    developers and AI agents the context they need to work with less guesswork.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Outside the development environment, this model breaks down. Data and processes are
-                                    fragmented across legacy systems, low-code platforms, spreadsheets, databases,
-                                    documents, and disconnected applications.
+                                    Business operations rarely have the same structure. Data and processes are often
+                                    scattered across legacy systems, low-code platforms, spreadsheets, databases,
+                                    documents, and disconnected applications. Understanding how a process works means
+                                    piecing together information from all of them.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    LongLink brings the same integrated model to business applications: a shared
-                                    platform where processes, logic, data, and workflows live together. It provides the
-                                    infrastructure needed to build, deploy, operate, and govern solutions, giving
-                                    developers, business users, and agents a structured working environment.
+                                    LongLink aims to bring the discipline of software development to business
+                                    applications: a shared platform where processes, application logic, data, and
+                                    workflows can be managed together. It provides the foundation to build, deploy,
+                                    operate, and govern solutions, giving developers, business users, and agents a
+                                    structured environment in which to work.
                                 </Text>
                             </Stack>
 
                             <Stack as="section" gap={6} paddingBlockStart={2}>
                                 <Stack gap={4}>
                                     <Heading level={2} textWrap="balance" type="display-3">
-                                        How does it work
+                                        How it works
                                     </Heading>
                                     <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                        LongLink is an open-source foundation for building, deploying, and operating
-                                        business software with standard Python tools. It separates the code that
-                                        describes a process from the shared services required to run that code reliably.
+                                        Building a custom solution from end to end gives you the greatest flexibility.
+                                        You can shape it around the exact requirements of a process. That flexibility
+                                        comes at a cost, however: everything surrounding the core application logic must
+                                        also be implemented and maintained.
+                                    </Text>
+                                    <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                        Deployment is an obvious example. The application needs somewhere to run, along
+                                        with the infrastructure to keep it available. Managed deployment platforms
+                                        simplify this work.
+                                    </Text>
+                                    <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                        Then come the services the application depends on: authentication, permissions,
+                                        storage, and user management. Existing services provide these capabilities
+                                        through APIs and SDKs—interfaces and libraries that help developers connect them
+                                        to an application.
+                                    </Text>
+                                    <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                        These services reduce the amount of software you need to build, but integrating
+                                        them remains part of the work. Developers still need to connect them to the
+                                        application logic, make them work together, and maintain those connections as
+                                        the solution evolves.
                                     </Text>
                                 </Stack>
                                 <Card
@@ -219,7 +240,7 @@ export default function IntroducingLongLink() {
                                     variant="transparent"
                                 >
                                     <img
-                                        alt="An AI assistant connected to a LongLink solution, services, and infrastructure"
+                                        alt="Core application logic surrounded by services and deployment infrastructure"
                                         className="aspect-video w-full object-contain"
                                         src="/images/platform.png"
                                     />
@@ -243,36 +264,66 @@ export default function IntroducingLongLink() {
                                     </Text>
                                 </Card>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    Each project becomes a LongLink Solution: a standard Python and FastAPI service
-                                    containing its data models, rules, workflows, integrations, routes, and interfaces.
-                                    Developers focus on business logic they can inspect, review, test, and change, while
-                                    the LongLink Platform handles authentication, permissions, deployment, storage,
-                                    routing, logging, governance, and operational structure. Users define how the work
-                                    should happen, and every Solution gets a consistent foundation without rebuilding
-                                    those common services for each process.
+                                    LongLink brings these common capabilities into a shared foundation, allowing
+                                    developers to focus on the logic of the process itself.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Its focus is internal business applications, where software must align closely with
+                                    an organization&apos;s workflows, responsibilities, and requirements. The process
+                                    determines how the application should work.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    The application logic remains conventional Python code. Python offers readable
+                                    syntax and a broad ecosystem, with established libraries such as FastAPI, Pydantic,
+                                    SQLAlchemy, and Alembic providing the building blocks for APIs, validation, data
+                                    access, and database migrations.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    The code lives in a repository and follows standard software-engineering practices:
+                                    testing, code review, versioning, automated deployment, and releases.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    We call this a{' '}
+                                    <Text color="primary" weight="semibold">
+                                        Solution
+                                    </Text>
+                                    : a repository that captures how a process works through its code, configuration,
+                                    documentation, and tests. It can be inspected, reviewed, maintained, and adapted as
+                                    requirements, processes, or regulations change.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    LongLink provides the infrastructure around each Solution. Each organization
+                                    receives a dedicated database and storage bucket, while every deployed Solution runs
+                                    in an isolated namespace with its own resources.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    Developers focus on implementing the process, business users define and validate its
+                                    requirements, and LongLink handles the common infrastructure needed to run it.
                                 </Text>
                             </Stack>
 
                             <Stack as="section" gap={4} paddingBlockStart={2}>
                                 <Heading level={2} textWrap="balance" type="display-3">
-                                    What next
+                                    What’s next
                                 </Heading>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
                                     The core architecture is complete, and the public beta is live. Try it, test it, and
                                     break it.
                                 </Text>
                                 <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
-                                    LongLink is open source. Leave us a{' '}
+                                    LongLink is open source.{' '}
                                     <Link
                                         hasUnderline
                                         href="https://github.com/xLongLink/longlink"
                                         isExternalLink
                                         type="inherit"
                                     >
-                                        star
+                                        Leave us a star on GitHub
                                     </Link>{' '}
-                                    and help us build what comes next. For questions, feedback, or collaboration, reach
-                                    out at{' '}
+                                    and help us build what comes next.
+                                </Text>
+                                <Text as="p" className="text-justify" color="secondary" textWrap="pretty">
+                                    For questions, feedback, or collaboration, reach out at{' '}
                                     <Link hasUnderline href="mailto:info@longlink.dev" type="inherit">
                                         info@longlink.dev
                                     </Link>
@@ -281,7 +332,7 @@ export default function IntroducingLongLink() {
                             </Stack>
                         </Stack>
 
-                        <Stack as="footer" gap={3}>
+                        <Stack as="footer" gap={3} paddingBlockStart={6}>
                             <Stack
                                 aria-label="Blog post navigation"
                                 direction="horizontal"

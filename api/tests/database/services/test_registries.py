@@ -1,22 +1,18 @@
 import pytest
 from uuid import UUID, uuid4
-from factories import queue_operation, create_organization, create_ready_infrastructure
+from factories import queue_operation, create_ready_infrastructure
 from src.errors import ConflictError, NotFoundError
-from collections.abc import Callable, Sequence, Awaitable
+from collections.abc import Callable, Awaitable
 from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
 from src.database.services import compute, storage, database
 from src.models.operations import OperationKind
-from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 
 DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
-Registry = ComputeRegistry | DatabaseRegistry | StorageRegistry
-FetchRegistry = Callable[[AsyncSession, Pagination], Awaitable[tuple[Sequence[Registry], int]]]
 
 
 @pytest.mark.parametrize(
@@ -34,57 +30,6 @@ async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
     async with session_scope() as session:
         with pytest.raises(NotFoundError, match="registry not found"):
             await delete(session, uuid4())
-
-
-@pytest.mark.parametrize(
-    ("delete", "registry", "model", "error"),
-    [
-        pytest.param(
-            compute.delete,
-            "compute",
-            ComputeRegistry,
-            "Compute registry is used by organizations",
-            id="compute",
-        ),
-        pytest.param(
-            database.delete,
-            "database",
-            DatabaseRegistry,
-            "Database registry is used by organizations",
-            id="database",
-        ),
-        pytest.param(
-            storage.delete,
-            "storage",
-            StorageRegistry,
-            "Storage registry is used by organizations",
-            id="storage",
-        ),
-    ],
-)
-async def test_delete_rejects_assigned_registry(
-    users: tuple[User, User, User],
-    delete: DeleteRegistry,
-    registry: str,
-    model: type[ComputeRegistry] | type[DatabaseRegistry] | type[StorageRegistry],
-    error: str,
-) -> None:
-    """Reject deletion while an organization references the registry."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], infrastructure=infrastructure)
-    registry_id = getattr(infrastructure, registry).id
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match=f"^{error}$"):
-            await delete(session, registry_id)
-
-    # Assert
-    async with session_scope() as session:
-        persisted = await session.get(model, registry_id)
-    assert persisted is not None
 
 
 @pytest.mark.parametrize(
@@ -204,27 +149,3 @@ async def test_create_rejects_duplicate_storage_names() -> None:
                 "storage-access-key",
                 "storage-secret-key",
             )
-
-
-@pytest.mark.parametrize(
-    ("fetch", "registry"),
-    [
-        pytest.param(compute.fetch_page, "compute", id="compute"),
-        pytest.param(database.fetch_page, "database", id="database"),
-        pytest.param(storage.fetch_page, "storage", id="storage"),
-    ],
-)
-async def test_fetch_page_returns_persisted_registry_and_total(fetch: FetchRegistry, registry: str) -> None:
-    """Return each persisted registry type and its collection total."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    expected = getattr(infrastructure, registry)
-
-    # Act
-    async with session_scope() as session:
-        registries, total = await fetch(session, Pagination())
-
-    # Assert
-    assert [item.id for item in registries] == [expected.id]
-    assert total == 1

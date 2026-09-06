@@ -282,7 +282,7 @@ async def update_member_role(
     member_id: UUID,
     role: OrganizationRoles,
     user: User,
-) -> bool:
+) -> None:
     """Change one active Organization membership role."""
 
     # Lock the Organization before revalidating the caller's active access.
@@ -325,30 +325,28 @@ async def update_member_role(
 
     # Repeated role assignments do not require persistence or reconciliation.
     if membership.role == role:
-        return False
+        return
 
     # Protect organizations from losing their last owner.
     if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
-        # Reject demotion when this is the only owner.
-        owner_statement = (
-            select(1)
+        # Reject demotion when no other active owner remains.
+        other_owner_id = await session.scalar(
+            select(col(UserOrganization.user_id))
             .where(
                 col(UserOrganization.organization_id) == organization_id,
                 col(UserOrganization.role) == OrganizationRoles.owner,
                 col(UserOrganization.deleted_at).is_(None),
+                col(UserOrganization.user_id) != member_id,
             )
-            .limit(2)
+            .limit(1)
             .with_for_update()
         )
-        owner_result = await session.scalars(owner_statement)
-        if len(owner_result.all()) <= 1:
+        if other_owner_id is None:
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
     membership.updated_id = user.id
     membership.role = role
-
-    return True
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
@@ -435,21 +433,22 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    # Lock every requested registry while validating the immutable infrastructure assignment.
-    result = await session.execute(
-        select(col(DatabaseRegistry.id), col(StorageRegistry.id))
-        .select_from(ComputeRegistry)
-        .outerjoin(DatabaseRegistry, col(DatabaseRegistry.id) == database_id)
-        .outerjoin(StorageRegistry, col(StorageRegistry.id) == storage_id)
-        .where(col(ComputeRegistry.id) == compute_id)
-        .with_for_update()
+    # Lock each requested registry while validating the immutable infrastructure assignment.
+    compute_registry_id = await session.scalar(
+        select(col(ComputeRegistry.id)).where(col(ComputeRegistry.id) == compute_id).with_for_update()
     )
-    assignment = result.one_or_none()
-    if assignment is None:
+    if compute_registry_id is None:
         raise UnavailableError("No compute registry available")
-    database_registry_id, storage_registry_id = assignment
+
+    database_registry_id = await session.scalar(
+        select(col(DatabaseRegistry.id)).where(col(DatabaseRegistry.id) == database_id).with_for_update()
+    )
     if database_registry_id is None:
         raise UnavailableError("No database registry available")
+
+    storage_registry_id = await session.scalar(
+        select(col(StorageRegistry.id)).where(col(StorageRegistry.id) == storage_id).with_for_update()
+    )
     if storage_registry_id is None:
         raise UnavailableError("No storage registry available")
 
