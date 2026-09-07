@@ -18,6 +18,9 @@ spec:
         spec:
             automountServiceAccountToken: false
             restartPolicy: Never
+            nodeSelector:
+                kubernetes.io/os: linux
+                kubernetes.io/arch: amd64
             securityContext:
                 runAsNonRoot: true
                 seccompProfile:
@@ -75,6 +78,9 @@ spec:
                 $solution_id_label: $solution_id
         spec:
             automountServiceAccountToken: false
+            nodeSelector:
+                kubernetes.io/os: linux
+                kubernetes.io/arch: amd64
             securityContext:
                 runAsNonRoot: true
                 seccompProfile:

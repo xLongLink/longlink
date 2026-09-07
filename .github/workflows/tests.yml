@@ -135,6 +135,7 @@ jobs:
               with:
                   context: .
                   file: api/Dockerfile
+                  platforms: linux/amd64
                   load: true
                   push: false
                   tags: longlink-api:test

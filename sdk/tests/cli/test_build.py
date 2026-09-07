@@ -559,6 +559,8 @@ def test_build_command_reports_built_image(
     assert commands == [
         [
             *expected_build_command,
+            "--platform",
+            "linux/amd64",
             "-f",
             str(temporary_context / "Dockerfile"),
             "-t",

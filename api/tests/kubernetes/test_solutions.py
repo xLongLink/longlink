@@ -16,8 +16,8 @@ class AppliedResource(Protocol):
     raw: dict[str, object]
 
 
-def test_solution_template_limits_ephemeral_storage() -> None:
-    """Bound each Solution and migration temporary filesystem."""
+def test_solution_template_constrains_workloads() -> None:
+    """Constrain Solution and migration architecture and temporary filesystems."""
 
     # Arrange
     migration, deployment, _, _ = templates.readyml_list(
@@ -41,6 +41,7 @@ def test_solution_template_limits_ephemeral_storage() -> None:
         assert isinstance(pod_template, dict)
         pod_spec = pod_template["spec"]
         assert isinstance(pod_spec, dict)
+        assert pod_spec["nodeSelector"] == {"kubernetes.io/os": "linux", "kubernetes.io/arch": "amd64"}
         containers = pod_spec["containers"]
         assert isinstance(containers, list) and len(containers) == 1
         container = containers[0]

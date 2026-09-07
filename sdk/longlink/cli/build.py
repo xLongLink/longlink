@@ -476,6 +476,8 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
             subprocess.run(
                 [
                     *docker_arguments,
+                    "--platform",
+                    "linux/amd64",
                     "-f",
                     str(build_context / "Dockerfile"),
                     "-t",

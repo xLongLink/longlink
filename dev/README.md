@@ -9,6 +9,8 @@ Development tools
 
 ## k3d local cluster
 
+Solution runtimes and migration Jobs require Linux AMD64 nodes. An ARM-only k3d cluster cannot schedule them, even when Docker can build AMD64 images through emulation.
+
 `make up` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, creates the k3d
 cluster, and builds the local sample Solution image. Host-facing ports bind to loopback, while k3d reaches PostgreSQL
 and the registry through the private bridge gateway. They are not exposed to the local network.

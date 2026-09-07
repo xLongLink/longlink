@@ -116,6 +116,7 @@ jobs:
               with:
                   context: .
                   file: api/Dockerfile
+                  platforms: linux/amd64
                   push: true
                   build-args: |
                       VERSION=${{ github.ref_name }}
