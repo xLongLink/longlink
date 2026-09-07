@@ -136,8 +136,9 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
         case 'ObjectExpression': {
             const result: Record<string, unknown> = Object.create(null);
 
+            // Reject spreads before evaluating object properties.
             for (const property of node.properties) {
-                if (!('key' in property) || !('value' in property)) {
+                if (property.type === 'SpreadElement') {
                     throw new Error('Object spread not allowed');
                 }
 
