@@ -111,11 +111,6 @@ export function SolutionRuntime({
             }) satisfies NavigationTab
     );
 
-    const loadingContent = (
-        <Center minHeight="calc(100vh - 14rem)" width="100%">
-            <Spinner label="Loading" />
-        </Center>
-    );
     let content: ReactNode;
 
     if (!routePath && firstTabView) {
@@ -163,7 +158,11 @@ export function SolutionRuntime({
             />
         );
     } else {
-        content = loadingContent;
+        content = (
+            <Center minHeight="calc(100vh - 14rem)" width="100%">
+                <Spinner label="Loading" />
+            </Center>
+        );
     }
 
     return children({

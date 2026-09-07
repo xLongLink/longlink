@@ -5,12 +5,13 @@ import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
+import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
+import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
@@ -184,7 +185,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch requires a literal state ID');
     }
     const valueAttribute = readXmlProp(props, 'value');
-    const value = resolveXmlValue(props, 'value', ctx);
+    const value = valueAttribute == null ? undefined : evaluate(valueAttribute, ctx);
     const { invalidate } = resolveXmlProps(props, ctx, patchPropsSchema);
     if ((valueAttribute != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');

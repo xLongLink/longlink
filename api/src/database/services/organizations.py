@@ -245,10 +245,10 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
 async def members(session: AsyncSession, organization_id: UUID) -> Sequence[UserOrganization]:
     """Return active organization member rows for one organization."""
 
-    # Query memberships with their users so detached callers can shape API payloads.
+    # Load memberships with the user identity fields required by API payloads.
     statement = (
         select(UserOrganization)
-        .options(joinedload(UserOrganization.user))
+        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
         .where(
             col(UserOrganization.organization_id) == organization_id,
             col(UserOrganization.deleted_at).is_(None),
@@ -262,9 +262,10 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
 async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     """Project users into one active, running Organization database."""
 
-    # Load the active running Organization with its assigned database.
-    result = await session.execute(
-        select(Organization, DatabaseRegistry)
+    # Load the database assigned to the active running Organization.
+    result = await session.scalars(
+        select(DatabaseRegistry)
+        .select_from(Organization)
         .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
         .where(
             col(Organization.id) == organization_id,
@@ -272,15 +273,16 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
             col(Organization.status) == Status.running,
         )
     )
-    assigned = result.tuples().one_or_none()
-    if assigned is None:
+    database = result.one_or_none()
+    if database is None:
         return
-    organization, database = assigned
     db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
 
     # Include deleted memberships so the Organization database receives tombstones.
     memberships_statement = (
-        select(UserOrganization).options(joinedload(UserOrganization.user)).where(col(UserOrganization.organization_id) == organization.id)
+        select(UserOrganization)
+        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar, User.updated_at, User.deleted_at))
+        .where(col(UserOrganization.organization_id) == organization_id)
     )
     memberships_result = await session.scalars(memberships_statement)
     memberships = memberships_result.all()
@@ -311,7 +313,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
         )
 
     # The Platform is authoritative over Organization user projections.
-    await shared_audit.sync(db.url(organization.id.hex, search_path="shared"), rows)
+    await shared_audit.sync(db.url(organization_id.hex, search_path="shared"), rows)
 
 
 async def _locked_membership(

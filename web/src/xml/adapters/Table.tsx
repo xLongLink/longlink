@@ -15,6 +15,12 @@ export function Table({ props, nodes }: Props) {
 
     const { data, idKey } = resolveXmlProps(props, ctx, tablePropsSchema, ['data']);
 
+    // Preserve the first index of each row reference for rich cell scopes.
+    const rowIndexes = new Map<Record<string, unknown>, number>();
+    for (const [index, row] of data.entries()) {
+        if (!rowIndexes.has(row)) rowIndexes.set(row, index);
+    }
+
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
         .map((node): AstryxTableColumn<Record<string, unknown>> => {
@@ -50,7 +56,7 @@ export function Table({ props, nodes }: Props) {
 
                     const rowCtx: Scope = {
                         parent: ctx,
-                        bindings: { index: data.indexOf(row), row, value },
+                        bindings: { index: rowIndexes.get(row) ?? -1, row, value },
                     };
 
                     return (

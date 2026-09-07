@@ -37,24 +37,23 @@ class Postgres:
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
 
-        # Keep the connection details inside the adapter so callers only pass registry fields.
-        url = URL.create(
-            "postgresql+psycopg",
-            username=self._username,
-            password=self._password,
-            host=self._host,
-            port=self._port,
-            database=database,
-        )
-
-        # Attach PostgreSQL driver options after URL creation so credentials stay structured.
+        # Configure PostgreSQL driver options before creating the structured URL.
         query = {"sslmode": self._sslmode.value, "options": "-c timezone=UTC"}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
             query["options"] = f"{query['options']} -c search_path={search_path}"
 
-        return url.update_query_dict(query)
+        # Keep connection details inside the adapter and credentials structured.
+        return URL.create(
+            "postgresql+psycopg",
+            username=self._username,
+            password=self._password,
+            host=self._host,
+            port=self._port,
+            database=database,
+            query=query,
+        )
 
     @staticmethod
     def quote(conn: AsyncConnection, value: str) -> str:
@@ -114,7 +113,8 @@ class Postgres:
                 host=self._host,
                 port=self._port,
                 database=organization.hex,
-            ).update_query_dict({"ssl": self._sslmode.value})
+                query={"ssl": self._sslmode.value},
+            )
         )
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.

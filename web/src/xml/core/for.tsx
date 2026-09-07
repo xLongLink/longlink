@@ -5,7 +5,7 @@ import { resolveXml, resolveXmlValue } from './props';
 
 /** Iterates over an array and renders children in a scoped context. */
 export function For({ props, nodes }: Props) {
-    const { scope: ctx, ...runtime } = useXmlRuntime();
+    const { scope: ctx, services } = useXmlRuntime();
 
     // Require the loop alias and source before resolving them.
     if (!props.as) throw new Error('For requires an "as" parameter');
@@ -28,7 +28,7 @@ export function For({ props, nodes }: Props) {
         };
 
         return (
-            <XmlContext.Provider key={index} value={{ ...runtime, scope: childCtx }}>
+            <XmlContext.Provider key={index} value={{ services, scope: childCtx }}>
                 {renderNode(nodes, childCtx)}
             </XmlContext.Provider>
         );
