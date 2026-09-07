@@ -39,9 +39,6 @@ class LongLink:
     def __init__(self, app: FastAPI) -> None:
         """Install runtime services, routes, and the frontend fallback into a Solution's FastAPI app."""
 
-        # Preserve Solution routes so view collisions are rejected during discovery.
-        solution_routes = list(app.routes)
-
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
 
@@ -51,7 +48,7 @@ class LongLink:
             raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before installing runtime services.
-        discovered_views = self._discover_views(views_directory, solution_routes)
+        discovered_views = self._discover_views(views_directory, app.routes)
 
         # Initialize Solution storage and database connections.
         storage = create_fs(settings)

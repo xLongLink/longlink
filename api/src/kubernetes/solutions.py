@@ -245,7 +245,8 @@ class Solutions:
                 migration_name = migration_pod.metadata.get("name", "unknown")
                 if migration_phase == "Failed":
                     logs = [f"Migration Pod {migration_name} failed:"]
-                    logs.extend([line async for line in migration_pod.logs(tail_lines=200)])
+                    async for line in migration_pod.logs(tail_lines=200):
+                        logs.append(line)
                     return logs
                 return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Solution Pod unavailable"]
             raise RuntimeError("Solution logs unavailable")
