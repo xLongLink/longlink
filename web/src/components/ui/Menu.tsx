@@ -84,10 +84,8 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
                     <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
                         {sections.map(({ entries, section }) => {
-                            const { children: _children, ...sectionProps } = section.props;
-
                             return (
-                                <AstryxSideNavSection {...sectionProps} className="pt-0" key={sectionProps.title}>
+                                <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
                                     {entries.map((entry) => {
                                         if (entry.kind === 'subsection') {
                                             const { icon, label } = entry.subSection.props;

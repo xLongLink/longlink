@@ -17,12 +17,11 @@ type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon'> & {
 };
 
 /** Renders tabs and the selected tab's content. */
-export function Tabs({ children, gap = 3, ...props }: TabsProps) {
+export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...tabListProps }: TabsProps) {
     const tabs = Children.toArray(children).filter(
         (child): child is ReactElement<TabProps> => isValidElement(child) && child.type === Tab
     );
     const [uncontrolledValue, setUncontrolledValue] = useState(tabs[0]?.props.value ?? '');
-    const { onChange, value: controlledValue, ...tabListProps } = props;
     const value = controlledValue ?? uncontrolledValue;
     const activeTab = tabs.find((tab) => tab.props.value === value) ?? tabs[0];
 

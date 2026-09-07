@@ -62,9 +62,12 @@ def authorization_url(provider: OAuthProvider, state: str, verifier: str) -> str
     # Request only profile data required to identify an account and verify its email address.
     if provider == "google":
         params["scope"] = "openid email profile"
-        return f"{GOOGLE_AUTHORIZATION_URL}?{urlencode(params)}"
-    params["scope"] = "read:user user:email"
-    return f"{GITHUB_AUTHORIZATION_URL}?{urlencode(params)}"
+        authorization_endpoint = GOOGLE_AUTHORIZATION_URL
+    else:
+        params["scope"] = "read:user user:email"
+        authorization_endpoint = GITHUB_AUTHORIZATION_URL
+
+    return f"{authorization_endpoint}?{urlencode(params)}"
 
 
 async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthIdentity | None:

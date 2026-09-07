@@ -249,17 +249,23 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         # Add local path dependencies to the context.
         for source_config in uv_sources.values():
             # Only mapping source entries can contain paths.
-            if isinstance(source_config, dict):
-                # Follow only string path sources.
-                source_path = source_config.get("path")
-                if isinstance(source_path, str):
-                    resolved_source_path = (source_root / source_path).resolve()
+            if not isinstance(source_config, dict):
+                continue
 
-                    # Include only project directories; invalid paths must not expand the Docker context.
-                    if resolved_source_path != Path(resolved_source_path.anchor) and (resolved_source_path / "pyproject.toml").is_file():
-                        if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
-                            raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
-                        pending_paths.append(resolved_source_path)
+            # Follow only string path sources.
+            source_path = source_config.get("path")
+            if not isinstance(source_path, str):
+                continue
+            resolved_source_path = (source_root / source_path).resolve()
+
+            # Include only project directories; invalid paths must not expand the Docker context.
+            if resolved_source_path == Path(resolved_source_path.anchor) or not (resolved_source_path / "pyproject.toml").is_file():
+                continue
+
+            # Reject dependencies outside the permitted workspace boundary.
+            if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
+                raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
+            pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
     common_root = Path(os.path.commonpath(seen_paths))
@@ -351,13 +357,7 @@ def build_solution(build_context: Path) -> tuple[str, str]:
                 except (OSError, RuntimeError):
                     ignored.add(name)
                     continue
-                if not target.is_relative_to(source_root):
-                    ignored.add(name)
-                    continue
-                if target.is_dir() and target in path.parents:
-                    ignored.add(name)
-                    continue
-                if is_ignored(target):
+                if not target.is_relative_to(source_root) or (target.is_dir() and target in path.parents) or is_ignored(target):
                     ignored.add(name)
 
         return ignored
