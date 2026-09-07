@@ -11,10 +11,10 @@ describe('useBindableValue', () => {
     let container: HTMLDivElement | undefined;
     let root: ReturnType<typeof createRoot> | undefined;
 
-    afterEach(() => {
+    afterEach(async () => {
         if (root) {
             const mountedRoot = root;
-            act(() => mountedRoot.unmount());
+            await act(async () => mountedRoot.unmount());
         }
         container?.remove();
         vi.unstubAllGlobals();
@@ -41,9 +41,7 @@ describe('useBindableValue', () => {
             (ctx.scope.bindings.form as { value: string }).value = 'second';
         });
 
-        await act(async () => {
-            await vi.waitFor(() => expect(input?.value).toBe('second'));
-        });
+        expect(input?.value).toBe('second');
 
         await act(async () => {
             await ctx.services.invalidate('form');
@@ -70,10 +68,15 @@ describe('useBindableValue', () => {
         if (!input) throw new Error('TextInput did not render');
 
         const user = userEvent.setup();
-        await user.clear(input);
-        await user.type(input, 'second');
+
+        // Commit the Valtio-driven controlled value before the next keystroke reads it.
+        await act(async () => user.clear(input));
+        for (const character of 'second') {
+            await act(async () => user.keyboard(character));
+        }
 
         expect((ctx.scope.bindings.form as { value: string }).value).toBe('second');
+        expect(input.value).toBe('second');
     });
 
     it('rejects unsafe writable binding paths', async () => {
@@ -109,10 +112,7 @@ describe('useBindableValue', () => {
             root?.render(<RenderXML ast={ast} ctx={ctx} />);
         });
 
-        await act(async () => {
-            await vi.waitFor(() => expect(output.textContent).toContain('Records unavailable'));
-        });
-
+        expect(output.textContent).toContain('Records unavailable');
         expect(output.textContent).not.toContain('Loaded child');
     });
 

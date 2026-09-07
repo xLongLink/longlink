@@ -76,14 +76,19 @@ export function Article({ children, page }: { children: ReactNode; page: Article
         <Layout
             height="auto"
             header={
-                <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" hasDivider padding={0}>
-                    <Stack className="relative" height={64} width="100%">
-                        <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                            <Breadcrumb className="min-w-0 overflow-hidden" />
-                        </PageContainer>
-                        <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
-                            <Button href="/user/organizations" label="Get Started" size="sm" variant="primary" />
-                        </Center>
+                <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" padding={0}>
+                    <Stack>
+                        <Stack className="relative" height={64} width="100%">
+                            <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
+                                <Breadcrumb className="min-w-0 overflow-hidden" />
+                            </PageContainer>
+                            <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
+                                <Button href="/user/organizations" label="Get Started" size="sm" variant="primary" />
+                            </Center>
+                        </Stack>
+                        <Stack paddingInline={5}>
+                            <Divider />
+                        </Stack>
                     </Stack>
                 </LayoutHeader>
             }

@@ -6,13 +6,6 @@ import type { ASTAttribute } from '../types';
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
-    // Keep standalone expressions typed when they are evaluated.
-    if (input.startsWith('${') && input.endsWith('}')) {
-        const segment = readInterpolationSegment(input, 0);
-
-        if (segment.end === input.length - 1) return { kind: 'expression', node: segment.node };
-    }
-
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
     if (reference && (reference[1] || input.includes('.'))) {
@@ -32,6 +25,12 @@ export function compileAttribute(value: string): ASTAttribute {
             if (value[index] !== '$' || value[index + 1] !== '{') continue;
 
             const segment = readInterpolationSegment(value, index);
+
+            // Keep a single expression typed even when surrounded by whitespace.
+            if (cursor === 0 && value.slice(0, index).trim() === '' && value.slice(segment.end + 1).trim() === '') {
+                return { kind: 'expression', node: segment.node };
+            }
+
             if (cursor < index) {
                 segments.push({ kind: 'text', value: value.slice(cursor, index) });
             }

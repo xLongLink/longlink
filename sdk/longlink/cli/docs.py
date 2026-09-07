@@ -18,7 +18,8 @@ def _schemas() -> tuple[etree._Element, ...]:
     # Parse trusted package files without resolving external resources.
     parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
     root = ROOT / ".static" / "xsd"
-    paths = [root / "types.xsd", *sorted((root / "adapters").glob("*.xsd"))]
+    schema = etree.parse(str(root / "schema.xsd"), parser).getroot()
+    paths = [root / include.attrib["schemaLocation"] for include in schema.findall(f"{XSD}include")]
     return tuple(etree.parse(str(path), parser).getroot() for path in paths)
 
 

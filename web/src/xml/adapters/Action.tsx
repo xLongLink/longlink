@@ -5,9 +5,9 @@ import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
-import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
+import { evaluate } from '../expressions/evaluate';
 import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
@@ -63,8 +63,11 @@ export function Action({ props, nodes }: Props) {
 
 /** Validates direct Action children and collects effect nodes in document order. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
+    // Conditional visibility is already handled by the shared renderer.
     for (const name of Object.keys(props)) {
-        throw new Error(`Action does not support ${name}`);
+        if (name !== 'if') {
+            throw new Error(`Action does not support ${name}`);
+        }
     }
 
     const steps: ASTNode[] = [];

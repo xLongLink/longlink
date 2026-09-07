@@ -141,8 +141,11 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
                     throw new Error('Object spread not allowed');
                 }
 
+                // Evaluate computed keys while preserving literal identifier property names.
                 const key =
-                    property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
+                    !property.computed && property.key.type === 'Identifier'
+                        ? property.key.name
+                        : String(evaluateNode(property.key, ctx));
 
                 // Skip prototype-related keys so XML object literals cannot mutate prototypes.
                 if (!isSafePropertyName(key)) continue;
