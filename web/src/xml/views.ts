@@ -3,14 +3,7 @@ import { resolveRequestUrl } from '@/xml/core/url';
 
 /** Returns whether a manifest route is a normalized supported React Router path. */
 function isRoute(route: string): boolean {
-    if (
-        !route.startsWith('/') ||
-        route.includes('%') ||
-        route.includes('\\') ||
-        route.includes('?') ||
-        route.includes('#')
-    )
-        return false;
+    if (!route.startsWith('/')) return false;
     if (route === '/') return true;
 
     return route

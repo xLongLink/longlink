@@ -206,7 +206,7 @@ function validateSetupNode(node: ASTNode): string {
 
     // Validate state declarations.
     if (node.name === 'State') {
-        const unsafeAttributes = Object.keys(node.params).filter((name) => name !== 'id' && !isSafePropertyName(name));
+        const unsafeAttributes = Object.keys(node.params).filter((name) => !isSafePropertyName(name));
 
         // Reject unsafe state attribute names.
         if (unsafeAttributes.length) {

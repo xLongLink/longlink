@@ -62,8 +62,6 @@ async def create(solution_id: UUID) -> None:
         except (Exception, asyncio.CancelledError):
             try:
                 await object_storage.revoke_solution(solution.id.hex)
-            except asyncio.CancelledError:
-                raise
             except Exception:
                 logger.exception("Could not revoke storage credentials for Solution '%s'", solution.id)
             raise
