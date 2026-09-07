@@ -469,9 +469,10 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
         # Run the Docker build and optional push.
         try:
             # Build from a context that includes local path dependencies referenced by uv.
-            docker_arguments = [docker_command, "build"]
             if builder is not None:
                 docker_arguments = [docker_command, "buildx", "build", "--builder", builder, "--load"]
+            else:
+                docker_arguments = [docker_command, "build"]
             subprocess.run(
                 [
                     *docker_arguments,

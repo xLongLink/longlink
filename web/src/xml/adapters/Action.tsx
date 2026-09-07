@@ -12,8 +12,6 @@ import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
 import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
 
-type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
-
 const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
@@ -36,7 +34,7 @@ const navigationPropsSchema = z.object({
 
 type ActionPlan = {
     control: ASTNode;
-    steps: ActionStep[];
+    steps: ASTNode[];
 };
 
 export const ActionHandlerContext = createContext<(() => void) | null>(null);
@@ -62,13 +60,13 @@ export function Action({ props, nodes }: Props) {
     );
 }
 
-/** Validates direct Action children and converts them into ordered executable steps. */
+/** Validates direct Action children and collects effect nodes in document order. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     for (const name of Object.keys(props)) {
         throw new Error(`Action does not support ${name}`);
     }
 
-    const steps: ActionStep[] = [];
+    const steps: ASTNode[] = [];
     let control: ASTNode | undefined;
 
     for (const node of nodes) {
@@ -86,7 +84,7 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
                     throw new Error(`${node.name} does not support ${name}`);
                 }
             }
-            steps.push({ kind: node.name === 'Request' ? 'request' : 'patch', props: node.params });
+            steps.push(node);
             continue;
         }
 
@@ -121,14 +119,14 @@ async function executeAction(
     let status: number | undefined;
 
     for (const step of plan.steps) {
-        if (step.kind === 'request') {
-            const result = await executeRequest(step.props, ctx, services.requestBaseUrl);
+        if (step.name === 'Request') {
+            const result = await executeRequest(step.params, ctx, services.requestBaseUrl);
             closeOnSuccess ||= result.closeDialog;
             status = result.status;
             continue;
         }
 
-        await executePatch(step.props, ctx, services);
+        await executePatch(step.params, ctx, services);
     }
 
     const { to, href } = resolveXmlProps(

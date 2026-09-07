@@ -2,6 +2,7 @@ import re
 import click
 from lxml import etree
 from functools import cache
+from collections import deque
 from longlink.constants import ROOT
 
 XSD = "{http://www.w3.org/2001/XMLSchema}"
@@ -82,13 +83,13 @@ def _helpers(
 
     # Follow declared child references and exact tags from the authored example.
     type_node = _complex_type(component, schemas)
-    pending = list(type_node.iter(f"{XSD}element")) if type_node is not None else []
+    pending = deque(type_node.iter(f"{XSD}element")) if type_node is not None else deque()
     for name in re.findall(r"<\s*/?\s*([A-Za-z_][\w.-]*)", example):
         if name in elements and elements[name].find(f"{XSD}annotation/{XSD}appinfo/{DOCS}docs") is None:
             pending.append(elements[name])
     helpers: dict[str, etree._Element] = {}
     while pending:
-        declaration = pending.pop(0)
+        declaration = pending.popleft()
         name = declaration.get("ref", "").rsplit(":", 1)[-1] or declaration.get("name", "")
         if not name or name == component.get("name") or name in helpers:
             continue

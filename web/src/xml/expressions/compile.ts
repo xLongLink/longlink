@@ -32,8 +32,8 @@ export function compileAttribute(value: string): ASTAttribute {
             if (value[index] !== '$' || value[index + 1] !== '{') continue;
 
             const segment = readInterpolationSegment(value, index);
-            if (cursor < segment.start) {
-                segments.push({ kind: 'text', value: value.slice(cursor, segment.start) });
+            if (cursor < index) {
+                segments.push({ kind: 'text', value: value.slice(cursor, index) });
             }
             segments.push({ kind: 'expression', node: segment.node });
             cursor = segment.end + 1;
@@ -65,7 +65,7 @@ function readInterpolationSegment(input: string, start: number) {
         }
 
         // Return only closed interpolation segments.
-        if (input[end] === '}') return { start, end, node };
+        if (input[end] === '}') return { end, node };
     } catch {}
 
     throw new Error('Unclosed XML expression interpolation');

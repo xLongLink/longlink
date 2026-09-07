@@ -97,9 +97,9 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             digest = manifest_headers.get("Docker-Content-Digest")
-            if digest is None and IMAGE_DIGEST_PATTERN.fullmatch(image.tag_or_digest):
+            if digest is None:
                 digest = image.tag_or_digest
-            if digest is None or not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+            if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
                 return None
 
             manifest_config = manifest.get("config")
