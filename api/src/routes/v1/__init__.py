@@ -1,9 +1,16 @@
+"""Internal, unstable Platform API for the bundled Web frontend.
+
+API and Web contract changes ship together; /api/v1 is not a supported external
+integration API or a backward-compatibility promise. Authentication and
+authorization remain required. The Platform-to-Solution runtime contract is separate.
+"""
+
 from . import auth, image, proxy, users, health, computes, storages, databases, solutions, operations, organizations
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/v1")
 
-# Keep the public v1 surface together so a future major can register independently.
+# Compose the internal Platform routes under one prefix.
 router.include_router(auth.router)
 router.include_router(solutions.router)
 router.include_router(proxy.router)

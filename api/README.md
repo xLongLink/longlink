@@ -9,6 +9,10 @@ The Platform manages authentication, permissions, organizations, infrastructure 
 
 ## Resources
 
+The Platform API supports PostgreSQL, MySQL, and SQLite as its production metadata database. Organization and Solution databases require PostgreSQL.
+
+Published Platform and SDK-built Solution images target `linux/amd64`. Compute clusters must provide Linux AMD64 nodes for Solution runtimes and migration Jobs. Hosted Solution images currently must be publicly accessible on GHCR; private registry support is tracked separately.
+
 Managed resources are connected to the platform:
 
 - Compute: `KaaS` (Kubernetes as a Service) using `kubeconfig.yaml`. LongLink installs and upgrades Envoy Gateway from the pinned release bundled with the Platform API.
