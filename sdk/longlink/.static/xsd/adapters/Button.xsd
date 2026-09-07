@@ -25,8 +25,7 @@
   &lt;Request url="/api/orders" method="POST" /&gt;
   &lt;Button variant="primary"&gt;Save&lt;/Button&gt;
 &lt;/Action&gt;
-
- &lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
+&lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

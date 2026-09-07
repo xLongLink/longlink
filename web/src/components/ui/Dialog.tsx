@@ -9,16 +9,24 @@ import { Dialog as AstryxDialog } from '@astryxdesign/core/Dialog';
 
 type DialogProps = Omit<ComponentProps<typeof AstryxDialog>, 'aria-label' | 'children' | 'padding'> & {
     children: ReactNode;
+    gap?: ComponentProps<typeof Stack>['gap'];
     subtitle?: string;
     title: string;
 };
 
 /** Renders a shared dialog with a titled, divided header and structured content. */
-export function Dialog({ children, onOpenChange, purpose, subtitle, title, ...props }: DialogProps) {
+export function Dialog({ children, gap = 3, onOpenChange, purpose, subtitle, title, ...props }: DialogProps) {
     return (
         <AstryxDialog {...props} aria-label={title} padding={0} onOpenChange={onOpenChange} purpose={purpose}>
             <Stack gap={0}>
-                <Stack direction="horizontal" gap={2} justify="between" align="start" paddingBlock={2} paddingInline={4}>
+                <Stack
+                    direction="horizontal"
+                    gap={2}
+                    justify="between"
+                    align="start"
+                    paddingBlock={2}
+                    paddingInline={4}
+                >
                     <Stack gap={subtitle ? 1 : 0}>
                         <Heading level={2}>{title}</Heading>
                         {subtitle ? (
@@ -38,7 +46,7 @@ export function Dialog({ children, onOpenChange, purpose, subtitle, title, ...pr
                     )}
                 </Stack>
                 <Divider />
-                <Stack gap={4} padding={4}>
+                <Stack gap={gap} padding={4}>
                     {children}
                 </Stack>
             </Stack>

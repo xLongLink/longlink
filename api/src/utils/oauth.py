@@ -77,30 +77,26 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
     # Exchange the single-use authorization code through the provider's fixed HTTPS endpoint.
     try:
         async with httpx2.AsyncClient(follow_redirects=False, timeout=10.0) as client:
+            # Share code-exchange fields while keeping provider requirements explicit.
+            data: dict[str, str | None] = {
+                "code": code,
+                "code_verifier": verifier,
+                "redirect_uri": redirect_uri(provider),
+            }
+            headers: dict[str, str] = {}
             if provider == "google":
-                token_response = await client.post(
-                    GOOGLE_TOKEN_URL,
-                    data={
-                        "client_id": env.GOOGLE_OAUTH_CLIENT_ID,
-                        "client_secret": env.GOOGLE_OAUTH_CLIENT_SECRET,
-                        "code": code,
-                        "code_verifier": verifier,
-                        "grant_type": "authorization_code",
-                        "redirect_uri": redirect_uri(provider),
-                    },
-                )
+                token_url = GOOGLE_TOKEN_URL
+                data["client_id"] = env.GOOGLE_OAUTH_CLIENT_ID
+                data["client_secret"] = env.GOOGLE_OAUTH_CLIENT_SECRET
+                data["grant_type"] = "authorization_code"
             else:
-                token_response = await client.post(
-                    GITHUB_TOKEN_URL,
-                    data={
-                        "client_id": env.GITHUB_OAUTH_CLIENT_ID,
-                        "client_secret": env.GITHUB_OAUTH_CLIENT_SECRET,
-                        "code": code,
-                        "code_verifier": verifier,
-                        "redirect_uri": redirect_uri(provider),
-                    },
-                    headers={"Accept": "application/json"},
-                )
+                token_url = GITHUB_TOKEN_URL
+                data["client_id"] = env.GITHUB_OAUTH_CLIENT_ID
+                data["client_secret"] = env.GITHUB_OAUTH_CLIENT_SECRET
+                headers["Accept"] = "application/json"
+
+            # Exchange the code and validate the provider response.
+            token_response = await client.post(token_url, data=data, headers=headers)
             if not token_response.is_success:
                 return None
             token_payload = token_response.json()

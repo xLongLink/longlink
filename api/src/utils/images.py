@@ -139,6 +139,6 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
             return result
-        except (httpx2.HTTPError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        except (httpx2.HTTPError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None

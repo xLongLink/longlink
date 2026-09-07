@@ -151,9 +151,7 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
 
     # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
     statement = (
-        _infrastructure_query()
-        .options(load_only(Organization.id, Organization.deleted_at))
-        .where(col(Organization.id) == organization_id)
+        _infrastructure_query().options(load_only(Organization.id, Organization.deleted_at)).where(col(Organization.id) == organization_id)
     )
     result = await session.execute(statement)
     row = result.tuples().one_or_none()
@@ -313,7 +311,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
         )
 
     # The Platform is authoritative over Organization user projections.
-    await shared_audit.sync(db.url(organization.id.hex, search_path="shared").render_as_string(hide_password=False), rows)
+    await shared_audit.sync(db.url(organization.id.hex, search_path="shared"), rows)
 
 
 async def _locked_membership(

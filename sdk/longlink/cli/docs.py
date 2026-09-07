@@ -45,7 +45,7 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     # Resolve descriptions and inherited runtime attributes.
     type_node = _complex_type(element, schemas)
     description = _text(element, f"{XSD}annotation/{XSD}documentation")
-    attributes = list(type_node.findall(f"{XSD}attribute")) if type_node is not None else []
+    attributes = type_node.findall(f"{XSD}attribute") if type_node is not None else []
     if type_node is not None and type_node.find(f"{XSD}attributeGroup") is not None:
         groups = (group for schema in schemas for group in schema.findall(f"{XSD}attributeGroup"))
         runtime = next((group for group in groups if group.get("name") == "XmlRuntimeAttributes"), None)
@@ -60,7 +60,9 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
         type_name = attribute.get("type", "string").rsplit(":", 1)[-1]
         simple_types = (node for schema in schemas for node in schema.findall(f"{XSD}simpleType"))
         simple_type = attribute.find(f"{XSD}simpleType") or next((node for node in simple_types if node.get("name") == type_name), None)
-        values = [] if simple_type is None else [value.get("value", "") for value in simple_type.findall(f"{XSD}restriction/{XSD}enumeration")]
+        values = (
+            [] if simple_type is None else [value.get("value", "") for value in simple_type.findall(f"{XSD}restriction/{XSD}enumeration")]
+        )
         details = ["required" if attribute.get("use") == "required" else "optional"]
         details.extend(f"{name}={attribute.get(name)}" for name in ("default", "fixed") if attribute.get(name) is not None)
         if values:
@@ -106,22 +108,13 @@ def docs_command(component: str | None) -> None:
 
     # Build the catalog from top-level elements carrying docs metadata.
     schemas = _schemas()
-    elements = {
-        node.get("name", ""): node
-        for schema in schemas
-        for node in schema.findall(f"{XSD}element")
-        if node.get("name")
-    }
+    elements = {node.get("name", ""): node for schema in schemas for node in schema.findall(f"{XSD}element") if node.get("name")}
     metadata_path = f"{XSD}annotation/{XSD}appinfo/{DOCS}docs"
-    documented = [
-        (element, metadata)
-        for element in elements.values()
-        if (metadata := element.find(metadata_path)) is not None
-    ]
+    documented = [(element, metadata) for element in elements.values() if (metadata := element.find(metadata_path)) is not None]
     # A missing component prints the grouped discovery catalog.
     if component is None:
         lines = ["LongLink XML components"]
-        documented = sorted(documented, key=lambda entry: entry[0].get("name", ""))
+        documented.sort(key=lambda entry: entry[0].get("name", ""))
         for category in sorted({metadata.get("category", "") for _, metadata in documented}):
             lines.extend(["", category])
             for element, metadata in documented:
@@ -134,9 +127,11 @@ def docs_command(component: str | None) -> None:
     # Resolve either the XML element name or documentation slug.
     normalized = component.casefold()
     match = next(
-        ((element, metadata) for element, metadata in documented if normalized in {
-            element.get("name", "").casefold(), metadata.get("slug", "").casefold()
-        }),
+        (
+            (element, metadata)
+            for element, metadata in documented
+            if normalized in {element.get("name", "").casefold(), metadata.get("slug", "").casefold()}
+        ),
         None,
     )
     if match is None:

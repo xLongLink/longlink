@@ -41,16 +41,16 @@ This section is a navigation aid, not a specification. The code is the source of
 
 ### Source Entry Points
 
-| Concern | Start Here |
-| --- | --- |
-| API composition and request boundaries | `api/main.py`, `api/src/routes/v1/` |
+| Concern                                 | Start Here                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------- |
+| API composition and request boundaries  | `api/main.py`, `api/src/routes/v1/`                                        |
 | Platform state and deployment lifecycle | `api/src/database/services/`, `api/src/operations/`, `api/src/kubernetes/` |
-| Hosted Solution authorization | `api/src/routes/v1/proxy.py` |
-| SDK integration and request context | `sdk/longlink/app.py`, `sdk/longlink/context.py` |
-| Solution tooling | `sdk/longlink/cli/` |
-| Web targets and Platform routes | `web/react-router.config.ts`, `web/src/platform/routes.ts` |
-| Shared View runtime | `web/src/components/Solution.tsx`, `web/src/xml/` |
-| Web API contract generation | `web/openapi-ts.config.ts` |
+| Hosted Solution authorization           | `api/src/routes/v1/proxy.py`                                               |
+| SDK integration and request context     | `sdk/longlink/app.py`, `sdk/longlink/context.py`                           |
+| Solution tooling                        | `sdk/longlink/cli/`                                                        |
+| Web targets and Platform routes         | `web/react-router.config.ts`, `web/src/platform/routes.ts`                 |
+| Shared View runtime                     | `web/src/components/Solution.tsx`, `web/src/xml/`                          |
+| Web API contract generation             | `web/openapi-ts.config.ts`                                                 |
 
 ## Python Guidelines
 
