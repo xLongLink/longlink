@@ -70,9 +70,7 @@ class Image(str):
             raise ValueError("Image registry port is invalid") from exc
 
         # Require valid repository path components.
-        if not repository or any(
-            not re.fullmatch(r"[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*", component) for component in repository.split("/")
-        ):
+        if any(not re.fullmatch(r"[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*", component) for component in repository.split("/")):
             raise ValueError("Image repository is invalid")
 
         reference = str.__new__(cls, value)

@@ -412,15 +412,16 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
     # Add a registry prefix when requested.
     if registry_prefix:
         # Restrict production registries to GHCR while allowing localhost development registries.
-        registry_host = registry_prefix.split("/", 1)[0]
+        registry_parts = registry_prefix.split("/")
+        registry_host = registry_parts[0]
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
             raise click.ClickException("Docker registry port is invalid")
-        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
+        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_parts) != 2):
             raise click.ClickException("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
-        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
+        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_parts[1:]):
             raise click.ClickException(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
         return f"{registry_prefix}/{image_name}:{version}"
 

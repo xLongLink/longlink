@@ -376,7 +376,7 @@ async def update_member_role(
         return
 
     # Protect organizations from losing their last owner.
-    if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
+    if membership.role == OrganizationRoles.owner:
         # Reject demotion when no other active owner remains.
         other_owner_id = await session.scalar(
             select(col(UserOrganization.user_id))
