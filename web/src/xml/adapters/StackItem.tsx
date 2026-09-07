@@ -14,12 +14,7 @@ const stackItemPropsSchema = z.object({
 
 export function StackItem({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { crossAlignSelf, isScrollable, size } = resolveXmlProps(
-        props,
-        ctx,
-        { crossAlignSelf: 'scalar', isScrollable: 'scalar', size: 'scalar' },
-        stackItemPropsSchema
-    );
+    const { crossAlignSelf, isScrollable, size } = resolveXmlProps(props, ctx, stackItemPropsSchema);
 
     return (
         <AstryxStackItem crossAlignSelf={crossAlignSelf} isScrollable={isScrollable} size={size}>

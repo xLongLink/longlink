@@ -10,7 +10,7 @@ const textPropsSchema = z.object({ color: z.enum(TEXT_COLORS).optional() });
 
 export function Text({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { color } = resolveXmlProps(props, ctx, { color: 'scalar' }, textPropsSchema);
+    const { color } = resolveXmlProps(props, ctx, textPropsSchema);
 
     return <AstryxText.Text color={color}>{renderNode(nodes, ctx)}</AstryxText.Text>;
 }

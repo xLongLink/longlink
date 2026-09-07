@@ -52,18 +52,18 @@ export function resolveXmlValue(props: ASTProps, name: string, ctx: Scope): unkn
     return evaluate(attribute, ctx);
 }
 
-/** Resolves named XML props by mode and validates the result with an object schema. */
+/** Resolves schema fields in declaration order, using scalar coercion except for raw fields. */
 export function resolveXmlProps<T extends z.ZodObject>(
     props: ASTProps,
     ctx: Scope,
-    fields: Record<string, 'scalar' | 'raw'>,
-    schema: T
+    schema: T,
+    rawFields: readonly (keyof T['shape'])[] = []
 ): z.output<T> {
     const values: Record<string, unknown> = {};
 
-    for (const [name, mode] of Object.entries(fields)) {
-        // Keep legacy scalar coercion distinct from raw evaluated values.
-        values[name] = mode === 'scalar' ? resolveXml(props, name, ctx) : resolveXmlValue(props, name, ctx);
+    // Keep scalar coercion distinct from raw evaluated values.
+    for (const name of Object.keys(schema.shape)) {
+        values[name] = rawFields.includes(name) ? resolveXmlValue(props, name, ctx) : resolveXml(props, name, ctx);
     }
 
     const result = schema.safeParse(values);

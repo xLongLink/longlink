@@ -129,12 +129,7 @@ async function executeAction(
         await executePatch(step.params, ctx, services);
     }
 
-    const { to, href } = resolveXmlProps(
-        plan.control.params,
-        ctx,
-        { to: 'scalar', href: 'scalar' },
-        navigationPropsSchema
-    );
+    const { to, href } = resolveXmlProps(plan.control.params, ctx, navigationPropsSchema);
     const url = resolveControlUrl(
         services.navigationBaseUrl,
         services.requestBaseUrl,
@@ -161,12 +156,7 @@ async function executeRequest(
     ctx: Scope,
     requestBaseUrl: string
 ): Promise<{ closeDialog: boolean; status: number }> {
-    const { url, method, form, json, closeDialog } = resolveXmlProps(
-        props,
-        ctx,
-        { url: 'scalar', method: 'scalar', form: 'raw', json: 'raw', closeDialog: 'scalar' },
-        requestPropsSchema
-    );
+    const { url, method, form, json, closeDialog } = resolveXmlProps(props, ctx, requestPropsSchema, ['form', 'json']);
     if (form !== undefined && json !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
     }
@@ -195,7 +185,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
     }
     const valueAttribute = readXmlProp(props, 'value');
     const value = resolveXmlValue(props, 'value', ctx);
-    const { invalidate } = resolveXmlProps(props, ctx, { invalidate: 'scalar' }, patchPropsSchema);
+    const { invalidate } = resolveXmlProps(props, ctx, patchPropsSchema);
     if ((valueAttribute != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');
     }

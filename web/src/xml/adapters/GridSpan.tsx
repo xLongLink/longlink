@@ -12,7 +12,7 @@ const gridSpanPropsSchema = z.object({
 
 export function GridSpan({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { columns, rows } = resolveXmlProps(props, ctx, { columns: 'scalar', rows: 'scalar' }, gridSpanPropsSchema);
+    const { columns, rows } = resolveXmlProps(props, ctx, gridSpanPropsSchema);
 
     return (
         <AstryxGridSpan columns={columns} rows={rows}>

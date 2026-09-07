@@ -21,12 +21,10 @@ export const DialogCloseContext = createContext<(() => void) | null>(null);
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, coerceXmlBoolean);
-    const { gap, purpose, subtitle, title, triggerLabel } = resolveXmlProps(
-        props,
-        ctx,
-        { gap: 'scalar', purpose: 'scalar', subtitle: 'scalar', title: 'raw', triggerLabel: 'raw' },
-        dialogPropsSchema
-    );
+    const { gap, purpose, subtitle, title, triggerLabel } = resolveXmlProps(props, ctx, dialogPropsSchema, [
+        'title',
+        'triggerLabel',
+    ]);
 
     if (props.triggerLabel != null && triggerLabel == null) {
         throw new Error('Dialog requires a string triggerLabel');

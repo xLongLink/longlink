@@ -125,9 +125,7 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
         validate_xml(content)
 
 
-@pytest.mark.parametrize(
-    "content", [f"<longlink>{content}</longlink>" for _, content in VALID_FRAGMENTS], ids=[case[0] for case in VALID_FRAGMENTS]
-)
+@pytest.mark.parametrize("content", [pytest.param(f"<longlink>{content}</longlink>", id=name) for name, content in VALID_FRAGMENTS])
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the View schema."""
 
@@ -135,9 +133,7 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
     validate_xml(content)
 
 
-@pytest.mark.parametrize(
-    "content", [f"<longlink>{content}</longlink>" for _, content in INVALID_FRAGMENTS], ids=[case[0] for case in INVALID_FRAGMENTS]
-)
+@pytest.mark.parametrize("content", [pytest.param(f"<longlink>{content}</longlink>", id=name) for name, content in INVALID_FRAGMENTS])
 def test_root_schema_rejects_invalid_fragments(content: str) -> None:
     """Reject representative invalid XML fragments through the View schema."""
 

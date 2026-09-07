@@ -1,8 +1,10 @@
 import re
 import click
 from lxml import etree
+from typing import cast
 from functools import cache
 from collections import deque
+from collections.abc import Iterator
 from longlink.constants import ROOT
 
 XSD = "{http://www.w3.org/2001/XMLSchema}"
@@ -25,7 +27,7 @@ def _text(node: etree._Element, path: str) -> str:
 
     # Namespace URIs work regardless of the prefix used by each schema.
     child = node.find(path)
-    text = "".join(str(value) for value in child.itertext()) if child is not None else ""
+    text = "".join(cast(Iterator[str], child.itertext())) if child is not None else ""
     return text.strip() if path.endswith(f"{DOCS}example") else " ".join(text.split())
 
 
@@ -52,9 +54,13 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
         runtime = next((group for group in groups if group.get("name") == "XmlRuntimeAttributes"), None)
         if runtime is not None:
             attributes.extend(runtime.findall(f"{XSD}attribute"))
-    lines = [element.get("name", ""), description, "Attributes"] if description else [element.get("name", ""), "Attributes"]
+    lines = [element.get("name", "")]
+    if description:
+        lines.append(description)
+    lines.append("Attributes")
     if not attributes:
-        return [*lines, "- none"]
+        lines.append("- none")
+        return lines
 
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:
@@ -117,12 +123,15 @@ def docs_command(component: str | None) -> None:
         lines = ["LongLink XML components"]
         documented.sort(key=lambda entry: entry[0].get("name", ""))
         for category in sorted({metadata.get("category", "") for _, metadata in documented}):
-            lines.extend(["", category])
+            lines.append("")
+            lines.append(category)
             for element, metadata in documented:
                 if metadata.get("category") == category:
                     description = _text(element, f"{XSD}annotation/{XSD}documentation")
                     lines.append(f"- {element.get('name')} - {description}")
-        click.echo("\n".join([*lines, "", "Run `longlink docs <component>` for attributes and examples."]))
+        lines.append("")
+        lines.append("Run `longlink docs <component>` for attributes and examples.")
+        click.echo("\n".join(lines))
         return
 
     # Resolve either the XML element name or documentation slug.
@@ -145,6 +154,10 @@ def docs_command(component: str | None) -> None:
     lines[0] = f"{lines[0]} [{metadata.get('category', '')}]"
     helpers = _helpers(element, example, elements, schemas)
     for helper in helpers:
-        lines.extend(["", "Related element", *_element_lines(helper, schemas)])
-    lines.extend(["", "Example", example or "- none"])
+        lines.append("")
+        lines.append("Related element")
+        lines.extend(_element_lines(helper, schemas))
+    lines.append("")
+    lines.append("Example")
+    lines.append(example or "- none")
     click.echo("\n".join(lines))

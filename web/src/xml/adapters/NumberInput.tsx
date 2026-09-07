@@ -15,12 +15,7 @@ const numberInputPropsSchema = z.object({
 export function NumberInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => (value == null ? undefined : Number(value)));
-    const { label, max, min, step } = resolveXmlProps(
-        props,
-        ctx,
-        { label: 'raw', max: 'scalar', min: 'scalar', step: 'scalar' },
-        numberInputPropsSchema
-    );
+    const { label, max, min, step } = resolveXmlProps(props, ctx, numberInputPropsSchema, ['label']);
 
     return (
         <AstryxNumberInput

@@ -11,7 +11,7 @@ const headingPropsSchema = z.object({
 
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { level } = resolveXmlProps(props, ctx, { level: 'scalar' }, headingPropsSchema);
+    const { level } = resolveXmlProps(props, ctx, headingPropsSchema);
 
     return <AstryxHeading level={level}>{renderNode(nodes, ctx)}</AstryxHeading>;
 }

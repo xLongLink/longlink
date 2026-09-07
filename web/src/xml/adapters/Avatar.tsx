@@ -14,17 +14,7 @@ const avatarPropsSchema = z.object({
 
 export function Avatar({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const {
-        alt,
-        kind,
-        name,
-        src: source,
-    } = resolveXmlProps(
-        props,
-        ctx,
-        { alt: 'scalar', kind: 'scalar', name: 'scalar', src: 'scalar' },
-        avatarPropsSchema
-    );
+    const { alt, kind, name, src: source } = resolveXmlProps(props, ctx, avatarPropsSchema);
     const src = resolveAnchorUrl(services.requestBaseUrl, source ?? '') || undefined;
     if (kind === 'organization') {
         return <UiAvatar kind="organization" name={name ?? ''} src={src} />;

@@ -21,7 +21,7 @@ export function Button({ props, nodes }: Props) {
         throw new Error('Button requires child content');
     }
 
-    const { to, variant } = resolveXmlProps(props, ctx, { to: 'scalar', variant: 'scalar' }, buttonPropsSchema);
+    const { to, variant } = resolveXmlProps(props, ctx, buttonPropsSchema);
     const actionHandler = useContext(ActionHandlerContext);
     const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
 

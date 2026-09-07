@@ -20,12 +20,7 @@ export function Slider({ props }: Props) {
         const numericValue = typeof value === 'string' || typeof value === 'number' ? Number(value) : Number.NaN;
         return Number.isFinite(numericValue) ? numericValue : 0;
     });
-    const { label, max, min, step } = resolveXmlProps(
-        props,
-        ctx,
-        { label: 'raw', max: 'scalar', min: 'scalar', step: 'scalar' },
-        sliderPropsSchema
-    );
+    const { label, max, min, step } = resolveXmlProps(props, ctx, sliderPropsSchema, ['label']);
 
     return (
         <AstryxSlider label={label} max={max} min={min} onChange={binding.setValue} step={step} value={binding.value} />

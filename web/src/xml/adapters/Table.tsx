@@ -13,7 +13,7 @@ const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 export function Table({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 
-    const { data, idKey } = resolveXmlProps(props, ctx, { data: 'raw', idKey: 'scalar' }, tablePropsSchema);
+    const { data, idKey } = resolveXmlProps(props, ctx, tablePropsSchema, ['data']);
 
     const columns = nodes
         .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
@@ -34,12 +34,7 @@ export function Table({ props, nodes }: Props) {
                 throw new Error('TableColumn requires a usable field path');
             }
             const field = fieldParts.join('.');
-            const { header: headerValue } = resolveXmlProps(
-                columnProps,
-                ctx,
-                { header: 'scalar' },
-                tableColumnPropsSchema
-            );
+            const { header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
             const header = headerValue ?? field;
 
             return {

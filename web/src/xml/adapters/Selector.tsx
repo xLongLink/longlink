@@ -17,7 +17,7 @@ export function Selector({ props, nodes }: Props) {
 
     return (
         <AstryxSelector
-            label={resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema).label}
+            label={resolveXmlProps(props, ctx, xmlLabelPropsSchema, ['label']).label}
             onChange={binding.setValue}
             options={options}
             value={binding.value}

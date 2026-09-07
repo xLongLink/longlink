@@ -1,6 +1,6 @@
 import { compileProps } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, setupContext } from '@/xml/core/context';
+import { createContext, getSetupNodes, setupContext } from '@/xml/core/context';
 
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
@@ -15,11 +15,11 @@ describe('core/context', () => {
             },
         ];
 
-        await setupContext(ast, ctx);
+        await setupContext(getSetupNodes(ast), ctx);
         const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
         expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
-        await setupContext(ast, ctx);
+        await setupContext(getSetupNodes(ast), ctx);
 
         expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
 
@@ -44,7 +44,7 @@ describe('core/context', () => {
             return new Response(JSON.stringify({ id: '123' }));
         });
 
-        await setupContext(ast, ctx);
+        await setupContext(getSetupNodes(ast), ctx);
 
         expect(requestedUrl).toBe('http://localhost/proxy/api/issues/123');
         expect(ctx.scope.bindings.issue).toEqual({ id: '123' });
@@ -62,7 +62,7 @@ describe('core/context', () => {
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
-        await setupContext(ast, ctx);
+        await setupContext(getSetupNodes(ast), ctx);
         await ctx.services.setups.records();
 
         // Assert
@@ -79,13 +79,13 @@ describe('core/context', () => {
 
         await expect(
             setupContext(
-                [
+                getSetupNodes([
                     {
                         name: 'Query',
                         params: compileProps({ id: 'issue', path: 'https://evil.example/issues' }),
                         children: [],
                     },
-                ],
+                ]),
                 ctx
             )
         ).rejects.toThrow('XML request URL must be solution-relative');
@@ -102,13 +102,13 @@ describe('core/context', () => {
         // Act and assert
         await expect(
             setupContext(
-                [
+                getSetupNodes([
                     {
                         name: 'Query',
                         params: compileProps({ id: 'issue', path: '${{id: "123"}}' }),
                         children: [],
                     },
-                ],
+                ]),
                 ctx
             )
         ).rejects.toThrow('Query path must resolve to a string');

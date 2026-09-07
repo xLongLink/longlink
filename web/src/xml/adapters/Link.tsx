@@ -20,7 +20,7 @@ export function Link({ props, nodes }: Props) {
         throw new Error('Link requires child content');
     }
 
-    const { href, to } = resolveXmlProps(props, ctx, { href: 'scalar', to: 'scalar' }, linkPropsSchema);
+    const { href, to } = resolveXmlProps(props, ctx, linkPropsSchema);
     const actionHandler = useContext(ActionHandlerContext);
     const controlUrl = resolveControlUrl(services.navigationBaseUrl, services.requestBaseUrl, to ?? '', href ?? '');
 
