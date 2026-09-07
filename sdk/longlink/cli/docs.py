@@ -66,8 +66,13 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:
         type_name = attribute.get("type", "string").rsplit(":", 1)[-1]
-        simple_types = (node for schema in schemas for node in schema.findall(f"{XSD}simpleType"))
-        simple_type = attribute.find(f"{XSD}simpleType") or next((node for node in simple_types if node.get("name") == type_name), None)
+        simple_type = attribute.find(f"{XSD}simpleType")
+
+        # Resolve named types only when no inline type is declared.
+        if simple_type is None:
+            simple_types = (node for schema in schemas for node in schema.findall(f"{XSD}simpleType"))
+            simple_type = next((node for node in simple_types if node.get("name") == type_name), None)
+
         values = (
             [] if simple_type is None else [value.get("value", "") for value in simple_type.findall(f"{XSD}restriction/{XSD}enumeration")]
         )

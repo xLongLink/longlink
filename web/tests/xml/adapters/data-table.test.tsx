@@ -30,7 +30,7 @@ describe('Table', () => {
         expect(output).toContain('Ada Lovelace');
     });
 
-    it('renders rich header and cell slots', () => {
+    it('renders an explicit header and rich cell children', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
         const output = renderXmlToMarkup(

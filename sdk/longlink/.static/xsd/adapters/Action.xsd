@@ -24,17 +24,17 @@
           <xsd:complexType>
             <xsd:attribute name="state" type="xsd:string" use="required">
               <xsd:annotation>
-                <xsd:documentation>State identifier to update.</xsd:documentation>
+                <xsd:documentation>Literal State identifier to patch, or State/Query identifier to invalidate.</xsd:documentation>
               </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="value" type="xsd:string">
               <xsd:annotation>
-                <xsd:documentation>Current value or binding expression.</xsd:documentation>
+                <xsd:documentation>Object expression containing declared State properties to update. Specify exactly one of value or invalidate="true".</xsd:documentation>
               </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true">
               <xsd:annotation>
-                <xsd:documentation>Invalidates the referenced state.</xsd:documentation>
+                <xsd:documentation>Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate="true".</xsd:documentation>
               </xsd:annotation>
             </xsd:attribute>
           </xsd:complexType>

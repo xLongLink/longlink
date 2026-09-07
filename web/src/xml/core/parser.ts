@@ -56,7 +56,6 @@ function toNodes(input: unknown): ASTNode[] {
 
     const record = input as Record<string, unknown>;
     const params = collectParams(record[':@']);
-    validateParams(params);
 
     // Preserve sibling order while stripping parser metadata.
     return Object.entries(record).flatMap(([key, value]) => {
@@ -80,7 +79,7 @@ function toNodes(input: unknown): ASTNode[] {
     });
 }
 
-/** Collects parser attributes into plain XML params. */
+/** Validates parser attribute names and compiles them into XML params. */
 function collectParams(input: unknown): ASTProps {
     // Ignore malformed attribute containers.
     if (!input || typeof input !== 'object') {
@@ -91,20 +90,9 @@ function collectParams(input: unknown): ASTProps {
 
     const params: ASTProps = {};
 
-    // Copy attributes without parser prefixes.
+    // Reject unsupported names before compiling attributes without parser prefixes.
     for (const [key, entry] of Object.entries(record)) {
-        // Compile string attributes without resolving runtime values.
         const name = key.slice(2);
-
-        params[name] = compileAttribute(entry);
-    }
-
-    return params;
-}
-
-/** Rejects XML attributes that would let consumers control adapter behavior or styling. */
-function validateParams(params: ASTProps): void {
-    for (const name of Object.keys(params)) {
         const lowerName = name.toLowerCase();
 
         if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
@@ -114,5 +102,10 @@ function validateParams(params: ASTProps): void {
         if (lowerName.startsWith('on')) {
             throw new Error(`Event handler attribute "${name}" is not supported in XML`);
         }
+
+        // Compile string attributes without resolving runtime values.
+        params[name] = compileAttribute(entry);
     }
+
+    return params;
 }

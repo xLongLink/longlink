@@ -13,7 +13,6 @@ import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
 import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
-const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 const requestPropsSchema = z.object({
@@ -23,6 +22,8 @@ const requestPropsSchema = z.object({
     json: z.unknown().optional(),
     closeDialog: z.boolean().default(false),
 });
+
+const REQUEST_ALLOWED_PROPS = new Set(Object.keys(requestPropsSchema.shape));
 
 const patchPropsSchema = z.object({
     invalidate: z.boolean().optional(),
