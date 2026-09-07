@@ -45,7 +45,7 @@ function formatOperationDate(value: string): string {
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const [logOperation, setLogOperation] = useState<OperationResponse | null>(null);
+    const [logOperationId, setLogOperationId] = useState<string | null>(null);
     const [metadataOperation, setMetadataOperation] = useState<OperationResponse | null>(null);
     const {
         items: operations,
@@ -125,7 +125,7 @@ export default function AdminOperations() {
                                 {
                                     isDisabled: operation.finished_at === null,
                                     label: 'Logs',
-                                    onClick: () => setLogOperation(operation),
+                                    onClick: () => setLogOperationId(operation.id),
                                 },
                             ]}
                         />
@@ -153,15 +153,15 @@ export default function AdminOperations() {
                     </MetadataList>
                 </MetadataDialog>
             ) : null}
-            {logOperation ? (
+            {logOperationId !== null ? (
                 <Logs
                     kind="operation"
                     onOpenChange={(open) => {
                         if (!open) {
-                            setLogOperation(null);
+                            setLogOperationId(null);
                         }
                     }}
-                    resourceId={logOperation.id}
+                    resourceId={logOperationId}
                 />
             ) : null}
         </Stack>

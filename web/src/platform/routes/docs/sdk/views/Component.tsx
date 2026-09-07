@@ -12,9 +12,9 @@ import { componentDocumentation, type ComponentDocumentation } from '@/lib/xsd';
 function AttributeTable({ attributes }: { attributes: ComponentDocumentation['attributes'] }) {
     return (
         <Table
-            data={attributes.map(({ description, name }) => ({ description, parameter: name }))}
+            data={attributes}
             columns={[
-                { key: 'parameter', header: 'Parameter', width: proportional(1) },
+                { key: 'name', header: 'Parameter', width: proportional(1) },
                 { key: 'description', header: 'Description', width: proportional(3) },
             ]}
             density="compact"
