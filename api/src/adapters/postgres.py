@@ -1,7 +1,7 @@
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
-from collections.abc import AsyncGenerator
+from collections.abc import Iterable, AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
@@ -212,8 +212,8 @@ class Postgres:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
-    async def delete_database(self, organization: UUID) -> None:
-        """Delete one organization database and tolerate missing databases."""
+    async def delete_database(self, organization: UUID, solutions: Iterable[UUID]) -> None:
+        """Delete an organization database, then its runtime roles, resuming after partial cleanup."""
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
         async with self._connection("postgres", autocommit=True) as conn:
@@ -232,6 +232,12 @@ class Postgres:
 
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
+
+            # Roles are cluster-global; remove them even when a previous attempt already dropped the database.
+            for solution in solutions:
+                runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
+                role = self.quote(conn, runtime_username)
+                await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
     async def solution_runtime_identity_exists(self, organization: UUID, solution: UUID) -> bool:
         """Return whether one Solution runtime database identity remains in PostgreSQL."""

@@ -1,8 +1,9 @@
 import pytest
-from uuid import uuid4
+from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
+from collections.abc import Iterable
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -266,12 +267,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_solution_schema(self, organization_id: object, solution_id: object) -> None:
-            """Record unexpected schema deletion."""
-
-            calls.append("schema")
-
-        async def delete_database(self, organization_id: object) -> None:
+        async def delete_database(self, organization_id: UUID, solutions: Iterable[UUID]) -> None:
             """Record unexpected database deletion."""
 
             calls.append("database")
@@ -280,7 +276,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def revoke(self, name: str) -> None:
+        async def revoke_solution(self, name: str) -> None:
             """Record unexpected credential revocation."""
 
             calls.append("revoke")
@@ -315,10 +311,8 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     assert calls == []
 
 
-async def test_delete_tears_down_organization_boundaries_in_order(
-    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Delete namespace, Solution resources, providers, then the Organization tombstone."""
+async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+    """Delete the namespace, database and roles, storage, then the Organization tombstone."""
 
     # Arrange a tombstoned Organization and an active sibling on the same infrastructure.
     infrastructure = await create_ready_infrastructure()
@@ -337,17 +331,11 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_solution_schema(self, organization_id: object, solution_id: object) -> None:
-            """Record Solution schema deletion."""
+        async def delete_database(self, organization_id: UUID, solutions: Iterable[UUID]) -> None:
+            """Record Organization database and scoped runtime-role deletion."""
 
             assert organization_id == organization.id
-            assert solution_id == solution.id
-            calls.append("schema")
-
-        async def delete_database(self, organization_id: object) -> None:
-            """Record Organization database deletion."""
-
-            assert organization_id == organization.id
+            assert set(solutions) == {solution.id}
             calls.append("database")
 
     class Storage:
@@ -393,4 +381,4 @@ async def test_delete_tears_down_organization_boundaries_in_order(
         assert await session.get(Solution, solution.id) is None
         assert await session.get(Organization, sibling_organization.id) is not None
         assert await session.get(Solution, sibling_solution.id) is not None
-    assert calls == ["namespace", "schema", "revoke", "database", "bucket"]
+    assert calls == ["namespace", "database", "revoke", "bucket"]

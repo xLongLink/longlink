@@ -31,13 +31,13 @@ from longlink.database import migrations as database_migrations
         ),
     ],
 )
-def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: list[str], project_name: str) -> None:
+def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: list[str], project_name: str, tmp_path: Path) -> None:
     """Copy the requested project scaffold into the target folder."""
 
     # Arrange
     runner = CliRunner()
 
-    with runner.isolated_filesystem():
+    with chdir(tmp_path):
         result = runner.invoke(init_command, arguments)
 
         # Assert
@@ -63,13 +63,13 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
         assert not (target / "uv.lock").exists()
 
 
-def test_init_refuses_existing_folder() -> None:
+def test_init_refuses_existing_folder(tmp_path: Path) -> None:
     """Avoid silently replacing an existing project folder."""
 
     # Arrange
     runner = CliRunner()
 
-    with runner.isolated_filesystem():
+    with chdir(tmp_path):
         target = Path.cwd() / "sample-solution"
         target.mkdir()
 
@@ -81,13 +81,13 @@ def test_init_refuses_existing_folder() -> None:
         assert "Target already exists" in result.output
 
 
-def test_init_rejects_invalid_project_name_without_creating_folder() -> None:
+def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Path) -> None:
     """Reject invalid project metadata before creating the requested scaffold."""
 
     # Arrange
     runner = CliRunner()
 
-    with runner.isolated_filesystem():
+    with chdir(tmp_path):
         # Act
         result = runner.invoke(init_command, ["--folder", "sample-solution", "--name", "../invalid"])
 
@@ -97,14 +97,16 @@ def test_init_rejects_invalid_project_name_without_creating_folder() -> None:
         assert not (Path.cwd() / "sample-solution").exists()
 
 
-def test_initialized_project_applies_bundled_migration_through_deployment_entrypoint(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_initialized_project_applies_bundled_migration_through_deployment_entrypoint(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Apply a generated project's initial migration through the deployment entrypoint."""
 
     # Arrange
     runner = CliRunner()
     monkeypatch.setenv("LONGLINK_ENV", "development")
 
-    with runner.isolated_filesystem():
+    with chdir(tmp_path):
         result = runner.invoke(init_command, ["--folder", "sample-solution"])
         assert result.exit_code == 0
         target = Path.cwd() / "sample-solution"
