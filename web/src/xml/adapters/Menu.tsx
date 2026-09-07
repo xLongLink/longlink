@@ -21,7 +21,7 @@ const menuEntryPropsSchema = z.object({
 /** Renders the solution menu from XML sections and items. */
 export function Menu({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, menuPropsSchema);
+    const { gap } = resolveXmlProps(props, ctx, menuPropsSchema);
 
     return (
         <SolutionMenu gap={gap}>
@@ -40,12 +40,7 @@ export function Menu({ props, nodes }: Props) {
 
 /** Converts an XML menu section into the solution menu marker. */
 function renderSection(node: ASTNode, ctx: Scope) {
-    const { isHeaderHidden, title } = resolveXmlProps(
-        node.params,
-        ctx,
-        { isHeaderHidden: 'scalar', title: 'raw' },
-        menuSectionPropsSchema
-    );
+    const { isHeaderHidden, title } = resolveXmlProps(node.params, ctx, menuSectionPropsSchema, ['title']);
 
     return (
         <SolutionMenuSection isHeaderHidden={isHeaderHidden} key={title} title={title}>
@@ -56,7 +51,7 @@ function renderSection(node: ASTNode, ctx: Scope) {
 
 /** Converts an XML menu item or subsection into the solution menu marker. */
 function renderEntry(node: ASTNode, ctx: Scope) {
-    const { icon, label } = resolveXmlProps(node.params, ctx, { icon: 'scalar', label: 'raw' }, menuEntryPropsSchema);
+    const { icon, label } = resolveXmlProps(node.params, ctx, menuEntryPropsSchema, ['label']);
 
     if (node.name === 'MenuItem') {
         return (

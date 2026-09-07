@@ -1,5 +1,4 @@
 import { Stack } from '@astryxdesign/core/Stack';
-import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
 import { useState, Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 
@@ -13,16 +12,14 @@ type TabsProps = Omit<AstryxTabListProps, 'children' | 'onChange' | 'value'> & {
 };
 type TabProps = Omit<ComponentProps<typeof AstryxTab>, 'icon'> & {
     children?: ReactNode;
-    icon?: StoneIconName;
 };
 
 /** Renders tabs and the selected tab's content. */
-export function Tabs({ children, gap = 3, ...props }: TabsProps) {
+export function Tabs({ children, gap = 3, onChange, value: controlledValue, ...tabListProps }: TabsProps) {
     const tabs = Children.toArray(children).filter(
         (child): child is ReactElement<TabProps> => isValidElement(child) && child.type === Tab
     );
     const [uncontrolledValue, setUncontrolledValue] = useState(tabs[0]?.props.value ?? '');
-    const { onChange, value: controlledValue, ...tabListProps } = props;
     const value = controlledValue ?? uncontrolledValue;
     const activeTab = tabs.find((tab) => tab.props.value === value) ?? tabs[0];
 
@@ -44,15 +41,9 @@ export function Tabs({ children, gap = 3, ...props }: TabsProps) {
                 value={activeTab.props.value}
             >
                 {tabs.map((tab) => {
-                    const { children: _children, icon, ...tabProps } = tab.props;
+                    const { children: _children, ...tabProps } = tab.props;
 
-                    return (
-                        <AstryxTab
-                            {...tabProps}
-                            icon={icon ? <Icon icon={icon} size="sm" /> : undefined}
-                            key={tabProps.label}
-                        />
-                    );
+                    return <AstryxTab {...tabProps} key={tabProps.label} />;
                 })}
             </AstryxTabList>
             <Stack gap={gap}>{activeTab.props.children}</Stack>

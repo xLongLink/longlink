@@ -7,7 +7,7 @@ import { CheckboxInput as AstryxCheckboxInput } from '@astryxdesign/core/Checkbo
 export function CheckboxInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, (value) => value === true || value === 'true');
-    const { label } = resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema);
+    const { label } = resolveXmlProps(props, ctx, xmlLabelPropsSchema, ['label']);
 
     return <AstryxCheckboxInput label={label} size="sm" value={binding.value} onChange={binding.setValue} />;
 }

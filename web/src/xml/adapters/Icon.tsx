@@ -12,7 +12,7 @@ const iconPropsSchema = z.object({
 
 export function Icon({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { icon, label } = resolveXmlProps(props, ctx, { icon: 'raw', label: 'scalar' }, iconPropsSchema);
+    const { icon, label } = resolveXmlProps(props, ctx, iconPropsSchema, ['icon']);
 
     return <AstryxIcon icon={icon} label={label} />;
 }

@@ -288,8 +288,40 @@ export default function Home() {
                     />
                 </Grid>
             </Section>
+            <Section className="relative z-20 bg-body" padding={6} paddingBlock={10} variant="transparent">
+                <Stack className="mx-auto py-16 text-center" gap={6} hAlign="center" maxWidth={1000} width="100%">
+                    <Stack gap={2} hAlign="center">
+                        <Heading justify="center" level={2} textWrap="balance" type="display-2">
+                            Design
+                            <ArrowRight
+                                aria-hidden="true"
+                                className="mx-2 inline-block size-6 align-middle sm:size-8"
+                            />
+                            Build
+                            <ArrowRight
+                                aria-hidden="true"
+                                className="mx-2 inline-block size-6 align-middle sm:size-8"
+                            />
+                            Operate
+                            <ArrowRight
+                                aria-hidden="true"
+                                className="mx-2 inline-block size-6 align-middle sm:size-8"
+                            />
+                            Improve
+                        </Heading>
+                        <Text as="p" color="secondary" textWrap="pretty">
+                            <Text display="block" type="inherit">
+                                The complete business process lifecycle, defined as code
+                            </Text>
+                            <Text display="block" type="inherit">
+                                Designed to be inspected, reviewed and improved.
+                            </Text>
+                        </Text>
+                    </Stack>
+                </Stack>
+            </Section>
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
-                <Stack className="mx-auto pt-10 sm:pt-16" width="100%" maxWidth={1000} gap={8}>
+                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }}>
                         <PathCard
                             action="Explore existing solutions"
@@ -354,14 +386,22 @@ export default function Home() {
                             And it's open source.
                         </Text>
                     </Stack>
-                    <Button
-                        endContent={<ArrowRight aria-hidden="true" size={16} />}
-                        href="https://github.com/xLongLink/longlink"
-                        label="Leave a star on GitHub"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        variant="primary"
-                    />
+                    <Stack className="flex-wrap" direction="horizontal" gap={3} hAlign="center" vAlign="center">
+                        <Button
+                            endContent={<ArrowRight aria-hidden="true" size={16} />}
+                            href="/blog/introducing-longlink"
+                            label="Introducing LongLink"
+                            variant="secondary"
+                        />
+                        <Button
+                            endContent={<ArrowRight aria-hidden="true" size={16} />}
+                            href="https://github.com/xLongLink/longlink"
+                            label="Leave a star on GitHub"
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            variant="primary"
+                        />
+                    </Stack>
                 </Stack>
             </Section>
         </>

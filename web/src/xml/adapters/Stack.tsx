@@ -16,12 +16,7 @@ const stackPropsSchema = z.object({
 
 export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { align, direction, gap, justify, wrap } = resolveXmlProps(
-        props,
-        ctx,
-        { align: 'scalar', direction: 'scalar', gap: 'scalar', justify: 'scalar', wrap: 'scalar' },
-        stackPropsSchema
-    );
+    const { align, direction, gap, justify, wrap } = resolveXmlProps(props, ctx, stackPropsSchema);
 
     return (
         <UiStack align={align} direction={direction} gap={gap} justify={justify} wrap={wrap}>

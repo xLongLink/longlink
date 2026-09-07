@@ -97,9 +97,9 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 return None
 
             digest = manifest_headers.get("Docker-Content-Digest")
-            if digest is None and IMAGE_DIGEST_PATTERN.fullmatch(image.tag_or_digest):
+            if digest is None:
                 digest = image.tag_or_digest
-            if digest is None or not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+            if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
                 return None
 
             manifest_config = manifest.get("config")
@@ -139,6 +139,6 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
                 result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
             return result
-        except (httpx2.HTTPError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        except (httpx2.HTTPError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None

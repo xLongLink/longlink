@@ -6,11 +6,6 @@
         <xsd:documentation>Avatar image URL.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="fallbackSrc" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Fallback image URL.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="name" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation>Name used for the avatar fallback.</xsd:documentation>

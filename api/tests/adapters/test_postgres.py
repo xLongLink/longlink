@@ -33,8 +33,7 @@ async def postgres_adapter() -> AsyncIterator[tuple[Postgres, UUID, UUID]]:
         try:
             yield adapter, organization_id, solution_id
         finally:
-            await adapter.delete_solution_schema(organization_id, solution_id)
-            await adapter.delete_database(organization_id)
+            await adapter.delete_database(organization_id, [solution_id])
 
 
 @pytest.mark.integration
@@ -170,8 +169,8 @@ async def test_postgres_adapter_reports_usage_before_and_after_cleanup(
     # Act
     database_usage = await adapter.database_usage(database_name)
     server_usage = await adapter.usage()
-    await adapter.delete_solution_schema(organization_id, solution_id)
-    await adapter.delete_database(organization_id)
+    await adapter.delete_database(organization_id, [solution_id])
+    await adapter.delete_database(organization_id, [solution_id])
     database_usage_after_delete = await adapter.database_usage(database_name)
     server_usage_after_delete = await adapter.usage()
 
@@ -181,3 +180,4 @@ async def test_postgres_adapter_reports_usage_before_and_after_cleanup(
     assert server_usage > 0
     assert database_usage_after_delete is None
     assert server_usage_after_delete == 0
+    assert await adapter.solution_runtime_identity_exists(organization_id, solution_id) is False

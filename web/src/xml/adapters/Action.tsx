@@ -7,14 +7,12 @@ import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
 import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
+import { evaluate } from '../expressions/evaluate';
 import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
+import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
-type ActionStep = { kind: 'patch' | 'request'; props: ASTProps };
-
-const REQUEST_ALLOWED_PROPS = new Set(['url', 'method', 'form', 'json', 'closeDialog']);
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 
 const requestPropsSchema = z.object({
@@ -24,6 +22,8 @@ const requestPropsSchema = z.object({
     json: z.unknown().optional(),
     closeDialog: z.boolean().default(false),
 });
+
+const REQUEST_ALLOWED_PROPS = new Set(Object.keys(requestPropsSchema.shape));
 
 const patchPropsSchema = z.object({
     invalidate: z.boolean().optional(),
@@ -36,7 +36,7 @@ const navigationPropsSchema = z.object({
 
 type ActionPlan = {
     control: ASTNode;
-    steps: ActionStep[];
+    steps: ASTNode[];
 };
 
 export const ActionHandlerContext = createContext<(() => void) | null>(null);
@@ -62,13 +62,16 @@ export function Action({ props, nodes }: Props) {
     );
 }
 
-/** Validates direct Action children and converts them into ordered executable steps. */
+/** Validates direct Action children and collects effect nodes in document order. */
 function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
+    // Conditional visibility is already handled by the shared renderer.
     for (const name of Object.keys(props)) {
-        throw new Error(`Action does not support ${name}`);
+        if (name !== 'if') {
+            throw new Error(`Action does not support ${name}`);
+        }
     }
 
-    const steps: ActionStep[] = [];
+    const steps: ASTNode[] = [];
     let control: ASTNode | undefined;
 
     for (const node of nodes) {
@@ -86,7 +89,7 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
                     throw new Error(`${node.name} does not support ${name}`);
                 }
             }
-            steps.push({ kind: node.name === 'Request' ? 'request' : 'patch', props: node.params });
+            steps.push(node);
             continue;
         }
 
@@ -121,22 +124,17 @@ async function executeAction(
     let status: number | undefined;
 
     for (const step of plan.steps) {
-        if (step.kind === 'request') {
-            const result = await executeRequest(step.props, ctx, services.requestBaseUrl);
+        if (step.name === 'Request') {
+            const result = await executeRequest(step.params, ctx, services.requestBaseUrl);
             closeOnSuccess ||= result.closeDialog;
             status = result.status;
             continue;
         }
 
-        await executePatch(step.props, ctx, services);
+        await executePatch(step.params, ctx, services);
     }
 
-    const { to, href } = resolveXmlProps(
-        plan.control.params,
-        ctx,
-        { to: 'scalar', href: 'scalar' },
-        navigationPropsSchema
-    );
+    const { to, href } = resolveXmlProps(plan.control.params, ctx, navigationPropsSchema);
     const url = resolveControlUrl(
         services.navigationBaseUrl,
         services.requestBaseUrl,
@@ -163,12 +161,7 @@ async function executeRequest(
     ctx: Scope,
     requestBaseUrl: string
 ): Promise<{ closeDialog: boolean; status: number }> {
-    const { url, method, form, json, closeDialog } = resolveXmlProps(
-        props,
-        ctx,
-        { url: 'scalar', method: 'scalar', form: 'raw', json: 'raw', closeDialog: 'scalar' },
-        requestPropsSchema
-    );
+    const { url, method, form, json, closeDialog } = resolveXmlProps(props, ctx, requestPropsSchema, ['form', 'json']);
     if (form !== undefined && json !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
     }
@@ -196,8 +189,8 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch requires a literal state ID');
     }
     const valueAttribute = readXmlProp(props, 'value');
-    const value = resolveXmlValue(props, 'value', ctx);
-    const { invalidate } = resolveXmlProps(props, ctx, { invalidate: 'scalar' }, patchPropsSchema);
+    const value = valueAttribute == null ? undefined : evaluate(valueAttribute, ctx);
+    const { invalidate } = resolveXmlProps(props, ctx, patchPropsSchema);
     if ((valueAttribute != null) === (invalidate === true)) {
         throw new Error('Patch requires exactly one of value or invalidate="true"');
     }

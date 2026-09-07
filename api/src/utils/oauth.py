@@ -62,9 +62,12 @@ def authorization_url(provider: OAuthProvider, state: str, verifier: str) -> str
     # Request only profile data required to identify an account and verify its email address.
     if provider == "google":
         params["scope"] = "openid email profile"
-        return f"{GOOGLE_AUTHORIZATION_URL}?{urlencode(params)}"
-    params["scope"] = "read:user user:email"
-    return f"{GITHUB_AUTHORIZATION_URL}?{urlencode(params)}"
+        authorization_endpoint = GOOGLE_AUTHORIZATION_URL
+    else:
+        params["scope"] = "read:user user:email"
+        authorization_endpoint = GITHUB_AUTHORIZATION_URL
+
+    return f"{authorization_endpoint}?{urlencode(params)}"
 
 
 async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthIdentity | None:
@@ -77,30 +80,26 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
     # Exchange the single-use authorization code through the provider's fixed HTTPS endpoint.
     try:
         async with httpx2.AsyncClient(follow_redirects=False, timeout=10.0) as client:
+            # Share code-exchange fields while keeping provider requirements explicit.
+            data: dict[str, str | None] = {
+                "code": code,
+                "code_verifier": verifier,
+                "redirect_uri": redirect_uri(provider),
+            }
+            headers: dict[str, str] = {}
             if provider == "google":
-                token_response = await client.post(
-                    GOOGLE_TOKEN_URL,
-                    data={
-                        "client_id": env.GOOGLE_OAUTH_CLIENT_ID,
-                        "client_secret": env.GOOGLE_OAUTH_CLIENT_SECRET,
-                        "code": code,
-                        "code_verifier": verifier,
-                        "grant_type": "authorization_code",
-                        "redirect_uri": redirect_uri(provider),
-                    },
-                )
+                token_url = GOOGLE_TOKEN_URL
+                data["client_id"] = env.GOOGLE_OAUTH_CLIENT_ID
+                data["client_secret"] = env.GOOGLE_OAUTH_CLIENT_SECRET
+                data["grant_type"] = "authorization_code"
             else:
-                token_response = await client.post(
-                    GITHUB_TOKEN_URL,
-                    data={
-                        "client_id": env.GITHUB_OAUTH_CLIENT_ID,
-                        "client_secret": env.GITHUB_OAUTH_CLIENT_SECRET,
-                        "code": code,
-                        "code_verifier": verifier,
-                        "redirect_uri": redirect_uri(provider),
-                    },
-                    headers={"Accept": "application/json"},
-                )
+                token_url = GITHUB_TOKEN_URL
+                data["client_id"] = env.GITHUB_OAUTH_CLIENT_ID
+                data["client_secret"] = env.GITHUB_OAUTH_CLIENT_SECRET
+                headers["Accept"] = "application/json"
+
+            # Exchange the code and validate the provider response.
+            token_response = await client.post(token_url, data=data, headers=headers)
             if not token_response.is_success:
                 return None
             token_payload = token_response.json()
@@ -142,7 +141,7 @@ def _google_identity(payload: object) -> OAuthIdentity | None:
     if not isinstance(payload, dict) or payload.get("email_verified") is not True:
         return None
     subject = _text(payload, "sub", 255)
-    email = _email(payload, "email")
+    email = _email(payload)
     if subject is None or email is None:
         return None
     return OAuthIdentity(
@@ -170,7 +169,7 @@ def _github_identity(profile: object, emails: object) -> OAuthIdentity | None:
             if isinstance(item, dict)
             and item.get("primary") is True
             and item.get("verified") is True
-            and (verified_email := _email(item, "email")) is not None
+            and (verified_email := _email(item)) is not None
         ),
         None,
     )
@@ -184,11 +183,11 @@ def _github_identity(profile: object, emails: object) -> OAuthIdentity | None:
     )
 
 
-def _email(payload: object, field: str) -> Email | None:
+def _email(payload: object) -> Email | None:
     """Return one valid email field from an untrusted provider response."""
 
     # Apply the same canonical email validation used at LongLink's HTTP boundaries.
-    value = _text(payload, field, 254)
+    value = _text(payload, "email", 254)
     if value is None:
         return None
     try:

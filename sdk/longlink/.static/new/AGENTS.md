@@ -11,7 +11,7 @@ You are working on a LongLink Solution project:
 ```
 ├── src/
 │   ├── models/       # SQLModel database tables
-│   ├── views/        # Solution View files
+│   ├── views/        # View files
 │   ├── routes/       # API routes
 │   ├── schemas/      # Pydantic schemas
 │   ├── services/     # Service modules
@@ -23,7 +23,7 @@ You are working on a LongLink Solution project:
 
 ## XML views
 
-- A Solution View uses XML, not HTML.
+- A View uses XML, not HTML.
 - Run `longlink docs` to discover the supported XML components.
 - Run `longlink docs <component>` before using a component to inspect its attributes, children, and examples.
 - Do not invent XML elements or attributes that are absent from the component documentation.

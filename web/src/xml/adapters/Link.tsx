@@ -10,7 +10,6 @@ import { Link as AstryxLink } from '@astryxdesign/core/Link';
 
 const linkPropsSchema = z.object({
     href: z.string().optional(),
-    isDisabled: z.boolean().optional(),
     to: z.string().optional(),
 });
 
@@ -21,12 +20,7 @@ export function Link({ props, nodes }: Props) {
         throw new Error('Link requires child content');
     }
 
-    const { href, isDisabled, to } = resolveXmlProps(
-        props,
-        ctx,
-        { href: 'scalar', isDisabled: 'scalar', to: 'scalar' },
-        linkPropsSchema
-    );
+    const { href, to } = resolveXmlProps(props, ctx, linkPropsSchema);
     const actionHandler = useContext(ActionHandlerContext);
     const controlUrl = resolveControlUrl(services.navigationBaseUrl, services.requestBaseUrl, to ?? '', href ?? '');
 
@@ -48,11 +42,7 @@ export function Link({ props, nodes }: Props) {
     }
 
     return (
-        <AstryxLink
-            href={controlUrl || undefined}
-            isDisabled={isDisabled}
-            onClick={actionHandler ? handleClick : undefined}
-        >
+        <AstryxLink href={controlUrl || undefined} onClick={actionHandler ? handleClick : undefined}>
             {renderNode(nodes, ctx)}
         </AstryxLink>
     );

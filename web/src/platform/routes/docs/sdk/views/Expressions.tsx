@@ -18,7 +18,7 @@ export default function DocsArticleRoute() {
     return (
         <Article page={article}>
             <Seo
-                description="Use expressions in LongLink Solution Views to render dynamic interfaces."
+                description="Use expressions in LongLink Views to render dynamic interfaces."
                 hasBreadcrumbs
                 title="Expressions | LongLink Documentation"
             />

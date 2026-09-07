@@ -2,6 +2,7 @@ import click
 import pytest
 import subprocess
 from pathlib import Path
+from contextlib import chdir
 from longlink.cli import build
 from click.testing import CliRunner
 
@@ -42,13 +43,13 @@ def docker_build(monkeypatch: pytest.MonkeyPatch) -> tuple[list[list[str]], list
     return commands, contexts
 
 
-def test_build_reports_missing_project_file_before_docker() -> None:
+def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> None:
     """Report a missing project file instead of blaming the Docker CLI."""
 
     # Arrange
     runner = CliRunner()
 
-    with runner.isolated_filesystem():
+    with chdir(tmp_path):
         # Act
         result = runner.invoke(build.build_command)
 

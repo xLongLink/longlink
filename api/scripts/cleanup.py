@@ -142,12 +142,10 @@ async def cleanup() -> None:
         if await storage.usage(organization.hex) is not None:
             raise RuntimeError(f"Exoscale Organization bucket remains: {organization}")
 
-    # Remove Solution schemas and runtime identities before deleting each Organization database.
+    # Drop each Organization database as a unit, then remove its cluster-global runtime identities.
     for (host, port, username, password, sslmode, organization), solution_ids in database_resources.items():
         database = Postgres(host, port, username, password, sslmode)
-        for solution in solution_ids:
-            await database.delete_solution_schema(organization, solution)
-        await database.delete_database(organization)
+        await database.delete_database(organization, solution_ids)
 
         # Verify the database and every cluster-global runtime identity are absent.
         remaining_identities = [

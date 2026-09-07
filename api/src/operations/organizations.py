@@ -108,13 +108,16 @@ async def delete(organization_id: UUID) -> str | None:
     logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
     async with contextlib.aclosing(cluster):
         await cluster.organizations.delete(infrastructure.organization.id.hex)
+
+    # Drop the containing database before its cluster-global runtime roles.
+    logger.info("Deleting PostgreSQL database and runtime roles for Organization %s", infrastructure.organization.id)
+    await db.delete_database(infrastructure.organization.id, solution_ids)
+
+    # Revoke each Solution credential before removing the Organization bucket.
     for solution_id in solution_ids:
-        logger.info("Deleting provider resources for Solution %s", solution_id)
-        await db.delete_solution_schema(infrastructure.organization.id, solution_id)
+        logger.info("Revoking storage credentials for Solution %s", solution_id)
         await object_storage.revoke_solution(solution_id.hex)
 
-    logger.info("Deleting PostgreSQL database for Organization %s", infrastructure.organization.id)
-    await db.delete_database(infrastructure.organization.id)
     logger.info("Deleting object storage bucket for Organization %s", infrastructure.organization.id)
     await object_storage.delete(infrastructure.organization.id.hex)
 

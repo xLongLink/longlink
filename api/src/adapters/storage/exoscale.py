@@ -159,7 +159,8 @@ class Exoscale:
                 if not self._bucket_is_absent(exc):
                     raise
 
-    async def _delete_objects(self, client: "S3Client", bucket: str, objects: "list[ObjectIdentifierTypeDef]") -> None:
+    @staticmethod
+    async def _delete_objects(client: "S3Client", bucket: str, objects: "list[ObjectIdentifierTypeDef]") -> None:
         """Delete one object batch and reject S3's successful response when individual deletions failed."""
 
         # Bulk deletes report per-object failures in a successful HTTP response.
@@ -211,8 +212,6 @@ class Exoscale:
             # Name-scoped compensation removes an incomplete deterministic credential generation.
             try:
                 await self.revoke_solution(name)
-            except asyncio.CancelledError:
-                raise
             except Exception:
                 pass
             raise

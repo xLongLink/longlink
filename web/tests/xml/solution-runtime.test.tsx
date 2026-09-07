@@ -20,11 +20,13 @@ describe('SolutionRuntime XML integration', () => {
         }
         root = undefined;
         apiRequest.mockReset();
+        vi.useRealTimers();
         vi.unstubAllGlobals();
     });
 
     it('fetches, initializes, and renders a manifest-defined XML view', async () => {
         // Arrange
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         apiRequest.mockImplementation((url: string, options?: RequestInit) => {
             if (url.endsWith('/views.json')) {
                 return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home', tab: 'home' }] };
@@ -62,12 +64,14 @@ describe('SolutionRuntime XML integration', () => {
             );
         });
 
+        // Deliver the manifest notification and commit the render that starts the XML query.
+        await act(async () => vi.runOnlyPendingTimersAsync());
+
+        // Deliver the XML notification and finish renderer setup before inspecting the DOM.
+        await act(async () => vi.runOnlyPendingTimersAsync());
+
         // Assert
-        await act(async () =>
-            vi.waitFor(() =>
-                expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/proxy/views.json', '/proxy/home.xml'])
-            )
-        );
-        await act(async () => vi.waitFor(() => expect(container.textContent).toContain('Welcome')));
+        expect(container.textContent).toContain('Welcome');
+        expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/proxy/views.json', '/proxy/home.xml']);
     });
 });

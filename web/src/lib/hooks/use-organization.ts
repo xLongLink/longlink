@@ -180,10 +180,10 @@ export function useUpdateOrganization(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ avatar }: OrganizationUpdate) => {
+        mutationFn: async (payload: OrganizationUpdate) => {
             return zOrganizationSummary.parse(
                 await api(`/api/v1/organizations/${organizationId}`, {
-                    json: { avatar },
+                    json: payload,
                     method: 'PATCH',
                 }).json()
             );

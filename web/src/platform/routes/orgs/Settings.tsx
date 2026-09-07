@@ -6,6 +6,7 @@ import { UserCell } from '@/components/Cells';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
+import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -32,8 +33,6 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import CreateSolution from '@/components/dialogs/CreateSolution';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
@@ -553,77 +552,64 @@ export default function OrganizationSettings() {
                     }
                 }}
             />
-            <Dialog isOpen={inviteOpen} purpose="form" onOpenChange={setInviteOpen}>
-                <Layout
-                    height="auto"
-                    header={
-                        <DialogHeader
-                            title="Invite user"
-                            subtitle="Send an invitation to join this organization."
-                            onOpenChange={setInviteOpen}
-                        />
-                    }
-                    content={
-                        <LayoutContent isScrollable={false}>
-                            <form
-                                id="invite-member-form"
-                                onSubmit={async (event) => {
-                                    event.preventDefault();
+            <Dialog
+                isOpen={inviteOpen}
+                purpose="form"
+                subtitle="Send an invitation to join this organization."
+                title="Invite user"
+                onOpenChange={setInviteOpen}
+            >
+                <form
+                    id="invite-member-form"
+                    onSubmit={async (event) => {
+                        event.preventDefault();
 
-                                    // Submit the invitation and surface any failure.
-                                    try {
-                                        await inviteMember.mutateAsync({
-                                            email: inviteEmail.trim(),
-                                            role: inviteRole,
-                                        });
-                                        setInviteOpen(false);
-                                        setInviteEmail('');
-                                        setInviteRole('write');
-                                    } catch (mutationError) {
-                                        toast({
-                                            body:
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to invite user',
-                                            type: 'error',
-                                        });
-                                    }
-                                }}
-                            >
-                                <Stack gap={4}>
-                                    <FormLayout>
-                                        <TextInput
-                                            label="Email"
-                                            type="email"
-                                            value={inviteEmail}
-                                            placeholder="user@example.com"
-                                            onChange={setInviteEmail}
-                                            isRequired
-                                        />
-                                        <Selector
-                                            isRequired
-                                            label="Role"
-                                            options={ROLE_NAMES}
-                                            value={inviteRole}
-                                            onChange={(value) => setInviteRole(value as OrganizationRoles)}
-                                        />
-                                    </FormLayout>
-                                    <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
-                                        <Button label="Cancel" onClick={() => setInviteOpen(false)} />
-                                        <Button
-                                            label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
-                                            type="submit"
-                                            isLoading={inviteMember.isPending}
-                                            isDisabled={
-                                                inviteEmail.trim().length === 0 || !hasOrganizationSolutionAccess
-                                            }
-                                        />
-                                    </Stack>
-                                </Stack>
-                            </form>
-                        </LayoutContent>
-                    }
-                />
+                        // Submit the invitation and surface any failure.
+                        try {
+                            await inviteMember.mutateAsync({
+                                email: inviteEmail.trim(),
+                                role: inviteRole,
+                            });
+                            setInviteOpen(false);
+                            setInviteEmail('');
+                            setInviteRole('write');
+                        } catch (mutationError) {
+                            toast({
+                                body: mutationError instanceof Error ? mutationError.message : 'Failed to invite user',
+                                type: 'error',
+                            });
+                        }
+                    }}
+                >
+                    <Stack gap={4}>
+                        <FormLayout>
+                            <TextInput
+                                label="Email"
+                                type="email"
+                                value={inviteEmail}
+                                placeholder="user@example.com"
+                                onChange={setInviteEmail}
+                                isRequired
+                            />
+                            <Selector
+                                isRequired
+                                label="Role"
+                                options={ROLE_NAMES}
+                                value={inviteRole}
+                                onChange={(value) => setInviteRole(value as OrganizationRoles)}
+                            />
+                        </FormLayout>
+                        <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
+                            <Button label="Cancel" onClick={() => setInviteOpen(false)} />
+                            <Button
+                                label={inviteMember.isPending ? 'Inviting...' : 'Invite'}
+                                type="submit"
+                                isLoading={inviteMember.isPending}
+                                isDisabled={inviteEmail.trim().length === 0 || !hasOrganizationSolutionAccess}
+                            />
+                        </Stack>
+                    </Stack>
+                </form>
             </Dialog>
             <AvatarDialog
                 avatar={avatar}

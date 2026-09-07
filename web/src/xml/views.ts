@@ -3,14 +3,7 @@ import { resolveRequestUrl } from '@/xml/core/url';
 
 /** Returns whether a manifest route is a normalized supported React Router path. */
 function isRoute(route: string): boolean {
-    if (
-        !route.startsWith('/') ||
-        route.includes('%') ||
-        route.includes('\\') ||
-        route.includes('?') ||
-        route.includes('#')
-    )
-        return false;
+    if (!route.startsWith('/')) return false;
     if (route === '/') return true;
 
     return route
@@ -48,7 +41,7 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const staticTabs = new Set<string>();
 
     for (const [index, view] of views.entries()) {
-        // Require each route to resolve one unambiguous Solution View.
+        // Require each route to resolve one unambiguous View.
         if (routes.has(view.route)) {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }

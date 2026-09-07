@@ -14,7 +14,7 @@ export function Tabs({ props, nodes }: Props) {
     const tabs = nodes
         .filter((node) => node.name === 'Tab' && isVisibleXmlNode(node, ctx))
         .map((node) => {
-            const { label, value } = resolveXmlProps(node.params, ctx, { label: 'raw', value: 'raw' }, tabPropsSchema);
+            const { label, value } = resolveXmlProps(node.params, ctx, tabPropsSchema, ['label', 'value']);
 
             return { label, nodes: node.children, value };
         });
@@ -25,7 +25,7 @@ export function Tabs({ props, nodes }: Props) {
     }
 
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? tabs[0].value));
-    const { gap } = resolveXmlProps(props, ctx, { gap: 'scalar' }, tabsPropsSchema);
+    const { gap } = resolveXmlProps(props, ctx, tabsPropsSchema);
 
     return (
         <SolutionTabs gap={gap} onChange={binding.setValue} value={binding.value}>

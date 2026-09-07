@@ -77,6 +77,19 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
     );
     const activeItem = items.find((item) => menuItemHref(item.props.label) === hash) ?? items[0];
 
+    // Render direct and nested items with the same navigation and selection behavior.
+    function renderItem(item: ReactElement<MenuMarkerProps>) {
+        return (
+            <AstryxSideNavItem
+                href={menuItemHref(item.props.label)}
+                icon={renderMenuIcon(item.props.icon)}
+                isSelected={item === activeItem}
+                key={item.props.label}
+                label={item.props.label}
+            />
+        );
+    }
+
     return (
         <Layout
             height="auto"
@@ -84,10 +97,8 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
                     <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
                         {sections.map(({ entries, section }) => {
-                            const { children: _children, ...sectionProps } = section.props;
-
                             return (
-                                <AstryxSideNavSection {...sectionProps} className="pt-0" key={sectionProps.title}>
+                                <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
                                     {entries.map((entry) => {
                                         if (entry.kind === 'subsection') {
                                             const { icon, label } = entry.subSection.props;
@@ -99,28 +110,12 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                                                     key={label}
                                                     label={label}
                                                 >
-                                                    {entry.items.map((item) => (
-                                                        <AstryxSideNavItem
-                                                            href={menuItemHref(item.props.label)}
-                                                            icon={renderMenuIcon(item.props.icon)}
-                                                            isSelected={item === activeItem}
-                                                            key={item.props.label}
-                                                            label={item.props.label}
-                                                        />
-                                                    ))}
+                                                    {entry.items.map(renderItem)}
                                                 </AstryxSideNavItem>
                                             );
                                         }
 
-                                        return (
-                                            <AstryxSideNavItem
-                                                href={menuItemHref(entry.item.props.label)}
-                                                icon={renderMenuIcon(entry.item.props.icon)}
-                                                isSelected={entry.item === activeItem}
-                                                key={entry.item.props.label}
-                                                label={entry.item.props.label}
-                                            />
-                                        );
+                                        return renderItem(entry.item);
                                     })}
                                 </AstryxSideNavSection>
                             );

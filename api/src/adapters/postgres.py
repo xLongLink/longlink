@@ -1,7 +1,7 @@
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
-from collections.abc import AsyncGenerator
+from collections.abc import Iterable, AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
@@ -37,24 +37,23 @@ class Postgres:
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
 
-        # Keep the connection details inside the adapter so callers only pass registry fields.
-        url = URL.create(
-            "postgresql+psycopg",
-            username=self._username,
-            password=self._password,
-            host=self._host,
-            port=self._port,
-            database=database,
-        )
-
-        # Attach PostgreSQL driver options after URL creation so credentials stay structured.
+        # Configure PostgreSQL driver options before creating the structured URL.
         query = {"sslmode": self._sslmode.value, "options": "-c timezone=UTC"}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
             query["options"] = f"{query['options']} -c search_path={search_path}"
 
-        return url.update_query_dict(query)
+        # Keep connection details inside the adapter and credentials structured.
+        return URL.create(
+            "postgresql+psycopg",
+            username=self._username,
+            password=self._password,
+            host=self._host,
+            port=self._port,
+            database=database,
+            query=query,
+        )
 
     @staticmethod
     def quote(conn: AsyncConnection, value: str) -> str:
@@ -68,7 +67,6 @@ class Postgres:
         database: str,
         *,
         autocommit: bool = False,
-        search_path: str | None = None,
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
@@ -77,7 +75,7 @@ class Postgres:
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
         engine = create_async_engine(
-            self.url(database, search_path=search_path),
+            self.url(database),
             **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
         )
 
@@ -115,7 +113,8 @@ class Postgres:
                 host=self._host,
                 port=self._port,
                 database=organization.hex,
-            ).update_query_dict({"ssl": self._sslmode.value})
+                query={"ssl": self._sslmode.value},
+            )
         )
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
@@ -213,8 +212,8 @@ class Postgres:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
-    async def delete_database(self, organization: UUID) -> None:
-        """Delete one organization database and tolerate missing databases."""
+    async def delete_database(self, organization: UUID, solutions: Iterable[UUID]) -> None:
+        """Delete an organization database, then its runtime roles, resuming after partial cleanup."""
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
         async with self._connection("postgres", autocommit=True) as conn:
@@ -233,6 +232,12 @@ class Postgres:
 
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
+
+            # Roles are cluster-global; remove them even when a previous attempt already dropped the database.
+            for solution in solutions:
+                runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
+                role = self.quote(conn, runtime_username)
+                await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
     async def solution_runtime_identity_exists(self, organization: UUID, solution: UUID) -> bool:
         """Return whether one Solution runtime database identity remains in PostgreSQL."""

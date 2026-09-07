@@ -1,12 +1,12 @@
-import type { ExpressionNode } from './expressions/types';
+import type { Expression } from 'acorn';
 
 export type ASTAttribute =
     | { kind: 'text'; value: string }
     | { kind: 'path'; parts: [string, ...string[]]; isBinding?: true }
-    | { kind: 'expression'; node: ExpressionNode }
+    | { kind: 'expression'; node: Expression }
     | {
           kind: 'interpolation';
-          segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }>;
+          segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: Expression }>;
       };
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */

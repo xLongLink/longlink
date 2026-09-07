@@ -1,4 +1,4 @@
-import type { ExpressionNode } from './types';
+import type { AnyNode } from 'acorn';
 import type { ASTAttribute, Scope } from '../types';
 import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from './resolve';
 
@@ -11,7 +11,7 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
 };
 
 /** Evaluates a supported AST node against the current scope. */
-function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
+function evaluateNode(node: AnyNode, ctx: Scope): unknown {
     // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
@@ -136,13 +136,17 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
         case 'ObjectExpression': {
             const result: Record<string, unknown> = Object.create(null);
 
+            // Reject spreads before evaluating object properties.
             for (const property of node.properties) {
-                if (!('key' in property) || !('value' in property)) {
+                if (property.type === 'SpreadElement') {
                     throw new Error('Object spread not allowed');
                 }
 
+                // Evaluate computed keys while preserving literal identifier property names.
                 const key =
-                    property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, ctx));
+                    !property.computed && property.key.type === 'Identifier'
+                        ? property.key.name
+                        : String(evaluateNode(property.key, ctx));
 
                 // Skip prototype-related keys so XML object literals cannot mutate prototypes.
                 if (!isSafePropertyName(key)) continue;
@@ -172,7 +176,7 @@ function evaluateNode(node: ExpressionNode, ctx: Scope): unknown {
         }
 
         default:
-            throw new Error(`Unsupported node: ${(node as { type: string }).type}`);
+            throw new Error(`Unsupported node: ${node.type}`);
     }
 }
 

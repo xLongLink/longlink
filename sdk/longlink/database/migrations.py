@@ -59,24 +59,21 @@ def make_migrations() -> bool:
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))
-    migration_created = True
 
     def _skip_empty_revision(_context: object, _revision: object, directives: list[MigrationScript]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
-        nonlocal migration_created
 
         # Suppress missing directives and revisions with no schema operations.
         if not directives or all(upgrade_ops.is_empty() for upgrade_ops in directives[0].upgrade_ops_list):
             directives[:] = []
-            migration_created = False
 
     # Invoke Alembic while suppressing revisions with no schema operations.
-    command.revision(
+    revisions = command.revision(
         cfg,
         autogenerate=True,
         process_revision_directives=_skip_empty_revision,
     )
-    return migration_created
+    return bool(revisions)
 
 
 def apply_migrations() -> None:

@@ -247,10 +247,10 @@ def test_create_engine_selects_database_url_and_options(
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}
 
 
-async def test_concurrent_sessions_initialize_one_session_factory(
+async def test_concurrent_sessions_initialize_one_engine(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Initialize the lazy database session factory only once."""
+    """Initialize the lazy database engine only once."""
 
     # Arrange
     create_count = 0
@@ -348,7 +348,7 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
 
     engine = VerificationEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
-    monkeypatch.setattr(database_base, "async_sessionmaker", lambda *_args, **_kwargs: AvailableSession)
+    monkeypatch.setattr(database_base, "AsyncSession", lambda *_args, **_kwargs: AvailableSession())
     database = database_base.Database(Envs(ENV="testing"))
 
     # Act

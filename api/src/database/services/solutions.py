@@ -121,6 +121,7 @@ async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> Non
     # Lock active solution access before changing its lifecycle state.
     result = await session.execute(
         select(Solution, col(UserOrganization.role))
+        .options(defer(Solution.secrets))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Solution.organization_id))
         .where(
             col(Solution.id) == solution_id,

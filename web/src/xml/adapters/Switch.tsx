@@ -7,7 +7,7 @@ import { resolveXmlProps, xmlLabelPropsSchema } from '../core/props';
 export function Switch({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'value', ctx, coerceXmlBoolean);
-    const { label } = resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema);
+    const { label } = resolveXmlProps(props, ctx, xmlLabelPropsSchema, ['label']);
 
     return <AstryxSwitch label={label} size="sm" value={binding.value} onChange={binding.setValue} />;
 }

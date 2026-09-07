@@ -96,8 +96,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
         )
         .with_for_update()
     )
-    memberships = result.all()
-    memberships_by_organization_id = {membership.organization_id: membership for membership in memberships}
+    memberships_by_organization_id = {membership.organization_id: membership for membership in result}
 
     changed_organization_ids: set[UUID] = set()
 

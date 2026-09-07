@@ -118,16 +118,29 @@ function parseElement(
     };
 }
 
-function collectNestedElements(value: XsdNode | undefined): XsdRecord[] {
+/** Yields nested element declarations in document order without collecting intermediate arrays. */
+function* collectNestedElements(value: XsdNode | undefined): Generator<XsdRecord> {
+    // Ignore values that cannot contain element declarations.
     const entry = record(value);
     if (!entry) {
-        return [];
+        return;
     }
 
-    return Object.entries(entry).flatMap(([name, child]) => [
-        ...(name === 'xsd:element' ? nodes({ [name]: child }, name) : []),
-        ...(Array.isArray(child) ? child.flatMap(collectNestedElements) : collectNestedElements(child)),
-    ]);
+    // Yield declarations before descending into their children.
+    for (const [name, child] of Object.entries(entry)) {
+        if (name === 'xsd:element') {
+            yield* nodes(entry, name);
+        }
+
+        // Preserve the order of repeated child nodes.
+        if (Array.isArray(child)) {
+            for (const item of child) {
+                yield* collectNestedElements(item);
+            }
+        } else {
+            yield* collectNestedElements(child);
+        }
+    }
 }
 
 function companionNames(component: ElementDocumentation, elements: Map<string, XsdRecord>): Set<string> {

@@ -39,9 +39,6 @@ class LongLink:
     def __init__(self, app: FastAPI) -> None:
         """Install runtime services, routes, and the frontend fallback into a Solution's FastAPI app."""
 
-        # Preserve Solution routes so view collisions are rejected during discovery.
-        solution_routes = list(app.routes)
-
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
 
@@ -51,7 +48,7 @@ class LongLink:
             raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before installing runtime services.
-        discovered_views = self._discover_views(views_directory, solution_routes)
+        discovered_views = self._discover_views(views_directory, app.routes)
 
         # Initialize Solution storage and database connections.
         storage = create_fs(settings)
@@ -87,7 +84,7 @@ class LongLink:
                 include_in_schema=False,
             )
 
-        # Make the browser root URL resolve to the first navigable Solution View.
+        # Make the browser root URL resolve to the first navigable View.
         first_tab_view = next(
             (definition for definition, _ in discovered_views if definition.route != "/" and ":" not in definition.route),
             None,
@@ -136,7 +133,7 @@ class LongLink:
             # Solution routes take precedence, so ambiguous view endpoints are rejected.
             scope = {"type": "http", "method": "GET", "path": registered_path}
             if any(solution_route.matches(scope)[0] is Match.FULL for solution_route in solution_routes):
-                raise ValueError(f"Solution View endpoint '{registered_path}' overlaps a Solution route")
+                raise ValueError(f"View endpoint '{registered_path}' overlaps a Solution route")
 
             discovered_views.append(
                 (

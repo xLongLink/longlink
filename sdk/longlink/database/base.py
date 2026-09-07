@@ -8,7 +8,7 @@ from collections.abc import AsyncGenerator
 from longlink.database import urls
 from sqlalchemy.engine import URL, make_url
 from longlink.shared.models import Audit
-from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -88,16 +88,15 @@ class Database:
 
         self._env = env
         self._engine: AsyncEngine | None = None
-        self._sessions: async_sessionmaker[AsyncSession] | None = None
         self._initialization_lock = asyncio.Lock()
 
-    async def _session_factory(self) -> async_sessionmaker[AsyncSession]:
-        """Initialize and return the Solution session factory."""
+    async def _get_engine(self) -> AsyncEngine:
+        """Initialize and return the Solution database engine."""
 
         # Initialize the engine once when concurrent requests arrive before startup completes.
-        if self._sessions is None:
+        if self._engine is None:
             async with self._initialization_lock:
-                if self._sessions is None:
+                if self._engine is None:
                     engine = create_engine(self._env)
 
                     # Initialize the database without publishing partially initialized resources.
@@ -112,19 +111,23 @@ class Database:
                         await engine.dispose()
                         raise
 
-                    # Publish the initialized engine and factory together.
+                    # Publish the engine only after initialization succeeds.
                     self._engine = engine
-                    self._sessions = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-        return self._sessions
+        return self._engine
 
     @asynccontextmanager
     async def session(self) -> AsyncGenerator[AsyncSession, None]:
         """Yield one Solution-owned database session."""
 
-        # Open one session from the lazy Solution session factory.
-        async with (await self._session_factory())() as session:
-            yield session
+        # Open one session bound to the initialized Solution engine.
+        engine = await self._get_engine()
+        session = AsyncSession(
+            engine,
+            expire_on_commit=False,
+        )
+        async with session as database_session:
+            yield database_session
 
     async def dispose(self) -> None:
         """Release the Solution database engine during shutdown."""
@@ -133,7 +136,6 @@ class Database:
         async with self._initialization_lock:
             engine = self._engine
             self._engine = None
-            self._sessions = None
 
         if engine is not None:
             await engine.dispose()

@@ -1,17 +1,10 @@
+import type { Expression } from 'acorn';
 import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute } from '../types';
-import type { ExpressionNode } from './types';
 
 /** Compiles an XML attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
-
-    // Keep standalone expressions typed when they are evaluated.
-    if (input.startsWith('${') && input.endsWith('}')) {
-        const segment = readInterpolationSegment(input, 0);
-
-        if (segment.end === input.length - 1) return { kind: 'expression', node: segment.node };
-    }
 
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
@@ -23,7 +16,7 @@ export function compileAttribute(value: string): ASTAttribute {
 
     // Compile mixed text and expressions into segments that render as text.
     if (input.includes('${')) {
-        const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: ExpressionNode }> = [];
+        const segments: Array<{ kind: 'text'; value: string } | { kind: 'expression'; node: Expression }> = [];
         let cursor = 0;
 
         // Scan the string for interpolation starts.
@@ -32,8 +25,14 @@ export function compileAttribute(value: string): ASTAttribute {
             if (value[index] !== '$' || value[index + 1] !== '{') continue;
 
             const segment = readInterpolationSegment(value, index);
-            if (cursor < segment.start) {
-                segments.push({ kind: 'text', value: value.slice(cursor, segment.start) });
+
+            // Keep a single expression typed even when surrounded by whitespace.
+            if (cursor === 0 && value.slice(0, index).trim() === '' && value.slice(segment.end + 1).trim() === '') {
+                return { kind: 'expression', node: segment.node };
+            }
+
+            if (cursor < index) {
+                segments.push({ kind: 'text', value: value.slice(cursor, index) });
             }
             segments.push({ kind: 'expression', node: segment.node });
             cursor = segment.end + 1;
@@ -56,7 +55,7 @@ function readInterpolationSegment(input: string, start: number) {
     try {
         const node = parseExpressionAt(input, start + 2, {
             ecmaVersion: 'latest',
-        }) as unknown as ExpressionNode & { end: number };
+        });
         let end = node.end;
 
         // Skip whitespace before the closing brace.
@@ -65,7 +64,7 @@ function readInterpolationSegment(input: string, start: number) {
         }
 
         // Return only closed interpolation segments.
-        if (input[end] === '}') return { start, end, node };
+        if (input[end] === '}') return { end, node };
     } catch {}
 
     throw new Error('Unclosed XML expression interpolation');

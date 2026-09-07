@@ -11,7 +11,7 @@ export function RadioList({ props, nodes }: Props) {
 
     return (
         <AstryxRadioList
-            label={resolveXmlProps(props, ctx, { label: 'raw' }, xmlLabelPropsSchema).label}
+            label={resolveXmlProps(props, ctx, xmlLabelPropsSchema, ['label']).label}
             onChange={binding.setValue}
             size="sm"
             value={binding.value}

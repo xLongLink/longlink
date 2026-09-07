@@ -75,7 +75,7 @@ function SummaryCard({
 
 const article = {
     toc: [
-        { id: 'solution-views', label: 'Solution Views', level: 1 },
+        { id: 'views', label: 'Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
         { id: 'action', label: 'Action', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
@@ -90,17 +90,17 @@ export default function DocsArticleRoute() {
     return (
         <Article page={article}>
             <Seo
-                description="Build interfaces with LongLink Solution Views and components."
+                description="Build interfaces with LongLink Views and components."
                 hasBreadcrumbs
-                title="Solution Views | LongLink Documentation"
+                title="Views | LongLink Documentation"
             />
             <Stack gap={5}>
-                <Heading id="solution-views" level={1}>
-                    Solution Views
+                <Heading id="views" level={1}>
+                    Views
                 </Heading>
                 <Text as="p">
-                    A Solution View is an XML interface definition associated with a browser route and rendered inside
-                    the LongLink Solution shell. Store views in <Code>src/views</Code> and compose them from{' '}
+                    A View is an XML interface definition associated with a browser route and rendered inside the
+                    LongLink Solution shell. Store views in <Code>src/views</Code> and compose them from{' '}
                     <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
                         Astryx
                     </Link>

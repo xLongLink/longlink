@@ -37,12 +37,7 @@ export function Grid({ props, nodes }: Props) {
         maxColumns,
         minColumnWidth: minWidth,
         repeat,
-    } = resolveXmlProps(
-        props,
-        ctx,
-        { columns: 'scalar', gap: 'scalar', maxColumns: 'scalar', minColumnWidth: 'scalar', repeat: 'scalar' },
-        gridPropsSchema
-    );
+    } = resolveXmlProps(props, ctx, gridPropsSchema);
 
     return (
         <AstryxGrid columns={minWidth != null ? { minWidth, max: maxColumns, repeat } : columnCount} gap={gap}>

@@ -72,7 +72,7 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
 
 
 def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    """Require the generated Solution View directory during startup."""
+    """Require the generated View directory during startup."""
 
     # Arrange
     monkeypatch.chdir(tmp_path)
@@ -244,7 +244,7 @@ def test_solution_routes_colliding_with_view_endpoints_are_rejected(
         return {"source": "solution"}
 
     # Reject ambiguous ownership during runtime registration.
-    with pytest.raises(ValueError, match="Solution View endpoint.*overlaps a Solution route"):
+    with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
         LongLink(app)
 
     # Assert LongLink did not register the colliding view endpoint.

@@ -14,11 +14,6 @@
         <xsd:documentation>Solution-relative navigation destination.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isDisabled" type="xsd:string">
-      <xsd:annotation>
-        <xsd:documentation>Disables the link.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Link" type="LinkType">

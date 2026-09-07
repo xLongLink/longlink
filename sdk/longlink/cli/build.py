@@ -155,29 +155,20 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
 
             # Inspect Field keyword arguments.
             for keyword in statement.value.keywords:
-                # Use explicit aliases as environment names.
-                if keyword.arg == "validation_alias":
-                    # Safely evaluate static alias expressions.
+                # Read static string aliases and descriptions.
+                if keyword.arg in ("validation_alias", "description"):
+                    # Safely evaluate static metadata expressions.
                     try:
-                        alias = ast.literal_eval(keyword.value)
+                        value = ast.literal_eval(keyword.value)
                     except ValueError:
-                        alias = None
+                        value = None
 
-                    # Store string aliases only.
-                    if isinstance(alias, str):
-                        env_entry["name"] = alias or field_name
-
-                # Capture static descriptions.
-                elif keyword.arg == "description":
-                    # Safely evaluate static descriptions.
-                    try:
-                        description = ast.literal_eval(keyword.value)
-                    except ValueError:
-                        description = None
-
-                    # Store string descriptions only.
-                    if isinstance(description, str):
-                        env_entry["description"] = description
+                    # Store strings while preserving the empty-alias fallback.
+                    if isinstance(value, str):
+                        if keyword.arg == "validation_alias":
+                            env_entry["name"] = value or field_name
+                        else:
+                            env_entry["description"] = value
 
                 # Defaults and factories make the field optional.
                 elif keyword.arg in ("default", "default_factory"):
@@ -258,17 +249,23 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
         # Add local path dependencies to the context.
         for source_config in uv_sources.values():
             # Only mapping source entries can contain paths.
-            if isinstance(source_config, dict):
-                # Follow only string path sources.
-                source_path = source_config.get("path")
-                if isinstance(source_path, str):
-                    resolved_source_path = (source_root / source_path).resolve()
+            if not isinstance(source_config, dict):
+                continue
 
-                    # Include only project directories; invalid paths must not expand the Docker context.
-                    if resolved_source_path != Path(resolved_source_path.anchor) and (resolved_source_path / "pyproject.toml").is_file():
-                        if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
-                            raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
-                        pending_paths.append(resolved_source_path)
+            # Follow only string path sources.
+            source_path = source_config.get("path")
+            if not isinstance(source_path, str):
+                continue
+            resolved_source_path = (source_root / source_path).resolve()
+
+            # Include only project directories; invalid paths must not expand the Docker context.
+            if resolved_source_path == Path(resolved_source_path.anchor) or not (resolved_source_path / "pyproject.toml").is_file():
+                continue
+
+            # Reject dependencies outside the permitted workspace boundary.
+            if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
+                raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
+            pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
     common_root = Path(os.path.commonpath(seen_paths))
@@ -333,7 +330,11 @@ def build_solution(build_context: Path) -> tuple[str, str]:
             path = Path(directory, name)
 
             # Exclude known sensitive and generated paths before copying any content.
-            if is_ignored(path) or path.parent == source_root and name in {"Dockerfile", ".dockerignore"}:
+            if (
+                any(fnmatch(name, pattern) for pattern in CONTEXT_IGNORE_PATTERNS)
+                or path.parent == source_root
+                and name in {"Dockerfile", ".dockerignore"}
+            ):
                 ignored.add(name)
                 continue
 
@@ -356,13 +357,7 @@ def build_solution(build_context: Path) -> tuple[str, str]:
                 except (OSError, RuntimeError):
                     ignored.add(name)
                     continue
-                if not target.is_relative_to(source_root):
-                    ignored.add(name)
-                    continue
-                if target.is_dir() and target in path.parents:
-                    ignored.add(name)
-                    continue
-                if is_ignored(target):
+                if not target.is_relative_to(source_root) or (target.is_dir() and target in path.parents) or is_ignored(target):
                     ignored.add(name)
 
         return ignored
@@ -417,15 +412,16 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
     # Add a registry prefix when requested.
     if registry_prefix:
         # Restrict production registries to GHCR while allowing localhost development registries.
-        registry_host = registry_prefix.split("/", 1)[0]
+        registry_parts = registry_prefix.split("/")
+        registry_host = registry_parts[0]
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
             raise click.ClickException("Docker registry port is invalid")
-        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_prefix.split("/")) != 2):
+        if host != "localhost" and (host != "ghcr.io" or separator or len(registry_parts) != 2):
             raise click.ClickException("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
-        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_prefix.split("/")[1:]):
+        if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_parts[1:]):
             raise click.ClickException(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
         return f"{registry_prefix}/{image_name}:{version}"
 
@@ -473,9 +469,10 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
         # Run the Docker build and optional push.
         try:
             # Build from a context that includes local path dependencies referenced by uv.
-            docker_arguments = [docker_command, "build"]
             if builder is not None:
                 docker_arguments = [docker_command, "buildx", "build", "--builder", builder, "--load"]
+            else:
+                docker_arguments = [docker_command, "build"]
             subprocess.run(
                 [
                     *docker_arguments,

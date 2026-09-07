@@ -9,7 +9,7 @@ export function isSafePropertyName(key: string): boolean {
 export function readSafeProperty<T extends Record<string, unknown>>(value: T, key: string): T[string] | undefined;
 export function readSafeProperty(value: unknown, key: string): unknown;
 export function readSafeProperty(value: unknown, key: string): unknown {
-    return isSafePropertyName(key) && value != null && Object.prototype.hasOwnProperty.call(value, key)
+    return isSafePropertyName(key) && value != null && Object.hasOwn(value, key)
         ? (value as Record<string, unknown>)[key]
         : undefined;
 }
