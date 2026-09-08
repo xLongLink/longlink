@@ -98,10 +98,23 @@ spec:
                           cpu: 500m
                           ephemeral-storage: 512Mi
                           memory: 256Mi
-                  readinessProbe:
+                  startupProbe:
                       httpGet:
                           path: /health
                           port: 8000
+                      periodSeconds: 5
+                      failureThreshold: 60
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8000
+                      periodSeconds: 10
+                      failureThreshold: 3
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8000
+                      timeoutSeconds: 5
                       periodSeconds: 5
                       failureThreshold: 3
                   envFrom:

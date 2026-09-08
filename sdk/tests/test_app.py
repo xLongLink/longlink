@@ -27,9 +27,11 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     client = create_runtime_client()
 
     # Exercise runtime metadata and frontend fallback routes.
-    frontend_response = client.get("/")
-    frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-    health_response = client.get("/health")
+    with client:
+        frontend_response = client.get("/")
+        frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+        health_response = client.get("/health")
+        ready_response = client.get("/ready")
     # Verify each runtime route.
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
@@ -37,6 +39,8 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     assert "text/html" in frontend_route_response.headers["content-type"]
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
+    assert ready_response.status_code == 200
+    assert ready_response.json() == {"ok": True}
 
 
 @pytest.mark.usefixtures("solution_source")

@@ -72,6 +72,25 @@ def test_solution_template_constrains_workloads() -> None:
         assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]
         assert pod_spec["volumes"] == [{"name": "tmp", "emptyDir": {"sizeLimit": "256Mi"}}]
 
+        # Only the runtime is probed; database outages must not trigger liveness restarts.
+        if workload is deployment:
+            assert container["startupProbe"] == {
+                "httpGet": {"path": "/health", "port": 8000},
+                "periodSeconds": 5,
+                "failureThreshold": 60,
+            }
+            assert container["livenessProbe"] == {
+                "httpGet": {"path": "/health", "port": 8000},
+                "periodSeconds": 10,
+                "failureThreshold": 3,
+            }
+            assert container["readinessProbe"] == {
+                "httpGet": {"path": "/ready", "port": 8000},
+                "timeoutSeconds": 5,
+                "periodSeconds": 5,
+                "failureThreshold": 3,
+            }
+
 
 async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid creating runtime resources when the Solution migration fails."""
