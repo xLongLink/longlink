@@ -182,7 +182,7 @@ image: sdk\:build
 	@docker buildx inspect "$(DEV_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_BUILDER)" --driver docker-container
 	@if [ ! -d sdk/dev ]; then \
 		cd sdk && uv run --locked longlink init --folder dev --name sample && \
-		if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi; \
+		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
 	fi
 	cd sdk/dev && uv run longlink build --builder "$(DEV_BUILDER)" --registry localhost:15000 --push --tag dev
 
@@ -201,6 +201,6 @@ web: web\:install
 # Build the SDK web bundle, then recreate and run the generated SDK development app.
 sdk: sdk\:build
 	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev --name sample
-	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
+	cd sdk && uv run --locked longlink init --folder dev --name sample && \
+		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml
 	cd sdk/dev && uv run longlink dev

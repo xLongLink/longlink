@@ -32,6 +32,7 @@ export default function AdminStorage() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/storages'] });
             toast({ body: 'Storage deleted' });
         },
+        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: storages,
@@ -45,9 +46,7 @@ export default function AdminStorage() {
         items: storages,
         getId: (storage) => storage.id,
         description: (storage) => `Delete storage ${storage.name}?`,
-        errorMessage: 'Failed to delete storage',
         fallbackDescription: 'Delete this storage registry?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const pageMetadata = <NoIndex title="Storage | LongLink" />;
 

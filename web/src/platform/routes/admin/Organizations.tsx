@@ -24,7 +24,7 @@ import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/Delete
 export default function AdminOrganizations() {
     const [metadataOrganization, setMetadataOrganization] = useState<OrganizationSummary | null>(null);
     const toast = useToast();
-    const deleteOrganization = useDeleteOrganization(() => toast({ body: 'Organization deleted' }));
+    const deleteOrganization = useDeleteOrganization();
     const {
         items: organizations,
         error,
@@ -37,9 +37,8 @@ export default function AdminOrganizations() {
         items: organizations,
         getId: (organization) => organization.id,
         description: (organization) => `Delete organization ${organization.name}?`,
-        errorMessage: 'Failed to delete organization',
         fallbackDescription: 'Delete this organization?',
-        onError: (message) => toast({ body: message, type: 'error' }),
+        onSuccess: () => toast({ body: 'Organization deleted' }),
     });
     const pageMetadata = <NoIndex title="Organizations | LongLink" />;
 

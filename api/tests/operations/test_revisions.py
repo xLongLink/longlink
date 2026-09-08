@@ -90,8 +90,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
-    if failure == "timeout":
-        monkeypatch.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.01)
     update = await claim_operation()
     assert update is not None and update.target_id == desired_id
 
@@ -106,7 +104,11 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert revision is not None and not revision.failed
         return
 
-    failed = await execute(update)
+    # Limit the timeout override to the failing attempt, not recovery work.
+    with monkeypatch.context() as timeout:
+        if failure == "timeout":
+            timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.01)
+        failed = await execute(update)
     assert failed.failed is not None
     if failure == "timeout":
         assert "timed out" in failed.failed
@@ -136,7 +138,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     recovery = await claim_operation()
     assert recovery is not None
     assert (recovery.kind, recovery.target_id) == (OperationKind.solution_deploy, good_id)
-    monkeypatch.setattr(env, "OPERATION_TIMEOUT_SECONDS", 600)
     restored = await execute(recovery)
     assert (restored.failed is not None) == (failure == "restoration")
 

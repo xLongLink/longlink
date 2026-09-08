@@ -85,7 +85,7 @@ To test a local Solution update, edit the generated project under `sdk/dev`, the
 make image  # Build and push localhost:15000/sample:dev, preserving your edits
 ```
 
-The local registry must be running (`make up` initializes it). `make image` generates the sample only when `sdk/dev` is missing. In Organization Settings, open the Solution actions and check for updates to deploy the changed image.
+The local registry must be running (`make up` initializes it). `make image` generates the sample only when `sdk/dev` is missing. In Organization Settings, click the Solution's **Check for updates** button, then **Update** to review and deploy the changed image.
 
 Cleanup
 

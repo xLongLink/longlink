@@ -41,7 +41,7 @@ Resource limits are managed at the `namespace`, `table` and `bucket` level.
 
 ## Solutions
 
-Maintainers can use the Solution menu in Organization Settings to **Check source for update** and deploy updates from the tracked source. Manual deployment from a new image source is available only through the API.
+Maintainers can click the Solution's **Check for updates** button in Organization Settings, then **Update** to review and deploy updates from the tracked source. Manual deployment from a new image source is available only through the API.
 
 - Each immutable Revision stores the submitted tag or digest as `source`, the resolved runtime digest as `image`, image metadata, and an encrypted environment snapshot. A digest source has no moving channel; checking it normally reports no update.
 - `POST /api/v1/organizations/{id}/solutions` takes a complete `envs` dictionary. `PUT /api/v1/solutions/{id}` deploys a new submitted `image` source and accepts an environment patch.

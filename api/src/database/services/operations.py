@@ -245,14 +245,20 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
 
     # A request can reuse this lease after its handler already skipped an outdated target.
     # Recheck desired state at completion so that request cannot disappear with the lease.
-    if operation is not None and operation.kind == OperationKind.solution_deploy:
-        revision = await session.get(Revision, operation.target_id)
-        if revision is not None:
-            solution = await session.get(Solution, revision.solution_id, with_for_update=True)
-            if solution is not None and solution.deleted_at is None:
-                target_id = solution.effective_revision_id
-                if target_id is not None and target_id != solution.deployed_revision_id:
-                    await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
+    if operation is None or operation.kind != OperationKind.solution_deploy:
+        return operation
+
+    revision = await session.get(Revision, operation.target_id)
+    if revision is None:
+        return operation
+
+    solution = await session.get(Solution, revision.solution_id, with_for_update=True)
+    if solution is None or solution.deleted_at is not None:
+        return operation
+
+    target_id = solution.effective_revision_id
+    if target_id is not None and target_id != solution.deployed_revision_id:
+        await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
 
     return operation
 
@@ -309,15 +315,21 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
 
     # Persist recovery alongside failure, including timeout failures from jobs.execute.
     # A failed restoration remains failed and never recursively schedules itself.
-    if operation.kind == OperationKind.solution_deploy:
-        revision = await session.get(Revision, operation.target_id)
-        if revision is not None:
-            if revision.deployed_at is None:
-                revision.failed = True
-            solution = await session.get(Solution, revision.solution_id, with_for_update=True)
-            if solution is not None and solution.deleted_at is None:
-                solution.status = Status.failed
-                if revision.deployed_at is None and solution.deployed_revision_id is not None:
-                    await enqueue(session, kind=OperationKind.solution_deploy, target_id=solution.deployed_revision_id)
+    if operation.kind != OperationKind.solution_deploy:
+        return operation
+
+    revision = await session.get(Revision, operation.target_id)
+    if revision is None:
+        return operation
+    if revision.deployed_at is None:
+        revision.failed = True
+
+    solution = await session.get(Solution, revision.solution_id, with_for_update=True)
+    if solution is None or solution.deleted_at is not None:
+        return operation
+
+    solution.status = Status.failed
+    if revision.deployed_at is None and solution.deployed_revision_id is not None:
+        await enqueue(session, kind=OperationKind.solution_deploy, target_id=solution.deployed_revision_id)
 
     return operation

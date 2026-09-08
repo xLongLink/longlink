@@ -14,6 +14,11 @@ import type { OrganizationSolutionSummary, SolutionUpdateCheck } from '@/lib/gen
 
 const defaultUpdateValues: { envs: Record<string, string | null | undefined> } = { envs: {} };
 
+/** Omitted configured values are preserved; null and blank replacements are missing. */
+function isMissingRequiredEnv(value: string | null | undefined, required: boolean, configured: boolean) {
+    return required && (value === undefined ? !configured : (value ?? '').trim().length === 0);
+}
+
 /** Review a source candidate and edit only explicitly changed environment values. */
 export default function UpdateSolution({
     solution,
@@ -27,11 +32,10 @@ export default function UpdateSolution({
     onInvalidate: () => Promise<void>;
 }) {
     const toast = useToast();
-    const path = `/api/v1/solutions/${solution.id}`;
     const formId = useId();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const metadata = candidate.metadata;
+    const environments = candidate.metadata.environments ?? [];
     const configured = candidate.configured_envs;
 
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
@@ -40,38 +44,36 @@ export default function UpdateSolution({
     const form = useForm({
         defaultValues: defaultUpdateValues,
         onSubmit: async ({ value }) => {
-            if (!busy && candidate.available) await deploy(value.envs);
+            if (busy) return;
+
+            // Submit a patch; the server independently resolves and validates the release again.
+            setBusy(true);
+            setError(null);
+            try {
+                await api(`/api/v1/solutions/${solution.id}/update`, {
+                    method: 'POST',
+                    timeout: 25000,
+                    json: {
+                        // Undefined fields are omitted; empty strings and explicit removals are preserved.
+                        envs: value.envs,
+                        expected_revision_id: candidate.revision_id,
+                    },
+                });
+                toast({ body: 'Release queued for deployment' });
+                await onInvalidate();
+            } catch (failure) {
+                // A conflict requires a fresh check, not resubmission of the old candidate.
+                if (failure instanceof ApiError && failure.status === 409) {
+                    toast({ body: failure.message, type: 'error' });
+                    await onInvalidate();
+                    return;
+                }
+                setError(failure instanceof Error ? failure.message : 'Deployment failed');
+            } finally {
+                setBusy(false);
+            }
         },
     });
-
-    /** Submit a patch; the server independently resolves and validates the release again. */
-    async function deploy(envs: typeof defaultUpdateValues.envs) {
-        setBusy(true);
-        setError(null);
-        try {
-            await api(`${path}/update`, {
-                method: 'POST',
-                timeout: 25000,
-                json: {
-                    // Undefined fields are omitted; empty strings and explicit removals are preserved.
-                    envs,
-                    expected_revision_id: candidate.revision_id,
-                },
-            });
-            toast({ body: 'Release queued for deployment' });
-            await onInvalidate();
-        } catch (failure) {
-            // A conflict requires a fresh check, not resubmission of the old candidate.
-            if (failure instanceof ApiError && failure.status === 409) {
-                toast({ body: failure.message, type: 'error' });
-                await onInvalidate();
-                return;
-            }
-            setError(failure instanceof Error ? failure.message : 'Deployment failed');
-        } finally {
-            setBusy(false);
-        }
-    }
 
     return (
         <Dialog
@@ -101,7 +103,7 @@ export default function UpdateSolution({
                             New {currentLabel === candidateLabel ? candidate.image : candidateLabel}
                         </Text>
                     </Stack>
-                    {(metadata.environments ?? []).map(({ name, required, description }) => {
+                    {environments.map(({ name, required, description }) => {
                         const isConfigured = configured.includes(name);
                         return (
                             <form.Field
@@ -109,10 +111,7 @@ export default function UpdateSolution({
                                 name={`envs.${name}` as `envs.${string}`}
                                 validators={{
                                     onChange: ({ value }) =>
-                                        required &&
-                                        (value === undefined ? !isConfigured : (value ?? '').trim().length === 0)
-                                            ? 'Required'
-                                            : undefined,
+                                        isMissingRequiredEnv(value, required, isConfigured) ? 'Required' : undefined,
                                 }}
                             >
                                 {(field) => (
@@ -168,12 +167,8 @@ export default function UpdateSolution({
             </form>
             <form.Subscribe
                 selector={(state) =>
-                    (metadata.environments ?? []).some(
-                        ({ name, required }) =>
-                            required &&
-                            (state.values.envs[name] === undefined
-                                ? !configured.includes(name)
-                                : (state.values.envs[name] ?? '').trim().length === 0)
+                    environments.some(({ name, required }) =>
+                        isMissingRequiredEnv(state.values.envs[name], required, configured.includes(name))
                     )
                 }
             >
@@ -186,7 +181,7 @@ export default function UpdateSolution({
                             label={busy ? 'Updating...' : 'Update solution'}
                             variant="primary"
                             isLoading={busy}
-                            isDisabled={busy || !candidate.available || missing}
+                            isDisabled={missing}
                         />
                     </Stack>
                 )}

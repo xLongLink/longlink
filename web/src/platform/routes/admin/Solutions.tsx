@@ -34,6 +34,7 @@ export default function AdminSolutions() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] });
             toast({ body: 'Solution deleted' });
         },
+        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: solutions,
@@ -47,9 +48,7 @@ export default function AdminSolutions() {
         items: solutions,
         getId: (solution) => solution.id,
         description: (solution) => `Delete solution ${solution.name}?`,
-        errorMessage: 'Failed to delete solution',
         fallbackDescription: 'Delete this solution?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const pageMetadata = <NoIndex title="Solutions | LongLink" />;
 

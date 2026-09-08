@@ -1,4 +1,3 @@
-import { api } from '@/lib/api';
 import { useState } from 'react';
 import { NoIndex } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
@@ -19,31 +18,16 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { avatarUrlSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDeleteOrganization } from '@/lib/hooks/use-organization';
-import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import type { UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
-import { useAuthenticatedUser, useUserOrganizations } from '@/lib/hooks/use-user';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { useAuthenticatedUser, useUpdateUser, useUserOrganizations } from '@/lib/hooks/use-user';
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const toast = useToast();
     const user = useAuthenticatedUser();
     const { memberships, isOrganizationsLoading } = useUserOrganizations();
-    const queryClient = useQueryClient();
-    const updateUser = useMutation({
-        mutationFn: async (payload: UserUpdate) =>
-            zUserSummary.parse(
-                await api('/api/v1/me', {
-                    json: payload,
-                    method: 'PATCH',
-                }).json()
-            ),
-        onSuccess: (updatedUser) => {
-            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
-        },
-    });
+    const updateUser = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
@@ -54,7 +38,12 @@ export default function Settings() {
     const avatar = editedAvatar ?? user.avatar;
 
     /** Saves the edited account name when focus leaves its input. */
-    const saveAccountName = async () => {
+    const saveAccountName = () => {
+        // Keep profile saves from replacing an in-flight mutation's UI callbacks.
+        if (updateUser.isPending) {
+            return;
+        }
+
         setAccountError(null);
         const accountName = name.trim();
 
@@ -70,21 +59,20 @@ export default function Settings() {
             return;
         }
 
-        // Persist the account name and surface any failure.
-        try {
-            await updateUser.mutateAsync({ name: accountName });
-            setEditedName(null);
-            toast({ body: 'Username saved' });
-        } catch (error) {
-            toast({
-                body: error instanceof Error ? error.message : 'Failed to update username',
-                type: 'error',
-            });
-        }
+        // Clear the draft after the saved profile reaches the cache.
+        updateUser.mutate(
+            { name: accountName },
+            {
+                onSuccess: () => {
+                    setEditedName(null);
+                    toast({ body: 'Username saved' });
+                },
+            }
+        );
     };
 
     /** Saves the current avatar URL and closes the dialog on success. */
-    async function saveAvatar() {
+    function saveAvatar() {
         setAvatarError(null);
 
         const normalizedAvatar = avatar.trim();
@@ -100,17 +88,16 @@ export default function Settings() {
         }
 
         // Persist the URL and use the refreshed profile value.
-        try {
-            await updateUser.mutateAsync({ avatar: normalizedAvatar });
-            setEditedAvatar(null);
-            setIsAvatarDialogOpen(false);
-            toast({ body: 'Avatar saved' });
-        } catch (mutationError) {
-            toast({
-                body: mutationError instanceof Error ? mutationError.message : 'Failed to update avatar',
-                type: 'error',
-            });
-        }
+        updateUser.mutate(
+            { avatar: normalizedAvatar },
+            {
+                onSuccess: () => {
+                    setEditedAvatar(null);
+                    setIsAvatarDialogOpen(false);
+                    toast({ body: 'Avatar saved' });
+                },
+            }
+        );
     }
 
     /** Opens or closes the avatar editor without retaining canceled changes. */
@@ -135,9 +122,7 @@ export default function Settings() {
         items: memberships,
         getId: (membership) => membership.organization.id,
         description: (membership) => `Delete ${membership.organization.name} from your account?`,
-        errorMessage: 'Failed to delete organization',
         fallbackDescription: 'Delete this organization?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     return (
         <PageContainer gap={8} padding={2}>
@@ -174,6 +159,7 @@ export default function Settings() {
                             <Stack direction="horizontal" gap={4} align="start" wrap="wrap">
                                 <TextInput
                                     label="Username"
+                                    isDisabled={updateUser.isPending}
                                     value={name}
                                     width="100%"
                                     isRequired
@@ -182,7 +168,7 @@ export default function Settings() {
                                         setEditedName(value);
                                         setAccountError(null);
                                     }}
-                                    onBlur={() => void saveAccountName()}
+                                    onBlur={saveAccountName}
                                 />
                                 <TextInput label="Email" type="email" value={user.email} width="100%" isDisabled />
                             </Stack>

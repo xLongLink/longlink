@@ -11,7 +11,7 @@ type AvatarDialogProps = {
     isSaving: boolean;
     onAvatarChange: (avatar: string) => void;
     onOpenChange: (open: boolean) => void;
-    onSave: () => Promise<void>;
+    onSave: () => void;
     placeholder: string;
     title: string;
 };
@@ -35,7 +35,7 @@ export function AvatarDialog({
                 id={formId}
                 onSubmit={(event) => {
                     event.preventDefault();
-                    void onSave();
+                    onSave();
                 }}
             >
                 <TextInput

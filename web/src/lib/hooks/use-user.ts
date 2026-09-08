@@ -1,10 +1,26 @@
 import { api } from '@/lib/api';
+import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const AuthenticatedUserContext = createContext<UserSummary | null>(null);
+
+/** Updates the current profile and publishes the saved user to the cache. */
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+    const toast = useToast();
+
+    return useMutation({
+        mutationFn: async (payload: UserUpdate) =>
+            zUserSummary.parse(await api('/api/v1/me', { json: payload, method: 'PATCH' }).json()),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
+        },
+        onError: (error) => toast({ body: error.message, type: 'error' }),
+    });
+}
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {

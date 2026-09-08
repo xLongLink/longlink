@@ -32,6 +32,7 @@ export default function AdminDatabase() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
             toast({ body: 'Database deleted' });
         },
+        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: databases,
@@ -45,9 +46,7 @@ export default function AdminDatabase() {
         items: databases,
         getId: (database) => database.id,
         description: (database) => `Delete database ${database.name}?`,
-        errorMessage: 'Failed to delete database',
         fallbackDescription: 'Delete this database?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const pageMetadata = <NoIndex title="Database | LongLink" />;
 

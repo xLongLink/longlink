@@ -16,13 +16,12 @@ type DeleteConfirmationProps = {
 
 type UseDeleteDialogOptions<TItem> = {
     title: string;
-    mutation: { isPending: boolean; mutateAsync: (id: string) => Promise<unknown> };
+    mutation: { isPending: boolean; mutate: (id: string, options: { onSuccess: () => void }) => void };
     items: TItem[];
     getId: (item: TItem) => string;
     description: (item: TItem) => ReactNode;
-    errorMessage: string;
     fallbackDescription: ReactNode;
-    onError: (message: string) => void;
+    onSuccess?: () => void;
 };
 
 /** Renders a shared destructive confirmation dialog. */
@@ -61,9 +60,8 @@ export function useDeleteDialog<TItem>({
     items,
     getId,
     description,
-    errorMessage,
     fallbackDescription,
-    onError,
+    onSuccess,
 }: UseDeleteDialogOptions<TItem>) {
     const [targetId, setTargetId] = useState<string | null>(null);
     const target = targetId === null ? null : items.find((item) => getId(item) === targetId);
@@ -83,19 +81,19 @@ export function useDeleteDialog<TItem>({
                     setTargetId(null);
                 }
             },
-            onConfirm: async () => {
+            onConfirm: () => {
                 // Ignore confirmations without a selected target.
                 if (targetId === null) {
                     return;
                 }
 
-                // Run the delete mutation and surface any failure.
-                try {
-                    await mutation.mutateAsync(targetId);
-                    setTargetId(null);
-                } catch (mutationError) {
-                    onError(mutationError instanceof Error ? mutationError.message : errorMessage);
-                }
+                // Close the dialog and notify the caller only after deletion succeeds.
+                mutation.mutate(targetId, {
+                    onSuccess: () => {
+                        setTargetId(null);
+                        onSuccess?.();
+                    },
+                });
             },
         } satisfies DeleteConfirmationProps,
     };

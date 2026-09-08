@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { useToast } from '@/lib/hooks/use-toast';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
     SolutionCreate,
@@ -108,8 +109,9 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
 }
 
 /** Deletes one organization and refreshes organization access data. */
-export function useDeleteOrganization(onSuccess?: () => void) {
+export function useDeleteOrganization() {
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     return useMutation({
         mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
@@ -119,16 +121,18 @@ export function useDeleteOrganization(onSuccess?: () => void) {
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]);
-            onSuccess?.();
         },
+        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
 }
 
 /** Provides mutations for organization members and invitations. */
 export function useOrganizationMembers(organizationId: string) {
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     const inviteMember = useMutation({
+        onError: (error) => toast({ body: error.message, type: 'error' }),
         mutationFn: (payload: OrganizationInvitationCreate) =>
             api(`/api/v1/organizations/${organizationId}/invitations`, { json: payload, method: 'POST' }),
         onSuccess: () =>
@@ -136,6 +140,7 @@ export function useOrganizationMembers(organizationId: string) {
     });
 
     const revokeInvitation = useMutation({
+        onError: (error) => toast({ body: error.message, type: 'error' }),
         mutationFn: (invitationId: string) =>
             api(`/api/v1/organizations/${organizationId}/invitations/${invitationId}`, { method: 'DELETE' }),
         onSuccess: () =>
@@ -143,6 +148,7 @@ export function useOrganizationMembers(organizationId: string) {
     });
 
     const changeMemberRole = useMutation({
+        onError: (error) => toast({ body: error.message, type: 'error' }),
         mutationFn: ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) =>
             api(`/api/v1/organizations/${organizationId}/members/${memberId}`, { json: { role }, method: 'PATCH' }),
         onSuccess: () =>
@@ -170,18 +176,22 @@ export function useCreateOrganizationSolution(organizationId: string) {
 /** Deletes one solution and refreshes organization solution data. */
 export function useDeleteOrganizationSolution(organizationId: string) {
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     return useMutation({
         mutationFn: (solutionId: string) => api(`/api/v1/solutions/${solutionId}`, { method: 'DELETE' }),
         onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
+        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
 }
 
 /** Updates mutable organization settings and refreshes organization caches. */
 export function useUpdateOrganization(organizationId: string) {
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     return useMutation({
+        onError: (error) => toast({ body: error.message, type: 'error' }),
         mutationFn: async (payload: OrganizationUpdate) => {
             return zOrganizationSummary.parse(
                 await api(`/api/v1/organizations/${organizationId}`, {

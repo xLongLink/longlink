@@ -102,9 +102,7 @@ export default function OrganizationSettings() {
         items: solutions,
         getId: (solution) => solution.id,
         description: (solution) => `Delete ${solution.name} from this organization?`,
-        errorMessage: 'Failed to delete solution',
         fallbackDescription: 'Delete this solution?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const isOrganizationSectionActive = hash === '' || hash === '#organization';
     const avatar = editedAvatar ?? organizationAvatar;
@@ -138,7 +136,7 @@ export default function OrganizationSettings() {
     }
 
     /** Saves the current avatar URL and closes the dialog on success. */
-    async function saveAvatar() {
+    function saveAvatar() {
         setAvatarError(null);
 
         // Ignore unavailable, unauthorized, and unchanged Organizations.
@@ -158,17 +156,16 @@ export default function OrganizationSettings() {
         }
 
         // Persist the URL and use the refreshed Organization value.
-        try {
-            await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
-            setEditedAvatar(null);
-            setIsAvatarDialogOpen(false);
-            toast({ body: 'Avatar saved' });
-        } catch (mutationError) {
-            toast({
-                body: mutationError instanceof Error ? mutationError.message : 'Failed to update avatar',
-                type: 'error',
-            });
-        }
+        updateOrganization.mutate(
+            { avatar: normalizedAvatar },
+            {
+                onSuccess: () => {
+                    setEditedAvatar(null);
+                    setIsAvatarDialogOpen(false);
+                    toast({ body: 'Avatar saved' });
+                },
+            }
+        );
     }
 
     /** Opens or closes the avatar editor without retaining canceled changes. */
@@ -506,29 +503,27 @@ export default function OrganizationSettings() {
                 actionLabel="Change role"
                 actionVariant="primary"
                 isActionLoading={changeMemberRole.isPending}
-                onAction={async () => {
+                onAction={() => {
                     // Ignore submissions without a selected role change.
                     if (roleChangeTarget === null || roleChangeMember === null) {
                         return;
                     }
 
                     // Persist the selected organization role.
-                    try {
-                        await changeMemberRole.mutateAsync({
+                    changeMemberRole.mutate(
+                        {
                             memberId: roleChangeTarget.memberId,
                             role: roleChangeTarget.role,
-                        });
-                        toast({
-                            body: `${roleChangeMember.user.name} now has ${roleLabel(roleChangeTarget.role)} permission`,
-                        });
-                        setRoleChangeTarget(null);
-                    } catch (mutationError) {
-                        toast({
-                            body:
-                                mutationError instanceof Error ? mutationError.message : 'Failed to change member role',
-                            type: 'error',
-                        });
-                    }
+                        },
+                        {
+                            onSuccess: () => {
+                                toast({
+                                    body: `${roleChangeMember.user.name} now has ${roleLabel(roleChangeTarget.role)} permission`,
+                                });
+                                setRoleChangeTarget(null);
+                            },
+                        }
+                    );
                 }}
             />
             <AlertDialog
@@ -549,24 +544,19 @@ export default function OrganizationSettings() {
                 actionLabel="Revoke invitation"
                 actionVariant="destructive"
                 isActionLoading={revokeInvitation.isPending}
-                onAction={async () => {
+                onAction={() => {
                     // Ignore submissions without a selected invitation.
                     if (revokeInvitationTarget === null) {
                         return;
                     }
 
                     // Revoke the pending grant and refresh Organization details.
-                    try {
-                        await revokeInvitation.mutateAsync(revokeInvitationTarget.id);
-                        toast({ body: `Invitation for ${revokeInvitationTarget.email} revoked` });
-                        setRevokeInvitationId(null);
-                    } catch (mutationError) {
-                        toast({
-                            body:
-                                mutationError instanceof Error ? mutationError.message : 'Failed to revoke invitation',
-                            type: 'error',
-                        });
-                    }
+                    revokeInvitation.mutate(revokeInvitationTarget.id, {
+                        onSuccess: () => {
+                            toast({ body: `Invitation for ${revokeInvitationTarget.email} revoked` });
+                            setRevokeInvitationId(null);
+                        },
+                    });
                 }}
             />
             <Dialog
@@ -578,24 +568,23 @@ export default function OrganizationSettings() {
             >
                 <form
                     id="invite-member-form"
-                    onSubmit={async (event) => {
+                    onSubmit={(event) => {
                         event.preventDefault();
 
-                        // Submit the invitation and surface any failure.
-                        try {
-                            await inviteMember.mutateAsync({
+                        // Reset the invitation form after a successful submission.
+                        inviteMember.mutate(
+                            {
                                 email: inviteEmail.trim(),
                                 role: inviteRole,
-                            });
-                            setInviteOpen(false);
-                            setInviteEmail('');
-                            setInviteRole('write');
-                        } catch (mutationError) {
-                            toast({
-                                body: mutationError instanceof Error ? mutationError.message : 'Failed to invite user',
-                                type: 'error',
-                            });
-                        }
+                            },
+                            {
+                                onSuccess: () => {
+                                    setInviteOpen(false);
+                                    setInviteEmail('');
+                                    setInviteRole('write');
+                                },
+                            }
+                        );
                     }}
                 >
                     <Stack gap={4}>
