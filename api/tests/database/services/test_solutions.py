@@ -4,6 +4,7 @@ from factories import create_solution, create_organization
 from src.errors import ConflictError, NotFoundError, ForbiddenError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
 from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
@@ -29,8 +30,8 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
                 session,
                 organization.id,
                 "Dashboard",
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=owner.id,
             )
 
@@ -51,8 +52,8 @@ async def test_create_rejects_missing_organization(users: tuple[User, User, User
                 session,
                 uuid4(),
                 "Dashboard",
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=users[0].id,
             )
 
@@ -86,16 +87,16 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
                 session,
                 organization.id,
                 "Blocked dashboard",
-                image=Image("ghcr.io/longlink/dashboard@sha256:test"),
                 secrets={},
+                metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=maintainer.id,
             )
         solution = await solutions.create(
             session,
             organization.id,
             "Owner dashboard",
-            image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             secrets={},
+            metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             user_id=owner.id,
         )
         await session.commit()

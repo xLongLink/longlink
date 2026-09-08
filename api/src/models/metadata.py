@@ -19,7 +19,7 @@ class LongLinkMetadata(BaseModel):
     """Structured metadata extracted from OCI and LongLink image labels."""
 
     # Runtime
-    image: Image = Field(exclude=True)
+    image: Image
 
     # Metadata
     description: str | None = None

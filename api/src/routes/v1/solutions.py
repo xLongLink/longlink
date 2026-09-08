@@ -1,16 +1,21 @@
 import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
+from sqlmodel import col
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
+from sqlalchemy import select
 from src.logger import logger
+from sqlalchemy.orm import defer
 from src.models.roles import OrganizationRoles
-from src.models.solutions import SolutionCreate, SolutionResponse
+from src.models.types import Image
+from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdate, RevisionResponse, SolutionResponse, SolutionUpdateCheck
 from src.database.services import solutions, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
+from src.database.models.solutions import Revision
 
 router = APIRouter()
 
@@ -60,11 +65,119 @@ async def create_solution(
         session,
         organization_id,
         payload.name,
-        image=metadata.image,
+        metadata=metadata,
         description=payload.description,
         secrets=payload.envs,
         user_id=user.id,
+        source=payload.image,
     )
+    await session.commit()
+
+
+@router.put("/solutions/{solution_id}", status_code=204)
+async def update_solution(
+    solution_id: UUID, payload: SolutionUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
+):
+    """Append and deploy an immutable image and environment snapshot."""
+
+    # Validate access and image requirements before recording a replacement release.
+    solution = await solutions.access(session, solution_id, user.id, lock=False)
+    expected_revision = solution.desired_revision_id
+    if payload.expected_revision_id is not None and payload.expected_revision_id != expected_revision:
+        raise HTTPException(status_code=409, detail="Desired revision changed since review. Review the release again.")
+    await session.commit()
+    metadata = await images.metadata(payload.image)
+    if metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+    solution = await solutions.access(session, solution_id, user.id)
+    if solution.desired_revision_id != expected_revision:
+        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Review the release again.")
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=payload.image)
+    await session.commit()
+
+
+@router.get("/solutions/{solution_id}/update", response_model=SolutionUpdateCheck)
+async def check_update(solution_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
+    """Inspect the desired release source without changing deployment state."""
+
+    # Avoid holding command locks while waiting for the public registry.
+    solution = await solutions.access(session, solution_id, user.id, lock=False)
+    revision = await session.get(Revision, solution.desired_revision_id)
+    if revision is None:
+        raise HTTPException(status_code=409, detail="Solution has no desired revision")
+    source, revision_id = Image(revision.source), revision.id
+    await session.commit()
+    metadata = await images.metadata(source)
+    if metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+
+    # Revalidate permissions and the source after inspection before returning a candidate.
+    solution = await solutions.access(session, solution_id, user.id)
+    if solution.desired_revision_id != revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+    return {
+        "source": source,
+        "image": metadata.image,
+        "current_image": revision.image,
+        "metadata": metadata,
+        "revision_id": revision_id,
+        "configured_envs": revision.configured_envs,
+        "available": metadata.image != revision.image,
+    }
+
+
+@router.post("/solutions/{solution_id}/update", status_code=204)
+async def apply_update(
+    solution_id: UUID, payload: SolutionPatch, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
+):
+    """Re-resolve the desired source and deploy only a changed digest."""
+
+    solution = await solutions.access(session, solution_id, user.id, lock=False)
+    if payload.expected_revision_id is not None and payload.expected_revision_id != solution.desired_revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed since review. Check again.")
+    revision = await session.get(Revision, solution.desired_revision_id)
+    if revision is None:
+        raise HTTPException(status_code=409, detail="Solution has no desired revision")
+    source, revision_id = Image(revision.source), revision.id
+    await session.commit()
+    metadata = await images.metadata(source)
+    if metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+
+    # Compare and merge only against the current serialized desired state.
+    solution = await solutions.access(session, solution_id, user.id)
+    if solution.desired_revision_id != revision_id:
+        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
+    if metadata.image == revision.image:
+        raise HTTPException(status_code=409, detail="Source is up to date. No revision was created.")
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=source)
+    await session.commit()
+
+
+@router.get("/solutions/{solution_id}/revisions", response_model=list[RevisionResponse])
+async def list_revisions(solution_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
+    """Return newest-first release history to Solution maintainers."""
+
+    # History projects configured names, never the environment values themselves.
+    await solutions.access(session, solution_id, user.id)
+    result = await session.scalars(
+        select(Revision)
+        .options(defer(Revision.image_metadata))
+        .where(col(Revision.solution_id) == solution_id)
+        .order_by(col(Revision.created_at).desc(), col(Revision.id).desc())
+    )
+    return result.all()
+
+
+@router.post("/solutions/{solution_id}/revisions/{revision_id}/rollback", status_code=204)
+async def rollback_solution(
+    solution_id: UUID, revision_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
+):
+    """Restore a successful release while retaining the current database schema."""
+
+    # Select and queue the exact historical release in one authorized transaction.
+    solution = await solutions.access(session, solution_id, user.id)
+    await solutions.rollback(session, solution, revision_id, user.id)
     await session.commit()
 
 

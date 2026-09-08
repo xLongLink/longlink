@@ -179,6 +179,10 @@ export type HttpValidationError = {
  */
 export type LongLinkMetadata = {
     /**
+     * Image
+     */
+    image: string;
+    /**
      * Description
      */
     description?: string | null;
@@ -209,7 +213,7 @@ export type OAuthAvailability = {
  *
  * Supported registered operation handlers.
  */
-export type OperationKind = 'compute.create' | 'solution.create' | 'solution.delete' | 'organization.create' | 'organization.delete';
+export type OperationKind = 'compute.create' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
  * OperationResource
@@ -402,6 +406,14 @@ export type OrganizationSolutionSummary = {
      */
     description?: string | null;
     status: Status;
+    /**
+     * Deployment Pending
+     */
+    deployment_pending: boolean;
+    /**
+     * Desired Revision Id
+     */
+    desired_revision_id: string | null;
 };
 
 /**
@@ -600,29 +612,87 @@ export type RegistrationComplete = {
 };
 
 /**
- * SolutionCreate
+ * RevisionResponse
  *
- * Validate solution creation payloads.
+ * Expose release history without encrypted environment values.
  */
-export type SolutionCreate = {
+export type RevisionResponse = {
     /**
-     * Name
+     * Id
      */
-    name: string;
+    id: string;
     /**
      * Image
      */
     image: string;
     /**
-     * Description
+     * Source
      */
-    description?: string | null;
+    source: string;
+    /**
+     * Configured Envs
+     */
+    configured_envs: Array<string>;
+    /**
+     * Failed
+     */
+    failed: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created Id
+     */
+    created_id: string | null;
+    /**
+     * Deployed At
+     */
+    deployed_at: string | null;
+};
+
+/**
+ * SolutionCreate
+ *
+ * Validate solution creation metadata and release configuration.
+ */
+export type SolutionCreate = {
     /**
      * Envs
      */
     envs?: {
         [key: string]: string;
     };
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
+ * SolutionPatch
+ *
+ * Preserve omitted values and remove variables explicitly set to null.
+ */
+export type SolutionPatch = {
+    /**
+     * Envs
+     */
+    envs?: {
+        [key: string]: string | null;
+    };
+    /**
+     * Expected Revision Id
+     */
+    expected_revision_id?: string | null;
 };
 
 /**
@@ -652,11 +722,80 @@ export type SolutionResponse = {
      * Image Desired
      */
     image_desired: string;
+    /**
+     * Desired Revision Id
+     */
+    desired_revision_id: string | null;
+    /**
+     * Deployed Revision Id
+     */
+    deployed_revision_id: string | null;
     status: Status;
+    /**
+     * Deployment Pending
+     */
+    deployment_pending: boolean;
     /**
      * Created At
      */
     created_at: string;
+};
+
+/**
+ * SolutionUpdate
+ *
+ * Deploy a submitted image source with an environment patch.
+ */
+export type SolutionUpdate = {
+    /**
+     * Envs
+     */
+    envs?: {
+        [key: string]: string | null;
+    };
+    /**
+     * Expected Revision Id
+     */
+    expected_revision_id?: string | null;
+    /**
+     * Image
+     */
+    image: string;
+};
+
+/**
+ * SolutionUpdateCheck
+ *
+ * Expose a candidate and configured names, never environment values.
+ */
+export type SolutionUpdateCheck = {
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Available
+     */
+    available: boolean;
+    /**
+     * Revision Id
+     */
+    revision_id: string;
+    /**
+     * Current Image
+     *
+     * Immutable image of the desired revision used for this update check.
+     */
+    current_image: string;
+    /**
+     * Configured Envs
+     */
+    configured_envs: Array<string>;
+    metadata: LongLinkMetadata;
 };
 
 /**
@@ -1161,6 +1300,192 @@ export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses];
 
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}';
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutData = {
+    body: SolutionUpdate;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}';
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutError = UpdateSolutionApiV1SolutionsSolutionIdPutErrors[keyof UpdateSolutionApiV1SolutionsSolutionIdPutErrors];
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutResponse = UpdateSolutionApiV1SolutionsSolutionIdPutResponses[keyof UpdateSolutionApiV1SolutionsSolutionIdPutResponses];
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/update';
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetError = CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors[keyof CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors];
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SolutionUpdateCheck;
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponse = CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses[keyof CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses];
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostData = {
+    body: SolutionPatch;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/update';
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostError = ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors[keyof ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors];
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses[keyof ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses];
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/revisions';
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetError = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors];
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses = {
+    /**
+     * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
+     *
+     * Successful Response
+     */
+    200: Array<RevisionResponse>;
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses];
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+        /**
+         * Revision Id
+         */
+        revision_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/revisions/{revision_id}/rollback';
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostError = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors];
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses];
+
 export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetData = {
     body?: never;
     path: {
@@ -1192,36 +1517,6 @@ export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
 };
 
 export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}';
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;

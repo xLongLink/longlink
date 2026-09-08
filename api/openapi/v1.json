@@ -614,6 +614,350 @@
         }
       }
     },
+    "/api/v1/solutions/{solution_id}": {
+      "put": {
+        "summary": "Update Solution",
+        "description": "Append and deploy an immutable image and environment snapshot.",
+        "operationId": "update_solution_api_v1_solutions__solution_id__put",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolutionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Solution",
+        "description": "Mark one Solution absent and queue explicit lifecycle cleanup.",
+        "operationId": "delete_solution_api_v1_solutions__solution_id__delete",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}/update": {
+      "get": {
+        "summary": "Check Update",
+        "description": "Inspect the desired release source without changing deployment state.",
+        "operationId": "check_update_api_v1_solutions__solution_id__update_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolutionUpdateCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Apply Update",
+        "description": "Re-resolve the desired source and deploy only a changed digest.",
+        "operationId": "apply_update_api_v1_solutions__solution_id__update_post",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolutionPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}/revisions": {
+      "get": {
+        "summary": "List Revisions",
+        "description": "Return newest-first release history to Solution maintainers.",
+        "operationId": "list_revisions_api_v1_solutions__solution_id__revisions_get",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RevisionResponse"
+                  },
+                  "title": "Response List Revisions Api V1 Solutions  Solution Id  Revisions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}/revisions/{revision_id}/rollback": {
+      "post": {
+        "summary": "Rollback Solution",
+        "description": "Restore a successful release while retaining the current database schema.",
+        "operationId": "rollback_solution_api_v1_solutions__solution_id__revisions__revision_id__rollback_post",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "revision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Revision Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/solutions/{solution_id}/logs": {
       "get": {
         "summary": "Get Solution Logs",
@@ -661,56 +1005,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/solutions/{solution_id}": {
-      "delete": {
-        "summary": "Delete Solution",
-        "description": "Mark one Solution absent and queue explicit lifecycle cleanup.",
-        "operationId": "delete_solution_api_v1_solutions__solution_id__delete",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2852,6 +3146,10 @@
       },
       "LongLinkMetadata": {
         "properties": {
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
           "description": {
             "anyOf": [
               {
@@ -2872,6 +3170,9 @@
           }
         },
         "type": "object",
+        "required": [
+          "image"
+        ],
         "title": "LongLinkMetadata",
         "description": "Structured metadata extracted from OCI and LongLink image labels."
       },
@@ -2898,7 +3199,7 @@
         "type": "string",
         "enum": [
           "compute.create",
-          "solution.create",
+          "solution.deploy",
           "solution.delete",
           "organization.create",
           "organization.delete"
@@ -3206,6 +3507,22 @@
           },
           "status": {
             "$ref": "#/components/schemas/Status"
+          },
+          "deployment_pending": {
+            "type": "boolean",
+            "title": "Deployment Pending"
+          },
+          "desired_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desired Revision Id"
           }
         },
         "type": "object",
@@ -3213,7 +3530,9 @@
           "id",
           "name",
           "slug",
-          "status"
+          "status",
+          "deployment_pending",
+          "desired_revision_id"
         ],
         "title": "OrganizationSolutionSummary",
         "description": "Represent a compact LongLink Solution in nested Organization responses."
@@ -3514,17 +3833,94 @@
         "title": "RegistrationComplete",
         "description": "Validate profile and password setup after email authentication."
       },
+      "RevisionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "configured_envs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Configured Envs"
+          },
+          "failed": {
+            "type": "boolean",
+            "title": "Failed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "created_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Id"
+          },
+          "deployed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deployed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "image",
+          "source",
+          "configured_envs",
+          "failed",
+          "created_at",
+          "created_id",
+          "deployed_at"
+        ],
+        "title": "RevisionResponse",
+        "description": "Expose release history without encrypted environment values."
+      },
       "SolutionCreate": {
         "properties": {
+          "envs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Envs"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
           "name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Name"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
           },
           "description": {
             "anyOf": [
@@ -3537,22 +3933,48 @@
               }
             ],
             "title": "Description"
-          },
-          "envs": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Envs"
           }
         },
         "type": "object",
         "required": [
-          "name",
-          "image"
+          "image",
+          "name"
         ],
         "title": "SolutionCreate",
-        "description": "Validate solution creation payloads."
+        "description": "Validate solution creation metadata and release configuration."
+      },
+      "SolutionPatch": {
+        "properties": {
+          "envs": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Envs"
+          },
+          "expected_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revision Id"
+          }
+        },
+        "type": "object",
+        "title": "SolutionPatch",
+        "description": "Preserve omitted values and remove variables explicitly set to null."
       },
       "SolutionResponse": {
         "properties": {
@@ -3587,8 +4009,36 @@
             "type": "string",
             "title": "Image Desired"
           },
+          "desired_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Desired Revision Id"
+          },
+          "deployed_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deployed Revision Id"
+          },
           "status": {
             "$ref": "#/components/schemas/Status"
+          },
+          "deployment_pending": {
+            "type": "boolean",
+            "title": "Deployment Pending"
           },
           "created_at": {
             "type": "string",
@@ -3604,11 +4054,102 @@
           "slug",
           "description",
           "image_desired",
+          "desired_revision_id",
+          "deployed_revision_id",
           "status",
+          "deployment_pending",
           "created_at"
         ],
         "title": "SolutionResponse",
         "description": "Represent one solution in API responses."
+      },
+      "SolutionUpdate": {
+        "properties": {
+          "envs": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Envs"
+          },
+          "expected_revision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revision Id"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "title": "SolutionUpdate",
+        "description": "Deploy a submitted image source with an environment patch."
+      },
+      "SolutionUpdateCheck": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "image": {
+            "type": "string",
+            "title": "Image"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "revision_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Revision Id"
+          },
+          "current_image": {
+            "type": "string",
+            "title": "Current Image",
+            "description": "Immutable image of the desired revision used for this update check."
+          },
+          "configured_envs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Configured Envs"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/LongLinkMetadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "image",
+          "available",
+          "revision_id",
+          "current_image",
+          "configured_envs",
+          "metadata"
+        ],
+        "title": "SolutionUpdateCheck",
+        "description": "Expose a candidate and configured names, never environment values."
       },
       "Status": {
         "type": "string",

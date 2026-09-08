@@ -4,6 +4,12 @@ class ServiceError(Exception):
     status_code = 500
 
 
+class InvalidError(ServiceError):
+    """Raise when submitted configuration does not satisfy release requirements."""
+
+    status_code = 422
+
+
 class NotFoundError(ServiceError):
     """Raise when a required persisted resource is absent."""
 

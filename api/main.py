@@ -8,6 +8,7 @@ from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
 from src.database.session import session_scope
 from src.database.services import users as user_service
@@ -83,6 +84,16 @@ async def service_error_response(_request: Request, error: ServiceError):
     """Return expected service failures as API responses."""
 
     return JSONResponse(status_code=error.status_code, content={"detail": str(error)})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_response(_request: Request, error: RequestValidationError):
+    """Return validation locations and messages without echoing submitted secrets."""
+
+    # Pydantic's default error input can contain an entire environment dictionary.
+    return JSONResponse(
+        status_code=422, content={"detail": [{"loc": item["loc"], "msg": item["msg"], "type": item["type"]} for item in error.errors()]}
+    )
 
 
 @app.middleware("http")

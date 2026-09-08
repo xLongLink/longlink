@@ -131,7 +131,13 @@ export default function AdminSolutions() {
                             <StatusBadge status={metadataSolution.status} />
                         </MetadataListItem>
                         <MetadataListItem label="Organization">{metadataSolution.organization.name}</MetadataListItem>
-                        <MetadataListItem label="Image">{metadataSolution.image_desired}</MetadataListItem>
+                        <MetadataListItem label="Desired image">{metadataSolution.image_desired}</MetadataListItem>
+                        <MetadataListItem label="Desired revision">
+                            {metadataSolution.desired_revision_id ?? 'Not selected'}
+                        </MetadataListItem>
+                        <MetadataListItem label="Last deployed revision">
+                            {metadataSolution.deployed_revision_id ?? 'Never deployed'}
+                        </MetadataListItem>
                         <MetadataListItem label="ID">{metadataSolution.id}</MetadataListItem>
                         <MetadataListItem label="Slug">{metadataSolution.slug}</MetadataListItem>
                         {metadataSolution.description ? (

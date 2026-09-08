@@ -79,12 +79,20 @@ Work on the LongLink SDK runtime:
 make sdk
 ```
 
+To test a local Solution update, edit the generated project under `sdk/dev`, then run:
+
+```bash
+make image  # Build and push localhost:15000/sample:dev, preserving your edits
+```
+
+The local registry must be running (`make up` initializes it). `make image` generates the sample only when `sdk/dev` is missing. In Organization Settings, open the Solution actions and check for updates to deploy the changed image.
+
 Cleanup
 
 ```bash
 make clean  # Remove tracked remote development resources
 make down   # Stop local services and the cluster; retain volumes
-make clear  # Remove local Compose volumes
+make clear  # Remove local Compose volumes and sdk/dev (including your edits)
 ```
 
 <br />

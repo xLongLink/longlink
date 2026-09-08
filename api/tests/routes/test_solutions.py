@@ -129,11 +129,12 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
-        assert persisted.secrets == {"API_KEY": "secret-value", "PORT": "8080"}
+        assert persisted.secrets == {}
+        assert persisted.desired_revision.envs == {"API_KEY": "secret-value", "PORT": "8080"}
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.solution_create,
-                col(Operation.target_id) == persisted.id,
+                col(Operation.kind) == OperationKind.solution_deploy,
+                col(Operation.target_id) == persisted.desired_revision_id,
             )
         )
         assert operation is not None
@@ -167,9 +168,7 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
 
     # Assert
     assert [response.status_code for response in responses] == [204, 204, 204, 409]
-    assert responses[-1].json() == {
-        "detail": "Solution limit reached during the beta. Contact LongLink to request additional solutions."
-    }
+    assert responses[-1].json() == {"detail": "Solution limit reached during the beta. Contact LongLink to request additional solutions."}
     async with session_scope() as session:
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
@@ -409,8 +408,8 @@ async def test_create_app_allows_maintainer_and_queues_reconciliation(
         assert solution is not None
         operation = await session.scalar(
             select(Operation).where(
-                col(Operation.kind) == OperationKind.solution_create,
-                col(Operation.target_id) == solution.id,
+                col(Operation.kind) == OperationKind.solution_deploy,
+                col(Operation.target_id) == solution.desired_revision_id,
             )
         )
     assert operation is not None

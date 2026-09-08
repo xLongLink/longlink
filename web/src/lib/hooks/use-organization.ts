@@ -91,7 +91,9 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
                   )
             : skipToken,
         refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating') ? 5000 : false,
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                ? 5000
+                : false,
         retry: false,
     });
     const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipError;

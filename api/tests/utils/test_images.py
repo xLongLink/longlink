@@ -1,6 +1,7 @@
 import httpx2
 import pytest
 from src.utils import images
+from src.errors import ForbiddenError
 from collections.abc import Callable, AsyncIterator
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -25,7 +26,8 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     """Avoid inspecting image metadata through unsupported registry references."""
 
     # Act
-    assert await images.metadata(Image("registry.example.com/longlink/dashboard:latest")) is None
+    with pytest.raises(ForbiddenError, match="not allowed"):
+        await images.metadata(Image("registry.example.com/longlink/dashboard:latest"))
 
 
 @pytest.mark.parametrize(
@@ -93,7 +95,7 @@ async def test_metadata_fetches_digest_image_references(
         },
         "manifest": {
             "url": "https://ghcr.io/v2/longlink/dashboard/manifests/sha256:deadbeef",
-            "accept": "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
+            "accept": images.MANIFEST_ACCEPT,
             "authorization": "Bearer pull-token",
         },
         "blob": {
@@ -120,8 +122,8 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
             )
         if request.url.host == "ghcr.io":
             assert request.headers["Authorization"] == "Bearer pull-token"
-            return httpx2.Response(307, headers={"Location": "https://storage.example/config"})
-        assert request.url == "https://storage.example/config"
+            return httpx2.Response(307, headers={"Location": "https://pkg-containers.githubusercontent.com/config"})
+        assert request.url == "https://pkg-containers.githubusercontent.com/config"
         assert "Authorization" not in request.headers
         return httpx2.Response(200, json={"config": {"Labels": {}}})
 
@@ -404,3 +406,105 @@ def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
 
     # Assert
     assert missing == ["LONGLINK_TOKEN", "ZEBRA"]
+
+
+@pytest.mark.parametrize("registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO", "localhost:15000"])
+async def test_registry_allowlist_is_exact_and_local_is_development_only(monkeypatch: pytest.MonkeyPatch, registry: str) -> None:
+    """Reject alternate spellings and development registry access in production before networking."""
+
+    monkeypatch.setattr(images.env, "DEVELOPMENT", False)
+    with pytest.raises(ForbiddenError, match="not allowed"):
+        await images.metadata(Image(f"{registry}/sample:dev"))
+
+
+@pytest.mark.parametrize(
+    "index_type", ["application/vnd.oci.image.index.v1+json", "application/vnd.docker.distribution.manifest.list.v2+json"]
+)
+async def test_local_registry_selects_amd64_child_without_authentication(monkeypatch: pytest.MonkeyPatch, index_type: str) -> None:
+    """Inspect the selected child, not an index or a different architecture's metadata."""
+
+    paths: list[str] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Serve an index containing an arm64 entry before the intended amd64 manifest."""
+
+        assert request.url.scheme == "http" and request.url.host == "localhost" and request.url.port == 15000
+        assert "Authorization" not in request.headers
+        paths.append(request.url.path)
+        if request.url.path.endswith("/dev"):
+            return httpx2.Response(
+                200,
+                headers={"Docker-Content-Digest": "sha256:index"},
+                json={
+                    "mediaType": index_type,
+                    "manifests": [
+                        {"digest": "sha256:arm", "platform": {"os": "linux", "architecture": "arm64"}},
+                        {"digest": "sha256:amd", "platform": {"os": "linux", "architecture": "amd64"}},
+                    ],
+                },
+            )
+        if request.url.path.endswith("/sha256:amd"):
+            return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
+        assert request.url.path.endswith("/blobs/sha256:config")
+        return httpx2.Response(
+            200,
+            json={
+                "os": "linux",
+                "architecture": "amd64",
+                "config": {"Labels": {"longlink.environments": '[{"name":"NEW","required":true}]'}},
+            },
+        )
+
+    mock_async_client(monkeypatch, respond)
+    result = await images.metadata(Image("localhost:15000/sample:dev"))
+    assert result is not None and result.image == "localhost:15000/sample@sha256:amd"
+    assert result.environments == [EnvironmentMetadata(name="NEW", required=True)]
+    assert paths == ["/v2/sample/manifests/dev", "/v2/sample/manifests/sha256:amd", "/v2/sample/blobs/sha256:config"]
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        "http://pkg-containers.githubusercontent.com/blob",
+        "https://localhost/blob",
+        "https://127.0.0.1/blob",
+        "https://pkg-containers.githubusercontent.com.evil/blob",
+        "https://pkg-containers.githubusercontent.com:444/blob",
+        "https://user:password@pkg-containers.githubusercontent.com/blob",
+        "//pkg-containers.githubusercontent.com/blob",
+    ],
+)
+async def test_registry_rejects_arbitrary_blob_redirects(monkeypatch: pytest.MonkeyPatch, location: str) -> None:
+    """Never follow redirects to arbitrary hosts, insecure transports, credentials, or ports."""
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Return only resources on the allowed origin and reject any unexpected request."""
+
+        assert request.url.host == "ghcr.io"
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "public-pull"})
+        if "/manifests/" in request.url.path:
+            return httpx2.Response(200, headers={"Docker-Content-Digest": "sha256:manifest"}, json={"config": {"digest": "sha256:config"}})
+        return httpx2.Response(307, headers={"Location": location})
+
+    mock_async_client(monkeypatch, respond)
+    assert await images.metadata(Image("ghcr.io/owner/sample:latest")) is None
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_registry_denial_is_explicit(monkeypatch: pytest.MonkeyPatch, status: int) -> None:
+    """Distinguish denied anonymous registry access from absent metadata or an unchanged source."""
+
+    mock_async_client(monkeypatch, lambda _request: httpx2.Response(status))
+    with pytest.raises(ForbiddenError, match="denied anonymous"):
+        await images.metadata(Image("ghcr.io/owner/private:latest"))
+
+
+@pytest.mark.parametrize("children", [[], [{"digest": "sha256:arm", "platform": {"os": "linux", "architecture": "arm64"}}]])
+async def test_registry_rejects_indexes_without_supported_platform(monkeypatch: pytest.MonkeyPatch, children: list[object]) -> None:
+    """Require an explicit linux/amd64 child without guessing a fallback architecture."""
+
+    mock_async_client(
+        monkeypatch, lambda _request: httpx2.Response(200, headers={"Docker-Content-Digest": "sha256:index"}, json={"manifests": children})
+    )
+    assert await images.metadata(Image("localhost:15000/sample:dev")) is None

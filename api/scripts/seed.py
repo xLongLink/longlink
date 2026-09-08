@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
 from sqlmodel import col
+from src.utils import images
 from contextlib import suppress
 from sqlalchemy import select
 from src.errors import ConflictError
@@ -26,6 +27,9 @@ class SeedSettings(BaseSettings):
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
+
+    # Sample release configuration
+    SAMPLE_ENVS: dict[str, str] = Field(default_factory=dict)
 
     # Database registry
     SOLUTION_DATABASE_URL: str | None = None
@@ -186,14 +190,20 @@ async def seed_local_development(settings: SeedSettings) -> None:
             )
         )
         if solution is None:
+            # Pin the development registry image just like a hosted release snapshot.
+            source = Image("localhost:15000/sample:dev")
+            metadata = await images.metadata(source)
+            if metadata is None:
+                raise RuntimeError("Development image metadata not found")
             await solutions.create(
                 session,
                 organization.id,
                 "Sample",
-                Image("localhost:15000/sample:dev"),
-                {},
+                metadata,
+                settings.SAMPLE_ENVS,
                 "A sample solution for local development.",
                 user_id=administrator.id,
+                source=source,
             )
         await session.commit()
 

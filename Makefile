@@ -1,4 +1,4 @@
-.PHONY: up local\:resources local\:image down clear check build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test web\:test ty api\:ty sdk\:ty
+.PHONY: up local\:resources image down clear check build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test web\:test ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
@@ -146,7 +146,7 @@ local\:resources:
 
 # Initialize local infrastructure and build the local sample Solution image.
 up: local\:resources
-	$(MAKE) local:image
+	$(MAKE) image
 
 
 # Stop local services and remove local development state except cached volumes.
@@ -162,9 +162,12 @@ down:
 	rm -f api/dev.db api/kubeconfig.yaml
 
 
-# Remove local Compose volumes.
+# Remove local Compose volumes and the generated SDK development project.
 clear:
-	docker compose -f dev/compose.yml down --volumes --remove-orphans
+	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
+		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
+	rm -rf sdk/dev
 
 
 # Run the local LongLink Platform API server before `make seed`.
@@ -174,12 +177,13 @@ api: api\:install
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
-# Build and push the local sample Solution image into the development registry.
-local\:image: sdk\:build
+# Build and push the local sample, preserving edits to an existing development project.
+image: sdk\:build
 	@docker buildx inspect "$(DEV_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_BUILDER)" --driver docker-container
-	rm -rf sdk/dev
-	cd sdk && uv run --locked longlink init --folder dev --name sample
-	cd sdk && if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi
+	@if [ ! -d sdk/dev ]; then \
+		cd sdk && uv run --locked longlink init --folder dev --name sample && \
+		if ! grep -q "^\[tool\.uv\.sources\]$$" dev/pyproject.toml; then printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; fi; \
+	fi
 	cd sdk/dev && uv run longlink build --builder "$(DEV_BUILDER)" --registry localhost:15000 --push --tag dev
 
 

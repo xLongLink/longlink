@@ -20,6 +20,10 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create the initial platform schema."""
 
+    # Other dialects can silently omit the predicate and make operation history unique too.
+    if op.get_bind().dialect.name not in {"postgresql", "sqlite"}:
+        raise RuntimeError("The Platform operation queue requires PostgreSQL or SQLite partial indexes")
+
     # Create users first because platform resources reference them for audit fields.
     op.create_table(
         "users",
@@ -145,7 +149,8 @@ def upgrade() -> None:
         sa.Column("organization_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("slug", sa.String(length=100), nullable=False),
-        sa.Column("image_desired", sa.String(length=512), nullable=False),
+        sa.Column("desired_revision_id", sa.Uuid(), nullable=True),
+        sa.Column("deployed_revision_id", sa.Uuid(), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column("secrets", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
@@ -187,6 +192,25 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("organization_id", "slug"),
     )
+
+    # Release snapshots belong to one stable Solution identity.
+    op.create_table(
+        "revisions",
+        sa.Column("id", sa.Uuid(), primary_key=True),
+        sa.Column("solution_id", sa.Uuid(), sa.ForeignKey("solutions.id", ondelete="CASCADE"), nullable=False),
+        sa.Column("image", sa.String(512), nullable=False),
+        sa.Column("source", sa.String(512), nullable=False),
+        sa.Column("image_metadata", sa.JSON(), nullable=False),
+        sa.Column("envs", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
+        sa.Column("created_id", sa.Uuid(), sa.ForeignKey("users.id"), nullable=True),
+        sa.Column("failed", sa.Boolean(), nullable=False),
+        sa.Column("deployed_at", longlink.database.types.UTCDateTime(), nullable=True),
+        sa.UniqueConstraint("solution_id", "id"),
+    )
+    with op.batch_alter_table("solutions") as batch:
+        batch.create_foreign_key("solution_desired_revision", "revisions", ["id", "desired_revision_id"], ["solution_id", "id"])
+        batch.create_foreign_key("solution_deployed_revision", "revisions", ["id", "deployed_revision_id"], ["solution_id", "id"])
 
     # Create organization invitations after organizations and users.
     op.create_table(
@@ -253,7 +277,7 @@ def upgrade() -> None:
             "kind",
             sa.Enum(
                 "compute.create",
-                "solution.create",
+                "solution.deploy",
                 "solution.delete",
                 "organization.create",
                 "organization.delete",
@@ -268,12 +292,6 @@ def upgrade() -> None:
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("finished_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column(
-            "unleased_target_id",
-            sa.Uuid(),
-            sa.Computed("CASE WHEN finished_at IS NULL AND lease_expires_at IS NULL THEN target_id ELSE NULL END"),
-            nullable=True,
-        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -282,10 +300,12 @@ def upgrade() -> None:
         ["kind", "target_id", "finished_at", "lease_expires_at"],
     )
     op.create_index(
-        "uq_operations_unleased_target",
+        "uq_operations_unfinished_target",
         "operations",
-        ["kind", "unleased_target_id"],
+        ["kind", "target_id"],
         unique=True,
+        postgresql_where=sa.text("finished_at IS NULL"),
+        sqlite_where=sa.text("finished_at IS NULL"),
     )
 
 
@@ -296,6 +316,10 @@ def downgrade() -> None:
     op.drop_table("operations")
     op.drop_table("user_organizations")
     op.drop_table("organization_invitations")
+    with op.batch_alter_table("solutions") as batch:
+        batch.drop_constraint("solution_desired_revision", type_="foreignkey")
+        batch.drop_constraint("solution_deployed_revision", type_="foreignkey")
+    op.drop_table("revisions")
     op.drop_table("solutions")
     op.drop_table("organizations")
     op.drop_table("storage_registries")

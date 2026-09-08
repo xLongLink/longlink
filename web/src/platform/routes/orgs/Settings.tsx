@@ -17,6 +17,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { useLocation, useParams } from 'react-router';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import SolutionUpdate from '@/components/SolutionUpdate';
 import { hasMinimumRole, ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter, formatBytes } from '@/lib/utils';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -426,6 +427,9 @@ export default function OrganizationSettings() {
                                                         {solution.name}
                                                     </Link>
                                                     <StatusBadge status={solution.status} />
+                                                    {solution.deployment_pending && solution.status !== 'creating' ? (
+                                                        <Text type="supporting">Deployment queued</Text>
+                                                    ) : null}
                                                 </Stack>
                                                 {solution.description ? (
                                                     <Text type="supporting">{solution.description}</Text>
@@ -438,23 +442,36 @@ export default function OrganizationSettings() {
                                             align="end"
                                             field="action"
                                             header="Action"
-                                            width={pixel(96)}
+                                            width={pixel(224)}
                                         >
                                             {(solution) => (
-                                                <MoreMenu
-                                                    label={`Open actions for ${solution.name}`}
-                                                    size="sm"
-                                                    items={[
-                                                        {
-                                                            label: 'Logs',
-                                                            onClick: () => setLogsTargetId(solution.id),
-                                                        },
-                                                        {
-                                                            label: 'Delete',
-                                                            onClick: () => deleteDialog.openFor(solution),
-                                                        },
-                                                    ]}
-                                                />
+                                                <Stack
+                                                    direction="horizontal"
+                                                    gap={2}
+                                                    align="center"
+                                                    justify="end"
+                                                    wrap="wrap"
+                                                >
+                                                    <SolutionUpdate
+                                                        key={`${solution.id}:${solution.desired_revision_id}:${solution.deployment_pending}:${solution.status}`}
+                                                        solution={solution}
+                                                        organizationId={organizationId}
+                                                    />
+                                                    <MoreMenu
+                                                        label={`Open actions for ${solution.name}`}
+                                                        size="sm"
+                                                        items={[
+                                                            {
+                                                                label: 'Logs',
+                                                                onClick: () => setLogsTargetId(solution.id),
+                                                            },
+                                                            {
+                                                                label: 'Delete',
+                                                                onClick: () => deleteDialog.openFor(solution),
+                                                            },
+                                                        ]}
+                                                    />
+                                                </Stack>
                                             )}
                                         </TableColumn>
                                     ) : null}

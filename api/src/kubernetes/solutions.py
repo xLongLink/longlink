@@ -1,6 +1,5 @@
 import json
 import asyncio
-import hashlib
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
@@ -79,31 +78,55 @@ class Solutions:
 
         self._client = client
 
-    async def apply(self, solution_id: UUID, namespace: str, image: str, secrets: dict[str, str]) -> None:
+    async def apply(
+        self, solution_id: UUID, namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, migrate: bool = True
+    ) -> None:
         """Deploy one Solution and wait for its rollout."""
 
         # Render workload resources before the first cluster mutation.
-        revision = hashlib.sha256(
-            json.dumps({"image": image, "secrets": secrets}, sort_keys=True, separators=(",", ":")).encode()
-        ).hexdigest()
-        migration_id = f"{solution_id}-migration-{revision[:8]}"
+        migration_id = f"migration-{revision_id}"
+        secret_id = f"revision-{revision_id}"
         migration, deployment, service, route = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
             solution_id=str(solution_id),
             solution_id_label=SOLUTION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
-            runtime_revision=revision,
+            runtime_revision=revision_id.hex,
             migration_id=migration_id,
+            secret_id=secret_id,
         )
 
-        # Recreate the complete Kubernetes Secret from Platform-authoritative encrypted state.
         api = await self._client.api()
+
+        # Stop interrupted migrations before another release or fallback can use the schema.
+        # Preserve Jobs for diagnostics; shutdown retries may resume their own exact Job.
+        async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+            job = cast(Job, candidate)
+            if migrate and job.name == migration_id:
+                continue
+            if any(
+                condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
+                for condition in job.raw.get("status", {}).get("conditions", [])
+            ):
+                continue
+            await job.patch({"spec": {"suspend": True}})
+            await job.wait(["condition=Suspended"])
+            while True:
+                async for pod in Pod.list(api=api, namespace=namespace, label_selector={"job-name": job.name}):
+                    if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
+                        break
+                else:
+                    break
+                await asyncio.sleep(5)
+
+        # Keep each revision's environment isolated from the currently running Pods.
         solution_secret = Secret(
             {
                 "metadata": {
-                    "name": str(solution_id),
+                    "name": secret_id,
                     "namespace": namespace,
+                    "labels": {SOLUTION_ID_LABEL: str(solution_id)},
                 },
                 "stringData": secrets,
             },
@@ -112,32 +135,31 @@ class Solutions:
         await apply(solution_secret)
 
         # Apply migrations once without restarting a failed migration container.
-        logger.info(
-            "Starting migration Job %s for Solution %s in namespace %s from image %s",
-            migration_id,
-            solution_id,
-            namespace,
-            image,
-        )
-        migration_job = Job(migration, api=api)
-        await apply(migration_job)
-        try:
-            await migration_job.wait(["condition=Complete", "condition=Failed"])
-        except asyncio.CancelledError:
-            # Preserve the operation timeout or worker shutdown after collecting bounded cluster diagnostics.
-            logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
-            await _log_migration_diagnostics(migration_job)
-            raise
+        if migrate:
+            logger.info(
+                "Starting migration Job %s for Solution %s in namespace %s from image %s", migration_id, solution_id, namespace, image
+            )
+            migration_job = Job(migration, api=api)
+            await apply(migration_job)
+            try:
+                await migration_job.wait(["condition=Complete", "condition=Failed"])
+            except asyncio.CancelledError:
+                # Preserve the operation timeout or worker shutdown after bounded diagnostics.
+                logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
+                await _log_migration_diagnostics(migration_job)
+                raise
 
-        # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-        if any(
-            condition.get("type") == "Failed" and condition.get("status") == "True"
-            for condition in migration_job.raw["status"]["conditions"]
-        ):
-            logger.error("Migration Job %s failed for Solution %s in namespace %s", migration_id, solution_id, namespace)
-            await _log_migration_diagnostics(migration_job)
-            raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
-        logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, namespace)
+            # Treat the Kubernetes terminal condition as the authoritative Job outcome.
+            if any(
+                condition.get("type") == "Failed" and condition.get("status") == "True"
+                for condition in migration_job.raw["status"]["conditions"]
+            ):
+                logger.error("Migration Job %s failed for Solution %s in namespace %s", migration_id, solution_id, namespace)
+                await _log_migration_diagnostics(migration_job)
+                raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
+            logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, namespace)
+        else:
+            logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
 
         # Create the Service and its owned HTTPRoute before starting Solution Pods.
         service_resource = Service(service, api=api)
@@ -194,7 +216,6 @@ class Solutions:
         resources = (
             Deployment(str(solution_id), namespace=namespace, api=api),
             Service(f"solution-{solution_id}", namespace=namespace, api=api),
-            Secret(str(solution_id), namespace=namespace, api=api),
             HTTPRouteResource(str(solution_id), namespace=namespace, api=api),
         )
         while await namespace_resource.exists():
@@ -212,6 +233,13 @@ class Solutions:
                 remaining = True
                 if job.metadata.get("deletionTimestamp") is None:
                     await job.delete()
+
+            # Retain revision secrets until the Solution itself is deleted.
+            async for candidate in Secret.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+                secret = cast(Secret, candidate)
+                remaining = True
+                if secret.metadata.get("deletionTimestamp") is None:
+                    await secret.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining:

@@ -7,7 +7,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, load_only, joinedload, contains_eager
+from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -86,6 +86,7 @@ async def solution_runtime_access(
     result = await session.execute(
         select(Solution, col(UserOrganization.role), ComputeRegistry)
         .options(
+            raiseload(Solution.desired_revision),
             load_only(
                 Solution.id,
                 Solution.organization_id,
@@ -172,7 +173,8 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
         .options(
             load_only(
                 Solution.id,
-                Solution.image_desired,
+                Solution.desired_revision_id,
+                Solution.deployed_revision_id,
                 Solution.secrets,
                 Solution.status,
                 Solution.deleted_at,
@@ -659,7 +661,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         # Organization cleanup supersedes unleased Solution lifecycle work.
         await session.execute(
             delete(Operation).where(
-                col(Operation.kind).in_((OperationKind.solution_create, OperationKind.solution_delete)),
+                col(Operation.kind) == OperationKind.solution_delete,
                 col(Operation.target_id).in_(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id)),
                 col(Operation.finished_at).is_(None),
                 col(Operation.lease_expires_at).is_(None),

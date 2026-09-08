@@ -7,6 +7,7 @@ from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions, invitations, organizations
@@ -636,7 +637,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
             session,
             organization.id,
             "Dashboard",
-            Image("ghcr.io/longlink/dashboard@sha256:test"),
+            LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             {},
             user_id=owner.id,
         )
