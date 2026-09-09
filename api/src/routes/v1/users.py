@@ -41,8 +41,10 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Apply only supplied profile values.
-    for field, value in payload.model_dump(exclude_none=True).items():
-        setattr(user, field, value)
+    if payload.name is not None:
+        user.name = payload.name
+    if payload.avatar is not None:
+        user.avatar = payload.avatar
     if not session.is_modified(user):
         return user
     await session.commit()

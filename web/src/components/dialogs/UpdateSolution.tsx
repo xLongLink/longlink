@@ -97,7 +97,6 @@ export default function UpdateSolution({
     async function handleSubmit() {
         if (submitting.current || busy) return;
         submitting.current = true;
-        update.reset();
         try {
             await form.handleSubmit(async (value) => {
                 // Translate explicit UI intent to the API patch without trimming replacement secrets.

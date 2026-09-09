@@ -76,8 +76,9 @@ def install_error_handlers(app: FastAPI) -> None:
                 continue
 
             # Replace only FastAPI's automatic response, leaving shared component schemas alone.
+            path_item = schema.get("paths", {}).get(route.path_format, {})
             for method in route.methods or ():
-                response = schema.get("paths", {}).get(route.path_format, {}).get(method.lower(), {}).get("responses", {}).get("422")
+                response = path_item.get(method.lower(), {}).get("responses", {}).get("422")
                 if response == {
                     "description": "Validation Error",
                     "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}},

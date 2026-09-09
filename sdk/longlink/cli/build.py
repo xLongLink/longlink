@@ -110,7 +110,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     tool_data = pyproject_data.get("tool")
     longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
     environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
-    if not isinstance(environment_import, str) or not environment_import.strip():
+    if not isinstance(environment_import, str):
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
     # Parse the configured module and class names without importing Solution code.

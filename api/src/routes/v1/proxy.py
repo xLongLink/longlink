@@ -133,8 +133,9 @@ async def proxy_solution_request(
 
         # Preserve actionable HTTP metadata, not upstream cookies or body-specific headers.
         for name in ("retry-after", "www-authenticate", "allow"):
-            if name in gateway_response.response.headers:
-                response_headers[name] = gateway_response.response.headers[name]
+            value = gateway_response.response.headers.get(name)
+            if value is not None:
+                response_headers[name] = value
         return JSONResponse(status_code=gateway_response.response.status_code, content={"detail": detail}, headers=response_headers)
 
     # Reject active documents before they can execute under the authenticated platform origin.

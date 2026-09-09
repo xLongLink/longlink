@@ -121,8 +121,7 @@ export default function VerifyEmail() {
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
-        const verificationError = verification.error instanceof ApiError ? verification.error : null;
-        const invalidToken = verificationError?.status === 400;
+        const invalidToken = verification.error instanceof ApiError && verification.error.status === 400;
 
         return (
             <AuthLayout

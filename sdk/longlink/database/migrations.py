@@ -63,9 +63,9 @@ def make_migrations() -> bool:
     def _skip_empty_revision(_context: object, _revision: object, directives: list[MigrationScript]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
 
-        # Suppress missing directives and revisions with no schema operations.
-        if not directives or all(upgrade_ops.is_empty() for upgrade_ops in directives[0].upgrade_ops_list):
-            directives[:] = []
+        # Suppress revisions with no schema operations.
+        if directives and all(upgrade_ops.is_empty() for upgrade_ops in directives[0].upgrade_ops_list):
+            directives.clear()
 
     # Invoke Alembic while suppressing revisions with no schema operations.
     revisions = command.revision(

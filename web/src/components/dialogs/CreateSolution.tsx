@@ -120,8 +120,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
 
     /** Create the solution after the image metadata has been reviewed. */
     async function handleCreateSolution(payload: CreateSolutionInput) {
-        inspectImage.reset();
-
         // Collect configured environment values, dropping empty fields.
         const envs: Record<string, string> = {};
 
@@ -309,10 +307,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             label="Back"
                             variant="ghost"
                             isDisabled={pending}
-                            clickAction={() => {
-                                setStep('image');
-                                inspectImage.reset();
-                            }}
+                            clickAction={() => setStep('image')}
                         />
                         <Stack direction="horizontal" gap={2}>
                             <Button
@@ -336,10 +331,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             label="Back"
                             variant="ghost"
                             isDisabled={pending}
-                            clickAction={() => {
-                                setStep('metadata');
-                                inspectImage.reset();
-                            }}
+                            clickAction={() => setStep('metadata')}
                         />
                         <Stack direction="horizontal" gap={2}>
                             <Button

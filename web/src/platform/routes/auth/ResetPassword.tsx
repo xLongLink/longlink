@@ -79,11 +79,6 @@ export default function ResetPassword() {
 
     const startInitialVerification = useEffectEvent(startVerification);
 
-    /** Awaits password saving while the mutation cache reports failures. */
-    async function handleResetPassword(payload: ResetPasswordValues) {
-        await resetPassword.mutateAsync(payload).catch(() => {});
-    }
-
     useEffect(() => {
         startInitialVerification(token);
 
@@ -130,7 +125,13 @@ export default function ResetPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <AuthForm gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>
+                <AuthForm
+                    gap={4}
+                    onSubmit={form.handleSubmit(async (payload) => {
+                        // Await completion while the mutation cache reports failures.
+                        await resetPassword.mutateAsync(payload).catch(() => {});
+                    })}
+                >
                     <Controller
                         control={form.control}
                         name="password"
