@@ -122,7 +122,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         async def send(self, request: object, stream: bool) -> Response:
             """Return the upstream response without closing it."""
 
-            captured["send"] = {"request": request, "stream": stream}
+            captured["send"] = {"stream": stream}
             return Response()
 
         async def aclose(self) -> None:
@@ -134,12 +134,9 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         def load_cert_chain(self, certfile: str) -> None:
             """Accept the temporary client identity."""
 
-            captured["identity_path"] = certfile
-
     tls = TLS()
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: tls)
-    monkeypatch.setattr(gateway.identity, "create_identity_token", lambda user_id, secret: "identity-token")
     client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity", "identity-secret-012345678901234567")
     request_content = content()
 
@@ -158,6 +155,9 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
     client_kwargs = cast(dict[str, object], captured["client_kwargs"])
     request = cast(dict[str, object], captured["request"])
     send = cast(dict[str, object], captured["send"])
+    headers = cast(dict[str, str], request["headers"])
+    identity_token = headers["x-longlink-identity"]
+    assert gateway.identity.identity_token_user(identity_token, "identity-secret-012345678901234567") == user_id
     assert client_kwargs == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     assert request == {
         "method": "POST",
@@ -165,7 +165,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
         "content": request_content,
         "headers": {
             "x-longlink-solution-id": str(solution_id),
-            "x-longlink-identity": "identity-token",
+            "x-longlink-identity": identity_token,
             "content-type": "application/json",
         },
     }

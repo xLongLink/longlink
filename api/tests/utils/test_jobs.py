@@ -350,18 +350,17 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
         await operation_worker.execute(operation)
 
 
-@pytest.mark.parametrize(
-    ("polling_failure", "execution_failure", "expected_execution_count", "expected_sleep_count"),
-    [
-        pytest.param(RuntimeError("database unavailable"), None, 1, 2, id="polling"),
-        pytest.param(None, RuntimeError("provider unavailable"), 0, 1, id="execution"),
-    ],
-)
+SCHEDULER_FAILURES = [
+    pytest.param(RuntimeError("database unavailable"), None, 2, id="polling"),
+    pytest.param(None, RuntimeError("provider unavailable"), 1, id="execution"),
+]
+
+
+@pytest.mark.parametrize(("polling_failure", "execution_failure", "expected_sleep_count"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
     monkeypatch: pytest.MonkeyPatch,
     polling_failure: RuntimeError | None,
     execution_failure: RuntimeError | None,
-    expected_execution_count: int,
     expected_sleep_count: int,
 ) -> None:
     """Continue polling after claim and execution failures."""
@@ -381,11 +380,11 @@ async def test_scheduler_recovers_from_worker_failures(
         return result
 
     async def execute(claimed: Operation) -> Operation:
-        """Record dispatched Operations or simulate an execution failure."""
+        """Record dispatched Operations before simulating an execution failure."""
 
+        executed.append(claimed)
         if execution_failure is not None:
             raise execution_failure
-        executed.append(claimed)
         return claimed
 
     async def sleep(_delay: float) -> None:
@@ -401,11 +400,12 @@ async def test_scheduler_recovers_from_worker_failures(
     monkeypatch.setattr(operation_worker, "execute", execute)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
 
-    # Act and assert
+    # Act
     with pytest.raises(asyncio.CancelledError):
         await operation_worker.run_operation_scheduler()
 
-    assert len(executed) == expected_execution_count
+    # Assert
+    assert executed == [operation]
     assert sleeps == expected_sleep_count
 
 

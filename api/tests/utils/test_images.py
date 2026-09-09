@@ -505,7 +505,20 @@ async def test_registry_denial_is_explicit(monkeypatch: pytest.MonkeyPatch, stat
 async def test_registry_rejects_indexes_without_supported_platform(monkeypatch: pytest.MonkeyPatch, children: list[object]) -> None:
     """Require an explicit linux/amd64 child without guessing a fallback architecture."""
 
-    mock_async_client(
-        monkeypatch, lambda _request: httpx2.Response(200, headers={"Docker-Content-Digest": "sha256:index"}, json={"manifests": children})
-    )
-    assert await images.metadata(Image("localhost:15000/sample:dev")) is None
+    # Arrange
+    requested_paths: list[str] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Record registry requests and return the unsupported image index."""
+
+        requested_paths.append(request.url.path)
+        return httpx2.Response(200, headers={"Docker-Content-Digest": "sha256:index"}, json={"manifests": children})
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    image_metadata = await images.metadata(Image("localhost:15000/sample:dev"))
+
+    # Assert
+    assert image_metadata is None
+    assert requested_paths == ["/v2/sample/manifests/dev"]

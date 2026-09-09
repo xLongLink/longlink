@@ -15,7 +15,6 @@ def test_render_mjml_template_rejects_compilation_errors(monkeypatch: pytest.Mon
         """Represent a failed MJML compilation."""
 
         errors = ["invalid markup"]
-        html = ""
 
     monkeypatch.setattr(mail, "mjml_to_html", lambda _source: Result())
 
@@ -100,7 +99,6 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeyp
 
         sent.append((message, options))
 
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
     monkeypatch.setattr(env, "SMTP_HOST", "smtp.example.com")
     monkeypatch.setattr(env, "SMTP_PORT", 465)
     monkeypatch.setattr(env, "SMTP_USERNAME", "mailer@example.com")
@@ -147,12 +145,13 @@ async def test_send_mail_requires_smtp_outside_development(monkeypatch: pytest.M
         await mail.send_mail("user@example.com", "Welcome", "Plain message", "<p>HTML message</p>")
 
 
-async def test_password_reset_email_keeps_credential_in_url_fragment(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_password_reset_email_keeps_credential_in_url_fragment(
+    monkeypatch: pytest.MonkeyPatch, captured_mail: list[tuple[str, str, str, str | None]]
+) -> None:
     """Build reset links with an encoded credential outside the HTTP request path."""
 
     # Arrange
     rendered: list[tuple[str, dict[str, object]]] = []
-    sent: list[tuple[str, str, str, str]] = []
 
     def render(template_name: str, **context: object) -> str:
         """Capture the reset template context."""
@@ -160,14 +159,8 @@ async def test_password_reset_email_keeps_credential_in_url_fragment(monkeypatch
         rendered.append((template_name, context))
         return "<p>Reset</p>"
 
-    async def send(recipient: str, subject: str, text: str, html: str) -> None:
-        """Capture the completed reset email."""
-
-        sent.append((recipient, subject, text, html))
-
     monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev/")
     monkeypatch.setattr(mail, "render_mjml_template", render)
-    monkeypatch.setattr(mail, "send_mail", send)
 
     # Act
     await mail.send_password_reset_email("user@example.com", "token with spaces")
@@ -175,9 +168,10 @@ async def test_password_reset_email_keeps_credential_in_url_fragment(monkeypatch
     # Assert
     reset_url = "https://longlink.dev/auth/reset-password#token=token+with+spaces"
     assert rendered == [("password_reset.mjml", {"reset_url": reset_url})]
-    assert sent == [("user@example.com", "Reset your LongLink password", f"Reset your password:\n\n{reset_url}\n", "<p>Reset</p>")]
+    assert captured_mail == [("user@example.com", "Reset your LongLink password", f"Reset your password:\n\n{reset_url}\n", "<p>Reset</p>")]
 
 
+@pytest.mark.usefixtures("captured_mail")
 async def test_organization_invitation_email_prefills_the_recipient(monkeypatch: pytest.MonkeyPatch) -> None:
     """Build invitation links from the recipient address and membership role."""
 
@@ -190,12 +184,8 @@ async def test_organization_invitation_email_prefills_the_recipient(monkeypatch:
         rendered.append((template_name, context))
         return "<p>Invitation</p>"
 
-    async def send(_recipient: str, _subject: str, _text: str, _html: str) -> None:
-        """Avoid SMTP delivery while testing message construction."""
-
     monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev/")
     monkeypatch.setattr(mail, "render_mjml_template", render)
-    monkeypatch.setattr(mail, "send_mail", send)
 
     # Act
     await mail.send_organization_invitation_email("user+team@example.com", "Engineering", OrganizationRoles.maintain)

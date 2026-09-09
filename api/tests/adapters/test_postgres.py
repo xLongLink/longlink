@@ -113,7 +113,7 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
     assert runtime_username.startswith("longlink_")
     assert len(runtime_username) <= 63
     assert shared_user == {"email": "owner@example.com", "role": "owner"}
-    assert deleted_at is not None
+    assert deleted_at == inactive_at
 
 
 @pytest.mark.integration

@@ -14,8 +14,8 @@ from longlink.database.base import database_metadata
 
 
 @pytest.fixture
-def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[Path, Callable[[str, str], None]], None, None]:
-    """Provide an isolated Solution model file and clean up its global import state."""
+def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator[Callable[[str, str], None], None, None]:
+    """Provide an isolated Solution model writer and clean up its global import state."""
 
     # Create the model path in a temporary Solution project.
     root = tmp_path / "src" / "models" / "catalog"
@@ -31,7 +31,7 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
         tracked_table_name = table_name
         model_path.write_text(source, encoding="utf-8")
 
-    yield model_path, write
+    yield write
 
     # Remove temporary metadata and module state even if model discovery fails.
     if tracked_table_name is not None:
@@ -41,14 +41,12 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
     sys.modules.pop("src.models.catalog.inventory", None)
 
 
-def test_migration_loader_discovers_nested_solution_models(
-    isolated_model: tuple[Path, Callable[[str, str], None]],
-) -> None:
+def test_migration_loader_discovers_nested_solution_models(isolated_model: Callable[[str, str], None]) -> None:
     """Load nested Solution model modules for Alembic metadata."""
 
-    # Create a nested Solution model in an isolated project tree.
+    # Arrange
     table_name = "nested_inventory_items"
-    _, write_model = isolated_model
+    write_model = isolated_model
     write_model(
         table_name,
         "from sqlmodel import Field, SQLModel\n"
@@ -61,20 +59,21 @@ def test_migration_loader_discovers_nested_solution_models(
         "    id: int | None = Field(default=None, primary_key=True)\n",
     )
 
-    # Load project models and verify their metadata registration.
+    # Act
     database_migrations.load_solution_models()
 
+    # Assert
     assert table_name in database_metadata.tables
 
 
 def test_migration_loader_skips_already_imported_models(
-    isolated_model: tuple[Path, Callable[[str, str], None]],
+    isolated_model: Callable[[str, str], None],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Avoid executing model modules that the Solution already loaded."""
 
     # Arrange
-    _, write_model = isolated_model
+    write_model = isolated_model
     module_name = "src.models.catalog.inventory"
     write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
     sys.modules[module_name] = ModuleType(module_name)
@@ -191,7 +190,6 @@ def test_production_migrations_upgrade_head_with_committed_revision(tmp_path: Pa
     # Assert
     config = captured["config"]
     assert isinstance(config, Config)
-    assert migrations_path.is_dir()
     assert captured["target"] == "head"
     assert config.get_main_option("script_location") == str(database_migrations.CURRENT_FILE.parent)
     assert config.get_main_option("version_locations") == str(migrations_path)

@@ -34,9 +34,7 @@ def test_main_skips_static_routes_when_web_bundle_is_absent(monkeypatch: pytest.
 
 
 @pytest.mark.parametrize("development", [False, True])
-def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(
-    monkeypatch: pytest.MonkeyPatch, development: bool
-) -> None:
+def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(monkeypatch: pytest.MonkeyPatch, development: bool) -> None:
     """Run the local entrypoint with development-only CORS configuration."""
 
     # Arrange
@@ -171,6 +169,4 @@ async def test_get_session_configures_database_specific_engine_options(
     assert result is session_factory
     kwargs = captured["kwargs"]
     assert isinstance(kwargs, dict)
-    assert {key: kwargs[key] for key in expected_kwargs} == expected_kwargs
-    assert ("isolation_level" in kwargs) is ("isolation_level" in expected_kwargs)
-    assert ("pool_use_lifo" in kwargs) is ("pool_use_lifo" in expected_kwargs)
+    assert {key: value for key, value in kwargs.items() if key in ("isolation_level", "pool_use_lifo")} == expected_kwargs

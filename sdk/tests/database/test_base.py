@@ -2,6 +2,7 @@ import pytest
 import asyncio
 from typing import ClassVar
 from sqlmodel import Field
+from contextlib import nullcontext
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
 from sqlalchemy.engine import URL, make_url
@@ -335,20 +336,9 @@ async def test_session_verifies_non_sqlite_connection_before_yielding_session(
     """Verify a non-SQLite connection before yielding a Solution session."""
 
     # Arrange
-    class AvailableSession:
-        """Provide the initialized session through an async context manager."""
-
-        async def __aenter__(self) -> str:
-            """Return the observable Solution session value."""
-
-            return "session"
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Exit the session context."""
-
     engine = VerificationEngine()
     monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
-    monkeypatch.setattr(database_base, "AsyncSession", lambda *_args, **_kwargs: AvailableSession())
+    monkeypatch.setattr(database_base, "AsyncSession", lambda *_args, **_kwargs: nullcontext("session"))
     database = database_base.Database(Envs(ENV="testing"))
 
     # Act

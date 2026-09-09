@@ -49,9 +49,7 @@ def test_longlink_solution_serves_runtime_routes_without_embedded_frontend(monke
 
     # Arrange
     monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
-    app = FastAPI()
-    LongLink(app)
-    client = TestClient(app)
+    client = create_runtime_client()
 
     # Act
     views_response = client.get("/views.json")

@@ -124,7 +124,6 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
         """Expose output from the failed migration Job."""
 
         name: ClassVar[str] = "failed-migration-pod"
-        metadata: ClassVar[dict[str, object]] = {"name": "failed-migration-pod"}
         raw: ClassVar[dict[str, object]] = {"status": {"phase": "Failed"}}
 
         @classmethod

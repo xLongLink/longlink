@@ -1,6 +1,5 @@
 import ssl
 import pytest
-import urllib.parse
 from src.utils import urls
 
 pytestmark = pytest.mark.no_db
@@ -45,10 +44,11 @@ def test_database_url_preserves_ssl_and_other_query_params(
 ) -> None:
     """Preserve valid SSL and unrelated PostgreSQL query options."""
 
-    normalized = urls.database(source).url.render_as_string(hide_password=False)
-    parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
+    # Act
+    connection = urls.database(source)
 
-    assert dict(parsed_query) == {**expected_query, "ssl": "disable"}
+    # Assert
+    assert connection.url.query == {**expected_query, "ssl": "disable"}
 
 
 def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options() -> None:
@@ -142,7 +142,7 @@ def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytes
     class Context:
         """Record client identity loading without requiring certificate files."""
 
-        check_hostname = False
+        check_hostname = True
 
         def load_cert_chain(self, certfile: str, keyfile: str | None = None) -> None:
             """Capture the configured certificate paths."""
@@ -152,9 +152,7 @@ def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytes
     monkeypatch.setattr(urls.ssl, "create_default_context", lambda **_kwargs: Context())
 
     # Act
-    connection = urls.database(
-        "mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA&ssl_cert=cert.pem&ssl_key=key.pem"
-    )
+    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA&ssl_cert=cert.pem&ssl_key=key.pem")
 
     # Assert
     context = connection.connect_args["ssl"]
