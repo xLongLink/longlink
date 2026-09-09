@@ -294,7 +294,7 @@ async def test_update_member_role_rejects_missing_member(users: tuple[User, User
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(NotFoundError):
-            await organizations.update_member_role(session, organization.id, non_member.id, OrganizationRoles.read, owner)
+            await organizations.update_member_role(session, organization.id, non_member.id, OrganizationRoles.read, owner.id)
 
 
 async def test_update_member_role_rejects_owner_changes_from_non_owners(users: tuple[User, User, User]) -> None:
@@ -315,7 +315,7 @@ async def test_update_member_role_rejects_owner_changes_from_non_owners(users: t
                 organization.id,
                 owner.id,
                 OrganizationRoles.read,
-                administrator,
+                administrator.id,
             )
 
 
@@ -334,7 +334,7 @@ async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[U
                 organization.id,
                 owner.id,
                 OrganizationRoles.maintain,
-                owner,
+                owner.id,
             )
 
 
@@ -352,7 +352,7 @@ async def test_update_member_role_skips_unchanged_assignments(users: tuple[User,
             organization.id,
             owner.id,
             OrganizationRoles.owner,
-            owner,
+            owner.id,
         )
 
 
@@ -373,7 +373,7 @@ async def test_update_member_role_persists_owner_authorized_change(users: tuple[
             organization.id,
             member.id,
             OrganizationRoles.maintain,
-            owner,
+            owner.id,
         )
         await session.commit()
 
@@ -403,7 +403,7 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
             organization.id,
             second_owner.id,
             OrganizationRoles.maintain,
-            owner,
+            owner.id,
         )
         await session.commit()
 
@@ -426,13 +426,13 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
 
     # Preserve legitimate owner mutations before revoking the administrator.
     async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, "https://example.com/owner.png", owner)
+        updated = await organizations.update(session, organization.id, "https://example.com/owner.png", owner.id)
         await organizations.create_invitation(
             session,
             organization.id,
             "owner-invited@example.com",
             OrganizationRoles.read,
-            owner,
+            owner.id,
         )
         await session.commit()
 
@@ -459,24 +459,24 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
 
         # Act and assert every service refreshes the persisted membership under its Organization lock.
         with pytest.raises(ForbiddenError, match="Access required"):
-            await organizations.update(update_session, organization.id, "https://example.com/blocked.png", administrator)
+            await organizations.update(update_session, organization.id, "https://example.com/blocked.png", administrator.id)
         with pytest.raises(ForbiddenError, match="Access required"):
             await organizations.create_invitation(
                 create_invitation_session,
                 organization.id,
                 "blocked-invited@example.com",
                 OrganizationRoles.read,
-                administrator,
+                administrator.id,
             )
         with pytest.raises(ForbiddenError, match="Access required"):
-            await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator)
+            await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator.id)
         with pytest.raises(ForbiddenError, match="Access required"):
             await organizations.update_member_role(
                 role_session,
                 organization.id,
                 owner.id,
                 OrganizationRoles.admin,
-                administrator,
+                administrator.id,
             )
 
 
@@ -604,7 +604,7 @@ async def test_update_returns_none_for_missing_organization(users: tuple[User, U
 
     # Act
     async with session_scope() as session:
-        updated = await organizations.update(session, uuid4(), "https://example.com/avatar.png", users[0])
+        updated = await organizations.update(session, uuid4(), "https://example.com/avatar.png", users[0].id)
 
     # Assert
     assert updated is None
@@ -618,7 +618,7 @@ async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tu
 
     # Act
     async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, organization.avatar, users[0])
+        updated = await organizations.update(session, organization.id, organization.avatar, users[0].id)
 
     # Assert
     assert updated is not None

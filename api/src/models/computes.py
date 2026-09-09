@@ -1,8 +1,8 @@
 import json
 import yaml
 from uuid import UUID
-from typing import cast
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from typing import Annotated, cast
+from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
 from src.models.statuses import Status
 
 
@@ -84,14 +84,7 @@ class ComputeRegistryCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
     # Connection
-    kubeconfig: dict[str, object]
-
-    @field_validator("kubeconfig", mode="before")
-    @classmethod
-    def validate_kubeconfig(cls, value: object) -> dict[str, object]:
-        """Parse and validate kubeconfigs before persistence."""
-
-        return kubeconfig_mapping(value)
+    kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
 
 
 class ComputeRegistryResponse(BaseModel):

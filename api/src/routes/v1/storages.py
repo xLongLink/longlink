@@ -15,7 +15,14 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_storage_registry(payload: StorageRegistryCreate, session: AsyncSession = Depends(get_session)):
     """Register one Exoscale SOS backend."""
 
-    registry = await storage.create(session, **payload.model_dump())
+    # Persist the validated storage connection.
+    registry = await storage.create(
+        session,
+        name=payload.name,
+        endpoint_url=payload.endpoint_url,
+        access_key_id=payload.access_key_id,
+        secret_access_key=payload.secret_access_key,
+    )
     await session.commit()
     return registry
 

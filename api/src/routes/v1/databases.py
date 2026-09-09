@@ -24,7 +24,16 @@ async def create_database_registry(payload: DatabaseRegistryCreate, session: Asy
     if not env.DEVELOPMENT and payload.sslmode == DatabaseSSLMode.disable:
         raise HTTPException(status_code=422, detail="Production databases must use SSL")
 
-    registry = await database.create(session, **payload.model_dump())
+    # Persist the validated database connection.
+    registry = await database.create(
+        session,
+        name=payload.name,
+        host=payload.host,
+        port=payload.port,
+        username=payload.username,
+        password=payload.password,
+        sslmode=payload.sslmode,
+    )
     await session.commit()
     return registry
 

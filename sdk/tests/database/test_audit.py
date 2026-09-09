@@ -8,7 +8,6 @@ from sqlmodel import Field, SQLModel
 from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
-from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 
@@ -25,11 +24,9 @@ def identity_context(user_id: UUID) -> Iterator[None]:
 
 
 @pytest_asyncio.fixture
-async def _audit_engine(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[database_base.Database]:
+async def _audit_engine() -> AsyncIterator[database_base.Database]:
     """Bind an isolated SQLite engine to the SDK session lifecycle."""
 
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     database = database_base.Database(Envs(ENV="testing"))
 
     try:

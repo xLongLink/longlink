@@ -12,7 +12,6 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationSolution } from '@/lib/hooks/use-organization';
-import type { LongLinkMetadata } from '@/lib/generated/platform-api-v1/types.gen';
 
 const createSolutionFormSchema = z.object({
     image: z.string().trim(),
@@ -36,7 +35,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
     const formId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<LongLinkMetadata['environments']>>([]);
     const submitting = useRef(false);
     const schema = createSolutionFormSchema.superRefine((value, ctx) => {
         // Only validate the current step on advance; validate everything before creation.
@@ -69,12 +67,10 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         },
         onMutate: (payload) => {
             // Discard metadata and registered dynamic fields from the previous inspection.
-            setDeclaredEnvironments([]);
             form.unregister('envs');
             form.reset({ ...payload, description: '', envs: {} });
         },
         onSuccess: (metadata, payload) => {
-            setDeclaredEnvironments(metadata.environments ?? []);
             form.reset({
                 ...payload,
                 description: metadata.description ?? '',
@@ -83,6 +79,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
             setStep('metadata');
         },
     });
+    const declaredEnvironments = inspectImage.data?.environments ?? [];
     const [image, name, envs] = useWatch({ control: form.control, name: ['image', 'name', 'envs'] });
     const pending = form.formState.isSubmitting || inspectImage.isPending || createSolution.isPending;
     const hasImage = image.trim().length > 0;
@@ -114,7 +111,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
     function resetDialogState() {
         setStep('image');
         form.reset(defaultCreateSolutionValues);
-        setDeclaredEnvironments([]);
         inspectImage.reset();
     }
 
@@ -301,37 +297,13 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             isLoading={inspectImage.isPending}
                         />
                     </Stack>
-                ) : step === 'metadata' ? (
-                    <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                        <Button
-                            label="Back"
-                            variant="ghost"
-                            isDisabled={pending}
-                            clickAction={() => setStep('image')}
-                        />
-                        <Stack direction="horizontal" gap={2}>
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={pending}
-                                clickAction={() => handleOpenChange(false)}
-                            />
-                            <Button
-                                form={formId}
-                                type="submit"
-                                label="Next"
-                                variant="primary"
-                                isDisabled={pending || !hasName}
-                            />
-                        </Stack>
-                    </Stack>
                 ) : (
                     <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
                         <Button
                             label="Back"
                             variant="ghost"
                             isDisabled={pending}
-                            clickAction={() => setStep('metadata')}
+                            clickAction={() => setStep(step === 'metadata' ? 'image' : 'metadata')}
                         />
                         <Stack direction="horizontal" gap={2}>
                             <Button
@@ -343,10 +315,12 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             <Button
                                 form={formId}
                                 type="submit"
-                                label={createSolution.isPending ? 'Creating...' : 'Create'}
+                                label={
+                                    step === 'metadata' ? 'Next' : createSolution.isPending ? 'Creating...' : 'Create'
+                                }
                                 variant="primary"
-                                isDisabled={pending || !hasName || missingEnvs}
-                                isLoading={createSolution.isPending}
+                                isDisabled={pending || !hasName || (step === 'envs' && missingEnvs)}
+                                isLoading={step === 'metadata' ? undefined : createSolution.isPending}
                             />
                         </Stack>
                     </Stack>
