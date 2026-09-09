@@ -14,6 +14,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useParams } from 'react-router';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -33,8 +34,9 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import CreateSolution from '@/components/dialogs/CreateSolution';
-import { avatarUrlSchema } from '@/components/settings/validation';
+import { invitationSchema } from '@/components/settings/validation';
 import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import {
@@ -44,16 +46,17 @@ import {
     useOrganizationMembers,
     useUpdateOrganization,
 } from '@/lib/hooks/use-organization';
+import {
+    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
+    zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 import type {
+    OrganizationInvitationCreate,
     OrganizationSolutionSummary,
     OrganizationInvitationResponse,
     OrganizationMemberAccessResponse,
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
-import {
-    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
-    zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the organization settings page. */
 export default function OrganizationSettings() {
@@ -83,16 +86,16 @@ export default function OrganizationSettings() {
     const hasOrganizationSolutionAccess = hasMinimumRole(organizationRole, 'maintain');
     const [logsTargetId, setLogsTargetId] = useState<string | null>(null);
     const [inviteOpen, setInviteOpen] = useState(false);
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<OrganizationRoles>('write');
+    const invitationForm = useForm<OrganizationInvitationCreate>({
+        defaultValues: { email: '', role: 'write' },
+        resolver: zodResolver(invitationSchema),
+    });
+    const inviteEmail = useWatch({ control: invitationForm.control, name: 'email' });
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
         memberId: string;
         role: OrganizationRoles;
     } | null>(null);
     const [revokeInvitationId, setRevokeInvitationId] = useState<string | null>(null);
-    const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
-    const [avatarError, setAvatarError] = useState<string | null>(null);
-    const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
     const deleteSolution = useDeleteOrganizationSolution(organizationId);
     const { inviteMember, revokeInvitation, changeMemberRole } = useOrganizationMembers(organizationId);
     const updateOrganization = useUpdateOrganization(organizationId);
@@ -105,7 +108,6 @@ export default function OrganizationSettings() {
         fallbackDescription: 'Delete this solution?',
     });
     const isOrganizationSectionActive = hash === '' || hash === '#organization';
-    const avatar = editedAvatar ?? organizationAvatar;
     const logsTarget = solutions.find((solution) => solution.id === logsTargetId) ?? null;
     const roleChangeMember =
         roleChangeTarget === null
@@ -135,54 +137,6 @@ export default function OrganizationSettings() {
         return role === 'maintain' ? 'maintainer' : role;
     }
 
-    /** Saves the current avatar URL and closes the dialog on success. */
-    function saveAvatar() {
-        setAvatarError(null);
-
-        // Ignore unavailable, unauthorized, and unchanged Organizations.
-        if (!canManageOrganization) {
-            return;
-        }
-        const normalizedAvatar = avatar.trim();
-        if (normalizedAvatar === organizationAvatar) {
-            setIsAvatarDialogOpen(false);
-            return;
-        }
-
-        // Require an empty value or an HTTP(S) URL.
-        if (!avatarUrlSchema.safeParse(normalizedAvatar).success) {
-            setAvatarError('Enter a valid HTTP(S) avatar URL.');
-            return;
-        }
-
-        // Persist the URL and use the refreshed Organization value.
-        updateOrganization.mutate(
-            { avatar: normalizedAvatar },
-            {
-                onSuccess: () => {
-                    setEditedAvatar(null);
-                    setIsAvatarDialogOpen(false);
-                    toast({ body: 'Avatar saved' });
-                },
-            }
-        );
-    }
-
-    /** Opens or closes the avatar editor without retaining canceled changes. */
-    function handleAvatarOpenChange(isOpen: boolean) {
-        // Keep the dialog available while a submitted avatar URL is still saving.
-        if (updateOrganization.isPending) {
-            return;
-        }
-
-        setIsAvatarDialogOpen(isOpen);
-
-        // Discard the dialog's draft when the user closes it without saving.
-        if (!isOpen) {
-            setEditedAvatar(null);
-            setAvatarError(null);
-        }
-    }
     const storagePath =
         isOrganizationSectionActive && organizationId ? `/api/v1/organizations/${organizationId}/storage` : null;
     const {
@@ -209,19 +163,35 @@ export default function OrganizationSettings() {
         <PageContainer gap={8} padding={2}>
             <NoIndex title="Organization Settings | LongLink" />
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
-                <IconButton
-                    className="size-12"
-                    icon={<Avatar kind="organization" name={organizationName} size="lg" src={avatar} />}
-                    isDisabled={!canManageOrganization}
-                    label="Edit organization avatar"
-                    tooltip="Edit avatar"
-                    variant="ghost"
-                    onClick={() => {
-                        setEditedAvatar(organizationAvatar);
-                        setAvatarError(null);
-                        setIsAvatarDialogOpen(true);
-                    }}
-                />
+                <AvatarDialog
+                    key={organizationId}
+                    avatar={organizationAvatar}
+                    formId="organization-avatar-form"
+                    isSaving={updateOrganization.isPending}
+                    isDisabled={!canManageOrganization || organizationId.length === 0}
+                    onSave={(avatar) =>
+                        updateOrganization.mutateAsync(
+                            { avatar },
+                            {
+                                onSuccess: () => toast({ body: 'Avatar saved' }),
+                            }
+                        )
+                    }
+                    placeholder="https://example.com/org.png"
+                    title="Organization avatar"
+                >
+                    {(avatar, open) => (
+                        <IconButton
+                            className="size-12"
+                            icon={<Avatar kind="organization" name={organizationName} size="lg" src={avatar} />}
+                            isDisabled={!canManageOrganization}
+                            label="Edit organization avatar"
+                            tooltip="Edit avatar"
+                            variant="ghost"
+                            onClick={open}
+                        />
+                    )}
+                </AvatarDialog>
                 <Stack>
                     <Heading accessibilityLevel={1} level={4}>
                         {organizationName}
@@ -568,41 +538,64 @@ export default function OrganizationSettings() {
             >
                 <form
                     id="invite-member-form"
-                    onSubmit={(event) => {
-                        event.preventDefault();
+                    noValidate
+                    onSubmit={invitationForm.handleSubmit((values) => {
+                        if (inviteMember.isPending || organizationId.length === 0 || !hasOrganizationSolutionAccess) {
+                            return;
+                        }
 
                         // Reset the invitation form after a successful submission.
-                        inviteMember.mutate(
-                            {
-                                email: inviteEmail.trim(),
-                                role: inviteRole,
+                        inviteMember.mutate(values, {
+                            onSuccess: () => {
+                                setInviteOpen(false);
+                                invitationForm.reset();
                             },
-                            {
-                                onSuccess: () => {
-                                    setInviteOpen(false);
-                                    setInviteEmail('');
-                                    setInviteRole('write');
-                                },
-                            }
-                        );
-                    }}
+                        });
+                    })}
                 >
                     <Stack gap={4}>
                         <FormLayout>
-                            <TextInput
-                                label="Email"
-                                type="email"
-                                value={inviteEmail}
-                                placeholder="user@example.com"
-                                onChange={setInviteEmail}
-                                isRequired
+                            <Controller
+                                control={invitationForm.control}
+                                name="email"
+                                render={({ field, fieldState }) => (
+                                    <TextInput
+                                        label="Email"
+                                        type="email"
+                                        ref={field.ref}
+                                        htmlName={field.name}
+                                        value={field.value}
+                                        placeholder="user@example.com"
+                                        onChange={(value) => field.onChange(value)}
+                                        onBlur={field.onBlur}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                        isRequired
+                                    />
+                                )}
                             />
-                            <Selector
-                                isRequired
-                                label="Role"
-                                options={ROLE_NAMES}
-                                value={inviteRole}
-                                onChange={(value) => setInviteRole(value as OrganizationRoles)}
+                            <Controller
+                                control={invitationForm.control}
+                                name="role"
+                                render={({ field, fieldState }) => (
+                                    <Selector
+                                        isRequired
+                                        label="Role"
+                                        options={ROLE_NAMES}
+                                        htmlName={field.name}
+                                        value={field.value}
+                                        onChange={(value) => field.onChange(value)}
+                                        onBlur={field.onBlur}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                    />
+                                )}
                             />
                         </FormLayout>
                         <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
@@ -617,21 +610,6 @@ export default function OrganizationSettings() {
                     </Stack>
                 </form>
             </Dialog>
-            <AvatarDialog
-                avatar={avatar}
-                error={avatarError}
-                formId="organization-avatar-form"
-                isOpen={isAvatarDialogOpen}
-                isSaving={updateOrganization.isPending}
-                onAvatarChange={(value) => {
-                    setEditedAvatar(value);
-                    setAvatarError(null);
-                }}
-                onOpenChange={handleAvatarOpenChange}
-                onSave={saveAvatar}
-                placeholder="https://example.com/org.png"
-                title="Organization avatar"
-            />
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </PageContainer>
     );

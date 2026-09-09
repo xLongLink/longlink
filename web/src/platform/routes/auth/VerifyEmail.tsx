@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { useNavigate } from 'react-router';
+import { passwordSchema } from './validation';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -9,12 +10,12 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { Divider } from '@astryxdesign/core/Divider';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useEffectEvent, useRef } from 'react';
-import { fieldErrorStatus, passwordSchema } from './validation';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -39,11 +40,9 @@ export default function VerifyEmail() {
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const verificationController = useRef<AbortController | null>(null);
-    const form = useForm({
+    const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: registrationCompleteSchema },
-        onSubmit: ({ value }) => handleComplete(value),
+        resolver: zodResolver(registrationCompleteSchema),
     });
     const verification = useMutation({
         mutationFn: async ({ signal, token: registrationToken }: VerificationRequest) => {
@@ -173,35 +172,43 @@ export default function VerifyEmail() {
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             {pageMetadata}
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={form.handleSubmit}>
-                    <form.Field
+                <AuthForm gap={3} onSubmit={form.handleSubmit(handleComplete)}>
+                    <Controller
+                        control={form.control}
                         name="name"
-                        children={(field) => (
+                        render={({ field, fieldState }) => (
                             <TextInput
+                                ref={field.ref}
                                 autoComplete="name"
                                 hasAutoFocus
-                                htmlName="name"
+                                htmlName={field.name}
                                 isRequired
                                 label="Name"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
-                                value={field.state.value}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                value={field.value}
                                 width="100%"
                             />
                         )}
                     />
-                    <form.Field
+                    <Controller
+                        control={form.control}
                         name="password"
-                        children={(field) => (
+                        render={({ field, fieldState }) => (
                             <TextInput
-                                htmlName="password"
+                                ref={field.ref}
+                                htmlName={field.name}
                                 isRequired
                                 label="Password"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
-                                value={field.state.value}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                value={field.value}
                                 width="100%"
                                 type="password"
                             />

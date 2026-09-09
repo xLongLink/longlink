@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Controller } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/RegistryDialog';
@@ -19,27 +20,23 @@ export default function CreateOrganization() {
     return (
         <RegistryDialog dialog={dialog} title="New organization" triggerLabel="Create Organization" width={640}>
             <FormLayout>
-                <dialog.form.Field name="name">
-                    {(field) => (
+                <Controller
+                    control={dialog.form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
                         <TextInput
+                            ref={field.ref}
                             label="Name"
-                            value={field.state.value}
-                            htmlName="name"
+                            value={field.value}
+                            htmlName={field.name}
                             isRequired
                             placeholder="Example LongLink"
-                            onBlur={field.handleBlur}
-                            onChange={field.handleChange}
-                            status={
-                                field.state.meta.errors.length > 0
-                                    ? {
-                                          type: 'error',
-                                          message: field.state.meta.errors[0]?.message,
-                                      }
-                                    : undefined
-                            }
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}
-                </dialog.form.Field>
+                />
             </FormLayout>
         </RegistryDialog>
     );

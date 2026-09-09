@@ -1,16 +1,17 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { useForm } from '@tanstack/react-form';
 import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useId, useState, type ReactNode } from 'react';
+import { useForm, type DefaultValues } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
-    defaultValues: TValues;
+    defaultValues: DefaultValues<NoInfer<TValues>>;
     endpoint: string;
     schema: z.ZodType<TValues, TValues>;
     additionalInvalidateKeys?: string[][];
@@ -51,10 +52,15 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
             ]);
         },
     });
-    const form = useForm({
+    const form = useForm<TValues, unknown, TValues>({
         defaultValues,
-        validators: { onChange: schema },
-        onSubmit: ({ value }) => mutation.mutate(value),
+        resolver: zodResolver(schema),
+        mode: 'onChange',
+    });
+    const handleSubmit = form.handleSubmit((value) => {
+        if (!mutation.isPending) {
+            mutation.mutate(value);
+        }
     });
     const handleOpenChange = createGuardedOpenChange(mutation.isPending, (nextOpen) => {
         if (!nextOpen) {
@@ -71,6 +77,7 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         open,
         openDialog: () => setOpen(true),
         handleOpenChange,
+        handleSubmit,
     };
 }
 
@@ -99,7 +106,9 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                     id={formId}
                     onSubmit={(event) => {
                         event.preventDefault();
-                        void dialog.form.handleSubmit();
+                        if (!dialog.isPending && !dialog.form.formState.isSubmitting) {
+                            void dialog.handleSubmit(event);
+                        }
                     }}
                 >
                     {children}
@@ -111,18 +120,16 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                         isDisabled={dialog.isPending}
                         clickAction={() => dialog.handleOpenChange(false)}
                     />
-                    <dialog.form.Subscribe selector={(state) => state.isValid}>
-                        {(isValid) => (
-                            <Button
-                                form={formId}
-                                type="submit"
-                                label={dialog.isPending ? 'Creating...' : 'Create'}
-                                variant="primary"
-                                isDisabled={!isValid}
-                                isLoading={dialog.isPending}
-                            />
-                        )}
-                    </dialog.form.Subscribe>
+                    <Button
+                        form={formId}
+                        type="submit"
+                        label={dialog.isPending ? 'Creating...' : 'Create'}
+                        variant="primary"
+                        isDisabled={
+                            !dialog.form.formState.isValid || dialog.form.formState.isSubmitting || dialog.isPending
+                        }
+                        isLoading={dialog.isPending}
+                    />
                 </Stack>
             </Dialog>
         </>

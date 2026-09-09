@@ -10,12 +10,13 @@ import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { emailSchema, passwordSchema } from './validation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
-import { emailSchema, fieldErrorStatus, passwordSchema } from './validation';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const loginSchema = z.object({
@@ -39,12 +40,13 @@ export default function Login() {
         staleTime: Infinity,
     });
     const hasOAuthProvider = oauthAvailability?.github || oauthAvailability?.google;
-    const form = useForm({
+    const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: loginSchema },
-        onSubmit: ({ value }) => handlePasswordSignIn(value),
+        resolver: zodResolver(loginSchema),
     });
+    const email = useWatch({ control: form.control, name: 'email' });
+    const trimmedEmail = email.trim();
+    const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
     const login = useMutation({
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
     });
@@ -106,20 +108,27 @@ export default function Login() {
                             <Divider label="or sign in with email" />
                         </Stack>
                     ) : null}
-                    <AuthForm gap={2} onSubmit={form.handleSubmit}>
+                    <AuthForm gap={2} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
                         <Stack gap={1}>
                             <Text type="label">Email</Text>
-                            <form.Field
+                            <Controller
+                                control={form.control}
                                 name="email"
-                                children={(field) => (
+                                render={({ field, fieldState }) => (
                                     <TextInput
-                                        htmlName="email"
+                                        ref={field.ref}
+                                        htmlName={field.name}
                                         isLabelHidden
                                         label="Email"
-                                        onChange={field.handleChange}
-                                        status={fieldErrorStatus(field.state.meta.errors)}
+                                        onBlur={field.onBlur}
+                                        onChange={field.onChange}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
                                         type="email"
-                                        value={field.state.value}
+                                        value={field.value}
                                         width="100%"
                                     />
                                 )}
@@ -132,18 +141,24 @@ export default function Login() {
                                     Forgot password?
                                 </Link>
                             </Stack>
-                            <form.Field
+                            <Controller
+                                control={form.control}
                                 name="password"
-                                children={(field) => (
+                                render={({ field, fieldState }) => (
                                     <TextInput
-                                        htmlName="password"
+                                        ref={field.ref}
+                                        htmlName={field.name}
                                         isLabelHidden
                                         isRequired
                                         label="Password"
-                                        onBlur={field.handleBlur}
-                                        onChange={field.handleChange}
-                                        status={fieldErrorStatus(field.state.meta.errors)}
-                                        value={field.state.value}
+                                        onBlur={field.onBlur}
+                                        onChange={field.onChange}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                        value={field.value}
                                         width="100%"
                                         type="password"
                                     />
@@ -160,25 +175,16 @@ export default function Login() {
                     </AuthForm>
                 </Stack>
 
-                <form.Subscribe selector={(state) => state.values.email}>
-                    {(email) => {
-                        const trimmedEmail = email.trim();
-                        const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
-
-                        return (
-                            <Divider
-                                label={
-                                    <>
-                                        New to LongLink?{' '}
-                                        <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
-                                            Create account
-                                        </Link>
-                                    </>
-                                }
-                            />
-                        );
-                    }}
-                </form.Subscribe>
+                <Divider
+                    label={
+                        <>
+                            New to LongLink?{' '}
+                            <Link href={`/auth/register${registerSearch}`} type="inherit" weight="medium">
+                                Create account
+                            </Link>
+                        </>
+                    }
+                />
             </Stack>
         </AuthLayout>
     );

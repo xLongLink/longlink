@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Controller } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { RegistryDialog, useRegistryDialog } from '@/components/dialogs/RegistryDialog';
@@ -26,43 +27,72 @@ export default function CreateStorage() {
     return (
         <RegistryDialog dialog={dialog} title="Connect storage" width={520}>
             <FormLayout>
-                <dialog.form.Field name="name">
-                    {(field) => (
-                        <TextInput label="Name" value={field.state.value} isRequired onChange={field.handleChange} />
-                    )}
-                </dialog.form.Field>
-                <dialog.form.Field name="endpoint_url">
-                    {(field) => (
+                <Controller
+                    control={dialog.form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
                         <TextInput
+                            ref={field.ref}
+                            label="Name"
+                            value={field.value}
+                            htmlName={field.name}
+                            isRequired
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="endpoint_url"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            ref={field.ref}
                             label="Endpoint URL"
-                            value={field.state.value}
+                            value={field.value}
+                            htmlName={field.name}
                             isRequired
                             placeholder="https://sos-ch-dk-2.exo.io"
-                            onChange={field.handleChange}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}
-                </dialog.form.Field>
-                <dialog.form.Field name="access_key_id">
-                    {(field) => (
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="access_key_id"
+                    render={({ field, fieldState }) => (
                         <TextInput
+                            ref={field.ref}
                             label="Access key ID"
-                            value={field.state.value}
+                            value={field.value}
+                            htmlName={field.name}
                             isRequired
-                            onChange={field.handleChange}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}
-                </dialog.form.Field>
-                <dialog.form.Field name="secret_access_key">
-                    {(field) => (
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="secret_access_key"
+                    render={({ field, fieldState }) => (
                         <TextInput
+                            ref={field.ref}
                             label="Secret access key"
-                            value={field.state.value}
+                            value={field.value}
+                            htmlName={field.name}
                             isRequired
                             type="password"
-                            onChange={field.handleChange}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}
-                </dialog.form.Field>
+                />
             </FormLayout>
         </RegistryDialog>
     );

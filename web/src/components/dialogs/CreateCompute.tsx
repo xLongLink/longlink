@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Controller } from 'react-hook-form';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -20,22 +21,39 @@ export default function CreateCompute() {
     return (
         <RegistryDialog dialog={dialog} title="Connect compute" width={640}>
             <FormLayout>
-                <dialog.form.Field name="name">
-                    {(field) => (
-                        <TextInput label="Name" value={field.state.value} isRequired onChange={field.handleChange} />
-                    )}
-                </dialog.form.Field>
-                <dialog.form.Field name="kubeconfig">
-                    {(field) => (
-                        <TextArea
-                            label="Kubeconfig"
-                            value={field.state.value}
+                <Controller
+                    control={dialog.form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            ref={field.ref}
+                            label="Name"
+                            value={field.value}
+                            htmlName={field.name}
                             isRequired
-                            rows={12}
-                            onChange={field.handleChange}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}
-                </dialog.form.Field>
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="kubeconfig"
+                    render={({ field, fieldState }) => (
+                        <TextArea
+                            ref={field.ref}
+                            label="Kubeconfig"
+                            value={field.value}
+                            htmlName={field.name}
+                            isRequired
+                            rows={12}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
             </FormLayout>
         </RegistryDialog>
     );

@@ -1,22 +1,33 @@
-import { useId, useState } from 'react';
+import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
 import { ArrowRight } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
-import { useForm } from '@tanstack/react-form';
 import { Dialog } from '@/components/ui/Dialog';
+import { useId, useRef, useState } from 'react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { OrganizationSolutionSummary, SolutionUpdateCheck } from '@/lib/generated/platform-api-v1/types.gen';
 
-const defaultUpdateValues: { envs: Record<string, string | null | undefined> } = { envs: {} };
+const environmentChangeSchema = z.discriminatedUnion('action', [
+    z.object({ action: z.literal('untouched') }),
+    z.object({ action: z.literal('remove') }),
+    z.object({ action: z.literal('replace'), value: z.string() }),
+]);
+
+type EnvironmentChange = z.infer<typeof environmentChangeSchema>;
 
 /** Omitted configured values are preserved; null and blank replacements are missing. */
-function isMissingRequiredEnv(value: string | null | undefined, required: boolean, configured: boolean) {
-    return required && (value === undefined ? !configured : (value ?? '').trim().length === 0);
+function isMissingRequiredEnv(change: EnvironmentChange, required: boolean, configured: boolean) {
+    return (
+        required &&
+        (change.action === 'untouched' ? !configured : change.action === 'remove' || change.value.trim().length === 0)
+    );
 }
 
 /** Review a source candidate and edit only explicitly changed environment values. */
@@ -34,6 +45,7 @@ export default function UpdateSolution({
     const toast = useToast();
     const formId = useId();
     const [busy, setBusy] = useState(false);
+    const submitting = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const environments = candidate.metadata.environments ?? [];
     const configured = candidate.configured_envs;
@@ -41,39 +53,66 @@ export default function UpdateSolution({
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
     const currentLabel = candidate.current_image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
     const candidateLabel = candidate.image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
-    const form = useForm({
-        defaultValues: defaultUpdateValues,
-        onSubmit: async ({ value }) => {
-            if (busy) return;
+    const schema = z.object({ envs: z.record(z.string(), environmentChangeSchema) }).superRefine((value, ctx) => {
+        // Existing required secrets remain valid without exposing or resubmitting their values.
+        for (const { name, required } of environments) {
+            if (
+                isMissingRequiredEnv(value.envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
+            ) {
+                ctx.addIssue({ code: 'custom', path: ['envs', name], message: 'Required' });
+            }
+        }
+    });
+    const form = useForm<z.infer<typeof schema>>({
+        defaultValues: { envs: Object.fromEntries(environments.map(({ name }) => [name, { action: 'untouched' }])) },
+        resolver: zodResolver(schema),
+        mode: 'onChange',
+    });
+    const envs = useWatch({ control: form.control, name: 'envs' });
+    const missing = environments.some(({ name, required }) =>
+        isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
+    );
 
-            // Submit a patch; the server independently resolves and validates the release again.
-            setBusy(true);
-            setError(null);
-            try {
+    /** Lock validation and submission together so repeated submits cannot queue duplicate releases. */
+    async function handleSubmit() {
+        if (submitting.current || busy) return;
+        submitting.current = true;
+        setBusy(true);
+        setError(null);
+        try {
+            await form.handleSubmit(async (value) => {
+                // Translate explicit UI intent to the API patch without trimming replacement secrets.
+                const patch: Record<string, string | null> = {};
+                for (const [name, change] of Object.entries(value.envs)) {
+                    if (change.action === 'remove') patch[name] = null;
+                    else if (change.action === 'replace') patch[name] = change.value;
+                }
+
+                // Submit a patch; the server independently resolves and validates the release again.
                 await api(`/api/v1/solutions/${solution.id}/update`, {
                     method: 'POST',
                     timeout: 25000,
                     json: {
-                        // Undefined fields are omitted; empty strings and explicit removals are preserved.
-                        envs: value.envs,
+                        envs: patch,
                         expected_revision_id: candidate.revision_id,
                     },
                 });
                 toast({ body: 'Release queued for deployment' });
                 await onInvalidate();
-            } catch (failure) {
-                // A conflict requires a fresh check, not resubmission of the old candidate.
-                if (failure instanceof ApiError && failure.status === 409) {
-                    toast({ body: failure.message, type: 'error' });
-                    await onInvalidate();
-                    return;
-                }
-                setError(failure instanceof Error ? failure.message : 'Deployment failed');
-            } finally {
-                setBusy(false);
+            })();
+        } catch (failure) {
+            // A conflict requires a fresh check, not resubmission of the old candidate.
+            if (failure instanceof ApiError && failure.status === 409) {
+                toast({ body: failure.message, type: 'error' });
+                await onInvalidate();
+                return;
             }
-        },
-    });
+            setError(failure instanceof Error ? failure.message : 'Deployment failed');
+        } finally {
+            submitting.current = false;
+            setBusy(false);
+        }
+    }
 
     return (
         <Dialog
@@ -83,14 +122,15 @@ export default function UpdateSolution({
             width={520}
             maxHeight="calc(100dvh - 2rem)"
             onOpenChange={(open) => {
-                if (!open && !busy) onClose();
+                if (!open && !busy && !submitting.current) onClose();
             }}
         >
             <form
                 id={formId}
+                noValidate
                 onSubmit={(event) => {
                     event.preventDefault();
-                    void form.handleSubmit();
+                    void handleSubmit();
                 }}
             >
                 <FormLayout>
@@ -106,86 +146,78 @@ export default function UpdateSolution({
                     {environments.map(({ name, required, description }) => {
                         const isConfigured = configured.includes(name);
                         return (
-                            <form.Field
+                            <Controller
+                                control={form.control}
                                 key={name}
-                                name={`envs.${name}` as `envs.${string}`}
-                                validators={{
-                                    onChange: ({ value }) =>
-                                        isMissingRequiredEnv(value, required, isConfigured) ? 'Required' : undefined,
-                                }}
-                            >
-                                {(field) => (
+                                name={`envs.${name}`}
+                                render={({ field, fieldState }) => (
                                     <Stack gap={2}>
                                         <TextInput
                                             label={name}
                                             htmlName={field.name}
                                             type="password"
-                                            value={field.state.value ?? ''}
-                                            isDisabled={busy || field.state.value === null}
+                                            value={field.value.action === 'replace' ? field.value.value : ''}
+                                            ref={field.ref}
+                                            status={
+                                                fieldState.error
+                                                    ? { type: 'error', message: fieldState.error.message }
+                                                    : undefined
+                                            }
+                                            isDisabled={busy || field.value.action === 'remove'}
                                             isRequired={required && !isConfigured}
                                             isOptional={!required}
                                             labelTooltip={description ?? undefined}
                                             placeholder={
-                                                field.state.value === null
+                                                field.value.action === 'remove'
                                                     ? 'Will be removed'
-                                                    : field.state.value === undefined && isConfigured
+                                                    : field.value.action === 'untouched' && isConfigured
                                                       ? 'Configured: preserve existing value'
                                                       : (description ?? `Enter ${name}`)
                                             }
-                                            onBlur={field.handleBlur}
-                                            onChange={field.handleChange}
+                                            onBlur={field.onBlur}
+                                            onChange={(value) => field.onChange({ action: 'replace', value })}
                                         />
-                                        {field.state.value !== undefined || (isConfigured && !required) ? (
+                                        {field.value.action !== 'untouched' || (isConfigured && !required) ? (
                                             <Stack direction="horizontal" gap={2} wrap="wrap">
-                                                {isConfigured && !required && field.state.value !== null ? (
+                                                {isConfigured && !required && field.value.action !== 'remove' ? (
                                                     <Button
                                                         label={`Remove ${name}`}
                                                         size="sm"
                                                         variant="ghost"
                                                         isDisabled={busy}
-                                                        onClick={() => field.handleChange(null)}
+                                                        onClick={() => field.onChange({ action: 'remove' })}
                                                     />
                                                 ) : null}
-                                                {field.state.value !== undefined ? (
+                                                {field.value.action !== 'untouched' ? (
                                                     <Button
                                                         label={`Undo ${name} change`}
                                                         size="sm"
                                                         variant="ghost"
                                                         isDisabled={busy}
-                                                        onClick={() => field.handleChange(undefined)}
+                                                        onClick={() => field.onChange({ action: 'untouched' })}
                                                     />
                                                 ) : null}
                                             </Stack>
                                         ) : null}
                                     </Stack>
                                 )}
-                            </form.Field>
+                            />
                         );
                     })}
                     {error ? <FieldStatus type="error" variant="detached" message={error} /> : null}
                 </FormLayout>
             </form>
-            <form.Subscribe
-                selector={(state) =>
-                    environments.some(({ name, required }) =>
-                        isMissingRequiredEnv(state.values.envs[name], required, configured.includes(name))
-                    )
-                }
-            >
-                {(missing) => (
-                    <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
-                        <Button label="Cancel" variant="ghost" isDisabled={busy} onClick={onClose} />
-                        <Button
-                            form={formId}
-                            type="submit"
-                            label={busy ? 'Updating...' : 'Update solution'}
-                            variant="primary"
-                            isLoading={busy}
-                            isDisabled={missing}
-                        />
-                    </Stack>
-                )}
-            </form.Subscribe>
+            <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">
+                <Button label="Cancel" variant="ghost" isDisabled={busy} onClick={onClose} />
+                <Button
+                    form={formId}
+                    type="submit"
+                    label={busy ? 'Updating...' : 'Update solution'}
+                    variant="primary"
+                    isLoading={busy}
+                    isDisabled={busy || missing}
+                />
+            </Stack>
         </Dialog>
     );
 }
