@@ -45,6 +45,11 @@ async def test_metadata_fetches_digest_image_references(
 
     # Arrange
     image = "ghcr.io/longlink/dashboard@sha256:deadbeef"
+    expected_metadata = LongLinkMetadata(
+        image=Image(image),
+        description="Demo app",
+        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
+    )
     captured: dict[str, object] = {}
 
     def respond(request: httpx2.Request) -> httpx2.Response:
@@ -84,11 +89,7 @@ async def test_metadata_fetches_digest_image_references(
 
     # Assert
     assert image_metadata is not None
-    assert image_metadata.model_dump(mode="json") == LongLinkMetadata(
-        image=Image(image),
-        description="Demo app",
-        environments=[EnvironmentMetadata(name="API_KEY", required=True)],
-    ).model_dump(mode="json")
+    assert image_metadata == expected_metadata
     assert captured == {
         "token": {
             "url": "https://ghcr.io/token?service=ghcr.io&scope=repository%3Alonglink%2Fdashboard%3Apull",

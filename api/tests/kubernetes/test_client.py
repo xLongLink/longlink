@@ -20,6 +20,7 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
 
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
     kubernetes = kubernetes_client.Kubernetes(kubeconfig)
+    assert created == []
 
     # Act
     first = await kubernetes.api()

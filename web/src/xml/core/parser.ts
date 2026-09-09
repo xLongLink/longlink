@@ -41,7 +41,7 @@ export function parseXML(xml: string): ASTNode[] {
 function toNodes(input: unknown): ASTNode[] {
     // Flatten preserve-order arrays into sibling nodes.
     if (Array.isArray(input)) {
-        return input.flatMap((item) => toNodes(item));
+        return input.flatMap(toNodes);
     }
 
     // Compile visible text into private AST nodes so XML elements can use natural text children.

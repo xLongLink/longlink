@@ -84,20 +84,19 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             resources[(OperationKind.solution_deploy, revision_id)] = OperationResource(id=solution_id, name=name)
 
     # Assemble response models with their resolved target resource.
-    items: list[OperationResponse] = []
-    for operation in operations:
-        items.append(
-            OperationResponse(
-                id=operation.id,
-                kind=operation.kind,
-                resource=resources.get((operation.kind, operation.target_id)),
-                target_id=operation.target_id,
-                status=operation.status,
-                failed=operation.failed,
-                created_at=operation.created_at,
-                finished_at=operation.finished_at,
-            )
+    items = [
+        OperationResponse(
+            id=operation.id,
+            kind=operation.kind,
+            resource=resources.get((operation.kind, operation.target_id)),
+            target_id=operation.target_id,
+            status=operation.status,
+            failed=operation.failed,
+            created_at=operation.created_at,
+            finished_at=operation.finished_at,
         )
+        for operation in operations
+    ]
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
@@ -180,7 +179,6 @@ async def enqueue(
     # Duplicate requests may queue repeated reconciliation; handlers must remain idempotent.
     operation = Operation(kind=kind, target_id=target_id)
     session.add(operation)
-    await session.flush()
     return operation
 
 

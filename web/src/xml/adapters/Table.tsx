@@ -14,59 +14,60 @@ export function Table({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 
     const { data, idKey } = resolveXmlProps(props, ctx, tablePropsSchema, ['data']);
+    const columnNodes = nodes.filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx));
 
-    // Preserve the first index of each row reference for rich cell scopes.
+    // Index rows only when visible rich cells need their original positions.
     const rowIndexes = new Map<Record<string, unknown>, number>();
-    for (const [index, row] of data.entries()) {
-        if (!rowIndexes.has(row)) rowIndexes.set(row, index);
+    if (columnNodes.some((node) => node.children.length > 0)) {
+        for (const [index, row] of data.entries()) {
+            if (!rowIndexes.has(row)) rowIndexes.set(row, index);
+        }
     }
 
-    const columns = nodes
-        .filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx))
-        .map((node): AstryxTableColumn<Record<string, unknown>> => {
-            const columnProps = node.params;
-            const fieldAttribute = readXmlProp(columnProps, 'field');
+    const columns = columnNodes.map((node): AstryxTableColumn<Record<string, unknown>> => {
+        const columnProps = node.params;
+        const fieldAttribute = readXmlProp(columnProps, 'field');
 
-            // Column field paths are static identifiers, not runtime values.
-            if (
-                !fieldAttribute ||
-                (fieldAttribute.kind !== 'text' && fieldAttribute.kind !== 'path') ||
-                (fieldAttribute.kind === 'path' && fieldAttribute.isBinding)
-            ) {
-                throw new Error('TableColumn requires a usable field path');
-            }
-            const fieldParts = fieldAttribute.kind === 'text' ? fieldAttribute.value.split('.') : fieldAttribute.parts;
-            if (fieldParts.some((part) => !part || /\s/.test(part))) {
-                throw new Error('TableColumn requires a usable field path');
-            }
-            const field = fieldParts.join('.');
-            const { header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
-            const header = headerValue ?? field;
+        // Column field paths are static identifiers, not runtime values.
+        if (
+            !fieldAttribute ||
+            (fieldAttribute.kind !== 'text' && fieldAttribute.kind !== 'path') ||
+            (fieldAttribute.kind === 'path' && fieldAttribute.isBinding)
+        ) {
+            throw new Error('TableColumn requires a usable field path');
+        }
+        const fieldParts = fieldAttribute.kind === 'text' ? fieldAttribute.value.split('.') : fieldAttribute.parts;
+        if (fieldParts.some((part) => !part || /\s/.test(part))) {
+            throw new Error('TableColumn requires a usable field path');
+        }
+        const field = fieldParts.join('.');
+        const { header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
+        const header = headerValue ?? field;
 
-            return {
-                header,
-                key: field,
-                renderCell: (row) => {
-                    const value = fieldParts.reduce(readSafeProperty, row);
+        return {
+            header,
+            key: field,
+            renderCell: (row) => {
+                const value = fieldParts.reduce(readSafeProperty, row);
 
-                    // Shorthand columns render the resolved field value directly.
-                    if (node.children.length === 0) {
-                        return String(value ?? '');
-                    }
+                // Shorthand columns render the resolved field value directly.
+                if (node.children.length === 0) {
+                    return String(value ?? '');
+                }
 
-                    const rowCtx: Scope = {
-                        parent: ctx,
-                        bindings: { index: rowIndexes.get(row) ?? -1, row, value },
-                    };
+                const rowCtx: Scope = {
+                    parent: ctx,
+                    bindings: { index: rowIndexes.get(row) ?? -1, row, value },
+                };
 
-                    return (
-                        <XmlContext.Provider value={{ scope: rowCtx, services }}>
-                            {renderNode(node.children, rowCtx)}
-                        </XmlContext.Provider>
-                    );
-                },
-            };
-        });
+                return (
+                    <XmlContext.Provider value={{ scope: rowCtx, services }}>
+                        {renderNode(node.children, rowCtx)}
+                    </XmlContext.Provider>
+                );
+            },
+        };
+    });
 
     // Astryx tables need at least one visible column definition.
     if (columns.length === 0) {

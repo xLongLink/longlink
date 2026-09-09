@@ -1,7 +1,7 @@
 import pytest
 from alembic import command
 from pathlib import Path
-from containers import postgres_container, require_docker_daemon
+from containers import mysql_container, postgres_container
 from contextlib import ExitStack
 from sqlalchemy import inspect, create_engine
 from alembic.config import Config
@@ -10,7 +10,6 @@ from collections.abc import Iterator
 from src.environments import env
 from sqlalchemy.engine import make_url
 from src.database.models import registry
-from testcontainers.community.mysql import MySqlContainer
 
 pytestmark = pytest.mark.no_db
 
@@ -42,15 +41,7 @@ def migration_urls(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[t
                 f"{container.get_connection_url(driver='psycopg')}?sslmode=disable",
             )
         elif request.param == "mysql":
-            require_docker_daemon()
-            mysql = MySqlContainer(
-                "mysql:8.4",
-                username="longlink",
-                password="sec@ret",
-                dbname="longlink",
-                dialect="pymysql",
-            )
-            stack.enter_context(mysql)
+            mysql = stack.enter_context(mysql_container("longlink", "sec@ret", "longlink"))
             url = make_url(mysql.get_connection_url())
             yield (
                 url.set(drivername="mysql+aiomysql", query={"ssl-mode": "DISABLED"}).render_as_string(hide_password=False),

@@ -61,7 +61,6 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     lines.append("Attributes")
     if not attributes:
         lines.append("- none")
-        return lines
 
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:

@@ -15,16 +15,20 @@ describe('Table', () => {
     });
 
     it('renders shorthand field columns', () => {
+        // Arrange
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', created_by: { name: 'Ada Lovelace' } }];
+
+        // Act
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table data="$items"><TableColumn field="sku" header="SKU" /><TableColumn field="created_by.name" header="Created by" /></Table>'
+                '<Table data="$items"><TableColumn field="sku" header="Product code" /><TableColumn field="created_by.name" header="Created by" /></Table>'
             ),
             ctx
         );
 
-        expect(output).toContain('SKU');
+        // Assert
+        expect(output).toContain('Product code');
         expect(output).toContain('SKU-001');
         expect(output).toContain('Created by');
         expect(output).toContain('Ada Lovelace');

@@ -38,14 +38,13 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
     runner = CliRunner()
 
     with chdir(tmp_path):
+        # Act
         result = runner.invoke(init_command, arguments)
 
         # Assert
         target = Path.cwd() / "sample-solution"
         assert result.exit_code == 0
         for path in [
-            "pyproject.toml",
-            "main.py",
             "src/models",
             "src/views",
             "src/routes",

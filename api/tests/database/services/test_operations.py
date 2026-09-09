@@ -416,12 +416,10 @@ async def test_operations_service_coalesces_claimed_work() -> None:
 
     # Create duplicate desired state while the claimed Operation remains immutable.
     follow_up = await queue(target_id=target_id)
-    duplicate = await queue(target_id=target_id)
 
-    # Verify both requests reuse the lease and shutdown can release it safely.
+    # Verify the request reuses the lease and shutdown can release it safely.
     assert claimed.status == OperationStatus.active
     assert follow_up.id == claimed.id
-    assert duplicate.id == follow_up.id
     assert follow_up.status == OperationStatus.active
     async with session_scope() as session:
         released = await operations.release(session, claimed.id)

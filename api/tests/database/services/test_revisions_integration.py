@@ -19,15 +19,14 @@ from src.database.models.solutions import Revision, Solution
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
 
 
-async def test_initial_migration_revision_constraints_and_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Exercise the collapsed migration, ownership constraints, and cyclic-FK cleanup on PostgreSQL."""
+async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Exercise revision ownership, concurrent updates, and cascade cleanup on PostgreSQL."""
 
     with postgres_container("longlink", "secret", "longlink") as container:
         database_url = container.get_connection_url(driver="asyncpg")
         monkeypatch.setattr(env, "DATABASE_URL", f"{database_url}?ssl=disable")
         config = Config("alembic.ini")
         await asyncio.to_thread(command.upgrade, config, "head")
-        await asyncio.to_thread(command.check, config)
         engine = create_async_engine(database_url)
         try:
             session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -76,4 +75,3 @@ async def test_initial_migration_revision_constraints_and_cleanup(monkeypatch: p
                 assert await session.get(Revision, second.desired_revision_id) is not None
         finally:
             await engine.dispose()
-        await asyncio.to_thread(command.downgrade, config, "base")

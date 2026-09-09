@@ -1,6 +1,7 @@
 import pytest
 import asyncio
 from uuid import UUID
+from types import SimpleNamespace
 from fastapi import Depends, FastAPI, Request
 from longlink import context, identity
 from contextlib import asynccontextmanager
@@ -83,7 +84,7 @@ def test_data_resolves_request_services(
                 session_closed = True
 
     app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage, "database": DatabaseService()})()
+    app.state.longlink = SimpleNamespace(storage=storage, database=DatabaseService())
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
@@ -130,7 +131,7 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
                 session_closed = True
 
     app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": object(), "database": DatabaseService()})()
+    app.state.longlink = SimpleNamespace(storage=object(), database=DatabaseService())
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
