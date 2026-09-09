@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
 import { Dialog } from '@/components/ui/Dialog';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
@@ -32,7 +31,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     schema,
     additionalInvalidateKeys = [],
 }: RegistryDialogOptions<TValues>) {
-    const toast = useToast();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const closeDialog = () => {
@@ -41,9 +39,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
     };
     const mutation = useMutation({
         mutationFn: (payload: TValues) => api(endpoint, { json: payload, method: 'POST' }),
-        onError: (error) => {
-            toast({ body: error.message, type: 'error' });
-        },
         onSuccess: () => {
             closeDialog();
             return Promise.all([

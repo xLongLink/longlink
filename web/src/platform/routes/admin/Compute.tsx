@@ -33,7 +33,6 @@ export default function AdminCompute() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/computes'] });
             toast({ body: 'Compute deleted' });
         },
-        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: computes,

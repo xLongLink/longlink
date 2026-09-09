@@ -72,7 +72,7 @@ export function AvatarDialog({
                             return;
                         }
 
-                        // Keep failed drafts available; mutation hooks report server errors.
+                        // Keep failed drafts available; the mutation cache reports server errors.
                         if (values.avatar !== avatar) {
                             try {
                                 await onSave(values.avatar);

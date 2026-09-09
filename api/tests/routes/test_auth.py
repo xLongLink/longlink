@@ -304,7 +304,7 @@ async def test_registration_completion_creates_authenticated_account(
 
     # Assert
     assert unauthenticated_login.status_code == 400
-    assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert unauthenticated_login.json() == {"detail": "Invalid email or password."}
     assert restored_setup.status_code == 200
     assert restored_setup.json() == {"email": email}
     assert restored_setup.headers["cache-control"] == "no-store"
@@ -341,7 +341,7 @@ async def test_password_login_rejects_wrong_password_and_unknown_email_without_s
     # Assert
     assert wrong_password_response.status_code == 400
     assert unknown_email_response.status_code == 400
-    assert wrong_password_response.json() == unknown_email_response.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert wrong_password_response.json() == unknown_email_response.json() == {"detail": "Invalid email or password."}
     assert "set-cookie" not in wrong_password_response.headers
     assert "set-cookie" not in unknown_email_response.headers
     assert client.cookies.get("longlink_auth") is None
@@ -369,7 +369,7 @@ async def test_password_login_rejects_deleted_account_with_correct_password_with
 
     # Assert
     assert response.status_code == 400
-    assert response.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert response.json() == {"detail": "Invalid email or password."}
     assert "set-cookie" not in response.headers
     assert client.cookies.get("longlink_auth") is None
 
@@ -490,7 +490,7 @@ async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncCl
 
     # Assert
     assert response.status_code == 400
-    assert response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
+    assert response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert "set-cookie" not in response.headers
 
 
@@ -502,7 +502,7 @@ async def test_password_reset_verify_rejects_invalid_token_without_cookie(client
 
     # Assert
     assert response.status_code == 400
-    assert response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
+    assert response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert "set-cookie" not in response.headers
     assert client.cookies.get("longlink_password_reset") is None
 
@@ -525,7 +525,7 @@ async def test_password_reset_rejects_missing_reset_cookie(
 
     # Assert
     assert reset_response.status_code == 400
-    assert reset_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
+    assert reset_response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert "set-cookie" not in reset_response.headers
     assert login_response.status_code == 204
 
@@ -603,7 +603,7 @@ async def test_forgot_and_reset_password(
     assert "Max-Age=0" in reset_cookie
     assert "Path=/api/v1/auth/reset-password" in reset_cookie
     assert reused_token_response.status_code == 400
-    assert reused_token_response.json() == {"detail": "RESET_PASSWORD_BAD_TOKEN"}
+    assert reused_token_response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert revoked_session.status_code == 401
 
     # Prove only the new password can create a fresh session.
@@ -617,7 +617,7 @@ async def test_forgot_and_reset_password(
     )
 
     assert old_login.status_code == 400
-    assert old_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
+    assert old_login.json() == {"detail": "Invalid email or password."}
     assert new_login.status_code == 204
 
 

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useSignOut } from '@/lib/hooks/use-user';
 import { Button } from '@astryxdesign/core/Button';
@@ -28,7 +27,6 @@ import {
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: UserSummary }) {
     const signOut = useSignOut();
-    const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
     return (
@@ -140,9 +138,7 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                         label="Sign out"
                         onClick={() => {
                             closeMenu();
-                            void signOut().catch(() => {
-                                showToast({ body: 'Failed to sign out', type: 'error' });
-                            });
+                            signOut.mutate();
                         }}
                         variant="destructive"
                     />

@@ -696,10 +696,9 @@ async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     # Request runtime content before the Solution is ready.
     response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
-    # Verify the loading response is empty and cannot be cached.
+    # Verify readiness has a readable error detail and cannot be cached.
     assert response.status_code == 503
-    assert response.text == ""
-    assert response.headers["content-length"] == "0"
+    assert response.json() == {"detail": "Solution is not ready yet. Please try again shortly."}
     assert response.headers["cache-control"] == "no-store"
 
 

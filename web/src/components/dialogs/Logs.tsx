@@ -48,7 +48,7 @@ export default function Logs({ kind, onOpenChange, resourceId }: LogsProps) {
                     <Spinner />
                 </Stack>
             ) : error ? (
-                <Banner status="error" title={error.message || 'Failed to load logs'} />
+                <Banner status="error" title="Failed to load logs" />
             ) : (
                 <CodeBlock
                     code={logLines.length > 0 ? logLines.join('\n') : details.emptyMessage}

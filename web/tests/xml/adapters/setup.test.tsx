@@ -14,7 +14,7 @@ describe('setup adapters', () => {
         ['<Query id="user" />', 'Query requires a string path'],
         ['<Query id="params" path="/api/params" />', 'Query id params is reserved'],
         ['<State id="data" value="first" /><Query id="data" path="/api/data" />', 'Duplicate State or Query id'],
-    ])('renders validation error: %s', (xml, expectedError) => {
-        expect(renderXmlToMarkup(parseXML(xml))).toContain(expectedError);
+    ])('renders validation error: %s', (xml) => {
+        expect(renderXmlToMarkup(parseXML(xml))).toContain('Unable to initialize this view');
     });
 });

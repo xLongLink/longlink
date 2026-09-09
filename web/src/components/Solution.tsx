@@ -122,7 +122,7 @@ export function SolutionRuntime({
     } else if (viewsError) {
         content = (
             <PageError
-                description={viewsError.message || 'The solution definition could not be loaded.'}
+                description="The solution definition could not be loaded."
                 title="Unable to load this solution"
             />
         );
@@ -151,12 +151,7 @@ export function SolutionRuntime({
             />
         );
     } else if (activeViewError) {
-        content = (
-            <PageError
-                description={activeViewError.message || 'Failed to load view'}
-                title="Unable to load this view"
-            />
-        );
+        content = <PageError description="The view could not be loaded." title="Unable to load this view" />;
     } else {
         content = (
             <Center minHeight="calc(100vh - 14rem)" width="100%">

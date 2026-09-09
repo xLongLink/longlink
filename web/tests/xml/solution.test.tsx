@@ -1,10 +1,12 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ApiErrorContext } from '@/lib/errors';
+import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const navigation = vi.hoisted(() => ({ destination: '' }));
 
@@ -58,7 +60,7 @@ describe('SolutionRuntime', () => {
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
-        expect(output.textContent).toContain('Manifest unavailable');
+        expect(output.textContent).toContain('The solution definition could not be loaded.');
     });
 
     it('redirects an empty route to the first non-index static tab', async () => {
@@ -105,7 +107,7 @@ describe('SolutionRuntime', () => {
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this view')));
-        expect(output.textContent).toContain('View unavailable');
+        expect(output.textContent).toContain('The view could not be loaded.');
     });
 
     it.each(['https://example.com/view.xml', '//example.com/view.xml'])(
@@ -127,7 +129,7 @@ describe('SolutionRuntime', () => {
             await act(async () =>
                 vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution'))
             );
-            expect(output.textContent).toContain('View path must be solution-relative');
+            expect(output.textContent).toContain('The solution definition could not be loaded.');
             expect(fetchRequest).toHaveBeenCalledOnce();
         }
     );
@@ -205,29 +207,32 @@ describe('SolutionRuntime', () => {
         const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const { client, reportError } = createQueryRuntime(vi.fn(), false);
+        client.setDefaultOptions({ queries: { retry: false } });
 
         await act(async () => {
             root?.render(
-                <QueryClientProvider client={client}>
-                    <MemoryRouter initialEntries={[initialPath]}>
-                        <Routes>
-                            <Route
-                                element={
-                                    <SolutionRuntime>
-                                        {({ content, tabs }) => (
-                                            <>
-                                                <Location tabs={tabs.map((tab) => tab.href).join(',')} />
-                                                {content}
-                                            </>
-                                        )}
-                                    </SolutionRuntime>
-                                }
-                                path="*"
-                            />
-                        </Routes>
-                    </MemoryRouter>
-                </QueryClientProvider>
+                <ApiErrorContext value={reportError}>
+                    <QueryClientProvider client={client}>
+                        <MemoryRouter initialEntries={[initialPath]}>
+                            <Routes>
+                                <Route
+                                    element={
+                                        <SolutionRuntime>
+                                            {({ content, tabs }) => (
+                                                <>
+                                                    <Location tabs={tabs.map((tab) => tab.href).join(',')} />
+                                                    {content}
+                                                </>
+                                            )}
+                                        </SolutionRuntime>
+                                    }
+                                    path="*"
+                                />
+                            </Routes>
+                        </MemoryRouter>
+                    </QueryClientProvider>
+                </ApiErrorContext>
             );
         });
 

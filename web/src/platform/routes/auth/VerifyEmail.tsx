@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router';
 import { passwordSchema } from './validation';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
@@ -35,7 +34,6 @@ type VerificationRequest = {
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
-    const showToast = useToast();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
@@ -102,16 +100,7 @@ export default function VerifyEmail() {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
                 startVerification('');
-                return;
             }
-            if (error instanceof ApiError && error.status === 409) {
-                return;
-            }
-
-            showToast({
-                body: error instanceof ApiError ? error.message : 'error',
-                type: 'error',
-            });
         }
     }
 
@@ -136,7 +125,12 @@ export default function VerifyEmail() {
         const invalidToken = verificationError?.status === 400;
 
         return (
-            <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
+            <AuthLayout
+                title="Verify your email"
+                description={
+                    invalidToken ? 'Request a new registration link to continue.' : 'Please try again in a moment.'
+                }
+            >
                 {pageMetadata}
                 <Stack gap={3}>
                     {invalidToken ? null : (
@@ -161,7 +155,7 @@ export default function VerifyEmail() {
     // Account races cannot succeed by resubmitting the same form.
     if (completion.error instanceof ApiError && completion.error.status === 409) {
         return (
-            <AuthLayout title="Complete your account" description={completion.error.message}>
+            <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}
                 <Button href={recoveryRegisterHref} label="Request a new registration link" />
             </AuthLayout>

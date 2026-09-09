@@ -84,6 +84,15 @@ export const zEnvironmentMetadata = z.object({
 });
 
 /**
+ * ErrorResponse
+ *
+ * Describe the public error contract without internal diagnostics.
+ */
+export const zErrorResponse = z.object({
+    detail: z.string()
+});
+
+/**
  * LongLinkMetadata
  *
  * Structured metadata extracted from OCI and LongLink image labels.
@@ -558,24 +567,6 @@ export const zPageUserSummary = z.object({
 export const zUserUpdate = z.object({
     name: z.string().min(1).max(255).nullish(),
     avatar: z.string().max(2048).nullish()
-});
-
-/**
- * ValidationError
- */
-export const zValidationError = z.object({
-    loc: z.array(z.union([z.string(), z.int()])),
-    msg: z.string(),
-    type: z.string(),
-    input: z.unknown().optional(),
-    ctx: z.record(z.string(), z.unknown()).optional()
-});
-
-/**
- * HTTPValidationError
- */
-export const zHttpValidationError = z.object({
-    detail: z.array(zValidationError).optional()
 });
 
 /**

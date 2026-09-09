@@ -33,7 +33,7 @@ export default function AuthenticatedLayout() {
                 <NoIndex title="Unable to Load Account | LongLink" />
                 <Center minHeight="calc(100dvh - var(--_app-shell-header-height, 0px) - var(--spacing-4))" width="100%">
                     <Stack gap={4} align="center">
-                        <Banner status="error" title={error.message} />
+                        <Banner status="error" title="Unable to load your account." />
                         <Button label="Retry" onClick={() => void refetch()} variant="primary" />
                     </Stack>
                 </Center>

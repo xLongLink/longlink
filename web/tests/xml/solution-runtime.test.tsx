@@ -1,14 +1,19 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ApiErrorContext } from '@/lib/errors';
+import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
 import { MemoryRouter, Route, Routes } from 'react-router';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const { apiRequest } = vi.hoisted(() => ({ apiRequest: vi.fn() }));
 
-vi.mock('@/lib/api', () => ({ api: apiRequest }));
+vi.mock('@/lib/api', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@/lib/api')>()),
+    api: apiRequest,
+}));
 
 describe('SolutionRuntime XML integration', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -41,26 +46,29 @@ describe('SolutionRuntime XML integration', () => {
         const container = document.createElement('div');
         const renderedRoot = createRoot(container);
         root = renderedRoot;
-        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+        const { client, reportError } = createQueryRuntime(vi.fn(), false);
+        client.setDefaultOptions({ queries: { retry: false } });
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 
         // Act
         await act(async () => {
             renderedRoot.render(
-                <QueryClientProvider client={client}>
-                    <MemoryRouter initialEntries={['/home']}>
-                        <Routes>
-                            <Route
-                                element={
-                                    <SolutionRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
-                                        {({ content }) => content}
-                                    </SolutionRuntime>
-                                }
-                                path="*"
-                            />
-                        </Routes>
-                    </MemoryRouter>
-                </QueryClientProvider>
+                <ApiErrorContext value={reportError}>
+                    <QueryClientProvider client={client}>
+                        <MemoryRouter initialEntries={['/home']}>
+                            <Routes>
+                                <Route
+                                    element={
+                                        <SolutionRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
+                                            {({ content }) => content}
+                                        </SolutionRuntime>
+                                    }
+                                    path="*"
+                                />
+                            </Routes>
+                        </MemoryRouter>
+                    </QueryClientProvider>
+                </ApiErrorContext>
             );
         });
 

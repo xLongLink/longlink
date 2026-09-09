@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import UpdateSolution from '@/components/dialogs/UpdateSolution';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,12 +14,12 @@ export default function SolutionUpdate({
     solution: OrganizationSolutionSummary;
     organizationId: string;
 }) {
-    const toast = useToast();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
 
     // Scope on-demand reviews to the desired revision and deployment lifecycle.
     const queryKey = [
+        'api',
         'release-review',
         solution.id,
         solution.desired_revision_id,
@@ -29,21 +28,10 @@ export default function SolutionUpdate({
     ];
     const inspection = useQuery({
         queryKey,
-        queryFn: async ({ signal }) => {
-            try {
-                return zSolutionUpdateCheck.parse(
-                    await api(`/api/v1/solutions/${solution.id}/update`, { signal, timeout: 25000 }).json()
-                );
-            } catch (failure) {
-                if (!signal.aborted) {
-                    toast({
-                        body: failure instanceof Error ? failure.message : 'Failed to check for updates',
-                        type: 'error',
-                    });
-                }
-                throw failure;
-            }
-        },
+        queryFn: async ({ signal }) =>
+            zSolutionUpdateCheck.parse(
+                await api(`/api/v1/solutions/${solution.id}/update`, { signal, timeout: 25000 }).json()
+            ),
         enabled: false,
         retry: false,
         gcTime: 0,

@@ -1,23 +1,24 @@
 import { z } from 'zod';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
+import { useEffect, useRef } from 'react';
 import { NoIndex } from '@/components/Seo';
+import { useApiError } from '@/lib/errors';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { Divider } from '@astryxdesign/core/Divider';
 import { useCurrentUser } from '@/lib/hooks/use-user';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailSchema, passwordSchema } from './validation';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 const loginSchema = z.object({
     email: emailSchema,
@@ -30,8 +31,10 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function Login() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const showToast = useToast();
+    const queryClient = useQueryClient();
+    const reportApiError = useApiError();
     const oauthError = searchParams.get('oauth_error') === '1';
+    const oauthFailure = useRef<ApiError | null>(null);
     const { user } = useCurrentUser();
     const { data: oauthAvailability } = useQuery({
         queryKey: ['api', '/api/v1/auth/oauth'],
@@ -49,7 +52,22 @@ export default function Login() {
     const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
     const login = useMutation({
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
+        onSuccess: async () => {
+            // A new login must never reuse data from the previous identity.
+            await clearSessionQueries(queryClient);
+            navigate('/user/organizations', { replace: true });
+        },
     });
+
+    // Reuse the callback error so central reporting deduplicates effect replays.
+    useEffect(() => {
+        if (oauthError) {
+            oauthFailure.current ??= new ApiError('Unable to sign in with this provider. Please try again.', 400);
+            reportApiError(oauthFailure.current);
+        } else {
+            oauthFailure.current = null;
+        }
+    }, [oauthError, reportApiError]);
 
     // Keep authenticated users out of the sign-in page.
     if (user) {
@@ -65,12 +83,8 @@ export default function Login() {
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            navigate('/user/organizations', { replace: true });
-        } catch (loginError) {
-            showToast({
-                body: loginError instanceof Error ? loginError.message : 'Sign in failed',
-                type: 'error',
-            });
+        } catch {
+            // The mutation cache reports failures; keep the form available for retry.
         }
     }
 
@@ -78,13 +92,6 @@ export default function Login() {
         <AuthLayout title={<WelcomeTitle />} description={null}>
             <NoIndex title="Sign In | LongLink" />
             <Stack gap={4}>
-                {oauthError ? (
-                    <Banner
-                        description="Try again or sign in with your email and password."
-                        status="error"
-                        title="OAuth sign in failed"
-                    />
-                ) : null}
                 <Stack gap={2}>
                     {hasOAuthProvider ? (
                         <Stack gap={2}>

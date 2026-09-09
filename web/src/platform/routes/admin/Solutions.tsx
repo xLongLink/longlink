@@ -34,7 +34,6 @@ export default function AdminSolutions() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] });
             toast({ body: 'Solution deleted' });
         },
-        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: solutions,

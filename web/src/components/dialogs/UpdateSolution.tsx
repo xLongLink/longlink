@@ -11,7 +11,6 @@ import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import type { OrganizationSolutionSummary, SolutionUpdateCheck } from '@/lib/generated/platform-api-v1/types.gen';
 
@@ -84,21 +83,11 @@ export default function UpdateSolution({
         onError: async (failure) => {
             // A conflict requires a fresh check, not resubmission of the old candidate.
             if (failure instanceof ApiError && failure.status === 409) {
-                toast({ body: failure.message, type: 'error' });
-                try {
-                    await onInvalidate();
-                } catch (refreshError) {
-                    // Refresh failures must remain visible after the dialog closes.
-                    toast({
-                        body: refreshError instanceof Error ? refreshError.message : 'Failed to refresh solutions',
-                        type: 'error',
-                    });
-                }
+                await onInvalidate();
             }
         },
     });
     const busy = form.formState.isSubmitting || update.isPending;
-    const error = update.error instanceof ApiError && update.error.status === 409 ? null : update.error;
     const envs = useWatch({ control: form.control, name: 'envs' });
     const missing = environments.some(({ name, required }) =>
         isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
@@ -118,7 +107,7 @@ export default function UpdateSolution({
                     else if (change.action === 'replace') patch[name] = change.value;
                 }
 
-                // Await the lifecycle callbacks; failures are rendered or reported by the mutation.
+                // Await the lifecycle callbacks; the mutation cache reports failures.
                 await update.mutateAsync(patch).catch(() => {
                     // Consume the rejection without ending form submission before the mutation settles.
                 });
@@ -218,7 +207,6 @@ export default function UpdateSolution({
                             />
                         );
                     })}
-                    {error ? <FieldStatus type="error" variant="detached" message={error.message} /> : null}
                 </FormLayout>
             </form>
             <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">

@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
 import { Dialog } from '@/components/ui/Dialog';
 import { useId, useRef, useState } from 'react';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
@@ -10,7 +9,6 @@ import { createGuardedOpenChange } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
 import { useCreateOrganizationSolution } from '@/lib/hooks/use-organization';
@@ -32,21 +30,8 @@ const defaultCreateSolutionValues: CreateSolutionInput = {
     envs: {},
 };
 
-/** Keeps image input and domain failures inline rather than in a toast. */
-function isImageInputError(error: unknown): error is ApiError {
-    return (
-        error instanceof ApiError &&
-        error.status >= 400 &&
-        error.status < 500 &&
-        error.status !== 401 &&
-        error.status !== 403 &&
-        error.status !== 429
-    );
-}
-
 /** Renders the create-solution dialog for an organization. */
 export default function CreateSolution({ organizationId }: { organizationId: string }) {
-    const toast = useToast();
     const createSolution = useCreateOrganizationSolution(organizationId);
     const formId = useId();
     const [open, setOpen] = useState(false);
@@ -97,17 +82,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
             });
             setStep('metadata');
         },
-        onError: (error) => {
-            // Surface operational failures globally; domain failures stay with the field.
-            if (!isImageInputError(error)) {
-                toast({
-                    body: error.message,
-                    type: 'error',
-                });
-            }
-        },
     });
-    const error = isImageInputError(inspectImage.error) ? inspectImage.error.message : null;
     const [image, name, envs] = useWatch({ control: form.control, name: ['image', 'name', 'envs'] });
     const pending = form.formState.isSubmitting || inspectImage.isPending || createSolution.isPending;
     const hasImage = image.trim().length > 0;
@@ -122,7 +97,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         try {
             await form.handleSubmit(async (value) => {
                 if (step === 'image') {
-                    // Await inspection while its mutation handles errors inline or by toast.
+                    // Await inspection while the mutation cache reports failures.
                     await inspectImage.mutateAsync(value).catch(() => {});
                 } else if (step === 'metadata') {
                     setStep('envs');
@@ -166,11 +141,8 @@ export default function CreateSolution({ organizationId }: { organizationId: str
             });
             setOpen(false);
             resetDialogState();
-        } catch (mutationError) {
-            toast({
-                body: mutationError instanceof Error ? mutationError.message : 'Failed to create solution',
-                type: 'error',
-            });
+        } catch {
+            // The mutation cache reports failures; preserve the wizard for retry.
         }
     }
 
@@ -312,7 +284,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                                 />
                             ))
                         )}
-                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
                     </FormLayout>
                 </form>
                 {step === 'image' ? (

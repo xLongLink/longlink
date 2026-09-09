@@ -140,12 +140,12 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     user = await users.by_email(session, payload.email)
     if user is None:
         await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
-        raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
+        raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Verify the supplied password before issuing a session.
     password_matches = await asyncio.to_thread(users.PASSWORD_HASH.verify, payload.password, user.password)
     if not password_matches or user.deleted_at is not None:
-        raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
+        raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Accept email-bound Organization access before issuing its signed browser session.
     changed_organization_ids = await invitations.accept(session, user)
@@ -205,7 +205,7 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
     try:
         await token.password_reset_user(session, payload.token)
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
+        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
     response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, "longlink_password_reset", payload.token, "/api/v1/auth/reset-password", 900)
 
@@ -222,7 +222,7 @@ async def get_password_reset_setup(
     try:
         await token.password_reset_user(session, password_reset_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
+        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
     response.headers["Cache-Control"] = "no-store"
 
 
@@ -239,7 +239,7 @@ async def reset_password(
     try:
         user = await token.password_reset_user(session, password_reset_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
+        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
     user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)

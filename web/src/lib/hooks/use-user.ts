@@ -1,5 +1,4 @@
 import { api } from '@/lib/api';
-import { useToast } from '@/lib/hooks/use-toast';
 import { createContext, useContext } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
@@ -10,7 +9,6 @@ export const AuthenticatedUserContext = createContext<UserSummary | null>(null);
 /** Updates the current profile and publishes the saved user to the cache. */
 export function useUpdateUser() {
     const queryClient = useQueryClient();
-    const toast = useToast();
 
     return useMutation({
         mutationFn: async (payload: UserUpdate) =>
@@ -18,7 +16,6 @@ export function useUpdateUser() {
         onSuccess: (updatedUser) => {
             queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
         },
-        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
 }
 
@@ -79,9 +76,11 @@ export function useUserOrganizations() {
 export function useSignOut() {
     const queryClient = useQueryClient();
 
-    return async () => {
-        await api('/api/v1/auth/logout', { method: 'POST' });
-        queryClient.clear();
-        window.location.assign('/user/organizations');
-    };
+    return useMutation({
+        mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
+        onSuccess: () => {
+            queryClient.clear();
+            window.location.assign('/user/organizations');
+        },
+    });
 }

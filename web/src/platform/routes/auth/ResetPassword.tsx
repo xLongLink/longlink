@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { passwordSchema } from './validation';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -33,7 +32,6 @@ function isBadTokenError(error: unknown): boolean {
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
-    const showToast = useToast();
     const token = useFragmentToken(PASSWORD_RESET_TOKEN_KEY);
     const verificationController = useRef<AbortController | null>(null);
     const form = useForm<ResetPasswordValues>({
@@ -81,21 +79,9 @@ export default function ResetPassword() {
 
     const startInitialVerification = useEffectEvent(startVerification);
 
-    /** Saves the new password while keeping invalid-token failures inline. */
+    /** Awaits password saving while the mutation cache reports failures. */
     async function handleResetPassword(payload: ResetPasswordValues) {
-        try {
-            await resetPassword.mutateAsync(payload);
-        } catch (error) {
-            // The bad-token response blocks this workflow and is rendered below.
-            if (isBadTokenError(error)) {
-                return;
-            }
-
-            showToast({
-                body: error instanceof Error ? error.message : 'Please try again in a moment.',
-                type: 'error',
-            });
-        }
+        await resetPassword.mutateAsync(payload).catch(() => {});
     }
 
     useEffect(() => {

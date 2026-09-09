@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
+import { ApiProvider } from '@/providers';
 import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import SolutionUpdate from '@/components/SolutionUpdate';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const revisionId = '00000000-0000-4000-8000-000000000001';
 const solution = {
@@ -36,11 +36,9 @@ const candidate = {
 describe('Solution source update dialog', () => {
     let root: ReturnType<typeof createRoot> | undefined;
     let container: HTMLElement | undefined;
-    let queryClient: QueryClient | undefined;
 
     afterEach(async () => {
         await act(async () => root?.unmount());
-        queryClient?.clear();
         container?.remove();
         vi.unstubAllGlobals();
     });
@@ -50,16 +48,14 @@ describe('Solution source update dialog', () => {
         container = document.createElement('section');
         document.body.append(container);
         root = createRoot(container);
-        const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-        queryClient = client;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             root?.render(
-                <QueryClientProvider client={client}>
-                    <LayerProvider>
+                <LayerProvider>
+                    <ApiProvider>
                         <SolutionUpdate solution={solution} organizationId="org" />
-                    </LayerProvider>
-                </QueryClientProvider>
+                    </ApiProvider>
+                </LayerProvider>
             )
         );
     }

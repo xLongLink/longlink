@@ -7,8 +7,9 @@ authorization remain required. The Platform-to-Solution runtime contract is sepa
 
 from . import auth, image, proxy, users, health, computes, storages, databases, solutions, operations, organizations
 from fastapi import APIRouter
+from src.errors import ErrorResponse
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", responses={422: {"model": ErrorResponse}, "default": {"model": ErrorResponse}})
 
 # Compose the internal Platform routes under one prefix.
 router.include_router(auth.router)

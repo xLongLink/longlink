@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '@/xml/renderers';
+import { RenderXML } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import { createContext } from '@/xml/core/context';

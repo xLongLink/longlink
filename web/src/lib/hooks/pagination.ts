@@ -18,6 +18,7 @@ export function usePaginate<T extends Record<string, unknown>>(
         queryFn: async ({ signal }) =>
             schema.parse(await api(`${path}?page=${page}&page_size=${PAGE_SIZE}`, { signal }).json()),
         refetchInterval,
+        meta: { polling: refetchInterval !== undefined },
     });
     const items = query.data?.items ?? [];
     const total = query.data?.total ?? 0;

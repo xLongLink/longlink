@@ -32,7 +32,6 @@ export default function AdminStorage() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/storages'] });
             toast({ body: 'Storage deleted' });
         },
-        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: storages,

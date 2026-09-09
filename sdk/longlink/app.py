@@ -5,6 +5,7 @@ from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.views import ViewDefinition, view_stem_route
+from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
 from longlink.context import install_context_middleware
@@ -53,6 +54,9 @@ class LongLink:
         # Initialize Solution storage and database connections.
         storage = create_fs(settings)
         database = Database(settings)
+
+        # Supply safe defaults while preserving Solution-owned exception handlers.
+        install_error_handlers(app)
 
         # Compress the embedded frontend and apply safe browser cache policies.
         app.add_middleware(FrontendMiddleware)

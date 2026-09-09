@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '@/xml/renderers';
+import { RenderXML } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import { createContext } from '@/xml/core/context';
@@ -112,7 +112,7 @@ describe('useBindableValue', () => {
             root?.render(<RenderXML ast={ast} ctx={ctx} />);
         });
 
-        expect(output.textContent).toContain('Records unavailable');
+        expect(output.textContent).toContain('Unable to initialize this view');
         expect(output.textContent).not.toContain('Loaded child');
     });
 
@@ -131,7 +131,7 @@ describe('useBindableValue', () => {
         });
 
         // Assert
-        expect(container.textContent).toContain('Query requires a string path');
+        expect(container.textContent).toContain('Unable to initialize this view');
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 });

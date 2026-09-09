@@ -32,7 +32,6 @@ export default function AdminDatabase() {
             void queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/databases'] });
             toast({ body: 'Database deleted' });
         },
-        onError: (error) => toast({ body: error.message, type: 'error' }),
     });
     const {
         items: databases,
