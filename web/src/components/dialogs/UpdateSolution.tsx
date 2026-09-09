@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { useId, useRef } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { ArrowRight } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Dialog } from '@/components/ui/Dialog';
-import { useId, useRef, useState } from 'react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -44,9 +45,7 @@ export default function UpdateSolution({
 }) {
     const toast = useToast();
     const formId = useId();
-    const [busy, setBusy] = useState(false);
     const submitting = useRef(false);
-    const [error, setError] = useState<string | null>(null);
     const environments = candidate.metadata.environments ?? [];
     const configured = candidate.configured_envs;
 
@@ -68,6 +67,38 @@ export default function UpdateSolution({
         resolver: zodResolver(schema),
         mode: 'onChange',
     });
+    const update = useMutation({
+        mutationFn: (patch: Record<string, string | null>) =>
+            api(`/api/v1/solutions/${solution.id}/update`, {
+                method: 'POST',
+                timeout: 25000,
+                json: {
+                    envs: patch,
+                    expected_revision_id: candidate.revision_id,
+                },
+            }),
+        onSuccess: async () => {
+            toast({ body: 'Release queued for deployment' });
+            await onInvalidate();
+        },
+        onError: async (failure) => {
+            // A conflict requires a fresh check, not resubmission of the old candidate.
+            if (failure instanceof ApiError && failure.status === 409) {
+                toast({ body: failure.message, type: 'error' });
+                try {
+                    await onInvalidate();
+                } catch (refreshError) {
+                    // Refresh failures must remain visible after the dialog closes.
+                    toast({
+                        body: refreshError instanceof Error ? refreshError.message : 'Failed to refresh solutions',
+                        type: 'error',
+                    });
+                }
+            }
+        },
+    });
+    const busy = form.formState.isSubmitting || update.isPending;
+    const error = update.error instanceof ApiError && update.error.status === 409 ? null : update.error;
     const envs = useWatch({ control: form.control, name: 'envs' });
     const missing = environments.some(({ name, required }) =>
         isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
@@ -77,8 +108,7 @@ export default function UpdateSolution({
     async function handleSubmit() {
         if (submitting.current || busy) return;
         submitting.current = true;
-        setBusy(true);
-        setError(null);
+        update.reset();
         try {
             await form.handleSubmit(async (value) => {
                 // Translate explicit UI intent to the API patch without trimming replacement secrets.
@@ -88,29 +118,13 @@ export default function UpdateSolution({
                     else if (change.action === 'replace') patch[name] = change.value;
                 }
 
-                // Submit a patch; the server independently resolves and validates the release again.
-                await api(`/api/v1/solutions/${solution.id}/update`, {
-                    method: 'POST',
-                    timeout: 25000,
-                    json: {
-                        envs: patch,
-                        expected_revision_id: candidate.revision_id,
-                    },
+                // Await the lifecycle callbacks; failures are rendered or reported by the mutation.
+                await update.mutateAsync(patch).catch(() => {
+                    // Consume the rejection without ending form submission before the mutation settles.
                 });
-                toast({ body: 'Release queued for deployment' });
-                await onInvalidate();
             })();
-        } catch (failure) {
-            // A conflict requires a fresh check, not resubmission of the old candidate.
-            if (failure instanceof ApiError && failure.status === 409) {
-                toast({ body: failure.message, type: 'error' });
-                await onInvalidate();
-                return;
-            }
-            setError(failure instanceof Error ? failure.message : 'Deployment failed');
         } finally {
             submitting.current = false;
-            setBusy(false);
         }
     }
 
@@ -204,7 +218,7 @@ export default function UpdateSolution({
                             />
                         );
                     })}
-                    {error ? <FieldStatus type="error" variant="detached" message={error} /> : null}
+                    {error ? <FieldStatus type="error" variant="detached" message={error.message} /> : null}
                 </FormLayout>
             </form>
             <Stack direction="horizontal" gap={2} justify="end" wrap="wrap">

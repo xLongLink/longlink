@@ -75,7 +75,6 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         form,
         isPending: mutation.isPending,
         open,
-        openDialog: () => setOpen(true),
         handleOpenChange,
         handleSubmit,
     };
@@ -93,7 +92,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
 
     return (
         <>
-            <Button label={triggerLabel} clickAction={dialog.openDialog} />
+            <Button label={triggerLabel} clickAction={() => dialog.handleOpenChange(true)} />
             <Dialog
                 isOpen={dialog.open}
                 onOpenChange={dialog.handleOpenChange}

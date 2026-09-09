@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { getIconComponent } from '@/components/ui/Icon';
+import { iconComponents } from '@/components/ui/Icon';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
 import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
@@ -106,7 +106,7 @@ export function SolutionRuntime({
         (view) =>
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
-                icon: view.icon ? getIconComponent(view.icon) : undefined,
+                icon: view.icon ? iconComponents[view.icon] : undefined,
                 label: view.name ?? startCase(view.tab),
             }) satisfies NavigationTab
     );

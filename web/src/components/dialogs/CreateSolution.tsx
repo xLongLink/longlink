@@ -5,6 +5,7 @@ import { useId, useRef, useState } from 'react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useMutation } from '@tanstack/react-query';
 import { createGuardedOpenChange } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -31,6 +32,18 @@ const defaultCreateSolutionValues: CreateSolutionInput = {
     envs: {},
 };
 
+/** Keeps image input and domain failures inline rather than in a toast. */
+function isImageInputError(error: unknown): error is ApiError {
+    return (
+        error instanceof ApiError &&
+        error.status >= 400 &&
+        error.status < 500 &&
+        error.status !== 401 &&
+        error.status !== 403 &&
+        error.status !== 429
+    );
+}
+
 /** Renders the create-solution dialog for an organization. */
 export default function CreateSolution({ organizationId }: { organizationId: string }) {
     const toast = useToast();
@@ -39,8 +52,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const [declaredEnvironments, setDeclaredEnvironments] = useState<NonNullable<LongLinkMetadata['environments']>>([]);
-    const [isInspecting, setIsInspecting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const submitting = useRef(false);
     const schema = createSolutionFormSchema.superRefine((value, ctx) => {
         // Only validate the current step on advance; validate everything before creation.
@@ -65,8 +76,40 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         mode: 'onChange',
         shouldUnregister: false,
     });
+    const inspectImage = useMutation({
+        mutationFn: async (payload: CreateSolutionInput) => {
+            // Fetch image metadata before showing editable fields.
+            const query = new URLSearchParams({ image: payload.image });
+            return zLongLinkMetadata.parse(await api(`/api/v1/image?${query.toString()}`).json());
+        },
+        onMutate: (payload) => {
+            // Discard metadata and registered dynamic fields from the previous inspection.
+            setDeclaredEnvironments([]);
+            form.unregister('envs');
+            form.reset({ ...payload, description: '', envs: {} });
+        },
+        onSuccess: (metadata, payload) => {
+            setDeclaredEnvironments(metadata.environments ?? []);
+            form.reset({
+                ...payload,
+                description: metadata.description ?? '',
+                envs: Object.fromEntries((metadata.environments ?? []).map((env) => [env.name, ''])),
+            });
+            setStep('metadata');
+        },
+        onError: (error) => {
+            // Surface operational failures globally; domain failures stay with the field.
+            if (!isImageInputError(error)) {
+                toast({
+                    body: error.message,
+                    type: 'error',
+                });
+            }
+        },
+    });
+    const error = isImageInputError(inspectImage.error) ? inspectImage.error.message : null;
     const [image, name, envs] = useWatch({ control: form.control, name: ['image', 'name', 'envs'] });
-    const pending = form.formState.isSubmitting || isInspecting || createSolution.isPending;
+    const pending = form.formState.isSubmitting || inspectImage.isPending || createSolution.isPending;
     const hasImage = image.trim().length > 0;
     const hasName = name.trim().length > 0;
     const missingEnvs = declaredEnvironments.some((env) => env.required && (envs[env.name] ?? '').trim().length === 0);
@@ -79,7 +122,8 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         try {
             await form.handleSubmit(async (value) => {
                 if (step === 'image') {
-                    await handleInspectImage(value);
+                    // Await inspection while its mutation handles errors inline or by toast.
+                    await inspectImage.mutateAsync(value).catch(() => {});
                 } else if (step === 'metadata') {
                     setStep('envs');
                 } else {
@@ -96,56 +140,12 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         setStep('image');
         form.reset(defaultCreateSolutionValues);
         setDeclaredEnvironments([]);
-        setError(null);
-    }
-
-    /** Inspect the image and advance to the solution details step. */
-    async function handleInspectImage(payload: CreateSolutionInput) {
-        setError(null);
-        setIsInspecting(true);
-
-        // Discard metadata and registered dynamic fields from the previous inspection.
-        setDeclaredEnvironments([]);
-        form.unregister('envs');
-        form.reset({ ...payload, description: '', envs: {} });
-
-        // Fetch image metadata before showing editable fields.
-        try {
-            const query = new URLSearchParams({ image: payload.image });
-            const metadata = zLongLinkMetadata.parse(await api(`/api/v1/image?${query.toString()}`).json());
-
-            setDeclaredEnvironments(metadata.environments ?? []);
-            form.reset({
-                ...payload,
-                description: metadata.description ?? '',
-                envs: Object.fromEntries((metadata.environments ?? []).map((env) => [env.name, ''])),
-            });
-            setStep('metadata');
-        } catch (inspectError) {
-            // Keep image input and domain failures with the field; surface operational failures globally.
-            if (
-                inspectError instanceof ApiError &&
-                inspectError.status >= 400 &&
-                inspectError.status < 500 &&
-                inspectError.status !== 401 &&
-                inspectError.status !== 403 &&
-                inspectError.status !== 429
-            ) {
-                setError(inspectError.message);
-                return;
-            }
-            toast({
-                body: inspectError instanceof Error ? inspectError.message : 'Failed to inspect image',
-                type: 'error',
-            });
-        } finally {
-            setIsInspecting(false);
-        }
+        inspectImage.reset();
     }
 
     /** Create the solution after the image metadata has been reviewed. */
     async function handleCreateSolution(payload: CreateSolutionInput) {
-        setError(null);
+        inspectImage.reset();
 
         // Collect configured environment values, dropping empty fields.
         const envs: Record<string, string> = {};
@@ -326,10 +326,10 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                         <Button
                             form={formId}
                             type="submit"
-                            label={isInspecting ? 'Inspecting...' : 'Inspect image'}
+                            label={inspectImage.isPending ? 'Inspecting...' : 'Inspect image'}
                             variant="primary"
                             isDisabled={pending || !hasImage}
-                            isLoading={isInspecting}
+                            isLoading={inspectImage.isPending}
                         />
                     </Stack>
                 ) : step === 'metadata' ? (
@@ -340,7 +340,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             isDisabled={pending}
                             clickAction={() => {
                                 setStep('image');
-                                setError(null);
+                                inspectImage.reset();
                             }}
                         />
                         <Stack direction="horizontal" gap={2}>
@@ -367,7 +367,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                             isDisabled={pending}
                             clickAction={() => {
                                 setStep('metadata');
-                                setError(null);
+                                inspectImage.reset();
                             }}
                         />
                         <Stack direction="horizontal" gap={2}>

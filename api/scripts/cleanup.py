@@ -75,13 +75,14 @@ async def cleanup() -> None:
             secret_access_key,
         ) in result:
             organization = UUID(str(organization_id))
+            solution = UUID(str(solution_id)) if solution_id is not None else None
             managed_namespaces.add(organization.hex)
 
             # Group Solution credentials and the Organization bucket by storage registry.
             storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
             storage_solutions = storage_resources.setdefault(storage_key, set())
-            if solution_id is not None:
-                storage_solutions.add(UUID(str(solution_id)))
+            if solution is not None:
+                storage_solutions.add(solution)
 
             # Group Solution runtime identities and the Organization database by database registry.
             sslmode = database_sslmode if isinstance(database_sslmode, DatabaseSSLMode) else DatabaseSSLMode(str(database_sslmode))
@@ -94,8 +95,8 @@ async def cleanup() -> None:
                 organization,
             )
             database_solutions = database_resources.setdefault(database_key, set())
-            if solution_id is not None:
-                database_solutions.add(UUID(str(solution_id)))
+            if solution is not None:
+                database_solutions.add(solution)
 
     # Stop all managed workloads before revoking the credentials they can consume.
     deleting_namespaces: dict[str, Namespace] = {}

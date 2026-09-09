@@ -108,7 +108,7 @@ export const stoneIconRegistry = Object.fromEntries(
     ])
 ) as IconRegistry;
 
-const iconComponents: Record<string, LucideIcon> = {
+export const iconComponents: Record<string, LucideIcon> = {
     activity: Activity,
     'arrow-right': ArrowRight,
     banknote: Banknote,
@@ -144,9 +144,4 @@ const iconComponents: Record<string, LucideIcon> = {
 /** Renders a registered Lucide icon at the requested Astryx size. */
 export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps<typeof AstryxIcon>['size'] }) {
     return <AstryxIcon icon={stoneIconComponents[icon]} size={size} />;
-}
-
-/** Resolves supported solution icon names to Lucide components. */
-export function getIconComponent(name: string): LucideIcon | undefined {
-    return iconComponents[name];
 }

@@ -42,11 +42,6 @@ function isMenuItem(node: ReactNode): node is ReactElement<MenuMarkerProps> {
     return isValidElement(node) && node.type === MenuItem;
 }
 
-/** Returns whether a node groups nested menu items. */
-function isMenuSubSection(node: ReactNode): node is ReactElement<MenuMarkerProps> {
-    return isValidElement(node) && node.type === MenuSubSection;
-}
-
 /** Renders section navigation beside the selected item's content. */
 export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] }) {
     const { hash } = useLocation();
@@ -58,7 +53,7 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                     return [{ item: child, kind: 'item' as const }];
                 }
 
-                if (isMenuSubSection(child)) {
+                if (isValidElement<MenuMarkerProps>(child) && child.type === MenuSubSection) {
                     return [
                         {
                             items: Children.toArray(child.props.children).filter(isMenuItem),
