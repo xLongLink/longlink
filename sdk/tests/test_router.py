@@ -50,7 +50,7 @@ def test_solution_route_overrides_frontend_fallback() -> None:
     client = TestClient(app)
 
     # Act
-    response = client.get("/settings")
+    response = client.get("/settings", headers={"accept": "text/html"})
 
     # Assert
     assert response.status_code == 200

@@ -32,6 +32,7 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
         second_row = await session.get(Operation, second_operation.id)
         assert first_row is not None
         assert second_row is not None
+        first_row.created_at = second_row.created_at - timedelta(days=1)
         first_row.finished_at = utcnow() - timedelta(days=31)
         first_row.logs = ["expired"]
         second_row.finished_at = utcnow() - timedelta(days=29)
@@ -49,7 +50,7 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
     # Assert
     assert cleared == 1
     assert len(page) == 1
-    assert page[0].id in {first_operation.id, second_operation.id}
+    assert page[0].id == second_operation.id
     assert total == 2
     assert first_row is not None
     assert first_row.logs == []
@@ -424,4 +425,6 @@ async def test_operations_service_coalesces_claimed_work() -> None:
     async with session_scope() as session:
         released = await operations.release(session, claimed.id)
         await session.commit()
-        assert released is not None and released.status == OperationStatus.scheduled
+        assert released is not None
+        assert released.status == OperationStatus.scheduled
+        assert released.lease_expires_at is None

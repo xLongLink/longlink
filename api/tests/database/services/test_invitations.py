@@ -59,17 +59,21 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
+        invitation_id = invitation.id
         refreshed_at = datetime(2026, 8, 24, tzinfo=UTC)
         monkeypatch.setattr(invitations, "utcnow", lambda: refreshed_at)
 
         # Act
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.admin)
         await session.commit()
+
+    # Read committed replacement values independently of the original identity map.
+    async with session_scope() as session:
         replacement = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
 
     # Assert
     assert replacement is not None
-    assert replacement.id == invitation.id
+    assert replacement.id == invitation_id
     assert replacement.role == OrganizationRoles.admin
     assert replacement.created_at == refreshed_at
 
@@ -186,6 +190,12 @@ async def test_accept_restores_deleted_membership_with_invited_role(users: tuple
         changed_organization_ids = await invitations.accept(session, invitee)
         await session.commit()
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        invitation = await session.scalar(
+            select(OrganizationInvitation).where(
+                OrganizationInvitation.organization_id == organization.id,
+                OrganizationInvitation.email == invitee.email,
+            )
+        )
 
     # Assert
     assert changed_organization_ids == {organization.id}
@@ -193,6 +203,7 @@ async def test_accept_restores_deleted_membership_with_invited_role(users: tuple
     assert membership.role == OrganizationRoles.admin
     assert membership.deleted_at is None
     assert membership.deleted_id is None
+    assert invitation is None
 
 
 async def test_accept_preserves_active_membership_role(users: tuple[User, User, User]) -> None:

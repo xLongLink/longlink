@@ -40,9 +40,10 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 ) -> None:
     """Retain a tombstone when Kubernetes deletion fails before provider cleanup."""
 
-    # Queue deletion for a Solution with real persisted infrastructure assignments.
+    # Arrange
     owner = users[0]
     organization, solution = await create_deleted_solution(owner)
+    provider_attempts: list[tuple[object, ...]] = []
 
     # Complete the known Organization and Solution creation operations before deletion.
     for kind, target_id in (
@@ -74,20 +75,23 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    def unexpected_provider(*_args: object) -> object:
-        """Fail if provider cleanup runs before Kubernetes deletion completes."""
+    def unexpected_provider(*args: object) -> object:
+        """Record and reject provider construction before Kubernetes deletion completes."""
 
+        provider_attempts.append(args)
         raise AssertionError("provider cleanup ran before Kubernetes deletion completed")
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
     monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
 
-    # Execute the real worker transition around the failing deletion handler.
+    # Act
     failed = await execute(claimed)
 
-    # The failed operation retains its tombstone and never reaches provider cleanup.
+    # Assert
+    assert provider_attempts == []
     assert failed.status == OperationStatus.failed
+    assert failed.failed == "RuntimeError: Kubernetes workload deletion failed"
     async with session_scope() as session:
         retained = await session.get(Solution, solution.id)
     assert retained is not None

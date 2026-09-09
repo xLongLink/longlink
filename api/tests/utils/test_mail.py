@@ -171,8 +171,9 @@ async def test_password_reset_email_keeps_credential_in_url_fragment(
     assert captured_mail == [("user@example.com", "Reset your LongLink password", f"Reset your password:\n\n{reset_url}\n", "<p>Reset</p>")]
 
 
-@pytest.mark.usefixtures("captured_mail")
-async def test_organization_invitation_email_prefills_the_recipient(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_organization_invitation_email_prefills_the_recipient(
+    monkeypatch: pytest.MonkeyPatch, captured_mail: list[tuple[str, str, str, str | None]]
+) -> None:
     """Build invitation links from the recipient address and membership role."""
 
     # Arrange
@@ -201,3 +202,10 @@ async def test_organization_invitation_email_prefills_the_recipient(monkeypatch:
             },
         )
     ]
+    assert len(captured_mail) == 1
+    recipient, subject, text, html = captured_mail[0]
+    assert recipient == "user+team@example.com"
+    assert subject == "Invitation to join Engineering on LongLink"
+    assert html == "<p>Invitation</p>"
+    assert "https://longlink.dev/auth/register?email=user%2Bteam%40example.com" in text
+    assert "Role: maintain\n" in text

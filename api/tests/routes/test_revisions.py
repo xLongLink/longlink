@@ -3,7 +3,7 @@ import asyncio
 from uuid import uuid4
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import create_solution, create_organization
+from factories import claim_operation, create_solution, complete_operation, create_organization
 from sqlalchemy import text, select
 from sqlalchemy.exc import IntegrityError
 from src.models.types import Image
@@ -21,6 +21,7 @@ async def test_update_history_and_explicit_rollback(
 ) -> None:
     """Authorize revision commands, encrypt snapshots, and retain history across rollback."""
 
+    # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
     other = await create_solution(organization, name="other")
@@ -36,6 +37,8 @@ async def test_update_history_and_explicit_rollback(
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}"
     payload = {"image": "ghcr.io/longlink/dashboard:latest", "envs": {"KEY": "revision-secret"}}
+
+    # Act and assert
     assert (await clients[1].put(url, json=payload)).status_code == 403
     assert (await clients[0].put(url, json={**payload, "envs": {"LONGLINK_ENV": "bad"}})).status_code == 422
     assert (await clients[0].put(url, json=payload)).status_code == 404
@@ -53,22 +56,57 @@ async def test_update_history_and_explicit_rollback(
     assert (await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")).status_code == 404
     assert (await clients[0].post(f"{url}/revisions/{initial_id}/rollback")).status_code == 409
 
-    # A successfully deployed snapshot is eligible without contacting the registry again.
+    # Arrange: Mark setup deployments complete so operation completion does not requeue them.
     async with session_scope() as session:
         initial = await session.get(Revision, initial_id)
         assert initial is not None
         initial.deployed_at = utcnow()
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        updated_id = current.desired_revision_id
+        current.deployed_revision_id = updated_id
+        other_current = await session.get(Solution, other.id)
+        assert other_current is not None
+        other_current.deployed_revision_id = other.desired_revision_id
         await session.commit()
         encrypted = await session.execute(text("SELECT envs FROM revisions"))
         assert "revision-secret" not in str(encrypted.all())
-    assert (await clients[0].post(f"{url}/revisions/{initial_id}/rollback")).status_code == 204
+
+    original_operation_id = None
+    for kind, target_id in (
+        (OperationKind.organization_create, organization.id),
+        (OperationKind.solution_deploy, initial_id),
+        (OperationKind.solution_deploy, other.desired_revision_id),
+        (OperationKind.solution_deploy, updated_id),
+    ):
+        setup_operation = await claim_operation()
+        assert setup_operation is not None
+        assert (setup_operation.kind, setup_operation.target_id) == (kind, target_id)
+        if target_id == initial_id:
+            original_operation_id = setup_operation.id
+        assert await complete_operation(setup_operation.id) is not None
+    assert original_operation_id is not None
+
+    # Act
+    response = await clients[0].post(f"{url}/revisions/{initial_id}/rollback")
+
+    # Assert
+    assert response.status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None and current.desired_revision_id == initial_id
         operation = await session.scalar(
-            select(Operation).where(col(Operation.kind) == OperationKind.solution_deploy, col(Operation.target_id) == initial_id)
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.solution_deploy,
+                col(Operation.target_id) == initial_id,
+                col(Operation.finished_at).is_(None),
+            )
         )
-        assert operation is not None and operation.target_id == initial_id
+        assert operation is not None
+        assert operation.id != original_operation_id
+        assert operation.kind == OperationKind.solution_deploy
+        assert operation.target_id == initial_id
+        assert operation.finished_at is None
     assert len((await clients[0].get(f"{url}/revisions")).json()) == 2
 
 
@@ -258,6 +296,7 @@ async def test_simultaneous_source_updates_create_only_one_revision(
 ) -> None:
     """Serialize competing source updates on SQLite, including their preserved values."""
 
+    # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization, secrets={"KEEP": "private-value"})
     barrier = asyncio.Barrier(2)
@@ -270,14 +309,28 @@ async def test_simultaneous_source_updates_create_only_one_revision(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
     url = f"/api/v1/solutions/{solution.id}/update"
+
+    # Act
     responses = await asyncio.gather(
         clients[0].post(url, json={"envs": {"LEFT": "left"}}),
         clients[0].post(url, json={"envs": {"RIGHT": "right"}}),
     )
+
+    # Assert
     assert sorted(response.status_code for response in responses) == [204, 409]
-    history = (await clients[0].get(f"/api/v1/solutions/{solution.id}/revisions")).json()
+    winning_patch = {"LEFT": "left"} if responses[0].status_code == 204 else {"RIGHT": "right"}
+    expected_envs = {"KEEP": "private-value", **winning_patch}
+    history_response = await clients[0].get(f"/api/v1/solutions/{solution.id}/revisions")
+    assert history_response.status_code == 200
+    history = history_response.json()
     assert len(history) == 2
-    assert "KEEP" in history[0]["configured_envs"] and len(history[0]["configured_envs"]) == 2
+    assert history[0]["configured_envs"] == sorted(expected_envs)
+
+    # Verify the successful request's complete snapshot was persisted.
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        assert current.desired_revision.envs == expected_envs
 
 
 @pytest.mark.integration

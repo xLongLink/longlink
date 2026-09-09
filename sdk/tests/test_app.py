@@ -205,12 +205,12 @@ def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -
 def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> None:
     """Validate SDK XML views against the bundled schema before registering routes."""
 
-    # Create a valid view alongside an invalid catalog entry.
+    # Arrange: Discover the valid view before the invalid catalog entry.
     (solution_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
-    (solution_source / "views" / "broken.xml").write_text("<unknown />", encoding="utf-8")
+    (solution_source / "views" / "z-broken.xml").write_text("<unknown />", encoding="utf-8")
     app = FastAPI()
 
-    # Reject the complete catalog before registering valid view endpoints.
+    # Act
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink(app)
 

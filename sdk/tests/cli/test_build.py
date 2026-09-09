@@ -1,3 +1,4 @@
+import os
 import click
 import pytest
 import subprocess
@@ -335,24 +336,15 @@ def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path,
     assert build_context.joinpath("linked-envs.py").is_symlink()
     assert build_context.joinpath("linked-envs.py").readlink() == Path("src/envs.py")
     assert not build_context.joinpath("dev.db").exists()
-    assert not build_context.joinpath("linked-database").exists()
-    assert not build_context.joinpath("linked-database").is_symlink()
-    assert not build_context.joinpath("absolute-envs.py").exists()
-    assert not build_context.joinpath("absolute-envs.py").is_symlink()
-    assert not build_context.joinpath("root-link").exists()
-    assert not build_context.joinpath("root-link").is_symlink()
-    assert not build_context.joinpath("cycle-a").exists()
-    assert not build_context.joinpath("cycle-a").is_symlink()
-    assert not build_context.joinpath("cycle-b").exists()
-    assert not build_context.joinpath("cycle-b").is_symlink()
-    assert not build_context.joinpath("broken-link").exists()
-    assert not build_context.joinpath("broken-link").is_symlink()
-    assert not build_context.joinpath("src", "parent-link").exists()
-    assert not build_context.joinpath("src", "parent-link").is_symlink()
-    assert not build_context.joinpath("relocated-envs.py").exists()
-    assert not build_context.joinpath("relocated-envs.py").is_symlink()
-    assert not build_context.joinpath("linked-secret.txt").exists()
-    assert not build_context.joinpath("linked-secret.txt").is_symlink()
+    assert not os.path.lexists(build_context / "linked-database")
+    assert not os.path.lexists(build_context / "absolute-envs.py")
+    assert not os.path.lexists(build_context / "root-link")
+    assert not os.path.lexists(build_context / "cycle-a")
+    assert not os.path.lexists(build_context / "cycle-b")
+    assert not os.path.lexists(build_context / "broken-link")
+    assert not os.path.lexists(build_context / "src" / "parent-link")
+    assert not os.path.lexists(build_context / "relocated-envs.py")
+    assert not os.path.lexists(build_context / "linked-secret.txt")
 
 
 def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build_project: Path) -> None:

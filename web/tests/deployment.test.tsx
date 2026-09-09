@@ -141,16 +141,24 @@ describe('Solution source update dialog', () => {
     });
 
     it('submits the reviewed revision for a source update and shows stale review errors', async () => {
+        // Arrange
+        const reviewedRevisionId = '00000000-0000-4000-8000-000000000099';
         const requests: string[] = [];
         const submissions: unknown[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
             requests.push(`${request.method} ${new URL(request.url).pathname}`);
             if (request.method === 'GET')
-                return Response.json({ ...candidate, metadata: { ...candidate.metadata, environments: [] } });
+                return Response.json({
+                    ...candidate,
+                    revision_id: reviewedRevisionId,
+                    metadata: { ...candidate.metadata, environments: [] },
+                });
             submissions.push(await request.json());
             return Response.json({ detail: 'Desired revision changed since review' }, { status: 409 });
         });
+
+        // Act
         await render();
         await act(async () => button('Check for updates').click());
         await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
@@ -160,7 +168,9 @@ describe('Solution source update dialog', () => {
         await act(async () =>
             vi.waitFor(() => expect(document.body.textContent).toContain('Desired revision changed since review'))
         );
-        expect(submissions).toEqual([{ envs: {}, expected_revision_id: revisionId }]);
+
+        // Assert
+        expect(submissions).toEqual([{ envs: {}, expected_revision_id: reviewedRevisionId }]);
         expect(button('Check for updates').disabled).toBe(false);
         expect(requests).toEqual([
             `GET /api/v1/solutions/${solution.id}/update`,

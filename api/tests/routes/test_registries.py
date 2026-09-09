@@ -183,8 +183,8 @@ async def test_registry_list_returns_ordered_page_and_total(
     """Return an ordered registry page without credentials."""
 
     # Arrange
-    alpha_response = await clients[0].post(f"/api/v1/{path}", json=payload | {"name": "Alpha Registry"})
     beta_response = await clients[0].post(f"/api/v1/{path}", json=payload | {"name": "Beta Registry"})
+    alpha_response = await clients[0].post(f"/api/v1/{path}", json=payload | {"name": "Alpha Registry"})
     assert alpha_response.status_code == create_status
     assert beta_response.status_code == create_status
     beta_id = beta_response.json()["id"]
