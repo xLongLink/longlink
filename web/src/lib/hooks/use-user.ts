@@ -21,12 +21,7 @@ export function useUpdateUser() {
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
-    const {
-        data: user,
-        error,
-        isLoading,
-        refetch,
-    } = useQuery({
+    return useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
         queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
@@ -34,13 +29,6 @@ export function useCurrentUser() {
         refetchOnWindowFocus: true,
         retry: false,
     });
-
-    return {
-        user,
-        isLoading,
-        error,
-        refetch,
-    };
 }
 
 /** Reads the user guaranteed by the authenticated route boundary. */
@@ -55,21 +43,11 @@ export function useAuthenticatedUser() {
 
 /** Reads organization memberships for the authenticated user. */
 export function useUserOrganizations() {
-    const {
-        data: memberships,
-        error: organizationsError,
-        isLoading: isOrganizationsLoading,
-    } = useQuery({
+    return useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: async ({ signal }) =>
             zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
     });
-
-    return {
-        memberships: memberships ?? [],
-        isOrganizationsLoading,
-        organizationsError,
-    };
 }
 
 /** Provides an action that ends the current user session. */

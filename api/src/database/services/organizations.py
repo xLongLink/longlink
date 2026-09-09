@@ -296,10 +296,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
         deleted_at = max((value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None)
 
         # Tombstone recency must be reflected in the projected update time.
-        if deleted_at is not None:
-            updated_at = max(membership.user.updated_at, membership.updated_at, deleted_at)
-        else:
-            updated_at = max(membership.user.updated_at, membership.updated_at)
+        updated_at = max(value for value in (membership.user.updated_at, membership.updated_at, deleted_at) if value is not None)
 
         rows.append(
             Audit(

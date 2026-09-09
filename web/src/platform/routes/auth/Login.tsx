@@ -35,7 +35,7 @@ export default function Login() {
     const reportApiError = useApiError();
     const oauthError = searchParams.get('oauth_error') === '1';
     const oauthFailure = useRef<ApiError | null>(null);
-    const { user } = useCurrentUser();
+    const { data: user } = useCurrentUser();
     const { data: oauthAvailability } = useQuery({
         queryKey: ['api', '/api/v1/auth/oauth'],
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),

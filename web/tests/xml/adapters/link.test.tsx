@@ -13,15 +13,19 @@ describe('Link', () => {
     });
 
     it('drops unsafe expression-backed navigation targets and falls back to a safe href', () => {
+        // Arrange
         const context = createContext();
         context.scope.bindings = { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' };
         context.services.navigationBaseUrl = '/orgs/acme/solutions/tracker';
-        context.services.requestBaseUrl = '/orgs/acme/solutions/tracker';
+        context.services.requestBaseUrl = '/api/v1/solutions/tracker/proxy';
+
+        // Act
         const output = renderXmlToMarkup(
             parseXML('<Link to="${destination}" href="${fallback}">Document</Link>'),
             context
         );
 
-        expect(output).toContain('href="/orgs/acme/solutions/tracker/files/document.pdf"');
+        // Assert
+        expect(output).toContain('href="/api/v1/solutions/tracker/proxy/files/document.pdf"');
     });
 });

@@ -1,8 +1,11 @@
 import pytest
 from typing import Literal
+from pathlib import Path
 from pydantic import ValidationError
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
+from fsspec.implementations.dirfs import DirFileSystem
+from fsspec.implementations.local import LocalFileSystem
 
 PRODUCTION_SETTINGS = {
     "LONGLINK_IDENTITY_SECRET": "identity-secret",
@@ -56,33 +59,27 @@ def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.Monke
 def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
 
-    # Capture S3 configuration and the scoped filesystem path.
+    # Arrange
     captured: dict[str, object] = {}
-    backing_filesystem = object()
-    scoped_filesystem = object()
+    backing_filesystem = LocalFileSystem()
 
-    def fake_filesystem_factory(protocol: str, **kwargs: object) -> object:
+    def fake_filesystem_factory(protocol: str, **kwargs: object) -> LocalFileSystem:
         """Capture the backing filesystem configuration."""
 
         captured["protocol"] = protocol
         captured["kwargs"] = kwargs
         return backing_filesystem
 
-    def fake_dir_filesystem(path: str, fs: object) -> object:
-        """Capture the configured storage scope."""
-
-        captured["path"] = path
-        captured["filesystem"] = fs
-        return scoped_filesystem
-
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
-    monkeypatch.setattr(storage_base, "DirFileSystem", fake_dir_filesystem)
     configure_production_environment(monkeypatch, "acme", "solutions/dashboard/")
 
-    # Build production storage for a scoped Solution prefix.
-    assert storage_base.create_fs(Envs()) is scoped_filesystem
+    # Act
+    scoped_filesystem = storage_base.create_fs(Envs())
 
-    # Verify both path isolation and S3 connection settings.
+    # Assert
+    assert isinstance(scoped_filesystem, DirFileSystem)
+    assert scoped_filesystem.path == (Path.cwd() / "acme/solutions/dashboard").as_posix()
+    assert scoped_filesystem.fs is backing_filesystem
     assert captured == {
         "protocol": "s3",
         "kwargs": {
@@ -91,8 +88,6 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
             "secret": "secret@key",
             "client_kwargs": {"region_name": "ch-gva-2"},
         },
-        "path": "acme/solutions/dashboard",
-        "filesystem": backing_filesystem,
     }
 
 

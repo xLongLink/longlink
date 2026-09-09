@@ -28,7 +28,7 @@ import { useAuthenticatedUser, useUpdateUser, useUserOrganizations } from '@/lib
 export default function Settings() {
     const toast = useToast();
     const user = useAuthenticatedUser();
-    const { memberships, isOrganizationsLoading } = useUserOrganizations();
+    const { data: memberships = [], isLoading: isOrganizationsLoading } = useUserOrganizations();
     const updateUser = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const {

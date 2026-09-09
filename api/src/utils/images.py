@@ -199,4 +199,3 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             result.environments = ENVIRONMENTS_ADAPTER.validate_json(environments)
 
         return result
-    return None

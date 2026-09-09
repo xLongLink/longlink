@@ -51,11 +51,7 @@ function attribute(value: XsdRecord | undefined, name: string): string {
 }
 
 function text(value: XsdNode | undefined): string {
-    if (typeof value === 'string') {
-        return value.trim();
-    }
-
-    const entry = record(value)?.['#text'];
+    const entry = typeof value === 'string' ? value : record(value)?.['#text'];
     return typeof entry === 'string' ? entry.trim() : '';
 }
 

@@ -11,7 +11,7 @@ import { AuthenticatedUserContext, useCurrentUser } from '@/lib/hooks/use-user';
 
 /** Guards all nested Platform routes behind the shared authentication UI. */
 export default function AuthenticatedLayout() {
-    const { user, isLoading, error, refetch } = useCurrentUser();
+    const { data: user, isLoading, error, refetch } = useCurrentUser();
     const pageMetadata = <NoIndex title="LongLink" />;
 
     // Wait for profile loading before deciding access.

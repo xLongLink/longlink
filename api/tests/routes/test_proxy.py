@@ -122,11 +122,6 @@ async def test_solution_proxy_forwards_safe_content(
             # Emit one upstream chunk through the proxy response stream.
             yield b"proxied"
 
-        async def aclose(self) -> None:
-            """Close the fake response."""
-
-            captured["close_count"] = captured.get("close_count", 0) + 1
-
     class Gateway:
         """Capture the proxy route's gateway request."""
 

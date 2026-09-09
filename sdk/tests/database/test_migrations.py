@@ -126,7 +126,6 @@ def test_make_migrations_creates_revisions_only_for_schema_operations(
 
     # Arrange
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(database_migrations, "load_solution_models", lambda: None)
     original_directives = list(directives)
 
     def fake_revision(

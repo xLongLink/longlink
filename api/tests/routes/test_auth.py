@@ -209,6 +209,7 @@ async def test_malformed_browser_session_is_rejected_before_database_lookup(
     assert response.status_code == 401
     assert response.json() == {"detail": "Not authenticated"}
 
+
 async def test_registration_setup_rejects_missing_verification_cookie(client: AsyncClient) -> None:
     """Require verified browser registration state before exposing setup details."""
 
@@ -482,6 +483,7 @@ async def test_registration_completion_rejects_duplicate_account(
     assert repeat_response.json() == {"detail": "An account with this email already exists. Sign in or reset your password to continue."}
     assert repeat_client.cookies.get("longlink_auth") is None
 
+
 async def test_password_reset_setup_rejects_missing_reset_cookie(client: AsyncClient) -> None:
     """Reject reset setup without browser-only reset proof."""
 
@@ -561,13 +563,21 @@ async def test_password_reset_verify_sets_secure_browser_only_cookie_in_producti
 
 
 async def test_forgot_and_reset_password(
-    client: AsyncClient, users: tuple[User, User, User], captured_mail: list[tuple[str, str, str, str | None]]
+    client: AsyncClient,
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
 ) -> None:
     """Reset a local password with the emailed one-time recovery token."""
 
+    # Arrange
     user = users[0]
+    authenticated_client = clients[0]
+    existing_session = await authenticated_client.get("/api/v1/me")
+    assert existing_session.status_code == 200
+    assert existing_session.json()["id"] == str(user.id)
 
-    # Missing and existing accounts receive the same response, while only the account gets mail.
+    # Act: Missing and existing accounts receive the same response, while only the account gets mail.
     missing_response = await client.post("/api/v1/auth/forgot-password", json={"email": "missing@example.com"})
     forgot_response = await client.post(
         "/api/v1/auth/forgot-password",
@@ -592,7 +602,9 @@ async def test_forgot_and_reset_password(
         headers={"Origin": env.PUBLIC_URL},
     )
     reused_token_response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
-    revoked_session = await client.get("/api/v1/me")
+    revoked_session = await authenticated_client.get("/api/v1/me")
+
+    # Assert
     assert verify_response.status_code == 204
     assert setup_response.status_code == 204
     assert setup_response.headers["cache-control"] == "no-store"
@@ -605,6 +617,7 @@ async def test_forgot_and_reset_password(
     assert reused_token_response.status_code == 400
     assert reused_token_response.json() == {"detail": "This password reset link is invalid or has expired. Please request a new one."}
     assert revoked_session.status_code == 401
+    assert revoked_session.json() == {"detail": "Not authenticated"}
 
     # Prove only the new password can create a fresh session.
     old_login = await client.post(
