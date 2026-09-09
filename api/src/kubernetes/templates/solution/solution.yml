@@ -10,6 +10,7 @@ metadata:
         longlink.io/component: migration
 spec:
     backoffLimit: 0
+    suspend: false
     template:
         metadata:
             labels:
@@ -43,7 +44,7 @@ spec:
                           memory: 256Mi
                   envFrom:
                       - secretRef:
-                            name: $solution_id
+                            name: $secret_id
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:
@@ -97,15 +98,28 @@ spec:
                           cpu: 500m
                           ephemeral-storage: 512Mi
                           memory: 256Mi
-                  readinessProbe:
+                  startupProbe:
                       httpGet:
                           path: /health
                           port: 8000
                       periodSeconds: 5
+                      failureThreshold: 60
+                  livenessProbe:
+                      httpGet:
+                          path: /health
+                          port: 8000
+                      periodSeconds: 10
+                      failureThreshold: 3
+                  readinessProbe:
+                      httpGet:
+                          path: /ready
+                          port: 8000
+                      timeoutSeconds: 5
+                      periodSeconds: 5
                       failureThreshold: 3
                   envFrom:
                       - secretRef:
-                            name: $solution_id
+                            name: $secret_id
                   securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:

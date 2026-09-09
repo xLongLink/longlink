@@ -3,6 +3,7 @@ from sqlalchemy import select
 from dataclasses import dataclass
 from collections.abc import Sequence
 from src.models.types import Image, DatabaseSSLMode
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions, operations, organizations
@@ -160,9 +161,10 @@ async def create_solution(
             session,
             organization.id,
             name,
-            image=resolved_image,
-            secrets={} if secrets is None else secrets,
+            secrets={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
             user_id=organization.created_id,
+            metadata=LongLinkMetadata(image=resolved_image),
         )
+        solution.secrets = {name: value for name, value in (secrets or {}).items() if name.startswith("LONGLINK_")}
         await session.commit()
         return solution

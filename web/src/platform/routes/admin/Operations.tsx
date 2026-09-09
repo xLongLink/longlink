@@ -25,14 +25,14 @@ const statusLabels: Record<OperationResponse['status'], string> = {
 };
 const kindLabels: Record<OperationResponse['kind'], string> = {
     'compute.create': 'Compute creation',
-    'solution.create': 'Solution creation',
+    'solution.deploy': 'Solution deployment',
     'solution.delete': 'Solution deletion',
     'organization.create': 'Organization creation',
     'organization.delete': 'Organization deletion',
 };
 const resourceLabels: Record<OperationResponse['kind'], string> = {
     'compute.create': 'Compute',
-    'solution.create': 'Solution',
+    'solution.deploy': 'Solution',
     'solution.delete': 'Solution',
     'organization.create': 'Organization',
     'organization.delete': 'Organization',

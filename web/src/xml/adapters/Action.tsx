@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { renderNode } from '../core/node';
+import { useApiError } from '@/lib/errors';
 import { ACTION_METHODS } from '../constants';
 import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
@@ -46,13 +47,12 @@ export function Action({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
+    const reportError = useApiError();
     const plan = createActionPlan(props, nodes);
 
     /** Executes the declared effects and presents unexpected failures. */
     function handleAction(): void {
-        void executeAction(plan, ctx, services, closeDialog, toast).catch((error: unknown) => {
-            toast({ body: error instanceof Error ? error.message : 'Action failed', type: 'error' });
-        });
+        void executeAction(plan, ctx, services, closeDialog, toast).catch(reportError);
     }
 
     return (

@@ -37,6 +37,7 @@ This section is a navigation aid, not a specification. The code is the source of
 - Platform metadata is separate from Solution business data. Organizations receive a Kubernetes namespace, PostgreSQL database, and storage bucket; Solutions receive scoped schemas, credentials, and storage prefixes within them.
 - The Platform projects user/membership data into an organization-shared schema for Solutions to read. This is one-way synchronization, not a cross-database transaction. Platform, shared-schema, and Solution migrations have distinct owners.
 - API OpenAPI definitions generate Web TypeScript/Zod contracts. SDK XSD schemas define and document XML views, while Web implements their browser behavior. Contract changes must stay aligned across packages; generated files are not the editing source.
+- API and SDK defaults supply safe error messages and HTTP statuses. The shared Web root reports API failures centrally; local UI owns validation, success behavior, and recovery rather than API error notifications.
 - XML is a restricted declarative UI language, not arbitrary HTML or JavaScript. Frontend access controls do not replace backend authorization, and SDK identity context does not independently enforce all access rules.
 
 ### Source Entry Points

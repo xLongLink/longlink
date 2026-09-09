@@ -163,13 +163,15 @@ export type EnvironmentMetadata = {
 };
 
 /**
- * HTTPValidationError
+ * ErrorResponse
+ *
+ * Describe the public error contract without internal diagnostics.
  */
-export type HttpValidationError = {
+export type ErrorResponse = {
     /**
      * Detail
      */
-    detail?: Array<ValidationError>;
+    detail: string;
 };
 
 /**
@@ -178,6 +180,10 @@ export type HttpValidationError = {
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export type LongLinkMetadata = {
+    /**
+     * Image
+     */
+    image: string;
     /**
      * Description
      */
@@ -209,7 +215,7 @@ export type OAuthAvailability = {
  *
  * Supported registered operation handlers.
  */
-export type OperationKind = 'compute.create' | 'solution.create' | 'solution.delete' | 'organization.create' | 'organization.delete';
+export type OperationKind = 'compute.create' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
  * OperationResource
@@ -402,6 +408,14 @@ export type OrganizationSolutionSummary = {
      */
     description?: string | null;
     status: Status;
+    /**
+     * Deployment Pending
+     */
+    deployment_pending: boolean;
+    /**
+     * Desired Revision Id
+     */
+    desired_revision_id: string | null;
 };
 
 /**
@@ -600,29 +614,87 @@ export type RegistrationComplete = {
 };
 
 /**
- * SolutionCreate
+ * RevisionResponse
  *
- * Validate solution creation payloads.
+ * Expose release history without encrypted environment values.
  */
-export type SolutionCreate = {
+export type RevisionResponse = {
     /**
-     * Name
+     * Id
      */
-    name: string;
+    id: string;
     /**
      * Image
      */
     image: string;
     /**
-     * Description
+     * Source
      */
-    description?: string | null;
+    source: string;
+    /**
+     * Configured Envs
+     */
+    configured_envs: Array<string>;
+    /**
+     * Failed
+     */
+    failed: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Created Id
+     */
+    created_id: string | null;
+    /**
+     * Deployed At
+     */
+    deployed_at: string | null;
+};
+
+/**
+ * SolutionCreate
+ *
+ * Validate solution creation metadata and release configuration.
+ */
+export type SolutionCreate = {
     /**
      * Envs
      */
     envs?: {
         [key: string]: string;
     };
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description?: string | null;
+};
+
+/**
+ * SolutionPatch
+ *
+ * Preserve omitted values and remove variables explicitly set to null.
+ */
+export type SolutionPatch = {
+    /**
+     * Envs
+     */
+    envs?: {
+        [key: string]: string | null;
+    };
+    /**
+     * Expected Revision Id
+     */
+    expected_revision_id?: string | null;
 };
 
 /**
@@ -652,11 +724,80 @@ export type SolutionResponse = {
      * Image Desired
      */
     image_desired: string;
+    /**
+     * Desired Revision Id
+     */
+    desired_revision_id: string | null;
+    /**
+     * Deployed Revision Id
+     */
+    deployed_revision_id: string | null;
     status: Status;
+    /**
+     * Deployment Pending
+     */
+    deployment_pending: boolean;
     /**
      * Created At
      */
     created_at: string;
+};
+
+/**
+ * SolutionUpdate
+ *
+ * Deploy a submitted image source with an environment patch.
+ */
+export type SolutionUpdate = {
+    /**
+     * Envs
+     */
+    envs?: {
+        [key: string]: string | null;
+    };
+    /**
+     * Expected Revision Id
+     */
+    expected_revision_id?: string | null;
+    /**
+     * Image
+     */
+    image: string;
+};
+
+/**
+ * SolutionUpdateCheck
+ *
+ * Expose a candidate and configured names, never environment values.
+ */
+export type SolutionUpdateCheck = {
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Image
+     */
+    image: string;
+    /**
+     * Available
+     */
+    available: boolean;
+    /**
+     * Revision Id
+     */
+    revision_id: string;
+    /**
+     * Current Image
+     *
+     * Immutable image of the desired revision used for this update check.
+     */
+    current_image: string;
+    /**
+     * Configured Envs
+     */
+    configured_envs: Array<string>;
+    metadata: LongLinkMetadata;
 };
 
 /**
@@ -800,40 +941,25 @@ export type UserUpdate = {
     avatar?: string | null;
 };
 
-/**
- * ValidationError
- */
-export type ValidationError = {
-    /**
-     * Location
-     */
-    loc: Array<string | number>;
-    /**
-     * Message
-     */
-    msg: string;
-    /**
-     * Error Type
-     */
-    type: string;
-    /**
-     * Input
-     */
-    input?: unknown;
-    /**
-     * Context
-     */
-    ctx?: {
-        [key: string]: unknown;
-    };
-};
-
 export type GetOauthAvailabilityApiV1AuthOauthGetData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/v1/auth/oauth';
 };
+
+export type GetOauthAvailabilityApiV1AuthOauthGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type GetOauthAvailabilityApiV1AuthOauthGetError = GetOauthAvailabilityApiV1AuthOauthGetErrors[keyof GetOauthAvailabilityApiV1AuthOauthGetErrors];
 
 export type GetOauthAvailabilityApiV1AuthOauthGetResponses = {
     /**
@@ -853,9 +979,13 @@ export type PasswordLoginApiV1AuthPasswordLoginPostData = {
 
 export type PasswordLoginApiV1AuthPasswordLoginPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type PasswordLoginApiV1AuthPasswordLoginPostError = PasswordLoginApiV1AuthPasswordLoginPostErrors[keyof PasswordLoginApiV1AuthPasswordLoginPostErrors];
@@ -878,9 +1008,13 @@ export type RequestPasswordResetApiV1AuthForgotPasswordPostData = {
 
 export type RequestPasswordResetApiV1AuthForgotPasswordPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type RequestPasswordResetApiV1AuthForgotPasswordPostError = RequestPasswordResetApiV1AuthForgotPasswordPostErrors[keyof RequestPasswordResetApiV1AuthForgotPasswordPostErrors];
@@ -901,9 +1035,13 @@ export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostData = {
 
 export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostError = VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors[keyof VerifyPasswordResetTokenApiV1AuthResetPasswordVerifyPostErrors];
@@ -926,9 +1064,13 @@ export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetData = {
 
 export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetPasswordResetSetupApiV1AuthResetPasswordSetupGetError = GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors[keyof GetPasswordResetSetupApiV1AuthResetPasswordSetupGetErrors];
@@ -951,9 +1093,13 @@ export type ResetPasswordApiV1AuthResetPasswordPostData = {
 
 export type ResetPasswordApiV1AuthResetPasswordPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ResetPasswordApiV1AuthResetPasswordPostError = ResetPasswordApiV1AuthResetPasswordPostErrors[keyof ResetPasswordApiV1AuthResetPasswordPostErrors];
@@ -976,9 +1122,13 @@ export type RequestRegistrationApiV1AuthRegisterPostData = {
 
 export type RequestRegistrationApiV1AuthRegisterPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type RequestRegistrationApiV1AuthRegisterPostError = RequestRegistrationApiV1AuthRegisterPostErrors[keyof RequestRegistrationApiV1AuthRegisterPostErrors];
@@ -999,9 +1149,13 @@ export type VerifyRegistrationTokenApiV1AuthVerifyPostData = {
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type VerifyRegistrationTokenApiV1AuthVerifyPostError = VerifyRegistrationTokenApiV1AuthVerifyPostErrors[keyof VerifyRegistrationTokenApiV1AuthVerifyPostErrors];
@@ -1024,9 +1178,13 @@ export type GetRegistrationSetupApiV1AuthRegisterSetupGetData = {
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetRegistrationSetupApiV1AuthRegisterSetupGetError = GetRegistrationSetupApiV1AuthRegisterSetupGetErrors[keyof GetRegistrationSetupApiV1AuthRegisterSetupGetErrors];
@@ -1049,9 +1207,13 @@ export type CompleteRegistrationApiV1AuthRegisterCompletePostData = {
 
 export type CompleteRegistrationApiV1AuthRegisterCompletePostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CompleteRegistrationApiV1AuthRegisterCompletePostError = CompleteRegistrationApiV1AuthRegisterCompletePostErrors[keyof CompleteRegistrationApiV1AuthRegisterCompletePostErrors];
@@ -1083,9 +1245,13 @@ export type ListSolutionsApiV1SolutionsGetData = {
 
 export type ListSolutionsApiV1SolutionsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListSolutionsApiV1SolutionsGetError = ListSolutionsApiV1SolutionsGetErrors[keyof ListSolutionsApiV1SolutionsGetErrors];
@@ -1113,9 +1279,13 @@ export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGet
 
 export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetError = GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors[keyof GetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetErrors];
@@ -1145,9 +1315,13 @@ export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostData = {
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostError = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostErrors];
@@ -1160,38 +1334,6 @@ export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses
 };
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses];
-
-export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}/logs';
-};
-
-export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetError = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors];
-
-export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
-    /**
-     * Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get
-     *
-     * Successful Response
-     */
-    200: Array<string>;
-};
-
-export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
 
 export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
     body?: never;
@@ -1207,9 +1349,13 @@ export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
 
 export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
@@ -1222,6 +1368,218 @@ export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
 };
 
 export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutData = {
+    body: SolutionUpdate;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}';
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutError = UpdateSolutionApiV1SolutionsSolutionIdPutErrors[keyof UpdateSolutionApiV1SolutionsSolutionIdPutErrors];
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type UpdateSolutionApiV1SolutionsSolutionIdPutResponse = UpdateSolutionApiV1SolutionsSolutionIdPutResponses[keyof UpdateSolutionApiV1SolutionsSolutionIdPutResponses];
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/update';
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetError = CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors[keyof CheckUpdateApiV1SolutionsSolutionIdUpdateGetErrors];
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: SolutionUpdateCheck;
+};
+
+export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponse = CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses[keyof CheckUpdateApiV1SolutionsSolutionIdUpdateGetResponses];
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostData = {
+    body: SolutionPatch;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/update';
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostError = ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors[keyof ApplyUpdateApiV1SolutionsSolutionIdUpdatePostErrors];
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses[keyof ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses];
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/revisions';
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetError = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors];
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses = {
+    /**
+     * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
+     *
+     * Successful Response
+     */
+    200: Array<RevisionResponse>;
+};
+
+export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses];
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+        /**
+         * Revision Id
+         */
+        revision_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/revisions/{revision_id}/rollback';
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostError = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors];
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses];
+
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}/logs';
+};
+
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetError = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetErrors];
+
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
+    /**
+     * Response Get Solution Logs Api V1 Solutions  Solution Id  Logs Get
+     *
+     * Successful Response
+     */
+    200: Array<string>;
+};
+
+export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;
@@ -1241,9 +1599,13 @@ export type ListComputeRegistriesApiV1ComputesGetData = {
 
 export type ListComputeRegistriesApiV1ComputesGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListComputeRegistriesApiV1ComputesGetError = ListComputeRegistriesApiV1ComputesGetErrors[keyof ListComputeRegistriesApiV1ComputesGetErrors];
@@ -1266,9 +1628,13 @@ export type CreateComputeRegistryApiV1ComputesPostData = {
 
 export type CreateComputeRegistryApiV1ComputesPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateComputeRegistryApiV1ComputesPostError = CreateComputeRegistryApiV1ComputesPostErrors[keyof CreateComputeRegistryApiV1ComputesPostErrors];
@@ -1296,9 +1662,13 @@ export type DeleteComputeRegistryApiV1ComputesRegistryIdDeleteData = {
 
 export type DeleteComputeRegistryApiV1ComputesRegistryIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type DeleteComputeRegistryApiV1ComputesRegistryIdDeleteError = DeleteComputeRegistryApiV1ComputesRegistryIdDeleteErrors[keyof DeleteComputeRegistryApiV1ComputesRegistryIdDeleteErrors];
@@ -1326,9 +1696,13 @@ export type GetComputeRegistryApiV1ComputesRegistryIdGetData = {
 
 export type GetComputeRegistryApiV1ComputesRegistryIdGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetComputeRegistryApiV1ComputesRegistryIdGetError = GetComputeRegistryApiV1ComputesRegistryIdGetErrors[keyof GetComputeRegistryApiV1ComputesRegistryIdGetErrors];
@@ -1360,9 +1734,13 @@ export type ListDatabaseRegistriesApiV1DatabasesGetData = {
 
 export type ListDatabaseRegistriesApiV1DatabasesGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListDatabaseRegistriesApiV1DatabasesGetError = ListDatabaseRegistriesApiV1DatabasesGetErrors[keyof ListDatabaseRegistriesApiV1DatabasesGetErrors];
@@ -1385,9 +1763,13 @@ export type CreateDatabaseRegistryApiV1DatabasesPostData = {
 
 export type CreateDatabaseRegistryApiV1DatabasesPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateDatabaseRegistryApiV1DatabasesPostError = CreateDatabaseRegistryApiV1DatabasesPostErrors[keyof CreateDatabaseRegistryApiV1DatabasesPostErrors];
@@ -1415,9 +1797,13 @@ export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteData = {
 
 export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteError = DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors[keyof DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors];
@@ -1445,9 +1831,13 @@ export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetData = {
 
 export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetError = GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors[keyof GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors];
@@ -1475,9 +1865,13 @@ export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetData = {
 
 export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetError = GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors[keyof GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors];
@@ -1500,6 +1894,19 @@ export type HealthzApiV1HealthzGetData = {
     url: '/api/v1/healthz';
 };
 
+export type HealthzApiV1HealthzGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type HealthzApiV1HealthzGetError = HealthzApiV1HealthzGetErrors[keyof HealthzApiV1HealthzGetErrors];
+
 export type HealthzApiV1HealthzGetResponses = {
     /**
      * Response Healthz Api V1 Healthz Get
@@ -1519,6 +1926,19 @@ export type ReadyzApiV1ReadyzGetData = {
     query?: never;
     url: '/api/v1/readyz';
 };
+
+export type ReadyzApiV1ReadyzGetErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type ReadyzApiV1ReadyzGetError = ReadyzApiV1ReadyzGetErrors[keyof ReadyzApiV1ReadyzGetErrors];
 
 export type ReadyzApiV1ReadyzGetResponses = {
     /**
@@ -1547,9 +1967,13 @@ export type InspectImageApiV1ImageGetData = {
 
 export type InspectImageApiV1ImageGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type InspectImageApiV1ImageGetError = InspectImageApiV1ImageGetErrors[keyof InspectImageApiV1ImageGetErrors];
@@ -1581,9 +2005,13 @@ export type ListOperationsApiV1OperationsGetData = {
 
 export type ListOperationsApiV1OperationsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListOperationsApiV1OperationsGetError = ListOperationsApiV1OperationsGetErrors[keyof ListOperationsApiV1OperationsGetErrors];
@@ -1611,9 +2039,13 @@ export type GetOperationLogsApiV1OperationsOperationIdLogsGetData = {
 
 export type GetOperationLogsApiV1OperationsOperationIdLogsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOperationLogsApiV1OperationsOperationIdLogsGetError = GetOperationLogsApiV1OperationsOperationIdLogsGetErrors[keyof GetOperationLogsApiV1OperationsOperationIdLogsGetErrors];
@@ -1647,9 +2079,13 @@ export type ListOrganizationsApiV1OrganizationsGetData = {
 
 export type ListOrganizationsApiV1OrganizationsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListOrganizationsApiV1OrganizationsGetError = ListOrganizationsApiV1OrganizationsGetErrors[keyof ListOrganizationsApiV1OrganizationsGetErrors];
@@ -1672,9 +2108,13 @@ export type CreateOrganizationApiV1OrganizationsPostData = {
 
 export type CreateOrganizationApiV1OrganizationsPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateOrganizationApiV1OrganizationsPostError = CreateOrganizationApiV1OrganizationsPostErrors[keyof CreateOrganizationApiV1OrganizationsPostErrors];
@@ -1702,9 +2142,13 @@ export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetData =
 
 export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetError = GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors[keyof GetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetErrors];
@@ -1732,9 +2176,13 @@ export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteData = {
 
 export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteError = DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteErrors[keyof DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteErrors];
@@ -1762,9 +2210,13 @@ export type GetOrganizationApiV1OrganizationsOrganizationIdGetData = {
 
 export type GetOrganizationApiV1OrganizationsOrganizationIdGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOrganizationApiV1OrganizationsOrganizationIdGetError = GetOrganizationApiV1OrganizationsOrganizationIdGetErrors[keyof GetOrganizationApiV1OrganizationsOrganizationIdGetErrors];
@@ -1792,9 +2244,13 @@ export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchData = {
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchError = UpdateOrganizationApiV1OrganizationsOrganizationIdPatchErrors[keyof UpdateOrganizationApiV1OrganizationsOrganizationIdPatchErrors];
@@ -1822,9 +2278,13 @@ export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabase
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetError = GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetErrors[keyof GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetErrors];
@@ -1854,9 +2314,13 @@ export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGe
 
 export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetError = GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors[keyof GetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetErrors];
@@ -1886,9 +2350,13 @@ export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitati
 
 export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostError = CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostErrors[keyof CreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostErrors];
@@ -1920,9 +2388,13 @@ export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitati
 
 export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteError = RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors[keyof RevokeOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsInvitationIdDeleteErrors];
@@ -1954,9 +2426,13 @@ export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMembe
 
 export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchError = UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchErrors[keyof UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchErrors];
@@ -1988,9 +2464,13 @@ export type ListStorageRegistriesApiV1StoragesGetData = {
 
 export type ListStorageRegistriesApiV1StoragesGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListStorageRegistriesApiV1StoragesGetError = ListStorageRegistriesApiV1StoragesGetErrors[keyof ListStorageRegistriesApiV1StoragesGetErrors];
@@ -2013,9 +2493,13 @@ export type CreateStorageRegistryApiV1StoragesPostData = {
 
 export type CreateStorageRegistryApiV1StoragesPostErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type CreateStorageRegistryApiV1StoragesPostError = CreateStorageRegistryApiV1StoragesPostErrors[keyof CreateStorageRegistryApiV1StoragesPostErrors];
@@ -2043,9 +2527,13 @@ export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteData = {
 
 export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteError = DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors[keyof DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors];
@@ -2073,9 +2561,13 @@ export type GetStorageRegistryApiV1StoragesRegistryIdGetData = {
 
 export type GetStorageRegistryApiV1StoragesRegistryIdGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetStorageRegistryApiV1StoragesRegistryIdGetError = GetStorageRegistryApiV1StoragesRegistryIdGetErrors[keyof GetStorageRegistryApiV1StoragesRegistryIdGetErrors];
@@ -2098,9 +2590,13 @@ export type GetMeApiV1MeGetData = {
 
 export type GetMeApiV1MeGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetMeApiV1MeGetError = GetMeApiV1MeGetErrors[keyof GetMeApiV1MeGetErrors];
@@ -2123,9 +2619,13 @@ export type PatchMeApiV1MePatchData = {
 
 export type PatchMeApiV1MePatchErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type PatchMeApiV1MePatchError = PatchMeApiV1MePatchErrors[keyof PatchMeApiV1MePatchErrors];
@@ -2148,9 +2648,13 @@ export type GetMyOrganizationsApiV1MeOrganizationsGetData = {
 
 export type GetMyOrganizationsApiV1MeOrganizationsGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type GetMyOrganizationsApiV1MeOrganizationsGetError = GetMyOrganizationsApiV1MeOrganizationsGetErrors[keyof GetMyOrganizationsApiV1MeOrganizationsGetErrors];
@@ -2184,9 +2688,13 @@ export type ListUsersApiV1UsersGetData = {
 
 export type ListUsersApiV1UsersGetErrors = {
     /**
-     * Validation Error
+     * Unprocessable Entity
      */
-    422: HttpValidationError;
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
 };
 
 export type ListUsersApiV1UsersGetError = ListUsersApiV1UsersGetErrors[keyof ListUsersApiV1UsersGetErrors];

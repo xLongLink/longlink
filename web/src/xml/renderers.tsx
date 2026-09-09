@@ -1,11 +1,12 @@
 import { subscribe } from 'valtio';
 import { renderNode } from './core/node';
+import { useApiError } from '@/lib/errors';
 import { isValtioProxy } from './core/state';
 import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { getSetupNodes, setupContext, XmlContext } from './core/context';
-import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, type ReactNode, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 /** Keeps XML rendering failures scoped to the XML surface. */
 class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, { error: Error | null }> {
@@ -38,6 +39,8 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
  * Renders a parsed XML tree with loading state while context initializes.
  */
 export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
+    const reportError = useApiError();
+    const reportSetupError = useEffectEvent(reportError);
     const setup = useMemo(() => {
         // Validate setup nodes before effects run.
         try {
@@ -54,6 +57,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     useEffect(() => {
         // Do not initialize an invalid document.
         if (setup.error) {
+            reportSetupError(setup.error);
             return;
         }
 
@@ -120,9 +124,12 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
                 initializedAst.current = ast;
                 setRenderVersion((current) => current + 1);
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 // Report setup failures only while mounted.
-                if (mounted) setSetupFailure({ ast, error });
+                if (!mounted) return;
+
+                setSetupFailure({ ast, error });
+                reportSetupError(error);
             });
 
         return () => {
@@ -136,11 +143,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
     // Show setup failures before rendering XML nodes.
     if (setup.error || setupError) {
-        const visibleError = setup.error ?? setupError;
-
-        return (
-            <Banner status="error" title={visibleError instanceof Error ? visibleError.message : 'XML setup failed'} />
-        );
+        return <Banner status="error" title="Unable to initialize this view" />;
     }
 
     // Wait for setup before rendering dependent nodes.

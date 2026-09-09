@@ -22,9 +22,13 @@ describe('Selector', () => {
         ).toThrow('Selector requires at least one Option');
     });
 
-    it('renders visible options', () => {
-        expect(() =>
-            renderXmlToMarkup(parseXML('<Selector label="Status"><Option label="Open" value="open" /></Selector>'))
-        ).not.toThrow();
+    it('renders its label when a visible option is provided', () => {
+        // Act
+        const output = renderXmlToMarkup(
+            parseXML('<Selector label="Status"><Option label="Open" value="open" /></Selector>')
+        );
+
+        // Assert
+        expect(output).toContain('Status');
     });
 });

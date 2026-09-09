@@ -8,10 +8,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './validation';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Starts stateless account registration with an email verification link. */
 export default function Register() {
@@ -20,33 +21,37 @@ export default function Register() {
     const registration = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
         onSuccess: () => showToast({ body: 'If this email can be registered, a registration link is on the way.' }),
-        onError: () => showToast({ body: 'Could not send the registration link. Try again shortly.', type: 'error' }),
     });
-    const form = useForm({
+    const form = useForm<EmailPayload>({
         defaultValues: { email: searchParams.get('email') ?? '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: emailPayloadSchema },
-        onSubmit: ({ value }) => registration.mutate(value),
+        resolver: zodResolver(emailPayloadSchema),
     });
+    const email = useWatch({ control: form.control, name: 'email' });
+    const trimmedEmail = email.trim();
+    const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
 
     return (
         <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <NoIndex title="Create Account | LongLink" />
             <Stack gap={3}>
-                <AuthForm gap={3} onSubmit={form.handleSubmit}>
-                    <form.Field
+                <AuthForm gap={3} onSubmit={form.handleSubmit((value) => registration.mutate(value))}>
+                    <Controller
+                        control={form.control}
                         name="email"
-                        children={(field) => (
+                        render={({ field, fieldState }) => (
                             <TextInput
+                                ref={field.ref}
                                 autoComplete="email"
-                                htmlName="email"
+                                htmlName={field.name}
                                 isRequired
                                 label="Email"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
                                 type="email"
-                                value={field.state.value}
+                                value={field.value}
                                 width="100%"
                             />
                         )}
@@ -58,25 +63,16 @@ export default function Register() {
                         variant="primary"
                     />
                 </AuthForm>
-                <form.Subscribe selector={(state) => state.values.email}>
-                    {(email) => {
-                        const trimmedEmail = email.trim();
-                        const signInSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
-
-                        return (
-                            <Divider
-                                label={
-                                    <>
-                                        Already have an account?{' '}
-                                        <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
-                                            Sign In
-                                        </Link>
-                                    </>
-                                }
-                            />
-                        );
-                    }}
-                </form.Subscribe>
+                <Divider
+                    label={
+                        <>
+                            Already have an account?{' '}
+                            <Link href={`/login${signInSearch}`} type="inherit" weight="medium">
+                                Sign In
+                            </Link>
+                        </>
+                    }
+                />
             </Stack>
         </AuthLayout>
     );

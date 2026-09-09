@@ -69,6 +69,8 @@ def test_frontend_middleware_varies_eligible_text_representations(accept_encodin
     response = request_response(app, "/text", {"accept-encoding": accept_encoding})
 
     # Assert
+    assert response.status_code == 200
+    assert response.content == b"x" * 1000
     assert response.headers.get("content-encoding") == expected_content_encoding
     assert response.headers["etag"] == 'W/"text-v1"'
     assert response.headers["vary"] == "Accept-Encoding"

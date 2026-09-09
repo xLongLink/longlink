@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from factories import queue_operation, create_ready_infrastructure
+from factories import create_compute, queue_operation, create_ready_infrastructure
 from src.errors import ConflictError, NotFoundError
 from collections.abc import Callable, Awaitable
 from src.models.types import DatabaseSSLMode
@@ -66,8 +66,8 @@ async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> N
     """Retain a compute registry while its creation operation is unfinished."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    compute_id = infrastructure.compute.id
+    compute_registry = await create_compute()
+    compute_id = compute_registry.id
     await queue_operation(kind=OperationKind.compute_create, target_id=compute_id)
 
     # Act and assert

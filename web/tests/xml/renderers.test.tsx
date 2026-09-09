@@ -1,11 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '@/xml';
 import type { ASTNode } from '@/xml/types';
 import { createRoot } from 'react-dom/client';
 import { createContext } from '@/xml/core/context';
-import { compileProps, renderXmlToMarkup } from './helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { compileProps, RenderXML, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     let root: ReturnType<typeof createRoot> | undefined;

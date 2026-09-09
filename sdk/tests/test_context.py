@@ -1,9 +1,10 @@
 import pytest
 import asyncio
 from uuid import UUID
+from types import SimpleNamespace
 from fastapi import Depends, FastAPI, Request
 from longlink import context, identity
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 
@@ -69,26 +70,21 @@ def test_data_resolves_request_services(
 
     database = Database()
 
-    @asynccontextmanager
-    async def fake_session(database: object) -> AsyncIterator[object]:
-        """Yield one fake request-scoped database session and record cleanup."""
-
-        nonlocal session_closed
-        try:
-            yield database
-        finally:
-            session_closed = True
-
     class DatabaseService:
         """Provide the configured request database session."""
 
-        def session(self) -> AbstractAsyncContextManager[object]:
-            """Yield the test database session."""
+        @asynccontextmanager
+        async def session(self) -> AsyncIterator[Database]:
+            """Yield the test database session and record cleanup."""
 
-            return fake_session(database)
+            nonlocal session_closed
+            try:
+                yield database
+            finally:
+                session_closed = True
 
     app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": storage, "database": DatabaseService()})()
+    app.state.longlink = SimpleNamespace(storage=storage, database=DatabaseService())
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
@@ -121,26 +117,21 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
         async def get(self, _model: object, _user_id: UUID) -> None:
             """Return no shared audit user."""
 
-    @asynccontextmanager
-    async def fake_session() -> AsyncIterator[Database]:
-        """Yield a database session and record finalization."""
-
-        nonlocal session_closed
-        try:
-            yield Database()
-        finally:
-            session_closed = True
-
     class DatabaseService:
         """Open the configured request database session."""
 
-        def session(self) -> AbstractAsyncContextManager[Database]:
-            """Return the managed fake session."""
+        @asynccontextmanager
+        async def session(self) -> AsyncIterator[Database]:
+            """Yield a database session and record finalization."""
 
-            return fake_session()
+            nonlocal session_closed
+            try:
+                yield Database()
+            finally:
+                session_closed = True
 
     app = FastAPI()
-    app.state.longlink = type("Runtime", (), {"storage": object(), "database": DatabaseService()})()
+    app.state.longlink = SimpleNamespace(storage=object(), database=DatabaseService())
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")

@@ -7,7 +7,7 @@ from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, load_only, joinedload, contains_eager
+from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
@@ -86,6 +86,7 @@ async def solution_runtime_access(
     result = await session.execute(
         select(Solution, col(UserOrganization.role), ComputeRegistry)
         .options(
+            raiseload(Solution.desired_revision),
             load_only(
                 Solution.id,
                 Solution.organization_id,
@@ -172,7 +173,8 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
         .options(
             load_only(
                 Solution.id,
-                Solution.image_desired,
+                Solution.desired_revision_id,
+                Solution.deployed_revision_id,
                 Solution.secrets,
                 Solution.status,
                 Solution.deleted_at,
@@ -294,10 +296,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
         deleted_at = max((value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None)
 
         # Tombstone recency must be reflected in the projected update time.
-        if deleted_at is not None:
-            updated_at = max(membership.user.updated_at, membership.updated_at, deleted_at)
-        else:
-            updated_at = max(membership.user.updated_at, membership.updated_at)
+        updated_at = max(value for value in (membership.user.updated_at, membership.updated_at, deleted_at) if value is not None)
 
         rows.append(
             Audit(
@@ -340,7 +339,7 @@ async def update_member_role(
     organization_id: UUID,
     member_id: UUID,
     role: OrganizationRoles,
-    user: User,
+    user_id: UUID,
 ) -> None:
     """Change one active Organization membership role."""
 
@@ -348,7 +347,7 @@ async def update_member_role(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    caller_membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.admin)
+    caller_membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
 
     # Lock the member role after locking the Organization and caller access.
     statement = (
@@ -395,7 +394,7 @@ async def update_member_role(
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
-    membership.updated_id = user.id
+    membership.updated_id = user_id
     membership.role = role
 
 
@@ -558,7 +557,7 @@ async def _persist(
     return organization
 
 
-async def update(session: AsyncSession, organization_id: UUID, avatar: str, user: User) -> Organization | None:
+async def update(session: AsyncSession, organization_id: UUID, avatar: str, user_id: UUID) -> Organization | None:
     """Update mutable Organization metadata."""
 
     # Lock and update the active Organization row.
@@ -570,10 +569,10 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str, user
         return None
 
     # Revalidate the caller while the Organization is locked to reject revoked administrators.
-    await _locked_membership(session, user.id, organization_id, OrganizationRoles.admin)
+    await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if organization.avatar != avatar:
         organization.avatar = avatar
-        organization.updated_id = user.id
+        organization.updated_id = user_id
 
     return organization
 
@@ -583,7 +582,7 @@ async def create_invitation(
     organization_id: UUID,
     email: str,
     role: OrganizationRoles,
-    user: User,
+    user_id: UUID,
 ) -> None:
     """Authorize and create one Organization invitation."""
 
@@ -591,7 +590,7 @@ async def create_invitation(
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.maintain)
+    membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
     if not roles.atleast(membership.role, role):
         raise ForbiddenError("Invitation role permissions required")
 
@@ -599,14 +598,14 @@ async def create_invitation(
     await invitation_service.create(session, organization_id, email, role)
 
 
-async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user: User) -> None:
+async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user_id: UUID) -> None:
     """Authorize and revoke one active Organization invitation."""
 
     # Lock the Organization before revalidating the caller's active invitation permission.
     organization = await session.get(Organization, organization_id, populate_existing=True, with_for_update=True)
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
-    membership = await _locked_membership(session, user.id, organization_id, OrganizationRoles.maintain)
+    membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
 
     # Resolve only an invitation belonging to the locked Organization.
     invitation = await session.get(OrganizationInvitation, invitation_id, with_for_update=True)
@@ -659,7 +658,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         # Organization cleanup supersedes unleased Solution lifecycle work.
         await session.execute(
             delete(Operation).where(
-                col(Operation.kind).in_((OperationKind.solution_create, OperationKind.solution_delete)),
+                col(Operation.kind) == OperationKind.solution_delete,
                 col(Operation.target_id).in_(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id)),
                 col(Operation.finished_at).is_(None),
                 col(Operation.lease_expires_at).is_(None),

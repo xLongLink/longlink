@@ -84,11 +84,21 @@ export const zEnvironmentMetadata = z.object({
 });
 
 /**
+ * ErrorResponse
+ *
+ * Describe the public error contract without internal diagnostics.
+ */
+export const zErrorResponse = z.object({
+    detail: z.string()
+});
+
+/**
  * LongLinkMetadata
  *
  * Structured metadata extracted from OCI and LongLink image labels.
  */
 export const zLongLinkMetadata = z.object({
+    image: z.string(),
     description: z.string().nullish(),
     environments: z.array(zEnvironmentMetadata).optional()
 });
@@ -110,7 +120,7 @@ export const zOAuthAvailability = z.object({
  */
 export const zOperationKind = z.enum([
     'compute.create',
-    'solution.create',
+    'solution.deploy',
     'solution.delete',
     'organization.create',
     'organization.delete'
@@ -275,15 +285,67 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
+ * RevisionResponse
+ *
+ * Expose release history without encrypted environment values.
+ */
+export const zRevisionResponse = z.object({
+    id: z.uuid(),
+    image: z.string(),
+    source: z.string(),
+    configured_envs: z.array(z.string()),
+    failed: z.boolean(),
+    created_at: z.iso.datetime(),
+    created_id: z.uuid().nullable(),
+    deployed_at: z.iso.datetime().nullable()
+});
+
+/**
  * SolutionCreate
  *
- * Validate solution creation payloads.
+ * Validate solution creation metadata and release configuration.
  */
 export const zSolutionCreate = z.object({
-    name: z.string().min(1).max(100),
+    envs: z.record(z.string(), z.string()).optional(),
     image: z.string(),
-    description: z.string().max(255).nullish(),
-    envs: z.record(z.string(), z.string()).optional()
+    name: z.string().min(1).max(100),
+    description: z.string().max(255).nullish()
+});
+
+/**
+ * SolutionPatch
+ *
+ * Preserve omitted values and remove variables explicitly set to null.
+ */
+export const zSolutionPatch = z.object({
+    envs: z.record(z.string(), z.string().nullable()).optional(),
+    expected_revision_id: z.uuid().nullish()
+});
+
+/**
+ * SolutionUpdate
+ *
+ * Deploy a submitted image source with an environment patch.
+ */
+export const zSolutionUpdate = z.object({
+    envs: z.record(z.string(), z.string().nullable()).optional(),
+    expected_revision_id: z.uuid().nullish(),
+    image: z.string()
+});
+
+/**
+ * SolutionUpdateCheck
+ *
+ * Expose a candidate and configured names, never environment values.
+ */
+export const zSolutionUpdateCheck = z.object({
+    source: z.string(),
+    image: z.string(),
+    available: z.boolean(),
+    revision_id: z.uuid(),
+    current_image: z.string(),
+    configured_envs: z.array(z.string()),
+    metadata: zLongLinkMetadata
 });
 
 /**
@@ -332,7 +394,9 @@ export const zOrganizationSolutionSummary = z.object({
     name: z.string(),
     slug: z.string(),
     description: z.string().nullish(),
-    status: zStatus
+    status: zStatus,
+    deployment_pending: z.boolean(),
+    desired_revision_id: z.uuid().nullable()
 });
 
 /**
@@ -376,7 +440,10 @@ export const zSolutionResponse = z.object({
     slug: z.string(),
     description: z.string().nullable(),
     image_desired: z.string(),
+    desired_revision_id: z.uuid().nullable(),
+    deployed_revision_id: z.uuid().nullable(),
     status: zStatus,
+    deployment_pending: z.boolean(),
     created_at: z.iso.datetime()
 });
 
@@ -503,24 +570,6 @@ export const zUserUpdate = z.object({
 });
 
 /**
- * ValidationError
- */
-export const zValidationError = z.object({
-    loc: z.array(z.union([z.string(), z.int()])),
-    msg: z.string(),
-    type: z.string(),
-    input: z.unknown().optional(),
-    ctx: z.record(z.string(), z.unknown()).optional()
-});
-
-/**
- * HTTPValidationError
- */
-export const zHttpValidationError = z.object({
-    detail: z.array(zValidationError).optional()
-});
-
-/**
  * Successful Response
  */
 export const zGetOauthAvailabilityApiV1AuthOauthGetResponse = zOAuthAvailability;
@@ -606,6 +655,67 @@ export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostPath = 
  */
 export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = z.void();
 
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
+
+export const zUpdateSolutionApiV1SolutionsSolutionIdPutBody = zSolutionUpdate;
+
+export const zUpdateSolutionApiV1SolutionsSolutionIdPutPath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zUpdateSolutionApiV1SolutionsSolutionIdPutResponse = z.void();
+
+export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetPath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetResponse = zSolutionUpdateCheck;
+
+export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostBody = zSolutionPatch;
+
+export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostPath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = z.void();
+
+export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetPath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
+ *
+ * Successful Response
+ */
+export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = z.array(zRevisionResponse);
+
+export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostPath = z.object({
+    solution_id: z.uuid(),
+    revision_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = z.void();
+
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
     solution_id: z.uuid()
 });
@@ -616,15 +726,6 @@ export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
  * Successful Response
  */
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = z.array(z.string());
-
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
 
 export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),

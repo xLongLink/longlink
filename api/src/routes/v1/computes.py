@@ -16,7 +16,8 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target and queue its initial creation."""
 
-    registry = await compute.create(session, **payload.model_dump())
+    # Persist the validated connection and queue compute provisioning.
+    registry = await compute.create(session, name=payload.name, kubeconfig=payload.kubeconfig)
     await session.commit()
     return registry
 

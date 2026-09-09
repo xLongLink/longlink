@@ -2,19 +2,19 @@ import { z } from 'zod';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { useNavigate } from 'react-router';
+import { passwordSchema } from './validation';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { Divider } from '@astryxdesign/core/Divider';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useEffectEvent, useRef } from 'react';
-import { fieldErrorStatus, passwordSchema } from './validation';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFragmentToken } from '@/lib/hooks/use-fragment-token';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zEmailPayload, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -34,16 +34,13 @@ type VerificationRequest = {
 
 /** Verifies an emailed registration link before collecting account credentials. */
 export default function VerifyEmail() {
-    const showToast = useToast();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const token = useFragmentToken(REGISTRATION_TOKEN_KEY);
     const verificationController = useRef<AbortController | null>(null);
-    const form = useForm({
+    const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', password: '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: registrationCompleteSchema },
-        onSubmit: ({ value }) => handleComplete(value),
+        resolver: zodResolver(registrationCompleteSchema),
     });
     const verification = useMutation({
         mutationFn: async ({ signal, token: registrationToken }: VerificationRequest) => {
@@ -103,16 +100,7 @@ export default function VerifyEmail() {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
                 startVerification('');
-                return;
             }
-            if (error instanceof ApiError && error.status === 409) {
-                return;
-            }
-
-            showToast({
-                body: error instanceof ApiError ? error.message : 'error',
-                type: 'error',
-            });
         }
     }
 
@@ -133,11 +121,15 @@ export default function VerifyEmail() {
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
-        const verificationError = verification.error instanceof ApiError ? verification.error : null;
-        const invalidToken = verificationError?.status === 400;
+        const invalidToken = verification.error instanceof ApiError && verification.error.status === 400;
 
         return (
-            <AuthLayout title="Verify your email" description={verificationError?.message ?? 'error'}>
+            <AuthLayout
+                title="Verify your email"
+                description={
+                    invalidToken ? 'Request a new registration link to continue.' : 'Please try again in a moment.'
+                }
+            >
                 {pageMetadata}
                 <Stack gap={3}>
                     {invalidToken ? null : (
@@ -162,7 +154,7 @@ export default function VerifyEmail() {
     // Account races cannot succeed by resubmitting the same form.
     if (completion.error instanceof ApiError && completion.error.status === 409) {
         return (
-            <AuthLayout title="Complete your account" description={completion.error.message}>
+            <AuthLayout title="Complete your account" description="Request a new registration link to continue.">
                 {pageMetadata}
                 <Button href={recoveryRegisterHref} label="Request a new registration link" />
             </AuthLayout>
@@ -173,35 +165,43 @@ export default function VerifyEmail() {
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             {pageMetadata}
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={form.handleSubmit}>
-                    <form.Field
+                <AuthForm gap={3} onSubmit={form.handleSubmit(handleComplete)}>
+                    <Controller
+                        control={form.control}
                         name="name"
-                        children={(field) => (
+                        render={({ field, fieldState }) => (
                             <TextInput
+                                ref={field.ref}
                                 autoComplete="name"
                                 hasAutoFocus
-                                htmlName="name"
+                                htmlName={field.name}
                                 isRequired
                                 label="Name"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
-                                value={field.state.value}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                value={field.value}
                                 width="100%"
                             />
                         )}
                     />
-                    <form.Field
+                    <Controller
+                        control={form.control}
                         name="password"
-                        children={(field) => (
+                        render={({ field, fieldState }) => (
                             <TextInput
-                                htmlName="password"
+                                ref={field.ref}
+                                htmlName={field.name}
                                 isRequired
                                 label="Password"
-                                onBlur={field.handleBlur}
-                                onChange={field.handleChange}
-                                status={fieldErrorStatus(field.state.meta.errors)}
-                                value={field.state.value}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                value={field.value}
                                 width="100%"
                                 type="password"
                             />

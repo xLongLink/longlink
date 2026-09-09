@@ -84,9 +84,6 @@ async def reset_db(
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
     monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
-    # Clear any cached session engine before binding the test database.
-    monkeypatch.setattr(session, "Session", None)
-
     engine = create_async_engine(db_url)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:

@@ -2,7 +2,6 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import String, or_, case, cast, func, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
@@ -11,7 +10,7 @@ from src.models.operations import OperationKind, OperationResource, OperationRes
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
@@ -49,49 +48,55 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         for operation in operations
         if operation.kind in {OperationKind.organization_create, OperationKind.organization_delete}
     }
-    solution_target_ids = {
-        operation.target_id for operation in operations if operation.kind in {OperationKind.solution_create, OperationKind.solution_delete}
-    }
+    solution_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_delete}
 
     # Load compact resource details for each target type.
-    resource_names: dict[tuple[OperationKind, UUID], str] = {}
+    resources: dict[tuple[OperationKind, UUID], OperationResource] = {}
     if compute_target_ids:
         result = await session.execute(
             select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
         )
         for resource_id, name in result.all():
-            resource_names[(OperationKind.compute_create, resource_id)] = name
+            resources[(OperationKind.compute_create, resource_id)] = OperationResource(id=resource_id, name=name)
 
     if organization_target_ids:
         result = await session.execute(
             select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
         )
         for resource_id, name in result.all():
-            resource_names[(OperationKind.organization_create, resource_id)] = name
-            resource_names[(OperationKind.organization_delete, resource_id)] = name
+            resource = OperationResource(id=resource_id, name=name)
+            resources[(OperationKind.organization_create, resource_id)] = resource
+            resources[(OperationKind.organization_delete, resource_id)] = resource
 
     if solution_target_ids:
         result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
         for resource_id, name in result.all():
-            resource_names[(OperationKind.solution_create, resource_id)] = name
-            resource_names[(OperationKind.solution_delete, resource_id)] = name
+            resources[(OperationKind.solution_delete, resource_id)] = OperationResource(id=resource_id, name=name)
+
+    revision_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_deploy}
+    if revision_ids:
+        result = await session.execute(
+            select(col(Revision.id), col(Solution.id), col(Solution.name))
+            .join(Solution, col(Solution.id) == col(Revision.solution_id))
+            .where(col(Revision.id).in_(revision_ids))
+        )
+        for revision_id, solution_id, name in result.all():
+            resources[(OperationKind.solution_deploy, revision_id)] = OperationResource(id=solution_id, name=name)
 
     # Assemble response models with their resolved target resource.
-    items: list[OperationResponse] = []
-    for operation in operations:
-        resource_name = resource_names.get((operation.kind, operation.target_id))
-        items.append(
-            OperationResponse(
-                id=operation.id,
-                kind=operation.kind,
-                resource=OperationResource(id=operation.target_id, name=resource_name) if resource_name is not None else None,
-                target_id=operation.target_id,
-                status=operation.status,
-                failed=operation.failed,
-                created_at=operation.created_at,
-                finished_at=operation.finished_at,
-            )
+    items = [
+        OperationResponse(
+            id=operation.id,
+            kind=operation.kind,
+            resource=resources.get((operation.kind, operation.target_id)),
+            target_id=operation.target_id,
+            status=operation.status,
+            failed=operation.failed,
+            created_at=operation.created_at,
+            finished_at=operation.finished_at,
         )
+        for operation in operations
+    ]
 
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
@@ -124,12 +129,12 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     )
     organization_rows = result.all()
     result = await session.execute(
-        select(col(Solution.id), col(Solution.deleted_at).is_not(None))
+        select(Solution)
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.compute_id), col(Solution.id))
     )
-    solution_rows = result.all()
+    solution_rows = result.scalars().all()
 
     # Create or reuse every desired-state operation in one transaction.
     for compute_id in compute_ids:
@@ -140,12 +145,13 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
             kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
             target_id=organization_id,
         )
-    for solution_id, deleted in solution_rows:
-        await enqueue(
-            session,
-            kind=OperationKind.solution_delete if deleted else OperationKind.solution_create,
-            target_id=solution_id,
-        )
+    for solution in solution_rows:
+        if solution.deleted_at is not None:
+            await enqueue(session, kind=OperationKind.solution_delete, target_id=solution.id)
+        else:
+            target_id = solution.effective_revision_id
+            if target_id is not None:
+                await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
 
 
 async def enqueue(
@@ -154,29 +160,25 @@ async def enqueue(
     kind: OperationKind,
     target_id: UUID,
 ) -> Operation:
-    """Add one Platform operation to an existing command transaction."""
+    """Coalesce unfinished work when visible, allowing duplicates from concurrent requests."""
 
-    # Reuse unleased work and preserve active work as an immutable retry boundary.
-    statement = select(Operation).where(
-        col(Operation.kind) == kind,
-        col(Operation.target_id) == target_id,
-        col(Operation.finished_at).is_(None),
-        col(Operation.lease_expires_at).is_(None),
+    # Reuse unfinished work, including an active or interrupted attempt at this exact target.
+    operation = await session.scalar(
+        select(Operation)
+        .where(
+            col(Operation.kind) == kind,
+            col(Operation.target_id) == target_id,
+            col(Operation.finished_at).is_(None),
+        )
+        .order_by(col(Operation.created_at), col(Operation.id))
+        .limit(1)
     )
-    operation = await session.scalar(statement)
     if operation is not None:
         return operation
 
-    # Let the partial unique index serialize concurrent creation of the same unleased work.
-    try:
-        async with session.begin_nested():
-            operation = Operation(kind=kind, target_id=target_id)
-            session.add(operation)
-            await session.flush()
-    except IntegrityError:
-        operation = await session.scalar(statement)
-        if operation is None:
-            raise
+    # Duplicate requests may queue repeated reconciliation; handlers must remain idempotent.
+    operation = Operation(kind=kind, target_id=target_id)
+    session.add(operation)
     return operation
 
 
@@ -225,7 +227,7 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
 
     # Complete only the currently leased operation.
     now = utcnow()
-    return await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -233,8 +235,30 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
             col(Operation.finished_at).is_(None),
         )
         .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
+    if result.rowcount != 1:
+        return None
+    operation = await session.get_one(Operation, operation_id, populate_existing=True)
+
+    # A request can reuse this lease after its handler already skipped an outdated target.
+    # Recheck desired state at completion so that request cannot disappear with the lease.
+    if operation.kind != OperationKind.solution_deploy:
+        return operation
+
+    revision = await session.get(Revision, operation.target_id)
+    if revision is None:
+        return operation
+
+    solution = await session.get(Solution, revision.solution_id, with_for_update=True)
+    if solution is None or solution.deleted_at is not None:
+        return operation
+
+    target_id = solution.effective_revision_id
+    if target_id is not None and target_id != solution.deployed_revision_id:
+        await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
+
+    return operation
 
 
 async def release(session: AsyncSession, operation_id: UUID) -> Operation | None:
@@ -242,7 +266,7 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
 
     # Release only work still owned by this worker.
     now = utcnow()
-    return await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -250,8 +274,11 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
             col(Operation.finished_at).is_(None),
         )
         .values(lease_expires_at=None)
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
+    if result.rowcount != 1:
+        return None
+    return await session.get_one(Operation, operation_id, populate_existing=True)
 
 
 async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
@@ -259,7 +286,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
 
     # Mark only an unfinished Operation that remains leased terminal.
     now = utcnow()
-    operation = await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -272,22 +299,39 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
             lease_expires_at=None,
             logs=[] if logs is None else logs,
         )
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
-    if operation is None:
+    if result.rowcount != 1:
         return None
+    operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # Expose failed creation work on its target without changing deletion lifecycle state.
     model = {
         OperationKind.compute_create: ComputeRegistry,
         OperationKind.organization_create: Organization,
-        OperationKind.solution_create: Solution,
     }.get(operation.kind)
     if model is not None:
         await session.execute(
-            update(model)
-            .where(col(model.id) == operation.target_id, col(model.status) == Status.creating)
-            .values(status=Status.failed)
+            update(model).where(col(model.id) == operation.target_id, col(model.status) == Status.creating).values(status=Status.failed)
         )
+
+    # Persist recovery alongside failure, including timeout failures from jobs.execute.
+    # A failed restoration remains failed and never recursively schedules itself.
+    if operation.kind != OperationKind.solution_deploy:
+        return operation
+
+    revision = await session.get(Revision, operation.target_id)
+    if revision is None:
+        return operation
+    if revision.deployed_at is None:
+        revision.failed = True
+
+    solution = await session.get(Solution, revision.solution_id, with_for_update=True)
+    if solution is None or solution.deleted_at is not None:
+        return operation
+
+    solution.status = Status.failed
+    if revision.deployed_at is None and solution.deployed_revision_id is not None:
+        await enqueue(session, kind=OperationKind.solution_deploy, target_id=solution.deployed_revision_id)
 
     return operation

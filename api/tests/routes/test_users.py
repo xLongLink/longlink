@@ -34,11 +34,11 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         {
             "organization": {
                 "id": str(organization.id),
-                    "name": "acme",
-                    "slug": "acme",
-                    "avatar": "",
-                    "status": "creating",
-                },
+                "name": "acme",
+                "slug": "acme",
+                "avatar": "",
+                "status": "creating",
+            },
             "role": "owner",
         }
     ]
@@ -120,6 +120,8 @@ async def test_patch_me_skips_organization_sync_when_profile_is_unchanged(
     """Avoid synchronizing organizations when no persisted profile field changes."""
 
     # Arrange
+    await create_organization(users[0])
+
     async def sync_users(*_args: object) -> None:
         """Fail if an unchanged profile triggers synchronization."""
 

@@ -21,13 +21,15 @@ describe('For', () => {
     });
 
     it('preserves parent bindings while nested aliases and indexes shadow', () => {
+        // Arrange
         const ctx = createContext();
         ctx.scope.bindings = {
-            groups: [{ items: [{ name: 'Alpha' }] }],
+            groups: [{ items: [{ name: 'Alpha' }, { name: 'Beta' }] }],
             params: { issue: '123' },
             title: 'Issue',
         };
 
+        // Act
         const output = renderXmlToMarkup(
             parseXML(
                 '<For each="$groups" as="item"><For each="$item.items" as="item">${title + \' #\' + params.issue + \' \' + item.name + \' \' + index}</For></For>'
@@ -35,6 +37,8 @@ describe('For', () => {
             ctx
         );
 
+        // Assert
         expect(output).toContain('Issue #123 Alpha 0');
+        expect(output).toContain('Issue #123 Beta 1');
     });
 });

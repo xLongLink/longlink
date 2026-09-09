@@ -61,7 +61,6 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     lines.append("Attributes")
     if not attributes:
         lines.append("- none")
-        return lines
 
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:
@@ -97,8 +96,9 @@ def _helpers(
     type_node = _complex_type(component, schemas)
     pending = deque(type_node.iter(f"{XSD}element")) if type_node is not None else deque()
     for name in re.findall(r"<\s*/?\s*([A-Za-z_][\w.-]*)", example):
-        if name in elements and elements[name].find(f"{XSD}annotation/{XSD}appinfo/{DOCS}docs") is None:
-            pending.append(elements[name])
+        element = elements.get(name)
+        if element is not None and element.find(f"{XSD}annotation/{XSD}appinfo/{DOCS}docs") is None:
+            pending.append(element)
     helpers: dict[str, etree._Element] = {}
     while pending:
         declaration = pending.popleft()

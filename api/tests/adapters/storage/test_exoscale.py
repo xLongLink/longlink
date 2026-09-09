@@ -1,5 +1,6 @@
 import httpx2
 import pytest
+from collections.abc import Iterator
 from botocore.exceptions import ClientError
 from src.adapters.storage import exoscale
 from exoscale.api.exceptions import ExoscaleAPIClientException
@@ -189,18 +190,69 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     credentials = await storage.solution_credentials("dashboard", "acme", "solutions/dashboard/")
 
     # Assert
-    role_call = next(value for name, value in calls if name == "create-iam-role")
     assert credentials == {"access_key_id": "runtime-key", "secret_access_key": "runtime-secret"}
     assert ("delete-api-key", "old-key") in calls
     assert ("delete-iam-role", "old-role") in calls
     assert ("get-organization", None) in calls
-    assert isinstance(role_call, dict)
-    policy = role_call["policy"]
-    assert isinstance(policy, dict)
-    assert "identity.org.uuid == '11111111-1111-1111-1111-111111111111'" in str(policy)
-    assert "acme" in str(policy)
-    assert "shared/" in str(policy)
-    assert "solutions/dashboard/" in str(policy)
+    assert (
+        "create-iam-role",
+        {
+            "name": "longlink-dashboard",
+            "description": "LongLink Solution storage access for dashboard",
+            "editable": False,
+            "policy": {
+                "default-service-strategy": "deny",
+                "services": {
+                    "sos": {
+                        "type": "rules",
+                        "rules": [
+                            {
+                                "action": "allow",
+                                "expression": (
+                                    "identity.org.uuid == '11111111-1111-1111-1111-111111111111' && "
+                                    "parameters.bucket == 'acme' && operation == 'head-bucket'"
+                                ),
+                            },
+                            {
+                                "action": "allow",
+                                "expression": (
+                                    "identity.org.uuid == '11111111-1111-1111-1111-111111111111' && "
+                                    "parameters.bucket == 'acme' && operation in ['list-objects', 'list-object-versions'] && "
+                                    "(parameters.prefix.startsWith('shared/') || parameters.prefix.startsWith('solutions/dashboard/'))"
+                                ),
+                            },
+                            {
+                                "action": "allow",
+                                "expression": (
+                                    "identity.org.uuid == '11111111-1111-1111-1111-111111111111' && "
+                                    "parameters.bucket == 'acme' && operation in ['get-object', 'head-object'] && "
+                                    "(parameters.key == 'shared' || parameters.key.startsWith('shared/') || "
+                                    "parameters.key == 'solutions/dashboard' || parameters.key.startsWith('solutions/dashboard/'))"
+                                ),
+                            },
+                            {
+                                "action": "allow",
+                                "expression": (
+                                    "identity.org.uuid == '11111111-1111-1111-1111-111111111111' && "
+                                    "parameters.bucket == 'acme' && operation == 'list-multipart-uploads' "
+                                    "&& parameters.prefix.startsWith('solutions/dashboard/')"
+                                ),
+                            },
+                            {
+                                "action": "allow",
+                                "expression": (
+                                    "identity.org.uuid == '11111111-1111-1111-1111-111111111111' && "
+                                    "parameters.bucket == 'acme' && "
+                                    "operation in ['put-object', 'delete-object', 'abort-multipart-upload'] "
+                                    "&& parameters.key.startsWith('solutions/dashboard/')"
+                                ),
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    ) in calls
     assert ("create-api-key", {"name": "longlink-dashboard", "role_id": "runtime-role"}) in calls
 
 
@@ -266,16 +318,34 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
 async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monkeypatch: pytest.MonkeyPatch) -> None:
     """Remove every destructive S3 resource type before deleting a bucket."""
 
-    # Provide one page of each resource type followed by its empty terminal page.
+    # Arrange
     calls: list[tuple[str, object]] = []
 
     class Client:
         def __init__(self) -> None:
-            """Initialize terminal listing state."""
+            """Provide one populated and one terminal page per resource type."""
 
-            self.uploads = False
-            self.objects = False
-            self.versions = False
+            self.uploads: Iterator[dict[str, object]] = iter(
+                (
+                    {"Uploads": [{"Key": "apps/dashboard/a", "UploadId": "upload"}]},
+                    {"Uploads": []},
+                )
+            )
+            self.objects: Iterator[dict[str, object]] = iter(
+                (
+                    {"Contents": [{"Key": "apps/dashboard/a"}]},
+                    {"Contents": []},
+                )
+            )
+            self.versions: Iterator[dict[str, object]] = iter(
+                (
+                    {
+                        "Versions": [{"Key": "apps/dashboard/a", "VersionId": "version"}],
+                        "DeleteMarkers": [{"Key": "apps/dashboard/b", "VersionId": "marker"}],
+                    },
+                    {"Versions": [], "DeleteMarkers": []},
+                )
+            )
 
         async def __aenter__(self) -> "Client":
             """Enter the fake S3 client context."""
@@ -288,10 +358,7 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
         async def list_multipart_uploads(self, **kwargs: object) -> dict[str, object]:
             """Return one incomplete upload then completion."""
 
-            if self.uploads:
-                return {"Uploads": []}
-            self.uploads = True
-            return {"Uploads": [{"Key": "apps/dashboard/a", "UploadId": "upload"}]}
+            return next(self.uploads)
 
         async def abort_multipart_upload(self, **kwargs: object) -> None:
             """Record upload aborts."""
@@ -301,21 +368,12 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
         async def list_objects_v2(self, **kwargs: object) -> dict[str, object]:
             """Return one current object then completion."""
 
-            if self.objects:
-                return {"Contents": []}
-            self.objects = True
-            return {"Contents": [{"Key": "apps/dashboard/a"}]}
+            return next(self.objects)
 
         async def list_object_versions(self, **kwargs: object) -> dict[str, object]:
             """Return one version and marker then completion."""
 
-            if self.versions:
-                return {"Versions": [], "DeleteMarkers": []}
-            self.versions = True
-            return {
-                "Versions": [{"Key": "apps/dashboard/a", "VersionId": "version"}],
-                "DeleteMarkers": [{"Key": "apps/dashboard/b", "VersionId": "marker"}],
-            }
+            return next(self.versions)
 
         async def delete_objects(self, **kwargs: object) -> dict[str, object]:
             """Record successful bulk deletion."""
@@ -326,8 +384,10 @@ async def test_exoscale_delete_prefix_removes_uploads_objects_and_versions(monke
     storage = exoscale.Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda: Client())
 
-    # Delete only the requested Solution prefix across all S3 resource types.
+    # Act
     await storage.delete_prefix("acme", "apps/dashboard/")
+
+    # Assert
     assert calls == [
         ("abort", {"Bucket": "acme", "Key": "apps/dashboard/a", "UploadId": "upload"}),
         ("delete", {"Objects": [{"Key": "apps/dashboard/a"}], "Quiet": True}),

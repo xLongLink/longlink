@@ -1,40 +1,39 @@
 import pytest
 from src import release
-from contextlib import asynccontextmanager
+from factories import create_compute, claim_operation
+from src.database.session import session_scope
+from src.database.services import operations
+from src.database.models.operations import Operation
 
-pytestmark = pytest.mark.no_db
 
+async def test_schedule_reconciliation_commits_scheduled_work() -> None:
+    """Reject live old workers and commit reconciliation after their leases release."""
 
-async def test_schedule_reconciliation_commits_scheduled_work(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Commit the transaction after scheduling reconciliation targets."""
-
-    # Arrange
-    events: list[str] = []
-
-    class Session:
-        """Record the scheduling transaction commit."""
-
-        async def commit(self) -> None:
-            """Record the commit after scheduling."""
-
-            events.append("commit")
-
-    @asynccontextmanager
-    async def session_scope():
-        """Yield the reconciliation session."""
-
-        yield Session()
-
-    async def schedule_reconciliation(_session: Session) -> None:
-        """Record the reconciliation scheduling request."""
-
-        events.append("schedule")
-
-    monkeypatch.setattr(release, "session_scope", session_scope)
-    monkeypatch.setattr(release.operations, "schedule_reconciliation", schedule_reconciliation)
-
-    # Act
+    # An old worker must not consume a new release's mutable-resource reconciliation.
+    compute = await create_compute()
     await release.schedule_reconciliation()
+    claimed = await claim_operation()
+    assert claimed is not None
+    with pytest.raises(RuntimeError, match="Stop existing API workers"):
+        await release.schedule_reconciliation()
 
-    # Assert
-    assert events == ["schedule", "commit"]
+    # Graceful shutdown makes the same durable target available to the new release.
+    async with session_scope() as session:
+        assert await operations.release(session, claimed.id) is not None
+        await session.commit()
+    await release.schedule_reconciliation()
+    async with session_scope() as session:
+        persisted = await session.get(Operation, claimed.id)
+        assert persisted is not None and persisted.target_id == compute.id
+        assert persisted.lease_expires_at is None and persisted.finished_at is None
+
+    # A completed target receives new committed reconciliation work.
+    resumed = await claim_operation()
+    assert resumed is not None and resumed.id == claimed.id
+    async with session_scope() as session:
+        assert await operations.complete(session, resumed.id) is not None
+        await session.commit()
+    await release.schedule_reconciliation()
+    successor = await claim_operation()
+    assert successor is not None and successor.id != claimed.id
+    assert successor.target_id == compute.id

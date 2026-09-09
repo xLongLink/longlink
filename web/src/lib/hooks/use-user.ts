@@ -1,19 +1,27 @@
 import { api } from '@/lib/api';
 import { createContext, useContext } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 export const AuthenticatedUserContext = createContext<UserSummary | null>(null);
 
+/** Updates the current profile and publishes the saved user to the cache. */
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (payload: UserUpdate) =>
+            zUserSummary.parse(await api('/api/v1/me', { json: payload, method: 'PATCH' }).json()),
+        onSuccess: (updatedUser) => {
+            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
+        },
+    });
+}
+
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
-    const {
-        data: user,
-        error,
-        isLoading,
-        refetch,
-    } = useQuery({
+    return useQuery({
         // Auth state must refresh immediately after login/logout redirects.
         queryKey: ['api', '/api/v1/me'],
         queryFn: async ({ signal }) => zUserSummary.parse(await api('/api/v1/me', { signal }).json()),
@@ -21,13 +29,6 @@ export function useCurrentUser() {
         refetchOnWindowFocus: true,
         retry: false,
     });
-
-    return {
-        user,
-        isLoading,
-        error,
-        refetch,
-    };
 }
 
 /** Reads the user guaranteed by the authenticated route boundary. */
@@ -42,30 +43,22 @@ export function useAuthenticatedUser() {
 
 /** Reads organization memberships for the authenticated user. */
 export function useUserOrganizations() {
-    const {
-        data: memberships,
-        error: organizationsError,
-        isLoading: isOrganizationsLoading,
-    } = useQuery({
+    return useQuery({
         queryKey: ['api', '/api/v1/me/organizations'],
         queryFn: async ({ signal }) =>
             zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
     });
-
-    return {
-        memberships: memberships ?? [],
-        isOrganizationsLoading,
-        organizationsError,
-    };
 }
 
 /** Provides an action that ends the current user session. */
 export function useSignOut() {
     const queryClient = useQueryClient();
 
-    return async () => {
-        await api('/api/v1/auth/logout', { method: 'POST' });
-        queryClient.clear();
-        window.location.assign('/user/organizations');
-    };
+    return useMutation({
+        mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
+        onSuccess: () => {
+            queryClient.clear();
+            window.location.assign('/user/organizations');
+        },
+    });
 }

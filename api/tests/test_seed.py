@@ -1,8 +1,11 @@
+import pytest
 from pathlib import Path
 from sqlmodel import col
 from sqlalchemy import func, select
 from scripts.seed import SeedSettings, CloudSeedSettings, seed_cloud, seed_local_development
 from src.environments import env
+from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -41,11 +44,20 @@ async def count(model: type[object]) -> int:
         return result.scalar_one()
 
 
-async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> None:
+async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep local seed resources stable across repeated initialization."""
 
     # Arrange
     local_settings = settings(tmp_path)
+
+    # Isolate registry transport from the workstation's mutable sample tag.
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Resolve the seed through the same metadata boundary as deployment."""
+
+        assert image == "localhost:15000/sample:dev"
+        return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
+
+    monkeypatch.setattr("scripts.seed.images.metadata", metadata)
 
     # Act
     await seed_local_development(local_settings)
@@ -65,6 +77,7 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path) -> N
     assert administrator.administrator is True
     assert solution is not None
     assert solution.description == "A sample solution for local development."
+    assert solution.desired_revision.source == "localhost:15000/sample:dev"
 
 
 async def test_cloud_seed_registers_only_infrastructure(tmp_path: Path) -> None:

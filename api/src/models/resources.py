@@ -35,3 +35,5 @@ class OrganizationSolutionSummary(BaseModel):
 
     # State
     status: Status
+    deployment_pending: bool
+    desired_revision_id: UUID | None

@@ -1,3 +1,4 @@
+import os
 import click
 import pytest
 import subprocess
@@ -311,7 +312,7 @@ def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
 def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Preserve allowed in-tree links while excluding unsafe and ignored targets."""
 
-    # Create allowed, ignored, absolute, recursive, cyclic, relocated-outside, and out-of-tree links.
+    # Arrange
     outside_file = build_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
     build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
@@ -328,22 +329,22 @@ def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path,
     build_context = build_project.parent / "context"
     monkeypatch.chdir(build_project)
 
-    # Build the temporary context.
+    # Act
     build.build_solution(build_context)
 
-    # Preserve the allowed link itself without copying ignored or out-of-tree aliases.
+    # Assert
     assert build_context.joinpath("linked-envs.py").is_symlink()
     assert build_context.joinpath("linked-envs.py").readlink() == Path("src/envs.py")
     assert not build_context.joinpath("dev.db").exists()
-    assert not build_context.joinpath("linked-database").is_symlink()
-    assert not build_context.joinpath("absolute-envs.py").is_symlink()
-    assert not build_context.joinpath("root-link").is_symlink()
-    assert not build_context.joinpath("cycle-a").is_symlink()
-    assert not build_context.joinpath("cycle-b").is_symlink()
-    assert not build_context.joinpath("broken-link").is_symlink()
-    assert not build_context.joinpath("src", "parent-link").is_symlink()
-    assert not build_context.joinpath("relocated-envs.py").is_symlink()
-    assert not build_context.joinpath("linked-secret.txt").is_symlink()
+    assert not os.path.lexists(build_context / "linked-database")
+    assert not os.path.lexists(build_context / "absolute-envs.py")
+    assert not os.path.lexists(build_context / "root-link")
+    assert not os.path.lexists(build_context / "cycle-a")
+    assert not os.path.lexists(build_context / "cycle-b")
+    assert not os.path.lexists(build_context / "broken-link")
+    assert not os.path.lexists(build_context / "src" / "parent-link")
+    assert not os.path.lexists(build_context / "relocated-envs.py")
+    assert not os.path.lexists(build_context / "linked-secret.txt")
 
 
 def test_resolve_docker_paths_includes_transitive_local_workspace_projects(build_project: Path) -> None:

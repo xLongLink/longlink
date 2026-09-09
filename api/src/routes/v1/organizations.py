@@ -99,7 +99,7 @@ async def update_organization(
     """Update mutable organization settings."""
 
     # Persist mutable metadata only while the Organization remains active.
-    organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user)
+    organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user.id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     await session.commit()
@@ -196,7 +196,7 @@ async def create_organization_invitation(
         membership.organization_id,
         payload.email,
         payload.role,
-        user,
+        user.id,
     )
     await session.commit()
 
@@ -213,7 +213,7 @@ async def revoke_organization_invitation(
 ):
     """Revoke one pending Organization invitation."""
 
-    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user)
+    await organizations.revoke_invitation(session, membership.organization_id, invitation_id, user.id)
     await session.commit()
 
 
@@ -233,7 +233,7 @@ async def update_organization_member(
         membership.organization_id,
         member_id,
         payload.role,
-        user,
+        user.id,
     )
     await session.commit()
     await organizations.sync_users(session, membership.organization_id)

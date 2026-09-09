@@ -2,33 +2,24 @@ import { api } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { emailPayloadSchema, fieldErrorStatus, type EmailPayload } from './validation';
+import { emailPayloadSchema, type EmailPayload } from './validation';
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
-    const showToast = useToast();
     const requestReset = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/forgot-password', { json: payload, method: 'POST' }),
-        onError: (error) => {
-            showToast({
-                body: error instanceof Error ? error.message : 'Please try again in a moment.',
-                type: 'error',
-            });
-        },
     });
-    const form = useForm({
+    const form = useForm<EmailPayload>({
         defaultValues: { email: '' },
-        validationLogic: revalidateLogic(),
-        validators: { onDynamic: emailPayloadSchema },
-        onSubmit: ({ value }) => requestReset.mutate(value),
+        resolver: zodResolver(emailPayloadSchema),
     });
 
     return (
@@ -47,20 +38,26 @@ export default function ForgotPassword() {
                 </Stack>
             ) : (
                 <>
-                    <AuthForm gap={4} onSubmit={form.handleSubmit}>
-                        <form.Field
+                    <AuthForm gap={4} onSubmit={form.handleSubmit((value) => requestReset.mutate(value))}>
+                        <Controller
+                            control={form.control}
                             name="email"
-                            children={(field) => (
+                            render={({ field, fieldState }) => (
                                 <TextInput
+                                    ref={field.ref}
                                     autoComplete="email"
-                                    htmlName="email"
+                                    htmlName={field.name}
                                     isRequired
                                     label="Email"
-                                    onBlur={field.handleBlur}
-                                    onChange={field.handleChange}
-                                    status={fieldErrorStatus(field.state.meta.errors)}
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
                                     type="email"
-                                    value={field.state.value}
+                                    value={field.value}
                                     width="100%"
                                 />
                             )}

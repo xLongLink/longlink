@@ -9,6 +9,8 @@ from factories import (
 )
 from src.operations import solutions as solution_operations
 from src.utils.jobs import execute
+from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions
@@ -38,14 +40,15 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 ) -> None:
     """Retain a tombstone when Kubernetes deletion fails before provider cleanup."""
 
-    # Queue deletion for a Solution with real persisted infrastructure assignments.
+    # Arrange
     owner = users[0]
     organization, solution = await create_deleted_solution(owner)
+    provider_attempts: list[tuple[object, ...]] = []
 
     # Complete the known Organization and Solution creation operations before deletion.
     for kind, target_id in (
         (OperationKind.organization_create, organization.id),
-        (OperationKind.solution_create, solution.id),
+        (OperationKind.solution_deploy, solution.desired_revision_id),
     ):
         setup_operation = await claim_operation()
         assert setup_operation is not None
@@ -72,20 +75,23 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    def unexpected_provider(*_args: object) -> object:
-        """Fail if provider cleanup runs before Kubernetes deletion completes."""
+    def unexpected_provider(*args: object) -> object:
+        """Record and reject provider construction before Kubernetes deletion completes."""
 
+        provider_attempts.append(args)
         raise AssertionError("provider cleanup ran before Kubernetes deletion completed")
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
     monkeypatch.setattr(solution_operations, "Postgres", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
 
-    # Execute the real worker transition around the failing deletion handler.
+    # Act
     failed = await execute(claimed)
 
-    # The failed operation retains its tombstone and never reaches provider cleanup.
+    # Assert
+    assert provider_attempts == []
     assert failed.status == OperationStatus.failed
+    assert failed.failed == "RuntimeError: Kubernetes workload deletion failed"
     async with session_scope() as session:
         retained = await session.get(Solution, solution.id)
     assert retained is not None
@@ -210,7 +216,9 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
             self.solutions = self
 
-        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(
+            self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str], *, revision_id: object, migrate: bool
+        ) -> None:
             """Capture the generated runtime environment."""
 
             captured["secrets"] = secrets
@@ -223,7 +231,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Run the actual lifecycle handler with fake external providers.
-    await solution_operations.create(solution.id)
+    await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
@@ -237,6 +245,22 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
+
+    # A subsequent revision reuses all generated credentials and stable data identities.
+    async with session_scope() as session:
+        current = await solutions.access(session, solution.id, owner.id)
+        metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"))
+        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"})
+        await session.commit()
+        revision_id = current.desired_revision_id
+    await solution_operations.deploy(revision_id)
+    assert len(database_passwords) == 1
+    assert captured["secrets"] == {"API_KEY": "replacement", **persisted.secrets}
+    async with session_scope() as session:
+        updated = await session.get(Solution, solution.id)
+        assert updated is not None
+        assert updated.secrets == persisted.secrets
+        assert updated.deployed_revision_id == revision_id
 
 
 @pytest.mark.parametrize("revoke_error", [None, RuntimeError("revoke failed")], ids=["success", "failure"])
@@ -290,7 +314,7 @@ async def test_solution_creation_preserves_schema_failure_during_credential_comp
 
     # Act and assert
     with pytest.raises(RuntimeError, match="database unavailable"):
-        await solution_operations.create(solution.id)
+        await solution_operations.deploy(solution.desired_revision_id)
     assert calls == ["credentials", "revoke"]
 
 
@@ -322,7 +346,9 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
             self.solutions = self
 
-        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(
+            self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str], *, revision_id: object, migrate: bool
+        ) -> None:
             """Capture the persisted runtime environment."""
 
             captured["secrets"] = secrets
@@ -335,7 +361,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Act
-    await solution_operations.create(solution.id)
+    await solution_operations.deploy(solution.desired_revision_id)
 
     # Assert
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
@@ -362,7 +388,7 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act
-    result = await solution_operations.create(solution.id)
+    result = await solution_operations.deploy(solution.desired_revision_id)
 
     # Assert
     assert result is None
@@ -384,7 +410,7 @@ async def test_solution_creation_skips_missing_solution_without_constructing_pro
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act and assert
-    assert await solution_operations.create(uuid4()) is None
+    assert await solution_operations.deploy(uuid4()) is None
 
 
 async def test_solution_creation_reuses_complete_runtime_secrets_for_running_solution(
@@ -414,7 +440,9 @@ async def test_solution_creation_reuses_complete_runtime_secrets_for_running_sol
 
             self.solutions = self
 
-        async def apply(self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str]) -> None:
+        async def apply(
+            self, _solution_id: object, _namespace: object, _image: object, secrets: dict[str, str], *, revision_id: object, migrate: bool
+        ) -> None:
             """Capture the persisted runtime contract."""
 
             applied.append(secrets)
@@ -425,7 +453,7 @@ async def test_solution_creation_reuses_complete_runtime_secrets_for_running_sol
     monkeypatch.setattr(solution_operations, "Kubernetes", Kubernetes)
 
     # Act
-    await solution_operations.create(solution.id)
+    await solution_operations.deploy(solution.desired_revision_id)
 
     # Assert
     assert applied == [solution.secrets]
@@ -486,7 +514,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_kubernetes)
 
     # Act
-    result = await solution_operations.create(solution.id)
+    result = await solution_operations.deploy(solution.desired_revision_id)
 
     # Assert
     assert result is None

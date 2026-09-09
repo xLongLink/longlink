@@ -126,14 +126,14 @@ def _leaf_certificate_builder(
 
 
 @overload
-def _generate_gateway_tls(compute_id: UUID, address: None) -> GatewayTLS: ...
+def generate_gateway_tls(compute_id: UUID, address: None) -> GatewayTLS: ...
 
 
 @overload
-def _generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS: ...
+def generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS: ...
 
 
-def _generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS | GatewayClientTLS:
+def generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS | GatewayClientTLS:
     """Generate a private CA with a Gateway server identity and optional Platform client identity."""
 
     # Create a private CA and Gateway server identity for this Compute.
@@ -227,13 +227,7 @@ def _generate_gateway_tls(compute_id: UUID, address: str | None) -> GatewayTLS |
 def generate_gateway_bootstrap_tls(compute_id: UUID) -> GatewayTLS:
     """Generate server-only TLS material used until the Gateway receives its endpoint."""
 
-    return _generate_gateway_tls(compute_id, None)
-
-
-def generate_gateway_tls(compute_id: UUID, address: str) -> GatewayClientTLS:
-    """Generate endpoint-bound Gateway and Platform client TLS identities."""
-
-    return _generate_gateway_tls(compute_id, address)
+    return generate_gateway_tls(compute_id, None)
 
 
 class Gateway:

@@ -27,9 +27,11 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     client = create_runtime_client()
 
     # Exercise runtime metadata and frontend fallback routes.
-    frontend_response = client.get("/")
-    frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-    health_response = client.get("/health")
+    with client:
+        frontend_response = client.get("/")
+        frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+        health_response = client.get("/health")
+        ready_response = client.get("/ready")
     # Verify each runtime route.
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
@@ -37,6 +39,8 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     assert "text/html" in frontend_route_response.headers["content-type"]
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
+    assert ready_response.status_code == 200
+    assert ready_response.json() == {"ok": True}
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -45,9 +49,7 @@ def test_longlink_solution_serves_runtime_routes_without_embedded_frontend(monke
 
     # Arrange
     monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
-    app = FastAPI()
-    LongLink(app)
-    client = TestClient(app)
+    client = create_runtime_client()
 
     # Act
     views_response = client.get("/views.json")
@@ -203,12 +205,12 @@ def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -
 def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> None:
     """Validate SDK XML views against the bundled schema before registering routes."""
 
-    # Create a valid view alongside an invalid catalog entry.
+    # Arrange: Discover the valid view before the invalid catalog entry.
     (solution_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
-    (solution_source / "views" / "broken.xml").write_text("<unknown />", encoding="utf-8")
+    (solution_source / "views" / "z-broken.xml").write_text("<unknown />", encoding="utf-8")
     app = FastAPI()
 
-    # Reject the complete catalog before registering valid view endpoints.
+    # Act
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink(app)
 
@@ -216,21 +218,17 @@ def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> No
     assert not any(getattr(route, "path", None) == "/views/valid" for route in app.router.routes)
 
 
-@pytest.mark.parametrize(
-    ("route", "expected_dashboard_routes"),
-    [
-        pytest.param("/views/dashboard", 1, id="static-route"),
-        pytest.param("/views/{view}", 0, id="dynamic-route"),
-    ],
-)
-def test_solution_routes_colliding_with_view_endpoints_are_rejected(
-    solution_source: Path,
-    route: str,
-    expected_dashboard_routes: int,
-) -> None:
+COLLIDING_SOLUTION_ROUTES = [
+    pytest.param("/views/dashboard", id="static-route"),
+    pytest.param("/views/{view}", id="dynamic-route"),
+]
+
+
+@pytest.mark.parametrize("route", COLLIDING_SOLUTION_ROUTES)
+def test_solution_routes_colliding_with_view_endpoints_are_rejected(solution_source: Path, route: str) -> None:
     """Reject view endpoints that would overlap a Solution-owned route."""
 
-    # Create a view whose endpoint is already owned by the Solution.
+    # Arrange
     (solution_source / "views" / "dashboard.xml").write_text(
         "<longlink>Dashboard</longlink>",
         encoding="utf-8",
@@ -243,12 +241,14 @@ def test_solution_routes_colliding_with_view_endpoints_are_rejected(
 
         return {"source": "solution"}
 
-    # Reject ambiguous ownership during runtime registration.
+    original_routes = app.router.routes.copy()
+
+    # Act
     with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
         LongLink(app)
 
-    # Assert LongLink did not register the colliding view endpoint.
-    assert sum(getattr(item, "path", None) == "/views/dashboard" for item in app.router.routes) == expected_dashboard_routes
+    # Assert
+    assert app.router.routes == original_routes
 
 
 @pytest.mark.parametrize(

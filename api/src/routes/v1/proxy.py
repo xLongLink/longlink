@@ -1,3 +1,4 @@
+import json
 import httpx2
 import asyncio
 from uuid import UUID
@@ -6,7 +7,7 @@ from src.auth import authuser, get_session
 from src.utils import roles
 from collections.abc import AsyncIterator
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import GatewayClient
 from src.database.services import organizations
@@ -18,6 +19,8 @@ BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/h
 PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
 PROXY_REQUEST_TIMEOUT_SECONDS = 30
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
+PROXY_ERROR_MAX_BYTES = 64 * 1024
+PROXY_ERROR_TIMEOUT_SECONDS = 5
 
 
 @router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
@@ -49,9 +52,13 @@ async def proxy_solution_request(
             detail=f"Organization {required_role.value} access required",
         )
 
-    # Let the web runtime show a loading state while solution creation is still pending.
+    # Report readiness explicitly; the frontend owns its loading presentation.
     if solution.status != Status.running:
-        return Response(status_code=503, headers={"cache-control": "no-store"})
+        raise HTTPException(
+            status_code=503,
+            detail="Solution is not ready yet. Please try again shortly.",
+            headers={"cache-control": "no-store"},
+        )
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
     if (
@@ -96,8 +103,42 @@ async def proxy_solution_request(
     except httpx2.HTTPError as exc:
         raise HTTPException(status_code=503, detail="Solution proxy request failed") from exc
 
-    # Reject active documents before they can execute under the authenticated platform origin.
+    # Normalize errors before checking successful response types or starting browser streaming.
     response_content_type = gateway_response.response.headers.get("content-type")
+    response_headers = {
+        "cache-control": "no-store",
+        "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+    }
+    if gateway_response.response.status_code >= 400:
+        detail = "The Solution could not complete the request. Please try again later."
+
+        # Only explicitly public JSON details cross the boundary; never forward raw diagnostics.
+        try:
+            async with asyncio.timeout(PROXY_ERROR_TIMEOUT_SECONDS):
+                body = bytearray()
+                async for chunk in gateway_response.response.aiter_bytes():
+                    if len(body) + len(chunk) > PROXY_ERROR_MAX_BYTES:
+                        break
+                    body.extend(chunk)
+                else:
+                    payload = json.loads(body)
+                    if isinstance(payload, dict) and isinstance(payload.get("detail"), str) and payload["detail"].strip():
+                        payload["detail"].encode("utf-8")
+                        detail = payload["detail"]
+        except (TimeoutError, httpx2.HTTPError, ValueError, RecursionError):
+            pass
+        finally:
+            await gateway_response.aclose()
+
+        # Preserve actionable HTTP metadata, not upstream cookies or body-specific headers.
+        for name in ("retry-after", "www-authenticate", "allow"):
+            value = gateway_response.response.headers.get(name)
+            if value is not None:
+                response_headers[name] = value
+        return JSONResponse(status_code=gateway_response.response.status_code, content={"detail": detail}, headers=response_headers)
+
+    # Reject active documents before they can execute under the authenticated platform origin.
     if response_content_type is not None and any(
         value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
     ):
@@ -105,11 +146,6 @@ async def proxy_solution_request(
         raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
 
     # Only content type crosses the runtime-to-browser boundary.
-    response_headers = {
-        "cache-control": "no-store",
-        "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-    }
     if response_content_type is not None:
         response_headers["content-type"] = response_content_type
 

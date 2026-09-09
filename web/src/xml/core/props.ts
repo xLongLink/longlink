@@ -10,6 +10,12 @@ export const xmlNonblankStringSchema = z
     .transform(String)
     .refine((value) => value.trim().length > 0, 'must not be blank');
 export const xmlLabelPropsSchema = z.object({ label: xmlNonblankStringSchema });
+export const xmlNumericControlPropsSchema = z.object({
+    label: xmlNonblankStringSchema,
+    max: z.number().optional(),
+    min: z.number().optional(),
+    step: z.number().optional(),
+});
 export const xmlPositiveNumberSchema = z.number().positive('must be a positive number');
 export const xmlPositiveIntegerSchema = z.number().int('must be an integer').positive('must be positive');
 export const xmlSpacingSchema = z

@@ -47,10 +47,8 @@ export default function AdminCompute() {
         getId: (compute) => compute.id,
         description: (compute) =>
             `Remove compute ${compute.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
-        errorMessage: 'Failed to delete compute',
         fallbackDescription:
             'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const pageMetadata = <NoIndex title="Compute | LongLink" />;
 

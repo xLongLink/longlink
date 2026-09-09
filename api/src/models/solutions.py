@@ -3,17 +3,13 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.models.resources import OrganizationIdentity
 
 
-class SolutionCreate(BaseModel):
-    """Validate solution creation payloads."""
-
-    # Metadata
-    name: str = Field(min_length=1, max_length=100)
-    image: Image
-    description: str | None = Field(default=None, max_length=255)
+class EnvironmentValues(BaseModel):
+    """Validate a complete environment snapshot."""
 
     # Configuration
     envs: dict[str, str] = Field(default_factory=dict)
@@ -52,6 +48,61 @@ class SolutionCreate(BaseModel):
         return envs
 
 
+class SolutionCreate(EnvironmentValues):
+    """Validate solution creation metadata and release configuration."""
+
+    image: Image
+    name: str = Field(min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=255)
+
+
+class SolutionPatch(BaseModel):
+    """Preserve omitted values and remove variables explicitly set to null."""
+
+    envs: dict[str, str | None] = Field(default_factory=dict)
+    expected_revision_id: UUID | None = None
+
+    @field_validator("envs")
+    @classmethod
+    def validate_patch(cls, envs: dict[str, str | None]) -> dict[str, str | None]:
+        """Validate names and supplied values, including removal names."""
+
+        EnvironmentValues.validate_environment_variables({name: value or "" for name, value in envs.items()})
+        return envs
+
+
+class SolutionUpdate(SolutionPatch):
+    """Deploy a submitted image source with an environment patch."""
+
+    image: Image
+
+
+class SolutionUpdateCheck(BaseModel):
+    """Expose a candidate and configured names, never environment values."""
+
+    source: str
+    image: str
+    available: bool
+    revision_id: UUID
+    current_image: str = Field(description="Immutable image of the desired revision used for this update check.")
+    configured_envs: list[str]
+    metadata: LongLinkMetadata
+
+
+class RevisionResponse(BaseModel):
+    """Expose release history without encrypted environment values."""
+
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    image: str
+    source: str
+    configured_envs: list[str]
+    failed: bool
+    created_at: datetime
+    created_id: UUID | None
+    deployed_at: datetime | None
+
+
 class SolutionResponse(BaseModel):
     """Represent one solution in API responses."""
 
@@ -70,9 +121,12 @@ class SolutionResponse(BaseModel):
 
     # Desired release
     image_desired: str
+    desired_revision_id: UUID | None
+    deployed_revision_id: UUID | None
 
     # State
     status: Status
+    deployment_pending: bool
 
     # Audit
     created_at: datetime

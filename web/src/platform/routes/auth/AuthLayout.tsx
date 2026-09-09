@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
+import type { ReactNode, SyntheticEvent } from 'react';
 
 type AuthFormProps = {
     children: ReactNode;
     gap: 2 | 3 | 4;
-    onSubmit: () => void | Promise<unknown>;
+    onSubmit: (event: SyntheticEvent<HTMLElement>) => Promise<void>;
 };
 
 /** Renders a token-spaced authentication form with native navigation disabled. */
@@ -17,8 +17,7 @@ export function AuthForm({ children, gap, onSubmit }: AuthFormProps) {
             as="form"
             gap={gap}
             onSubmit={(event) => {
-                event.preventDefault();
-                void onSubmit();
+                void onSubmit(event);
             }}
         >
             {children}

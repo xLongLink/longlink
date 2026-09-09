@@ -6,28 +6,36 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
+from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 
 
-async def create(solution_id: UUID) -> None:
-    """Converge one Solution lifecycle target or running workload."""
+async def deploy(revision_id: UUID) -> None:
+    """Apply an exact revision, retaining Solution-owned credentials and data."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
+        revision = await session.get(Revision, revision_id)
+        if revision is None:
+            return
+        solution_id = revision.solution_id
         target = await organizations.solution_infrastructure(session, solution_id)
         if target is None:
             logger.info("Solution %s no longer exists; skipping reconciliation", solution_id)
             return
         solution, infrastructure = target
-    if solution.deleted_at is not None:
-        logger.info("Solution %s is pending deletion; skipping reconciliation", solution.id)
-        return
+        if revision.id != solution.effective_revision_id:
+            return
+        if solution.deleted_at is not None:
+            return
+        await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(status=Status.creating))
+        await session.commit()
     organization = infrastructure.organization
     runtime_secrets = solution.secrets
 
@@ -110,22 +118,25 @@ async def create(solution_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
-        await cluster.solutions.apply(solution.id, organization.id.hex, solution.image_desired, runtime_secrets)
+        await cluster.solutions.apply(
+            solution.id,
+            organization.id.hex,
+            revision.image,
+            {**revision.envs, **runtime_secrets},
+            revision_id=revision.id,
+            migrate=revision.deployed_at is None,
+        )
 
     # Publish the applied release only after workload readiness.
-    if solution.status in {Status.creating, Status.failed}:
-        logger.info("Publishing Solution %s", solution.id)
-        async with session_scope() as session:
-            await session.execute(
-                update(Solution)
-                .where(
-                    col(Solution.id) == solution.id,
-                    col(Solution.deleted_at).is_(None),
-                    col(Solution.status).in_((Status.creating, Status.failed)),
-                )
-                .values(status=Status.running)
-            )
-            await session.commit()
+    logger.info("Publishing Solution %s", solution.id)
+    async with session_scope() as session:
+        await session.execute(
+            update(Solution)
+            .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
+            .values(status=Status.running, deployed_revision_id=revision.id)
+        )
+        await session.execute(update(Revision).where(col(Revision.id) == revision.id).values(deployed_at=utcnow()))
+        await session.commit()
 
 
 async def delete(solution_id: UUID) -> None:
@@ -172,5 +183,8 @@ async def delete(solution_id: UUID) -> None:
     logger.info("Purging Solution %s", solution.id)
     async with session_scope() as session:
         # The delete statement locks the tombstone while making completed cleanup idempotent.
+        await session.execute(
+            update(Solution).where(col(Solution.id) == solution.id).values(desired_revision_id=None, deployed_revision_id=None)
+        )
         await session.execute(sql_delete(Solution).where(col(Solution.id) == solution.id))
         await session.commit()

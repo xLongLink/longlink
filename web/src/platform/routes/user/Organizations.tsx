@@ -15,7 +15,11 @@ import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1
 
 /** Renders the organizations landing page for the authenticated user. */
 export default function Organizations() {
-    const { memberships, isOrganizationsLoading, organizationsError } = useUserOrganizations();
+    const {
+        data: memberships = [],
+        isLoading: isOrganizationsLoading,
+        error: organizationsError,
+    } = useUserOrganizations();
     const pageMetadata = <NoIndex title="Organizations | LongLink" />;
 
     if (isOrganizationsLoading) {

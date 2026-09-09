@@ -106,17 +106,20 @@ async def test_ensure_administrator_uses_concurrently_created_configured_user(mo
         password=password_hash.hash(env.ADMIN_PASSWORD),
     )
     scalar_calls = 0
+    flush_calls = 0
 
     async def return_concurrent_administrator(_statement: object) -> User | None:
         """Model the configured account appearing after the unique-index conflict."""
 
         nonlocal scalar_calls
         scalar_calls += 1
-        return None if scalar_calls == 1 else concurrent_administrator
+        return None if scalar_calls <= 2 else concurrent_administrator
 
     async def raise_unique_conflict() -> None:
         """Model another Platform replica creating the configured account first."""
 
+        nonlocal flush_calls
+        flush_calls += 1
         raise IntegrityError("INSERT", {}, Exception("unique constraint"))
 
     # Act
@@ -126,6 +129,8 @@ async def test_ensure_administrator_uses_concurrently_created_configured_user(mo
         await user_service.ensure_administrator(session)
 
     # Assert
+    assert flush_calls == 1
+    assert scalar_calls == 3
     assert concurrent_administrator.name == env.ADMIN_NAME
     assert concurrent_administrator.administrator is True
 
@@ -186,6 +191,7 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     """Persist registrations and exclude deleted memberships and organizations."""
 
     # Arrange
+    password_hash = PasswordHash.recommended()
     member = users[1]
     active_organization = await create_organization(member, name="active")
     deleted_organization = await create_organization(member, name="deleted")
@@ -198,11 +204,14 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
 
     # Act
     async with session_scope() as session:
+        persisted_user = await session.get(User, registered.id)
         memberships = await user_service.memberships(session, member.id)
         organization_ids = await user_service.organization_ids(session, member.id)
 
     # Assert
     assert registered.id is not None
-    assert registered.email == "registered@example.com"
+    assert persisted_user is not None
+    assert persisted_user.email == "registered@example.com"
+    assert password_hash.verify("test-password", persisted_user.password)
     assert [membership.organization_id for membership in memberships] == [active_organization.id]
     assert list(organization_ids) == [active_organization.id]

@@ -1,4 +1,3 @@
-import pytest
 from uuid import uuid4
 from datetime import timedelta
 from factories import (
@@ -10,7 +9,6 @@ from factories import (
     create_ready_infrastructure,
 )
 from factories import queue_operation as queue
-from sqlalchemy.exc import IntegrityError
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -18,7 +16,7 @@ from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.models.pagination import Pagination
 from src.database.models.computes import ComputeRegistry
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
@@ -34,6 +32,7 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
         second_row = await session.get(Operation, second_operation.id)
         assert first_row is not None
         assert second_row is not None
+        first_row.created_at = second_row.created_at - timedelta(days=1)
         first_row.finished_at = utcnow() - timedelta(days=31)
         first_row.logs = ["expired"]
         second_row.finished_at = utcnow() - timedelta(days=29)
@@ -51,65 +50,12 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
     # Assert
     assert cleared == 1
     assert len(page) == 1
-    assert page[0].id in {first_operation.id, second_operation.id}
+    assert page[0].id == second_operation.id
     assert total == 2
     assert first_row is not None
     assert first_row.logs == []
     assert second_row is not None
     assert second_row.logs == ["retained"]
-
-
-async def test_operations_service_enqueue_uses_concurrently_created_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return the unleased operation created by another transaction during an insert race."""
-
-    # Arrange
-    concurrent_operation = Operation(kind=OperationKind.compute_create, target_id=uuid4())
-    scalar_calls = 0
-
-    async def return_concurrent_operation(_statement: object) -> Operation | None:
-        """Model the matching operation appearing after the unique-index conflict."""
-
-        nonlocal scalar_calls
-        scalar_calls += 1
-        return None if scalar_calls == 1 else concurrent_operation
-
-    async def raise_unique_conflict() -> None:
-        """Model a competing transaction winning the operation insert race."""
-
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    # Act
-    async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_concurrent_operation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        operation = await operations.enqueue(session, kind=concurrent_operation.kind, target_id=concurrent_operation.target_id)
-
-    # Assert
-    assert operation is concurrent_operation
-
-
-async def test_operations_service_enqueue_reraises_unresolved_insert_conflict(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Expose an insert conflict when no competing Operation can be recovered."""
-
-    # Arrange
-    conflict = IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    async def return_no_operation(_statement: object) -> None:
-        """Model an unavailable competing Operation after the insert conflict."""
-
-    async def raise_unique_conflict() -> None:
-        """Model an insert conflict without a visible winning transaction."""
-
-        raise conflict
-
-    # Act and assert
-    async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_no_operation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        with pytest.raises(IntegrityError) as error:
-            await operations.enqueue(session, kind=OperationKind.compute_create, target_id=uuid4())
-
-    assert error.value is conflict
 
 
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
@@ -119,11 +65,11 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     organization_id = uuid4()
 
     solution = await queue(
-        kind=OperationKind.solution_create,
+        kind=OperationKind.solution_deploy,
         target_id=first_solution_id,
     )
     duplicate = await queue(
-        kind=OperationKind.solution_create,
+        kind=OperationKind.solution_deploy,
         target_id=first_solution_id,
     )
     await queue(
@@ -135,7 +81,7 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     assert duplicate.id == solution.id
     assert len(fetched) == 2
     assert {(item.kind, item.target_id) for item in fetched} == {
-        (OperationKind.solution_create, first_solution_id),
+        (OperationKind.solution_deploy, first_solution_id),
         (OperationKind.organization_create, organization_id),
     }
 
@@ -144,7 +90,7 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
     assert claimed.id == solution.id
     completed = await complete_operation(claimed.id)
     replacement = await queue(
-        kind=OperationKind.solution_create,
+        kind=OperationKind.solution_deploy,
         target_id=first_solution_id,
     )
 
@@ -170,7 +116,6 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
             organization_id=organization.id,
             name="Dashboard",
             slug="dashboard",
-            image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
             secrets={},
             status=Status.running,
         )
@@ -178,13 +123,25 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
             organization_id=organization.id,
             name="Deleted",
             slug="deleted",
-            image_desired="ghcr.io/longlink/deleted@sha256:resolved",
             secrets={},
             status=Status.running,
             deleted_at=utcnow(),
         )
         session.add(running)
         session.add(deleted)
+        await session.flush()
+        revision = Revision(
+            source="ghcr.io/longlink/dashboard:latest",
+            solution_id=running.id,
+            image="ghcr.io/longlink/dashboard@sha256:resolved",
+            image_metadata={},
+            envs={},
+            deployed_at=utcnow(),
+        )
+        session.add(revision)
+        await session.flush()
+        running.desired_revision_id = revision.id
+        running.deployed_revision_id = revision.id
         await session.commit()
 
     async with session_scope() as session:
@@ -195,9 +152,29 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
     assert scheduled == {
         (OperationKind.compute_create, infrastructure.compute.id),
         (OperationKind.organization_create, organization.id),
-        (OperationKind.solution_create, running.id),
+        (OperationKind.solution_deploy, revision.id),
         (OperationKind.solution_delete, deleted.id),
     }
+
+    # Pending desired takes priority over last deployed, including release reconciliation.
+    async with session_scope() as session:
+        current = await session.get(Solution, running.id)
+        assert current is not None
+        desired = Revision(
+            source="ghcr.io/longlink/dashboard:latest",
+            solution_id=running.id,
+            image="ghcr.io/longlink/dashboard@sha256:new",
+            image_metadata={},
+            envs={},
+        )
+        session.add(desired)
+        await session.flush()
+        current.desired_revision_id = desired.id
+        current.desired_revision = desired
+        await operations.schedule_reconciliation(session)
+        await session.commit()
+    scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
+    assert (OperationKind.solution_deploy, desired.id) in scheduled
 
 
 async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
@@ -219,7 +196,6 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
             organization_id=organization.id,
             name="Deleted Dashboard",
             slug="deleted-dashboard",
-            image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
             secrets={},
             deleted_at=utcnow(),
         )
@@ -362,10 +338,20 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
             organization_id=organization.id,
             name="Dashboard",
             slug="dashboard",
-            image_desired="ghcr.io/longlink/dashboard@sha256:resolved",
             secrets={},
         )
         session.add(solution)
+        await session.flush()
+        revision = Revision(
+            source="ghcr.io/longlink/dashboard:latest",
+            solution_id=solution.id,
+            image="ghcr.io/longlink/dashboard@sha256:resolved",
+            image_metadata={},
+            envs={},
+        )
+        session.add(revision)
+        await session.flush()
+        solution.desired_revision_id = revision.id
         await session.commit()
 
     compute_operation = await queue(kind=OperationKind.compute_create, target_id=compute.id)
@@ -380,7 +366,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert organization_claim.id == organization_operation.id
     assert await fail_operation(organization_operation.id, "organization creation failed") is not None
 
-    solution_operation = await queue(kind=OperationKind.solution_create, target_id=solution.id)
+    solution_operation = await queue(kind=OperationKind.solution_deploy, target_id=solution.desired_revision_id)
     solution_claim = await claim_operation()
     assert solution_claim is not None
     assert solution_claim.id == solution_operation.id
@@ -405,7 +391,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     items_by_kind = {item.kind: item for item in items}
     compute_item = items_by_kind[OperationKind.compute_create]
     organization_item = items_by_kind[OperationKind.organization_create]
-    solution_item = items_by_kind[OperationKind.solution_create]
+    solution_item = items_by_kind[OperationKind.solution_deploy]
     assert compute_item.resource is not None
     assert compute_item.resource.id == compute.id
     assert compute_item.resource.name == compute.name
@@ -420,8 +406,8 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert solution_item.status == OperationStatus.failed
 
 
-async def test_operations_service_creates_follow_up_after_claimed_work() -> None:
-    """Keep claimed work immutable while coalescing one unclaimed follow-up."""
+async def test_operations_service_coalesces_claimed_work() -> None:
+    """Reuse claimed work and release it for another attempt."""
 
     # Seed and claim one operation.
     target_id = uuid4()
@@ -431,10 +417,14 @@ async def test_operations_service_creates_follow_up_after_claimed_work() -> None
 
     # Create duplicate desired state while the claimed Operation remains immutable.
     follow_up = await queue(target_id=target_id)
-    duplicate = await queue(target_id=target_id)
 
-    # Verify one separate unclaimed follow-up represents the newer request.
+    # Verify the request reuses the lease and shutdown can release it safely.
     assert claimed.status == OperationStatus.active
-    assert follow_up.id != claimed.id
-    assert duplicate.id == follow_up.id
-    assert follow_up.status == OperationStatus.scheduled
+    assert follow_up.id == claimed.id
+    assert follow_up.status == OperationStatus.active
+    async with session_scope() as session:
+        released = await operations.release(session, claimed.id)
+        await session.commit()
+        assert released is not None
+        assert released.status == OperationStatus.scheduled
+        assert released.lease_expires_at is None

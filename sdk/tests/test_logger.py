@@ -54,9 +54,10 @@ def test_configure_logger_reuses_existing_handler(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(logger, "propagate", True)
 
     # Act
-    configure_logger(logger.name)
+    configured_logger = configure_logger(logger.name)
 
     # Assert
+    assert configured_logger is logger
     assert logger.handlers == [handler]
     assert logger.level == logging.INFO
     assert logger.propagate is False
@@ -72,10 +73,12 @@ def test_configure_logger_adds_configured_handler_when_logger_has_none(monkeypat
     monkeypatch.setattr(logger, "propagate", True)
 
     # Act
-    configure_logger(logger.name)
-    configure_logger(logger.name)
+    configured_logger = configure_logger(logger.name)
+    reconfigured_logger = configure_logger(logger.name)
 
     # Assert
+    assert configured_logger is logger
+    assert reconfigured_logger is logger
     assert len(logger.handlers) == 1
     assert isinstance(logger.handlers[0], logging.StreamHandler)
     assert isinstance(logger.handlers[0].formatter, ColorFormatter)

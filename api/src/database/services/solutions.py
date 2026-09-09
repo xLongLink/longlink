@@ -1,19 +1,21 @@
 from uuid import UUID
 from sqlmodel import col
-from src.utils import names, roles
-from sqlalchemy import func, select
-from src.errors import ConflictError, NotFoundError, ForbiddenError
+from src.utils import names, roles, images
+from sqlalchemy import func, select, update
+from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import defer, contains_eager
-from collections.abc import Sequence
+from sqlalchemy.orm import defer, raiseload, contains_eager
+from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
+from src.models.metadata import LongLinkMetadata
+from src.models.solutions import EnvironmentValues
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.solutions import Solution
+from src.database.models.solutions import Revision, Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
@@ -45,15 +47,20 @@ async def create(
     session: AsyncSession,
     organization_id: UUID,
     name: str,
-    image: Image,
+    metadata: LongLinkMetadata,
     secrets: dict[str, str],
     description: str | None = None,
     *,
     user_id: UUID,
+    source: Image | None = None,
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
     # Lock the Organization before creating a Solution against its assignment.
+    if session.get_bind().dialect.name == "sqlite":
+        await session.execute(
+            update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
+        )
     organization = await session.scalar(select(Organization).where(col(Organization.id) == organization_id).with_for_update())
     if organization is None:
         raise NotFoundError("Organization not found")
@@ -93,8 +100,7 @@ async def create(
         name=name,
         slug=names.slugify(name),
         description=description,
-        image_desired=image,
-        secrets=secrets,
+        secrets={},
         updated_id=user_id,
     )
 
@@ -106,37 +112,111 @@ async def create(
     except IntegrityError as exc:
         raise ConflictError("Solution slug already exists") from exc
 
-    await operations.enqueue(
-        session,
-        kind=OperationKind.solution_create,
-        target_id=solution.id,
-    )
+    # Creation uses the same immutable release boundary as subsequent updates.
+    await deploy(session, solution, user_id, metadata, secrets, source=source)
 
     return solution
 
 
-async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
-    """Authorize, tombstone, and queue cleanup for one LongLink Solution."""
+async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, lock: bool = True) -> Solution:
+    """Lock one active Solution and revalidate maintenance access."""
 
-    # Lock active solution access before changing its lifecycle state.
-    result = await session.execute(
+    # SQLite needs a write reservation because SELECT FOR UPDATE is a no-op there.
+    if lock and session.get_bind().dialect.name == "sqlite":
+        await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(updated_at=col(Solution.updated_at)))
+
+    # Serialize commands and permission changes before recording a deployment.
+    statement = (
         select(Solution, col(UserOrganization.role))
-        .options(defer(Solution.secrets))
+        .options(defer(Solution.secrets), raiseload(Solution.desired_revision))
         .join(UserOrganization, col(UserOrganization.organization_id) == col(Solution.organization_id))
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(
             col(Solution.id) == solution_id,
             col(Solution.deleted_at).is_(None),
+            col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.deleted_at).is_(None),
         )
-        .with_for_update()
+        .execution_options(populate_existing=True)
     )
+    if lock:
+        statement = statement.with_for_update(of=(Solution, UserOrganization))
+    result = await session.execute(statement)
     row = result.one_or_none()
     if row is None:
         raise ForbiddenError("Access required")
     solution, role = row
     if not roles.atleast(role, OrganizationRoles.maintain):
         raise ForbiddenError("Permission required")
+    return solution
+
+
+async def deploy(
+    session: AsyncSession,
+    solution: Solution,
+    user_id: UUID,
+    metadata: LongLinkMetadata,
+    envs: Mapping[str, str | None],
+    *,
+    source: Image | None = None,
+) -> None:
+    """Append a snapshot and queue its exact deployment target."""
+
+    # Merge the patch into the serialized desired snapshot, not the last deployed release.
+    current = await session.get(Revision, solution.desired_revision_id) if solution.desired_revision_id is not None else None
+    merged = dict(current.envs) if current is not None else {}
+    for name, value in envs.items():
+        if value is None:
+            merged.pop(name, None)
+        else:
+            merged[name] = value
+    try:
+        EnvironmentValues.validate_environment_variables({name: value or "" for name, value in envs.items()})
+        EnvironmentValues.validate_environment_variables(merged)
+    except ValueError as exc:
+        raise InvalidError(str(exc)) from exc
+    missing = images.missing_envs(metadata, merged)
+    if missing:
+        raise InvalidError(f"Solution environment does not satisfy required image variables: {', '.join(missing)}")
+
+    # Never change Solution-owned runtime credentials when appending a release.
+    revision = Revision(
+        solution_id=solution.id,
+        image=metadata.image,
+        source=source if source is not None else metadata.image,
+        image_metadata=metadata.model_dump(mode="json"),
+        envs=merged,
+        created_id=user_id,
+    )
+    session.add(revision)
+    await session.flush()
+    solution.desired_revision_id = revision.id
+    solution.desired_revision = revision
+    solution.updated_id = user_id
+    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
+
+
+async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID, user_id: UUID) -> None:
+    """Select a previously deployed snapshot without reversing migrations."""
+
+    # Only this Solution's proven releases are safe rollback candidates.
+    revision = await session.get(Revision, revision_id)
+    if revision is None or revision.solution_id != solution.id:
+        raise NotFoundError("Revision not found")
+    if revision.deployed_at is None:
+        raise ConflictError("Revision has never been deployed successfully")
+    solution.desired_revision_id = revision.id
+    solution.desired_revision = revision
+    solution.updated_id = user_id
+    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
+
+
+async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
+    """Authorize, tombstone, and queue cleanup for one LongLink Solution."""
+
+    # Use the same locked maintenance boundary as deployment commands.
+    solution = await access(session, solution_id, user_id)
 
     # Record the tombstone and schedule external cleanup in one transaction.
     now = utcnow()

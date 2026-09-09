@@ -1,15 +1,17 @@
 import asyncio
 import contextlib
+from src import errors
 from fastapi import FastAPI, Request, Response
 from pathlib import Path
 from src.utils import jobs
-from src.errors import ServiceError
 from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
 from src.database.session import session_scope
+from starlette.exceptions import HTTPException
 from src.database.services import users as user_service
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -78,11 +80,11 @@ async def prevent_cross_origin_authenticated_writes(
     return await call_next(request)
 
 
-@app.exception_handler(ServiceError)
-async def service_error_response(_request: Request, error: ServiceError):
-    """Return expected service failures as API responses."""
-
-    return JSONResponse(status_code=error.status_code, content={"detail": str(error)})
+# Apply the same public contract to domain, HTTP, validation, and unexpected failures.
+app.exception_handler(errors.ServiceError)(errors.service_error_response)
+app.exception_handler(HTTPException)(errors.http_error_response)
+app.exception_handler(RequestValidationError)(errors.validation_error_response)
+app.add_exception_handler(Exception, errors.unexpected_error_response)
 
 
 @app.middleware("http")

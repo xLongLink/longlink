@@ -47,9 +47,7 @@ export default function AdminSolutions() {
         items: solutions,
         getId: (solution) => solution.id,
         description: (solution) => `Delete solution ${solution.name}?`,
-        errorMessage: 'Failed to delete solution',
         fallbackDescription: 'Delete this solution?',
-        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const pageMetadata = <NoIndex title="Solutions | LongLink" />;
 
@@ -131,7 +129,13 @@ export default function AdminSolutions() {
                             <StatusBadge status={metadataSolution.status} />
                         </MetadataListItem>
                         <MetadataListItem label="Organization">{metadataSolution.organization.name}</MetadataListItem>
-                        <MetadataListItem label="Image">{metadataSolution.image_desired}</MetadataListItem>
+                        <MetadataListItem label="Desired image">{metadataSolution.image_desired}</MetadataListItem>
+                        <MetadataListItem label="Desired revision">
+                            {metadataSolution.desired_revision_id ?? 'Not selected'}
+                        </MetadataListItem>
+                        <MetadataListItem label="Last deployed revision">
+                            {metadataSolution.deployed_revision_id ?? 'Never deployed'}
+                        </MetadataListItem>
                         <MetadataListItem label="ID">{metadataSolution.id}</MetadataListItem>
                         <MetadataListItem label="Slug">{metadataSolution.slug}</MetadataListItem>
                         {metadataSolution.description ? (

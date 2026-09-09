@@ -1,4 +1,4 @@
-import { RenderXML } from '@/xml/renderers';
+import { RenderXML } from '../helpers';
 import { MemoryRouter } from 'react-router';
 import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';

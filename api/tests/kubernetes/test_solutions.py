@@ -16,6 +16,19 @@ class AppliedResource(Protocol):
     raw: dict[str, object]
 
 
+class MigrationJobs:
+    """Provide the existing migration Jobs for workload adapter tests."""
+
+    jobs: ClassVar[list[object]] = []
+
+    @classmethod
+    async def list(cls, **_kwargs: object):
+        """Yield existing Jobs without contacting Kubernetes."""
+
+        for job in cls.jobs:
+            yield job
+
+
 def test_solution_template_constrains_workloads() -> None:
     """Constrain Solution and migration architecture and temporary filesystems."""
 
@@ -28,6 +41,7 @@ def test_solution_template_constrains_workloads() -> None:
         namespace="acme",
         runtime_revision="revision",
         migration_id="solution-migration",
+        secret_id="solution-revision",
     )
 
     # Assert
@@ -58,6 +72,25 @@ def test_solution_template_constrains_workloads() -> None:
         assert container["volumeMounts"] == [{"name": "tmp", "mountPath": "/tmp"}]
         assert pod_spec["volumes"] == [{"name": "tmp", "emptyDir": {"sizeLimit": "256Mi"}}]
 
+        # Only the runtime is probed; database outages must not trigger liveness restarts.
+        if workload is deployment:
+            assert container["startupProbe"] == {
+                "httpGet": {"path": "/health", "port": 8000},
+                "periodSeconds": 5,
+                "failureThreshold": 60,
+            }
+            assert container["livenessProbe"] == {
+                "httpGet": {"path": "/health", "port": 8000},
+                "periodSeconds": 10,
+                "failureThreshold": 3,
+            }
+            assert container["readinessProbe"] == {
+                "httpGet": {"path": "/ready", "port": 8000},
+                "timeoutSeconds": 5,
+                "periodSeconds": 5,
+                "failureThreshold": 3,
+            }
+
 
 async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid creating runtime resources when the Solution migration fails."""
@@ -66,7 +99,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
     applied: list[str] = []
     logged: list[str] = []
 
-    class MigrationJob:
+    class MigrationJob(MigrationJobs):
         """Report a terminally failed migration Job."""
 
         def __init__(self, raw: dict[str, object], *, api: object) -> None:
@@ -91,7 +124,6 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
         """Expose output from the failed migration Job."""
 
         name: ClassVar[str] = "failed-migration-pod"
-        metadata: ClassVar[dict[str, object]] = {"name": "failed-migration-pod"}
         raw: ClassVar[dict[str, object]] = {"status": {"phase": "Failed"}}
 
         @classmethod
@@ -99,7 +131,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             """Yield the failed migration Pod selected by its Job label."""
 
             assert kwargs["namespace"] == "acme"
-            assert kwargs["label_selector"] == {"job-name": "00000000-0000-4000-8000-000000000001-migration-5d5aa840"}
+            assert kwargs["label_selector"] == {"job-name": f"migration-{UUID(int=1)}"}
             yield cls()
 
         async def logs(self, tail_lines: int) -> AsyncIterator[str]:
@@ -141,16 +173,36 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             "acme",
             "ghcr.io/longlink/dashboard:latest",
             {},
+            revision_id=UUID(int=1),
         )
     assert applied == ["Secret", "Job"]
     assert logged[-1] == "Recent output from migration Pod failed-migration-pod:\ndatabase connection refused"
 
 
-async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Apply every workload resource when the Deployment and HTTPRoute are ready."""
+@pytest.mark.parametrize("migrate", [True, False])
+async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypatch: pytest.MonkeyPatch, migrate: bool) -> None:
+    """Stop interrupted migrations, isolate secrets, and skip migrations on rollback."""
 
     # Arrange
     applied: list[str] = []
+
+    class InterruptedJob:
+        """Retain an interrupted migration while stopping its schema mutations."""
+
+        name = "interrupted"
+        raw: ClassVar[dict[str, object]] = {"status": {}}
+
+        async def patch(self, patch: dict[str, object]) -> None:
+            """Suspend the old migration before applying any new workload."""
+
+            assert patch == {"spec": {"suspend": True}}
+            applied.append("suspend")
+
+        async def wait(self, conditions: list[str]) -> None:
+            """Acknowledge suspension before checking for remaining Pods."""
+
+            assert conditions == ["condition=Suspended"]
+            applied.append("suspended")
 
     class Resource:
         """Supply Kubernetes-generated rollout state for desired resources."""
@@ -190,21 +242,29 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
                     ]
                 }
 
-    class MigrationJob(Resource):
+    class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
+
+        jobs: ClassVar[list[object]] = [InterruptedJob()]
 
         async def wait(self, conditions: list[str]) -> None:
             """Supply the completed status returned by Kubernetes."""
 
             assert conditions == ["condition=Complete", "condition=Failed"]
+            assert migrate
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
     async def apply(resource: AppliedResource) -> None:
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
+        if resource.raw.get("kind") == "Deployment":
+            spec = resource.raw["spec"]
+            assert isinstance(spec, dict)
+            assert spec["template"]["spec"]["containers"][0]["envFrom"] == [{"secretRef": {"name": f"revision-{UUID(int=1)}"}}]
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
+    monkeypatch.setattr(solutions, "Pod", MigrationJobs)
     monkeypatch.setattr(solutions, "Deployment", Resource)
     monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
@@ -215,10 +275,12 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
         "acme",
         "ghcr.io/longlink/dashboard:latest",
         {},
+        revision_id=UUID(int=1),
+        migrate=migrate,
     )
 
     # Assert
-    assert applied == ["Secret", "Job", "Service", "HTTPRoute", "Deployment"]
+    assert applied == ["suspend", "suspended", "Secret", *(["Job"] if migrate else []), "Service", "HTTPRoute", "Deployment"]
 
 
 async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -246,7 +308,7 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
                 ]
             }
 
-    class MigrationJob(Resource):
+    class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
         async def wait(self, _conditions: list[str]) -> None:
@@ -268,6 +330,7 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
             "acme",
             "ghcr.io/longlink/dashboard:latest",
             {},
+            revision_id=UUID(int=1),
         )
 
 
@@ -288,7 +351,7 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
 
             raise solutions.NotFoundError("Deployment missing")
 
-    class MigrationJob(Resource):
+    class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
         async def wait(self, _conditions: list[str]) -> None:
@@ -306,7 +369,7 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
     # Act and assert
     with pytest.raises(RuntimeError, match="Kubernetes Solution Deployment disappeared during rollout"):
         await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}
+            UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
         )
 
 
@@ -338,7 +401,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
         async def refresh(self) -> None:
             """Keep resource state current between polling attempts."""
 
-    class MigrationJob(Resource):
+    class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
         async def wait(self, _conditions: list[str]) -> None:
@@ -376,7 +439,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
     # Act
     await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
-        UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}
+        UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
     )
 
     # Assert
@@ -592,7 +655,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
             nonlocal resource_checks
             resource_checks += 1
-            return resource_checks <= 4
+            return resource_checks <= 3
 
         async def refresh(self) -> None:
             """Keep the fake resource metadata unchanged."""
@@ -633,6 +696,16 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             phase = "Running" if pod_checks == 1 else "Failed"
             yield type("Pod", (), {"raw": {"status": {"phase": phase}}})()
 
+    class SecretResource:
+        """Expose revision secrets only before their deletion."""
+
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Yield a retained revision secret once."""
+
+            if "Secret" not in deleted:
+                yield Resource("Secret")
+
     async def sleep(delay: float) -> None:
         """Record polling without delaying the test."""
 
@@ -646,7 +719,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "Deployment", resource("Deployment"))
     monkeypatch.setattr(solutions, "Service", resource("Service"))
-    monkeypatch.setattr(solutions, "Secret", resource("Secret"))
+    monkeypatch.setattr(solutions, "Secret", SecretResource)
     monkeypatch.setattr(solutions, "HTTPRouteResource", resource("HTTPRoute"))
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions, "Pod", PodResource)
@@ -659,7 +732,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
     )
 
     # Assert
-    assert deleted == ["Deployment", "Service", "Secret", "HTTPRoute", "Job"]
+    assert deleted == ["Deployment", "Service", "HTTPRoute", "Job", "Secret"]
     assert sleeps == [5, 5]
 
 
@@ -758,7 +831,7 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "Deployment", Resource)
     monkeypatch.setattr(solutions, "Service", Resource)
-    monkeypatch.setattr(solutions, "Secret", Resource)
+    monkeypatch.setattr(solutions, "Secret", JobResource)
     monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)

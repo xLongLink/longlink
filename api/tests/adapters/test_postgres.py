@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from containers import postgres_container
 from sqlalchemy import text
 from src.adapters import postgres
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import DBAPIError
 from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
@@ -79,7 +79,7 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
                 .one()
             )
 
-        with pytest.raises(SQLAlchemyError):
+        with pytest.raises(DBAPIError) as error:
             async with runtime_engine.begin() as connection:
                 await connection.execute(
                     text(
@@ -109,11 +109,12 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
         await maintenance_engine.dispose()
 
     # Assert
+    assert getattr(error.value.orig, "sqlstate", None) == "42501"
     assert retried_runtime_username == runtime_username
     assert runtime_username.startswith("longlink_")
     assert len(runtime_username) <= 63
     assert shared_user == {"email": "owner@example.com", "role": "owner"}
-    assert deleted_at is not None
+    assert deleted_at == inactive_at
 
 
 @pytest.mark.integration

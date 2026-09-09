@@ -14,7 +14,13 @@ import {
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
 const menuPropsSchema = z.object({ gap: xmlSpacingSchema.default(3) });
 const menuEntryPropsSchema = z.object({
-    icon: z.string().refine(isStoneIconName, 'must be a supported icon name').optional(),
+    icon: z
+        .string()
+        .refine(
+            (value: string): value is StoneIconName => Object.hasOwn(stoneIconComponents, value),
+            'must be a supported icon name'
+        )
+        .optional(),
     label: xmlNonblankStringSchema,
 });
 
@@ -78,9 +84,4 @@ function renderEntry(node: ASTNode, ctx: Scope) {
     }
 
     throw new Error(`MenuSection does not support ${node.name} children`);
-}
-
-/** Returns whether a value identifies an icon supported by the solution menu. */
-function isStoneIconName(value: string): value is StoneIconName {
-    return Object.hasOwn(stoneIconComponents, value);
 }

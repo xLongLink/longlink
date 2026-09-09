@@ -110,7 +110,7 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     tool_data = pyproject_data.get("tool")
     longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
     environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
-    if not isinstance(environment_import, str) or not environment_import.strip():
+    if not isinstance(environment_import, str):
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
     # Parse the configured module and class names without importing Solution code.
@@ -316,12 +316,6 @@ def build_solution(build_context: Path) -> tuple[str, str]:
     # Apply a fixed context policy without interpreting project-specific ignore syntax.
     context_root = build_context.resolve()
 
-    def is_ignored(path: Path) -> bool:
-        """Return whether any path component matches the fixed context policy."""
-
-        relative_path = path.relative_to(source_root)
-        return any(fnmatch(part, pattern) for part in relative_path.parts for pattern in CONTEXT_IGNORE_PATTERNS)
-
     def ignore_context_paths(directory: str, contents: list[str]) -> set[str]:
         """Return ignored paths and unsafe or ignored symlinks."""
 
@@ -357,7 +351,11 @@ def build_solution(build_context: Path) -> tuple[str, str]:
                 except (OSError, RuntimeError):
                     ignored.add(name)
                     continue
-                if not target.is_relative_to(source_root) or (target.is_dir() and target in path.parents) or is_ignored(target):
+                if (
+                    not target.is_relative_to(source_root)
+                    or (target.is_dir() and target in path.parents)
+                    or any(fnmatch(part, pattern) for part in target.relative_to(source_root).parts for pattern in CONTEXT_IGNORE_PATTERNS)
+                ):
                     ignored.add(name)
 
         return ignored
@@ -376,11 +374,11 @@ def build_solution(build_context: Path) -> tuple[str, str]:
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = "" if root == source_root else f"{root.relative_to(source_root).as_posix()}/"
-    local_dependency_manifests = "\n".join(
-        f"COPY {source_path.relative_to(source_root).as_posix()}/pyproject.toml "
-        f"/workspace/{source_path.relative_to(source_root).as_posix()}/"
-        for source_path in local_source_paths
-    )
+    manifest_lines: list[str] = []
+    for source_path in local_source_paths:
+        relative_path = source_path.relative_to(source_root).as_posix()
+        manifest_lines.append(f"COPY {relative_path}/pyproject.toml /workspace/{relative_path}/")
+    local_dependency_manifests = "\n".join(manifest_lines)
     build_context.joinpath("Dockerfile").write_text(
         DOCKERFILE_TEMPLATE.format(
             dependency_source=dependency_source,

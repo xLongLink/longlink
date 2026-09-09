@@ -91,7 +91,10 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
                   )
             : skipToken,
         refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating') ? 5000 : false,
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                ? 5000
+                : false,
+        meta: { polling: true },
         retry: false,
     });
     const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipError;
@@ -106,7 +109,7 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
 }
 
 /** Deletes one organization and refreshes organization access data. */
-export function useDeleteOrganization(onSuccess?: () => void) {
+export function useDeleteOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -117,7 +120,6 @@ export function useDeleteOrganization(onSuccess?: () => void) {
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
             ]);
-            onSuccess?.();
         },
     });
 }

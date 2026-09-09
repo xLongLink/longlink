@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '@/xml/renderers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
+import { RenderXML, renderXmlToMarkup } from '../helpers';
 import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -163,10 +162,10 @@ describe('Action', () => {
     it.each([
         {
             error: 'Denied',
-            fetch: async () => new Response(JSON.stringify({ detail: 'Denied' }), { status: 403 }),
+            fetch: async () => Response.json({ detail: 'Denied' }, { status: 403 }),
         },
         {
-            error: 'Network unavailable',
+            error: 'The request could not be completed. Please try again.',
             fetch: async () => Promise.reject(new Error('Network unavailable')),
         },
     ])('does not navigate or close when a request fails: $error', async ({ error, fetch }) => {
@@ -227,7 +226,7 @@ describe('Action', () => {
             error: 'form must evaluate to an object',
             request: 'method="POST" form="invalid"',
         },
-    ])('does not execute invalid request payloads: $error', async ({ error, request }) => {
+    ])('does not execute invalid request payloads: $error', async ({ request }) => {
         const ctx = createContext();
         const closeDialog = vi.fn();
         const fetchRequest = vi.fn();
@@ -245,7 +244,9 @@ describe('Action', () => {
             await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
         });
 
-        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
+        expect(toast).toHaveBeenCalledWith(
+            expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
+        );
         expect(fetchRequest).not.toHaveBeenCalled();
         expect(ctx.services.navigate).not.toHaveBeenCalled();
         expect(closeDialog).not.toHaveBeenCalled();
@@ -297,7 +298,7 @@ describe('Action', () => {
 
         expect(ctx.scope.bindings.form).toEqual({ value: 'draft' });
         expect(toast).toHaveBeenCalledWith(
-            expect.objectContaining({ body: 'Patch cannot update undeclared State property "other"', type: 'error' })
+            expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );
     });
 
@@ -322,7 +323,7 @@ describe('Action', () => {
             setup: '<Query id="records" path="/records" />',
             patch: '<Patch state="records" value="${{value: \'published\'}}" />',
         },
-    ])('rejects invalid Patch contracts: $error', async ({ error, setup, patch }) => {
+    ])('rejects invalid Patch contracts: $error', async ({ setup, patch }) => {
         // Arrange
         const ctx = createContext();
         vi.stubGlobal('fetch', async () => new Response('{}'));
@@ -335,7 +336,9 @@ describe('Action', () => {
         });
 
         // Assert
-        expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
+        expect(toast).toHaveBeenCalledWith(
+            expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
+        );
     });
 
     async function renderAction(
