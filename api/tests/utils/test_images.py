@@ -160,27 +160,24 @@ async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.
     assert image_metadata is None
 
 
-@pytest.mark.parametrize(
-    "headers",
-    [
-        pytest.param({"Content-Length": str(images.IMAGE_METADATA_MAX_BYTES + 1)}, id="declared-oversize"),
-        pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
-    ],
-)
-async def test_metadata_rejects_invalid_manifest_response_sizes(monkeypatch: pytest.MonkeyPatch, headers: dict[str, str]) -> None:
-    """Reject oversized or invalid manifest bodies before decoding them."""
+INVALID_METADATA_LENGTH_HEADERS = [
+    pytest.param({"Content-Length": str(images.IMAGE_METADATA_MAX_BYTES + 1)}, id="declared-oversize"),
+    pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
+]
+
+
+@pytest.mark.parametrize("headers", INVALID_METADATA_LENGTH_HEADERS)
+async def test_bounded_json_rejects_invalid_declared_response_sizes(headers: dict[str, str]) -> None:
+    """Reject oversized or malformed declared lengths despite a valid JSON body."""
 
     # Arrange
-    def respond(request: httpx2.Request) -> httpx2.Response:
-        """Return authentication followed by an invalidly sized manifest."""
-        if request.url.path == "/token":
-            return httpx2.Response(200, json={"token": "pull-token"})
-        return httpx2.Response(200, content=b"{}", headers=headers)
+    response = httpx2.Response(200, content=b"{}", headers=headers)
 
-    mock_async_client(monkeypatch, respond)
+    # Act
+    result = await images.bounded_json(response)
 
-    # Act and assert
-    assert await images.metadata(Image("ghcr.io/longlink/dashboard:latest")) is None
+    # Assert
+    assert result is None
 
 
 async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> None:

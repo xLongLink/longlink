@@ -181,6 +181,10 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     latest_id: UUID | None = None
     return_to_active = False
     applied: list[str] = []
+    expected_images = {
+        "first": "ghcr.io/longlink/dashboard@sha256:test",
+        "second": "ghcr.io/longlink/dashboard@sha256:second",
+    }
 
     class Kubernetes:
         """Capture which queued snapshot reaches the runtime."""
@@ -195,7 +199,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
 
             nonlocal latest_id
             applied.append(secrets["KEY"])
-            assert image.endswith("test" if secrets["KEY"] == "first" else "second")
+            assert image == expected_images[secrets["KEY"]]
             if latest_id is None:
                 # A newer request during an active rollout must not change its captured target.
                 async with session_scope() as session:

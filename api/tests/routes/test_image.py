@@ -51,9 +51,10 @@ async def test_inspect_image_returns_declared_metadata(
     """Return the immutable image and declared runtime environment metadata."""
 
     # Arrange
-    async def fake_metadata(_image: Image) -> LongLinkMetadata:
-        """Return declared image metadata."""
+    async def fake_metadata(image: Image) -> LongLinkMetadata:
+        """Verify the requested image and return its declared metadata."""
 
+        assert image == Image("ghcr.io/longlink/dashboard:latest")
         return LongLinkMetadata(
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             environments=[EnvironmentMetadata(name="API_KEY", description="API key", required=True)],

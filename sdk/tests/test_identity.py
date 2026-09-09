@@ -29,27 +29,32 @@ def test_identity_token_user_rejects_empty_identity_secret() -> None:
         identity.identity_token_user("token", "")
 
 
-@pytest.mark.parametrize(
-    ("secret", "claims"),
-    [
-        pytest.param(
-            IDENTITY_SECRET,
-            {"exp": datetime.now(UTC) - timedelta(seconds=1)},
-            id="expired",
-        ),
-        pytest.param(
-            IDENTITY_SECRET,
-            {"aud": "other-audience"},
-            id="wrong-audience",
-        ),
-        pytest.param(
-            "other-identity-secret-01234567890",
-            {},
-            id="wrong-secret",
-        ),
-    ],
-)
-def test_identity_token_user_rejects_invalid_signed_token(secret: str, claims: dict[str, object]) -> None:
+INVALID_SIGNED_TOKENS = [
+    pytest.param(
+        IDENTITY_SECRET,
+        {"exp": datetime.now(UTC) - timedelta(seconds=1)},
+        jwt.ExpiredSignatureError,
+        id="expired",
+    ),
+    pytest.param(
+        IDENTITY_SECRET,
+        {"aud": "other-audience"},
+        jwt.InvalidAudienceError,
+        id="wrong-audience",
+    ),
+    pytest.param(
+        "other-identity-secret-01234567890",
+        {},
+        jwt.InvalidSignatureError,
+        id="wrong-secret",
+    ),
+]
+
+
+@pytest.mark.parametrize(("secret", "claims", "expected_error"), INVALID_SIGNED_TOKENS)
+def test_identity_token_user_rejects_invalid_signed_token(
+    secret: str, claims: dict[str, object], expected_error: type[jwt.InvalidTokenError]
+) -> None:
     """Reject expired, wrongly scoped, and incorrectly signed identity assertions."""
 
     # Arrange
@@ -66,7 +71,7 @@ def test_identity_token_user_rejects_invalid_signed_token(secret: str, claims: d
     )
 
     # Act and assert
-    with pytest.raises(jwt.InvalidTokenError):
+    with pytest.raises(expected_error):
         identity.identity_token_user(encoded, IDENTITY_SECRET)
 
 

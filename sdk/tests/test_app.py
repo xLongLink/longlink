@@ -218,21 +218,17 @@ def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> No
     assert not any(getattr(route, "path", None) == "/views/valid" for route in app.router.routes)
 
 
-@pytest.mark.parametrize(
-    ("route", "expected_dashboard_routes"),
-    [
-        pytest.param("/views/dashboard", 1, id="static-route"),
-        pytest.param("/views/{view}", 0, id="dynamic-route"),
-    ],
-)
-def test_solution_routes_colliding_with_view_endpoints_are_rejected(
-    solution_source: Path,
-    route: str,
-    expected_dashboard_routes: int,
-) -> None:
+COLLIDING_SOLUTION_ROUTES = [
+    pytest.param("/views/dashboard", id="static-route"),
+    pytest.param("/views/{view}", id="dynamic-route"),
+]
+
+
+@pytest.mark.parametrize("route", COLLIDING_SOLUTION_ROUTES)
+def test_solution_routes_colliding_with_view_endpoints_are_rejected(solution_source: Path, route: str) -> None:
     """Reject view endpoints that would overlap a Solution-owned route."""
 
-    # Create a view whose endpoint is already owned by the Solution.
+    # Arrange
     (solution_source / "views" / "dashboard.xml").write_text(
         "<longlink>Dashboard</longlink>",
         encoding="utf-8",
@@ -245,12 +241,14 @@ def test_solution_routes_colliding_with_view_endpoints_are_rejected(
 
         return {"source": "solution"}
 
-    # Reject ambiguous ownership during runtime registration.
+    original_routes = app.router.routes.copy()
+
+    # Act
     with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
         LongLink(app)
 
-    # Assert LongLink did not register the colliding view endpoint.
-    assert sum(getattr(item, "path", None) == "/views/dashboard" for item in app.router.routes) == expected_dashboard_routes
+    # Assert
+    assert app.router.routes == original_routes
 
 
 @pytest.mark.parametrize(
