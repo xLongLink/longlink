@@ -5,7 +5,7 @@ from conftest import create_client
 from sqlmodel import col
 from factories import create_solution, create_organization
 from containers import postgres_container
-from sqlalchemy import text, delete, update
+from sqlalchemy import delete, update
 from src.database import session as database_session
 from alembic.config import Config
 from sqlalchemy.exc import IntegrityError
@@ -33,22 +33,6 @@ async def test_initial_migration_revision_constraints_and_cleanup(monkeypatch: p
             session_factory = async_sessionmaker(engine, expire_on_commit=False)
             monkeypatch.setattr(database_session, "Session", session_factory)
             async with session_factory() as session:
-                # Verify the collapsed migration installs the same partial index as the ORM.
-                definition = await session.scalar(
-                    text("SELECT indexdef FROM pg_indexes WHERE indexname = 'uq_operations_unfinished_target'")
-                )
-                assert definition is not None
-                assert "UNIQUE INDEX" in definition and "(kind, target_id)" in definition
-                assert "WHERE (finished_at IS NULL)" in definition
-                assert (
-                    await session.scalar(
-                        text(
-                            "SELECT count(*) FROM information_schema.columns WHERE table_name = 'operations' AND column_name = 'unleased_target_id'"
-                        )
-                    )
-                    == 0
-                )
-
                 owner = User(name="Owner", email="owner@example.com", password="unused")
                 session.add(owner)
                 await session.commit()

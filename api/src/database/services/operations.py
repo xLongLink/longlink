@@ -2,7 +2,6 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from sqlalchemy import String, or_, case, cast, func, select, update
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
@@ -162,28 +161,26 @@ async def enqueue(
     kind: OperationKind,
     target_id: UUID,
 ) -> Operation:
-    """Add one Platform operation to an existing command transaction."""
+    """Coalesce unfinished work when visible, allowing duplicates from concurrent requests."""
 
     # Reuse unfinished work, including an active or interrupted attempt at this exact target.
-    statement = select(Operation).where(
-        col(Operation.kind) == kind,
-        col(Operation.target_id) == target_id,
-        col(Operation.finished_at).is_(None),
+    operation = await session.scalar(
+        select(Operation)
+        .where(
+            col(Operation.kind) == kind,
+            col(Operation.target_id) == target_id,
+            col(Operation.finished_at).is_(None),
+        )
+        .order_by(col(Operation.created_at), col(Operation.id))
+        .limit(1)
     )
-    operation = await session.scalar(statement)
     if operation is not None:
         return operation
 
-    # Let the partial unique index serialize concurrent creation of the same unfinished work.
-    try:
-        async with session.begin_nested():
-            operation = Operation(kind=kind, target_id=target_id)
-            session.add(operation)
-            await session.flush()
-    except IntegrityError:
-        operation = await session.scalar(statement)
-        if operation is None:
-            raise
+    # Duplicate requests may queue repeated reconciliation; handlers must remain idempotent.
+    operation = Operation(kind=kind, target_id=target_id)
+    session.add(operation)
+    await session.flush()
     return operation
 
 
@@ -232,7 +229,7 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
 
     # Complete only the currently leased operation.
     now = utcnow()
-    operation = await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -240,12 +237,15 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
             col(Operation.finished_at).is_(None),
         )
         .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
+    if result.rowcount != 1:
+        return None
+    operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # A request can reuse this lease after its handler already skipped an outdated target.
     # Recheck desired state at completion so that request cannot disappear with the lease.
-    if operation is None or operation.kind != OperationKind.solution_deploy:
+    if operation.kind != OperationKind.solution_deploy:
         return operation
 
     revision = await session.get(Revision, operation.target_id)
@@ -268,7 +268,7 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
 
     # Release only work still owned by this worker.
     now = utcnow()
-    return await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -276,8 +276,11 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
             col(Operation.finished_at).is_(None),
         )
         .values(lease_expires_at=None)
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
+    if result.rowcount != 1:
+        return None
+    return await session.get_one(Operation, operation_id, populate_existing=True)
 
 
 async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
@@ -285,7 +288,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
 
     # Mark only an unfinished Operation that remains leased terminal.
     now = utcnow()
-    operation = await session.scalar(
+    result = await session.execute(
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
@@ -298,10 +301,11 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
             lease_expires_at=None,
             logs=[] if logs is None else logs,
         )
-        .returning(Operation)
+        .execution_options(synchronize_session=False)
     )
-    if operation is None:
+    if result.rowcount != 1:
         return None
+    operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # Expose failed creation work on its target without changing deletion lifecycle state.
     model = {

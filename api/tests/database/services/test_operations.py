@@ -1,4 +1,3 @@
-import pytest
 from uuid import uuid4
 from datetime import timedelta
 from factories import (
@@ -10,7 +9,6 @@ from factories import (
     create_ready_infrastructure,
 )
 from factories import queue_operation as queue
-from sqlalchemy.exc import IntegrityError
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -57,59 +55,6 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
     assert first_row.logs == []
     assert second_row is not None
     assert second_row.logs == ["retained"]
-
-
-async def test_operations_service_enqueue_uses_concurrently_created_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return the unfinished operation created by another transaction during an insert race."""
-
-    # Arrange
-    concurrent_operation = Operation(kind=OperationKind.compute_create, target_id=uuid4())
-    scalar_calls = 0
-
-    async def return_concurrent_operation(_statement: object) -> Operation | None:
-        """Model the matching operation appearing after the unique-index conflict."""
-
-        nonlocal scalar_calls
-        scalar_calls += 1
-        return None if scalar_calls == 1 else concurrent_operation
-
-    async def raise_unique_conflict() -> None:
-        """Model a competing transaction winning the operation insert race."""
-
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    # Act
-    async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_concurrent_operation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        operation = await operations.enqueue(session, kind=concurrent_operation.kind, target_id=concurrent_operation.target_id)
-
-    # Assert
-    assert operation is concurrent_operation
-
-
-async def test_operations_service_enqueue_reraises_unresolved_insert_conflict(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Expose an insert conflict when no competing Operation can be recovered."""
-
-    # Arrange
-    conflict = IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    async def return_no_operation(_statement: object) -> None:
-        """Model an unavailable competing Operation after the insert conflict."""
-
-    async def raise_unique_conflict() -> None:
-        """Model an insert conflict without a visible winning transaction."""
-
-        raise conflict
-
-    # Act and assert
-    async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_no_operation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        with pytest.raises(IntegrityError) as error:
-            await operations.enqueue(session, kind=OperationKind.compute_create, target_id=uuid4())
-
-    assert error.value is conflict
 
 
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
@@ -461,7 +406,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
 
 
 async def test_operations_service_coalesces_claimed_work() -> None:
-    """Reuse claimed work and release it without a unique-index conflict."""
+    """Reuse claimed work and release it for another attempt."""
 
     # Seed and claim one operation.
     target_id = uuid4()

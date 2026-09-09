@@ -20,10 +20,6 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create the initial platform schema."""
 
-    # Other dialects can silently omit the predicate and make operation history unique too.
-    if op.get_bind().dialect.name not in {"postgresql", "sqlite"}:
-        raise RuntimeError("The Platform operation queue requires PostgreSQL or SQLite partial indexes")
-
     # Create users first because platform resources reference them for audit fields.
     op.create_table(
         "users",
@@ -298,14 +294,6 @@ def upgrade() -> None:
         "ix_operations_queue",
         "operations",
         ["kind", "target_id", "finished_at", "lease_expires_at"],
-    )
-    op.create_index(
-        "uq_operations_unfinished_target",
-        "operations",
-        ["kind", "target_id"],
-        unique=True,
-        postgresql_where=sa.text("finished_at IS NULL"),
-        sqlite_where=sa.text("finished_at IS NULL"),
     )
 
 

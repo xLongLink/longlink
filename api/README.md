@@ -9,7 +9,7 @@ The Platform manages authentication, permissions, organizations, infrastructure 
 
 ## Resources
 
-The Platform API lifecycle queue requires PostgreSQL or SQLite as its metadata database. MySQL connection parsing remains available, but MySQL does not support the partial unique index required by the queue and the initial migration rejects it. Organization and Solution databases require PostgreSQL.
+The Platform API supports PostgreSQL, MySQL, and SQLite as its production metadata database. Organization and Solution databases require PostgreSQL.
 
 Published Platform and SDK-built Solution images target `linux/amd64`. Compute clusters must provide Linux AMD64 nodes for Solution runtimes and migration Jobs. Hosted Solution images currently must be publicly accessible on GHCR; private registry support is tracked separately.
 
@@ -86,7 +86,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
     - One `compute.create` for every Compute.
     - One create or delete operation for every Organization according to its tombstone.
     - One deploy or delete operation for every Solution in an active Organization according to its tombstone and effective desired revision.
-- Repeated scheduling coalesces all unfinished work, including leased attempts. A unique partial index on `(kind, target_id)` where `finished_at IS NULL` enforces this on PostgreSQL and SQLite. Completion rechecks Solution desired state so requests coalesced with an active attempt are not lost.
+- Repeated scheduling coalesces visible unfinished work, including leased attempts. Concurrent requests may queue duplicates, so lifecycle handlers must tolerate repeated reconciliation. Completion rechecks Solution desired state so requests coalesced with an active attempt are not lost.
 - Each API replica starts (`main.py`).
     - `FastAPI` manage user request.
     - `lifespan` claims and executes Operations.
