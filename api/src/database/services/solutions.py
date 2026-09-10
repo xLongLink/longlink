@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Literal
 from sqlmodel import col
 from src.utils import names, roles, images
 from sqlalchemy import func, select, update
@@ -53,6 +54,7 @@ async def create(
     *,
     user_id: UUID,
     source: Image | None = None,
+    min_scale: Literal[0, 1] = 0,
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
@@ -113,7 +115,7 @@ async def create(
         raise ConflictError("Solution slug already exists") from exc
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, secrets, source=source)
+    await deploy(session, solution, user_id, metadata, secrets, source=source, min_scale=min_scale)
 
     return solution
 
@@ -160,6 +162,7 @@ async def deploy(
     envs: Mapping[str, str | None],
     *,
     source: Image | None = None,
+    min_scale: Literal[0, 1] | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
@@ -180,11 +183,27 @@ async def deploy(
     if missing:
         raise InvalidError(f"Solution environment does not satisfy required image variables: {', '.join(missing)}")
 
+    # Preserve omitted scaling and reject identical snapshots before queuing work.
+    if min_scale is None:
+        min_scale = current.min_scale if current is not None else 0
+    if source is None:
+        source = metadata.image
+    if (
+        current is not None
+        and not current.failed
+        and current.image == metadata.image
+        and current.source == source
+        and current.envs == merged
+        and current.min_scale == min_scale
+    ):
+        raise ConflictError("Source and configuration are up to date. No revision was created.")
+
     # Never change Solution-owned runtime credentials when appending a release.
     revision = Revision(
         solution_id=solution.id,
         image=metadata.image,
-        source=source if source is not None else metadata.image,
+        source=source,
+        min_scale=min_scale,
         image_metadata=metadata.model_dump(mode="json"),
         envs=merged,
         created_id=user_id,

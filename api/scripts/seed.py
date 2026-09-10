@@ -1,6 +1,5 @@
 import asyncio
 import argparse
-import subprocess
 from pathlib import Path
 from pydantic import Field, field_validator
 from sqlmodel import col
@@ -8,16 +7,14 @@ from src.utils import images
 from contextlib import suppress
 from sqlalchemy import select
 from src.errors import ConflictError
-from src.models.types import Image, DatabaseSSLMode
+from src.models.types import Image
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.engine import make_url
-from src.models.computes import kubeconfig_mapping
+from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
-from src.database.services import users, compute, storage, database, solutions, organizations
-from src.models.infrastructure import DatabaseConfiguration, exoscale_zone
+from src.database.services import users, compute, storage, solutions, organizations
+from src.models.infrastructure import exoscale_zone
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
@@ -27,14 +24,14 @@ class SeedSettings(BaseSettings):
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
+    GATEWAY_URL: str = "https://localhost:8443"
+    GATEWAY_CERTIFICATE: str | None = None
+    DATABASE_SIZE_GIB: int = 10
+    DATABASE_INSTANCES: int = 1
+    DATABASE_STORAGE_CLASS: str = "local-path"
 
     # Sample release configuration
-    SAMPLE_ENVS: dict[str, str] = Field(default_factory=dict)
-
-    # Database registry
-    SOLUTION_DATABASE_URL: str | None = None
-    LOCAL_DATABASE_PORT: int = Field(default=15432, ge=1, le=65535)
-    LOCAL_DOCKER_NETWORK: str = Field(default="longlink-dev", min_length=1)
+    SAMPLE_ENVS: dict[str, str] = Field(default_factory=lambda: {"REQUIRED": "development"})
 
     # Storage registry
     EXOSCALE_API_KEY: str = Field(min_length=1)
@@ -57,84 +54,26 @@ class SeedSettings(BaseSettings):
         return value
 
 
-def local_database_host(settings: SeedSettings) -> str:
-    """Return the local Docker host address reachable from k3d solution pods."""
-
-    # Resolve the current network gateway because Docker can change it after recreation.
-    result = subprocess.run(
-        ["docker", "network", "inspect", settings.LOCAL_DOCKER_NETWORK, "--format", "{{range .IPAM.Config}}{{.Gateway}}{{end}}"],
-        capture_output=True,
-        check=True,
-        text=True,
-    )
-    host = result.stdout.strip()
-    if not host:
-        raise RuntimeError(f"Docker network '{settings.LOCAL_DOCKER_NETWORK}' has no gateway address")
-    return host
-
-
-def solution_database_configuration(settings: SeedSettings) -> DatabaseConfiguration:
-    """Return the validated Solution database registry configuration."""
-
-    # Use the isolated Docker PostgreSQL service when no remote database is configured.
-    if settings.SOLUTION_DATABASE_URL is None:
-        return DatabaseConfiguration(
-            host=local_database_host(settings),
-            port=settings.LOCAL_DATABASE_PORT,
-            username="admin",
-            password="admin",
-            sslmode=DatabaseSSLMode.disable,
-        )
-
-    # Parse a PostgreSQL administrator URL with the supported connection option.
-    database_url = make_url(settings.SOLUTION_DATABASE_URL)
-    if database_url.get_backend_name() != "postgresql" or set(database_url.query) - {"sslmode"}:
-        raise ValueError("Solution database URL must use PostgreSQL and only supports the sslmode query option")
-
-    # Validate all connection fields before persisting administrator credentials.
-    try:
-        return DatabaseConfiguration.model_validate(
-            {
-                "host": database_url.host or "",
-                "port": database_url.port or 5432,
-                "username": database_url.username or "",
-                "password": database_url.password or "",
-                "sslmode": database_url.query.get("sslmode", DatabaseSSLMode.require.value),
-            }
-        )
-    except ValueError:
-        raise ValueError("Solution database URL has invalid connection settings") from None
-
-
-async def seed_infrastructure(
-    settings: SeedSettings, *, compute_name: str, database_name: str, storage_name: str
-) -> tuple[ComputeRegistry, DatabaseRegistry, StorageRegistry]:
+async def seed_infrastructure(settings: SeedSettings, *, compute_name: str, storage_name: str) -> tuple[ComputeRegistry, StorageRegistry]:
     """Register the configured infrastructure and return its registries."""
 
     # Validate the configured Kubernetes compute before mutating Platform state.
-    kubeconfig = kubeconfig_mapping(settings.KUBECONFIG.read_text(encoding="utf-8"))
-
-    # Resolve either the configured Solution database or the local PostgreSQL service.
-    database_config = solution_database_configuration(settings)
+    payload = ComputeRegistryCreate.model_validate(
+        {
+            "name": compute_name,
+            "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
+            "gateway_url": settings.GATEWAY_URL,
+            "gateway_certificate": settings.GATEWAY_CERTIFICATE,
+            "database_storage_class": settings.DATABASE_STORAGE_CLASS,
+            "database_size_gib": settings.DATABASE_SIZE_GIB,
+            "database_instances": settings.DATABASE_INSTANCES,
+        }
+    )
 
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, compute_name, kubeconfig)
-            await session.commit()
-
-    # Register the configured database unless it already exists.
-    with suppress(ConflictError):
-        async with session_scope() as session:
-            await database.create(
-                session,
-                database_name,
-                database_config.host,
-                database_config.port,
-                database_config.username,
-                database_config.password,
-                database_config.sslmode,
-            )
+            await compute.create(session, **payload.model_dump())
             await session.commit()
 
     # Register the configured storage unless it already exists.
@@ -151,20 +90,18 @@ async def seed_infrastructure(
 
     async with session_scope() as session:
         compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == compute_name))
-        database_registry = await session.scalar(select(DatabaseRegistry).where(col(DatabaseRegistry.name) == database_name))
         storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == storage_name))
-        if compute_registry is None or database_registry is None or storage_registry is None:
+        if compute_registry is None or storage_registry is None:
             raise RuntimeError("Configured infrastructure is not available")
-        return compute_registry, database_registry, storage_registry
+        return compute_registry, storage_registry
 
 
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register local infrastructure and create the local example Organization and Solution."""
 
-    compute_registry, database_registry, storage_registry = await seed_infrastructure(
+    compute_registry, storage_registry = await seed_infrastructure(
         settings,
         compute_name="development compute",
-        database_name="development database",
         storage_name="local storage",
     )
 
@@ -180,7 +117,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 administrator,
                 compute_id=compute_registry.id,
                 storage_id=storage_registry.id,
-                database_id=database_registry.id,
             )
 
         solution = await session.scalar(
@@ -211,7 +147,9 @@ async def seed_local_development(settings: SeedSettings) -> None:
 class CloudSeedSettings(SeedSettings):
     """Define the infrastructure connections registered by a cloud deployment."""
 
-    SOLUTION_DATABASE_URL: str
+    # Cloud infrastructure must choose its externally reachable gateway and durable storage class.
+    GATEWAY_URL: str = Field(default="", min_length=1, validate_default=True)
+    DATABASE_STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -222,7 +160,6 @@ async def seed_cloud(settings: CloudSeedSettings) -> None:
     await seed_infrastructure(
         settings,
         compute_name="cloud compute",
-        database_name="cloud database",
         storage_name="cloud storage",
     )
 

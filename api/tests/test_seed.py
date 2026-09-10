@@ -10,7 +10,6 @@ from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
@@ -29,7 +28,8 @@ def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -
     )
     return settings_type(
         KUBECONFIG=kubeconfig,
-        SOLUTION_DATABASE_URL="postgresql://admin:admin@database:5432/postgres?sslmode=disable",
+        GATEWAY_URL="https://gateway.example",
+        DATABASE_STORAGE_CLASS="local-path",
         EXOSCALE_API_KEY="access-key",
         EXOSCALE_API_SECRET="secret-key",
         EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
@@ -66,7 +66,6 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monk
     # Assert
     assert await count(User) == 1
     assert await count(ComputeRegistry) == 1
-    assert await count(DatabaseRegistry) == 1
     assert await count(StorageRegistry) == 1
     assert await count(Organization) == 1
     assert await count(Solution) == 1
@@ -88,7 +87,6 @@ async def test_cloud_seed_registers_only_infrastructure(tmp_path: Path) -> None:
 
     # Assert
     assert await count(ComputeRegistry) == 1
-    assert await count(DatabaseRegistry) == 1
     assert await count(StorageRegistry) == 1
     assert await count(User) == 0
     assert await count(Organization) == 0

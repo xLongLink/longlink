@@ -5,7 +5,7 @@ integration API or a backward-compatibility promise. Authentication and
 authorization remain required. The Platform-to-Solution runtime contract is separate.
 """
 
-from . import auth, image, proxy, users, health, computes, storages, databases, solutions, operations, organizations
+from . import auth, image, proxy, users, health, computes, storages, solutions, operations, organizations
 from fastapi import APIRouter
 from src.errors import ErrorResponse
 
@@ -20,7 +20,6 @@ router.include_router(auth.router)
 router.include_router(solutions.router)
 router.include_router(proxy.router)
 router.include_router(computes.router)
-router.include_router(databases.router)
 router.include_router(health.router)
 router.include_router(image.router)
 router.include_router(operations.router)

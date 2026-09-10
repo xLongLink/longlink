@@ -4,6 +4,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
     name: '$namespace'
+    labels:
+        longlink.io/namespace: compute
+        pod-security.kubernetes.io/enforce: restricted
 ---
 apiVersion: v1
 kind: ResourceQuota
@@ -12,13 +15,14 @@ metadata:
     namespace: '$namespace'
 spec:
     hard:
-        limits.cpu: '2'
-        limits.ephemeral-storage: 2Gi
-        limits.memory: 1Gi
-        pods: '4'
-        requests.cpu: 400m
-        requests.ephemeral-storage: 1Gi
-        requests.memory: 512Mi
+        # Budget for old/new revisions, queue proxies, and one migration during rollout.
+        limits.cpu: '4'
+        limits.ephemeral-storage: 4Gi
+        limits.memory: 3Gi
+        pods: '8'
+        requests.cpu: '1'
+        requests.ephemeral-storage: 3Gi
+        requests.memory: 2Gi
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -29,15 +33,87 @@ spec:
     podSelector: {}
     policyTypes:
         - Ingress
+        - Egress
+    egress:
+        # Preserve public SOS/S3 and HTTPS integrations without opening private or special-use networks.
+        - to:
+              - ipBlock:
+                    cidr: 0.0.0.0/0
+                    except:
+                        - 0.0.0.0/8
+                        - 10.0.0.0/8
+                        - 100.64.0.0/10
+                        - 127.0.0.0/8
+                        - 169.254.0.0/16
+                        - 172.16.0.0/12
+                        - 192.0.0.0/24
+                        - 192.0.2.0/24
+                        - 192.88.99.0/24
+                        - 192.168.0.0/16
+                        - 198.18.0.0/15
+                        - 198.51.100.0/24
+                        - 203.0.113.0/24
+                        - 224.0.0.0/4
+                        - 240.0.0.0/4
+              - ipBlock:
+                    # Global unicast only: excludes ULA, link-local, multicast, mapped IPv4 and NAT64.
+                    cidr: 2000::/3
+                    except:
+                        - 2001::/23
+                        - 2001:db8::/32
+                        - 2002::/16
+                        - 3fff::/20
+          ports:
+              - {protocol: TCP, port: 443}
+        # Private dependencies remain explicitly scoped to their namespaces and Pods.
+        - to:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: kube-system
+                podSelector:
+                    matchLabels:
+                        k8s-app: kube-dns
+          ports:
+              - {protocol: UDP, port: 53}
+              - {protocol: TCP, port: 53}
+        - to:
+              - namespaceSelector:
+                    matchLabels:
+                        longlink.io/compute-namespace: '$namespace'
+                podSelector:
+                    matchLabels:
+                        cnpg.io/cluster: database
+          ports:
+              - {protocol: TCP, port: 5432}
+        - to:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: knative-serving
+                podSelector:
+                    matchLabels:
+                        app: autoscaler
+          ports:
+              - {protocol: TCP, port: 8080}
     ingress:
         - from:
               - namespaceSelector:
                     matchLabels:
-                        kubernetes.io/metadata.name: envoy-gateway-system
+                        kubernetes.io/metadata.name: kourier-system
                 podSelector:
                     matchLabels:
-                        gateway.envoyproxy.io/owning-gateway-name: longlink
-                        gateway.envoyproxy.io/owning-gateway-namespace: longlink-system
+                        app: 3scale-kourier-gateway
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: knative-serving
+                podSelector:
+                    matchExpressions:
+                        - key: app
+                          operator: In
+                          values: [activator, autoscaler, controller, net-kourier-controller]
           ports:
-              - protocol: TCP
-                port: 8000
+              # Never admit direct user-container traffic on 8000.
+              - {protocol: TCP, port: 8012}
+              - {protocol: TCP, port: 8013}
+              - {protocol: TCP, port: 8022}
+              - {protocol: TCP, port: 9090}
+              - {protocol: TCP, port: 9091}

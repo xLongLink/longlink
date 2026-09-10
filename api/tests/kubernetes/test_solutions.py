@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 from uuid import UUID
 from typing import ClassVar, Protocol
 from conftest import FakeKubernetes
@@ -33,7 +34,7 @@ def test_solution_template_constrains_workloads() -> None:
     """Constrain Solution and migration architecture and temporary filesystems."""
 
     # Arrange
-    migration, deployment, _, _ = templates.readyml_list(
+    migration, deployment = templates.readyml_list(
         files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
         solution_id="solution",
         solution_id_label="longlink.io/solution-id",
@@ -42,6 +43,7 @@ def test_solution_template_constrains_workloads() -> None:
         runtime_revision="revision",
         migration_id="solution-migration",
         secret_id="solution-revision",
+        min_scale=1,
     )
 
     # Assert
@@ -74,6 +76,7 @@ def test_solution_template_constrains_workloads() -> None:
 
         # Only the runtime is probed; database outages must not trigger liveness restarts.
         if workload is deployment:
+            assert pod_template["metadata"]["annotations"]["autoscaling.knative.dev/min-scale"] == "1"
             assert container["startupProbe"] == {
                 "httpGet": {"path": "/health", "port": 8000},
                 "periodSeconds": 5,
@@ -221,25 +224,13 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
         async def refresh(self) -> None:
             """Supply ready controller status for the committed manifest."""
 
-            if self.raw.get("kind") == "Deployment":
+            if self.raw.get("apiVersion") == "serving.knative.dev/v1":
                 self.metadata["generation"] = 1
                 self.raw["status"] = {
                     "observedGeneration": 1,
-                    "replicas": 1,
-                    "updatedReplicas": 1,
-                    "readyReplicas": 1,
-                    "availableReplicas": 1,
-                }
-            elif self.raw.get("kind") == "HTTPRoute":
-                self.raw["status"] = {
-                    "parents": [
-                        {
-                            "conditions": [
-                                {"type": "Accepted", "status": "True"},
-                                {"type": "ResolvedRefs", "status": "True"},
-                            ]
-                        }
-                    ]
+                    "latestCreatedRevisionName": "revision",
+                    "latestReadyRevisionName": "revision",
+                    "conditions": [{"type": "Ready", "status": "True"}],
                 }
 
     class MigrationJob(Resource, MigrationJobs):
@@ -258,15 +249,14 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
         """Record the resources accepted by Kubernetes."""
 
         applied.append(str(resource.raw.get("kind", "Secret")))
-        if resource.raw.get("kind") == "Deployment":
+        if resource.raw.get("apiVersion") == "serving.knative.dev/v1":
             spec = resource.raw["spec"]
             assert isinstance(spec, dict)
             assert spec["template"]["spec"]["containers"][0]["envFrom"] == [{"secretRef": {"name": f"revision-{UUID(int=1)}"}}]
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
     monkeypatch.setattr(solutions, "Pod", MigrationJobs)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
 
     # Act
@@ -280,7 +270,7 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
     )
 
     # Assert
-    assert applied == ["suspend", "suspended", "Secret", *(["Job"] if migrate else []), "Service", "HTTPRoute", "Deployment"]
+    assert applied == ["suspend", "suspended", "Secret", *(["Job"] if migrate else []), "Service"]
 
 
 async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -294,6 +284,7 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
             """Expose the resource fields queried during rollout."""
 
             self.raw = raw
+            self.metadata = {"generation": 1}
 
         async def refresh(self) -> None:
             """Supply the quota admission failure returned by Kubernetes."""
@@ -301,8 +292,9 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
             self.raw["status"] = {
                 "conditions": [
                     {
-                        "type": "ReplicaFailure",
-                        "reason": "FailedCreate",
+                        "type": "Ready",
+                        "status": "False",
+                        "reason": "RevisionFailed",
                         "message": "exceeded quota: solution Pods",
                     }
                 ]
@@ -320,22 +312,23 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
         """Accept a resource without contacting Kubernetes."""
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Kubernetes Solution capacity exhausted"):
-        await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"),
-            "acme",
-            "ghcr.io/longlink/dashboard:latest",
-            {},
-            revision_id=UUID(int=1),
-        )
+    with pytest.raises(RuntimeError, match="capacity exhausted"):
+        async with asyncio.timeout(1):
+            await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
+                UUID("00000000-0000-4000-8000-000000000001"),
+                "acme",
+                "ghcr.io/longlink/dashboard:latest",
+                {},
+                revision_id=UUID(int=1),
+            )
 
 
 async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Stop rollout polling when the Solution Deployment disappears."""
+    """Stop rollout polling when the Knative Solution Service disappears."""
 
     # Arrange
     class Resource:
@@ -347,9 +340,9 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
             self.raw = raw
 
         async def refresh(self) -> None:
-            """Report that the Deployment disappeared before rollout completed."""
+            """Report that the Knative Service disappeared before rollout completed."""
 
-            raise solutions.NotFoundError("Deployment missing")
+            raise solutions.NotFoundError("Knative Service missing")
 
     class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
@@ -363,18 +356,18 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
         """Accept a resource without contacting Kubernetes."""
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="Kubernetes Solution Deployment disappeared during rollout"):
+    with pytest.raises(RuntimeError, match="Knative Solution Service disappeared during rollout"):
         await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
             UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
         )
 
 
 async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Retry rollout polling until the Deployment and HTTPRoute are ready."""
+    """Retry rollout polling until Knative reports the current revision ready."""
 
     # Arrange
     sleeps: list[float] = []
@@ -395,7 +388,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
             kind = raw.get("kind")
             assert isinstance(kind, str)
             resources[kind] = self
-            if kind == "Deployment":
+            if kind == "Service":
                 self.metadata["generation"] = 1
 
         async def refresh(self) -> None:
@@ -417,23 +410,24 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
         sleeps.append(delay)
         if len(sleeps) == 1:
-            resources["Deployment"].raw["status"] = {
+            resources["Service"].raw["status"] = {
                 "observedGeneration": 1,
-                "replicas": 1,
-                "updatedReplicas": 1,
-                "readyReplicas": 1,
-                "availableReplicas": 1,
+                "latestCreatedRevisionName": "new-revision",
+                "latestReadyRevisionName": "old-revision",
+                "conditions": [{"type": "Ready", "status": "True"}],
             }
         else:
-            resources["HTTPRoute"].raw["status"] = {
-                "parents": [{"conditions": [{"type": "Accepted", "status": "True"}, {"type": "ResolvedRefs", "status": "True"}]}]
+            resources["Service"].raw["status"] = {
+                "observedGeneration": 1,
+                "latestCreatedRevisionName": "new-revision",
+                "latestReadyRevisionName": "new-revision",
+                "conditions": [{"type": "Ready", "status": "True"}],
             }
 
     resources: dict[str, Resource] = {}
 
     monkeypatch.setattr(solutions, "Job", MigrationJob)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "apply", apply)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
 
@@ -496,10 +490,11 @@ async def test_solution_logs_returns_running_solution_pod_logs(monkeypatch: pyte
 
             yield cls()
 
-        async def logs(self, *, tail_lines: int):
+        async def logs(self, *, tail_lines: int, container: str):
             """Yield recent Solution output."""
 
             assert tail_lines == 200
+            assert container == "solution"
             yield "solution started"
 
     monkeypatch.setattr(solutions, "Pod", PodResource)
@@ -655,7 +650,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
             nonlocal resource_checks
             resource_checks += 1
-            return resource_checks <= 3
+            return resource_checks == 1
 
         async def refresh(self) -> None:
             """Keep the fake resource metadata unchanged."""
@@ -717,10 +712,8 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
         return lambda *_args, **_kwargs: Resource(kind)
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "Deployment", resource("Deployment"))
-    monkeypatch.setattr(solutions, "Service", resource("Service"))
+    monkeypatch.setattr(solutions, "KnativeServiceResource", resource("Service"))
     monkeypatch.setattr(solutions, "Secret", SecretResource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", resource("HTTPRoute"))
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions, "Pod", PodResource)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
@@ -732,7 +725,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
     )
 
     # Assert
-    assert deleted == ["Deployment", "Service", "HTTPRoute", "Job", "Secret"]
+    assert deleted == ["Service", "Job", "Secret"]
     assert sleeps == [5, 5]
 
 
@@ -763,7 +756,7 @@ async def test_solution_delete_skips_cleanup_when_namespace_is_absent(monkeypatc
             raise AssertionError("Solution resources must not be inspected after namespace deletion")
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
 
     # Act
     await solutions.Solutions(FakeKubernetes()).delete(  # type: ignore[arg-type]
@@ -829,10 +822,8 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
         sleeps.append(delay)
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "Deployment", Resource)
-    monkeypatch.setattr(solutions, "Service", Resource)
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "Secret", JobResource)
-    monkeypatch.setattr(solutions, "HTTPRouteResource", Resource)
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
 

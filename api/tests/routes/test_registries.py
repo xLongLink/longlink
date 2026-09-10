@@ -9,13 +9,11 @@ from src.database.models.users import User
     ("method", "path", "payload"),
     [
         pytest.param("GET", "computes", None, id="list-computes"),
-        pytest.param("GET", "databases", None, id="list-databases"),
         pytest.param("GET", "storages", None, id="list-storages"),
         pytest.param("GET", "users", None, id="list-users"),
         pytest.param("GET", "organizations", None, id="list-organizations"),
         pytest.param("GET", "solutions", None, id="list-solutions"),
         pytest.param("POST", "computes", {}, id="create-compute"),
-        pytest.param("POST", "databases", {}, id="create-database"),
         pytest.param("POST", "storages", {}, id="create-storage"),
     ],
 )
@@ -32,7 +30,7 @@ async def test_platform_user_cannot_access_administrator_registries(
     assert response.json() == {"detail": "Permission required"}
 
 
-@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("databases", "database"), ("storages", "storage")])
+@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("storages", "storage")])
 async def test_platform_user_cannot_delete_administrator_registries(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
 ) -> None:
@@ -52,7 +50,7 @@ async def test_platform_user_cannot_delete_administrator_registries(
     assert get_response.status_code == 200
 
 
-@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("databases", "database"), ("storages", "storage")])
+@pytest.mark.parametrize(("path", "registry"), [("computes", "compute"), ("storages", "storage")])
 async def test_platform_user_cannot_read_administrator_registry_details(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str
 ) -> None:
@@ -79,13 +77,6 @@ async def test_platform_user_cannot_read_administrator_registry_details(
             {"gateway_url": "https://gateway.example", "status": "running"},
             ["kubeconfig"],
             id="compute",
-        ),
-        pytest.param(
-            "databases",
-            "database",
-            {"host": "database.example", "sslmode": "disable"},
-            ["password"],
-            id="database",
         ),
         pytest.param(
             "storages",
@@ -123,7 +114,6 @@ async def test_registry_endpoints_return_registered_backend(
     ("path", "expected_detail"),
     [
         pytest.param("computes", "Compute registry not found", id="compute"),
-        pytest.param("databases", "Database registry not found", id="database"),
         pytest.param("storages", "Storage registry not found", id="storage"),
     ],
 )
@@ -146,23 +136,24 @@ async def test_registry_endpoint_returns_resource_specific_not_found_error(
         pytest.param(
             "computes",
             {
+                "gateway_url": "https://gateway.example",
+                "database_storage_class": "local-path",
                 "kubeconfig": {
                     "clusters": [{"name": "cluster", "cluster": {}}],
                     "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
                     "current-context": "context",
                     "users": [{"name": "user", "user": {}}],
-                }
+                },
             },
-            {"gateway_url": None, "status": "creating"},
+            {
+                "gateway_url": "https://gateway.example",
+                "status": "creating",
+                "database_storage_class": "local-path",
+                "database_size_gib": 10,
+                "database_instances": 1,
+            },
             202,
             id="compute",
-        ),
-        pytest.param(
-            "databases",
-            {"host": "database.example", "port": 5432, "username": "admin", "password": "secret", "sslmode": "disable"},
-            {"host": "database.example", "port": 5432, "sslmode": "disable", "username": "admin"},
-            201,
-            id="database",
         ),
         pytest.param(
             "storages",
@@ -204,6 +195,8 @@ async def test_registry_list_returns_ordered_page_and_total(
             "computes",
             {
                 "name": "Ephemeral Compute",
+                "gateway_url": "https://gateway.example",
+                "database_storage_class": "local-path",
                 "kubeconfig": {
                     "clusters": [{"name": "cluster", "cluster": {}}],
                     "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
@@ -215,21 +208,6 @@ async def test_registry_list_returns_ordered_page_and_total(
             "Compute registry already exists",
             202,
             id="compute",
-        ),
-        pytest.param(
-            "databases",
-            {
-                "name": "Ephemeral Database",
-                "host": "database.example",
-                "port": 5432,
-                "username": "admin",
-                "password": "secret",
-                "sslmode": "disable",
-            },
-            ["password"],
-            "Database registry already exists",
-            201,
-            id="database",
         ),
         pytest.param(
             "storages",
@@ -270,7 +248,6 @@ async def test_registry_creation_rejects_duplicate_name(
 @pytest.mark.parametrize(
     ("path", "registry", "not_found_detail"),
     [
-        pytest.param("databases", "database", "Database registry not found", id="database"),
         pytest.param("storages", "storage", "Storage registry not found", id="storage"),
     ],
 )
@@ -299,7 +276,6 @@ async def test_registry_deletes_unused_registration(
     ("path", "registry", "error"),
     [
         pytest.param("computes", "compute", "Compute registry is used by organizations", id="compute"),
-        pytest.param("databases", "database", "Database registry is used by organizations", id="database"),
         pytest.param("storages", "storage", "Storage registry is used by organizations", id="storage"),
     ],
 )

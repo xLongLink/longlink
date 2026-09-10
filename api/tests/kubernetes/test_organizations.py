@@ -22,13 +22,13 @@ def test_organization_template_limits_ephemeral_storage() -> None:
     resource_quota_hard = resource_quota_spec["hard"]
     assert isinstance(resource_quota_hard, dict)
     assert resource_quota_hard == {
-        "limits.cpu": "2",
-        "limits.ephemeral-storage": "2Gi",
-        "limits.memory": "1Gi",
-        "pods": "4",
-        "requests.cpu": "400m",
-        "requests.ephemeral-storage": "1Gi",
-        "requests.memory": "512Mi",
+        "limits.cpu": "4",
+        "limits.ephemeral-storage": "4Gi",
+        "limits.memory": "3Gi",
+        "pods": "8",
+        "requests.cpu": "1",
+        "requests.ephemeral-storage": "3Gi",
+        "requests.memory": "2Gi",
     }
 
 
@@ -50,7 +50,10 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
 
     # Assert
     assert [resource["kind"] for resource in applied] == ["Namespace", "ResourceQuota", "NetworkPolicy"]
-    assert applied[0]["metadata"] == {"name": "acme"}
+    assert applied[0]["metadata"] == {
+        "name": "acme",
+        "labels": {"longlink.io/namespace": "compute", "pod-security.kubernetes.io/enforce": "restricted"},
+    }
     for resource in applied[1:]:
         metadata = resource["metadata"]
         assert isinstance(metadata, dict)

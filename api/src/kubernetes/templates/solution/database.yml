@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: '$namespace'
+    labels:
+        longlink.io/namespace: database
+        longlink.io/compute-namespace: '$compute_namespace'
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+    name: longlink-database
+    namespace: '$namespace'
+spec:
+    hard:
+        # Budget all instances, concurrent bootstrap/join Jobs, and one backup/replacement Pod.
+        pods: '$quota_pods'
+        requests.cpu: '$quota_pods'
+        requests.memory: '${quota_pods}Gi'
+        limits.cpu: '$quota_pods'
+        limits.memory: '${quota_pods}Gi'
+        persistentvolumeclaims: '$quota_instances'
+        requests.storage: '${quota_storage_gib}Gi'
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-database-boundary
+    namespace: '$namespace'
+spec:
+    podSelector: {}
+    policyTypes: [Ingress]
+    ingress:
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: '$compute_namespace'
+                podSelector:
+                    matchExpressions:
+                        - key: longlink.io/component
+                          operator: In
+                          values: [solution, migration]
+              - namespaceSelector:
+                    matchLabels:
+                        longlink.io/platform: 'true'
+                podSelector:
+                    matchLabels:
+                        longlink.io/component: api
+          ports:
+              - {protocol: TCP, port: 5432}
+        - from:
+              - podSelector:
+                    matchLabels:
+                        cnpg.io/cluster: database
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: cnpg-system
+          ports:
+              - {protocol: TCP, port: 5432}
+              - {protocol: TCP, port: 8000}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+    name: database
+    namespace: '$namespace'
+spec:
+    instances: $instances
+    enableSuperuserAccess: true
+    superuserSecret:
+        name: database-superuser
+    storage:
+        storageClass: $storage_class
+        size: '${size_gib}Gi'
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: '1'
+            memory: 1Gi
+    postgresql:
+        pg_hba:
+            - hostnossl all all all reject

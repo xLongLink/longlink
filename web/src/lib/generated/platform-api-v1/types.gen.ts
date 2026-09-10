@@ -40,6 +40,26 @@ export type ComputeRegistryCreate = {
     kubeconfig: {
         [key: string]: unknown;
     };
+    /**
+     * Gateway Url
+     */
+    gateway_url: string;
+    /**
+     * Gateway Certificate
+     */
+    gateway_certificate?: string | null;
+    /**
+     * Database Size Gib
+     */
+    database_size_gib?: number;
+    /**
+     * Database Instances
+     */
+    database_instances?: number;
+    /**
+     * Database Storage Class
+     */
+    database_storage_class: string;
 };
 
 /**
@@ -59,76 +79,50 @@ export type ComputeRegistryResponse = {
     /**
      * Gateway Url
      */
-    gateway_url: string | null;
+    gateway_url: string;
+    /**
+     * Database Size Gib
+     */
+    database_size_gib: number;
+    /**
+     * Database Instances
+     */
+    database_instances: number;
+    /**
+     * Database Storage Class
+     */
+    database_storage_class: string;
     status: Status;
 };
 
 /**
- * DatabaseRegistryCreate
+ * DatabaseState
  *
- * Validate one database registry creation payload.
+ * Describe the availability of an Organization's CNPG database.
  */
-export type DatabaseRegistryCreate = {
-    /**
-     * Host
-     */
-    host: string;
-    /**
-     * Port
-     */
-    port: number;
-    sslmode?: DatabaseSslMode;
-    /**
-     * Password
-     */
-    password: string;
-    /**
-     * Username
-     */
-    username: string;
-    /**
-     * Name
-     */
-    name: string;
-};
+export type DatabaseState = 'available' | 'hibernating' | 'hibernated' | 'resuming' | 'failed';
 
 /**
- * DatabaseRegistryResponse
+ * DatabaseUsage
  *
- * Describe one database backend while filtering its administrator password.
- *
- * Non-secret connection metadata remains available for administrator diagnostics.
+ * Report timestamped database usage and configured storage per CNPG instance.
  */
-export type DatabaseRegistryResponse = {
+export type DatabaseUsage = {
     /**
-     * Id
+     * Size Bytes
      */
-    id: string;
+    size_bytes: number | null;
     /**
-     * Name
+     * Measured At
      */
-    name: string;
+    measured_at: string | null;
     /**
-     * Host
+     * Allocated Bytes
+     *
+     * Configured storage bytes per database instance, not summed across replicas
      */
-    host: string;
-    /**
-     * Port
-     */
-    port: number;
-    sslmode: DatabaseSslMode;
-    /**
-     * Username
-     */
-    username: string;
+    allocated_bytes: number;
 };
-
-/**
- * DatabaseSSLMode
- *
- * Supported PostgreSQL SSL modes.
- */
-export type DatabaseSslMode = 'disable' | 'require';
 
 /**
  * EmailPayload
@@ -457,6 +451,11 @@ export type OrganizationSummary = {
      */
     avatar: string;
     status: Status;
+    database_state: DatabaseState;
+    /**
+     * Database Idle Seconds
+     */
+    database_idle_seconds: number;
 };
 
 /**
@@ -468,7 +467,11 @@ export type OrganizationUpdate = {
     /**
      * Avatar
      */
-    avatar: string | '';
+    avatar?: string | '' | null;
+    /**
+     * Database Idle Seconds
+     */
+    database_idle_seconds?: number | null;
 };
 
 /**
@@ -479,20 +482,6 @@ export type PageComputeRegistryResponse = {
      * Items
      */
     items: Array<ComputeRegistryResponse>;
-    /**
-     * Total
-     */
-    total: number;
-};
-
-/**
- * Page[DatabaseRegistryResponse]
- */
-export type PageDatabaseRegistryResponse = {
-    /**
-     * Items
-     */
-    items: Array<DatabaseRegistryResponse>;
     /**
      * Total
      */
@@ -636,6 +625,10 @@ export type RevisionResponse = {
      */
     configured_envs: Array<string>;
     /**
+     * Min Scale
+     */
+    min_scale: 0 | 1;
+    /**
      * Failed
      */
     failed: boolean;
@@ -674,6 +667,10 @@ export type SolutionCreate = {
      */
     name: string;
     /**
+     * Min Scale
+     */
+    min_scale?: 0 | 1;
+    /**
      * Description
      */
     description?: string | null;
@@ -691,6 +688,10 @@ export type SolutionPatch = {
     envs?: {
         [key: string]: string | null;
     };
+    /**
+     * Min Scale
+     */
+    min_scale?: 0 | 1 | null;
     /**
      * Expected Revision Id
      */
@@ -720,6 +721,10 @@ export type SolutionResponse = {
      * Description
      */
     description: string | null;
+    /**
+     * Min Scale
+     */
+    min_scale: 0 | 1;
     /**
      * Image Desired
      */
@@ -756,6 +761,10 @@ export type SolutionUpdate = {
         [key: string]: string | null;
     };
     /**
+     * Min Scale
+     */
+    min_scale?: 0 | 1 | null;
+    /**
      * Expected Revision Id
      */
     expected_revision_id?: string | null;
@@ -783,6 +792,10 @@ export type SolutionUpdateCheck = {
      * Available
      */
     available: boolean;
+    /**
+     * Min Scale
+     */
+    min_scale: 0 | 1;
     /**
      * Revision Id
      */
@@ -1716,177 +1729,6 @@ export type GetComputeRegistryApiV1ComputesRegistryIdGetResponses = {
 
 export type GetComputeRegistryApiV1ComputesRegistryIdGetResponse = GetComputeRegistryApiV1ComputesRegistryIdGetResponses[keyof GetComputeRegistryApiV1ComputesRegistryIdGetResponses];
 
-export type ListDatabaseRegistriesApiV1DatabasesGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page
-         */
-        page?: number;
-        /**
-         * Page Size
-         */
-        page_size?: number;
-    };
-    url: '/api/v1/databases';
-};
-
-export type ListDatabaseRegistriesApiV1DatabasesGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type ListDatabaseRegistriesApiV1DatabasesGetError = ListDatabaseRegistriesApiV1DatabasesGetErrors[keyof ListDatabaseRegistriesApiV1DatabasesGetErrors];
-
-export type ListDatabaseRegistriesApiV1DatabasesGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: PageDatabaseRegistryResponse;
-};
-
-export type ListDatabaseRegistriesApiV1DatabasesGetResponse = ListDatabaseRegistriesApiV1DatabasesGetResponses[keyof ListDatabaseRegistriesApiV1DatabasesGetResponses];
-
-export type CreateDatabaseRegistryApiV1DatabasesPostData = {
-    body: DatabaseRegistryCreate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/databases';
-};
-
-export type CreateDatabaseRegistryApiV1DatabasesPostErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type CreateDatabaseRegistryApiV1DatabasesPostError = CreateDatabaseRegistryApiV1DatabasesPostErrors[keyof CreateDatabaseRegistryApiV1DatabasesPostErrors];
-
-export type CreateDatabaseRegistryApiV1DatabasesPostResponses = {
-    /**
-     * Successful Response
-     */
-    201: DatabaseRegistryResponse;
-};
-
-export type CreateDatabaseRegistryApiV1DatabasesPostResponse = CreateDatabaseRegistryApiV1DatabasesPostResponses[keyof CreateDatabaseRegistryApiV1DatabasesPostResponses];
-
-export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/databases/{registry_id}';
-};
-
-export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteError = DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors[keyof DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteErrors];
-
-export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteResponse = DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteResponses[keyof DeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteResponses];
-
-export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/databases/{registry_id}';
-};
-
-export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetError = GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors[keyof GetDatabaseRegistryApiV1DatabasesRegistryIdGetErrors];
-
-export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: DatabaseRegistryResponse;
-};
-
-export type GetDatabaseRegistryApiV1DatabasesRegistryIdGetResponse = GetDatabaseRegistryApiV1DatabasesRegistryIdGetResponses[keyof GetDatabaseRegistryApiV1DatabasesRegistryIdGetResponses];
-
-export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/databases/{registry_id}/usage';
-};
-
-export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetError = GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors[keyof GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetErrors];
-
-export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponses = {
-    /**
-     * Response Get Database Usage Api V1 Databases  Registry Id  Usage Get
-     *
-     * Successful Response
-     */
-    200: number;
-};
-
-export type GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponse = GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponses[keyof GetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponses];
-
 export type HealthzApiV1HealthzGetData = {
     body?: never;
     path?: never;
@@ -2264,6 +2106,74 @@ export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses = {
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses[keyof UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses];
 
+export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostData = {
+    body?: never;
+    path: {
+        /**
+         * Organization Id
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/{organization_id}/database/resume';
+};
+
+export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostError = ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors[keyof ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors];
+
+export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: DatabaseState;
+};
+
+export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponse = ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses[keyof ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses];
+
+export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostData = {
+    body?: never;
+    path: {
+        /**
+         * Organization Id
+         */
+        organization_id: string;
+    };
+    query?: never;
+    url: '/api/v1/organizations/{organization_id}/database/hibernate';
+};
+
+export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostError = HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors[keyof HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors];
+
+export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: DatabaseState;
+};
+
+export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponse = HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses[keyof HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses];
+
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetData = {
     body?: never;
     path: {
@@ -2291,11 +2201,9 @@ export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabase
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses = {
     /**
-     * Response Get Organization Database Usage Api V1 Organizations  Organization Id  Database Get
-     *
      * Successful Response
      */
-    200: number | null;
+    200: DatabaseUsage;
 };
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses[keyof GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponses];

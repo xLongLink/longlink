@@ -20,9 +20,10 @@ class Envs(BaseSettings):
     DATABASE_NAME: str | None = None
     DATABASE_PORT: int | None = None
     DATABASE_SCHEMA: str | None = None
-    DATABASE_SSLMODE: Literal["disable", "require"] = "require"
+    DATABASE_SSLMODE: Literal["disable", "require", "verify-full"] = "require"
     DATABASE_PASSWORD: str | None = None
     DATABASE_USERNAME: str | None = None
+    DATABASE_CERTIFICATE: str | None = None
 
     # Storage
     STORAGE_BUCKET: str | None = None

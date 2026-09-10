@@ -22,6 +22,7 @@ const candidate = {
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     revision_id: revisionId,
     available: true,
+    min_scale: 1,
     configured_envs: ['KEEP', 'DROP', 'UNDECLARED'],
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
@@ -100,7 +101,9 @@ describe('Solution source update dialog', () => {
         await act(async () =>
             vi.waitFor(() => expect(document.body.textContent).toContain('Final image requires ANOTHER'))
         );
-        expect(submissions).toEqual([{ envs: { NEW: 'new-secret', DROP: null }, expected_revision_id: revisionId }]);
+        expect(submissions).toEqual([
+            { envs: { NEW: 'new-secret', DROP: null }, min_scale: 1, expected_revision_id: revisionId },
+        ]);
         await act(async () => button('Undo DROP change').click());
         const drop = document.querySelector<HTMLInputElement>('input[name="envs.DROP"]');
         if (!drop || !keep) throw new Error('Configured field missing');
@@ -112,29 +115,48 @@ describe('Solution source update dialog', () => {
         await act(async () => user.clear(drop));
         await act(async () => button('Update solution').click());
         await act(async () => vi.waitFor(() => expect(submissions).toHaveLength(2)));
-        expect(submissions[1]).toEqual({ envs: { NEW: 'new-secret', DROP: '' }, expected_revision_id: revisionId });
+        expect(submissions[1]).toEqual({
+            envs: { NEW: 'new-secret', DROP: '' },
+            min_scale: 1,
+            expected_revision_id: revisionId,
+        });
     });
 
-    it.each([
-        { status: 200, message: 'Up to Date' },
-        { status: 403, message: 'Registry denied anonymous image access' },
-    ])('distinguishes source checks with status $status', async ({ status, message }) => {
+    it('opens configuration when no source update is available', async () => {
+        let checks = 0;
+        vi.stubGlobal('fetch', async () => {
+            checks += 1;
+            return Response.json({ ...candidate, available: false });
+        });
+        await render();
+        expect(checks).toBe(0);
+        await act(async () => button('Check for updates').click());
+        await act(async () => vi.waitFor(() => expect(document.body.textContent).toContain('Configure')));
+        expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(button('Configure').disabled).toBe(false);
+        await act(async () => button('Configure').click());
+        expect(document.querySelector('input[name="envs.NEW"]')).not.toBeNull();
+        expect(checks).toBe(1);
+    });
+
+    it('retries a failed source check before updating', async () => {
         let checks = 0;
         vi.stubGlobal('fetch', async () => {
             checks += 1;
             return checks === 1
-                ? Response.json(status === 200 ? { ...candidate, available: false } : { detail: message }, { status })
+                ? Response.json({ detail: 'Registry denied anonymous image access' }, { status: 403 })
                 : Response.json(candidate);
         });
         await render();
         expect(checks).toBe(0);
         await act(async () => button('Check for updates').click());
-        await act(async () => vi.waitFor(() => expect(document.body.textContent).toContain(message)));
+        await act(async () =>
+            vi.waitFor(() => expect(document.body.textContent).toContain('Registry denied anonymous image access'))
+        );
         expect(document.querySelector('[role="dialog"]')).toBeNull();
-        expect(button(status === 200 ? 'Up to Date' : 'Check for updates').disabled).toBe(false);
-        await act(async () => button(status === 200 ? 'Up to Date' : 'Check for updates').click());
+        expect(button('Check for updates').disabled).toBe(false);
+        await act(async () => button('Check for updates').click());
         await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
-        expect(checks).toBe(2);
         await act(async () => button('Update').click());
         expect(document.querySelector('input[name="envs.NEW"]')).not.toBeNull();
         expect(checks).toBe(2);
@@ -164,13 +186,17 @@ describe('Solution source update dialog', () => {
         await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
         await act(async () => button('Update').click());
         expect(button('Update solution').disabled).toBe(false);
+        const alwaysOn = document.querySelector<HTMLInputElement>('input[name="alwaysOn"]');
+        if (!alwaysOn) throw new Error('Always-on field missing');
+        expect(alwaysOn.checked).toBe(true);
+        await act(async () => alwaysOn.click());
         await act(async () => button('Update solution').click());
         await act(async () =>
             vi.waitFor(() => expect(document.body.textContent).toContain('Desired revision changed since review'))
         );
 
         // Assert
-        expect(submissions).toEqual([{ envs: {}, expected_revision_id: reviewedRevisionId }]);
+        expect(submissions).toEqual([{ envs: {}, min_scale: 0, expected_revision_id: reviewedRevisionId }]);
         expect(button('Check for updates').disabled).toBe(false);
         expect(requests).toEqual([
             `GET /api/v1/solutions/${solution.id}/update`,

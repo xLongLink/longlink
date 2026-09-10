@@ -1,11 +1,12 @@
 import asyncio
 from alembic import command
 from alembic.config import Config
+from longlink.database import urls
 from sqlalchemy.engine import URL, make_url
 from importlib.resources import files
 
 
-def migration_config(database_url: str | URL) -> Config:
+def migration_config(database_url: str | URL, certificate: str | None = None) -> Config:
     """Build an Alembic config for one organization database."""
 
     # Normalize structured and string URLs before validating the database driver.
@@ -23,10 +24,13 @@ def migration_config(database_url: str | URL) -> Config:
 
     # Alembic uses ConfigParser, where percent-encoded URL characters must be escaped.
     config.set_main_option("sqlalchemy.url", url.render_as_string(hide_password=False).replace("%", "%%"))
+
+    # Keep the verified SSL context in memory rather than embedding certificate material in the URL.
+    config.attributes["connect_args"] = urls.connect_args(url, certificate=certificate)
     return config
 
 
-async def migrate_database(database_url: str | URL) -> None:
+async def migrate_database(database_url: str | URL, certificate: str | None = None) -> None:
     """Apply shared-schema migrations without blocking the control-plane event loop."""
 
-    await asyncio.to_thread(command.upgrade, migration_config(database_url), "head")
+    await asyncio.to_thread(command.upgrade, migration_config(database_url, certificate=certificate), "head")

@@ -62,6 +62,10 @@ TEMP
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
+/api/src/kubernetes/templates/platform/cnpg-v*.yml
+/api/src/kubernetes/templates/platform/kourier-v*.yml
+/api/src/kubernetes/templates/platform/serving-core-v*.yml
+/api/src/kubernetes/templates/platform/serving-crds-v*.yml
 /sdk/longlink/.static/web/
 /sdk/dev/
 /web/logs/

@@ -1,5 +1,6 @@
 import re
 from uuid import UUID
+from typing import Literal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.types import Image
@@ -53,6 +54,7 @@ class SolutionCreate(EnvironmentValues):
 
     image: Image
     name: str = Field(min_length=1, max_length=100)
+    min_scale: Literal[0, 1] = 0
     description: str | None = Field(default=None, max_length=255)
 
 
@@ -60,6 +62,7 @@ class SolutionPatch(BaseModel):
     """Preserve omitted values and remove variables explicitly set to null."""
 
     envs: dict[str, str | None] = Field(default_factory=dict)
+    min_scale: Literal[0, 1] | None = None
     expected_revision_id: UUID | None = None
 
     @field_validator("envs")
@@ -83,6 +86,7 @@ class SolutionUpdateCheck(BaseModel):
     source: str
     image: str
     available: bool
+    min_scale: Literal[0, 1]
     revision_id: UUID
     current_image: str = Field(description="Immutable image of the desired revision used for this update check.")
     configured_envs: list[str]
@@ -97,6 +101,7 @@ class RevisionResponse(BaseModel):
     image: str
     source: str
     configured_envs: list[str]
+    min_scale: Literal[0, 1]
     failed: bool
     created_at: datetime
     created_id: UUID | None
@@ -120,6 +125,7 @@ class SolutionResponse(BaseModel):
     description: str | None
 
     # Desired release
+    min_scale: Literal[0, 1]
     image_desired: str
     desired_revision_id: UUID | None
     deployed_revision_id: UUID | None

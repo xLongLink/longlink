@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from dataclasses import dataclass
 from collections.abc import Sequence
-from src.models.types import Image, DatabaseSSLMode
+from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -11,7 +11,6 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
@@ -19,10 +18,9 @@ from src.database.models.organizations import Organization
 
 @dataclass(frozen=True, slots=True)
 class Infrastructure:
-    """Hold one test compute, database, and storage registry assignment."""
+    """Hold one test compute and storage registry assignment."""
 
     compute: ComputeRegistry
-    database: DatabaseRegistry
     storage: StorageRegistry
 
 
@@ -78,6 +76,8 @@ async def create_compute() -> ComputeRegistry:
     async with session_scope() as session:
         compute = ComputeRegistry(
             name="Local compute",
+            gateway_url="https://gateway.example",
+            database_storage_class="local-path",
             kubeconfig={"apiVersion": "v1", "clusters": []},
         )
         session.add(compute)
@@ -95,17 +95,8 @@ async def create_ready_infrastructure() -> Infrastructure:
             name=f"Local testing compute {suffix}",
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
-            gateway_certificate="test-certificate",
-            gateway_client_identity="test-client-certificate\ntest-client-private-key",
+            database_storage_class="local-path",
             status=Status.running,
-        )
-        database = DatabaseRegistry(
-            name=f"Local testing database {suffix}",
-            host="database.example",
-            port=5432,
-            username="admin",
-            password="secret",
-            sslmode=DatabaseSSLMode.disable,
         )
         storage = StorageRegistry(
             name=f"Local testing storage {suffix}",
@@ -114,10 +105,9 @@ async def create_ready_infrastructure() -> Infrastructure:
             secret_access_key="secret-key",
         )
         session.add(compute)
-        session.add(database)
         session.add(storage)
         await session.commit()
-        return Infrastructure(compute=compute, database=database, storage=storage)
+        return Infrastructure(compute=compute, storage=storage)
 
 
 async def create_organization(
@@ -137,7 +127,6 @@ async def create_organization(
             owner,
             compute_id=infrastructure.compute.id,
             storage_id=infrastructure.storage.id,
-            database_id=infrastructure.database.id,
         )
         await session.commit()
         return organization

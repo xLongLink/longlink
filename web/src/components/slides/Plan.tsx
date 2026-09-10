@@ -11,31 +11,22 @@ export function PlanSlide() {
                 <Grid className="absolute inset-0" columns={3}>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-3" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Open source
-                            </Text>
-                            <Text color="secondary" type="large">
-                                July 2026
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-3" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Public beta
-                            </Text>
-                            <Text color="secondary" type="large">
-                                September 2026
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-3" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Pilots
-                            </Text>
-                            <Text color="secondary" type="large">
-                                Q4 2026
                             </Text>
                         </Stack>
                     </Stack>
@@ -44,6 +35,7 @@ export function PlanSlide() {
             <Text
                 className="ppt-slide-standard-font absolute bottom-12 start-12"
                 hasCapsize
+                size="xl"
                 type="large"
                 weight="semibold"
             >

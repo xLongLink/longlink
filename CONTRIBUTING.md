@@ -33,6 +33,7 @@ make web:install    # Install web dependencies
 make build          # Typecheck and build API and SDK web bundles
 make api:build      # Build the API web bundle
 make sdk:build      # Build the embedded SDK web bundle
+make api:manifests  # Download checksum-locked Kubernetes package data
 
 make seed           # Migrate and seed the Platform test Organization
 

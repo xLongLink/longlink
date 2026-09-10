@@ -164,7 +164,7 @@ def test_connect_args_returns_driver_specific_settings(
     """Return only the connection settings supported by each database driver."""
 
     # Act
-    result = database_urls.connect_args(database_url, schema=schema, ssl=ssl)
+    result = database_urls.connect_args(database_url, schema=schema, sslmode=ssl)
 
     # Assert
     assert result == expected

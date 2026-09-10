@@ -52,6 +52,10 @@ web/tests
 
 # LongLink generated workspaces and bundles
 api/src/.static/web
+api/src/kubernetes/templates/platform/cnpg-v*.yml
+api/src/kubernetes/templates/platform/kourier-v*.yml
+api/src/kubernetes/templates/platform/serving-core-v*.yml
+api/src/kubernetes/templates/platform/serving-crds-v*.yml
 sdk/dev
 sdk/longlink/.static/web
 web/src/lib/generated/*

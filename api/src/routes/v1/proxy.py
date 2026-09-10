@@ -5,11 +5,14 @@ from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, get_session
 from src.utils import roles
+from contextlib import AsyncExitStack
+from src.logger import logger
+from src.operations import databases
 from collections.abc import AsyncIterator
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.statuses import Status
-from src.adapters.gateway import GatewayClient
+from src.adapters.gateway import Gateway
 from src.database.services import organizations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -17,10 +20,18 @@ from src.database.models.users import User
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
 PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
-PROXY_REQUEST_TIMEOUT_SECONDS = 30
+PROXY_REQUEST_TIMEOUT_SECONDS = 120
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 PROXY_ERROR_MAX_BYTES = 64 * 1024
 PROXY_ERROR_TIMEOUT_SECONDS = 5
+RUNTIME_ADMISSION_TIMEOUT_SECONDS = 120
+
+
+async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
+    """Keep runtime activity alive until FastAPI finishes sending the response."""
+
+    async with AsyncExitStack() as stack:
+        yield stack
 
 
 @router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
@@ -31,6 +42,7 @@ async def proxy_solution_request(
     path: str = "",
     user: User = Depends(authuser),
     session: AsyncSession = Depends(get_session),
+    runtime: AsyncExitStack = Depends(runtime_scope, scope="request"),
 ) -> Response:
     """Enforce HTTP-method-specific Organization roles before traffic enters its compute gateway.
 
@@ -61,36 +73,54 @@ async def proxy_solution_request(
         )
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
-    if (
-        registry.gateway_url is None
-        or registry.gateway_certificate is None
-        or registry.gateway_client_identity is None
-        or not identity_secret
-    ):
+    if not identity_secret:
         raise HTTPException(status_code=503, detail="Solution gateway is not ready")
+
+    # Release the authorization snapshot before independent runtime transactions begin.
+    await session.commit()
+    try:
+        async with asyncio.timeout(RUNTIME_ADMISSION_TIMEOUT_SECONDS):
+            lease = await runtime.enter_async_context(databases.activity(solution.organization_id))
+    except Exception as exc:
+        logger.warning("Runtime admission failed for Organization %s: %s", solution.organization_id, type(exc).__name__)
+        raise HTTPException(
+            status_code=503,
+            detail="Organization database is waking. Please try again shortly.",
+            headers={"Retry-After": "5", "Cache-Control": "no-store"},
+        ) from exc
+    assert lease is not None
+
+    # Wake can outlast an access change; never reuse pre-wake authorization for runtime admission.
+    access = await organizations.solution_runtime_access(session, user.id, solution_id)
+    if access is None or not roles.atleast(access[1], required_role):
+        raise HTTPException(status_code=403, detail="Access required")
+    if access[0].status != Status.running:
+        raise HTTPException(status_code=503, detail="Solution is not ready", headers={"Retry-After": "5"})
+    await session.commit()
 
     async def request_content() -> AsyncIterator[bytes]:
         """Stream one bounded request body to the solution gateway."""
 
         # Count streamed bytes before forwarding each request chunk.
-        size = 0
-        async for chunk in request.stream():
-            size += len(chunk)
-            if size > PROXY_REQUEST_MAX_BYTES:
-                raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
-            yield chunk
+        with lease.protect():
+            size = 0
+            async for chunk in request.stream():
+                size += len(chunk)
+                if size > PROXY_REQUEST_MAX_BYTES:
+                    raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
+                yield chunk
 
-    # Proxy only authenticated API requests through the mTLS compute gateway boundary.
+    # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
-            gateway = GatewayClient(
+            gateway = Gateway(
                 registry.gateway_url,
                 registry.gateway_certificate,
-                registry.gateway_client_identity,
-                identity_secret,
             )
             gateway_response = await gateway.request(
                 solution_id=solution.id,
+                organization_id=solution.organization_id,
+                identity_secret=identity_secret,
                 user_id=user.id,
                 method=request.method,
                 path=path,
@@ -102,6 +132,9 @@ async def proxy_solution_request(
         raise HTTPException(status_code=504, detail="Solution proxy request timed out") from exc
     except httpx2.HTTPError as exc:
         raise HTTPException(status_code=503, detail="Solution proxy request failed") from exc
+
+    # Cover disconnects before the response iterator starts, and close upstream before releasing activity.
+    runtime.push_async_callback(gateway_response.aclose)
 
     # Normalize errors before checking successful response types or starting browser streaming.
     response_content_type = gateway_response.response.headers.get("content-type")
@@ -128,8 +161,6 @@ async def proxy_solution_request(
                         detail = payload["detail"]
         except (TimeoutError, httpx2.HTTPError, ValueError, RecursionError):
             pass
-        finally:
-            await gateway_response.aclose()
 
         # Preserve actionable HTTP metadata, not upstream cookies or body-specific headers.
         for name in ("retry-after", "www-authenticate", "allow"):
@@ -142,7 +173,6 @@ async def proxy_solution_request(
     if response_content_type is not None and any(
         value.partition(";")[0].strip() in BLOCKED_PROXY_CONTENT_TYPES for value in response_content_type.lower().split(",")
     ):
-        await gateway_response.aclose()
         raise HTTPException(status_code=502, detail="Solution proxy returned an unsupported content type")
 
     # Only content type crosses the runtime-to-browser boundary.
@@ -152,12 +182,10 @@ async def proxy_solution_request(
     async def response_content() -> AsyncIterator[bytes]:
         """Stream the upstream response and release network resources on completion."""
 
-        # Keep both upstream resources open until streaming ends or is interrupted.
-        try:
+        # The request-scoped exit stack owns upstream resources through completion or disconnect.
+        with lease.protect():
             async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
                 async for chunk in gateway_response.response.aiter_bytes():
                     yield chunk
-        finally:
-            await gateway_response.aclose()
 
     return StreamingResponse(response_content(), status_code=gateway_response.response.status_code, headers=response_headers)

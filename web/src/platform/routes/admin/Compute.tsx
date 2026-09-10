@@ -77,7 +77,7 @@ export default function AdminCompute() {
                 <Stack>
                     <Heading level={1}>Compute</Heading>
                     <Text as="p" color="secondary">
-                        Inspect runtime workloads, node capacity, and orchestration status.
+                        Manage Kubernetes connections, Kourier gateways, and database provisioning settings.
                     </Text>
                 </Stack>
                 <CreateCompute />
@@ -99,12 +99,7 @@ export default function AdminCompute() {
                                     <Text weight="semibold">{compute.name}</Text>
                                     <StatusBadge status={compute.status} />
                                 </Stack>
-                                <Text type="supporting">
-                                    {compute.gateway_url ??
-                                        (compute.status === 'creating'
-                                            ? 'Provisioning gateway'
-                                            : 'Gateway unavailable')}
-                                </Text>
+                                <Text type="supporting">{compute.gateway_url}</Text>
                             </Stack>
                         </Stack>
                     )}
@@ -132,8 +127,15 @@ export default function AdminCompute() {
                         <MetadataListItem label="Status">
                             <StatusBadge status={metadataCompute.status} />
                         </MetadataListItem>
-                        <MetadataListItem label="Gateway">
-                            {metadataCompute.gateway_url ?? 'Unavailable'}
+                        <MetadataListItem label="Gateway">{metadataCompute.gateway_url}</MetadataListItem>
+                        <MetadataListItem label="Database storage class">
+                            {metadataCompute.database_storage_class}
+                        </MetadataListItem>
+                        <MetadataListItem label="Database size per instance">
+                            {metadataCompute.database_size_gib} GiB
+                        </MetadataListItem>
+                        <MetadataListItem label="Database instances">
+                            {metadataCompute.database_instances}
                         </MetadataListItem>
                         <MetadataListItem label="ID">{metadataCompute.id}</MetadataListItem>
                     </MetadataList>

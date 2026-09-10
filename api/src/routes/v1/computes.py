@@ -17,7 +17,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
     """Register a compute target and queue its initial creation."""
 
     # Persist the validated connection and queue compute provisioning.
-    registry = await compute.create(session, name=payload.name, kubeconfig=payload.kubeconfig)
+    registry = await compute.create(session, **payload.model_dump())
     await session.commit()
     return registry
 
@@ -45,6 +45,9 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
                 ComputeRegistry.id,
                 ComputeRegistry.name,
                 ComputeRegistry.gateway_url,
+                ComputeRegistry.database_size_gib,
+                ComputeRegistry.database_instances,
+                ComputeRegistry.database_storage_class,
                 ComputeRegistry.status,
             )
         ],

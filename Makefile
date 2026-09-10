@@ -1,8 +1,10 @@
-.PHONY: up local\:resources image down clear check build api\:build sdk\:build seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test web\:test ty api\:ty sdk\:ty
+.PHONY: up local\:resources image down clear check build api\:build sdk\:build api\:manifests seed clean format python\:format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install test api\:test sdk\:test web\:test ty api\:ty sdk\:ty
 
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 DEV_BUILDER := longlink-dev
+DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
+DEV_CERTIFICATES := dev/certificates
 PYTHON_IMPORT_FORMAT := uv run --locked ruff check --select I --fix .
 
 # Install all API, SDK, and web dependencies.
@@ -12,6 +14,11 @@ install: api\:install sdk\:install web\:install
 # Install API Python development dependencies.
 api\:install:
 	cd api && uv sync --locked --extra dev
+
+
+# Download checksum-locked Kubernetes manifests used as API package data.
+api\:manifests:
+	cd api && uv run --locked python scripts/manifests.py
 
 
 # Install SDK Python development dependencies.
@@ -66,7 +73,7 @@ test: api\:test sdk\:test web\:test
 
 
 # Run API tests with coverage.
-api\:test: api\:install api\:build
+api\:test: api\:install api\:manifests api\:build
 	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 
 
@@ -120,6 +127,11 @@ local\:resources:
 			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make up.\n"; \
 			exit 1; \
 		fi; \
+		image="$$(docker inspect "k3d-$(DEV_CLUSTER)-server-0" --format '{{.Config.Image}}')"; \
+		if [ "$$image" != "$(DEV_K3S_IMAGE)" ]; then \
+			printf "Existing k3d cluster uses %s instead of $(DEV_K3S_IMAGE). Run make down before make up.\n" "$$image"; \
+			exit 1; \
+		fi; \
 		printf "k3d cluster $(DEV_CLUSTER) already exists.\n"; \
 	else \
 		printf "Creating k3d cluster $(DEV_CLUSTER).\n"; \
@@ -128,9 +140,35 @@ local\:resources:
 		if [ -z "$$gateway" ]; then printf "Development Docker network has no gateway.\n"; exit 1; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait
 	@if ! k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
-		k3d cluster create "$(DEV_CLUSTER)" --network "$(DEV_DOCKER_NETWORK)" --api-port 127.0.0.1:8001 -p "127.0.0.1:8443:443@loadbalancer" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
+		k3d cluster create "$(DEV_CLUSTER)" --image "$(DEV_K3S_IMAGE)" --network "$(DEV_DOCKER_NETWORK)" --api-port 127.0.0.1:8001 -p "127.0.0.1:8443:443@loadbalancer" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
 	fi
 	@umask 077; k3d kubeconfig get "$(DEV_CLUSTER)" > api/kubeconfig.yaml
+	@mkdir -p "$(DEV_CERTIFICATES)"
+	@if [ ! -f "$(DEV_CERTIFICATES)/ca.crt" ] || [ ! -f "$(DEV_CERTIFICATES)/gateway.crt" ] || [ ! -f "$(DEV_CERTIFICATES)/gateway.key" ]; then \
+		printf "Creating local Kourier certificate.\n"; \
+		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+			-keyout "$(DEV_CERTIFICATES)/ca.key" -out "$(DEV_CERTIFICATES)/ca.crt" \
+			-subj "/CN=LongLink Development CA" \
+			-addext "basicConstraints=critical,CA:TRUE" \
+			-addext "keyUsage=critical,keyCertSign,cRLSign" >/dev/null 2>&1; \
+		openssl req -newkey rsa:2048 -nodes \
+			-keyout "$(DEV_CERTIFICATES)/gateway.key" -out "$(DEV_CERTIFICATES)/gateway.csr" \
+			-subj "/CN=localhost" \
+			-addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1; \
+		printf "subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n" > "$(DEV_CERTIFICATES)/gateway.ext"; \
+		openssl x509 -req -days 3650 \
+			-in "$(DEV_CERTIFICATES)/gateway.csr" \
+			-CA "$(DEV_CERTIFICATES)/ca.crt" -CAkey "$(DEV_CERTIFICATES)/ca.key" -CAcreateserial \
+			-out "$(DEV_CERTIFICATES)/gateway.crt" -extfile "$(DEV_CERTIFICATES)/gateway.ext" >/dev/null 2>&1; \
+		rm -f "$(DEV_CERTIFICATES)/gateway.csr" "$(DEV_CERTIFICATES)/gateway.ext" "$(DEV_CERTIFICATES)/ca.srl"; \
+	fi
+	@kubectl --kubeconfig api/kubeconfig.yaml create namespace knative-serving --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
+	@kubectl --kubeconfig api/kubeconfig.yaml create namespace kourier-system --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
+	@kubectl --kubeconfig api/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
+		--cert="$(DEV_CERTIFICATES)/gateway.crt" --key="$(DEV_CERTIFICATES)/gateway.key" \
+		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
+	@printf 'apiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: longlink-local-api\n  namespace: kourier-system\nspec:\n  podSelector:\n    matchLabels:\n      app: 3scale-kourier-gateway\n  policyTypes: [Ingress]\n  ingress:\n    - ports:\n        - {protocol: TCP, port: 8444}\n' | \
+		kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
 	@printf "Waiting for local registry...\n"
 	@attempt=1; \
 	while ! curl --fail --silent --output /dev/null http://localhost:15000/v2/; do \
@@ -160,6 +198,7 @@ down:
 	@docker buildx rm --force "$(DEV_BUILDER)" >/dev/null 2>&1 || true
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
+	rm -rf "$(DEV_CERTIFICATES)"
 
 
 # Remove local Compose volumes and the generated SDK development project.
@@ -171,7 +210,7 @@ clear:
 
 
 # Run the local LongLink Platform API server before `make seed`.
-api: api\:install
+api: api\:install api\:manifests
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
@@ -188,9 +227,10 @@ image: sdk\:build
 
 
 # Seed local infrastructure and create the local example Organization and Solution.
-seed: api\:install
+seed: api\:install api\:manifests
+	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true uv run --locked python -m scripts.seed
+	cd api && DEVELOPMENT=true GATEWAY_CERTIFICATE="$$(cat ../$(DEV_CERTIFICATES)/ca.crt)" uv run --locked python -m scripts.seed
 
 
 # Run the Vite web app.

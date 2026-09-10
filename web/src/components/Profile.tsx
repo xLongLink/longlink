@@ -16,7 +16,6 @@ import {
     BookOpen,
     Building2,
     ChevronRight,
-    Database,
     ExternalLink,
     HardDrive,
     Settings2,
@@ -103,12 +102,6 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                                     label="Organizations"
                                     onClickCapture={closeMenu}
                                     startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/database"
-                                    label="Database"
-                                    onClickCapture={closeMenu}
-                                    startContent={<Database aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/storage"

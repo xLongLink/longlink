@@ -1,20 +1,26 @@
 import asyncio
+import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
 from src.logger import logger
 from sqlalchemy.exc import OperationalError
+from src.operations import databases
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
+from longlink.utils.time import utcnow
 from src.models.storages import OrganizationStorageUsageResponse
+from src.database.session import session_scope
 from src.models.resources import OrganizationSolutionSummary
-from src.adapters.postgres import Postgres
 from src.database.services import organizations
+from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
+    DatabaseState,
+    DatabaseUsage,
     OrganizationCreate,
     OrganizationUpdate,
     OrganizationDetails,
@@ -25,7 +31,6 @@ from src.models.organizations import (
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
@@ -99,44 +104,113 @@ async def update_organization(
     """Update mutable organization settings."""
 
     # Persist mutable metadata only while the Organization remains active.
-    organization = await organizations.update(session, membership.organization_id, str(payload.avatar), user.id)
+    organization = await organizations.update(
+        session,
+        membership.organization_id,
+        str(payload.avatar) if payload.avatar is not None else None,
+        user.id,
+        payload.database_idle_seconds,
+    )
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
     await session.commit()
     return organization
 
 
+async def database_admin(
+    organization_id: UUID,
+    user: User = Depends(authuser),
+    session: AsyncSession = Depends(get_session),
+) -> UUID:
+    """Authorize manual database transitions under the Organization admission lock."""
+
+    # Refresh authorization after locking, then release the transaction before external work.
+    organization = await databases.lock(session, organization_id)
+    membership = await session.get(UserOrganization, (user.id, organization_id), populate_existing=True)
+    if (
+        organization is None
+        or organization.deleted_at is not None
+        or membership is None
+        or membership.deleted_at is not None
+        or not roles.atleast(membership.role, OrganizationRoles.admin)
+    ):
+        raise HTTPException(status_code=403, detail="Organization administrator access required")
+    await session.commit()
+    return organization_id
+
+
+@router.post("/organizations/{organization_id}/database/resume", response_model=DatabaseState)
+async def resume_organization_database(organization_id: UUID = Depends(database_admin)):
+    """Wake and synchronize an Organization database without changing its idle policy."""
+
+    # Runtime recovery continues through the scheduler if readiness exceeds this request's wait.
+    try:
+        async with asyncio.timeout(20), databases.activity(organization_id):
+            return DatabaseState.available
+    except Exception as exc:
+        logger.warning("Manual database resume failed for Organization %s: %s", organization_id, type(exc).__name__)
+        raise HTTPException(status_code=503, detail="Database is not ready", headers={"Retry-After": "5"}) from exc
+
+
+@router.post("/organizations/{organization_id}/database/hibernate", response_model=DatabaseState)
+async def hibernate_organization_database(organization_id: UUID = Depends(database_admin)):
+    """Hibernate an eligible database without overriding active work or its always-on policy."""
+
+    # Manual sleep bypasses only the idle timer, never leases, Pods, backups, or the always-on setting.
+    try:
+        async with asyncio.timeout(15 * 60):
+            hibernated = await databases.hibernate(organization_id, manual=True)
+    except Exception as exc:
+        logger.warning("Manual database hibernation failed for Organization %s: %s", organization_id, type(exc).__name__)
+        raise HTTPException(status_code=503, detail="Database hibernation is unavailable", headers={"Retry-After": "5"}) from exc
+    if not hibernated:
+        raise HTTPException(status_code=409, detail="Database must allow hibernation and have no active runtime or backup work")
+    return DatabaseState.hibernated
+
+
 @router.get(
     "/organizations/{organization_id}/database",
-    response_model=int | None,
+    response_model=DatabaseUsage,
 )
 async def get_organization_database_usage(
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return live usage for the Organization database."""
+    """Return cached usage while asleep without waking the Organization for telemetry."""
 
-    # Load the Organization's immutable database assignment.
-    registry = await session.get(DatabaseRegistry, membership.organization.database_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Database registry not found")
+    # Allocation is Platform metadata, so even sleeping databases need no Kubernetes or SQL request.
+    organization = membership.organization
+    infrastructure = await organizations.infrastructure(session, organization.id)
+    if infrastructure is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    usage = {
+        "size_bytes": organization.database_usage_bytes,
+        "measured_at": organization.database_usage_at,
+        "allocated_bytes": infrastructure.compute.database_size_gib * 1024**3,
+    }
+    await session.commit()
+    if organization.database_state != DatabaseState.available:
+        return usage
 
     # Inspect the exact Organization database while distinguishing absence from backend failures.
     try:
-        database = Postgres(
-            registry.host,
-            registry.port,
-            registry.username,
-            registry.password,
-            registry.sslmode,
-        )
-        return await database.database_usage(membership.organization.id.hex)
-    except OperationalError as exc:
-        logger.warning(
-            "Database resources unavailable for organization '%s' through registry '%s'",
-            membership.organization.slug,
-            registry.name,
-        )
+        async with asyncio.timeout(20), databases.activity(organization.id, wake=False) as admitted:
+            if not admitted:
+                return usage
+            cluster = Kubernetes(infrastructure.compute.kubeconfig)
+            async with contextlib.aclosing(cluster):
+                database = await databases.connection(infrastructure, cluster)
+                size_bytes = await database.database_usage(organization.id.hex)
+            measured_at = utcnow()
+            async with session_scope() as usage_session:
+                current = await databases.lock(usage_session, organization.id)
+                if current is not None:
+                    current.database_usage_bytes = size_bytes
+                    current.database_usage_at = measured_at
+                await usage_session.commit()
+            return {"size_bytes": size_bytes, "measured_at": measured_at, "allocated_bytes": usage["allocated_bytes"]}
+    except (OperationalError, TimeoutError, RuntimeError) as exc:
+        logger.warning("Database resources unavailable for organization '%s'", organization.slug)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
 
@@ -236,7 +310,6 @@ async def update_organization_member(
         user.id,
     )
     await session.commit()
-    await organizations.sync_users(session, membership.organization_id)
 
 
 @router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)

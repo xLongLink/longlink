@@ -1,12 +1,16 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
+from secrets import token_urlsafe
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Column
+from sqlalchemy import Enum, Column, BigInteger
+from src.environments import env
+from src.database.types import EncryptedType
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 from src.database.models.base import PlatformModel
+from src.models.organizations import DatabaseState
 
 
 class Organization(PlatformModel, table=True):
@@ -27,8 +31,22 @@ class Organization(PlatformModel, table=True):
 
     # Infrastructure
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)
-    database_id: UUID = Field(foreign_key="database_registries.id", index=True)
     storage_id: UUID = Field(foreign_key="storage_registries.id", index=True)
+
+    # Database
+    database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
+    database_idle_seconds: int = Field(default=0)
+    database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
+    database_state: DatabaseState = Field(
+        default=DatabaseState.available,
+        sa_column=Column(
+            Enum(DatabaseState, name="database_state_enum", native_enum=False, create_constraint=True, validate_strings=True),
+            nullable=False,
+        ),
+    )
+    database_sync_pending: bool = Field(default=True)
+    database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
+    database_usage_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # State
     status: Status = Field(
@@ -46,3 +64,16 @@ class Organization(PlatformModel, table=True):
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
+
+
+class OrganizationActivity(PlatformModel, table=True):
+    """Keep an Organization database awake while a bounded activity lease is live."""
+
+    __tablename__: ClassVar[str] = "organization_activities"
+
+    # Identifier
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+
+    # Lease
+    organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE", index=True)
+    expires_at: datetime = Field(sa_type=UTCDateTime, index=True)

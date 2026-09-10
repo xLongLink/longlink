@@ -1,0 +1,18 @@
+{
+    "src/kubernetes/templates/platform/serving-crds-v1.23.0.yml": {
+        "url": "https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml",
+        "sha256": "b172ff4901ed50f8e4e09ff8616e54d22e264df7086ce8cb74f513a04812fe74"
+    },
+    "src/kubernetes/templates/platform/serving-core-v1.23.0.yml": {
+        "url": "https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml",
+        "sha256": "be3f16c9c0ac9276cc173ef04871aaeac78537f9edb116310caa02f016e9cbc2"
+    },
+    "src/kubernetes/templates/platform/kourier-v1.23.0.yml": {
+        "url": "https://github.com/knative-extensions/net-kourier/releases/download/knative-v1.23.0/kourier.yaml",
+        "sha256": "cded0c3c1d7669b1aa9f7484234b454ff3940a2b54a27d5ec4825c2d4003d01d"
+    },
+    "src/kubernetes/templates/platform/cnpg-v1.29.1.yml": {
+        "url": "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/v1.29.1/releases/cnpg-1.29.1.yaml",
+        "sha256": "e0c5ff41bf5b01c0775bf225929b8423d543cd23e9742e4274fe7de8499cf93a"
+    }
+}

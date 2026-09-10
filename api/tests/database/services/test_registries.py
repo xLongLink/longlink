@@ -3,14 +3,12 @@ from uuid import UUID, uuid4
 from factories import create_compute, queue_operation, create_ready_infrastructure
 from src.errors import ConflictError, NotFoundError
 from collections.abc import Callable, Awaitable
-from src.models.types import DatabaseSSLMode
 from src.database.session import session_scope
-from src.database.services import compute, storage, database
+from src.database.services import compute, storage
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 
 DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
 
@@ -19,7 +17,6 @@ DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
     "delete",
     [
         pytest.param(compute.delete, id="compute"),
-        pytest.param(database.delete, id="database"),
         pytest.param(storage.delete, id="storage"),
     ],
 )
@@ -36,14 +33,13 @@ async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
     ("delete", "registry", "model"),
     [
         pytest.param(compute.delete, "compute", ComputeRegistry, id="compute"),
-        pytest.param(database.delete, "database", DatabaseRegistry, id="database"),
         pytest.param(storage.delete, "storage", StorageRegistry, id="storage"),
     ],
 )
 async def test_delete_removes_unused_registry(
     delete: DeleteRegistry,
     registry: str,
-    model: type[ComputeRegistry] | type[DatabaseRegistry] | type[StorageRegistry],
+    model: type[ComputeRegistry] | type[StorageRegistry],
 ) -> None:
     """Delete a registry that has no organization assignment."""
 
@@ -86,42 +82,20 @@ async def test_create_rejects_duplicate_compute_names() -> None:
 
     # Arrange
     async with session_scope() as session:
-        await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})
-        await session.commit()
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(session, "Duplicate Compute", {"apiVersion": "v1"})
-
-
-async def test_create_rejects_duplicate_database_names() -> None:
-    """Translate duplicate Database names into the stable domain conflict."""
-
-    # Arrange
-    async with session_scope() as session:
-        await database.create(
-            session,
-            "Duplicate Database",
-            "database.example",
-            5432,
-            "admin",
-            "database-secret",
-            DatabaseSSLMode.disable,
+        await compute.create(
+            session, "Duplicate Compute", {"apiVersion": "v1"}, gateway_url="https://gateway.example", database_storage_class="local-path"
         )
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^Database registry already exists$"):
-            await database.create(
+        with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
+            await compute.create(
                 session,
-                "Duplicate Database",
-                "database.example",
-                5432,
-                "admin",
-                "database-secret",
-                DatabaseSSLMode.disable,
+                "Duplicate Compute",
+                {"apiVersion": "v1"},
+                gateway_url="https://gateway.example",
+                database_storage_class="local-path",
             )
 
 

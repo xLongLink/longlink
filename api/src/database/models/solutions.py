@@ -1,9 +1,9 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Literal, ClassVar
 from datetime import datetime
 from pydantic import JsonValue
 from sqlmodel import Field, Relationship
-from sqlalchemy import JSON, Enum, Column, UniqueConstraint, ForeignKeyConstraint, event, inspect
+from sqlalchemy import JSON, Enum, Column, Integer, CheckConstraint, UniqueConstraint, ForeignKeyConstraint, event, inspect
 from sqlalchemy.orm import Mapper
 from src.environments import env
 from sqlalchemy.engine import Connection
@@ -87,6 +87,12 @@ class Solution(PlatformModel, table=True):
         return self.desired_revision.image
 
     @property
+    def min_scale(self) -> Literal[0, 1]:
+        """Expose the desired snapshot's minimum running instance count."""
+
+        return self.desired_revision.min_scale
+
+    @property
     def effective_revision_id(self) -> UUID | None:
         """Select desired state, falling back to the last deployed release after failure."""
 
@@ -105,13 +111,14 @@ class Revision(PlatformModel, table=True):
     """Retain an immutable release snapshot and its observed deployment outcome."""
 
     __tablename__: ClassVar[str] = "revisions"
-    __table_args__ = (UniqueConstraint("solution_id", "id"),)
+    __table_args__ = (UniqueConstraint("solution_id", "id"), CheckConstraint("min_scale IN (0, 1)", name="revision_min_scale"))
 
     # Snapshot
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     solution_id: UUID = Field(foreign_key="solutions.id", ondelete="CASCADE")
     image: str = Field(max_length=512)
     source: str = Field(max_length=512)
+    min_scale: Literal[0, 1] = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     image_metadata: dict[str, JsonValue] = Field(sa_column=Column(JSON, nullable=False))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
@@ -136,6 +143,6 @@ def protect_snapshot(_mapper: Mapper[Revision], _connection: Connection, revisio
     state = inspect(revision)
     if any(
         state.attrs[name].history.has_changes()
-        for name in ("id", "solution_id", "source", "image", "image_metadata", "envs", "created_at", "created_id")
+        for name in ("id", "solution_id", "source", "image", "image_metadata", "envs", "min_scale", "created_at", "created_id")
     ):
         raise ValueError("Revision snapshots are immutable")

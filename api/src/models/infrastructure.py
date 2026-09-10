@@ -1,7 +1,5 @@
 import re
 import urllib.parse
-from pydantic import Field, BaseModel, field_validator
-from src.models.types import DatabaseSSLMode
 
 
 def exoscale_zone(endpoint_url: str) -> str:
@@ -30,43 +28,3 @@ def exoscale_zone(endpoint_url: str) -> str:
         raise ValueError("Exoscale storage endpoint URL must use https://sos-{zone}.exo.io")
 
     return zone
-
-
-class DatabaseConfiguration(BaseModel):
-    """Database connection configuration for one registry."""
-
-    # Connection
-    host: str = Field(min_length=1, max_length=255)
-    port: int = Field(ge=1, le=65535)
-    sslmode: DatabaseSSLMode = DatabaseSSLMode.require
-    password: str = Field(min_length=1, max_length=255)
-    username: str = Field(min_length=1, max_length=255)
-
-    @field_validator("host")
-    @classmethod
-    def validate_host(cls, host: str) -> str:
-        """Validate one plain database hostname without an embedded port."""
-
-        # Database ports have a dedicated field, so host values contain only DNS names or IP literals.
-        value = host.strip().rstrip("/")
-        parsed = urllib.parse.urlsplit(f"//{value}")
-
-        # Accessing the parsed port rejects malformed numeric values before the structural checks.
-        try:
-            parsed_port = parsed.port
-        except ValueError as exc:
-            raise ValueError("Database host port is invalid") from exc
-        if (
-            not value
-            or "://" in value
-            or parsed.hostname is None
-            or parsed_port is not None
-            or parsed.username
-            or parsed.password
-            or parsed.path
-            or parsed.query
-            or parsed.fragment
-            or any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value)
-        ):
-            raise ValueError("Database host is invalid")
-        return value

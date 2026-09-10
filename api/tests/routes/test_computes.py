@@ -18,6 +18,8 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     # Arrange
     payload = {
         "name": "Queued Compute",
+        "gateway_url": "https://gateway.example",
+        "database_storage_class": "local-path",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],

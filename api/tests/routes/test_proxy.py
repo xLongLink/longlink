@@ -12,9 +12,9 @@ from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 
 class ProxyCapture(TypedDict, total=False):
@@ -83,6 +83,10 @@ async def create_running_solution(user: User) -> tuple[Solution, Infrastructure]
 
     # Set lifecycle state directly because proxy tests do not exercise reconciliation.
     async with session_scope() as session:
+        persisted_organization = await session.get(Organization, organization.id)
+        assert persisted_organization is not None
+        persisted_organization.status = Status.running
+        persisted_organization.database_sync_pending = False
         persisted_solution = await session.get(Solution, solution.id)
         assert persisted_solution is not None
         persisted_solution.secrets = {
@@ -132,6 +136,8 @@ async def test_solution_proxy_forwards_safe_content(
             self,
             *,
             solution_id: UUID,
+            organization_id: UUID,
+            identity_secret: str,
             user_id: UUID,
             method: str,
             path: str,
@@ -142,6 +148,8 @@ async def test_solution_proxy_forwards_safe_content(
             """Record the route request and return a safe upstream response."""
 
             assert content_type is not None
+            assert organization_id == solution.organization_id
+            assert identity_secret == "test-identity-secret-01234567890"
             captured["method"] = method
             captured["url"] = f"https://gateway.example/{path}?{query}"
             captured["content"] = b"".join([chunk async for chunk in content])
@@ -156,7 +164,7 @@ async def test_solution_proxy_forwards_safe_content(
 
             return FakeGatewayResponse(FakeProxyResponse(), close)
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", Gateway)
     client = clients[0]
 
     # Proxy a request with a content type and request body.
@@ -204,7 +212,7 @@ async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
 
         raise AssertionError("Gateway client must not be constructed")
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", unexpected_gateway)
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:
@@ -250,7 +258,7 @@ async def test_solution_proxy_streams_response_without_upstream_content_type(
         close_count += 1
 
     gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", fake_gateway_request(gateway_response))
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
@@ -286,7 +294,7 @@ async def test_solution_proxy_times_out_before_gateway_response(
             await asyncio.sleep(0.01)
             raise AssertionError("timed-out gateway request must not complete")
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", Gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", Gateway)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_TIMEOUT_SECONDS", 0.001)
 
     # Act
@@ -327,7 +335,7 @@ async def test_solution_proxy_propagates_timed_out_response_stream(
         close_count += 1
 
     gateway_response = FakeGatewayResponse(SlowProxyResponse(), close)
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", fake_gateway_request(gateway_response))
     monkeypatch.setattr(proxy_routes, "PROXY_RESPONSE_TIMEOUT_SECONDS", 0.001)
 
     # Act and assert
@@ -369,7 +377,7 @@ async def test_solution_proxy_rejects_active_content(
         closed = True
 
     gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", fake_gateway_request(gateway_response))
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
@@ -410,7 +418,7 @@ async def test_solution_proxy_closes_gateway_response_when_upstream_stream_fails
         close_count += 1
 
     gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", fake_gateway_request(gateway_response))
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", fake_gateway_request(gateway_response))
 
     # Act and assert
     with pytest.raises(RuntimeError, match="upstream interrupted"):
@@ -435,7 +443,7 @@ async def test_solution_proxy_rejects_oversized_request_body(
             pass
         raise AssertionError("oversized request must not reach the gateway")
 
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", request)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
     # Act
@@ -456,7 +464,7 @@ async def test_solution_proxy_forwards_request_body_at_configured_limit(
     # Arrange
     solution, infrastructure = await create_running_solution(users[0])
     captured: list[bytes] = []
-    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
+    tls = object()
 
     class FakeResponse:
         """Provide a successful response after consuming the bounded body."""
@@ -539,7 +547,7 @@ async def test_solution_proxy_allows_organization_read_members(
         called = True
         return FakeGatewayResponse(FakeProxyResponse())
 
-    monkeypatch.setattr("src.routes.v1.proxy.GatewayClient.request", request)
+    monkeypatch.setattr("src.routes.v1.proxy.Gateway.request", request)
     async with session_scope() as session:
         session.add(
             UserOrganization(
@@ -577,7 +585,7 @@ async def test_solution_proxy_rejects_cross_organization_access(
 
         raise AssertionError("Gateway client was constructed")
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", unexpected_gateway)
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -598,7 +606,7 @@ async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
     user = users[0]
     solution, _ = await create_running_solution(user)
 
-    tls = SimpleNamespace(load_cert_chain=lambda _certfile: None)
+    tls = object()
 
     class FailingProxyClient:
         """Fake upstream HTTP client that fails solution proxy requests."""
@@ -666,7 +674,7 @@ async def test_solution_proxy_enforces_method_role(
 
         raise AssertionError("Gateway client must not be constructed")
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", unexpected_gateway)
 
     # Attempt a mutating Solution proxy request.
     response = await client.request(method, f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
@@ -697,26 +705,19 @@ async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
     assert response.headers["cache-control"] == "no-store"
 
 
-@pytest.mark.parametrize("missing", ["gateway_url", "gateway_certificate", "gateway_client_identity", "identity_secret"])
 async def test_solution_proxy_returns_unavailable_when_gateway_requirement_is_missing(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
-    missing: str,
 ) -> None:
-    """Return unavailable when any required compute gateway value is absent."""
+    """Return unavailable when the Solution's signed identity key is absent."""
 
     # Arrange a running Solution with one persisted readiness requirement omitted.
-    solution, infrastructure = await create_running_solution(users[0])
+    solution, _ = await create_running_solution(users[0])
     async with session_scope() as session:
-        if missing == "identity_secret":
-            persisted_solution = await session.get(Solution, solution.id)
-            assert persisted_solution is not None
-            persisted_solution.secrets = {}
-        else:
-            registry = await session.get(ComputeRegistry, infrastructure.compute.id)
-            assert registry is not None
-            setattr(registry, missing, None)
+        persisted_solution = await session.get(Solution, solution.id)
+        assert persisted_solution is not None
+        persisted_solution.secrets = {}
         await session.commit()
 
     def unexpected_gateway(*_args: object) -> object:
@@ -724,7 +725,7 @@ async def test_solution_proxy_returns_unavailable_when_gateway_requirement_is_mi
 
         raise AssertionError("Gateway client must not be constructed")
 
-    monkeypatch.setattr(proxy_routes, "GatewayClient", unexpected_gateway)
+    monkeypatch.setattr(proxy_routes, "Gateway", unexpected_gateway)
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")

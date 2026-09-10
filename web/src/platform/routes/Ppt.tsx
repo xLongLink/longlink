@@ -1,20 +1,27 @@
 import { NoIndex } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
-import { Wordmark } from '@/components/Wordmark';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
 import { PlanSlide } from '@/components/slides/Plan';
 import { TeamSlide } from '@/components/slides/Team';
+import { TitleSlide } from '@/components/slides/Title';
+import { ClosingSlide } from '@/components/slides/Closing';
 import { useLocation, useNavigate } from 'react-router';
 import { TargetSlide } from '@/components/slides/Target';
 import { PlatformSlide } from '@/components/slides/Platform';
-import { PrinciplesSlide } from '@/components/slides/Principles';
 import { IntroductionSlide } from '@/components/slides/Introduction';
-import { BookOpen, CalendarRange, ListChecks, Server, Target, Users } from 'lucide-react';
+import { BookOpen, CalendarRange, Image, Server, Target, Users } from 'lucide-react';
 
 const slides = [
+    {
+        component: TitleSlide,
+        href: '/ppt?slide=title',
+        icon: Image,
+        id: 'title',
+        label: 'Title',
+    },
     {
         component: IntroductionSlide,
         href: '/ppt?slide=introduction',
@@ -28,13 +35,6 @@ const slides = [
         icon: Target,
         id: 'target',
         label: 'Target',
-    },
-    {
-        component: PrinciplesSlide,
-        href: '/ppt?slide=principles',
-        icon: ListChecks,
-        id: 'principles',
-        label: 'Principles',
     },
     {
         component: PlatformSlide,
@@ -51,7 +51,15 @@ const slides = [
         label: 'Plan',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
+    {
+        component: ClosingSlide,
+        href: '/ppt?slide=closing',
+        icon: Image,
+        id: 'closing',
+        label: 'Closing',
+    },
 ] as const;
+const tabs = slides.slice(1, -1);
 
 const printStyles = `
     .ppt-slide-content {
@@ -138,8 +146,7 @@ const printStyles = `
             display: block;
         }
 
-        .ppt-print-slide,
-        .ppt-print-title-slide {
+        .ppt-print-slide {
             width: 100vw;
             height: 100vh;
             overflow: hidden;
@@ -174,34 +181,39 @@ function PresentationSlide({
 }) {
     const slide = slides[slideIndex];
     const Slide = slide.component;
-    const platform = (
-        <Platform
-            action={
-                <Text hasTabularNumbers type="supporting">
-                    {slideIndex + 1} / {slides.length}
-                </Text>
-            }
-            activeTab={slide.href}
-            contentMinHeight="100%"
-            height="fill"
-            isContentCentered
-            isDevelopmentNoticeShown={false}
-            tabs={slides}
-        >
-            <Stack align="center" className="ppt-slide-content" height="100%" justify="center" width="100%">
+    const content =
+        slide.id === 'title' || slide.id === 'closing' ? (
+            <Stack className="ppt-slide-content" height="100%" width="100%">
                 <Slide />
             </Stack>
-        </Platform>
-    );
+        ) : (
+            <Platform
+                action={
+                    <Text hasTabularNumbers type="supporting">
+                        {slideIndex + 1} / {slides.length}
+                    </Text>
+                }
+                activeTab={slide.href}
+                contentMinHeight="100%"
+                height="fill"
+                isContentCentered
+                isDevelopmentNoticeShown={false}
+                tabs={tabs}
+            >
+                <Stack align="center" className="ppt-slide-content" height="100%" justify="center" width="100%">
+                    <Slide />
+                </Stack>
+            </Platform>
+        );
 
     return (
         <Stack as="section" aria-label={`Slide ${slideIndex + 1} of ${slides.length}`} className={className}>
             {isScreen ? (
                 <Card className="ppt-screen-frame" padding={0}>
-                    {platform}
+                    {content}
                 </Card>
             ) : (
-                platform
+                content
             )}
         </Stack>
     );
@@ -241,32 +253,9 @@ export default function Ppt() {
             <style>{printStyles}</style>
             <PresentationSlide className="ppt-screen-slide" isScreen slideIndex={slideIndex} />
             <Stack className="ppt-print-slides" width="100%">
-                <Stack
-                    as="section"
-                    aria-label="LongLink title slide"
-                    className="ppt-print-title-slide"
-                    justify="center"
-                    align="center"
-                >
-                    <Wordmark size="display" />
-                </Stack>
                 {slides.map((slide, printSlideIndex) => (
                     <PresentationSlide className="ppt-print-slide" key={slide.id} slideIndex={printSlideIndex} />
                 ))}
-                <Stack
-                    as="section"
-                    aria-label="LongLink closing slide"
-                    className="ppt-print-slide ppt-print-title-slide"
-                    justify="center"
-                    align="center"
-                >
-                    <Stack align="center" gap={4}>
-                        <Wordmark size="display" />
-                        <Text hasCapsize type="large" weight="semibold">
-                            longlink.dev
-                        </Text>
-                    </Stack>
-                </Stack>
             </Stack>
         </>
     );

@@ -1,50 +1,69 @@
-# LongLink owns one authenticated Envoy Gateway per Compute.
+# Apply these boundaries before installing shared controllers.
 apiVersion: v1
 kind: Namespace
 metadata:
-    name: longlink-system
+    name: knative-serving
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: GatewayClass
+apiVersion: v1
+kind: Namespace
 metadata:
-    name: longlink-envoy
-spec:
-    controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    name: kourier-system
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
 metadata:
-    name: longlink
-    namespace: longlink-system
+    name: longlink-gateway-boundary
+    namespace: kourier-system
 spec:
-    gatewayClassName: longlink-envoy
-    listeners:
-        - name: https
-          protocol: HTTPS
-          port: 443
-          tls:
-              mode: Terminate
-              certificateRefs:
-                  - group: ''
-                    kind: Secret
-                    name: longlink-gateway-tls
-          allowedRoutes:
-              namespaces:
-                  from: All
+    podSelector: {}
+    policyTypes: [Ingress]
+    ingress:
+        # Probers need both the internal and dedicated probe listeners, never tenant sources.
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: knative-serving
+                podSelector:
+                    matchLabels:
+                        app: net-kourier-controller
+          ports:
+              - {protocol: TCP, port: 8081}
+              - {protocol: TCP, port: 8090}
+              - {protocol: TCP, port: 9443}
+        # Only operator-labelled Platform Pods may enter from inside the cluster.
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        longlink.io/platform: 'true'
+                podSelector:
+                    matchLabels:
+                        longlink.io/component: api
+          ports:
+              - {protocol: TCP, port: 8444}
+        # External Platform sources require a separate operator-owned IP allowlist policy.
 ---
-apiVersion: gateway.envoyproxy.io/v1alpha1
-kind: ClientTrafficPolicy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
 metadata:
-    name: longlink-platform-only
-    namespace: longlink-system
+    name: longlink-activator-boundary
+    namespace: knative-serving
 spec:
-    targetRefs:
-        - group: gateway.networking.k8s.io
-          kind: Gateway
-          name: longlink
-    tls:
-        clientValidation:
-            caCertificateRefs:
-                - group: ''
-                  kind: Secret
-                  name: longlink-gateway-client-ca
+    podSelector:
+        matchLabels:
+            app: activator
+    policyTypes: [Ingress]
+    ingress:
+        - from:
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: kourier-system
+                podSelector:
+                    matchLabels:
+                        app: 3scale-kourier-gateway
+              - namespaceSelector:
+                    matchLabels:
+                        kubernetes.io/metadata.name: knative-serving
+          ports:
+              - {protocol: TCP, port: 8012}
+              - {protocol: TCP, port: 8013}
+              - {protocol: TCP, port: 9090}

@@ -1,14 +1,16 @@
 import pytest
 from uuid import UUID, uuid4
+from conftest import DatabasePostgres
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_infrastructure
 from src.operations import organizations as organization_operations
-from collections.abc import Iterable
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
+
+pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
 async def test_reconcile_prepares_providers_namespace_and_publishes_organization(
@@ -21,10 +23,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     organization = await create_organization(users[0], infrastructure=infrastructure)
     calls: list[str] = []
 
-    class Database:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
+    class Database(DatabasePostgres):
         async def prepare_organization_database(self, organization_id: object) -> None:
             """Record database preparation."""
 
@@ -43,6 +42,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         async def apply(self, namespace: str) -> None:
             """Record namespace reconciliation."""
 
+            assert namespace == f"longlink-compute-{organization.id.hex}"
             calls.append("namespace")
 
     class Kubernetes:
@@ -54,15 +54,15 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    async def sync_users(session: object, organization_id: object) -> None:
+    async def sync_users(*args: object, **kwargs: object) -> None:
         """Record user projection after publication."""
 
         calls.append("users")
 
-    monkeypatch.setattr(organization_operations, "Postgres", Database)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.organizations, "sync_users", sync_users)
+    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Reconcile and inspect the published state.
     await organization_operations.reconcile(organization.id)
@@ -70,7 +70,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         refreshed = await session.get(Organization, organization.id)
 
     # Every boundary completes before user projection and status publication.
-    assert calls == ["database", "storage", "namespace", "users"]
+    assert calls == ["database", "users", "storage", "namespace"]
     assert refreshed is not None
     assert refreshed.status == Status.running
 
@@ -86,10 +86,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
     organization = await create_organization(users[0], infrastructure=infrastructure)
     calls: list[str] = []
 
-    class Database:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
+    class Database(DatabasePostgres):
         async def prepare_organization_database(self, organization_id: object) -> None:
             """Record database preparation."""
 
@@ -110,7 +107,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
         async def apply(self, namespace: str) -> None:
             """Record namespace reconciliation."""
 
-            assert namespace == organization.id.hex
+            assert namespace == f"longlink-compute-{organization.id.hex}"
             calls.append("namespace")
 
     class Kubernetes:
@@ -122,24 +119,23 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    async def sync_users(_session: object, organization_id: object) -> None:
+    async def sync_users(*args: object, **kwargs: object) -> None:
         """Fail the user projection after every external boundary is ready."""
 
-        assert organization_id == organization.id
         calls.append("users")
         raise RuntimeError("user projection failed")
 
-    monkeypatch.setattr(organization_operations, "Postgres", Database)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.organizations, "sync_users", sync_users)
+    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="user projection failed"):
         await organization_operations.reconcile(organization.id)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
-    assert calls == ["database", "storage", "namespace", "users"]
+    assert calls == ["database", "users"]
     assert refreshed is not None
     assert refreshed.status == Status.creating
 
@@ -158,7 +154,7 @@ async def test_reconcile_skips_missing_organization_without_constructing_provide
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -192,7 +188,7 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -221,7 +217,7 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -242,7 +238,7 @@ async def test_delete_skips_missing_organization_without_external_cleanup(monkey
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(organization_operations, "Postgres", unexpected_provider)
+    monkeypatch.setattr(organization_operations.databases, "Postgres", unexpected_provider)
     monkeypatch.setattr(organization_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", unexpected_provider)
 
@@ -267,7 +263,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_database(self, organization_id: UUID, solutions: Iterable[UUID]) -> None:
+        async def delete(self, organization_id: UUID) -> None:
             """Record unexpected database deletion."""
 
             calls.append("database")
@@ -297,11 +293,11 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
             """Expose the failing Organization Kubernetes operations."""
 
             self.organizations = Organizations()
+            self.databases = Database()
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
 
@@ -331,11 +327,10 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete_database(self, organization_id: UUID, solutions: Iterable[UUID]) -> None:
+        async def delete(self, organization_id: UUID) -> None:
             """Record Organization database and scoped runtime-role deletion."""
 
             assert organization_id == organization.id
-            assert set(solutions) == {solution.id}
             calls.append("database")
 
     class Storage:
@@ -358,7 +353,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         async def delete(self, namespace: str) -> None:
             """Record namespace deletion."""
 
-            assert namespace == organization.id.hex
+            assert namespace == f"longlink-compute-{organization.id.hex}"
             calls.append("namespace")
 
     class Kubernetes:
@@ -366,11 +361,11 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
+            self.databases = Database()
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(organization_operations, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
 

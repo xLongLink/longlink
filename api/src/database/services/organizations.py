@@ -23,7 +23,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
@@ -37,7 +36,6 @@ class Infrastructure:
 
     organization: Organization
     compute: ComputeRegistry
-    database: DatabaseRegistry
     storage: StorageRegistry
 
 
@@ -85,6 +83,7 @@ async def solution_runtime_access(
     # Load Solution access and its gateway secret in one query.
     result = await session.execute(
         select(Solution, col(UserOrganization.role), ComputeRegistry)
+        .execution_options(populate_existing=True)
         .options(
             raiseload(Solution.desired_revision),
             load_only(
@@ -98,7 +97,6 @@ async def solution_runtime_access(
                 ComputeRegistry.kubeconfig,
                 ComputeRegistry.gateway_url,
                 ComputeRegistry.gateway_certificate,
-                ComputeRegistry.gateway_client_identity,
             ),
         )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
@@ -115,24 +113,19 @@ async def solution_runtime_access(
     return result.tuples().one_or_none()
 
 
-def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry]]:
+def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, StorageRegistry]]:
     """Select one Organization's provider connections for lifecycle work."""
 
     # Keep provider projections and assignment joins shared across lifecycle targets.
     return (
-        select(Organization, ComputeRegistry, DatabaseRegistry, StorageRegistry)
+        select(Organization, ComputeRegistry, StorageRegistry)
         .options(
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.kubeconfig,
-            ),
-            load_only(
-                DatabaseRegistry.id,
-                DatabaseRegistry.host,
-                DatabaseRegistry.port,
-                DatabaseRegistry.password,
-                DatabaseRegistry.sslmode,
-                DatabaseRegistry.username,
+                ComputeRegistry.database_size_gib,
+                ComputeRegistry.database_instances,
+                ComputeRegistry.database_storage_class,
             ),
             load_only(
                 StorageRegistry.id,
@@ -142,7 +135,6 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, Datab
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-        .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
         .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
     )
 
@@ -151,15 +143,13 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
     # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
-    statement = (
-        _infrastructure_query().options(load_only(Organization.id, Organization.deleted_at)).where(col(Organization.id) == organization_id)
-    )
+    statement = _infrastructure_query().where(col(Organization.id) == organization_id)
     result = await session.execute(statement)
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    organization, compute, database, storage = row
-    return Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
+    organization, compute, storage = row
+    return Infrastructure(organization=organization, compute=compute, storage=storage)
 
 
 async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Infrastructure] | None:
@@ -179,7 +169,6 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
                 Solution.status,
                 Solution.deleted_at,
             ),
-            load_only(Organization.id),
         )
         .where(col(Solution.id) == solution_id)
     )
@@ -187,8 +176,8 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    organization, compute, database, storage, solution = row
-    return solution, Infrastructure(organization=organization, compute=compute, database=database, storage=storage)
+    organization, compute, storage, solution = row
+    return solution, Infrastructure(organization=organization, compute=compute, storage=storage)
 
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
@@ -262,23 +251,14 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
 
 
 async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
-    """Project users into one active, running Organization database."""
+    """Durably request shared-user projection in the caller's transaction."""
 
-    # Load the database assigned to the active running Organization.
-    result = await session.scalars(
-        select(DatabaseRegistry)
-        .select_from(Organization)
-        .join(DatabaseRegistry, col(DatabaseRegistry.id) == col(Organization.database_id))
-        .where(
-            col(Organization.id) == organization_id,
-            col(Organization.deleted_at).is_(None),
-            col(Organization.status) == Status.running,
-        )
-    )
-    database = result.one_or_none()
-    if database is None:
-        return
-    db = Postgres(database.host, database.port, database.username, database.password, database.sslmode)
+    # Never wake a sleeping database for a membership mutation.
+    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+
+
+async def project_users(session: AsyncSession, organization_id: UUID, db: Postgres) -> None:
+    """Project a Platform snapshot while runtime coordination owns synchronization."""
 
     # Include deleted memberships so the Organization database receives tombstones.
     memberships_statement = (
@@ -312,7 +292,8 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
         )
 
     # The Platform is authoritative over Organization user projections.
-    await shared_audit.sync(db.url(organization_id.hex, search_path="shared"), rows)
+    with db.url(organization_id.hex, search_path="shared") as url:
+        await shared_audit.sync(url, rows)
 
 
 async def _locked_membership(
@@ -396,6 +377,7 @@ async def update_member_role(
     # Persist the role change.
     membership.updated_id = user_id
     membership.role = role
+    await sync_users(session, organization_id)
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
@@ -437,18 +419,6 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
 
-    # Lock the selected Database until the Organization assignment is committed.
-    database_assignments = (
-        select(func.count(col(Organization.id)))
-        .where(col(Organization.database_id) == col(DatabaseRegistry.id), col(Organization.deleted_at).is_(None))
-        .scalar_subquery()
-    )
-    database_id = await session.scalar(
-        select(col(DatabaseRegistry.id)).order_by(database_assignments, col(DatabaseRegistry.name)).limit(1).with_for_update()
-    )
-    if database_id is None:
-        raise UnavailableError("No database registry available")
-
     # Lock the selected Storage until the Organization assignment is committed.
     storage_assignments = (
         select(func.count(col(Organization.id)))
@@ -467,7 +437,6 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
         user,
         compute_id=compute_id,
         storage_id=storage_id,
-        database_id=database_id,
     )
 
 
@@ -478,7 +447,6 @@ async def create(
     *,
     compute_id: UUID,
     storage_id: UUID,
-    database_id: UUID,
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
@@ -488,12 +456,6 @@ async def create(
     )
     if compute_registry_id is None:
         raise UnavailableError("No compute registry available")
-
-    database_registry_id = await session.scalar(
-        select(col(DatabaseRegistry.id)).where(col(DatabaseRegistry.id) == database_id).with_for_update()
-    )
-    if database_registry_id is None:
-        raise UnavailableError("No database registry available")
 
     storage_registry_id = await session.scalar(
         select(col(StorageRegistry.id)).where(col(StorageRegistry.id) == storage_id).with_for_update()
@@ -507,7 +469,6 @@ async def create(
         user,
         compute_id=compute_id,
         storage_id=storage_id,
-        database_id=database_id,
     )
 
 
@@ -518,7 +479,6 @@ async def _persist(
     *,
     compute_id: UUID,
     storage_id: UUID,
-    database_id: UUID,
 ) -> Organization:
     """Persist an Organization after its infrastructure assignment is locked and validated."""
 
@@ -527,7 +487,6 @@ async def _persist(
         name=name,
         slug=names.slugify(name),
         compute_id=compute_id,
-        database_id=database_id,
         storage_id=storage_id,
     )
 
@@ -557,21 +516,26 @@ async def _persist(
     return organization
 
 
-async def update(session: AsyncSession, organization_id: UUID, avatar: str, user_id: UUID) -> Organization | None:
+async def update(
+    session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID, database_idle_seconds: int | None = None
+) -> Organization | None:
     """Update mutable Organization metadata."""
 
-    # Lock and update the active Organization row.
-    result = await session.scalars(
-        select(Organization).where(col(Organization.id) == organization_id, col(Organization.deleted_at).is_(None)).with_for_update()
+    # Take a portable write lock before refreshing metadata already loaded by authentication.
+    await session.execute(
+        sql_update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
     )
-    organization = result.one_or_none()
-    if organization is None:
+    organization = await session.get(Organization, organization_id, populate_existing=True)
+    if organization is None or organization.deleted_at is not None:
         return None
 
     # Revalidate the caller while the Organization is locked to reject revoked administrators.
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
-    if organization.avatar != avatar:
+    if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
+        organization.updated_id = user_id
+    if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
+        organization.database_idle_seconds = database_idle_seconds
         organization.updated_id = user_id
 
     return organization

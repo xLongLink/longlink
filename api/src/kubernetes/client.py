@@ -2,6 +2,7 @@ import kr8s
 from typing import cast
 from kr8s.asyncio import Api
 from src.kubernetes.gateway import Gateway
+from src.kubernetes.databases import Databases
 from src.kubernetes.solutions import Solutions
 from src.kubernetes.organizations import Organizations
 
@@ -16,6 +17,7 @@ class Kubernetes:
         self._api_client: Api | None = None
 
         self.gateway = Gateway(self)
+        self.databases = Databases(self)
         self.solutions = Solutions(self)
         self.organizations = Organizations(self)
 

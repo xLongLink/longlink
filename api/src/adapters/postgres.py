@@ -1,7 +1,8 @@
+import tempfile
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
-from collections.abc import Iterable, AsyncGenerator
+from collections.abc import Iterator, AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
@@ -11,12 +12,14 @@ from sqlalchemy.sql.elements import quoted_name
 
 
 class Postgres:
-    """Implement the database tenant topology on PostgreSQL using registry credentials for control-plane provisioning.
+    """Provision organization databases and Solution schemas using cluster-owned PostgreSQL credentials.
 
     Runtime roles can write their solution schema and read the organization's shared schema.
     """
 
-    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode) -> None:
+    def __init__(
+        self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode, certificate: str | None = None
+    ) -> None:
         """Initialize the PostgreSQL database adapter.
 
         Args:
@@ -25,27 +28,31 @@ class Postgres:
             username: PostgreSQL username.
             password: PostgreSQL password.
             sslmode: PostgreSQL SSL mode.
+            certificate: PEM CA certificate; when supplied, require certificate and hostname verification.
         """
 
-        # Store registry connection settings.
+        # Store organization cluster connection settings.
         self._host = host
         self._port = port
         self._username = username
         self._password = password
         self._sslmode = sslmode
+        self._certificate = certificate
 
-    def url(self, database: str, search_path: str | None = None) -> URL:
-        """Build one SQLAlchemy URL for the requested database."""
+    @contextlib.contextmanager
+    def url(self, database: str, search_path: str | None = None) -> Iterator[URL]:
+        """Yield a libpq URL whose CA file lives until exit; dispose all consuming engines inside this context."""
 
         # Configure PostgreSQL driver options before creating the structured URL.
-        query = {"sslmode": self._sslmode.value, "options": "-c timezone=UTC"}
+        sslmode = "verify-full" if self._certificate is not None else self._sslmode.value
+        query = {"sslmode": sslmode, "options": "-c timezone=UTC"}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
             query["options"] = f"{query['options']} -c search_path={search_path}"
 
         # Keep connection details inside the adapter and credentials structured.
-        return URL.create(
+        url = URL.create(
             "postgresql+psycopg",
             username=self._username,
             password=self._password,
@@ -54,6 +61,15 @@ class Postgres:
             database=database,
             query=query,
         )
+
+        # Local connections need no certificate file; hosted connections must verify the server hostname and CA.
+        if self._certificate is None:
+            yield url
+        else:
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".crt") as certificate:
+                certificate.write(self._certificate)
+                certificate.flush()
+                yield url.update_query_dict({"sslrootcert": certificate.name})
 
     @staticmethod
     def quote(conn: AsyncConnection, value: str) -> str:
@@ -74,21 +90,21 @@ class Postgres:
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        engine = create_async_engine(
-            self.url(database),
-            **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
-        )
+        with self.url(database) as url:
+            engine = create_async_engine(
+                url,
+                **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
+            )
 
-        # Ensure the operation-scoped engine is disposed after use.
-        try:
-            # Use explicit connections for autocommit operations and transactions for normal operations.
-            # Yield the selected connection context to the caller.
-            async with engine.connect() if autocommit else engine.begin() as conn:
-                yield conn
+            # Ensure the operation-scoped engine is disposed before removing its CA file.
+            try:
+                # Use explicit connections for autocommit operations and transactions for normal operations.
+                async with engine.connect() if autocommit else engine.begin() as conn:
+                    yield conn
 
-        # Dispose the per-operation engine even when SQL execution raises.
-        finally:
-            await engine.dispose()
+            # Dispose the per-operation engine even when SQL execution raises.
+            finally:
+                await engine.dispose()
 
     async def prepare_organization_database(self, organization: UUID) -> None:
         """Converge one organization database, run SDK-owned shared-schema migrations, and restore shared-schema restrictions.
@@ -114,7 +130,8 @@ class Postgres:
                 port=self._port,
                 database=organization.hex,
                 query={"ssl": self._sslmode.value},
-            )
+            ),
+            certificate=self._certificate,
         )
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
@@ -212,41 +229,6 @@ class Postgres:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
-    async def delete_database(self, organization: UUID, solutions: Iterable[UUID]) -> None:
-        """Delete an organization database, then its runtime roles, resuming after partial cleanup."""
-
-        # Terminate active sessions so PostgreSQL can drop the organization database.
-        async with self._connection("postgres", autocommit=True) as conn:
-            database_name = self.quote(conn, organization.hex)
-            await conn.execute(
-                text(
-                    """
-                    SELECT pg_terminate_backend(pid)
-                    FROM pg_stat_activity
-                    WHERE datname = :database_name
-                    AND pid <> pg_backend_pid()
-                    """
-                ),
-                {"database_name": organization.hex},
-            )
-
-            # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
-            await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
-
-            # Roles are cluster-global; remove them even when a previous attempt already dropped the database.
-            for solution in solutions:
-                runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
-                role = self.quote(conn, runtime_username)
-                await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
-
-    async def solution_runtime_identity_exists(self, organization: UUID, solution: UUID) -> bool:
-        """Return whether one Solution runtime database identity remains in PostgreSQL."""
-
-        # Runtime roles are cluster-global and remain discoverable after their database is removed.
-        runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
-        async with self._connection("postgres") as conn:
-            return (await conn.scalar(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})) is not None
-
     async def database_usage(self, database_name: str) -> int | None:
         """Return physical size for one database when it exists."""
 
@@ -257,21 +239,3 @@ class Postgres:
                 {"database_name": database_name},
             )
         return int(usage) if usage is not None else None
-
-    async def usage(self) -> int:
-        """Return the total non-system database size in bytes."""
-
-        # Sum all non-system databases managed by this PostgreSQL backend.
-        async with self._connection("postgres") as conn:
-            result = await conn.execute(
-                text(
-                    """
-                    SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS database_size
-                    FROM pg_database
-                    WHERE datname NOT IN ('postgres', 'template0', 'template1')
-                    """
-                )
-            )
-
-            # Normalize the scalar result to the API response value.
-            return int(result.scalar_one())

@@ -115,13 +115,13 @@ async def complete_oauth_login(
         return oauth_failure_response()
     try:
         changed_organization_ids = await invitations.accept(session, user)
+        for organization_id in sorted(changed_organization_ids):
+            await organizations.sync_users(session, organization_id)
         await session.commit()
     except IntegrityError:
         return oauth_failure_response()
 
-    # Complete pending membership projection before publishing the signed browser credential.
-    for organization_id in changed_organization_ids:
-        await organizations.sync_users(session, organization_id)
+    # Publish the signed browser credential only after durable projection demand commits.
     response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/user/organizations", status_code=302)
     credential = token.create_auth_token(user)
 
@@ -149,10 +149,9 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
 
     # Accept email-bound Organization access before issuing its signed browser session.
     changed_organization_ids = await invitations.accept(session, user)
-    await session.commit()
-
-    for organization_id in changed_organization_ids:
+    for organization_id in sorted(changed_organization_ids):
         await organizations.sync_users(session, organization_id)
+    await session.commit()
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
@@ -205,7 +204,9 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
     try:
         await token.password_reset_user(session, payload.token)
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
+        raise HTTPException(
+            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
+        ) from exc
     response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, "longlink_password_reset", payload.token, "/api/v1/auth/reset-password", 900)
 
@@ -222,7 +223,9 @@ async def get_password_reset_setup(
     try:
         await token.password_reset_user(session, password_reset_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
+        raise HTTPException(
+            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
+        ) from exc
     response.headers["Cache-Control"] = "no-store"
 
 
@@ -239,7 +242,9 @@ async def reset_password(
     try:
         user = await token.password_reset_user(session, password_reset_token or "")
     except jwt.PyJWTError as exc:
-        raise HTTPException(status_code=400, detail="This password reset link is invalid or has expired. Please request a new one.") from exc
+        raise HTTPException(
+            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
+        ) from exc
 
     # Replace the credential so password-bound browser sessions become invalid.
     user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
@@ -323,6 +328,8 @@ async def complete_registration(
     try:
         user = await users.register(session, payload.name, email, payload.password)
         changed_organization_ids = await invitations.accept(session, user)
+        for organization_id in sorted(changed_organization_ids):
+            await organizations.sync_users(session, organization_id)
         await session.commit()
     except IntegrityError as exc:
         raise HTTPException(
@@ -330,8 +337,6 @@ async def complete_registration(
             detail="An account with this email already exists. Sign in or reset your password to continue.",
         ) from exc
 
-    for organization_id in changed_organization_ids:
-        await organizations.sync_users(session, organization_id)
     credential = token.create_auth_token(user)
 
     # Publish browser authentication only after both persistent records commit.

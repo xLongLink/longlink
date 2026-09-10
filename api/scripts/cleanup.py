@@ -2,15 +2,18 @@ import asyncio
 from kr8s import NotFoundError
 from uuid import UUID
 from pathlib import Path
-from sqlalchemy import text
-from src.models.types import DatabaseSSLMode
+from sqlmodel import col
+from contextlib import aclosing
+from sqlalchemy import text, select
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import kubeconfig_mapping
 from kr8s.asyncio.objects import Namespace
 from src.database.session import session_scope
-from src.adapters.postgres import Postgres
 from src.kubernetes.client import Kubernetes
+from src.database.models.storages import StorageRegistry
 from src.adapters.storage.exoscale import Exoscale
+from src.database.models.solutions import Solution
+from src.database.models.organizations import Organization
 
 
 class CleanupSettings(BaseSettings):
@@ -35,98 +38,68 @@ async def cleanup() -> None:
     if not kubeconfig.is_file():
         raise ValueError(f"Kubeconfig not found: {kubeconfig}")
     cluster = Kubernetes(kubeconfig_mapping(kubeconfig.read_text(encoding="utf-8")))
-    api = await cluster.api()
 
     # Collect provider resources from current Platform state.
-    managed_namespaces = {"longlink-system"}
+    organization_ids: set[UUID] = set()
     storage_resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
-    database_resources: dict[tuple[str, int, str, str, DatabaseSSLMode, UUID], set[UUID]] = {}
     async with session_scope() as session:
         result = await session.execute(
-            text(
-                """
-                SELECT organizations.id,
-                       solutions.id,
-                       database_registries.host,
-                       database_registries.port,
-                       database_registries.username,
-                       database_registries.password,
-                       database_registries.sslmode,
-                       storage_registries.endpoint_url,
-                       storage_registries.access_key_id,
-                       storage_registries.secret_access_key
-                FROM organizations
-                JOIN database_registries ON database_registries.id = organizations.database_id
-                JOIN storage_registries ON storage_registries.id = organizations.storage_id
-                LEFT JOIN solutions ON solutions.organization_id = organizations.id
-                """
+            select(
+                col(Organization.id),
+                col(Solution.id),
+                col(StorageRegistry.endpoint_url),
+                col(StorageRegistry.access_key_id),
+                col(StorageRegistry.secret_access_key),
             )
+            .select_from(Organization)
+            .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
+            .outerjoin(Solution, col(Solution.organization_id) == col(Organization.id))
         )
         for (
-            organization_id,
-            solution_id,
-            database_host,
-            database_port,
-            database_username,
-            database_password,
-            database_sslmode,
+            organization,
+            solution,
             endpoint_url,
             access_key_id,
             secret_access_key,
         ) in result:
-            organization = UUID(str(organization_id))
-            solution = UUID(str(solution_id)) if solution_id is not None else None
-            managed_namespaces.add(organization.hex)
+            organization_ids.add(organization)
 
             # Group Solution credentials and the Organization bucket by storage registry.
-            storage_key = (str(endpoint_url), str(access_key_id), str(secret_access_key), organization)
+            storage_key = (endpoint_url, access_key_id, secret_access_key, organization)
             storage_solutions = storage_resources.setdefault(storage_key, set())
             if solution is not None:
                 storage_solutions.add(solution)
 
-            # Group Solution runtime identities and the Organization database by database registry.
-            sslmode = database_sslmode if isinstance(database_sslmode, DatabaseSSLMode) else DatabaseSSLMode(str(database_sslmode))
-            database_key = (
-                str(database_host),
-                int(database_port),
-                str(database_username),
-                str(database_password),
-                sslmode,
-                organization,
-            )
-            database_solutions = database_resources.setdefault(database_key, set())
-            if solution is not None:
-                database_solutions.add(solution)
+    # Verify all compute Pods have terminated before destroying any Organization database.
+    removed_namespaces = 0
+    async with aclosing(cluster):
+        api = await cluster.api()
+        for prefix in ("longlink-compute", "longlink-database"):
+            deleting_namespaces: dict[str, Namespace] = {}
+            for organization_id in sorted(organization_ids):
+                namespace = f"{prefix}-{organization_id.hex}"
+                namespace_resource = Namespace(namespace, api=api)
+                try:
+                    await namespace_resource.delete()
+                except NotFoundError:
+                    continue
+                deleting_namespaces[namespace] = namespace_resource
 
-    # Stop all managed workloads before revoking the credentials they can consume.
-    deleting_namespaces: dict[str, Namespace] = {}
-    for namespace in sorted(managed_namespaces):
-        namespace_resource = Namespace(namespace, api=api)
-        try:
-            await namespace_resource.delete()
-        except NotFoundError:
-            continue
-        deleting_namespaces[namespace] = namespace_resource
-
-    # Wait for every accepted deletion before removing provider credentials.
-    removed_namespaces = len(deleting_namespaces)
-    try:
-        async with asyncio.timeout(10 * 60):
-            while deleting_namespaces:
-                remaining: dict[str, Namespace] = {}
-                for namespace, resource in deleting_namespaces.items():
-                    if await resource.exists():
-                        remaining[namespace] = resource
-                if not remaining:
-                    break
-                deleting_namespaces = remaining
-                await asyncio.sleep(5)
-    except TimeoutError:
-        names = ", ".join(sorted(deleting_namespaces))
-        raise RuntimeError(f"Kubernetes namespaces did not terminate: {names}") from None
-
-    # Remove the cluster-scoped class after its LongLink Gateway and data plane are gone.
-    await cluster.gateway.delete()
+            # Complete each deletion pass before the next boundary or Platform state is removed.
+            removed_namespaces += len(deleting_namespaces)
+            try:
+                async with asyncio.timeout(10 * 60):
+                    while deleting_namespaces:
+                        remaining: dict[str, Namespace] = {}
+                        for namespace, resource in deleting_namespaces.items():
+                            if await resource.exists():
+                                remaining[namespace] = resource
+                        deleting_namespaces = remaining
+                        if deleting_namespaces:
+                            await asyncio.sleep(5)
+            except TimeoutError:
+                names = ", ".join(sorted(deleting_namespaces))
+                raise RuntimeError(f"Kubernetes namespaces did not terminate: {names}") from None
 
     # Revoke Solution credentials before emptying and deleting each Organization bucket.
     for (endpoint_url, access_key_id, secret_access_key, organization), solution_ids in storage_resources.items():
@@ -143,30 +116,15 @@ async def cleanup() -> None:
         if await storage.usage(organization.hex) is not None:
             raise RuntimeError(f"Exoscale Organization bucket remains: {organization}")
 
-    # Drop each Organization database as a unit, then remove its cluster-global runtime identities.
-    for (host, port, username, password, sslmode, organization), solution_ids in database_resources.items():
-        database = Postgres(host, port, username, password, sslmode)
-        await database.delete_database(organization, solution_ids)
-
-        # Verify the database and every cluster-global runtime identity are absent.
-        remaining_identities = [
-            solution for solution in solution_ids if await database.solution_runtime_identity_exists(organization, solution)
-        ]
-        if remaining_identities:
-            names = ", ".join(str(solution) for solution in sorted(remaining_identities))
-            raise RuntimeError(f"PostgreSQL Solution runtime identities remain: {names}")
-        if await database.database_usage(organization.hex) is not None:
-            raise RuntimeError(f"PostgreSQL Organization database remains: {organization}")
-
     # Remove Platform lifecycle and registry state only after external cleanup is verified.
     cleanup_order = (
         "operations",
         "organization_invitations",
+        "organization_activities",
         "user_organizations",
         "solutions",
         "organizations",
         "compute_registries",
-        "database_registries",
         "storage_registries",
     )
     async with session_scope() as session:
@@ -175,8 +133,8 @@ async def cleanup() -> None:
         await session.commit()
 
     print(
-        f"Removed and verified {removed_namespaces} Kubernetes namespaces, "
-        f"{len(database_resources)} database resources, and {len(storage_resources)} storage resources."
+        f"Removed and verified {removed_namespaces} Kubernetes namespaces "
+        f"and {len(storage_resources)} storage resources. Shared cluster controllers were retained."
     )
 
 

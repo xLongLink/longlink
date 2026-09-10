@@ -950,7 +950,7 @@
       },
       "post": {
         "summary": "Apply Update",
-        "description": "Re-resolve the desired source and deploy only a changed digest.",
+        "description": "Re-resolve the desired source and deploy a changed image or configuration.",
         "operationId": "apply_update_api_v1_solutions__solution_id__update_post",
         "parameters": [
           {
@@ -1475,344 +1475,6 @@
         "responses": {
           "204": {
             "description": "Successful Response"
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
-    "/api/v1/databases": {
-      "post": {
-        "summary": "Create Database Registry",
-        "description": "Register one database backend.",
-        "operationId": "create_database_registry_api_v1_databases_post",
-        "parameters": [
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DatabaseRegistryCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatabaseRegistryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      },
-      "get": {
-        "summary": "List Database Registries",
-        "description": "Return all registered database backends.",
-        "operationId": "list_database_registries_api_v1_databases_get",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 25,
-              "title": "Page Size"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Page_DatabaseRegistryResponse_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
-    "/api/v1/databases/{registry_id}": {
-      "get": {
-        "summary": "Get Database Registry",
-        "description": "Return one database backend registration.",
-        "operationId": "get_database_registry_api_v1_databases__registry_id__get",
-        "parameters": [
-          {
-            "name": "registry_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Registry Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatabaseRegistryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Database Registry",
-        "description": "Delete one unused database backend registration.",
-        "operationId": "delete_database_registry_api_v1_databases__registry_id__delete",
-        "parameters": [
-          {
-            "name": "registry_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Registry Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
-    "/api/v1/databases/{registry_id}/usage": {
-      "get": {
-        "summary": "Get Database Usage",
-        "description": "Query point-in-time storage usage from the live database backend, not persisted desired state.\n\nThe result is diagnostic and depends on backend availability.",
-        "operationId": "get_database_usage_api_v1_databases__registry_id__usage_get",
-        "parameters": [
-          {
-            "name": "registry_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Registry Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "integer",
-                  "title": "Response Get Database Usage Api V1 Databases  Registry Id  Usage Get"
-                }
-              }
-            }
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -2558,10 +2220,144 @@
         }
       }
     },
+    "/api/v1/organizations/{organization_id}/database/resume": {
+      "post": {
+        "summary": "Resume Organization Database",
+        "description": "Wake and synchronize an Organization database without changing its idle policy.",
+        "operationId": "resume_organization_database_api_v1_organizations__organization_id__database_resume_post",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{organization_id}/database/hibernate": {
+      "post": {
+        "summary": "Hibernate Organization Database",
+        "description": "Hibernate an eligible database without overriding active work or its always-on policy.",
+        "operationId": "hibernate_organization_database_api_v1_organizations__organization_id__database_hibernate_post",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatabaseState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return live usage for the Organization database.",
+        "description": "Return cached usage while asleep without waking the Organization for telemetry.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -2597,15 +2393,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "type": "integer"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Get Organization Database Usage Api V1 Organizations  Organization Id  Database Get"
+                  "$ref": "#/components/schemas/DatabaseUsage"
                 }
               }
             }
@@ -3504,12 +3292,52 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Kubeconfig"
+          },
+          "gateway_url": {
+            "type": "string",
+            "maxLength": 512,
+            "title": "Gateway Url"
+          },
+          "gateway_certificate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 65536
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gateway Certificate"
+          },
+          "database_size_gib": {
+            "type": "integer",
+            "maximum": 65536.0,
+            "minimum": 1.0,
+            "title": "Database Size Gib",
+            "default": 10
+          },
+          "database_instances": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Database Instances",
+            "default": 1
+          },
+          "database_storage_class": {
+            "type": "string",
+            "maxLength": 253,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+            "title": "Database Storage Class"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "kubeconfig"
+          "kubeconfig",
+          "gateway_url",
+          "database_storage_class"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
@@ -3526,15 +3354,20 @@
             "title": "Name"
           },
           "gateway_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Gateway Url"
+          },
+          "database_size_gib": {
+            "type": "integer",
+            "title": "Database Size Gib"
+          },
+          "database_instances": {
+            "type": "integer",
+            "title": "Database Instances"
+          },
+          "database_storage_class": {
+            "type": "string",
+            "title": "Database Storage Class"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -3545,106 +3378,65 @@
           "id",
           "name",
           "gateway_url",
+          "database_size_gib",
+          "database_instances",
+          "database_storage_class",
           "status"
         ],
         "title": "ComputeRegistryResponse",
         "description": "Describe one compute backend without exposing its private connection state or secrets."
       },
-      "DatabaseRegistryCreate": {
-        "properties": {
-          "host": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Host"
-          },
-          "port": {
-            "type": "integer",
-            "maximum": 65535.0,
-            "minimum": 1.0,
-            "title": "Port"
-          },
-          "sslmode": {
-            "$ref": "#/components/schemas/DatabaseSSLMode",
-            "default": "require"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Password"
-          },
-          "username": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Username"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "host",
-          "port",
-          "password",
-          "username",
-          "name"
-        ],
-        "title": "DatabaseRegistryCreate",
-        "description": "Validate one database registry creation payload."
-      },
-      "DatabaseRegistryResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "host": {
-            "type": "string",
-            "title": "Host"
-          },
-          "port": {
-            "type": "integer",
-            "title": "Port"
-          },
-          "sslmode": {
-            "$ref": "#/components/schemas/DatabaseSSLMode"
-          },
-          "username": {
-            "type": "string",
-            "title": "Username"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "host",
-          "port",
-          "sslmode",
-          "username"
-        ],
-        "title": "DatabaseRegistryResponse",
-        "description": "Describe one database backend while filtering its administrator password.\n\nNon-secret connection metadata remains available for administrator diagnostics."
-      },
-      "DatabaseSSLMode": {
+      "DatabaseState": {
         "type": "string",
         "enum": [
-          "disable",
-          "require"
+          "available",
+          "hibernating",
+          "hibernated",
+          "resuming",
+          "failed"
         ],
-        "title": "DatabaseSSLMode",
-        "description": "Supported PostgreSQL SSL modes."
+        "title": "DatabaseState",
+        "description": "Describe the availability of an Organization's CNPG database."
+      },
+      "DatabaseUsage": {
+        "properties": {
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "measured_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measured At"
+          },
+          "allocated_bytes": {
+            "type": "integer",
+            "title": "Allocated Bytes",
+            "description": "Configured storage bytes per database instance, not summed across replicas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "size_bytes",
+          "measured_at",
+          "allocated_bytes"
+        ],
+        "title": "DatabaseUsage",
+        "description": "Report timestamped database usage and configured storage per CNPG instance."
       },
       "EmailPayload": {
         "properties": {
@@ -4139,6 +3931,13 @@
           },
           "status": {
             "$ref": "#/components/schemas/Status"
+          },
+          "database_state": {
+            "$ref": "#/components/schemas/DatabaseState"
+          },
+          "database_idle_seconds": {
+            "type": "integer",
+            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
@@ -4147,7 +3946,9 @@
           "name",
           "slug",
           "avatar",
-          "status"
+          "status",
+          "database_state",
+          "database_idle_seconds"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."
@@ -4157,24 +3958,41 @@
           "avatar": {
             "anyOf": [
               {
-                "type": "string",
-                "maxLength": 2083,
-                "minLength": 1,
-                "format": "uri"
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 2083,
+                    "minLength": 1,
+                    "format": "uri"
+                  },
+                  {
+                    "type": "string",
+                    "const": ""
+                  }
+                ],
+                "maxLength": 2048
               },
               {
-                "type": "string",
-                "const": ""
+                "type": "null"
               }
             ],
-            "maxLength": 2048,
             "title": "Avatar"
+          },
+          "database_idle_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
-        "required": [
-          "avatar"
-        ],
         "title": "OrganizationUpdate",
         "description": "Validate mutable organization settings."
       },
@@ -4199,28 +4017,6 @@
           "total"
         ],
         "title": "Page[ComputeRegistryResponse]"
-      },
-      "Page_DatabaseRegistryResponse_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/DatabaseRegistryResponse"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Total"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
-        "title": "Page[DatabaseRegistryResponse]"
       },
       "Page_OperationResponse_": {
         "properties": {
@@ -4416,6 +4212,14 @@
             "type": "array",
             "title": "Configured Envs"
           },
+          "min_scale": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Min Scale"
+          },
           "failed": {
             "type": "boolean",
             "title": "Failed"
@@ -4456,6 +4260,7 @@
           "image",
           "source",
           "configured_envs",
+          "min_scale",
           "failed",
           "created_at",
           "created_id",
@@ -4482,6 +4287,15 @@
             "maxLength": 100,
             "minLength": 1,
             "title": "Name"
+          },
+          "min_scale": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Min Scale",
+            "default": 0
           },
           "description": {
             "anyOf": [
@@ -4519,6 +4333,21 @@
             },
             "type": "object",
             "title": "Envs"
+          },
+          "min_scale": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Scale"
           },
           "expected_revision_id": {
             "anyOf": [
@@ -4565,6 +4394,14 @@
               }
             ],
             "title": "Description"
+          },
+          "min_scale": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Min Scale"
           },
           "image_desired": {
             "type": "string",
@@ -4614,6 +4451,7 @@
           "name",
           "slug",
           "description",
+          "min_scale",
           "image_desired",
           "desired_revision_id",
           "deployed_revision_id",
@@ -4639,6 +4477,21 @@
             },
             "type": "object",
             "title": "Envs"
+          },
+          "min_scale": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Scale"
           },
           "expected_revision_id": {
             "anyOf": [
@@ -4678,6 +4531,14 @@
             "type": "boolean",
             "title": "Available"
           },
+          "min_scale": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Min Scale"
+          },
           "revision_id": {
             "type": "string",
             "format": "uuid",
@@ -4704,6 +4565,7 @@
           "source",
           "image",
           "available",
+          "min_scale",
           "revision_id",
           "current_image",
           "configured_envs",

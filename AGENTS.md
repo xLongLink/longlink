@@ -34,7 +34,8 @@ This section is a navigation aid, not a specification. The code is the source of
 
 ### Boundaries and Contracts
 
-- Platform metadata is separate from Solution business data. Organizations receive a Kubernetes namespace, PostgreSQL database, and storage bucket; Solutions receive scoped schemas, credentials, and storage prefixes within them.
+- Platform metadata is separate from Solution business data. Organizations receive separate compute and database namespaces, a dedicated CloudNativePG cluster, and a storage bucket; Solutions receive scoped schemas, credentials, and storage prefixes within them. Compute registrations own CNPG storage settings and the HTTPS Kourier gateway connection; there is no external tenant database registry.
+- Organization databases can hibernate when idle under an opt-in policy (`0` keeps them always on). Runtime activity coordinates waking and shared-user synchronization before admitting work. Diagnostics return timestamped cached usage without waking a sleeping database; reported storage allocation is per database instance.
 - The Platform projects user/membership data into an organization-shared schema for Solutions to read. This is one-way synchronization, not a cross-database transaction. Platform, shared-schema, and Solution migrations have distinct owners.
 - API OpenAPI definitions generate Web TypeScript/Zod contracts. SDK XSD schemas define and document XML views, while Web implements their browser behavior. Contract changes must stay aligned across packages; generated files are not the editing source.
 - API and SDK defaults supply safe error messages and HTTP statuses. The shared Web root reports API failures centrally; local UI owns validation, success behavior, and recovery rather than API error notifications.

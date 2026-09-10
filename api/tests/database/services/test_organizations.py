@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4
+from conftest import DatabasePostgres
 from datetime import timedelta
 from sqlmodel import col
 from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
@@ -7,6 +8,7 @@ from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
+from sqlalchemy.engine import URL
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -32,7 +34,8 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Assert
     assert organization.compute_id == infrastructure.compute.id
-    assert organization.database_id == infrastructure.database.id
+    assert organization.database_idle_seconds == 0
+    assert organization.database_sync_pending is True
     assert organization.storage_id == infrastructure.storage.id
     assert organization.status == Status.creating
 
@@ -121,7 +124,6 @@ async def test_infrastructure_returns_all_organization_registry_assignments(user
     assert resolved is not None
     assert resolved.organization.id == organization.id
     assert resolved.compute.id == organization.compute_id
-    assert resolved.database.id == organization.database_id
     assert resolved.storage.id == organization.storage_id
 
 
@@ -142,7 +144,6 @@ async def test_solution_infrastructure_returns_solution_registry_assignments(use
     assert resolved_solution.id == solution.id
     assert infrastructure.organization.id == organization.id
     assert infrastructure.compute.id == organization.compute_id
-    assert infrastructure.database.id == organization.database_id
     assert infrastructure.storage.id == organization.storage_id
 
 
@@ -203,9 +204,9 @@ async def test_sync_users_projects_active_organization_members(
 
     # Arrange
     organization = await create_organization(users[0])
-    synchronized: list[tuple[str, list[Audit]]] = []
+    synchronized: list[tuple[URL, list[Audit]]] = []
 
-    async def capture_sync(database_url: str, rows: list[Audit]) -> None:
+    async def capture_sync(database_url: URL, rows: list[Audit]) -> None:
         """Capture the shared-database projection without opening a connection."""
 
         synchronized.append((database_url, rows))
@@ -219,11 +220,11 @@ async def test_sync_users_projects_active_organization_members(
 
     # Act
     async with session_scope() as session:
-        await organizations.sync_users(session, organization.id)
+        await organizations.project_users(session, organization.id, DatabasePostgres())
 
     # Assert
     database_url, rows = synchronized[0]
-    assert organization.id.hex in database_url
+    assert database_url.database == organization.id.hex
     assert [
         {
             "id": row.id,
@@ -272,7 +273,7 @@ async def test_sync_users_projects_deleted_memberships_as_tombstones(
 
     # Act
     async with session_scope() as session:
-        await organizations.sync_users(session, organization.id)
+        await organizations.project_users(session, organization.id, DatabasePostgres())
 
     # Assert
     assert len(synchronized) == 1
@@ -545,7 +546,6 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
 
     # Assert
     assert organization.compute_id == available_infrastructure.compute.id
-    assert organization.database_id == available_infrastructure.database.id
     assert organization.storage_id == available_infrastructure.storage.id
 
 
@@ -553,7 +553,6 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
     ("registry", "error"),
     [
         pytest.param("compute", "No compute registry available", id="compute"),
-        pytest.param("database", "No database registry available", id="database"),
         pytest.param("storage", "No storage registry available", id="storage"),
     ],
 )
@@ -568,7 +567,6 @@ async def test_create_rejects_missing_assigned_infrastructure(
     infrastructure = await create_ready_infrastructure()
     assignments = {
         "compute_id": infrastructure.compute.id,
-        "database_id": infrastructure.database.id,
         "storage_id": infrastructure.storage.id,
     }
     assignments[f"{registry}_id"] = uuid4()
@@ -594,7 +592,6 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 "acme",
                 users[0],
                 compute_id=infrastructure.compute.id,
-                database_id=infrastructure.database.id,
                 storage_id=infrastructure.storage.id,
             )
 
