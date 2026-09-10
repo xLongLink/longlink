@@ -12,17 +12,17 @@ export function IntroductionSlide() {
                     draggable={false}
                     src="/images/paths.png"
                 />
-                <Stack className="absolute start-1/4 top-1/2 -translate-x-1/2 -translate-y-8">
-                    <Text hasCapsize type="display-1" weight="semibold">
+                <Stack className="absolute start-1/4 top-1/2 -translate-x-1/2 -translate-y-12">
+                    <Text hasCapsize type="display-2" weight="semibold">
                         Classical Coding
                     </Text>
                 </Stack>
                 <Stack className="absolute bottom-1/6 start-5/6 top-5/12 translate-y-2 -translate-x-1/2">
-                    <Text hasCapsize textWrap="nowrap" type="display-1" weight="semibold">
+                    <Text hasCapsize textWrap="nowrap" type="display-2" weight="semibold">
                         Hybrid Coding
                     </Text>
-                    <Stack className="absolute start-0 top-full -translate-y-1">
-                        <Text hasCapsize type="display-1" weight="semibold">
+                    <Stack className="absolute start-0 top-full translate-x-4 -translate-y-1">
+                        <Text hasCapsize type="display-2" weight="semibold">
                             Vibe Coding
                         </Text>
                     </Stack>

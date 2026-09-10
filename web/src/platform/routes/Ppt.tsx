@@ -4,12 +4,12 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useEffect, useEffectEvent } from 'react';
 import Platform from '@/platform/layouts/Platform';
-import { PlanSlide } from '@/components/slides/Plan';
 import { TeamSlide } from '@/components/slides/Team';
 import { TitleSlide } from '@/components/slides/Title';
-import { ClosingSlide } from '@/components/slides/Closing';
 import { useLocation, useNavigate } from 'react-router';
 import { TargetSlide } from '@/components/slides/Target';
+import { ClosingSlide } from '@/components/slides/Closing';
+import { RoadmapSlide } from '@/components/slides/Roadmap';
 import { PlatformSlide } from '@/components/slides/Platform';
 import { IntroductionSlide } from '@/components/slides/Introduction';
 import { BookOpen, CalendarRange, Image, Server, Target, Users } from 'lucide-react';
@@ -44,11 +44,11 @@ const slides = [
         label: 'Platform',
     },
     {
-        component: PlanSlide,
-        href: '/ppt?slide=plan',
+        component: RoadmapSlide,
+        href: '/ppt?slide=roadmap',
         icon: CalendarRange,
-        id: 'plan',
-        label: 'Plan',
+        id: 'roadmap',
+        label: 'Roadmap',
     },
     { component: TeamSlide, href: '/ppt?slide=team', icon: Users, id: 'team', label: 'Team' },
     {
@@ -63,8 +63,8 @@ const tabs = slides.slice(1, -1);
 
 const printStyles = `
     .ppt-slide-content {
-        --font-family-body: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
-        --font-family-heading: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-body: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-heading: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
     }
 
     .ppt-slide-standard-font {

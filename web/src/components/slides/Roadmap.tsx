@@ -2,8 +2,8 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 
-/** Renders the presentation plan slide. */
-export function PlanSlide() {
+/** Renders the presentation roadmap slide. */
+export function RoadmapSlide() {
     return (
         <Stack align="center" className="relative" height="100%" justify="center" width="100%">
             <Stack className="relative" maxWidth={960} width="100%">
@@ -11,21 +11,21 @@ export function PlanSlide() {
                 <Grid className="absolute inset-0" columns={3}>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-1" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Open source
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-1" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Public beta
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-1" weight="semibold">
+                            <Text hasCapsize type="display-2" weight="semibold">
                                 Pilots
                             </Text>
                         </Stack>
@@ -39,7 +39,7 @@ export function PlanSlide() {
                 type="large"
                 weight="semibold"
             >
-                What is the plan?
+                What is the roadmap?
             </Text>
         </Stack>
     );

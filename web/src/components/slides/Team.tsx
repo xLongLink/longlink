@@ -19,7 +19,7 @@ export function TeamSlide() {
                         Elegant solutions for complex problems
                     </Text>
                     <Text color="secondary" size="2xl" type="large">
-                        Strongly belive in open source
+                        Strongly believe in open source
                     </Text>
                 </Stack>
             </Stack>

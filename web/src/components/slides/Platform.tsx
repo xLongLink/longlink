@@ -15,7 +15,7 @@ export function PlatformSlide() {
                 <Text
                     className="absolute start-3/10 top-1/5 -translate-x-1/2"
                     hasCapsize
-                    type="display-1"
+                    type="display-2"
                     weight="semibold"
                 >
                     Services
@@ -23,7 +23,7 @@ export function PlatformSlide() {
                 <Text
                     className="absolute bottom-1/5 start-7/10 -translate-x-1/2"
                     hasCapsize
-                    type="display-1"
+                    type="display-2"
                     weight="semibold"
                 >
                     Deployment

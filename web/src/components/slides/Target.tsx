@@ -11,14 +11,14 @@ export function TargetSlide() {
                 <Grid columns={2} gap={2} justify="center" maxWidth={696} width="100%">
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Legacy systems
                             </Text>
                         </Stack>
                     </Card>
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Low-code platforms
                             </Text>
                         </Stack>
@@ -27,21 +27,21 @@ export function TargetSlide() {
                 <Grid columns={3} gap={2} justify="center" width="100%">
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 SaaS applications
                             </Text>
                         </Stack>
                     </Card>
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Excel
                             </Text>
                         </Stack>
                     </Card>
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Vibe tools
                             </Text>
                         </Stack>
@@ -50,14 +50,14 @@ export function TargetSlide() {
                 <Grid columns={2} gap={2} justify="center" maxWidth={696} width="100%">
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Manual workflows
                             </Text>
                         </Stack>
                     </Card>
                     <Card className="ppt-brittle-brick" height={160} variant="muted" width={344}>
                         <Stack align="center" height="100%" justify="center">
-                            <Text size="4xl" type="large" weight="semibold">
+                            <Text size="3xl" type="large" weight="semibold">
                                 Workarounds
                             </Text>
                         </Stack>
