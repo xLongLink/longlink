@@ -15,7 +15,7 @@ export function PlatformSlide() {
                 <Text
                     className="absolute start-3/10 top-1/5 -translate-x-1/2"
                     hasCapsize
-                    type="display-2"
+                    type="display-1"
                     weight="semibold"
                 >
                     Services
@@ -23,7 +23,7 @@ export function PlatformSlide() {
                 <Text
                     className="absolute bottom-1/5 start-7/10 -translate-x-1/2"
                     hasCapsize
-                    type="display-2"
+                    type="display-1"
                     weight="semibold"
                 >
                     Deployment
@@ -32,7 +32,7 @@ export function PlatformSlide() {
             <Text
                 className="ppt-slide-standard-font absolute bottom-12 start-12"
                 hasCapsize
-                size="xl"
+                size="2xl"
                 type="large"
                 weight="semibold"
             >

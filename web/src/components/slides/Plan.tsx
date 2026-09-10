@@ -11,21 +11,21 @@ export function PlanSlide() {
                 <Grid className="absolute inset-0" columns={3}>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-2" weight="semibold">
+                            <Text hasCapsize type="display-1" weight="semibold">
                                 Open source
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-2" weight="semibold">
+                            <Text hasCapsize type="display-1" weight="semibold">
                                 Public beta
                             </Text>
                         </Stack>
                     </Stack>
                     <Stack align="center" height="100%" justify="center">
                         <Stack align="center" className="-translate-y-12" gap={1}>
-                            <Text hasCapsize type="display-2" weight="semibold">
+                            <Text hasCapsize type="display-1" weight="semibold">
                                 Pilots
                             </Text>
                         </Stack>
@@ -35,7 +35,7 @@ export function PlanSlide() {
             <Text
                 className="ppt-slide-standard-font absolute bottom-12 start-12"
                 hasCapsize
-                size="xl"
+                size="2xl"
                 type="large"
                 weight="semibold"
             >

@@ -11,7 +11,7 @@ export function TitleSlide() {
                 draggable={false}
                 src="/images/human-robot-hands.png"
             />
-            <Stack className="absolute bottom-16 start-16 text-7xl [&>span]:items-end">
+            <Stack className="absolute bottom-16 start-16 text-9xl [&>span]:items-end">
                 <Wordmark size="inherit" />
             </Stack>
         </Stack>
