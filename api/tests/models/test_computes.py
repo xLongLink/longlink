@@ -12,6 +12,10 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     payload = ComputeRegistryCreate.model_validate(
         {
             "name": "Compute",
+            "storage_class": "block-storage",
+            "storage_endpoint": "https://storage.example",
+            "gateway_url": "https://gateway.example",
+            "database_storage_class": "local-path",
             "kubeconfig": (
                 "apiVersion: v1\n"
                 "clusters:\n- name: cluster\n  cluster:\n    server: https://kubernetes.example\n"
@@ -34,6 +38,8 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
         ComputeRegistryCreate.model_validate(
             {
                 "name": "Compute",
+                "gateway_url": "https://gateway.example",
+                "database_storage_class": "local-path",
                 "kubeconfig": {
                     "apiVersion": "v1",
                     "clusters": [{"name": "cluster", "cluster": {}}],
@@ -79,4 +85,11 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
 
     # Act and assert
     with pytest.raises(ValidationError, match=message):
-        ComputeRegistryCreate.model_validate({"name": "Compute", "kubeconfig": kubeconfig})
+        ComputeRegistryCreate.model_validate(
+            {
+                "name": "Compute",
+                "kubeconfig": kubeconfig,
+                "gateway_url": "https://gateway.example",
+                "database_storage_class": "local-path",
+            }
+        )

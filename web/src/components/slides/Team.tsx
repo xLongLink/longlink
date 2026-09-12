@@ -6,18 +6,20 @@ import { Divider } from '@astryxdesign/core/Divider';
 export function TeamSlide() {
     return (
         <Stack align="center" className="ppt-slide-standard-font" gap={3}>
-            <Text as="h1" hasCapsize type="display-3" weight="semibold">
+            <Text as="h1" hasCapsize type="display-1" weight="semibold">
                 Leonardo Saurwein
             </Text>
             <Stack align="center" gap={3}>
-                <Text type="large">BSc in Mechanical Engineering at ETHZ</Text>
+                <Text size="2xl" type="large">
+                    BSc in Mechanical Engineering at ETHZ
+                </Text>
                 <Divider />
                 <Stack align="center" gap={1}>
-                    <Text color="secondary" type="large">
+                    <Text color="secondary" size="2xl" type="large">
                         Elegant solutions for complex problems
                     </Text>
-                    <Text color="secondary" type="large">
-                        Strongly belive in open source
+                    <Text color="secondary" size="2xl" type="large">
+                        Strongly believe in open source
                     </Text>
                 </Stack>
             </Stack>

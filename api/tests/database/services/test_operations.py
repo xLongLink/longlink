@@ -107,8 +107,6 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
             name="Acme",
             slug="acme",
             compute_id=infrastructure.compute.id,
-            database_id=infrastructure.database.id,
-            storage_id=infrastructure.storage.id,
         )
         session.add(organization)
         await session.flush()
@@ -186,8 +184,6 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
             name="Deleted Acme",
             slug="deleted-acme",
             compute_id=infrastructure.compute.id,
-            database_id=infrastructure.database.id,
-            storage_id=infrastructure.storage.id,
             deleted_at=utcnow(),
         )
         session.add(organization)
@@ -329,8 +325,6 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
             name="Acme",
             slug="acme",
             compute_id=infrastructure.compute.id,
-            database_id=infrastructure.database.id,
-            storage_id=infrastructure.storage.id,
         )
         session.add(organization)
         await session.flush()

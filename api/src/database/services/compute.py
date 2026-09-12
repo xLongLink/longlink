@@ -24,6 +24,13 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 ComputeRegistry.id,
                 ComputeRegistry.name,
                 ComputeRegistry.gateway_url,
+                ComputeRegistry.database_size_gib,
+                ComputeRegistry.database_instances,
+                ComputeRegistry.database_storage_class,
+                ComputeRegistry.storage_class,
+                ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_size_gib,
+                ComputeRegistry.storage_instances,
                 ComputeRegistry.status,
             )
         )
@@ -38,11 +45,39 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(session: AsyncSession, name: str, kubeconfig: dict[str, object]) -> ComputeRegistry:
+async def create(
+    session: AsyncSession,
+    name: str,
+    kubeconfig: dict[str, object],
+    *,
+    gateway_url: str,
+    database_storage_class: str,
+    storage_class: str,
+    storage_endpoint: str,
+    storage_size_gib: int = 100,
+    storage_instances: int = 3,
+    storage_certificate: str | None = None,
+    gateway_certificate: str | None = None,
+    database_size_gib: int = 10,
+    database_instances: int = 1,
+) -> ComputeRegistry:
     """Register one compute target."""
 
     # Persist the target and its initial reconciliation request atomically.
-    registry = ComputeRegistry(name=name, kubeconfig=kubeconfig)
+    registry = ComputeRegistry(
+        name=name,
+        kubeconfig=kubeconfig,
+        gateway_url=gateway_url,
+        gateway_certificate=gateway_certificate,
+        database_storage_class=database_storage_class,
+        database_size_gib=database_size_gib,
+        database_instances=database_instances,
+        storage_class=storage_class,
+        storage_endpoint=storage_endpoint,
+        storage_size_gib=storage_size_gib,
+        storage_instances=storage_instances,
+        storage_certificate=storage_certificate,
+    )
     session.add(registry)
 
     # Translate unique registry names to one stable API conflict.

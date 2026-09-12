@@ -23,44 +23,41 @@ export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
  */
 export const zComputeRegistryCreate = z.object({
     name: z.string().min(1).max(128),
-    kubeconfig: z.record(z.string(), z.unknown())
+    kubeconfig: z.record(z.string(), z.unknown()),
+    gateway_url: z.string().max(512),
+    gateway_certificate: z.string().max(65536).nullish(),
+    database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
+    database_instances: z.int().gte(1).lte(3).optional().default(1),
+    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
+    storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
+    storage_endpoint: z.string().max(512),
+    storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
+    storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
+    storage_certificate: z.string().max(65536).nullish()
 });
 
 /**
- * DatabaseSSLMode
+ * DatabaseState
  *
- * Supported PostgreSQL SSL modes.
+ * Describe the availability of an Organization's CNPG database.
  */
-export const zDatabaseSslMode = z.enum(['disable', 'require']);
+export const zDatabaseState = z.enum([
+    'available',
+    'hibernating',
+    'hibernated',
+    'resuming',
+    'failed'
+]);
 
 /**
- * DatabaseRegistryCreate
+ * DatabaseUsage
  *
- * Validate one database registry creation payload.
+ * Report timestamped database usage and configured storage per CNPG instance.
  */
-export const zDatabaseRegistryCreate = z.object({
-    host: z.string().min(1).max(255),
-    port: z.int().gte(1).lte(65535),
-    sslmode: zDatabaseSslMode.optional().default('require'),
-    password: z.string().min(1).max(255),
-    username: z.string().min(1).max(255),
-    name: z.string().min(1).max(128)
-});
-
-/**
- * DatabaseRegistryResponse
- *
- * Describe one database backend while filtering its administrator password.
- *
- * Non-secret connection metadata remains available for administrator diagnostics.
- */
-export const zDatabaseRegistryResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    host: z.string(),
-    port: z.int(),
-    sslmode: zDatabaseSslMode,
-    username: z.string()
+export const zDatabaseUsage = z.object({
+    size_bytes: z.int().nullable(),
+    measured_at: z.iso.datetime().nullable(),
+    allocated_bytes: z.int()
 });
 
 /**
@@ -220,7 +217,7 @@ export const zOrganizationMemberUpdate = z.object({
 /**
  * OrganizationStorageUsageResponse
  *
- * Represent live usage for one Organization bucket.
+ * Report current logical object bytes for one organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
     bucket_name: z.string(),
@@ -236,15 +233,8 @@ export const zOrganizationUpdate = z.object({
     avatar: z.union([
         z.url().min(1).max(2083),
         z.literal('')
-    ])
-});
-
-/**
- * Page[DatabaseRegistryResponse]
- */
-export const zPageDatabaseRegistryResponse = z.object({
-    items: z.array(zDatabaseRegistryResponse),
-    total: z.int().gte(0)
+    ]).nullish(),
+    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
 });
 
 /**
@@ -294,6 +284,7 @@ export const zRevisionResponse = z.object({
     image: z.string(),
     source: z.string(),
     configured_envs: z.array(z.string()),
+    min_scale: z.union([z.literal(0), z.literal(1)]),
     failed: z.boolean(),
     created_at: z.iso.datetime(),
     created_id: z.uuid().nullable(),
@@ -309,6 +300,7 @@ export const zSolutionCreate = z.object({
     envs: z.record(z.string(), z.string()).optional(),
     image: z.string(),
     name: z.string().min(1).max(100),
+    min_scale: z.union([z.literal(0), z.literal(1)]).optional().default(0),
     description: z.string().max(255).nullish()
 });
 
@@ -319,6 +311,7 @@ export const zSolutionCreate = z.object({
  */
 export const zSolutionPatch = z.object({
     envs: z.record(z.string(), z.string().nullable()).optional(),
+    min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
     expected_revision_id: z.uuid().nullish()
 });
 
@@ -329,6 +322,7 @@ export const zSolutionPatch = z.object({
  */
 export const zSolutionUpdate = z.object({
     envs: z.record(z.string(), z.string().nullable()).optional(),
+    min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
     expected_revision_id: z.uuid().nullish(),
     image: z.string()
 });
@@ -342,6 +336,7 @@ export const zSolutionUpdateCheck = z.object({
     source: z.string(),
     image: z.string(),
     available: z.boolean(),
+    min_scale: z.union([z.literal(0), z.literal(1)]),
     revision_id: z.uuid(),
     current_image: z.string(),
     configured_envs: z.array(z.string()),
@@ -367,7 +362,14 @@ export const zStatus = z.enum([
 export const zComputeRegistryResponse = z.object({
     id: z.uuid(),
     name: z.string(),
-    gateway_url: z.string().nullable(),
+    gateway_url: z.string(),
+    database_size_gib: z.int(),
+    database_instances: z.int(),
+    database_storage_class: z.string(),
+    storage_class: z.string(),
+    storage_endpoint: z.string(),
+    storage_size_gib: z.int(),
+    storage_instances: z.int(),
     status: zStatus
 });
 
@@ -409,7 +411,9 @@ export const zOrganizationSummary = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    status: zStatus
+    status: zStatus,
+    database_state: zDatabaseState,
+    database_idle_seconds: z.int()
 });
 
 /**
@@ -439,6 +443,7 @@ export const zSolutionResponse = z.object({
     name: z.string(),
     slug: z.string(),
     description: z.string().nullable(),
+    min_scale: z.union([z.literal(0), z.literal(1)]),
     image_desired: z.string(),
     desired_revision_id: z.uuid().nullable(),
     deployed_revision_id: z.uuid().nullable(),
@@ -452,37 +457,6 @@ export const zSolutionResponse = z.object({
  */
 export const zPageSolutionResponse = z.object({
     items: z.array(zSolutionResponse),
-    total: z.int().gte(0)
-});
-
-/**
- * StorageRegistryCreate
- *
- * Validate one storage registry creation payload.
- */
-export const zStorageRegistryCreate = z.object({
-    name: z.string().min(1).max(128),
-    endpoint_url: z.string().min(1).max(255),
-    access_key_id: z.string().min(1).max(255),
-    secret_access_key: z.string().min(1).max(255)
-});
-
-/**
- * StorageRegistryResponse
- *
- * Describe one Exoscale SOS backend without exposing Platform credentials.
- */
-export const zStorageRegistryResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    endpoint_url: z.string()
-});
-
-/**
- * Page[StorageRegistryResponse]
- */
-export const zPageStorageRegistryResponse = z.object({
-    items: z.array(zStorageRegistryResponse),
     total: z.int().gte(0)
 });
 
@@ -762,52 +736,6 @@ export const zGetComputeRegistryApiV1ComputesRegistryIdGetPath = z.object({
  */
 export const zGetComputeRegistryApiV1ComputesRegistryIdGetResponse = zComputeRegistryResponse;
 
-export const zListDatabaseRegistriesApiV1DatabasesGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListDatabaseRegistriesApiV1DatabasesGetResponse = zPageDatabaseRegistryResponse;
-
-export const zCreateDatabaseRegistryApiV1DatabasesPostBody = zDatabaseRegistryCreate;
-
-/**
- * Successful Response
- */
-export const zCreateDatabaseRegistryApiV1DatabasesPostResponse = zDatabaseRegistryResponse;
-
-export const zDeleteDatabaseRegistryApiV1DatabasesRegistryIdDeletePath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteDatabaseRegistryApiV1DatabasesRegistryIdDeleteResponse = z.void();
-
-export const zGetDatabaseRegistryApiV1DatabasesRegistryIdGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetDatabaseRegistryApiV1DatabasesRegistryIdGetResponse = zDatabaseRegistryResponse;
-
-export const zGetDatabaseUsageApiV1DatabasesRegistryIdUsageGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Response Get Database Usage Api V1 Databases  Registry Id  Usage Get
- *
- * Successful Response
- */
-export const zGetDatabaseUsageApiV1DatabasesRegistryIdUsageGetResponse = z.int();
-
 /**
  * Response Healthz Api V1 Healthz Get
  *
@@ -907,16 +835,32 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationSummary;
 
+export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponse = zDatabaseState;
+
+export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponse = zDatabaseState;
+
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()
 });
 
 /**
- * Response Get Organization Database Usage Api V1 Organizations  Organization Id  Database Get
- *
  * Successful Response
  */
-export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = z.int().nullable();
+export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = zDatabaseUsage;
 
 export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
     organization_id: z.uuid()
@@ -961,41 +905,6 @@ export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMem
  * Successful Response
  */
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = z.void();
-
-export const zListStorageRegistriesApiV1StoragesGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListStorageRegistriesApiV1StoragesGetResponse = zPageStorageRegistryResponse;
-
-export const zCreateStorageRegistryApiV1StoragesPostBody = zStorageRegistryCreate;
-
-/**
- * Successful Response
- */
-export const zCreateStorageRegistryApiV1StoragesPostResponse = zStorageRegistryResponse;
-
-export const zDeleteStorageRegistryApiV1StoragesRegistryIdDeletePath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponse = z.void();
-
-export const zGetStorageRegistryApiV1StoragesRegistryIdGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetStorageRegistryApiV1StoragesRegistryIdGetResponse = zStorageRegistryResponse;
 
 /**
  * Successful Response

@@ -70,6 +70,7 @@ async def create_solution(
         secrets=payload.envs,
         user_id=user.id,
         source=payload.image,
+        min_scale=payload.min_scale,
     )
     await session.commit()
 
@@ -92,7 +93,7 @@ async def update_solution(
     solution = await solutions.access(session, solution_id, user.id)
     if solution.desired_revision_id != expected_revision:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Review the release again.")
-    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=payload.image)
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=payload.image, min_scale=payload.min_scale)
     await session.commit()
 
 
@@ -122,6 +123,7 @@ async def check_update(solution_id: UUID, user: User = Depends(authuser), sessio
         "metadata": metadata,
         "revision_id": revision_id,
         "configured_envs": revision.configured_envs,
+        "min_scale": revision.min_scale,
         "available": metadata.image != revision.image,
     }
 
@@ -130,7 +132,7 @@ async def check_update(solution_id: UUID, user: User = Depends(authuser), sessio
 async def apply_update(
     solution_id: UUID, payload: SolutionPatch, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
 ):
-    """Re-resolve the desired source and deploy only a changed digest."""
+    """Re-resolve the desired source and deploy a changed image or configuration."""
 
     solution = await solutions.access(session, solution_id, user.id, lock=False)
     if payload.expected_revision_id is not None and payload.expected_revision_id != solution.desired_revision_id:
@@ -148,9 +150,7 @@ async def apply_update(
     solution = await solutions.access(session, solution_id, user.id)
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
-    if metadata.image == revision.image:
-        raise HTTPException(status_code=409, detail="Source is up to date. No revision was created.")
-    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=source)
+    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=source, min_scale=payload.min_scale)
     await session.commit()
 
 
@@ -203,7 +203,7 @@ async def get_solution_logs(
             registry.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            return await cluster.solutions.logs(solution.id, solution.organization_id.hex)
+            return await cluster.solutions.logs(solution.id, f"longlink-compute-{solution.organization_id.hex}")
     except RuntimeError as exc:
         logger.warning("Solution logs unavailable for '%s': %s", solution.id, exc)
         raise HTTPException(status_code=503, detail="Solution logs unavailable") from exc

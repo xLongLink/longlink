@@ -59,39 +59,16 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("gateway_url", sa.String(length=512), nullable=True),
+        sa.Column("gateway_url", sa.String(length=512), nullable=False),
         sa.Column("gateway_certificate", sa.Text(), nullable=True),
-        sa.Column("gateway_client_identity", EncryptedType(env.ENCRYPTION_KEY), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
-    )
-
-    # Create database registries.
-    op.create_table(
-        "database_registries",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("host", sa.String(length=255), nullable=False),
-        sa.Column("port", sa.Integer(), nullable=False),
-        sa.Column("password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column(
-            "sslmode",
-            sa.Enum("disable", "require", name="databasesslmode", native_enum=False),
-            nullable=False,
-        ),
-        sa.Column("username", sa.String(length=255), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
-    )
-
-    # Create storage registries.
-    op.create_table(
-        "storage_registries",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("endpoint_url", sa.String(length=255), nullable=False),
-        sa.Column("access_key_id", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("secret_access_key", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("database_size_gib", sa.Integer(), nullable=False),
+        sa.Column("database_instances", sa.Integer(), nullable=False),
+        sa.Column("database_storage_class", sa.String(length=253), nullable=False),
+        sa.Column("storage_class", sa.String(length=253), nullable=False),
+        sa.Column("storage_endpoint", sa.String(length=512), nullable=False),
+        sa.Column("storage_size_gib", sa.Integer(), nullable=False),
+        sa.Column("storage_instances", sa.Integer(), nullable=False),
+        sa.Column("storage_certificate", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -104,8 +81,27 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
-        sa.Column("database_id", sa.Uuid(), nullable=False),
-        sa.Column("storage_id", sa.Uuid(), nullable=False),
+        sa.Column("database_password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("database_idle_seconds", sa.Integer(), nullable=False),
+        sa.Column("database_last_active_at", longlink.database.types.UTCDateTime(), nullable=False),
+        sa.Column(
+            "database_state",
+            sa.Enum(
+                "available",
+                "hibernating",
+                "hibernated",
+                "resuming",
+                "failed",
+                name="database_state_enum",
+                native_enum=False,
+                create_constraint=True,
+                validate_strings=True,
+            ),
+            nullable=False,
+        ),
+        sa.Column("database_sync_pending", sa.Boolean(), nullable=False),
+        sa.Column("database_usage_bytes", sa.BigInteger(), nullable=True),
+        sa.Column("database_usage_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column(
             "status",
             sa.Enum(
@@ -127,16 +123,24 @@ def upgrade() -> None:
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["database_id"], ["database_registries.id"]),
         sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["storage_id"], ["storage_registries.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("slug"),
     )
     op.create_index("ix_organizations_compute_id", "organizations", ["compute_id"])
-    op.create_index("ix_organizations_database_id", "organizations", ["database_id"])
-    op.create_index("ix_organizations_storage_id", "organizations", ["storage_id"])
+
+    # Track expiring database activity independently of actors and lifecycle operations.
+    op.create_table(
+        "organization_activities",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("organization_id", sa.Uuid(), nullable=False),
+        sa.Column("expires_at", longlink.database.types.UTCDateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["organization_id"], ["organizations.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index("ix_organization_activities_organization_id", "organization_activities", ["organization_id"])
+    op.create_index("ix_organization_activities_expires_at", "organization_activities", ["expires_at"])
 
     # Create solutions after organizations.
     op.create_table(
@@ -196,6 +200,8 @@ def upgrade() -> None:
         sa.Column("solution_id", sa.Uuid(), sa.ForeignKey("solutions.id", ondelete="CASCADE"), nullable=False),
         sa.Column("image", sa.String(512), nullable=False),
         sa.Column("source", sa.String(512), nullable=False),
+        sa.Column("min_scale", sa.Integer(), server_default="0", nullable=False),
+        sa.CheckConstraint("min_scale IN (0, 1)", name="revision_min_scale"),
         sa.Column("image_metadata", sa.JSON(), nullable=False),
         sa.Column("envs", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -309,8 +315,7 @@ def downgrade() -> None:
         batch.drop_constraint("solution_deployed_revision", type_="foreignkey")
     op.drop_table("revisions")
     op.drop_table("solutions")
+    op.drop_table("organization_activities")
     op.drop_table("organizations")
-    op.drop_table("storage_registries")
-    op.drop_table("database_registries")
     op.drop_table("compute_registries")
     op.drop_table("users")

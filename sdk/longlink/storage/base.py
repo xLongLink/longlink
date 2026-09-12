@@ -1,6 +1,11 @@
+import ssl
 import fsspec
+import weakref
+import tempfile
 from pathlib import PurePosixPath
+from contextlib import ExitStack
 from fsspec.spec import AbstractFileSystem
+from longlink.storage import tls
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
@@ -23,13 +28,25 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     if settings.ENV == "production":
-        filesystem = fsspec.filesystem(
-            "s3",
-            endpoint_url=settings.STORAGE_ENDPOINT_URL,
-            key=settings.STORAGE_USERNAME,
-            secret=settings.STORAGE_PASSWORD,
-            client_kwargs={"region_name": settings.STORAGE_REGION},
-        )
+        # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
+        with ExitStack() as files:
+            certificate = None
+            if settings.STORAGE_CERTIFICATE is not None:
+                ssl.create_default_context(cadata=settings.STORAGE_CERTIFICATE)
+                certificate = files.enter_context(tempfile.NamedTemporaryFile(mode="w", suffix=".crt"))
+                certificate.write(settings.STORAGE_CERTIFICATE)
+                certificate.flush()
+            filesystem = fsspec.filesystem(
+                "s3",
+                endpoint_url=settings.STORAGE_ENDPOINT_URL,
+                key=settings.STORAGE_USERNAME,
+                secret=settings.STORAGE_PASSWORD,
+                client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate.name} if certificate is not None else {})},
+                config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
+                skip_instance_cache=True,
+            )
+            if certificate is not None:
+                weakref.finalize(filesystem, files.pop_all().close)
     else:
         # Tests use memory storage while development keeps generated files locally inspectable.
         filesystem = fsspec.filesystem("memory" if settings.ENV == "testing" else "file")

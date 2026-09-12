@@ -2,19 +2,19 @@ import json
 import asyncio
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 from src.utils import templates
 from src.logger import logger
 from importlib.resources import files
-from kr8s.asyncio.objects import Job, Pod, Event, Secret, Service, Namespace, Deployment, new_class
-from src.kubernetes.utils import apply, deployment_is_ready
+from kr8s.asyncio.objects import Job, Pod, Event, Secret, Namespace, new_class
+from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 SOLUTION_ID_LABEL = "longlink.io/solution-id"
 MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS = 10
-HTTPRouteResource = new_class("HTTPRoute", "gateway.networking.k8s.io/v1", asyncio=True, plural="httproutes")
+KnativeServiceResource = new_class("Service", "serving.knative.dev/v1", asyncio=True, plural="services")
 
 
 async def _log_migration_diagnostics(migration_job: Job) -> None:
@@ -79,22 +79,30 @@ class Solutions:
         self._client = client
 
     async def apply(
-        self, solution_id: UUID, namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, migrate: bool = True
+        self,
+        solution_id: UUID,
+        namespace: str,
+        image: str,
+        secrets: dict[str, str],
+        *,
+        revision_id: UUID,
+        min_scale: Literal[0, 1] = 0,
+        migrate: bool = True,
     ) -> None:
         """Deploy one Solution and wait for its rollout."""
 
         # Render workload resources before the first cluster mutation.
         migration_id = f"migration-{revision_id}"
         secret_id = f"revision-{revision_id}"
-        migration, deployment, service, route = templates.readyml_list(
+        migration, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
             solution_id=str(solution_id),
-            solution_id_label=SOLUTION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=revision_id.hex,
             migration_id=migration_id,
             secret_id=secret_id,
+            min_scale=min_scale,
         )
 
         api = await self._client.api()
@@ -161,12 +169,8 @@ class Solutions:
         else:
             logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
 
-        # Create the Service and its owned HTTPRoute before starting Solution Pods.
-        service_resource = Service(service, api=api)
-        await apply(service_resource)
-        route_resource = HTTPRouteResource(route, api=api)
-        await apply(route_resource)
-        deployed = Deployment(deployment, api=api)
+        # Knative owns revision Deployments, Services, routing, and scale-to-zero activation.
+        deployed = KnativeServiceResource(service, api=api)
         await apply(deployed)
 
         # Poll rollout status without repeatedly applying the same Solution revision.
@@ -174,36 +178,37 @@ class Solutions:
             try:
                 await deployed.refresh()
             except NotFoundError as exc:
-                raise RuntimeError("Kubernetes Solution Deployment disappeared during rollout") from exc
+                raise RuntimeError("Knative Solution Service disappeared during rollout") from exc
 
-            # Surface quota admission failures instead of waiting for an unavailable Pod indefinitely.
+            # Ignore stale failures while the controller observes a replacement or fallback revision.
             status = deployed.raw.get("status")
-            conditions = status.get("conditions") if isinstance(status, dict) else []
-            if isinstance(conditions, list) and any(
-                isinstance(condition, dict)
-                and condition.get("type") == "ReplicaFailure"
-                and condition.get("reason") == "FailedCreate"
-                and isinstance(condition.get("message"), str)
-                and "exceeded quota" in condition["message"]
-                for condition in conditions
-            ):
-                raise RuntimeError("Kubernetes Solution capacity exhausted")
-            if not deployment_is_ready(deployed):
+            if not isinstance(status, dict):
+                await asyncio.sleep(5)
+                continue
+            generation = deployed.metadata.get("generation")
+            if status.get("observedGeneration") not in {None, generation}:
                 await asyncio.sleep(5)
                 continue
 
-            # Wait for the ready Deployment's route references to be accepted.
-            await route_resource.refresh()
-            route_status = route_resource.raw.get("status")
-            parents = route_status.get("parents", []) if isinstance(route_status, dict) else []
-            route_conditions = {
-                condition.get("type")
-                for parent in parents
-                if isinstance(parent, dict)
-                for condition in parent.get("conditions", [])
-                if isinstance(condition, dict) and condition.get("status") == "True"
-            }
-            if {"Accepted", "ResolvedRefs"} <= route_conditions:
+            # Surface explicit terminal failures; Unknown conditions still represent progressing rollouts.
+            conditions = status.get("conditions") or []
+            for condition in conditions:
+                if condition.get("status") != "False":
+                    continue
+                message = condition.get("message", "")
+                reason = condition.get("reason", "Unknown")
+                if "exceeded quota" in message.lower():
+                    raise RuntimeError("Kubernetes Solution capacity exhausted")
+                if condition.get("type") in {"Ready", "ConfigurationsReady", "RoutesReady"}:
+                    raise RuntimeError(f"Knative Solution rollout failed ({reason}): {message}")
+
+            # Require the latest desired revision and current generation, not an older ready route.
+            if (
+                status.get("observedGeneration") == generation
+                and status.get("latestCreatedRevisionName") is not None
+                and status.get("latestReadyRevisionName") == status.get("latestCreatedRevisionName")
+                and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
+            ):
                 return
             await asyncio.sleep(5)
 
@@ -213,19 +218,18 @@ class Solutions:
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
         namespace_resource = Namespace(namespace, api=api)
-        resources = (
-            Deployment(str(solution_id), namespace=namespace, api=api),
-            Service(f"solution-{solution_id}", namespace=namespace, api=api),
-            HTTPRouteResource(str(solution_id), namespace=namespace, api=api),
+        resource = KnativeServiceResource(
+            f"solution-{solution_id}",
+            namespace=namespace,
+            api=api,
         )
         while await namespace_resource.exists():
             remaining = False
-            for resource in resources:
-                if await resource.exists():
-                    await resource.refresh()
-                    remaining = True
-                    if resource.metadata.get("deletionTimestamp") is None:
-                        await resource.delete()
+            if await resource.exists():
+                await resource.refresh()
+                remaining = True
+                if resource.metadata.get("deletionTimestamp") is None:
+                    await resource.delete()
 
             # Delete retained migration Jobs only when their Solution is being removed.
             async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
@@ -265,7 +269,7 @@ class Solutions:
                 phase = status.get("phase") if isinstance(status, dict) else None
                 component = pod.metadata.get("labels", {}).get("longlink.io/component")
                 if component != "migration" and phase not in {"Succeeded", "Failed"}:
-                    return [line async for line in pod.logs(tail_lines=200)]
+                    return [line async for line in pod.logs(container="solution", tail_lines=200)]
                 if component == "migration":
                     migration_pod = pod
                     migration_phase = phase if isinstance(phase, str) else None

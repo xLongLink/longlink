@@ -809,6 +809,7 @@ wheels = [
 name = "longlink"
 source = { editable = "." }
 dependencies = [
+    { name = "aiobotocore" },
     { name = "aiosqlite" },
     { name = "alembic" },
     { name = "asyncpg" },
@@ -843,6 +844,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiobotocore", specifier = ">=2.25.1" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.19.1" },
     { name = "asyncpg", specifier = ">=0.31.0" },

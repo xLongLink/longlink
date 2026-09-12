@@ -1,13 +1,15 @@
 import os
 import pytest
 import pytest_asyncio
+from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from typing import cast
 from pathlib import Path
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
-from collections.abc import AsyncIterator
+from collections.abc import Iterator, AsyncIterator
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 TEST_PASSWORD = "longlink-test-password"
@@ -36,12 +38,123 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
 os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
 os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 
-from main import app
+from types import SimpleNamespace
 from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.database.models import registry
+from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
+
+
+class StorageKubernetes:
+    """Supply the external storage boundary for Platform lifecycle tests."""
+
+    async def install(self, compute: object) -> None:
+        """Accept shared storage reconciliation."""
+
+    async def bucket(self, organization: UUID, compute: object, *, create: bool = False) -> SimpleNamespace:
+        """Return the owner connection for an organization bucket."""
+
+        return SimpleNamespace(name=organization.hex, storage=self)
+
+    async def user(self, solution: UUID, organization: UUID) -> Credentials:
+        """Return stable scoped credentials."""
+
+        return Credentials("solution", "generated-secret")
+
+    async def authorize(self, bucket: str, solutions: object) -> None:
+        """Accept the real lifecycle policy snapshot."""
+
+    async def revoke(self, solution: UUID) -> None:
+        """Accept user deletion."""
+
+    async def delete_prefix(self, bucket: str, prefix: str) -> None:
+        """Accept owner-scoped object cleanup."""
+
+    async def delete(self, organization: UUID, compute: object) -> None:
+        """Accept organization storage deletion."""
+
+    async def usage(self, bucket: str) -> int:
+        """Return deterministic logical usage."""
+
+        return 128
+
+
+class DatabaseKubernetes:
+    """Provide the CNPG provider boundary without opening Kubernetes connections."""
+
+    def __init__(self, *_args: object) -> None:
+        """Expose database operations through the production client shape."""
+
+        self.databases = self
+        self.storage = StorageKubernetes()
+
+    async def apply(self, organization: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
+        """Accept Organization cluster provisioning."""
+
+    async def resume(self, organization: UUID) -> None:
+        """Accept database resumption."""
+
+    async def portforward(self, organization: UUID) -> int:
+        """Supply a local transport port consumed only by the SQL fake."""
+
+        return 15432
+
+    async def certificate(self, organization: UUID) -> str:
+        """Return a synthetic certificate consumed only by the SQL fake."""
+
+        return "test-database-ca"
+
+    async def aclose(self) -> None:
+        """Close the provider boundary."""
+
+
+class DatabasePostgres:
+    """Provide external SQL operations while activity and projection use real Platform state."""
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        """Accept the private Organization connection settings."""
+
+    @contextmanager
+    def url(self, database: str, search_path: str | None = None) -> Iterator[URL]:
+        """Build the structured connection target passed to shared projection."""
+
+        yield URL.create("postgresql+psycopg", host="database.example", database=database)
+
+    @asynccontextmanager
+    async def _connection(self, database: str) -> AsyncIterator["DatabasePostgres"]:
+        """Scope the SQL readiness probe to its Organization database."""
+
+        yield self
+
+    async def execute(self, statement: object) -> None:
+        """Accept only the readiness probe used by database coordination."""
+
+        assert str(statement) == "SELECT 1"
+
+    async def prepare_organization_database(self, organization: UUID) -> None:
+        """Accept shared schema provisioning."""
+
+    async def database_usage(self, database: str) -> int | None:
+        """Return deterministic database usage."""
+
+        return 128
+
+
+@pytest.fixture
+def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace only external CNPG and SQL I/O for request and lifecycle tests."""
+
+    from src.operations import databases
+    from src.database.services import organizations
+
+    async def sync(*args: object, **kwargs: object) -> None:
+        """Accept the real shared-user snapshot at its database transport boundary."""
+
+    monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(databases.postgres, "Postgres", DatabasePostgres)
+    monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 
 class FakeKubernetes:
@@ -51,6 +164,11 @@ class FakeKubernetes:
         """Return the fake API client used by resource fakes."""
 
         return cast(Api, object())
+
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
+        """Return a synthetic development gateway port without external I/O."""
+
+        return 18444
 
 
 @pytest.fixture
@@ -108,6 +226,9 @@ def authenticated_cookies(user: User) -> Cookies:
 
 def create_client(user: User | None = None) -> AsyncClient:
     """Build an in-process API client with optional authentication cookies."""
+
+    # Unit and model tests do not need to import the composed API application.
+    from main import app
 
     cookies = authenticated_cookies(user) if user is not None else None
     headers = {"origin": env.PUBLIC_URL.rstrip("/")}

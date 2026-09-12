@@ -51,7 +51,7 @@ export default function SolutionUpdate({
     return (
         <>
             <Button
-                label={candidate ? (candidate.available ? 'Update' : 'Up to Date') : 'Check for updates'}
+                label={candidate ? (candidate.available ? 'Update' : 'Configure') : 'Check for updates'}
                 size="sm"
                 isLoading={inspection.isFetching}
                 isDisabled={
@@ -60,7 +60,7 @@ export default function SolutionUpdate({
                     solution.status === 'creating'
                 }
                 clickAction={async () => {
-                    if (candidate?.available) {
+                    if (candidate) {
                         setIsOpen(true);
                     } else {
                         await inspection.refetch();

@@ -25,35 +25,19 @@ vp env setup
 ```
 
 ```bash
-make install        # Install all the dependencies
-make api:install    # Install API dependencies
-make sdk:install    # Install SDK dependencies
-make web:install    # Install web dependencies
+make install  # Install development dependencies
+make check    # Run lint, type, and contract checks
+make format   # Format source and documentation
+make build    # Typecheck and build both web bundles
+make test     # Build required bundles and run all tests
 
-make build          # Typecheck and build API and SDK web bundles
-make api:build      # Build the API web bundle
-make sdk:build      # Build the embedded SDK web bundle
-
-make seed           # Migrate and seed the Platform test Organization
-
-make clean          # Remove tracked remote development resources
-
-make format         # Format the code
-make api:format     # Format API code
-make sdk:format     # Format SDK code
-make web:format     # Format web and docs code
-
-make ty             # Run API and SDK type checks
-make api:ty         # Run API type checks
-make sdk:ty         # Run SDK type checks
-
-make up             # Initialize local services, cluster, and Solution image
-make image          # Build/push the local sample, preserving existing sdk/dev edits
-make web            # Run the Vite web app
-make api            # Run the LongLink Platform API after seeding
-
-make down           # Stop local services and the cluster; retain volumes
-make clear          # Remove local Compose volumes and sdk/dev (including your edits)
+make up       # Initialize local services, cluster, and sample image
+make down     # Stop local services and cluster; preserve caches and sdk/dev
+make seed     # Migrate and seed the Platform test Organization
+make api      # Run the Platform API
+make web      # Run the Web development server
+make sdk      # Run the local sample Solution
+make image    # Build and push the local sample image
 ```
 
 ## Test the SDK in development

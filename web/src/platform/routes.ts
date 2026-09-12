@@ -63,8 +63,6 @@ export default [
                 route('users', './routes/admin/Users.tsx'),
                 route('solutions', './routes/admin/Solutions.tsx'),
                 route('organizations', './routes/admin/Organizations.tsx'),
-                route('database', './routes/admin/Database.tsx'),
-                route('storage', './routes/admin/Storage.tsx'),
                 route('compute', './routes/admin/Compute.tsx'),
                 route('operations', './routes/admin/Operations.tsx'),
             ]),

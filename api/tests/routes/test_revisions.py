@@ -174,6 +174,7 @@ async def test_source_update_preserves_patches_and_reresolves(
     history = (await clients[0].get(f"{url}/revisions")).json()
     assert history[0]["source"] == source
     assert history[0]["configured_envs"] == ["DROP", "KEEP"]
+    assert history[0]["min_scale"] == 0
     assert "private-value" not in str(history)
 
     # Source checks require maintenance and cannot be used as a registry oracle by other users.
@@ -190,8 +191,12 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert check.json()["current_image"] == check.json()["image"] == resolved.image
     assert check.json()["configured_envs"] == ["DROP", "KEEP"]
     assert "private-value" not in check.text
-    assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "ignored"}})).status_code == 409
+    assert check.json()["min_scale"] == 0
+    assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "private-value"}})).status_code == 409
     assert len((await clients[0].get(f"{url}/revisions")).json()) == 2
+    assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 204
+    assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 409
+    assert (await clients[0].post(f"{url}/update", json={"min_scale": 2})).status_code == 422
 
     # A review is advisory: submission re-resolves a moved tag and enforces its new requirements.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
@@ -214,6 +219,7 @@ async def test_source_update_preserves_patches_and_reresolves(
         assert current is not None
         assert current.desired_revision.image == resolved.image
         assert current.desired_revision.source == source
+        assert current.desired_revision.min_scale == 1
         assert current.desired_revision.envs == {"KEEP": "private-value", "NEW": "new-value"}
         assert current.deployment_pending
         prior = await session.get(Revision, solution.desired_revision_id)
@@ -225,7 +231,10 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert (await clients[0].put(url, json={"image": digest, "envs": {"NEW": "replacement"}})).status_code == 204
     check = await clients[0].get(f"{url}/update")
     assert check.json()["source"] == digest and check.json()["available"] is False
+    assert check.json()["min_scale"] == 1
     assert inspected[-1] == digest
+    assert (await clients[0].post(f"{url}/update", json={"min_scale": 0})).status_code == 204
+    assert (await clients[0].get(f"{url}/update")).json()["min_scale"] == 0
 
 
 @pytest.mark.parametrize("method", ["GET", "POST", "PUT"])

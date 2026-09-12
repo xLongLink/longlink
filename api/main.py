@@ -28,6 +28,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # Start this replica's scheduler and retained-log cleanup.
     worker = asyncio.create_task(jobs.run_operation_scheduler())
     log_cleanup = asyncio.create_task(jobs.run_operation_log_cleanup())
+    database_worker = asyncio.create_task(jobs.run_database_scheduler())
 
     # Always stop background Operation work when the application lifespan exits.
     try:
@@ -35,10 +36,13 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     finally:
         worker.cancel()
         log_cleanup.cancel()
+        database_worker.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await worker
         with contextlib.suppress(asyncio.CancelledError):
             await log_cleanup
+        with contextlib.suppress(asyncio.CancelledError):
+            await database_worker
 
 
 app = FastAPI(

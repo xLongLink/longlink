@@ -9,7 +9,7 @@ from src.database.models.base import PlatformModel
 
 
 class ComputeRegistry(PlatformModel, table=True):
-    """Persist one Compute target and its authenticated Envoy Gateway state.
+    """Persist one Compute target and its Kourier and CNPG configuration.
 
     The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Solution traffic.
     """
@@ -32,6 +32,17 @@ class ComputeRegistry(PlatformModel, table=True):
         ),
     )
     # Gateway
-    gateway_url: str | None = Field(default=None, max_length=512)
+    gateway_url: str = Field(max_length=512)
     gateway_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_client_identity: str | None = Field(default=None, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=True))
+
+    # Database
+    database_size_gib: int = Field(default=10)
+    database_instances: int = Field(default=1)
+    database_storage_class: str = Field(max_length=253)
+
+    # Object storage
+    storage_class: str = Field(max_length=253)
+    storage_endpoint: str = Field(max_length=512)
+    storage_size_gib: int = Field(default=100)
+    storage_instances: int = Field(default=3)
+    storage_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

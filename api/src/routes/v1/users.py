@@ -40,16 +40,18 @@ async def list_users(
 async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
     """Update the authenticated user's details."""
 
-    # Apply only supplied profile values.
+    # Avoid persistence and synchronization for unchanged profile values.
+    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
+        return user
+
+    # Lock Organizations in stable order before changing the user, matching membership mutation lock order.
+    for organization_id in sorted(await users.organization_ids(session, user.id)):
+        await organizations.sync_users(session, organization_id)
+
+    # Commit profile changes and durable projection demand together.
     if payload.name is not None:
         user.name = payload.name
     if payload.avatar is not None:
         user.avatar = payload.avatar
-    if not session.is_modified(user):
-        return user
     await session.commit()
-
-    # Keep every organization database synchronized after profile update requests.
-    for organization_id in await users.organization_ids(session, user.id):
-        await organizations.sync_users(session, organization_id)
     return user

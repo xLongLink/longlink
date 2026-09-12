@@ -2,10 +2,12 @@ import asyncio
 import logging
 from uuid import UUID
 from typing import override
+from sqlmodel import col
 from functools import partial
+from sqlalchemy import delete, select
 from src.logger import logger
 from contextvars import ContextVar
-from src.operations import handlers
+from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from longlink.utils.time import utcnow
@@ -13,6 +15,7 @@ from src.database.session import session_scope
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
+from src.database.models.organizations import Organization, OrganizationActivity
 
 operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
 OPERATION_LOG_CLEANUP_SECONDS = 86400
@@ -170,3 +173,38 @@ async def run_operation_log_cleanup() -> None:
             logger.exception("Operation log cleanup failed")
 
         await asyncio.sleep(OPERATION_LOG_CLEANUP_SECONDS)
+
+
+async def run_database_scheduler() -> None:
+    """Recover database transitions and hibernate idle tenants outside the lifecycle queue."""
+
+    # Keep independent tenant tasks across polls rather than waiting for the slowest transition.
+    running: dict[UUID, asyncio.Task[None]] = {}
+    limit = asyncio.Semaphore(8)
+
+    async def reconcile(organization_id: UUID) -> None:
+        """Isolate one Organization's runtime maintenance failures."""
+
+        try:
+            async with limit, asyncio.timeout(15 * 60):
+                await databases.reconcile(organization_id)
+        except Exception:
+            logger.exception("Database maintenance failed for Organization %s", organization_id)
+
+    async with asyncio.TaskGroup() as tasks:
+        while True:
+            try:
+                async with session_scope() as session:
+                    await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.expires_at) <= utcnow()))
+                    result = await session.scalars(select(col(Organization.id)).where(col(Organization.deleted_at).is_(None)))
+                    organization_ids = result.all()
+                    await session.commit()
+                running = {organization_id: task for organization_id, task in running.items() if not task.done()}
+            except Exception:
+                logger.exception("Database scheduler polling failed")
+                await asyncio.sleep(30)
+                continue
+            for organization_id in organization_ids:
+                if organization_id not in running:
+                    running[organization_id] = tasks.create_task(reconcile(organization_id))
+            await asyncio.sleep(30)

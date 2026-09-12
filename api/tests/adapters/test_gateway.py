@@ -69,20 +69,17 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(monkeypatch:
 
             self.closed = True
 
-    class TLS:
-        def load_cert_chain(self, certfile: str) -> None:
-            """Accept the temporary client identity."""
-
     # Replace the transport after TLS setup with a cancellable request client.
     clients: list[Client] = []
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
-    monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: TLS())
-    client = gateway.GatewayClient("https://gateway.example", "", "", "identity-secret-012345678901234567")
+    client = gateway.Gateway("https://gateway.example", None)
 
     # Cancellation must propagate after the owning client has closed.
     with pytest.raises(asyncio.CancelledError):
         await client.request(
             solution_id=uuid4(),
+            organization_id=uuid4(),
+            identity_secret="identity-secret-012345678901234567",
             user_id=uuid4(),
             method="GET",
             path="status",
@@ -98,6 +95,7 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
 
     # Arrange
     solution_id = uuid4()
+    organization_id = uuid4()
     user_id = uuid4()
     captured: dict[str, object] = {}
 
@@ -130,19 +128,17 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
 
             captured["client_closed"] = True
 
-    class TLS:
-        def load_cert_chain(self, certfile: str) -> None:
-            """Accept the temporary client identity."""
-
-    tls = TLS()
+    tls = gateway.ssl.create_default_context()
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(gateway.ssl, "create_default_context", lambda cadata: tls)
-    client = gateway.GatewayClient("https://gateway.example/", "gateway-ca", "client-identity", "identity-secret-012345678901234567")
+    client = gateway.Gateway("https://gateway.example/", "gateway-ca")
     request_content = content()
 
     # Act
     response = await client.request(
         solution_id=solution_id,
+        organization_id=organization_id,
+        identity_secret="identity-secret-012345678901234567",
         user_id=user_id,
         method="POST",
         path="health",
@@ -158,13 +154,13 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(monkeypatch:
     headers = cast(dict[str, str], request["headers"])
     identity_token = headers["x-longlink-identity"]
     assert gateway.identity.identity_token_user(identity_token, "identity-secret-012345678901234567") == user_id
-    assert client_kwargs == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
+    assert client_kwargs == {"follow_redirects": False, "trust_env": False, "timeout": 300.0, "verify": tls}
     assert request == {
         "method": "POST",
         "url": "https://gateway.example/health?verbose=true",
         "content": request_content,
         "headers": {
-            "x-longlink-solution-id": str(solution_id),
+            "host": f"solution-{solution_id}.longlink-compute-{organization_id.hex}.svc.cluster.local",
             "x-longlink-identity": identity_token,
             "content-type": "application/json",
         },

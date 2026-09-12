@@ -1,6 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
+from conftest import DatabasePostgres, DatabaseKubernetes
 from datetime import UTC, datetime
 from sqlmodel import select
 from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
@@ -13,11 +14,15 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
+
+pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
 async def test_create_organization_persists_desired_state_and_queues_creation(
@@ -42,8 +47,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         organization = await session.get(Organization, UUID(payload["id"]))
     assert organization is not None
     assert organization.compute_id == infrastructure.compute.id
-    assert organization.database_id == infrastructure.database.id
-    assert organization.storage_id == infrastructure.storage.id
+    assert organization.database_idle_seconds == 0
     assert organization.status == Status.creating
     operations = await fetch_operations()
     assert len(operations) == 1
@@ -94,8 +98,6 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     ("registry", "expected_detail"),
     [
         pytest.param("compute", "No ready compute registry available", id="compute"),
-        pytest.param("database", "No database registry available", id="database"),
-        pytest.param("storage", "No storage registry available", id="storage"),
     ],
 )
 async def test_create_organization_rejects_when_required_registry_is_unavailable(
@@ -396,11 +398,8 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
     client = clients[0]
     organization = await create_organization(owner, infrastructure=await create_ready_infrastructure())
 
-    class FakePostgres:
+    class FakePostgres(DatabasePostgres):
         """Provide database usage responses for the Organization resource endpoint."""
-
-        def __init__(self, *_args: object) -> None:
-            """Accept the adapter configuration supplied by the route."""
 
         async def database_usage(self, database_name: str) -> int | None:
             """Return usage or raise the configured database backend failure."""
@@ -410,7 +409,20 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
                 raise usage
             return usage
 
-    monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
+
+    # Usage reads observe an already-running database without provisioning or waking it.
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.database_sync_pending = False
+        compute = await session.get(ComputeRegistry, persisted.compute_id)
+        assert compute is not None
+        compute.database_instances = 3
+        await session.commit()
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/database")
@@ -418,10 +430,34 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        response_payload: int | None | dict[str, str] = expected_payload
+        response_payload = {
+            "size_bytes": expected_payload,
+            "measured_at": "2026-09-09T12:00:00Z",
+            "allocated_bytes": 10 * 1024**3,
+        }
     else:
         response_payload = {"detail": "Database resources unavailable"}
     assert response.json() == response_payload
+
+    # Cached diagnostics preserve their timestamp and per-instance allocation without waking SQL.
+    if expected_status == 200:
+        async with session_scope() as session:
+            persisted = await session.get(Organization, organization.id)
+            assert persisted is not None
+            assert persisted.database_usage_bytes == expected_payload
+            assert persisted.database_usage_at == datetime(2026, 9, 9, 12, tzinfo=UTC)
+            persisted.database_state = DatabaseState.hibernated
+            await session.commit()
+
+        def unexpected_cluster(*args: object) -> None:
+            """Reject provider access for a sleeping database's cached diagnostics."""
+
+            raise AssertionError("Diagnostics must not wake a sleeping database")
+
+        monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_cluster)
+        cached = await client.get(f"/api/v1/organizations/{organization.id}/database")
+        assert cached.status_code == 200
+        assert cached.json() == response_payload
 
 
 @pytest.mark.parametrize(
@@ -464,7 +500,10 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
                 raise usage
             return usage
 
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
+    from conftest import StorageKubernetes
+
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
@@ -501,11 +540,8 @@ async def test_organization_resource_endpoints_allow_members(
         )
         await session.commit()
 
-    class FakePostgres:
+    class FakePostgres(DatabasePostgres):
         """Provide an inspectable Organization database."""
-
-        def __init__(self, *_args: object) -> None:
-            """Accept the route's database adapter configuration."""
 
         async def database_usage(self, database_name: str) -> int:
             """Return the database's live usage."""
@@ -522,8 +558,20 @@ async def test_organization_resource_endpoints_allow_members(
             assert bucket_name == organization.id.hex
             return 0
 
-    monkeypatch.setattr("src.routes.v1.organizations.Postgres", FakePostgres)
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
+    from conftest import StorageKubernetes
+
+    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
+    monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
+
+    # Resource inspection starts from a ready Organization, not its queued creation state.
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.status = Status.running
+        persisted.database_sync_pending = False
+        await session.commit()
     client = clients[1]
 
     # Act
@@ -532,7 +580,7 @@ async def test_organization_resource_endpoints_allow_members(
     # Assert
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
-        "database": 0,
+        "database": {"size_bytes": 0, "measured_at": "2026-09-09T12:00:00Z", "allocated_bytes": 10 * 1024**3},
         "storage": {"bucket_name": organization.id.hex, "space_used": 0},
     }
     assert response.json() == expected_payloads[resource]
@@ -555,8 +603,8 @@ async def test_organization_resource_endpoints_reject_non_members(
 
         raise AssertionError("cross-tenant resource access reached a provider")
 
-    monkeypatch.setattr("src.routes.v1.organizations.Postgres", unexpected_provider)
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", unexpected_provider)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", unexpected_provider)
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_provider)
 
     # Act
     response = await clients[1].get(f"/api/v1/organizations/{organization.id}/{resource}")
@@ -641,6 +689,8 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "slug": "globex",
                 "avatar": "",
                 "status": "creating",
+                "database_state": "available",
+                "database_idle_seconds": 0,
             }
         ],
         "total": 2,
@@ -893,21 +943,16 @@ async def test_create_organization_invitation_rejects_role_above_caller(
 async def test_update_organization_member_changes_role(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Allow organization owners to change member roles."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
-    synchronized_organizations: list[UUID] = []
-
-    async def sync_users(_session: object, organization_id: UUID) -> None:
-        """Record runtime membership synchronization."""
-
-        synchronized_organizations.append(organization_id)
-
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -917,7 +962,6 @@ async def test_update_organization_member_changes_role(
         )
         await session.commit()
 
-    monkeypatch.setattr(organizations, "sync_users", sync_users)
     client = clients[0]
 
     # Act
@@ -930,22 +974,26 @@ async def test_update_organization_member_changes_role(
     assert response.status_code == 204
     async with session_scope() as session:
         updated_members = await organizations.members(session, organization.id)
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is True
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
-    assert synchronized_organizations == [organization.id]
 
 
-async def test_update_organization_member_reconciles_unchanged_role_without_persistence(
+async def test_update_organization_member_keeps_unchanged_role_without_persistence(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reconcile an unchanged member role without rewriting its audit fields."""
+    """Keep an unchanged member role without rewriting audit fields or requesting projection."""
 
     # Arrange
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -959,15 +1007,6 @@ async def test_update_organization_member_reconciles_unchanged_role_without_pers
         original_updated_at = original.updated_at
         original_updated_id = original.updated_id
 
-    synchronized_organizations: list[UUID] = []
-
-    async def sync_users(_session: object, organization_id: UUID) -> None:
-        """Record runtime membership reconciliation."""
-
-        synchronized_organizations.append(organization_id)
-
-    monkeypatch.setattr(organizations, "sync_users", sync_users)
-
     # Act
     response = await clients[0].patch(
         f"/api/v1/organizations/{organization.id}/members/{member.id}",
@@ -978,10 +1017,12 @@ async def test_update_organization_member_reconciles_unchanged_role_without_pers
     assert response.status_code == 204
     async with session_scope() as session:
         unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
     assert unchanged.updated_id == original_updated_id
-    assert synchronized_organizations == [organization.id]
 
 
 async def test_update_organization_member_returns_not_found_for_non_member(

@@ -1,6 +1,7 @@
 import pytest
 import asyncio
 from uuid import UUID
+from conftest import DatabaseKubernetes
 from factories import claim_operation, create_solution, complete_operation, create_organization
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
@@ -13,6 +14,8 @@ from src.database.services import solutions, operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
+
+pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
 @pytest.mark.parametrize(
@@ -40,11 +43,16 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             """Expose the runtime adapter."""
 
             self.solutions = self
+            self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
-        async def apply(self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, migrate: bool) -> None:
+        async def apply(
+            self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool
+        ) -> None:
             """Capture the exact snapshot and simulate rollout outcomes."""
 
             calls.append((image, secrets, migrate))
+            assert min_scale == (1 if image.endswith("@sha256:new") else 0)
             if not failing:
                 return
             if failure == "deleted_during_rollout":
@@ -86,7 +94,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"})
+        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"}, min_scale=1)
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
@@ -107,7 +115,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     # Limit the timeout override to the failing attempt, not recovery work.
     with monkeypatch.context() as timeout:
         if failure == "timeout":
-            timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.01)
+            timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.5)
         failed = await execute(update)
     assert failed.failed is not None
     if failure == "timeout":
@@ -152,7 +160,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert good is not None and not good.failed
         assert current.status == (Status.failed if failure == "restoration" else Status.running)
         assert current.secrets == solution.secrets
-    assert calls[-1][1] == {"KEY": "old", **solution.secrets}
+    assert calls[-1][1] == {"KEY": "old", **solution.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
     assert calls[-1][2] is False
     assert await claim_operation() is None
 
@@ -193,8 +201,12 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             """Expose runtime deployment."""
 
             self.solutions = self
+            self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
-        async def apply(self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, migrate: bool) -> None:
+        async def apply(
+            self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool
+        ) -> None:
             """Capture immutable image and environment pairs."""
 
             nonlocal latest_id

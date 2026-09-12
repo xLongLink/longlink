@@ -1,0 +1,82 @@
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+    name: rook-ceph
+    namespace: rook-ceph
+spec:
+    cephVersion:
+        image: quay.io/ceph/ceph:v19.2.6@sha256:ff836bb28e7d0be0ec4dd22e79407174452a96e11ee62e9cdd1fa47f4bcc3bdc
+        allowUnsupported: false
+    dataDirHostPath: /var/lib/rook
+    mon:
+        count: $instances
+        allowMultiplePerNode: false
+        volumeClaimTemplate:
+            spec:
+                storageClassName: $storage_class
+                resources:
+                    requests:
+                        storage: 10Gi
+    mgr:
+        count: $managers
+        allowMultiplePerNode: false
+    dashboard:
+        enabled: false
+    storage:
+        useAllNodes: false
+        useAllDevices: false
+        storageClassDeviceSets:
+            - name: longlink
+              count: $instances
+              portable: false
+              placement:
+                  topologySpreadConstraints:
+                      - maxSkew: 1
+                        topologyKey: kubernetes.io/hostname
+                        whenUnsatisfiable: DoNotSchedule
+                        labelSelector:
+                            matchLabels:
+                                app: rook-ceph-osd
+              volumeClaimTemplates:
+                  - metadata:
+                        name: data
+                    spec:
+                        storageClassName: $storage_class
+                        volumeMode: Block
+                        accessModes: [ReadWriteOnce]
+                        resources:
+                            requests:
+                                storage: '${size_gib}Gi'
+---
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStore
+metadata:
+    name: longlink
+    namespace: rook-ceph
+spec:
+    metadataPool:
+        failureDomain: host
+        replicated:
+            size: $instances
+            requireSafeReplicaSize: $safe_replica_size
+    dataPool:
+        failureDomain: host
+        replicated:
+            size: $instances
+            requireSafeReplicaSize: $safe_replica_size
+    preservePoolsOnDelete: true
+    gateway:
+        instances: $managers
+        port: 0
+        securePort: 443
+        sslCertificateRef: longlink-storage-tls
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+    name: longlink-buckets
+provisioner: rook-ceph.ceph.rook.io/bucket
+reclaimPolicy: Delete
+parameters:
+    objectStoreName: longlink
+    objectStoreNamespace: rook-ceph

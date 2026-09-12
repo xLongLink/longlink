@@ -1,4 +1,3 @@
-import asyncio
 import secrets
 import contextlib
 from uuid import UUID
@@ -6,17 +5,30 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import update
 from src.logger import logger
+from src.operations import storage, databases
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
-from src.adapters.storage.exoscale import Exoscale
 from src.database.models.solutions import Revision, Solution
 
 
 async def deploy(revision_id: UUID) -> None:
+    """Keep the database awake through schema provisioning, migrations, and readiness."""
+
+    async with session_scope() as session:
+        revision = await session.get(Revision, revision_id)
+        if revision is None:
+            return
+        solution = await session.get(Solution, revision.solution_id)
+        if solution is None or solution.deleted_at is not None:
+            return
+    async with databases.activity(solution.organization_id):
+        await _deploy(revision_id)
+
+
+async def _deploy(revision_id: UUID) -> None:
     """Apply an exact revision, retaining Solution-owned credentials and data."""
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
@@ -42,55 +54,34 @@ async def deploy(revision_id: UUID) -> None:
     # Converge providers and the workload while the Solution is not yet published.
     # Reuse generated credentials after an interrupted creation attempt.
     if "LONGLINK_ENV" not in runtime_secrets:
-        # Build providers from the Solution's immutable infrastructure assignments.
-        object_storage = Exoscale(
-            infrastructure.storage.endpoint_url,
-            infrastructure.storage.access_key_id,
-            infrastructure.storage.secret_access_key,
-        )
-
-        # Generate fresh credentials for the initial creation attempt.
-        bucket = organization.id.hex
+        # Rook preserves generated credentials across retries; owner keys never reach workloads.
         prefix = f"solutions/{solution.id.hex}/"
         logger.info("Creating object storage credentials for Solution %s", solution.id)
-        credentials = await object_storage.solution_credentials(solution.id.hex, bucket, prefix)
-
-        # Revoke freshly-issued storage credentials if database provisioning cannot complete.
         database_password = secrets.token_urlsafe(24)
-        try:
-            logger.info("Creating PostgreSQL schema for Solution %s", solution.id)
-            database = Postgres(
-                infrastructure.database.host,
-                infrastructure.database.port,
-                infrastructure.database.username,
-                infrastructure.database.password,
-                infrastructure.database.sslmode,
-            )
+        cluster = Kubernetes(infrastructure.compute.kubeconfig)
+        async with contextlib.aclosing(cluster):
+            bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+            credentials = await cluster.storage.user(solution.id, organization.id)
+            database = await databases.connection(infrastructure, cluster)
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
-        except (Exception, asyncio.CancelledError):
-            try:
-                await object_storage.revoke_solution(solution.id.hex)
-            except Exception:
-                logger.exception("Could not revoke storage credentials for Solution '%s'", solution.id)
-            raise
 
         # Build and commit the complete runtime contract before creating the workload.
         runtime_secrets = {
             **runtime_secrets,
             "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": infrastructure.database.host,
+            "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
             "LONGLINK_DATABASE_NAME": organization.id.hex,
             "LONGLINK_DATABASE_PASSWORD": database_password,
-            "LONGLINK_DATABASE_PORT": str(infrastructure.database.port),
+            "LONGLINK_DATABASE_PORT": "5432",
             "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-            "LONGLINK_DATABASE_SSLMODE": infrastructure.database.sslmode.value,
+            "LONGLINK_DATABASE_SSLMODE": "require",
             "LONGLINK_DATABASE_USERNAME": database_username,
-            "LONGLINK_STORAGE_BUCKET": bucket,
-            "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.storage.endpoint_url,
-            "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+            "LONGLINK_STORAGE_BUCKET": bucket.name,
+            "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.compute.storage_endpoint,
+            "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
             "LONGLINK_STORAGE_PREFIX": prefix,
-            "LONGLINK_STORAGE_REGION": object_storage.region,
-            "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+            "LONGLINK_STORAGE_REGION": "us-east-1",
+            "LONGLINK_STORAGE_USERNAME": credentials.access_key,
         }
 
     # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
@@ -118,12 +109,24 @@ async def deploy(revision_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
+        bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+        await storage.authorize(bucket.storage, bucket.name, organization.id)
         await cluster.solutions.apply(
             solution.id,
-            organization.id.hex,
+            f"longlink-compute-{organization.id.hex}",
             revision.image,
-            {**revision.envs, **runtime_secrets},
+            {
+                **revision.envs,
+                **runtime_secrets,
+                "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
+                **(
+                    {"LONGLINK_STORAGE_CERTIFICATE": infrastructure.compute.storage_certificate}
+                    if infrastructure.compute.storage_certificate
+                    else {}
+                ),
+            },
             revision_id=revision.id,
+            min_scale=revision.min_scale,
             migrate=revision.deployed_at is None,
         )
 
@@ -140,6 +143,20 @@ async def deploy(revision_id: UUID) -> None:
 
 
 async def delete(solution_id: UUID) -> None:
+    """Protect workload and schema cleanup from database hibernation."""
+
+    async with session_scope() as session:
+        solution = await session.get(Solution, solution_id)
+        if solution is None:
+            return
+        infrastructure = await organizations.infrastructure(session, solution.organization_id)
+        if infrastructure is None or infrastructure.organization.deleted_at is not None:
+            return
+    async with databases.activity(solution.organization_id):
+        await _delete(solution_id)
+
+
+async def _delete(solution_id: UUID) -> None:
     """Remove one Solution route, runtime, provider state, and tombstone."""
 
     # An absent tombstone means a previous execution completed cleanup.
@@ -157,27 +174,16 @@ async def delete(solution_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
-        await cluster.solutions.delete(solution.id, organization.id.hex)
+        await cluster.solutions.delete(solution.id, f"longlink-compute-{organization.id.hex}")
+        db = await databases.connection(infrastructure, cluster)
+        logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
+        await db.delete_solution_schema(organization.id, solution.id)
 
-    # Provider credentials remain available until Kubernetes confirms no Pod can use them.
-    db = Postgres(
-        infrastructure.database.host,
-        infrastructure.database.port,
-        infrastructure.database.username,
-        infrastructure.database.password,
-        infrastructure.database.sslmode,
-    )
-    object_storage = Exoscale(
-        infrastructure.storage.endpoint_url,
-        infrastructure.storage.access_key_id,
-        infrastructure.storage.secret_access_key,
-    )
-    logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
-    await db.delete_solution_schema(organization.id, solution.id)
-    logger.info("Revoking object storage credentials for Solution %s", solution.id)
-    await object_storage.revoke_solution(solution.id.hex)
-    logger.info("Deleting object storage objects for Solution %s", solution.id)
-    await object_storage.delete_prefix(organization.id.hex, f"solutions/{solution.id.hex}/")
+        # Remove the RGW identity before dropping its policy entries; owner credentials perform cleanup.
+        bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+        await cluster.storage.revoke(solution.id)
+        await storage.authorize(bucket.storage, bucket.name, organization.id)
+        await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 
     # Purge the tombstone only after all external resources are absent.
     logger.info("Purging Solution %s", solution.id)

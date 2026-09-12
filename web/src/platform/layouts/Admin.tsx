@@ -5,7 +5,7 @@ import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
+import { AppWindow, ArrowUpDown, Building2, Users, Wrench } from 'lucide-react';
 
 /** Renders the authorized admin shell with tabbed navigation. */
 export default function Admin() {
@@ -24,8 +24,6 @@ export default function Admin() {
                 { href: '/admin/users', icon: Users, label: 'Users' },
                 { href: '/admin/solutions', icon: AppWindow, label: 'Solutions' },
                 { href: '/admin/organizations', icon: Building2, label: 'Organizations' },
-                { href: '/admin/database', icon: Database, label: 'Database' },
-                { href: '/admin/storage', icon: HardDrive, label: 'Storage' },
                 { href: '/admin/compute', icon: Wrench, label: 'Compute' },
                 { href: '/admin/operations', icon: ArrowUpDown, label: 'Operations' },
             ]}

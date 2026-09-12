@@ -1,7 +1,6 @@
 import asyncio
 from alembic import context
 from sqlalchemy import pool, text
-from longlink.database import urls
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -47,7 +46,7 @@ async def run_async_migrations(database_url: str) -> None:
     connectable = create_async_engine(
         database_url,
         poolclass=pool.NullPool,
-        connect_args=urls.connect_args(database_url),
+        connect_args=config.attributes["connect_args"],
     )
     try:
         async with connectable.connect() as connection:

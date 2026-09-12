@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import type { OrganizationSolutionSummary, SolutionUpdateCheck } from '@/lib/generated/platform-api-v1/types.gen';
 
 const environmentChangeSchema = z.discriminatedUnion('action', [
@@ -51,28 +52,37 @@ export default function UpdateSolution({
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
     const currentLabel = candidate.current_image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
     const candidateLabel = candidate.image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
-    const schema = z.object({ envs: z.record(z.string(), environmentChangeSchema) }).superRefine((value, ctx) => {
-        // Existing required secrets remain valid without exposing or resubmitting their values.
-        for (const { name, required } of environments) {
-            if (
-                isMissingRequiredEnv(value.envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
-            ) {
-                ctx.addIssue({ code: 'custom', path: ['envs', name], message: 'Required' });
+    const schema = z
+        .object({ alwaysOn: z.boolean(), envs: z.record(z.string(), environmentChangeSchema) })
+        .superRefine((value, ctx) => {
+            // Existing required secrets remain valid without exposing or resubmitting their values.
+            for (const { name, required } of environments) {
+                if (
+                    isMissingRequiredEnv(
+                        value.envs[name] ?? { action: 'untouched' },
+                        required,
+                        configured.includes(name)
+                    )
+                ) {
+                    ctx.addIssue({ code: 'custom', path: ['envs', name], message: 'Required' });
+                }
             }
-        }
-    });
+        });
     const form = useForm<z.infer<typeof schema>>({
-        defaultValues: { envs: Object.fromEntries(environments.map(({ name }) => [name, { action: 'untouched' }])) },
+        defaultValues: {
+            alwaysOn: candidate.min_scale === 1,
+            envs: Object.fromEntries(environments.map(({ name }) => [name, { action: 'untouched' }])),
+        },
         resolver: zodResolver(schema),
         mode: 'onChange',
     });
     const update = useMutation({
-        mutationFn: (patch: Record<string, string | null>) =>
+        mutationFn: (patch: { envs: Record<string, string | null>; min_scale: 0 | 1 }) =>
             api(`/api/v1/solutions/${solution.id}/update`, {
                 method: 'POST',
                 timeout: 25000,
                 json: {
-                    envs: patch,
+                    ...patch,
                     expected_revision_id: candidate.revision_id,
                 },
             }),
@@ -89,6 +99,11 @@ export default function UpdateSolution({
     });
     const busy = form.formState.isSubmitting || update.isPending;
     const envs = useWatch({ control: form.control, name: 'envs' });
+    const alwaysOn = useWatch({ control: form.control, name: 'alwaysOn' });
+    const changed =
+        candidate.available ||
+        alwaysOn !== (candidate.min_scale === 1) ||
+        Object.values(envs).some((change) => change.action !== 'untouched');
     const missing = environments.some(({ name, required }) =>
         isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
     );
@@ -107,7 +122,7 @@ export default function UpdateSolution({
                 }
 
                 // Await the lifecycle callbacks; the mutation cache reports failures.
-                await update.mutateAsync(patch).catch(() => {
+                await update.mutateAsync({ envs: patch, min_scale: value.alwaysOn ? 1 : 0 }).catch(() => {
                     // Consume the rejection without ending form submission before the mutation settles.
                 });
             })();
@@ -145,6 +160,22 @@ export default function UpdateSolution({
                             New {currentLabel === candidateLabel ? candidate.image : candidateLabel}
                         </Text>
                     </Stack>
+                    <Controller
+                        control={form.control}
+                        name="alwaysOn"
+                        render={({ field }) => (
+                            <CheckboxInput
+                                label="Always on"
+                                description="Keep at least one instance running. Uses resources while idle and prevents the organization database from hibernating."
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                ref={field.ref}
+                                htmlName={field.name}
+                                isDisabled={busy}
+                            />
+                        )}
+                    />
                     {environments.map(({ name, required, description }) => {
                         const isConfigured = configured.includes(name);
                         return (
@@ -216,7 +247,7 @@ export default function UpdateSolution({
                     label={busy ? 'Updating...' : 'Update solution'}
                     variant="primary"
                     isLoading={busy}
-                    isDisabled={busy || missing}
+                    isDisabled={busy || missing || !changed}
                 />
             </Stack>
         </Dialog>

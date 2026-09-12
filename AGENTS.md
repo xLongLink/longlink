@@ -1,57 +1,63 @@
 # LongLink Agent Guide
 
 - Project is in _MVP mode - No need for backwards compatibility - Collapse migrations_
+- Use the cleanup skill located at `./opencode/skills/cleanup`
 - Focus on building complex things as simple as possible. Find ways to reduce complexity when solving problems
-- Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
-- For a small, fixed number of collection mutations, prefer explicit single-item additions over constructing a temporary collection for a bulk update.
-- For bounded, infrequent work, prefer clear iteration over query-count optimizations unless measurement shows a material cost.
 - Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.
 
-## Project Architecture
 
-This section is a navigation aid, not a specification. The code is the source of truth for current behavior, contracts, configuration, and commands. Update this overview when architectural boundaries change; do not duplicate implementation details here.
+## Terminology
 
-### Terminology
+- Platform: Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
+- Solution: Simplest possible representation of a business process expressed as code. 
+- View: XML interface definition rendered by the shared Web runtime.
 
-- **LongLink (Platform):** Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
-- **Solution:** Business application owning its Python/FastAPI logic, models, migrations, and Views.
-- **View:** XML interface definition rendered by the shared Web runtime.
-- **Organization:** Membership and resource boundary grouping users and Solutions.
+## Architecture
 
-### Packages
+```text
+LongLink
+├── Control plane
+│   ├── Web + API → authentication, memberships, Views, request proxy
+│   ├── Operation worker → provisioning and deployments
+│   ├── Database coordinator → activity, wake/sleep, identity sync
+│   └── Platform database → desired state and operation history
+├── Container registry → Solution images
+├── Compute registration → Kubernetes cluster
+│   ├── Shared infrastructure
+│   │   ├── Kourier → HTTPS routing
+│   │   ├── Knative → application lifecycle and scaling
+│   │   ├── CloudNativePG → PostgreSQL lifecycle
+│   │   └── Rook/Ceph → S3 object storage and identities
+│   └── Organization (many per cluster)
+│       ├── Compute namespace
+│       │   └── Solution (many per Organization)
+│       │       ├── Knative Service → FastAPI + SDK Pods
+│       │       └── Migration Jobs
+│       └── Database namespace
+│           └── PostgreSQL cluster + persistent volumes
+│               ├── Shared identity schema
+│               └── Schema + credentials per Solution
+└── Organization storage namespace → bucket claim and owner credentials
+    └── Organization bucket → prefix and scoped Ceph identity per Solution
+```
 
-- **API (`api/`):** FastAPI control plane for authentication, memberships, infrastructure registrations, lifecycle operations, and authorized Solution proxying. Routes validate requests, database services manage Platform state, and durable operations coordinate infrastructure changes.
-- **SDK (`sdk/`):** Python application toolkit, not a Platform API client. Integrates with Solution-owned FastAPI apps, supplies request identity and database/storage context, validates and serves XML views, and provides scaffolding, migrations, and container-build tooling. Solutions run as separate services, not in-process Platform plugins.
-- **Web (`web/`):** React/TypeScript Platform interface and shared XML view renderer. Builds two browser applications: the Platform UI embedded in the API and a standalone Solution shell embedded in the SDK. Python serves the production assets; public Platform pages are prerendered at build time.
 
-### Main Flows
+## Boundaries and Contracts
 
-1. **Deploy:** SDK tooling packages a Solution as a container image. The API records the requested deployment and queues a durable operation to provision scoped resources, run Solution migrations, and start its Kubernetes workload.
-2. **Use:** Browser requests pass through the Platform API, which checks the session and organization permissions before proxying to the Solution with signed user identity. The Solution executes business logic using its database/storage context. Business-specific authorization remains the Solution's responsibility.
-3. **Render:** Web loads the Solution's view manifest, matches a browser route, fetches XML, and renders registered React components. XML state, queries, and actions drive interaction with Solution endpoints. Hosted views use the API proxy; standalone SDK views call the Solution directly. Browser navigation paths and backend request paths are separate.
+- Platform metadata is separate from Solution business data.
+- Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
+- Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
+- Organization databases may hibernate when idle; activity wakes them and synchronizes shared users before work begins.
+- Diagnostics use cached data without waking databases, and storage allocation is reported per database instance.
+- Platform users and memberships flow one way into the Organization's shared schema.
+- Platform, shared-schema, and Solution migrations have separate owners.
+- OpenAPI generates Web API contracts; SDK XSD schemas define XML Views implemented by Web.
+- Edit source contracts, not generated files, and keep implementations aligned.
+- API and SDK define safe errors; shared Web reports API failures while local UI handles interaction recovery.
+- XML permits declarative UI only, and frontend access controls never replace backend authorization.
 
-### Boundaries and Contracts
-
-- Platform metadata is separate from Solution business data. Organizations receive a Kubernetes namespace, PostgreSQL database, and storage bucket; Solutions receive scoped schemas, credentials, and storage prefixes within them.
-- The Platform projects user/membership data into an organization-shared schema for Solutions to read. This is one-way synchronization, not a cross-database transaction. Platform, shared-schema, and Solution migrations have distinct owners.
-- API OpenAPI definitions generate Web TypeScript/Zod contracts. SDK XSD schemas define and document XML views, while Web implements their browser behavior. Contract changes must stay aligned across packages; generated files are not the editing source.
-- API and SDK defaults supply safe error messages and HTTP statuses. The shared Web root reports API failures centrally; local UI owns validation, success behavior, and recovery rather than API error notifications.
-- XML is a restricted declarative UI language, not arbitrary HTML or JavaScript. Frontend access controls do not replace backend authorization, and SDK identity context does not independently enforce all access rules.
-
-### Source Entry Points
-
-| Concern                                 | Start Here                                                                 |
-| --------------------------------------- | -------------------------------------------------------------------------- |
-| API composition and request boundaries  | `api/main.py`, `api/src/routes/v1/`                                        |
-| Platform state and deployment lifecycle | `api/src/database/services/`, `api/src/operations/`, `api/src/kubernetes/` |
-| Hosted Solution authorization           | `api/src/routes/v1/proxy.py`                                               |
-| SDK integration and request context     | `sdk/longlink/app.py`, `sdk/longlink/context.py`                           |
-| Solution tooling                        | `sdk/longlink/cli/`                                                        |
-| Web targets and Platform routes         | `web/react-router.config.ts`, `web/src/platform/routes.ts`                 |
-| Shared View runtime                     | `web/src/components/Solution.tsx`, `web/src/xml/`                          |
-| Web API contract generation             | `web/openapi-ts.config.ts`                                                 |
 
 ## Python Guidelines
 
@@ -73,20 +79,18 @@ This section is a navigation aid, not a specification. The code is the source of
 - Store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
 - Use `collections.abc.Sequence` for read-only query result return types instead of `list`.
 
-### FastAPI & Pydantic
-
 - Declare `response_model` on FastAPI routes, let FastAPI validating response model.
 - Group Pydantic fields into commented sections from shortest name to longest name within each section.
 
-### Comments
-
 - Add a docstring to every Python function.
 - Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
+
 
 ### Testing
 
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
+
 
 ## JavaScript / TypeScript Guidelines
 
@@ -113,6 +117,7 @@ This section is a navigation aid, not a specification. The code is the source of
 - Run formatting, linting, type checking, and relevant existing tests, then review the implementation for further simplification.
 - Use only `lucide-react` icons, do not use `Astryx` icons
 - Each page shall be simple and standalone, prefer duplication of code where clarity benefict.
+
 
 ## Astryx Guidelines
 
@@ -141,6 +146,7 @@ template --list page + block recipes
 docs <topic> color, elevation, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling, theme, tokens, typography
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
+
 
 ## Commit Message Structure
 

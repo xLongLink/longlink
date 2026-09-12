@@ -1,8 +1,9 @@
+import ssl
 import json
 import yaml
 from uuid import UUID
-from typing import Annotated, cast
-from pydantic import Field, BaseModel, ConfigDict, BeforeValidator
+from typing import Literal, Annotated, cast
+from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 from src.models.statuses import Status
 
 
@@ -86,6 +87,70 @@ class ComputeRegistryCreate(BaseModel):
     # Connection
     kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
 
+    # Gateway
+    gateway_url: str = Field(max_length=512)
+    gateway_certificate: str | None = Field(default=None, max_length=65536)
+
+    # Database
+    database_size_gib: int = Field(default=10, ge=1, le=65536, strict=True)
+    database_instances: int = Field(default=1, ge=1, le=3, strict=True)
+    database_storage_class: str = Field(
+        min_length=1,
+        max_length=253,
+        pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+    )
+
+    # Object storage
+    storage_class: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$")
+    storage_endpoint: str = Field(max_length=512)
+    storage_size_gib: int = Field(default=100, ge=10, le=65536, strict=True)
+    storage_instances: Literal[1, 3] = 3
+    storage_certificate: str | None = Field(default=None, max_length=65536)
+
+    @field_validator("gateway_url", "storage_endpoint")
+    @classmethod
+    def validate_gateway_url(cls, value: str) -> str:
+        """Require a credential-free HTTPS gateway origin."""
+
+        # Keep proxy paths separate from the registered TLS endpoint.
+        url = HttpUrl(value)
+        if (
+            url.scheme != "https"
+            or url.username is not None
+            or url.password is not None
+            or url.path not in (None, "/")
+            or url.query is not None
+            or url.fragment is not None
+        ):
+            raise ValueError("Gateway URL must be an HTTPS origin without credentials, path, query, or fragment")
+        return str(url).rstrip("/")
+
+    @field_validator("gateway_certificate", "storage_certificate")
+    @classmethod
+    def validate_gateway_certificate(cls, value: str | None) -> str | None:
+        """Validate an optional PEM trust bundle without accepting private keys."""
+
+        # Let the TLS library validate the same certificate data used by the proxy.
+        if value is None:
+            return None
+        if "PRIVATE KEY" in value or "-----BEGIN CERTIFICATE-----" not in value:
+            raise ValueError("Gateway certificate must be a PEM CA certificate bundle")
+        try:
+            ssl.create_default_context(cadata=value)
+        except ssl.SSLError as exc:
+            raise ValueError("Gateway certificate must be a valid PEM CA certificate bundle") from exc
+        return value
+
+    @field_validator("database_storage_class", "storage_class")
+    @classmethod
+    def validate_storage_class(cls, value: str) -> str:
+        """Require DNS labels within the Kubernetes storage class name."""
+
+        # Kubernetes DNS subdomain labels are limited to 63 characters each.
+        if any(len(label) > 63 for label in value.split(".")):
+            raise ValueError("Storage class DNS labels must not exceed 63 characters")
+        return value
+
 
 class ComputeRegistryResponse(BaseModel):
     """Describe one compute backend without exposing its private connection state or secrets."""
@@ -99,7 +164,18 @@ class ComputeRegistryResponse(BaseModel):
     name: str
 
     # Gateway
-    gateway_url: str | None
+    gateway_url: str
+
+    # Database
+    database_size_gib: int
+    database_instances: int
+    database_storage_class: str
+
+    # Object storage
+    storage_class: str
+    storage_endpoint: str
+    storage_size_gib: int
+    storage_instances: int
 
     # State
     status: Status

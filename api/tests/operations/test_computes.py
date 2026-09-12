@@ -1,205 +1,106 @@
 import pytest
-from uuid import UUID
+from conftest import StorageKubernetes
 from factories import create_compute, claim_operation, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.operations import OperationStatus
-from src.kubernetes.gateway import GatewayTLS, GatewayClientTLS
 from src.database.models.computes import ComputeRegistry
 
 
-@pytest.mark.parametrize(
-    ("address", "expected_url"),
-    [
-        pytest.param("gateway.example", "https://gateway.example", id="hostname"),
-        pytest.param("192.0.2.1", "https://192.0.2.1", id="ipv4"),
-        pytest.param("2001:db8::1", "https://[2001:db8::1]", id="compressed-ipv6"),
-        pytest.param("2001:0db8:0000:0000:0000:0000:0000:0001", "https://[2001:db8::1]", id="expanded-ipv6"),
-    ],
-)
-def test_gateway_url_normalizes_published_addresses(address: str, expected_url: str) -> None:
-    """Return valid HTTPS URLs for controller-published gateway addresses."""
-
-    # Act
-    url = compute_operations.gateway_url(address)
-
-    # Assert
-    assert url == expected_url
-
-
 async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Create the shared Envoy Gateway and preserve published access during reconciliation."""
+    """Reconcile shared controllers while preserving the operator's gateway connection."""
 
-    compute_registry = await create_compute()
-    generation = 0
+    # Arrange
+    registry = await create_compute()
+    connections: list[tuple[str, str | None]] = []
 
-    def generate_tls(compute_id: UUID, address: str) -> GatewayClientTLS:
-        """Return distinct generated TLS material."""
+    class Gateway:
+        """Capture shared-controller reconciliation."""
 
-        nonlocal generation
-        assert compute_id == compute_registry.id
-        generation += 1
-        return GatewayClientTLS(
-            ca_certificate=f"ca-{generation}",
-            server_certificate=f"server-certificate-{generation}",
-            server_private_key=f"server-private-key-{generation}",
-            client_certificate=f"client-certificate-{generation}",
-            client_private_key=f"client-private-key-{generation}",
-        )
+        async def apply(self, url: str, certificate: str | None) -> None:
+            """Record the configured gateway connection."""
 
-    def generate_bootstrap_tls(compute_id: UUID) -> GatewayTLS:
-        """Return server-only bootstrap TLS material."""
+            connections.append((url, certificate))
 
-        assert compute_id == compute_registry.id
-        return GatewayTLS(
-            ca_certificate="bootstrap-ca",
-            server_certificate="bootstrap-server-certificate",
-            server_private_key="bootstrap-server-private-key",
-        )
-
-    class FakeGateway:
-        """Capture gateway resource operations."""
-
-        async def apply(self, tls: GatewayTLS | None = None) -> str:
-            """Return the shared Gateway endpoint."""
-
-            return "192.0.2.1"
-
-        async def replace_tls(self, tls: GatewayTLS) -> None:
-            """Accept the final endpoint-bound server identity."""
-
-    class FakeKubernetes:
-        """Expose the fake gateway abstraction."""
+    class Kubernetes:
+        """Expose the shared-controller boundary."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Validate the selected compute registry."""
+            """Validate the selected Compute."""
 
-            assert kubeconfig == compute_registry.kubeconfig
-            self.gateway = FakeGateway()
+            assert kubeconfig == registry.kubeconfig
+            self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
-            """Close the fake Kubernetes client."""
+            """Close the provider client."""
 
-    monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
-    monkeypatch.setattr(compute_operations, "generate_gateway_tls", generate_tls)
-    monkeypatch.setattr(compute_operations, "generate_gateway_bootstrap_tls", generate_bootstrap_tls)
-    await queue_operation(target_id=compute_registry.id)
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    await queue_operation(target_id=registry.id)
     claimed = await claim_operation()
     assert claimed is not None
 
+    # Act
     completed = await execute(claimed)
-
-    # Reconcile the Compute again after a deployment schedules another pass.
-    await queue_operation(target_id=compute_registry.id)
+    await queue_operation(target_id=registry.id)
     recreated_claim = await claim_operation()
     assert recreated_claim is not None
     recreated = await execute(recreated_claim)
 
+    # Assert
     assert completed.status == OperationStatus.completed
     assert recreated.status == OperationStatus.completed
+    assert connections == [(registry.gateway_url, registry.gateway_certificate)] * 2
     async with session_scope() as session:
-        refreshed = await session.get(ComputeRegistry, compute_registry.id)
+        refreshed = await session.get(ComputeRegistry, registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
-    assert refreshed.gateway_url == "https://192.0.2.1"
-    assert refreshed.gateway_certificate == "ca-1"
-    assert refreshed.gateway_client_identity == "client-certificate-1\nclient-private-key-1"
+    assert refreshed.gateway_url == registry.gateway_url
+    assert refreshed.gateway_certificate == registry.gateway_certificate
 
 
 async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Make a compute and its single Operation terminal after a provider error."""
-
-    compute_registry = await create_compute()
-
-    class FailingGateway:
-        """Raise a transient endpoint provider error."""
-
-        async def apply(self, tls: GatewayTLS | None = None) -> str:
-            """Fail shared Gateway creation after entering Kubernetes."""
-
-            raise RuntimeError("gateway unavailable")
-
-    class FailingKubernetes:
-        """Expose the failing gateway abstraction."""
-
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            self.gateway = FailingGateway()
-
-        async def aclose(self) -> None:
-            """Close the fake Kubernetes client."""
-
-    monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
-    await queue_operation(target_id=compute_registry.id)
-    claimed = await claim_operation()
-    assert claimed is not None
-
-    failed = await execute(claimed)
-
-    assert failed.status == OperationStatus.failed
-    async with session_scope() as session:
-        refreshed = await session.get(ComputeRegistry, compute_registry.id)
-    assert refreshed is not None
-    assert refreshed.status == Status.failed
-
-
-async def test_create_running_compute_rejects_endpoint_change_without_rotating_credentials(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Keep published mTLS credentials when the Gateway endpoint changes."""
+    """Make a Compute and its Operation terminal after a provider error."""
 
     # Arrange
     registry = await create_compute()
-    async with session_scope() as session:
-        persisted = await session.get(ComputeRegistry, registry.id)
-        assert persisted is not None
-        persisted.status = Status.running
-        persisted.gateway_url = "https://192.0.2.1"
-        persisted.gateway_certificate = "certificate"
-        persisted.gateway_client_identity = "client-certificate\nclient-private-key"
-        await session.commit()
 
     class Gateway:
-        """Return a different published endpoint."""
+        """Fail shared-controller reconciliation."""
 
-        async def apply(self, tls: GatewayTLS | None = None) -> str:
-            """Publish an endpoint that differs from the persisted value."""
+        async def apply(self, url: str, certificate: str | None) -> None:
+            """Report the provider failure."""
 
-            assert tls is None
-            return "192.0.2.2"
-
-        async def replace_tls(self, tls: GatewayTLS) -> None:
-            """Reject unexpected credential rotation."""
-
-            raise AssertionError("TLS must not rotate")
+            raise RuntimeError("gateway unavailable")
 
     class Kubernetes:
-        """Expose the endpoint-changing Gateway."""
+        """Expose the failing provider."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Validate the selected compute registry."""
+            """Initialize the provider boundary."""
 
-            assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
-            """Close the fake Kubernetes client."""
+            """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    await queue_operation(target_id=registry.id)
+    claimed = await claim_operation()
+    assert claimed is not None
 
     # Act
-    reason = await compute_operations.create(registry.id)
+    failed = await execute(claimed)
 
     # Assert
-    assert reason == "Gateway endpoint changed and requires explicit credential rotation"
+    assert failed.status == OperationStatus.failed
     async with session_scope() as session:
-        persisted = await session.get(ComputeRegistry, registry.id)
-    assert persisted is not None
-    assert persisted.status == Status.running
-    assert persisted.gateway_url == "https://192.0.2.1"
-    assert persisted.gateway_certificate == "certificate"
-    assert persisted.gateway_client_identity == "client-certificate\nclient-private-key"
+        refreshed = await session.get(ComputeRegistry, registry.id)
+    assert refreshed is not None
+    assert refreshed.status == Status.failed
 
 
 async def test_create_missing_compute_skips_gateway_reconciliation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -231,39 +132,34 @@ async def test_create_missing_compute_skips_gateway_reconciliation(monkeypatch: 
 
 
 async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Do not publish Gateway credentials after the Compute lifecycle changes."""
+    """Do not publish readiness after the Compute lifecycle changes concurrently."""
 
     # Arrange
     registry = await create_compute()
 
     class Gateway:
-        """Change the Compute lifecycle after Gateway provisioning."""
+        """Change the Compute lifecycle during reconciliation."""
 
-        async def apply(self, tls: GatewayTLS | None = None) -> str:
-            """Record a concurrent lifecycle change before publication."""
+        async def apply(self, url: str, certificate: str | None) -> None:
+            """Record the concurrent lifecycle change."""
 
-            assert tls is not None
             async with session_scope() as session:
                 persisted = await session.get(ComputeRegistry, registry.id)
                 assert persisted is not None
-                persisted.status = Status.running
+                persisted.status = Status.failed
                 await session.commit()
-            return "192.0.2.1"
-
-        async def replace_tls(self, tls: GatewayTLS) -> None:
-            """Accept endpoint-bound TLS before publication is rejected."""
 
     class Kubernetes:
-        """Expose the lifecycle-changing Gateway."""
+        """Expose the lifecycle-changing provider."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Validate the selected compute registry."""
+            """Initialize the provider boundary."""
 
-            assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
-            """Close the fake Kubernetes client."""
+            """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 
@@ -271,11 +167,10 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
     reason = await compute_operations.create(registry.id)
 
     # Assert
-    assert reason == "Compute gateway state was not recorded"
+    assert reason == "Compute readiness was not recorded"
     async with session_scope() as session:
         persisted = await session.get(ComputeRegistry, registry.id)
     assert persisted is not None
-    assert persisted.status == Status.running
-    assert persisted.gateway_url is None
-    assert persisted.gateway_certificate is None
-    assert persisted.gateway_client_identity is None
+    assert persisted.status == Status.failed
+    assert persisted.gateway_url == registry.gateway_url
+    assert persisted.gateway_certificate == registry.gateway_certificate

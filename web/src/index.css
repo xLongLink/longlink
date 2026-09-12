@@ -1,6 +1,7 @@
 @layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
 
-@import '@fontsource-variable/caveat';
+@import '@fontsource/kalam';
+@import '@fontsource/kalam/700.css';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import '@astryxdesign/core/reset.css';
@@ -26,8 +27,8 @@
     }
 
     .handwritten-diagram {
-        --font-family-body: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
-        --font-family-heading: 'Caveat Variable', 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-body: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
+        --font-family-heading: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
     }
 }
 

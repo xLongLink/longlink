@@ -436,7 +436,7 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.status_code == 200
     assert response.json() == ["line 1", "line 2"]
     assert captured["logs"] == app.id
-    assert captured["namespace"] == organization.id.hex
+    assert captured["namespace"] == f"longlink-compute-{organization.id.hex}"
 
 
 @pytest.mark.parametrize(

@@ -21,9 +21,7 @@ Focus only on the test cases. Do not change production code.
 Run coverage from the repository root:
 
 ```bash
-make api:test  # API: main.py and src
-make sdk:test  # SDK: longlink
-make test      # Both packages
+make test  # API, SDK, and Web
 ```
 
 ## Testing Guidelines

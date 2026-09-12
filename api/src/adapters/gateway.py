@@ -1,6 +1,5 @@
 import ssl
 import httpx2
-import tempfile
 from uuid import UUID
 from longlink import identity
 from dataclasses import dataclass
@@ -24,22 +23,28 @@ class GatewayResponse:
             await self.client.aclose()
 
 
-class GatewayClient:
-    """Send authenticated Platform requests to one compute gateway."""
+class Gateway:
+    """Send authorized Platform requests through the IP-restricted Kourier gateway."""
 
-    def __init__(self, url: str, ca_certificate: str, client_identity: str, identity_secret: str) -> None:
+    def __init__(self, url: str, certificate: str | None = None) -> None:
         """Initialize one gateway connection from persisted compute state."""
 
         self._url = url.rstrip("/")
-        self._ca_certificate = ca_certificate
-        self._client_identity = client_identity
-        self._identity_secret = identity_secret
+        self._certificate = certificate
+
+    def client(self) -> httpx2.AsyncClient:
+        """Create the operation-owned, hostname-verified gateway transport."""
+
+        tls = ssl.create_default_context(cadata=self._certificate)
+        return httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
 
     async def request(
         self,
         *,
         solution_id: UUID,
+        organization_id: UUID,
         user_id: UUID,
+        identity_secret: str,
         method: str,
         path: str,
         query: str,
@@ -49,23 +54,14 @@ class GatewayClient:
         """Start one streamed request through the authenticated solution route."""
 
         headers = {
-            "x-longlink-solution-id": str(solution_id),
-            "x-longlink-identity": identity.create_identity_token(user_id, self._identity_secret),
+            "host": f"solution-{solution_id}.longlink-compute-{organization_id.hex}.svc.cluster.local",
+            "x-longlink-identity": identity.create_identity_token(user_id, identity_secret),
         }
         if content_type is not None:
             headers["content-type"] = content_type
 
-        # Authenticate the Platform using its client identity and trust only this Gateway CA.
-        tls = ssl.create_default_context(cadata=self._ca_certificate)
-        with tempfile.NamedTemporaryFile(mode="w") as identity_file:
-            identity_file.write(self._client_identity)
-            identity_file.flush()
-            tls.load_cert_chain(identity_file.name)
-        client = httpx2.AsyncClient(
-            follow_redirects=False,
-            timeout=300.0,
-            verify=tls,
-        )
+        # Verify the gateway hostname independently of the Knative routing authority.
+        client = self.client()
         try:
             response = await client.send(
                 client.build_request(method, f"{self._url}/{path}{'?' + query if query else ''}", content=content, headers=headers),
