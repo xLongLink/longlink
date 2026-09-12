@@ -1,5 +1,4 @@
 import pytest
-from uuid import uuid4
 from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
 from src.database.models.users import User
@@ -37,62 +36,13 @@ async def test_platform_user_cannot_delete_compute_registry(clients: tuple[Async
 
     # Act
     response = await clients[1].delete(f"/api/v1/computes/{compute.id}")
-    get_response = await clients[0].get(f"/api/v1/computes/{compute.id}")
+    list_response = await clients[0].get("/api/v1/computes")
 
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-    assert get_response.status_code == 200
-
-
-async def test_platform_user_cannot_read_compute_registry_details(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
-    """Reject registered backend detail reads from non-administrators."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    compute = infrastructure.compute
-
-    # Act
-    response = await clients[1].get(f"/api/v1/computes/{compute.id}")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
-
-
-async def test_compute_endpoint_returns_registered_backend(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
-    """Return the registered Compute without its secrets."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    compute = infrastructure.compute
-    expected_fields = {"gateway_url": "https://gateway.example", "status": "running"}
-    secret_fields = ["kubeconfig"]
-
-    # Act
-    get_response = await clients[0].get(f"/api/v1/computes/{compute.id}")
-
-    # Assert
-    assert get_response.status_code == 200
-    payload = get_response.json()
-    assert payload["id"] == str(compute.id)
-    assert payload["name"] == compute.name
-    assert {field: payload[field] for field in expected_fields} == expected_fields
-    assert all(field not in payload for field in secret_fields)
-    assert all(str(getattr(compute, secret_field)) not in get_response.text for secret_field in secret_fields)
-
-
-async def test_compute_endpoint_returns_resource_specific_not_found_error(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Return the resource-specific error when an administrator requests an unknown registry."""
-
-    # Act
-    response = await clients[0].get(f"/api/v1/computes/{uuid4()}")
-
-    # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Compute registry not found"}
+    assert list_response.status_code == 200
+    assert str(compute.id) in {item["id"] for item in list_response.json()["items"]}
 
 
 async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
@@ -194,55 +144,39 @@ async def test_registry_creation_rejects_duplicate_name(
     assert duplicate_response.json() == {"detail": duplicate_error}
 
 
-@pytest.mark.parametrize(
-    ("path", "registry", "not_found_detail"),
-    [
-        pytest.param("computes", "compute", "Compute registry not found", id="compute"),
-    ],
-)
-async def test_registry_deletes_unused_registration(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], path: str, registry: str, not_found_detail: str
-) -> None:
-    """Delete an unassigned registry and reject later reads or deletion."""
+async def test_compute_registry_deletes_unused_registration(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
+    """Delete an unassigned Compute registry and reject repeated deletion."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
-    registry_id = getattr(infrastructure, registry).id
+    registry_id = infrastructure.compute.id
 
     # Act
-    delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
-    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
-    repeat_delete_response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
+    delete_response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
+    list_response = await clients[0].get("/api/v1/computes")
+    repeat_delete_response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
 
     # Assert
     assert delete_response.status_code == 204
-    assert get_response.status_code == 404
-    assert get_response.json() == {"detail": not_found_detail}
+    assert list_response.status_code == 200
+    assert str(registry_id) not in {item["id"] for item in list_response.json()["items"]}
     assert repeat_delete_response.status_code == 404
 
 
-@pytest.mark.parametrize(
-    ("path", "registry", "error"),
-    [
-        pytest.param("computes", "compute", "Compute registry is used by organizations", id="compute"),
-    ],
-)
-async def test_registry_delete_rejects_assigned_registry(
+async def test_compute_registry_delete_rejects_assigned_registry(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    path: str,
-    registry: str,
-    error: str,
 ) -> None:
-    """Keep registries while an Organization references them."""
+    """Keep a Compute registry while an Organization references it."""
 
     infrastructure = await create_ready_infrastructure()
     await create_organization(users[0], infrastructure=infrastructure)
-    registry_id = getattr(infrastructure, registry).id
+    registry_id = infrastructure.compute.id
 
-    response = await clients[0].delete(f"/api/v1/{path}/{registry_id}")
-    get_response = await clients[0].get(f"/api/v1/{path}/{registry_id}")
+    response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
+    list_response = await clients[0].get("/api/v1/computes")
 
     assert response.status_code == 409
-    assert response.json() == {"detail": error}
-    assert get_response.status_code == 200
+    assert response.json() == {"detail": "Compute registry is used by organizations"}
+    assert list_response.status_code == 200
+    assert str(registry_id) in {item["id"] for item in list_response.json()["items"]}

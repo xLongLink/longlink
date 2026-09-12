@@ -26,10 +26,11 @@ export function useOrganizationMembership(organizationSlug: string) {
         retry: false,
     });
     const membership = membershipQuery.data;
-    const organizationId = membership?.organization.id;
+    const organization = membership?.organization;
+    const organizationId = organization?.id;
     const role = membership?.role ?? null;
 
-    return { organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
+    return { organization, organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
 }
 
 /** Invalidates cached organization solution collections. */

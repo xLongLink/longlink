@@ -68,6 +68,7 @@ export default function OrganizationSettings() {
     const toast = useToast();
     const isSolutionsSectionActive = hash === '#solutions';
     const {
+        organization: membershipOrganization,
         organizationId: membershipOrganizationId,
         role: organizationRole,
         isLoading: isMembershipLoading,
@@ -79,7 +80,7 @@ export default function OrganizationSettings() {
         invitations,
         isLoading: isOrganizationLoading,
         error: organizationError,
-    } = useOrganization(membershipOrganizationId);
+    } = useOrganization(isSolutionsSectionActive ? undefined : membershipOrganizationId);
     const {
         solutions,
         isLoading: isSolutionsLoading,
@@ -89,9 +90,9 @@ export default function OrganizationSettings() {
     // Preserve the page's loading state and details-first error precedence.
     const isLoading = isMembershipLoading || isOrganizationLoading || isSolutionsLoading;
     const error: (Error & { status?: number }) | null = organizationError ?? membershipError ?? solutionsError;
-    const organizationName = organizationDetails?.name ?? organization;
-    const organizationAvatar = organizationDetails?.avatar ?? '';
-    const organizationId = organizationDetails?.id ?? '';
+    const organizationName = organizationDetails?.name ?? membershipOrganization?.name ?? organization;
+    const organizationAvatar = organizationDetails?.avatar ?? membershipOrganization?.avatar ?? '';
+    const organizationId = organizationDetails?.id ?? membershipOrganization?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
     const hasOrganizationSolutionAccess = hasMinimumRole(organizationRole, 'maintain');
     const [logsTargetId, setLogsTargetId] = useState<string | null>(null);
@@ -344,6 +345,10 @@ export default function OrganizationSettings() {
                                     key={organizationId}
                                     organization={organizationDetails}
                                     canManage={canManageOrganization}
+                                    isSaving={updateOrganization.isPending}
+                                    onSave={(databaseIdleSeconds) =>
+                                        updateOrganization.mutateAsync({ database_idle_seconds: databaseIdleSeconds })
+                                    }
                                 />
                             )}
                             <ProgressBar

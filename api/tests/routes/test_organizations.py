@@ -627,53 +627,6 @@ async def test_organization_resource_endpoints_reject_non_members(
     assert response.json() == {"detail": "Access required"}
 
 
-@pytest.mark.parametrize(
-    ("action", "role"),
-    [
-        pytest.param("resume", OrganizationRoles.read, id="resume-read"),
-        pytest.param("resume", OrganizationRoles.write, id="resume-write"),
-        pytest.param("resume", OrganizationRoles.maintain, id="resume-maintain"),
-        pytest.param("hibernate", OrganizationRoles.read, id="hibernate-read"),
-        pytest.param("hibernate", OrganizationRoles.write, id="hibernate-write"),
-        pytest.param("hibernate", OrganizationRoles.maintain, id="hibernate-maintain"),
-    ],
-)
-async def test_database_actions_reject_non_administrator_members(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    action: str,
-    role: OrganizationRoles,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject manual database transitions before invoking the database operation."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=role))
-        await session.commit()
-
-    def unexpected_activity(*_args: object, **_kwargs: object) -> object:
-        """Fail if denied resume starts database activity."""
-
-        raise AssertionError("denied database transition must not start database activity")
-
-    async def unexpected_hibernate(*_args: object, **_kwargs: object) -> bool:
-        """Fail if denied hibernation starts database work."""
-
-        raise AssertionError("denied database transition must not start database hibernation")
-
-    monkeypatch.setattr("src.routes.v1.organizations.databases.activity", unexpected_activity)
-    monkeypatch.setattr("src.routes.v1.organizations.databases.hibernate", unexpected_hibernate)
-
-    # Act
-    response = await clients[1].post(f"/api/v1/organizations/{organization.id}/database/{action}")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Organization administrator access required"}
-
-
 async def test_get_organization_returns_invitations(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

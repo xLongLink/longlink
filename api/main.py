@@ -46,8 +46,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
-    redoc_url="/api/v1/redocs",
-    openapi_url="/api/v1/openapi.json",
+    redoc_url=None,
+    openapi_url=None,
     title="LongLink Platform API",
     version="1.0.0",
 )

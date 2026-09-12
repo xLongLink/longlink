@@ -8,28 +8,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
-const navigation = vi.hoisted(() => ({ destination: '' }));
-
-vi.mock('@/xml', async (importOriginal) => {
-    const xml = await importOriginal<typeof import('@/xml')>();
-
-    return {
-        ...xml,
-        RenderXML: ({
-            ctx,
-        }: {
-            ctx: {
-                scope: { bindings: { params: Record<string, string> } };
-                services: { navigate: (url: string) => void };
-            };
-        }) => (
-            <button onClick={() => ctx.services.navigate(navigation.destination)}>
-                {ctx.scope.bindings.params.issueId}
-            </button>
-        ),
-    };
-});
-
 describe('SolutionRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
     let locationAssignDescriptor: PropertyDescriptor | undefined;
@@ -68,7 +46,7 @@ describe('SolutionRuntime', () => {
         stubFetch((url) =>
             url.endsWith('/views.json')
                 ? jsonResponse([view('index', '/'), view('home', '/home')])
-                : xmlResponse('<Text>Home</Text>')
+                : xmlResponse('<longlink><Text>Home</Text></longlink>')
         );
 
         // Act
@@ -81,6 +59,7 @@ describe('SolutionRuntime', () => {
         await act(async () =>
             vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))
         );
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Home')));
     });
 
     it('renders an empty manifest response', async () => {
@@ -138,7 +117,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return jsonResponse([view('issue', '/issues/:issueId')]);
-            return xmlResponse('<longlink />');
+            return xmlResponse('<longlink><Text>${params.issueId}</Text></longlink>');
         });
 
         // Act
@@ -166,9 +145,8 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
-            return xmlResponse('<longlink />');
+            return xmlResponse('<longlink><Button to="/next">Continue</Button></longlink>');
         });
-        navigation.destination = '/next';
         const output = await renderRuntime('/home');
 
         await act(async () => vi.waitFor(() => expect(output.querySelector('button')).not.toBeNull()));
@@ -189,18 +167,19 @@ describe('SolutionRuntime', () => {
         Object.defineProperty(window.location, 'assign', { configurable: true, value: assign });
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
-            return xmlResponse('<longlink />');
+            return xmlResponse(
+                '<longlink><Action><Link href="https://example.com/next">Continue</Link></Action></longlink>'
+            );
         });
-        navigation.destination = 'https://example.com/next';
         const output = await renderRuntime('/home');
 
-        await act(async () => vi.waitFor(() => expect(output.querySelector('button')).not.toBeNull()));
+        await act(async () => vi.waitFor(() => expect(output.querySelector('a')).not.toBeNull()));
 
         // Act
-        await act(async () => output.querySelector('button')?.click());
+        await act(async () => output.querySelector('a')?.click());
 
         // Assert
-        expect(assign).toHaveBeenCalledWith('https://example.com/next');
+        await act(async () => vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://example.com/next')));
     });
 
     async function renderRuntime(initialPath = '/'): Promise<HTMLDivElement> {

@@ -221,13 +221,32 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     # Arrange
     first_id = UUID("00000000-0000-0000-0000-000000000006")
     second_id = UUID("00000000-0000-0000-0000-000000000007")
+    requests_arrived = 0
+    both_requests_arrived = asyncio.Event()
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def current_user() -> dict[str, str | None]:
+        """Return the audit identity after both requests reach the handler."""
+
+        nonlocal requests_arrived
+        requests_arrived += 1
+
+        if requests_arrived == 2:
+            both_requests_arrived.set()
+
+        await both_requests_arrived.wait()
+        user_id = context._current_identity.get()
+        return {"user_id": str(user_id) if user_id is not None else None}
 
     # Act
-    with TestClient(create_context_application()) as client:
-        first_response, second_response = await asyncio.gather(
-            asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
-            asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),
-        )
+    with TestClient(app) as client:
+        async with asyncio.timeout(1):
+            first_response, second_response = await asyncio.gather(
+                asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
+                asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),
+            )
 
     # Assert
     assert first_response.status_code == 200

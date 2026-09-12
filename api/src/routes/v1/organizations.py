@@ -116,57 +116,6 @@ async def update_organization(
     return organization
 
 
-async def database_admin(
-    organization_id: UUID,
-    user: User = Depends(authuser),
-    session: AsyncSession = Depends(get_session),
-) -> UUID:
-    """Authorize manual database transitions under the Organization admission lock."""
-
-    # Refresh authorization after locking, then release the transaction before external work.
-    organization = await databases.lock(session, organization_id)
-    membership = await session.get(UserOrganization, (user.id, organization_id), populate_existing=True)
-    if (
-        organization is None
-        or organization.deleted_at is not None
-        or membership is None
-        or membership.deleted_at is not None
-        or not roles.atleast(membership.role, OrganizationRoles.admin)
-    ):
-        raise HTTPException(status_code=403, detail="Organization administrator access required")
-    await session.commit()
-    return organization_id
-
-
-@router.post("/organizations/{organization_id}/database/resume", response_model=DatabaseState)
-async def resume_organization_database(organization_id: UUID = Depends(database_admin)):
-    """Wake and synchronize an Organization database without changing its idle policy."""
-
-    # Runtime recovery continues through the scheduler if readiness exceeds this request's wait.
-    try:
-        async with asyncio.timeout(20), databases.activity(organization_id):
-            return DatabaseState.available
-    except Exception as exc:
-        logger.warning("Manual database resume failed for Organization %s: %s", organization_id, type(exc).__name__)
-        raise HTTPException(status_code=503, detail="Database is not ready", headers={"Retry-After": "5"}) from exc
-
-
-@router.post("/organizations/{organization_id}/database/hibernate", response_model=DatabaseState)
-async def hibernate_organization_database(organization_id: UUID = Depends(database_admin)):
-    """Hibernate an eligible database without overriding active work or its always-on policy."""
-
-    # Manual sleep bypasses only the idle timer, never leases, Pods, backups, or the always-on setting.
-    try:
-        async with asyncio.timeout(15 * 60):
-            hibernated = await databases.hibernate(organization_id, manual=True)
-    except Exception as exc:
-        logger.warning("Manual database hibernation failed for Organization %s: %s", organization_id, type(exc).__name__)
-        raise HTTPException(status_code=503, detail="Database hibernation is unavailable", headers={"Retry-After": "5"}) from exc
-    if not hibernated:
-        raise HTTPException(status_code=409, detail="Database must allow hibernation and have no active runtime or backup work")
-    return DatabaseState.hibernated
-
-
 @router.get(
     "/organizations/{organization_id}/database",
     response_model=DatabaseUsage,
