@@ -3,7 +3,7 @@ import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import update
+from sqlalchemy import select, update
 from src.logger import logger
 from src.operations import storage, databases
 from longlink.utils.time import utcnow
@@ -17,14 +17,16 @@ from src.database.models.solutions import Revision, Solution
 async def deploy(revision_id: UUID) -> None:
     """Keep the database awake through schema provisioning, migrations, and readiness."""
 
+    # Admission needs only the organization identity; _deploy refreshes the full target after waking SQL.
     async with session_scope() as session:
-        revision = await session.get(Revision, revision_id)
-        if revision is None:
+        organization_id = await session.scalar(
+            select(col(Solution.organization_id))
+            .join(Revision, col(Revision.solution_id) == col(Solution.id))
+            .where(col(Revision.id) == revision_id, col(Solution.deleted_at).is_(None))
+        )
+        if organization_id is None:
             return
-        solution = await session.get(Solution, revision.solution_id)
-        if solution is None or solution.deleted_at is not None:
-            return
-    async with databases.activity(solution.organization_id):
+    async with databases.activity(organization_id):
         await _deploy(revision_id)
 
 
@@ -60,6 +62,7 @@ async def _deploy(revision_id: UUID) -> None:
         database_password = secrets.token_urlsafe(24)
         cluster = Kubernetes(infrastructure.compute.kubeconfig)
         async with contextlib.aclosing(cluster):
+            await cluster.storage.quota(organization.id, infrastructure.compute)
             bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
             credentials = await cluster.storage.user(solution.id, organization.id)
             database = await databases.connection(infrastructure, cluster)
@@ -109,6 +112,7 @@ async def _deploy(revision_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
+        await cluster.storage.quota(organization.id, infrastructure.compute)
         bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
         await storage.authorize(bucket.storage, bucket.name, organization.id)
         await cluster.solutions.apply(

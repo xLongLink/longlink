@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles, postgres
-from sqlalchemy import Select, func, delete, select
+from sqlalchemy import Select, BigInteger, cast, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -125,6 +125,8 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_certificate,
+                ComputeRegistry.bucket_size_bytes,
+                ComputeRegistry.bucket_max_objects,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -397,13 +399,24 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
 
     # Lock the selected Compute until the Organization assignment is committed.
     compute_assignments = (
-        select(func.count(col(Organization.id)))
-        .where(col(Organization.compute_id) == col(ComputeRegistry.id), col(Organization.deleted_at).is_(None))
-        .scalar_subquery()
+        select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
         select(col(ComputeRegistry.id))
-        .where(col(ComputeRegistry.status) == Status.running)
+        .where(
+            col(ComputeRegistry.status) == Status.running,
+            compute_assignments + 1
+            <= (
+                cast(col(ComputeRegistry.storage_size_gib), BigInteger)
+                * 1024**3
+                * (100 - col(ComputeRegistry.storage_reserve_percent))
+                / 100
+            )
+            / (
+                col(ComputeRegistry.bucket_size_bytes)
+                + cast(col(ComputeRegistry.bucket_max_objects), BigInteger) * col(ComputeRegistry.storage_object_overhead_bytes)
+            ),
+        )
         .order_by(compute_assignments, col(ComputeRegistry.name))
         .limit(1)
         .with_for_update()
@@ -428,13 +441,7 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    # Lock each requested registry while validating the immutable infrastructure assignment.
-    compute_registry_id = await session.scalar(
-        select(col(ComputeRegistry.id)).where(col(ComputeRegistry.id) == compute_id).with_for_update()
-    )
-    if compute_registry_id is None:
-        raise UnavailableError("No compute registry available")
-
+    # Admission locks and validates the immutable Compute assignment before persistence.
     return await _persist(
         session,
         name,
@@ -451,6 +458,21 @@ async def _persist(
     compute_id: UUID,
 ) -> Organization:
     """Persist an Organization after its infrastructure assignment is locked and validated."""
+
+    # A no-op write serializes admission on every supported backend, including SQLite.
+    await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
+    compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
+    if compute is None:
+        raise UnavailableError("No compute registry available")
+
+    # Recount after acquiring the Compute lock: pre-lock selection may have a stale statement snapshot.
+    count = await session.scalar(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
+    reservation = compute.bucket_size_bytes + compute.bucket_max_objects * compute.storage_object_overhead_bytes
+
+    # OSD count equals pool replication, so usable capacity is one OSD, not their raw sum.
+    capacity = compute.storage_size_gib * 1024**3 * (100 - compute.storage_reserve_percent) // 100
+    if count is None or (count + 1) * reservation > capacity:
+        raise UnavailableError("Compute storage capacity is reserved; wait for cleanup or register more capacity")
 
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(

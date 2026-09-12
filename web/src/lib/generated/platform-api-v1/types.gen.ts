@@ -80,6 +80,22 @@ export type ComputeRegistryCreate = {
      * Storage Certificate
      */
     storage_certificate?: string | null;
+    /**
+     * Bucket Size Bytes
+     */
+    bucket_size_bytes: number;
+    /**
+     * Bucket Max Objects
+     */
+    bucket_max_objects: number;
+    /**
+     * Storage Reserve Percent
+     */
+    storage_reserve_percent: number;
+    /**
+     * Storage Object Overhead Bytes
+     */
+    storage_object_overhead_bytes: number;
 };
 
 /**
@@ -128,6 +144,22 @@ export type ComputeRegistryResponse = {
      * Storage Instances
      */
     storage_instances: number;
+    /**
+     * Bucket Size Bytes
+     */
+    bucket_size_bytes: number;
+    /**
+     * Bucket Max Objects
+     */
+    bucket_max_objects: number;
+    /**
+     * Storage Reserve Percent
+     */
+    storage_reserve_percent: number;
+    /**
+     * Storage Object Overhead Bytes
+     */
+    storage_object_overhead_bytes: number;
     status: Status;
 };
 

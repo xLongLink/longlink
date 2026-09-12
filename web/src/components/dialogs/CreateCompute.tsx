@@ -40,6 +40,10 @@ const schema = z.object({
     storage_size_gib: z.number().int().min(10).max(65536),
     storage_instances: z.union([z.literal(1), z.literal(3)]),
     storage_certificate: z.string().max(65536).nullable(),
+    bucket_size_bytes: z.number().int().min(1024).max(70368744177664).multipleOf(1024),
+    bucket_max_objects: z.number().int().min(1).max(2147483647),
+    storage_reserve_percent: z.number().int().min(1).max(99),
+    storage_object_overhead_bytes: z.number().int().min(4096).max(1073741824),
 });
 
 /** Registers one compute target. */
@@ -58,6 +62,10 @@ export default function CreateCompute() {
             storage_size_gib: 100,
             storage_instances: 3,
             storage_certificate: null,
+            bucket_size_bytes: undefined,
+            bucket_max_objects: undefined,
+            storage_reserve_percent: undefined,
+            storage_object_overhead_bytes: undefined,
         },
         endpoint: '/api/v1/computes',
         schema,
@@ -269,6 +277,93 @@ export default function CreateCompute() {
                             rows={4}
                             onBlur={field.onBlur}
                             onChange={(value) => field.onChange(value.trim() === '' ? null : value)}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="bucket_size_bytes"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Organization bucket byte quota"
+                            description="Shared by all Solutions in each Organization. Enter a multiple of 1024 bytes."
+                            units="bytes"
+                            min={1024}
+                            max={70368744177664}
+                            step={1024}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="bucket_max_objects"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Organization bucket object quota"
+                            min={1}
+                            max={2147483647}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_reserve_percent"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Ceph capacity headroom"
+                            description="Unallocated capacity after replication, for recovery, quota lag, and operational overhead."
+                            units="%"
+                            min={1}
+                            max={99}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_object_overhead_bytes"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Reserved overhead per object"
+                            description="Budget for allocation rounding, bucket indexes, and metadata in addition to the byte quota. Size for your workload."
+                            units="bytes"
+                            min={4096}
+                            max={1073741824}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
                             status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}

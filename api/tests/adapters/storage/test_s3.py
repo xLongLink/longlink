@@ -233,3 +233,68 @@ async def test_development_transports_preserve_tls_and_s3_signing(ceph: tuple[Do
     async with routed.client() as client:
         with pytest.raises(httpx2.ConnectError):
             await client.get("https://wrong-host.example/", headers={"Host": "internalkourier"})
+
+
+@pytest.mark.parametrize("limit", ["bytes", "objects"])
+async def test_ceph_bucket_quota_blocks_scoped_writes(ceph: tuple[DockerContainer, str, str], limit: str) -> None:
+    """Enforce aggregate bucket quotas across scoped writers while preserving reads and cleanup."""
+
+    # Configure the same individual-bucket quota that Rook's bucketMaxSize/bucketMaxObjects set.
+    container, endpoint, certificate = ceph
+    bucket = f"quota-{uuid4().hex}"
+    solutions = [uuid4(), uuid4()]
+    owner = S3(endpoint, Credentials("owner-key", "owner-secret"), certificate)
+    async with owner.client() as client:
+        await client.create_bucket(Bucket=bucket)
+    for solution in solutions:
+        result = container.exec(
+            [
+                "radosgw-admin",
+                "user",
+                "create",
+                "--uid",
+                f"solution-{solution.hex}",
+                "--display-name",
+                solution.hex,
+                "--access-key",
+                solution.hex,
+                "--secret-key",
+                "quota-secret",
+                "--max-buckets",
+                "-1",
+            ]
+        )
+        assert result.exit_code == 0, result.output.decode()
+    for operation in ("set", "enable"):
+        result = container.exec(
+            [
+                "radosgw-admin",
+                "quota",
+                operation,
+                "--quota-scope",
+                "bucket",
+                "--bucket",
+                bucket,
+                "--max-size",
+                "8192" if limit == "bytes" else "1048576",
+                "--max-objects",
+                "100" if limit == "bytes" else "1",
+            ]
+        )
+        assert result.exit_code == 0, result.output.decode()
+    await owner.authorize(bucket, solutions)
+
+    # A legitimate first writer succeeds; a sibling cannot evade the shared quota with its own UID.
+    first = S3(endpoint, Credentials(solutions[0].hex, "quota-secret"), certificate)
+    second = S3(endpoint, Credentials(solutions[1].hex, "quota-secret"), certificate)
+    key = f"solutions/{solutions[0].hex}/valid"
+    async with first.client() as client:
+        await client.put_object(Bucket=bucket, Key=key, Body=b"x" * 8192)
+        assert (await client.head_object(Bucket=bucket, Key=key))["ContentLength"] == 8192
+    async with second.client() as client:
+        with pytest.raises(ClientError) as error:
+            await client.put_object(Bucket=bucket, Key=f"solutions/{solutions[1].hex}/excess", Body=b"x" * 8192)
+        assert error.value.response["Error"]["Code"] == "QuotaExceeded"
+    async with first.client() as client:
+        await client.delete_object(Bucket=bucket, Key=key)
+    await owner.delete_prefix(bucket, "")

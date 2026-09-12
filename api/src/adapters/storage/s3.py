@@ -1,9 +1,8 @@
-import ssl
 import json
 import aioboto3
-import tempfile
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
+from itertools import batched
 from contextlib import ExitStack, asynccontextmanager
 from dataclasses import field, dataclass
 from collections.abc import Sequence, AsyncIterator
@@ -13,6 +12,7 @@ from botocore.exceptions import ClientError
 
 if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
+    from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
 
 
 @dataclass(frozen=True)
@@ -46,11 +46,7 @@ class S3:
         with ExitStack() as stack:
             verify: bool | str = True
             if self.certificate is not None:
-                ssl.create_default_context(cadata=self.certificate)
-                certificate = stack.enter_context(tempfile.NamedTemporaryFile(mode="w", suffix=".crt"))
-                certificate.write(self.certificate)
-                certificate.flush()
-                verify = certificate.name
+                verify = stack.enter_context(tls.certificate_file(self.certificate))
             session = aioboto3.Session()
             async with session.client(
                 "s3",
@@ -154,11 +150,25 @@ class S3:
                     for upload in page.get("Uploads", []):
                         await client.abort_multipart_upload(Bucket=bucket, Key=upload["Key"], UploadId=upload["UploadId"])
                 async for page in client.get_paginator("list_object_versions").paginate(Bucket=bucket, Prefix=prefix):
-                    for item in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]:
-                        await client.delete_object(Bucket=bucket, Key=item["Key"], VersionId=item["VersionId"])
+                    versions: list[ObjectIdentifierTypeDef] = [
+                        {"Key": item["Key"], "VersionId": item["VersionId"]}
+                        for item in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]
+                    ]
+                    await self._delete_objects(client, bucket, versions)
                 async for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
-                    for item in page.get("Contents", []):
-                        await client.delete_object(Bucket=bucket, Key=item["Key"])
+                    objects: list[ObjectIdentifierTypeDef] = [{"Key": item["Key"]} for item in page.get("Contents", [])]
+                    await self._delete_objects(client, bucket, objects)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
+
+    @staticmethod
+    async def _delete_objects(client: "S3Client", bucket: str, objects: Sequence["ObjectIdentifierTypeDef"]) -> None:
+        """Delete bounded batches and reject partial failures returned in successful HTTP responses."""
+
+        # S3 accepts at most 1,000 identifiers; an empty page must not issue a deletion request.
+        for batch in batched(objects, 1000):
+            response = await client.delete_objects(Bucket=bucket, Delete={"Objects": list(batch), "Quiet": True})
+            errors = response.get("Errors", [])
+            if errors:
+                raise RuntimeError(f"S3 failed to delete {len(errors)} objects")

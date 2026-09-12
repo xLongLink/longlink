@@ -109,6 +109,12 @@ class ComputeRegistryCreate(BaseModel):
     storage_instances: Literal[1, 3] = 3
     storage_certificate: str | None = Field(default=None, max_length=65536)
 
+    # Storage admission policy (explicit administrator configuration)
+    bucket_size_bytes: int = Field(ge=1024, le=70368744177664, multiple_of=1024, strict=True)
+    bucket_max_objects: int = Field(ge=1, le=2147483647, strict=True)
+    storage_reserve_percent: int = Field(ge=1, le=99, strict=True)
+    storage_object_overhead_bytes: int = Field(ge=4096, le=1073741824, strict=True)
+
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
     def validate_gateway_url(cls, value: str) -> str:
@@ -178,6 +184,12 @@ class ComputeRegistryResponse(BaseModel):
     storage_endpoint: str
     storage_size_gib: int
     storage_instances: int
+
+    # Storage admission policy
+    bucket_size_bytes: int
+    bucket_max_objects: int
+    storage_reserve_percent: int
+    storage_object_overhead_bytes: int
 
     # State
     status: Status

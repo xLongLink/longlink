@@ -5,6 +5,50 @@ from src.models.computes import ComputeRegistryCreate
 pytestmark = pytest.mark.no_db
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("bucket_size_bytes", 0),
+        ("bucket_size_bytes", 1025),
+        ("bucket_size_bytes", None),
+        ("bucket_max_objects", -1),
+        ("bucket_max_objects", True),
+        ("storage_reserve_percent", 0),
+        ("storage_reserve_percent", 100),
+        ("storage_object_overhead_bytes", 0),
+    ],
+)
+def test_storage_policy_requires_explicit_positive_limits(field: str, value: object) -> None:
+    """Accept explicit finite quota policy and reject omitted, unlimited, or imprecise limits."""
+
+    # Validate a real complete registration before changing just one policy input.
+    payload = {
+        "name": "quota",
+        "gateway_url": "https://gateway.example",
+        "database_storage_class": "database",
+        "storage_class": "block",
+        "storage_endpoint": "https://storage.example",
+        "bucket_size_bytes": 1073741824,
+        "bucket_max_objects": 10000,
+        "storage_reserve_percent": 30,
+        "storage_object_overhead_bytes": 65536,
+        "kubeconfig": {
+            "clusters": [{"name": "test", "cluster": {}}],
+            "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+            "users": [{"name": "test", "user": {}}],
+            "current-context": "test",
+        },
+    }
+    assert ComputeRegistryCreate.model_validate(payload).bucket_max_objects == 10000
+    if value is None:
+        del payload[field]
+    else:
+        payload[field] = value
+    with pytest.raises(ValidationError) as error:
+        ComputeRegistryCreate.model_validate(payload)
+    assert any(item["loc"] == (field,) for item in error.value.errors())
+
+
 def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     """Accept YAML kubeconfigs and persist their JSON-compatible mapping."""
 
@@ -12,6 +56,10 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     payload = ComputeRegistryCreate.model_validate(
         {
             "name": "Compute",
+            "bucket_size_bytes": 1073741824,
+            "bucket_max_objects": 10000,
+            "storage_reserve_percent": 30,
+            "storage_object_overhead_bytes": 65536,
             "storage_class": "block-storage",
             "storage_endpoint": "https://storage.example",
             "gateway_url": "https://gateway.example",

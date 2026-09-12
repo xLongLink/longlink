@@ -33,11 +33,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def bucket(self, organization: UUID, compute: object, *, create: bool = False):
+        async def bucket(self, organization: UUID, compute: object):
             """Record bucket creation."""
 
             calls.append("storage")
-            return await super().bucket(organization, compute, create=create)
+            return await super().bucket(organization, compute)
 
     class Organizations:
         async def apply(self, namespace: str) -> None:

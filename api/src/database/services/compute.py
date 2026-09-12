@@ -31,6 +31,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_size_gib,
                 ComputeRegistry.storage_instances,
+                ComputeRegistry.bucket_size_bytes,
+                ComputeRegistry.bucket_max_objects,
+                ComputeRegistry.storage_reserve_percent,
+                ComputeRegistry.storage_object_overhead_bytes,
                 ComputeRegistry.status,
             )
         )
@@ -54,6 +58,10 @@ async def create(
     database_storage_class: str,
     storage_class: str,
     storage_endpoint: str,
+    bucket_size_bytes: int,
+    bucket_max_objects: int,
+    storage_reserve_percent: int,
+    storage_object_overhead_bytes: int,
     storage_size_gib: int = 100,
     storage_instances: int = 3,
     storage_certificate: str | None = None,
@@ -77,6 +85,10 @@ async def create(
         storage_size_gib=storage_size_gib,
         storage_instances=storage_instances,
         storage_certificate=storage_certificate,
+        bucket_size_bytes=bucket_size_bytes,
+        bucket_max_objects=bucket_max_objects,
+        storage_reserve_percent=storage_reserve_percent,
+        storage_object_overhead_bytes=storage_object_overhead_bytes,
     )
     session.add(registry)
 

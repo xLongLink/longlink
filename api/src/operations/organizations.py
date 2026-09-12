@@ -43,7 +43,7 @@ async def _reconcile(organization_id: UUID) -> None:
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
-        bucket = await cluster.storage.bucket(organization.id, infrastructure.compute, create=True)
+        bucket = await cluster.storage.apply(organization.id, infrastructure.compute)
         await storage.authorize(bucket.storage, bucket.name, organization.id)
         await cluster.organizations.apply(f"longlink-compute-{organization.id.hex}")
 

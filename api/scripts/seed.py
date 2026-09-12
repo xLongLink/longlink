@@ -38,6 +38,10 @@ class SeedSettings(BaseSettings):
     STORAGE_SIZE_GIB: int = 20
     STORAGE_INSTANCES: int = 1
     STORAGE_CERTIFICATE: str | None = None
+    BUCKET_SIZE_BYTES: int = 1073741824
+    BUCKET_MAX_OBJECTS: int = 10000
+    STORAGE_RESERVE_PERCENT: int = 30
+    STORAGE_OBJECT_OVERHEAD_BYTES: int = 65536
 
     model_config = SettingsConfigDict(
         env_file=".env.seed",
@@ -64,6 +68,10 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
             "storage_size_gib": settings.STORAGE_SIZE_GIB,
             "storage_instances": settings.STORAGE_INSTANCES,
             "storage_certificate": settings.STORAGE_CERTIFICATE,
+            "bucket_size_bytes": settings.BUCKET_SIZE_BYTES,
+            "bucket_max_objects": settings.BUCKET_MAX_OBJECTS,
+            "storage_reserve_percent": settings.STORAGE_RESERVE_PERCENT,
+            "storage_object_overhead_bytes": settings.STORAGE_OBJECT_OVERHEAD_BYTES,
         }
     )
 
@@ -146,6 +154,10 @@ class CloudSeedSettings(SeedSettings):
     STORAGE_INSTANCES: int = 3
     STORAGE_SIZE_GIB: int = 100
     STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
+    BUCKET_SIZE_BYTES: int = Field(default=0, gt=0, validate_default=True)
+    BUCKET_MAX_OBJECTS: int = Field(default=0, gt=0, validate_default=True)
+    STORAGE_RESERVE_PERCENT: int = Field(default=0, gt=0, validate_default=True)
+    STORAGE_OBJECT_OVERHEAD_BYTES: int = Field(default=0, gt=0, validate_default=True)
 
     model_config = SettingsConfigDict(extra="ignore")
 

@@ -100,6 +100,10 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
 
     # Arrange
     payload = {
+        "bucket_size_bytes": 1073741824,
+        "bucket_max_objects": 10000,
+        "storage_reserve_percent": 30,
+        "storage_object_overhead_bytes": 65536,
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_class": "block-storage",
@@ -112,6 +116,10 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         },
     }
     expected_item = {
+        "bucket_size_bytes": 1073741824,
+        "bucket_max_objects": 10000,
+        "storage_reserve_percent": 30,
+        "storage_object_overhead_bytes": 65536,
         "gateway_url": "https://gateway.example",
         "status": "creating",
         "database_storage_class": "local-path",
@@ -143,6 +151,10 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
             "computes",
             {
                 "name": "Ephemeral Compute",
+                "bucket_size_bytes": 1073741824,
+                "bucket_max_objects": 10000,
+                "storage_reserve_percent": 30,
+                "storage_object_overhead_bytes": 65536,
                 "storage_class": "block-storage",
                 "storage_endpoint": "https://storage.example",
                 "gateway_url": "https://gateway.example",

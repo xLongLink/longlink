@@ -31,6 +31,10 @@ def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -
         DATABASE_STORAGE_CLASS="local-path",
         STORAGE_CLASS="block-storage",
         STORAGE_ENDPOINT="https://storage.example",
+        BUCKET_SIZE_BYTES=1073741824,
+        BUCKET_MAX_OBJECTS=10000,
+        STORAGE_RESERVE_PERCENT=30,
+        STORAGE_OBJECT_OVERHEAD_BYTES=65536,
     )
 
 

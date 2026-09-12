@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 from src.environments import env
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, Service, Namespace, Deployment, CustomResourceDefinition, new_class, object_from_spec
-from src.kubernetes.utils import apply, deployment_is_ready
+from src.kubernetes.utils import apply, deployment_is_ready, wait_crd_established
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -147,15 +147,7 @@ class Gateway:
                         )
                         await apply(resource)
                         if isinstance(resource, CustomResourceDefinition):
-                            # Fresh CRDs can briefly omit status entirely, which kr8s.wait cannot unpack.
-                            while True:
-                                await resource.refresh()
-                                conditions = resource.raw.get("status", {}).get("conditions") or []
-                                if any(
-                                    condition.get("type") == "Established" and condition.get("status") == "True" for condition in conditions
-                                ):
-                                    break
-                                await asyncio.sleep(1)
+                            await wait_crd_established(resource)
                         if isinstance(resource, Deployment):
                             deployments.append(resource)
 
