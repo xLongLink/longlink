@@ -5,14 +5,13 @@ import { UserCell } from '@/components/Cells';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { pixel } from '@astryxdesign/core/Table';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import MetadataDialog from '@/components/dialogs/Metadata';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
+import { Table, type TableColumn, pixel } from '@astryxdesign/core/Table';
 import { zPageUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
@@ -57,28 +56,38 @@ export default function AdminUsers() {
                 hasHover
                 idKey="id"
                 plugins={{ pagination }}
-            >
-                <TableColumn<UserSummary> field="user" header="User" width={pixel(400)}>
-                    {(user) => (
-                        <UserCell
-                            endContent={<Badge label={user.administrator ? 'Administrator' : 'User'} />}
-                            user={user}
-                        />
-                    )}
-                </TableColumn>
-                <TableColumn<UserSummary> align="end" field="actions" header="" width={pixel(56)}>
-                    {(user) => (
-                        <IconButton
-                            icon={<Ellipsis />}
-                            label={`View metadata for ${user.name}`}
-                            size="sm"
-                            tooltip="View metadata"
-                            variant="ghost"
-                            onClick={() => setMetadataUser(user)}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'user',
+                            header: 'User',
+                            width: pixel(400),
+                            renderCell: (user) => (
+                                <UserCell
+                                    endContent={<Badge label={user.administrator ? 'Administrator' : 'User'} />}
+                                    user={user}
+                                />
+                            ),
+                        },
+                        {
+                            align: 'end',
+                            key: 'actions',
+                            header: '',
+                            width: pixel(56),
+                            renderCell: (user) => (
+                                <IconButton
+                                    icon={<Ellipsis />}
+                                    label={`View metadata for ${user.name}`}
+                                    size="sm"
+                                    tooltip="View metadata"
+                                    variant="ghost"
+                                    onClick={() => setMetadataUser(user)}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<UserSummary>[]
+                }
+            />
             {metadataUser && (
                 <MetadataDialog onClose={() => setMetadataUser(null)} title="User metadata">
                     <MetadataList>

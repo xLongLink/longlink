@@ -6,6 +6,7 @@ from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 from fsspec.implementations.local import LocalFileSystem
+from fsspec.implementations.memory import MemoryFileSystem
 
 PRODUCTION_SETTINGS = {
     "LONGLINK_IDENTITY_SECRET": "identity-secret",
@@ -105,33 +106,20 @@ def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) 
         storage_base.create_fs(settings)
 
 
-@pytest.mark.parametrize(
-    ("environment", "expected_protocol"),
-    [
-        pytest.param("testing", "memory", id="testing"),
-        pytest.param("development", "file", id="development"),
-    ],
-)
+@pytest.mark.parametrize(("environment", "expected_filesystem"), [("testing", MemoryFileSystem), ("development", LocalFileSystem)])
 def test_nonproduction_storage_selects_local_filesystem(
-    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"], expected_protocol: str
+    environment: Literal["testing", "development"], expected_filesystem: type[MemoryFileSystem] | type[LocalFileSystem]
 ) -> None:
     """Use memory storage for tests and local files for development."""
 
     # Arrange
-    filesystem = object()
-    protocols: list[str] = []
+    settings = Envs(ENV=environment, STORAGE_BUCKET=None, STORAGE_PREFIX=None)
 
-    def create_filesystem(protocol: str) -> object:
-        """Record the requested non-production storage backend."""
-
-        protocols.append(protocol)
-        return filesystem
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
+    # Act
+    filesystem = storage_base.create_fs(settings)
 
     # Assert
-    assert storage_base.create_fs(Envs(ENV=environment)) is filesystem
-    assert protocols == [expected_protocol]
+    assert isinstance(filesystem, expected_filesystem)
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

@@ -1,7 +1,6 @@
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
     it.each([
@@ -11,7 +10,7 @@ describe('Table', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [];
 
-        expect(() => renderXmlToMarkup(parseXML(xml), ctx)).toThrow('TableColumn requires a usable field path');
+        expect(() => renderXmlToMarkup(parseFragment(xml), ctx)).toThrow('TableColumn requires a usable field path');
     });
 
     it('renders shorthand field columns', () => {
@@ -21,7 +20,7 @@ describe('Table', () => {
 
         // Act
         const output = renderXmlToMarkup(
-            parseXML(
+            parseFragment(
                 '<Table data="$items"><TableColumn field="sku" header="Product code" /><TableColumn field="created_by.name" header="Created by" /></Table>'
             ),
             ctx
@@ -38,7 +37,7 @@ describe('Table', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
         const output = renderXmlToMarkup(
-            parseXML(
+            parseFragment(
                 '<Table data="$items"><TableColumn field="name" header="Item"><Stack direction="horizontal">$row.name<Badge>$row.sku</Badge></Stack></TableColumn></Table>'
             ),
             ctx
@@ -54,7 +53,7 @@ describe('Table', () => {
         ctx.scope.bindings = { params: {}, prefix: 'Included', items: [{ tags: [{ name: 'Alpha' }] }] };
 
         const output = renderXmlToMarkup(
-            parseXML(
+            parseFragment(
                 '<Table data="$items"><TableColumn field="tags"><For each="$row.tags" as="tag">${prefix + \' \' + tag.name + \' \' + index}</For></TableColumn></Table>'
             ),
             ctx

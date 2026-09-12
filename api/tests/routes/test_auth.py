@@ -1,7 +1,7 @@
+import httpx2
 import pytest
 from src import auth
 from main import app
-from uuid import UUID
 from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
@@ -16,8 +16,55 @@ from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
+from src.database.models.organizations import Organization
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
+OAUTH_PROVIDERS = ("google", "github")
+UNVERIFIED_OAUTH_RESPONSES = (
+    pytest.param("google", {}, id="google-missing-verification"),
+    pytest.param("google", {"email_verified": False}, id="google-false-verification"),
+    pytest.param("google", {"email_verified": "true"}, id="google-string-verification"),
+    pytest.param("github", [], id="github-no-emails"),
+    pytest.param(
+        "github",
+        [{"primary": True, "verified": False}, {"primary": False, "verified": True}],
+        id="github-primary-and-verified-on-different-emails",
+    ),
+)
+
+
+@pytest.fixture
+def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, User]) -> dict[str, object]:
+    """Supply provider HTTP responses while retaining real identity verification."""
+
+    # Arrange local credentials and verified control responses.
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_ID", "github-client")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_SECRET", "github-secret")
+    responses: dict[str, object] = {
+        oauth.GOOGLE_TOKEN_URL: {"access_token": "private-provider-token"},
+        oauth.GITHUB_TOKEN_URL: {"access_token": "private-provider-token"},
+        oauth.GOOGLE_USERINFO_URL: {"sub": "12345", "email": users[1].email, "email_verified": True},
+        oauth.GITHUB_USER_URL: {"id": 12345, "email": users[1].email},
+        oauth.GITHUB_EMAILS_URL: [{"email": users[1].email, "primary": True, "verified": True}],
+    }
+
+    async def respond(_transport: httpx2.AsyncHTTPTransport, request: httpx2.Request) -> httpx2.Response:
+        """Intercept only outbound HTTP and reject unexpected provider endpoints."""
+
+        # Verify callback proof reaches the real provider code exchange.
+        if str(request.url) in (oauth.GOOGLE_TOKEN_URL, oauth.GITHUB_TOKEN_URL):
+            fields = parse_qs(request.content.decode())
+            assert request.method == "POST"
+            assert fields["code"] == ["provider-code"]
+            assert fields["code_verifier"] == ["pkce-verifier"]
+
+        # Return deterministic JSON at the network boundary.
+        return httpx2.Response(200, json=responses[str(request.url)], request=request)
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", respond)
+    return responses
 
 
 def registration_verification_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
@@ -50,21 +97,6 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
     # Extract browser-only proof from the password-reset link fragment.
     reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
     return parse_qs(urlparse(reset_url).fragment)["token"][0]
-
-
-def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> list[UUID]:
-    """Record Organization membership projections without a database adapter."""
-
-    # Replace the external projection boundary with an observable local sink.
-    synchronized_organization_ids: list[UUID] = []
-
-    async def sync_users(_session: object, organization_id: UUID) -> None:
-        """Record one requested Organization projection."""
-
-        synchronized_organization_ids.append(organization_id)
-
-    monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
-    return synchronized_organization_ids
 
 
 async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange(
@@ -104,35 +136,23 @@ async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange
     assert client.cookies.get("longlink_auth") is None
 
 
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
 async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     client: AsyncClient,
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
+    oauth_responses: dict[str, object],
+    provider: oauth.OAuthProvider,
 ) -> None:
     """Link a verified provider identity to its existing canonical account."""
 
     # Arrange
     user = users[1]
-    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
-    provider_calls: list[tuple[str, str, str]] = []
-
-    async def identity(provider: oauth.OAuthProvider, code: str, verifier: str) -> oauth.OAuthIdentity:
-        """Return one verified provider identity while recording the exchange proof."""
-
-        provider_calls.append((provider, code, verifier))
-        return oauth.OAuthIdentity(
-            subject="google-subject",
-            email=user.email,
-            name="Provider Name",
-            avatar="https://example.com/avatar.png",
-        )
-
-    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", identity)
 
     # Act
     response = await client.get(
-        "/api/v1/auth/oauth/google/callback",
+        f"/api/v1/auth/oauth/{provider}/callback",
         params={"code": "provider-code", "state": "expected-state"},
         follow_redirects=False,
     )
@@ -145,13 +165,107 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
-    assert provider_calls == [("google", "provider-code", "pkce-verifier")]
     assert profile_response.status_code == 200
     assert profile_response.json()["id"] == str(user.id)
     async with session_scope() as session:
         linked_user = await session.get(User, user.id)
     assert linked_user is not None
-    assert linked_user.google_id == "google-subject"
+    assert getattr(linked_user, f"{provider}_id") == "12345"
+
+
+@pytest.mark.parametrize(("provider", "verification"), UNVERIFIED_OAUTH_RESPONSES)
+async def test_oauth_callback_rejects_unverified_email_without_account_changes(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    provider: oauth.OAuthProvider,
+    verification: dict[str, bool | str] | list[dict[str, bool]],
+) -> None:
+    """Reject unverified provider emails without leaking details or changing accounts."""
+
+    # Arrange
+    if isinstance(verification, dict):
+        oauth_responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "12345", "email": users[1].email, **verification}
+    else:
+        oauth_responses[oauth.GITHUB_EMAILS_URL] = [{"email": user.email, **flags} for user, flags in zip(users[1:], verification)]
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert "Max-Age=0" in response.headers["set-cookie"]
+    assert "longlink_auth=" not in response.headers["set-cookie"]
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        persisted_users = result.scalars().all()
+    assert {(user.id, user.email, user.google_id, user.github_id) for user in persisted_users} == {
+        (user.id, user.email, None, None) for user in users
+    }
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Authenticate the subject owner even when the provider returns another account's email."""
+
+    # Arrange
+    account_a, account_b = users[1:]
+    async with session_scope() as session:
+        linked_user = await session.get(User, account_a.id)
+        assert linked_user is not None
+        setattr(linked_user, f"{provider}_id", "12345")
+        await session.commit()
+
+    async def identity(_provider: oauth.OAuthProvider, _code: str, _verifier: str) -> oauth.OAuthIdentity:
+        """Return the existing subject with a different account's verified email."""
+
+        # Supply the provider result while retaining real local account resolution.
+        return oauth.OAuthIdentity(subject="12345", email=account_b.email, name="Provider Name", avatar="")
+
+    monkeypatch.setattr(oauth, "identity", identity)
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+    profile_response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is not None
+    assert profile_response.status_code == 200
+    assert profile_response.json()["id"] == str(account_a.id)
+    assert profile_response.json()["email"] == account_a.email
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        persisted_users = result.scalars().all()
+    assert {(user.id, user.email, getattr(user, f"{provider}_id")) for user in persisted_users} == {
+        (users[0].id, users[0].email, None),
+        (account_a.id, account_a.email, "12345"),
+        (account_b.id, account_b.email, None),
+    }
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
@@ -379,7 +493,6 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Accept an email-bound Organization role while creating a verified account."""
 
@@ -387,9 +500,11 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     email = "invited@example.com"
     organization = await create_organization(users[0])
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
-    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
     await register_and_verify(client, captured_mail, email)
 
     # Act
@@ -401,6 +516,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     organizations_response = await client.get("/api/v1/me/organizations")
     async with session_scope() as session:
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        persisted = await session.get(Organization, organization.id)
 
     # Assert
     assert response.status_code == 201
@@ -412,14 +528,14 @@ async def test_registration_completion_accepts_pending_organization_invitation(
         }
     ]
     assert invitation is None
-    assert synchronized_organization_ids == [organization.id]
+    assert persisted is not None
+    assert persisted.database_sync_pending is True
     assert client.cookies.get("longlink_auth") is not None
 
 
 async def test_password_login_accepts_pending_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Accept pending Organization access when an existing user signs in."""
 
@@ -427,9 +543,11 @@ async def test_password_login_accepts_pending_organization_invitation(
     owner, invited_user, _ = users
     organization = await create_organization(owner)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
         await session.commit()
-    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
 
     # Act
     response = await clients[1].post(
@@ -437,6 +555,7 @@ async def test_password_login_accepts_pending_organization_invitation(
         json={"email": invited_user.email, "password": TEST_PASSWORD},
     )
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         membership = await session.scalar(
             select(UserOrganization).where(
@@ -450,7 +569,8 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert invitation is None
     assert membership is not None
     assert membership.role == OrganizationRoles.write
-    assert synchronized_organization_ids == [organization.id]
+    assert persisted is not None
+    assert persisted.database_sync_pending is True
 
 
 async def test_registration_completion_rejects_duplicate_account(

@@ -4,46 +4,13 @@ import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from fastapi import Depends, FastAPI, Request
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
-INVALID_IDENTITY_TOKENS = (
-    pytest.param("invalid-token", id="malformed"),
-    pytest.param(
-        identity.create_identity_token(UUID("00000000-0000-0000-0000-000000000001"), "wrong-identity-secret-01234567890"),
-        id="wrong-secret",
-    ),
-    pytest.param(
-        jwt.encode(
-            {
-                "sub": "00000000-0000-0000-0000-000000000001",
-                "aud": "wrong-audience",
-                "iat": datetime(2020, 1, 1, tzinfo=UTC),
-                "exp": datetime(2030, 1, 1, tzinfo=UTC),
-            },
-            IDENTITY_SECRET,
-            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
-        ),
-        id="wrong-audience",
-    ),
-    pytest.param(
-        jwt.encode(
-            {
-                "sub": "00000000-0000-0000-0000-000000000001",
-                "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-                "iat": datetime(2020, 1, 1, tzinfo=UTC),
-                "exp": datetime(2020, 1, 1, 1, tzinfo=UTC),
-            },
-            IDENTITY_SECRET,
-            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
-        ),
-        id="expired",
-    ),
-)
 
 
 def identity_headers(user_id: UUID) -> dict[str, str]:
@@ -184,11 +151,33 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     assert session_closed
 
 
-@pytest.mark.parametrize("token", INVALID_IDENTITY_TOKENS)
-def test_context_middleware_treats_invalid_identity_as_anonymous(token: str) -> None:
+@pytest.mark.parametrize("case", ["malformed", "wrong-secret", "wrong-audience", "expired"])
+def test_context_middleware_treats_invalid_identity_as_anonymous(case: str) -> None:
     """Ignore Platform identity tokens that fail validation."""
 
     # Arrange
+    now = datetime.now(UTC)
+    user_id = UUID("00000000-0000-0000-0000-000000000001")
+    claims = {
+        "sub": str(user_id),
+        "aud": identity.IDENTITY_TOKEN_AUDIENCE,
+        "iat": now - timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+        "exp": now + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+    }
+    tokens = {
+        "malformed": "invalid-token",
+        "wrong-secret": identity.create_identity_token(user_id, "wrong-identity-secret-01234567890"),
+        "wrong-audience": jwt.encode(
+            {**claims, "aud": "wrong-audience"},
+            IDENTITY_SECRET,
+            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
+        ),
+        "expired": jwt.encode(
+            {**claims, "exp": now - timedelta(seconds=60)},
+            IDENTITY_SECRET,
+            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
+        ),
+    }
     app = FastAPI()
     context.install_context_middleware(app, IDENTITY_SECRET)
 
@@ -203,7 +192,7 @@ def test_context_middleware_treats_invalid_identity_as_anonymous(token: str) -> 
     # Act
     response = client.get(
         "/",
-        headers={"x-longlink-identity": token},
+        headers={"x-longlink-identity": tokens[case]},
     )
 
     # Assert
@@ -232,13 +221,32 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
     # Arrange
     first_id = UUID("00000000-0000-0000-0000-000000000006")
     second_id = UUID("00000000-0000-0000-0000-000000000007")
+    requests_arrived = 0
+    both_requests_arrived = asyncio.Event()
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def current_user() -> dict[str, str | None]:
+        """Return the audit identity after both requests reach the handler."""
+
+        nonlocal requests_arrived
+        requests_arrived += 1
+
+        if requests_arrived == 2:
+            both_requests_arrived.set()
+
+        await both_requests_arrived.wait()
+        user_id = context._current_identity.get()
+        return {"user_id": str(user_id) if user_id is not None else None}
 
     # Act
-    with TestClient(create_context_application()) as client:
-        first_response, second_response = await asyncio.gather(
-            asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
-            asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),
-        )
+    with TestClient(app) as client:
+        async with asyncio.timeout(1):
+            first_response, second_response = await asyncio.gather(
+                asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
+                asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),
+            )
 
     # Assert
     assert first_response.status_code == 200

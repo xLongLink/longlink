@@ -6,7 +6,6 @@ from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
 from sqlalchemy import select
 from src.logger import logger
-from sqlalchemy.orm import defer
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -162,12 +161,9 @@ async def list_revisions(solution_id: UUID, user: User = Depends(authuser), sess
     """Return newest-first release history to Solution maintainers."""
 
     # History projects configured names, never the environment values themselves.
-    await solutions.access(session, solution_id, user.id)
+    await solutions.access(session, solution_id, user.id, lock=False)
     result = await session.scalars(
-        select(Revision)
-        .options(defer(Revision.image_metadata))
-        .where(col(Revision.solution_id) == solution_id)
-        .order_by(col(Revision.created_at).desc(), col(Revision.id).desc())
+        select(Revision).where(col(Revision.solution_id) == solution_id).order_by(col(Revision.created_at).desc(), col(Revision.id).desc())
     )
     return result.all()
 

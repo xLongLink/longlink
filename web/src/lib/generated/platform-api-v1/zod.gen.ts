@@ -735,15 +735,6 @@ export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeletePath = z.object(
  */
 export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = z.void();
 
-export const zGetComputeRegistryApiV1ComputesRegistryIdGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetComputeRegistryApiV1ComputesRegistryIdGetResponse = zComputeRegistryResponse;
-
 /**
  * Response Healthz Api V1 Healthz Get
  *
@@ -842,24 +833,6 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  * Successful Response
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationSummary;
-
-export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponse = zDatabaseState;
-
-export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponse = zDatabaseState;
 
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()

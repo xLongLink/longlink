@@ -106,6 +106,39 @@ async def test_metadata_fetches_digest_image_references(
     }
 
 
+async def test_metadata_rejects_mismatched_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject contradictory manifest digests before inspecting image config blobs."""
+
+    # Arrange
+    digest = f"sha256:{'a' * 64}"
+    requested_paths: list[str] = []
+
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Authenticate successfully and return a different valid manifest digest."""
+
+        # Record authentication and manifest requests while forbidding blob inspection.
+        requested_paths.append(request.url.path)
+        if request.url.path == "/token":
+            return httpx2.Response(200, json={"token": "pull-token"})
+        if request.url.path == f"/v2/longlink/dashboard/manifests/{digest}":
+            assert request.headers["Authorization"] == "Bearer pull-token"
+            return httpx2.Response(
+                200,
+                json={"config": {"digest": "sha256:config"}},
+                headers={"Docker-Content-Digest": f"sha256:{'b' * 64}"},
+            )
+        raise AssertionError("Mismatched registry digests must not fetch config blobs")
+
+    mock_async_client(monkeypatch, respond)
+
+    # Act
+    image_metadata = await images.metadata(Image(f"ghcr.io/longlink/dashboard@{digest}"))
+
+    # Assert
+    assert image_metadata is None
+    assert requested_paths == ["/token", f"/v2/longlink/dashboard/manifests/{digest}"]
+
+
 async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
     """Read image configuration after GHCR redirects the blob request."""
 

@@ -41,9 +41,9 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 from types import SimpleNamespace
 from src.utils import mail, token
 from src.database import session
+from src.utils.s3 import Credentials
 from src.environments import env
 from src.database.models import registry
-from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
 
 
@@ -131,9 +131,12 @@ class DatabasePostgres:
         yield URL.create("postgresql+psycopg", host="database.example", database=database)
 
     @asynccontextmanager
-    async def _connection(self, database: str) -> AsyncIterator["DatabasePostgres"]:
-        """Scope the SQL readiness probe to its Organization database."""
+    async def _connection(self, database: str, *, search_path: str | None = None) -> AsyncIterator["DatabasePostgres"]:
+        """Scope SQL projection and readiness probes to their Organization database."""
 
+        # Record the connection target forwarded by the projection service.
+        self.database = database
+        self.search_path = search_path
         yield self
 
     async def execute(self, statement: object) -> None:

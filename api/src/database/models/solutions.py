@@ -1,9 +1,8 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, Literal, ClassVar
 from datetime import datetime
-from pydantic import JsonValue
 from sqlmodel import Field, Relationship
-from sqlalchemy import JSON, Enum, Column, Integer, CheckConstraint, UniqueConstraint, ForeignKeyConstraint, event, inspect
+from sqlalchemy import Enum, Column, Integer, CheckConstraint, UniqueConstraint, ForeignKeyConstraint, event, inspect
 from sqlalchemy.orm import Mapper
 from src.environments import env
 from sqlalchemy.engine import Connection
@@ -119,7 +118,6 @@ class Revision(PlatformModel, table=True):
     image: str = Field(max_length=512)
     source: str = Field(max_length=512)
     min_scale: Literal[0, 1] = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
-    image_metadata: dict[str, JsonValue] = Field(sa_column=Column(JSON, nullable=False))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
@@ -143,6 +141,6 @@ def protect_snapshot(_mapper: Mapper[Revision], _connection: Connection, revisio
     state = inspect(revision)
     if any(
         state.attrs[name].history.has_changes()
-        for name in ("id", "solution_id", "source", "image", "image_metadata", "envs", "min_scale", "created_at", "created_id")
+        for name in ("id", "solution_id", "source", "image", "envs", "min_scale", "created_at", "created_id")
     ):
         raise ValueError("Revision snapshots are immutable")

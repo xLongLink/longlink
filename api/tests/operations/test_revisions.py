@@ -14,6 +14,7 @@ from src.database.services import solutions, operations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
+from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.usefixtures("database_runtime")
 
@@ -22,9 +23,9 @@ pytestmark = pytest.mark.usefixtures("database_runtime")
     "failure", ["initial", "error", "timeout", "shutdown", "restoration", "deleted_during_rollout", "deleted_before_recovery"]
 )
 async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, failure: str) -> None:
-    """Recover errors and timeouts durably, but release shutdown for resumption."""
+    """Finalize timed-out rollouts before returning, recover failures, and resume shutdown."""
 
-    # Use real persisted revisions and the actual worker; replace only Kubernetes.
+    # Arrange: use real persisted revisions and the actual worker; replace only Kubernetes.
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(
@@ -34,6 +35,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     assert setup is not None
     await complete_operation(setup.id)
     calls: list[tuple[str, dict[str, str], bool]] = []
+    rollout_finalized = asyncio.Event()
     failing = failure == "initial"
 
     class Kubernetes:
@@ -64,7 +66,11 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             if failure == "shutdown":
                 raise asyncio.CancelledError
             if failure == "timeout":
-                await asyncio.sleep(10)
+                # Suspend rollout until the real worker timeout cancels and finalizes it.
+                try:
+                    await asyncio.Event().wait()
+                finally:
+                    rollout_finalized.set()
             raise RuntimeError("rollout failed")
 
         async def aclose(self) -> None:
@@ -112,14 +118,21 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert revision is not None and not revision.failed
         return
 
-    # Limit the timeout override to the failing attempt, not recovery work.
+    # Act: limit the timeout override to the failing attempt, not recovery work.
     with monkeypatch.context() as timeout:
         if failure == "timeout":
             timeout.setattr(env, "OPERATION_TIMEOUT_SECONDS", 0.5)
         failed = await execute(update)
+
+    # Assert: rollout finalization and the exact persisted timeout precede worker return.
     assert failed.failed is not None
     if failure == "timeout":
-        assert "timed out" in failed.failed
+        assert rollout_finalized.is_set()
+        assert failed.failed == "Operation timed out after 0.5 seconds"
+        async with session_scope() as session:
+            persisted = await session.get(Operation, update.id)
+            assert persisted is not None
+            assert persisted.failed == "Operation timed out after 0.5 seconds"
 
     # Tombstones suppress both new recovery requests and already queued recovery work.
     if failure in {"deleted_during_rollout", "deleted_before_recovery"}:

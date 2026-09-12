@@ -2,6 +2,7 @@ import pytest
 from uuid import uuid4
 from factories import create_compute, queue_operation, create_ready_infrastructure
 from src.errors import ConflictError, NotFoundError
+from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
 from src.database.services import compute
 from src.models.operations import OperationKind
@@ -58,35 +59,29 @@ async def test_create_rejects_duplicate_compute_names() -> None:
     """Translate duplicate Compute names into the stable domain conflict."""
 
     # Arrange
+    payload = ComputeRegistryCreate(
+        name="Duplicate Compute",
+        kubeconfig={
+            "apiVersion": "v1",
+            "clusters": [{"name": "cluster", "cluster": {"server": "https://kubernetes.example"}}],
+            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+            "current-context": "context",
+            "users": [{"name": "user", "user": {"token": "secret"}}],
+        },
+        bucket_size_bytes=1073741824,
+        bucket_max_objects=10000,
+        storage_reserve_percent=30,
+        storage_object_overhead_bytes=65536,
+        gateway_url="https://gateway.example",
+        database_storage_class="local-path",
+        storage_class="block-storage",
+        storage_endpoint="https://storage.example",
+    )
     async with session_scope() as session:
-        await compute.create(
-            session,
-            "Duplicate Compute",
-            {"apiVersion": "v1"},
-            bucket_size_bytes=1073741824,
-            bucket_max_objects=10000,
-            storage_reserve_percent=30,
-            storage_object_overhead_bytes=65536,
-            gateway_url="https://gateway.example",
-            database_storage_class="local-path",
-            storage_class="block-storage",
-            storage_endpoint="https://storage.example",
-        )
+        await compute.create(session, payload)
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(
-                session,
-                "Duplicate Compute",
-                {"apiVersion": "v1"},
-                bucket_size_bytes=1073741824,
-                bucket_max_objects=10000,
-                storage_reserve_percent=30,
-                storage_object_overhead_bytes=65536,
-                gateway_url="https://gateway.example",
-                database_storage_class="local-path",
-                storage_class="block-storage",
-                storage_endpoint="https://storage.example",
-            )
+            await compute.create(session, payload)

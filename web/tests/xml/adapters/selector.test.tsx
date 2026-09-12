@@ -1,11 +1,10 @@
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Selector', () => {
     it('rejects markup without a visible Option', () => {
-        expect(() => renderXmlToMarkup(parseXML('<Selector label="Status" />'))).toThrow(
+        expect(() => renderXmlToMarkup(parseFragment('<Selector label="Status" />'))).toThrow(
             'Selector requires at least one Option'
         );
     });
@@ -16,7 +15,9 @@ describe('Selector', () => {
 
         expect(() =>
             renderXmlToMarkup(
-                parseXML('<Selector label="Status"><Option if="$showOptions" label="Open" value="open" /></Selector>'),
+                parseFragment(
+                    '<Selector label="Status"><Option if="$showOptions" label="Open" value="open" /></Selector>'
+                ),
                 ctx
             )
         ).toThrow('Selector requires at least one Option');
@@ -25,7 +26,7 @@ describe('Selector', () => {
     it('renders its label when a visible option is provided', () => {
         // Act
         const output = renderXmlToMarkup(
-            parseXML('<Selector label="Status"><Option label="Open" value="open" /></Selector>')
+            parseFragment('<Selector label="Status"><Option label="Open" value="open" /></Selector>')
         );
 
         // Assert

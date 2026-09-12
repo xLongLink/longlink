@@ -14,8 +14,8 @@ const parser = new XMLParser({
     preserveOrder: true,
 });
 
-/** Parses an XML string into a flat AST structure. */
-export function parseXML(xml: string): ASTNode[] {
+/** Parses one XML document with a single longlink root. */
+export function parseXML(xml: string): ASTNode {
     // Reject XML constructs outside the supported subset.
     if (UNSUPPORTED_XML_MARKUP_PATTERN.test(xml)) {
         throw new Error('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
@@ -34,7 +34,15 @@ export function parseXML(xml: string): ASTNode[] {
         throw new Error(`XML is invalid${location}: ${validationError?.msg ?? 'Malformed XML'}`);
     }
 
-    return toNodes(parser.parse(xml));
+    // Compile all nodes before validating the document root to preserve attribute error precedence.
+    const ast = toNodes(parser.parse(xml));
+    const [root] = ast;
+
+    if (ast.length !== 1 || root?.name !== 'longlink') {
+        throw new Error('XML views must contain exactly one longlink root');
+    }
+
+    return root;
 }
 
 /** Converts parser output into XML AST nodes. */

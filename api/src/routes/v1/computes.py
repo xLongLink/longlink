@@ -1,7 +1,6 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session
-from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
@@ -17,7 +16,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
     """Register a compute target and queue its initial creation."""
 
     # Persist the validated connection and queue compute provisioning.
-    registry = await compute.create(session, **payload.model_dump())
+    registry = await compute.create(session, payload)
     await session.commit()
     return registry
 
@@ -30,40 +29,6 @@ async def list_compute_registries(
 
     items, total = await compute.fetch_page(session, pagination)
     return {"items": items, "total": total}
-
-
-@router.get("/computes/{registry_id}", response_model=ComputeRegistryResponse)
-async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
-    """Return one compute backend registration."""
-
-    # Resolve the requested active compute registry.
-    registry = await session.get(
-        ComputeRegistry,
-        registry_id,
-        options=[
-            load_only(
-                ComputeRegistry.id,
-                ComputeRegistry.name,
-                ComputeRegistry.gateway_url,
-                ComputeRegistry.database_size_gib,
-                ComputeRegistry.database_instances,
-                ComputeRegistry.database_storage_class,
-                ComputeRegistry.storage_class,
-                ComputeRegistry.storage_endpoint,
-                ComputeRegistry.storage_size_gib,
-                ComputeRegistry.storage_instances,
-                ComputeRegistry.bucket_size_bytes,
-                ComputeRegistry.bucket_max_objects,
-                ComputeRegistry.storage_reserve_percent,
-                ComputeRegistry.storage_object_overhead_bytes,
-                ComputeRegistry.status,
-            )
-        ],
-    )
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Compute registry not found")
-
-    return registry
 
 
 @router.delete("/computes/{registry_id}", status_code=204)

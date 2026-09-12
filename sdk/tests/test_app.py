@@ -112,25 +112,25 @@ def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch)
         pytest.param(
             "index.xml",
             "<longlink>Home</longlink>",
-            {"tab": "index", "route": "/"},
+            {"route": "/"},
             id="index",
         ),
         pytest.param(
             "dashboard.xml",
             '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
-            {"tab": "dashboard", "route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
+            {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
             "admin/users.xml",
             "<longlink>Users</longlink>",
-            {"tab": "admin/users", "route": "/admin/users"},
+            {"route": "/admin/users"},
             id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",
             '<longlink name="Issue">Issue</longlink>',
-            {"tab": "issues", "route": "/issues/:issue", "name": "Issue"},
+            {"route": "/issues/:issue", "name": "Issue"},
             id="dynamic",
         ),
     ],
@@ -175,7 +175,7 @@ def test_xml_view_catalog_omits_blank_display_metadata(solution_source: Path) ->
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [{"path": "views/dashboard", "route": "/dashboard", "tab": "dashboard"}]
+    assert response.json() == [{"path": "views/dashboard", "route": "/dashboard"}]
 
 
 def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -> None:
@@ -195,8 +195,8 @@ def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -
     # Assert
     assert catalog_response.status_code == 200
     assert catalog_response.json() == [
-        {"path": "views/admin/alpha", "route": "/admin/alpha", "tab": "admin/alpha"},
-        {"path": "views/zebra", "route": "/zebra", "tab": "zebra"},
+        {"path": "views/admin/alpha", "route": "/admin/alpha"},
+        {"path": "views/zebra", "route": "/zebra"},
     ]
     assert root_response.status_code == 307
     assert root_response.headers["location"] == "/admin/alpha"

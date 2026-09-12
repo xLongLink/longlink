@@ -28,10 +28,7 @@ describe('Button', () => {
 
         await act(async () => {
             root?.render(
-                <RenderXML
-                    ast={parseXML('<longlink><Button to="/issues/123">Issue</Button></longlink>')[0]}
-                    ctx={ctx}
-                />
+                <RenderXML ast={parseXML('<longlink><Button to="/issues/123">Issue</Button></longlink>')} ctx={ctx} />
             );
         });
 

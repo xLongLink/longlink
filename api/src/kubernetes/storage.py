@@ -5,13 +5,12 @@ import asyncio
 from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
-from src.utils import templates
+from src.utils import s3, templates
 from dataclasses import dataclass
 from src.environments import env
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, APIObject, ConfigMap, Namespace, Deployment, CustomResourceDefinition, new_class, object_from_spec
 from src.kubernetes.utils import apply, deployment_is_ready, wait_crd_established
-from src.adapters.storage.s3 import S3, Credentials
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -31,7 +30,7 @@ class Bucket:
     """Describe one reconciled bucket and its control-plane connection."""
 
     name: str
-    storage: S3
+    storage: s3.S3
 
 
 class Storage:
@@ -182,24 +181,26 @@ class Storage:
         config = ConfigMap("storage", namespace=namespace, api=api)
         await secret.refresh()
         await config.refresh()
-        credentials = Credentials(
+        credentials = s3.Credentials(
             base64.b64decode(secret.raw["data"]["AWS_ACCESS_KEY_ID"], validate=True).decode(),
             base64.b64decode(secret.raw["data"]["AWS_SECRET_ACCESS_KEY"], validate=True).decode(),
         )
         storage = await self.connection(compute, credentials)
         return Bucket(config.raw["data"]["BUCKET_NAME"], storage)
 
-    async def connection(self, compute: "ComputeRegistry", credentials: Credentials) -> S3:
+    async def connection(self, compute: "ComputeRegistry", credentials: s3.Credentials) -> s3.S3:
         """Resolve the S3 transport while retaining the registered TLS and signing identity."""
 
+        # Only development changes the transport destination; TLS and signing retain the endpoint.
+        resolver = None
         if env.DEVELOPMENT:
             from src.development import storage
 
             port = await self._client.portforward("rook-ceph-rgw-longlink", "rook-ceph", 443)
-            return storage.S3(compute.storage_endpoint, credentials, compute.storage_certificate, port)
-        return S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+            resolver = storage.Resolver(compute.storage_endpoint, port)
+        return s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate, resolver=resolver)
 
-    async def user(self, solution: UUID, organization: UUID) -> Credentials:
+    async def user(self, solution: UUID, organization: UUID) -> s3.Credentials:
         """Converge a stable unprivileged RGW user that cannot create buckets."""
 
         # Rook user names are RGW UIDs; UUID-based names remain unique across organization namespaces.
@@ -224,7 +225,7 @@ class Storage:
         await apply(resource)
         return await self._credentials(resource)
 
-    async def _credentials(self, resource: APIObject) -> Credentials:
+    async def _credentials(self, resource: APIObject) -> s3.Credentials:
         """Wait for Rook to reconcile an identity before reading its generated key Secret."""
 
         # Observed generation prevents consuming stale keys after an identity specification changes.
@@ -237,7 +238,7 @@ class Storage:
                 await asyncio.sleep(2)
         secret = Secret(status["info"]["secretName"], namespace="rook-ceph", api=await self._client.api())
         await secret.refresh()
-        return Credentials(
+        return s3.Credentials(
             base64.b64decode(secret.raw["data"]["AccessKey"], validate=True).decode(),
             base64.b64decode(secret.raw["data"]["SecretKey"], validate=True).decode(),
         )

@@ -88,8 +88,7 @@ make image  # Build and push localhost:15000/sample:dev, preserving your edits
 Cleanup
 
 ```bash
-DEVELOPMENT=true uv --directory api run --locked python -m scripts.cleanup  # Remove tracked remote resources first
-make down  # Stop local services and the cluster; preserve caches and sdk/dev
+make down  # Stop local services and the cluster
 ```
 
 <br />

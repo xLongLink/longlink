@@ -97,6 +97,7 @@ class Postgres:
         database: str,
         *,
         autocommit: bool = False,
+        search_path: str | None = None,
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
@@ -104,7 +105,7 @@ class Postgres:
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        with self.url(database) as url:
+        with self.url(database, search_path=search_path) as url:
             engine = create_async_engine(
                 url,
                 **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),

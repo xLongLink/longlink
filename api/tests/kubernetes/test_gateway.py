@@ -95,7 +95,9 @@ def applied_resources(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]
             assert kwargs["follow_redirects"] is False
             if "transport" in kwargs:
                 assert isinstance(kwargs["transport"], Transport)
+                assert kwargs["timeout"] == 300.0
                 return
+            assert kwargs["timeout"] == 10
             context = kwargs["verify"]
             assert isinstance(context, gateway.ssl.SSLContext)
             assert context.verify_mode == gateway.ssl.CERT_REQUIRED

@@ -5,21 +5,34 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { proportional } from '@astryxdesign/core/Table';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateSolution from '@/components/dialogs/CreateSolution';
-import { useOrganizationSolutions } from '@/lib/hooks/use-organization';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useOrganizationMembership, useOrganizationSolutions } from '@/lib/hooks/use-organization';
 
 /** Renders the organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const { solutions, organizationId, role, isLoading, error } = useOrganizationSolutions(organization);
+    const {
+        organizationId,
+        role,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organization);
+    const {
+        solutions,
+        isLoading: isSolutionsLoading,
+        error: solutionsError,
+    } = useOrganizationSolutions(organizationId);
+
+    // Preserve the page's loading state and solutions-first error precedence.
+    const isLoading = isMembershipLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const canManageSolutions = hasMinimumRole(role, 'maintain');
     const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 
@@ -60,7 +73,7 @@ export default function Organization() {
                         Manage the solutions attached to this organization.
                     </Text>
                 </Stack>
-                {canManageSolutions ? <CreateSolution organizationId={organizationId} /> : null}
+                {canManageSolutions ? <CreateSolution organizationId={organizationId ?? ''} /> : null}
             </Stack>
             <Table
                 data={solutions}
@@ -68,21 +81,32 @@ export default function Organization() {
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover
                 idKey="id"
-            >
-                <TableColumn<OrganizationSolutionSummary> field="name" header="Solution" width={proportional(1)}>
-                    {(solution) => (
-                        <Stack>
-                            <Stack direction="horizontal" gap={1} align="center">
-                                <Link href={`/orgs/${organization}/solutions/${solution.slug}`} weight="semibold">
-                                    {solution.name}
-                                </Link>
-                                <StatusBadge status={solution.status} />
-                            </Stack>
-                            {solution.description ? <Text type="supporting">{solution.description}</Text> : null}
-                        </Stack>
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'name',
+                            header: 'Solution',
+                            width: proportional(1),
+                            renderCell: (solution) => (
+                                <Stack>
+                                    <Stack direction="horizontal" gap={1} align="center">
+                                        <Link
+                                            href={`/orgs/${organization}/solutions/${solution.slug}`}
+                                            weight="semibold"
+                                        >
+                                            {solution.name}
+                                        </Link>
+                                        <StatusBadge status={solution.status} />
+                                    </Stack>
+                                    {solution.description ? (
+                                        <Text type="supporting">{solution.description}</Text>
+                                    ) : null}
+                                </Stack>
+                            ),
+                        },
+                    ] satisfies TableColumn<OrganizationSolutionSummary>[]
+                }
+            />
         </PageContainer>
     );
 }

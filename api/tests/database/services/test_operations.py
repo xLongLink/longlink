@@ -132,7 +132,6 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
             source="ghcr.io/longlink/dashboard:latest",
             solution_id=running.id,
             image="ghcr.io/longlink/dashboard@sha256:resolved",
-            image_metadata={},
             envs={},
             deployed_at=utcnow(),
         )
@@ -162,7 +161,6 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
             source="ghcr.io/longlink/dashboard:latest",
             solution_id=running.id,
             image="ghcr.io/longlink/dashboard@sha256:new",
-            image_metadata={},
             envs={},
         )
         session.add(desired)
@@ -348,7 +346,6 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
             source="ghcr.io/longlink/dashboard:latest",
             solution_id=solution.id,
             image="ghcr.io/longlink/dashboard@sha256:resolved",
-            image_metadata={},
             envs={},
         )
         session.add(revision)

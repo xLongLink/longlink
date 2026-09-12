@@ -10,7 +10,6 @@ class ViewDefinition:
 
     path: str
     route: str
-    tab: str
     name: str | None = None
     icon: str | None = None
 

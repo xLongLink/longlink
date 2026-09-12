@@ -1,10 +1,9 @@
-import pytest
-from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
+from src.database.models.organizations import Organization
 
 
 async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(
@@ -25,8 +24,14 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     # Assert
     assert profile_response.status_code == 200
     assert profile_response.headers["cache-control"] == "no-store"
-    assert profile_response.json()["id"] == str(user.id)
-    assert profile_response.json()["administrator"] is True
+    assert profile_response.json() == {
+        "id": str(user.id),
+        "name": user.name,
+        "email": user.email,
+        "avatar": user.avatar,
+        "administrator": user.administrator,
+    }
+    assert user.password not in profile_response.text
 
     assert organizations_response.status_code == 200
     assert organizations_response.headers["cache-control"] == "no-store"
@@ -83,25 +88,21 @@ async def test_list_users_returns_administrator_page_and_total(
     assert payload["total"] == 3
 
 
-async def test_patch_me_syncs_every_active_organization_after_profile_change(
+async def test_patch_me_queues_sync_for_every_active_organization_after_profile_change(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Project changed user profile data to each active organization database."""
+    """Persist the changed profile and queue synchronization for both organizations."""
 
     # Arrange
     user = users[0]
     first_organization = await create_organization(user, name="acme")
     second_organization = await create_organization(user, name="globex")
-    synchronized_organization_ids: list[UUID] = []
-
-    async def sync_users(_session: object, organization_id: UUID) -> None:
-        """Record organization user-projection requests without a database adapter."""
-
-        synchronized_organization_ids.append(organization_id)
-
-    monkeypatch.setattr("src.routes.v1.users.organizations.sync_users", sync_users)
+    async with session_scope() as session:
+        first_organization.database_sync_pending = False
+        second_organization.database_sync_pending = False
+        session.add_all([first_organization, second_organization])
+        await session.commit()
 
     # Act
     response = await clients[0].patch("/api/v1/me", json={"name": "Updated User"})
@@ -109,25 +110,33 @@ async def test_patch_me_syncs_every_active_organization_after_profile_change(
     # Assert
     assert response.status_code == 200
     assert response.json()["name"] == "Updated User"
-    assert set(synchronized_organization_ids) == {first_organization.id, second_organization.id}
+    async with session_scope() as session:
+        persisted_user = await session.get(User, user.id)
+        assert persisted_user is not None
+        assert persisted_user.name == "Updated User"
+        persisted_first_organization = await session.get(Organization, first_organization.id)
+        assert persisted_first_organization is not None
+        assert persisted_first_organization.database_sync_pending is True
+        persisted_second_organization = await session.get(Organization, second_organization.id)
+        assert persisted_second_organization is not None
+        assert persisted_second_organization.database_sync_pending is True
 
 
-async def test_patch_me_skips_organization_sync_when_profile_is_unchanged(
+async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchanged(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Avoid synchronizing organizations when no persisted profile field changes."""
+    """Keep the persisted profile unchanged and queue neither organization's synchronization."""
 
     # Arrange
-    await create_organization(users[0])
-
-    async def sync_users(*_args: object) -> None:
-        """Fail if an unchanged profile triggers synchronization."""
-
-        pytest.fail("unchanged profile must not synchronize organizations")
-
-    monkeypatch.setattr("src.routes.v1.users.organizations.sync_users", sync_users)
+    user = users[0]
+    first_organization = await create_organization(user, name="acme")
+    second_organization = await create_organization(user, name="globex")
+    async with session_scope() as session:
+        first_organization.database_sync_pending = False
+        second_organization.database_sync_pending = False
+        session.add_all([first_organization, second_organization])
+        await session.commit()
 
     # Act
     response = await clients[0].patch("/api/v1/me", json={"name": users[0].name})
@@ -135,3 +144,13 @@ async def test_patch_me_skips_organization_sync_when_profile_is_unchanged(
     # Assert
     assert response.status_code == 200
     assert response.json()["name"] == "Platform Administrator"
+    async with session_scope() as session:
+        persisted_user = await session.get(User, user.id)
+        assert persisted_user is not None
+        assert persisted_user.name == "Platform Administrator"
+        persisted_first_organization = await session.get(Organization, first_organization.id)
+        assert persisted_first_organization is not None
+        assert persisted_first_organization.database_sync_pending is False
+        persisted_second_organization = await session.get(Organization, second_organization.id)
+        assert persisted_second_organization is not None
+        assert persisted_second_organization.database_sync_pending is False

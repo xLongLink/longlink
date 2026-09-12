@@ -6,13 +6,13 @@ import asyncio
 from uuid import uuid4
 from pathlib import Path
 from containers import require_docker_daemon
+from src.utils.s3 import S3, Credentials
 from urllib.parse import urlsplit
 from collections.abc import Iterator
 from src.development import gateway, storage
 from botocore.exceptions import SSLError, ClientError
 from longlink.storage.base import create_fs
 from longlink.utils.settings import Envs
-from src.adapters.storage.s3 import S3, Credentials
 from testcontainers.core.container import DockerContainer
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
@@ -25,7 +25,7 @@ def ceph() -> Iterator[tuple[DockerContainer, str, str]]:
 
     require_docker_daemon()
     container = DockerContainer(CEPH_IMAGE, entrypoint="bash")
-    container.with_volume_mapping(str(Path(__file__).resolve().parents[2] / "ceph.sh"), "/test/ceph.sh", mode="ro")
+    container.with_volume_mapping(str(Path(__file__).resolve().parents[1] / "ceph.sh"), "/test/ceph.sh", mode="ro")
     container.with_command("/test/ceph.sh")
     container.with_exposed_ports(8080)
     container.with_exposed_ports(8443)
@@ -82,6 +82,16 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
     async with owner.client() as client:
         await client.create_bucket(Bucket=bucket)
         await client.create_bucket(Bucket=other_bucket)
+
+        # RGW exposes never-versioned objects as deletable null versions.
+        await client.put_object(Bucket=bucket, Key=prefix + "unversioned", Body=b"null version")
+        versions = await client.list_object_versions(Bucket=bucket, Prefix=prefix)
+        assert [(item["Key"], item["VersionId"]) for item in versions["Versions"]] == [(prefix + "unversioned", "null")]
+        await owner.delete_prefix(bucket, prefix)
+        assert not (await client.list_objects_v2(Bucket=bucket, Prefix=prefix)).get("Contents")
+
+        # Preserve a pre-versioning null object alongside later versions and delete markers.
+        await client.put_object(Bucket=bucket, Key=prefix + "legacy", Body=b"legacy")
         await client.put_bucket_versioning(Bucket=bucket, VersioningConfiguration={"Status": "Enabled"})
         await client.put_object(Bucket=bucket, Key="shared/reference", Body=b"shared")
         await client.put_object(Bucket=bucket, Key=sibling_key, Body=b"private")
@@ -97,7 +107,7 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
         shared = await client.get_object(Bucket=bucket, Key="shared/reference")
         async with shared["Body"] as body:
             assert await body.read() == b"shared"
-        assert len((await client.list_objects_v2(Bucket=bucket, Prefix=prefix))["Contents"]) == 1
+        assert len((await client.list_objects_v2(Bucket=bucket, Prefix=prefix))["Contents"]) == 2
         for denied_prefix in ("", "solutions/", f"solutions/{sibling.hex}/", prefix.rstrip("/")):
             with pytest.raises(ClientError) as error:
                 await client.list_objects_v2(Bucket=bucket, Prefix=denied_prefix)
@@ -195,6 +205,17 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
     result = container.exec(["radosgw-admin", "user", "rm", "--uid", f"solution-{first.hex}"])
     assert result.exit_code == 0, result.output.decode()
     await owner.authorize(bucket, [sibling])
+
+    # Suspended buckets retain versions and markers while new writes use the null version.
+    async with owner.client() as client:
+        await client.delete_object(Bucket=bucket, Key=prefix + "file")
+        await client.put_bucket_versioning(Bucket=bucket, VersioningConfiguration={"Status": "Suspended"})
+        await client.put_object(Bucket=bucket, Key=prefix + "suspended", Body=b"suspended")
+        await client.delete_object(Bucket=bucket, Key=prefix + "legacy")
+        versions = await client.list_object_versions(Bucket=bucket, Prefix=prefix)
+        assert any(item["Key"] == prefix + "suspended" and item["VersionId"] == "null" for item in versions["Versions"])
+        assert any(item["VersionId"] == "null" for item in versions["DeleteMarkers"])
+
     async with runtime.client() as client:
         with pytest.raises(ClientError):
             await client.list_objects_v2(Bucket=bucket, Prefix=prefix)
@@ -214,23 +235,27 @@ async def test_development_transports_preserve_tls_and_s3_signing(ceph: tuple[Do
     _, endpoint, certificate = ceph
     port = urlsplit(endpoint).port
     assert port is not None
-    connection = storage.S3("https://localhost", Credentials("owner-key", "owner-secret"), certificate, port)
+    resolver = storage.Resolver("https://localhost", port)
+    connection = S3("https://localhost", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
     async with connection.client() as client:
         await client.list_buckets()
-    connection = storage.S3("https://wrong-host.example", Credentials("owner-key", "owner-secret"), certificate, port)
+    resolver = storage.Resolver("https://wrong-host.example", port)
+    connection = S3("https://wrong-host.example", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
     async with connection.client() as client:
         with pytest.raises(SSLError):
             await client.list_buckets()
 
     # Knative's routing authority differs from the certificate identity and must not alter SNI.
-    routed = gateway.Gateway("https://localhost", certificate, port)
-    async with routed.client() as client:
+    transport = gateway.Transport(port, certificate)
+    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    async with client:
         response = await client.get("https://localhost/", headers={"Host": "internalkourier"})
         # RGW interprets this foreign authority as a missing bucket, proving Host survived the tunnel.
         assert response.status_code == 404
         assert "<Code>NoSuchBucket</Code>" in response.text
-    routed = gateway.Gateway("https://wrong-host.example", certificate, port)
-    async with routed.client() as client:
+    transport = gateway.Transport(port, certificate)
+    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    async with client:
         with pytest.raises(httpx2.ConnectError):
             await client.get("https://wrong-host.example/", headers={"Host": "internalkourier"})
 

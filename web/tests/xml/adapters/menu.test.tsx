@@ -2,9 +2,9 @@ import { RenderXML } from '../helpers';
 import { MemoryRouter } from 'react-router';
 import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Menu', () => {
     it.each([
@@ -18,13 +18,13 @@ describe('Menu', () => {
             'MenuSection does not support Text children',
         ],
     ])('rejects invalid structure', (xml, error) => {
-        expect(() => renderXmlToMarkup(parseXML(xml))).toThrow(error);
+        expect(() => renderXmlToMarkup(parseFragment(xml))).toThrow(error);
     });
 
     it('renders sections, items, and subsections', () => {
         const ast = parseXML(
             '<longlink><Menu><MenuSection title="Workspace"><MenuItem label="Overview">Overview content</MenuItem><MenuSubSection label="Projects"><MenuItem label="Active projects">Projects content</MenuItem></MenuSubSection></MenuSection></Menu></longlink>'
-        )[0];
+        );
         const output = renderToStaticMarkup(
             <MemoryRouter>
                 <RenderXML ast={ast} ctx={createContext()} />

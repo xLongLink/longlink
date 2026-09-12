@@ -77,12 +77,12 @@ async def test_compute_registry_deletes_registration_after_completed_lifecycle(
 
     # Act
     response = await clients[0].delete(f"/api/v1/computes/{compute.id}")
-    get_response = await clients[0].get(f"/api/v1/computes/{compute.id}")
+    list_response = await clients[0].get("/api/v1/computes")
 
     # Assert
     assert response.status_code == 204
-    assert get_response.status_code == 404
-    assert get_response.json() == {"detail": "Compute registry not found"}
+    assert list_response.status_code == 200
+    assert str(compute.id) not in {item["id"] for item in list_response.json()["items"]}
 
 
 async def test_compute_registry_deletion_rejects_unknown_registry(

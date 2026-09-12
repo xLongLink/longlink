@@ -14,15 +14,14 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { AvatarDialog } from '@/components/dialogs/Avatar';
 import { PageContainer } from '@/components/PageContainer';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
+import { Menu, type MenuSection } from '@/components/ui/Menu';
 import { accountNameSchema } from '@/components/settings/validation';
 import { useDeleteOrganization } from '@/lib/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { useAuthenticatedUser, useUpdateUser, useUserOrganizations } from '@/lib/hooks/use-user';
 /** Renders the authenticated settings page. */
 export default function Settings() {
@@ -88,6 +87,116 @@ export default function Settings() {
         description: (membership) => `Delete ${membership.organization.name} from your account?`,
         fallbackDescription: 'Delete this organization?',
     });
+
+    // Prepare settings panels while Menu mounts only the selected content.
+    const sections: MenuSection[] = [
+        {
+            title: 'Settings',
+            isHeaderHidden: true,
+            entries: [
+                {
+                    kind: 'item',
+                    icon: 'userRound',
+                    label: 'Account',
+                    content: (
+                        <Stack gap={4}>
+                            <Heading level={2}>Account</Heading>
+                            <Divider />
+                            <Stack direction="horizontal" gap={4} align="start" wrap="wrap">
+                                <Controller
+                                    control={control}
+                                    name="name"
+                                    render={({ field, fieldState }) => (
+                                        <TextInput
+                                            label="Username"
+                                            ref={field.ref}
+                                            htmlName={field.name}
+                                            isDisabled={updateUser.isPending || isSubmitting}
+                                            value={field.value}
+                                            width="100%"
+                                            isRequired
+                                            status={
+                                                fieldState.error
+                                                    ? { type: 'error', message: fieldState.error.message }
+                                                    : undefined
+                                            }
+                                            onChange={(value) => {
+                                                field.onChange(value);
+                                                clearErrors('name');
+                                            }}
+                                            onBlur={() => {
+                                                field.onBlur();
+                                                void saveAccountName();
+                                            }}
+                                        />
+                                    )}
+                                />
+                                <TextInput label="Email" type="email" value={user.email} width="100%" isDisabled />
+                            </Stack>
+                        </Stack>
+                    ),
+                },
+                {
+                    kind: 'item',
+                    icon: 'building2',
+                    label: 'Organizations',
+                    content: (
+                        <Stack gap={4}>
+                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                                <Heading level={2}>Organizations</Heading>
+                                <CreateOrganization />
+                            </Stack>
+                            <Divider />
+                            {isOrganizationsLoading ? null : (
+                                <Table
+                                    data={memberships}
+                                    density="compact"
+                                    emptyState={<EmptyState title="No results." isCompact />}
+                                    hasHover
+                                    idKey={(membership) => membership.organization.id}
+                                    columns={
+                                        [
+                                            {
+                                                key: 'name',
+                                                header: 'Name',
+                                                width: proportional(1),
+                                                renderCell: (membership) => (
+                                                    <OrganizationCell
+                                                        endContent={<Badge label={membership.role} />}
+                                                        organization={membership.organization}
+                                                    />
+                                                ),
+                                            },
+                                            {
+                                                key: 'actions',
+                                                header: 'Actions',
+                                                width: pixel(96),
+                                                align: 'end',
+                                                renderCell: (membership) =>
+                                                    membership.role === 'owner' ? (
+                                                        <MoreMenu
+                                                            label={`Open actions for ${membership.organization.name}`}
+                                                            size="sm"
+                                                            items={[
+                                                                {
+                                                                    label: 'Delete',
+                                                                    onClick: () => deleteDialog.openFor(membership),
+                                                                },
+                                                            ]}
+                                                        />
+                                                    ) : null,
+                                            },
+                                        ] satisfies TableColumn<(typeof memberships)[number]>[]
+                                    }
+                                />
+                            )}
+                        </Stack>
+                    ),
+                },
+            ],
+        },
+    ];
+
     return (
         <PageContainer gap={8} padding={2}>
             <NoIndex title="Account Settings | LongLink" />
@@ -128,101 +237,9 @@ export default function Settings() {
                 </Stack>
             </Stack>
 
-            <Menu>
-                <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem icon="userRound" label="Account">
-                        <Stack gap={4}>
-                            <Heading level={2}>Account</Heading>
-                            <Divider />
-                            <Stack direction="horizontal" gap={4} align="start" wrap="wrap">
-                                <Controller
-                                    control={control}
-                                    name="name"
-                                    render={({ field, fieldState }) => (
-                                        <TextInput
-                                            label="Username"
-                                            ref={field.ref}
-                                            htmlName={field.name}
-                                            isDisabled={updateUser.isPending || isSubmitting}
-                                            value={field.value}
-                                            width="100%"
-                                            isRequired
-                                            status={
-                                                fieldState.error
-                                                    ? { type: 'error', message: fieldState.error.message }
-                                                    : undefined
-                                            }
-                                            onChange={(value) => {
-                                                field.onChange(value);
-                                                clearErrors('name');
-                                            }}
-                                            onBlur={() => {
-                                                field.onBlur();
-                                                void saveAccountName();
-                                            }}
-                                        />
-                                    )}
-                                />
-                                <TextInput label="Email" type="email" value={user.email} width="100%" isDisabled />
-                            </Stack>
-                        </Stack>
-                    </MenuItem>
-                    <MenuItem icon="building2" label="Organizations">
-                        <Stack gap={4}>
-                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                                <Heading level={2}>Organizations</Heading>
-                                <CreateOrganization />
-                            </Stack>
-                            <Divider />
-                            {isOrganizationsLoading ? null : (
-                                <Table
-                                    data={memberships}
-                                    density="compact"
-                                    emptyState={<EmptyState title="No results." isCompact />}
-                                    hasHover
-                                    idKey={(membership) => membership.organization.id}
-                                >
-                                    <TableColumn<(typeof memberships)[number]>
-                                        field="name"
-                                        header="Name"
-                                        width={proportional(1)}
-                                    >
-                                        {(membership) => (
-                                            <OrganizationCell
-                                                endContent={<Badge label={membership.role} />}
-                                                organization={membership.organization}
-                                            />
-                                        )}
-                                    </TableColumn>
-                                    <TableColumn<(typeof memberships)[number]>
-                                        field="actions"
-                                        header="Actions"
-                                        width={pixel(96)}
-                                        align="end"
-                                    >
-                                        {(membership) =>
-                                            membership.role === 'owner' ? (
-                                                <MoreMenu
-                                                    label={`Open actions for ${membership.organization.name}`}
-                                                    size="sm"
-                                                    items={[
-                                                        {
-                                                            label: 'Delete',
-                                                            onClick: () => deleteDialog.openFor(membership),
-                                                        },
-                                                    ]}
-                                                />
-                                            ) : null
-                                        }
-                                    </TableColumn>
-                                </Table>
-                            )}
-                        </Stack>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
+            <Menu sections={sections} />
 
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </PageContainer>
     );
 }

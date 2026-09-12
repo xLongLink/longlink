@@ -15,7 +15,7 @@ import {
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Returns current-user membership data for one organization route slug. */
-function useOrganizationMembership(organizationSlug: string) {
+export function useOrganizationMembership(organizationSlug: string) {
     const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
     const membershipQuery = useQuery({
         queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
@@ -26,10 +26,11 @@ function useOrganizationMembership(organizationSlug: string) {
         retry: false,
     });
     const membership = membershipQuery.data;
-    const organizationId = membership?.organization.id;
+    const organization = membership?.organization;
+    const organizationId = organization?.id;
     const role = membership?.role ?? null;
 
-    return { organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
+    return { organization, organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
 }
 
 /** Invalidates cached organization solution collections. */
@@ -43,14 +44,7 @@ function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organiz
 }
 
 /** Fetches organization details and people-management data for the current workspace. */
-export function useOrganization(organizationSlug: string) {
-    const {
-        organizationId,
-        role,
-        isLoading: isMembershipLoading,
-        error: membershipError,
-    } = useOrganizationMembership(organizationSlug);
-
+export function useOrganization(organizationId: string | undefined) {
     const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
     const organizationQuery = useQuery({
         queryKey: ['api', organizationPath],
@@ -60,27 +54,19 @@ export function useOrganization(organizationSlug: string) {
         retry: false,
     });
 
-    const error: (Error & { status?: number }) | null = organizationQuery.error ?? membershipError;
     const { organization, members = [], invitations = [] } = organizationQuery.data ?? {};
 
     return {
         organization,
         members,
         invitations,
-        role,
-        isLoading: isMembershipLoading || organizationQuery.isLoading,
-        error,
+        isLoading: organizationQuery.isLoading,
+        error: organizationQuery.error,
     };
 }
 
 /** Fetches organization solutions without loading people-management data. */
-export function useOrganizationSolutions(organizationSlug: string, enabled = true) {
-    const {
-        organizationId,
-        role,
-        isLoading: isMembershipLoading,
-        error: membershipError,
-    } = useOrganizationMembership(organizationSlug);
+export function useOrganizationSolutions(organizationId: string | undefined, enabled = true) {
     const solutionsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
     const solutionsQuery = useQuery({
         queryKey: ['api', solutionsPath],
@@ -97,14 +83,11 @@ export function useOrganizationSolutions(organizationSlug: string, enabled = tru
         meta: { polling: true },
         retry: false,
     });
-    const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipError;
 
     return {
         solutions: solutionsQuery.data ?? [],
-        organizationId: organizationId ?? '',
-        role,
-        isLoading: isMembershipLoading || solutionsQuery.isLoading,
-        error,
+        isLoading: solutionsQuery.isLoading,
+        error: solutionsQuery.error,
     };
 }
 

@@ -204,7 +204,6 @@ async def deploy(
         image=metadata.image,
         source=source,
         min_scale=min_scale,
-        image_metadata=metadata.model_dump(mode="json"),
         envs=merged,
         created_id=user_id,
     )

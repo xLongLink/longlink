@@ -10,17 +10,16 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Kubernetes } from '@/components/svg/Kubernetes';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import MetadataDialog from '@/components/dialogs/Metadata';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateCompute from '@/components/dialogs/CreateCompute';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
@@ -89,34 +88,44 @@ export default function AdminCompute() {
                 hasHover
                 idKey="id"
                 plugins={{ pagination }}
-            >
-                <TableColumn<ComputeRegistryResponse> field="compute" header="Compute" width={proportional(2)}>
-                    {(compute) => (
-                        <Stack direction="horizontal" gap={3} align="center">
-                            <Kubernetes height={24} width={24} />
-                            <Stack>
-                                <Stack direction="horizontal" gap={1} align="center">
-                                    <Text weight="semibold">{compute.name}</Text>
-                                    <StatusBadge status={compute.status} />
+                columns={
+                    [
+                        {
+                            key: 'compute',
+                            header: 'Compute',
+                            width: proportional(2),
+                            renderCell: (compute) => (
+                                <Stack direction="horizontal" gap={3} align="center">
+                                    <Kubernetes height={24} width={24} />
+                                    <Stack>
+                                        <Stack direction="horizontal" gap={1} align="center">
+                                            <Text weight="semibold">{compute.name}</Text>
+                                            <StatusBadge status={compute.status} />
+                                        </Stack>
+                                        <Text type="supporting">{compute.gateway_url}</Text>
+                                    </Stack>
                                 </Stack>
-                                <Text type="supporting">{compute.gateway_url}</Text>
-                            </Stack>
-                        </Stack>
-                    )}
-                </TableColumn>
-                <TableColumn<ComputeRegistryResponse> align="end" field="metadata" header="" width={pixel(56)}>
-                    {(compute) => (
-                        <IconButton
-                            icon={<Ellipsis />}
-                            label={`View metadata for ${compute.name}`}
-                            size="sm"
-                            tooltip="View metadata"
-                            variant="ghost"
-                            onClick={() => setMetadataCompute(compute)}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                            ),
+                        },
+                        {
+                            align: 'end',
+                            key: 'metadata',
+                            header: '',
+                            width: pixel(56),
+                            renderCell: (compute) => (
+                                <IconButton
+                                    icon={<Ellipsis />}
+                                    label={`View metadata for ${compute.name}`}
+                                    size="sm"
+                                    tooltip="View metadata"
+                                    variant="ghost"
+                                    onClick={() => setMetadataCompute(compute)}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<ComputeRegistryResponse>[]
+                }
+            />
             {metadataCompute && (
                 <MetadataDialog
                     onClose={() => setMetadataCompute(null)}
@@ -159,7 +168,7 @@ export default function AdminCompute() {
                     </MetadataList>
                 </MetadataDialog>
             )}
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </Stack>
     );
 }

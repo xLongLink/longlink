@@ -128,7 +128,6 @@ class LongLink:
             view_route = view_stem_route(path_without_suffix)
             relative_route = view_route.removeprefix("/")
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
-            tab = relative_route.split("/:", 1)[0] or "index"
 
             # View endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:
@@ -144,7 +143,6 @@ class LongLink:
                     ViewDefinition(
                         path=view_path,
                         route=view_route,
-                        tab=tab,
                         name=view_name,
                         icon=view_icon,
                     ),

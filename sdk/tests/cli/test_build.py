@@ -26,22 +26,14 @@ def build_project(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def docker_build(monkeypatch: pytest.MonkeyPatch) -> tuple[list[list[str]], list[Path]]:
-    """Replace Docker discovery and project metadata with deterministic values."""
+def docker_build(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
+    """Prepare a real project and replace external Docker discovery."""
 
-    # Keep Docker invocations and generated contexts observable to build-command tests.
+    # Run build-command tests from the project and keep Docker invocations observable.
     commands: list[list[str]] = []
-    contexts: list[Path] = []
-
-    def build_solution(build_context: Path) -> tuple[str, str]:
-        """Record the generated context and return fixed project metadata."""
-
-        contexts.append(build_context)
-        return "0.1.0", "Demo Solution"
-
-    monkeypatch.setattr(build, "build_solution", build_solution)
+    monkeypatch.chdir(build_project)
     monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
-    return commands, contexts
+    return commands
 
 
 def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> None:
@@ -150,6 +142,7 @@ def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
     envs_path = tmp_path / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text(
+        "raise AssertionError('Solution module must not execute')\n"
         "from pydantic import BaseModel, Field\n"
         "\n"
         "ALIAS = 'DYNAMIC_TOKEN'\n"
@@ -519,7 +512,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
         pytest.param(
             ["--push"],
             ["/usr/bin/docker", "build"],
-            [["/usr/bin/docker", "push", "localhost:15000/demo-solution:dev"]],
+            [["/usr/bin/docker", "push", "localhost:15000/demo:dev"]],
             True,
             id="push",
         ),
@@ -534,7 +527,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
     ],
 )
 def test_build_command_reports_built_image(
-    docker_build: tuple[list[list[str]], list[Path]],
+    docker_build: list[list[str]],
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
     expected_build_command: list[str],
@@ -544,19 +537,26 @@ def test_build_command_reports_built_image(
     """Build an image locally and optionally publish it."""
 
     # Arrange
-    commands, contexts = docker_build
+    commands = docker_build
     runner = CliRunner()
 
+    def run_docker(command: list[str], check: bool) -> None:
+        """Record Docker commands and verify the live build artifact."""
+
+        # Inspect the generated context before the command cleans it up.
+        commands.append(command)
+        if command[1] != "push":
+            assert Path(command[-1], "Dockerfile").is_file()
+
     # Replace Docker boundaries with deterministic local fakes.
-    monkeypatch.setattr(build.subprocess, "run", lambda command, check: commands.append(command))
+    monkeypatch.setattr(build.subprocess, "run", run_docker)
 
     # Act
     result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", *arguments])
 
     # Assert
     assert result.exit_code == 0
-    assert len(contexts) == 1
-    temporary_context = contexts[0]
+    temporary_context = Path(commands[0][-1])
     assert commands == [
         [
             *expected_build_command,
@@ -565,28 +565,28 @@ def test_build_command_reports_built_image(
             "-f",
             str(temporary_context / "Dockerfile"),
             "-t",
-            "localhost:15000/demo-solution:dev",
+            "localhost:15000/demo:dev",
             str(temporary_context),
         ],
         *expected_commands,
     ]
-    assert "- Built image: localhost:15000/demo-solution:dev" in result.output
-    assert ("- Pushed image: localhost:15000/demo-solution:dev" in result.output) is expected_push_output
+    assert "- Built image: localhost:15000/demo:dev" in result.output
+    assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is expected_push_output
 
 
-def test_build_command_reports_docker_build_failure_without_pushing(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_build_command_reports_docker_build_failure_without_pushing(docker_build: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
     """Translate a failed Docker build into a CLI error before a push starts."""
 
     # Arrange
-    commands, _contexts = docker_build
+    commands = docker_build
     runner = CliRunner()
 
     def fail_build(command: list[str], check: bool) -> None:
         """Record and fail the Docker build command."""
 
+        # Verify the generated artifact before simulating a failed build.
         commands.append(command)
+        assert Path(command[-1], "Dockerfile").is_file()
         raise subprocess.CalledProcessError(23, command)
 
     monkeypatch.setattr(build.subprocess, "run", fail_build)
@@ -601,21 +601,21 @@ def test_build_command_reports_docker_build_failure_without_pushing(
     assert commands[0][1] == "build"
 
 
-def test_build_command_reports_docker_push_failure(
-    docker_build: tuple[list[list[str]], list[Path]], monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_build_command_reports_docker_push_failure(docker_build: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
     """Translate a failed Docker push into a CLI error after building the image."""
 
     # Arrange
-    commands, _contexts = docker_build
+    commands = docker_build
     runner = CliRunner()
 
     def fail_push(command: list[str], check: bool) -> None:
         """Record Docker commands and fail only the push command."""
 
+        # Fail the push after verifying the live build artifact.
         commands.append(command)
         if command[1] == "push":
             raise subprocess.CalledProcessError(24, command)
+        assert Path(command[-1], "Dockerfile").is_file()
 
     monkeypatch.setattr(build.subprocess, "run", fail_push)
 

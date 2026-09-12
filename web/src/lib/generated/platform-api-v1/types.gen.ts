@@ -1705,40 +1705,6 @@ export type DeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponses = {
 
 export type DeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = DeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponses[keyof DeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponses];
 
-export type GetComputeRegistryApiV1ComputesRegistryIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/computes/{registry_id}';
-};
-
-export type GetComputeRegistryApiV1ComputesRegistryIdGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type GetComputeRegistryApiV1ComputesRegistryIdGetError = GetComputeRegistryApiV1ComputesRegistryIdGetErrors[keyof GetComputeRegistryApiV1ComputesRegistryIdGetErrors];
-
-export type GetComputeRegistryApiV1ComputesRegistryIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: ComputeRegistryResponse;
-};
-
-export type GetComputeRegistryApiV1ComputesRegistryIdGetResponse = GetComputeRegistryApiV1ComputesRegistryIdGetResponses[keyof GetComputeRegistryApiV1ComputesRegistryIdGetResponses];
-
 export type HealthzApiV1HealthzGetData = {
     body?: never;
     path?: never;
@@ -2115,74 +2081,6 @@ export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses = {
 };
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses[keyof UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses];
-
-export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostData = {
-    body?: never;
-    path: {
-        /**
-         * Organization Id
-         */
-        organization_id: string;
-    };
-    query?: never;
-    url: '/api/v1/organizations/{organization_id}/database/resume';
-};
-
-export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostError = ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors[keyof ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostErrors];
-
-export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: DatabaseState;
-};
-
-export type ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponse = ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses[keyof ResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponses];
-
-export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostData = {
-    body?: never;
-    path: {
-        /**
-         * Organization Id
-         */
-        organization_id: string;
-    };
-    query?: never;
-    url: '/api/v1/organizations/{organization_id}/database/hibernate';
-};
-
-export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostError = HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors[keyof HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostErrors];
-
-export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: DatabaseState;
-};
-
-export type HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponse = HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses[keyof HibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponses];
 
 export type GetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetData = {
     body?: never;

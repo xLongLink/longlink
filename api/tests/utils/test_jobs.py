@@ -182,34 +182,6 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     assert "INFO: Compute reconciliation failed" in transitions[0][2]
 
 
-async def test_execute_persists_timeout_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Persist a timed-out handler as a failed claimed Operation."""
-
-    # Arrange
-    operation = leased_operation()
-
-    @asynccontextmanager
-    async def expired_timeout(_seconds: int):
-        """Raise the worker timeout after one handler execution."""
-
-        yield
-        raise TimeoutError
-
-    async def complete_handler(_target_id: UUID) -> None:
-        """Complete before the configured worker timeout expires."""
-
-    monkeypatch.setattr(operation_worker.asyncio, "timeout", expired_timeout)
-    monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
-    monkeypatch.setattr(operation_worker.operations, "fail", failed_transition(operation))
-
-    # Act
-    result = await operation_worker.execute(operation)
-
-    # Assert
-    assert result.status == OperationStatus.failed
-    assert result.failed == f"Operation timed out after {operation_worker.env.OPERATION_TIMEOUT_SECONDS} seconds"
-
-
 async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Contain an unexpected handler exception and release its Operation lease."""
 

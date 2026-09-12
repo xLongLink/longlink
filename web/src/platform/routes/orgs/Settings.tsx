@@ -28,7 +28,6 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AvatarDialog } from '@/components/dialogs/Avatar';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -36,15 +35,16 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import DatabaseSettings from '@/components/settings/Database';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Menu, type MenuSection } from '@/components/ui/Menu';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { invitationSchema } from '@/components/settings/validation';
-import { Menu, MenuItem, MenuSection, MenuSubSection } from '@/components/ui/Menu';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import {
     useDeleteOrganizationSolution,
     useOrganization,
+    useOrganizationMembership,
     useOrganizationSolutions,
     useOrganizationMembers,
     useUpdateOrganization,
@@ -68,23 +68,31 @@ export default function OrganizationSettings() {
     const toast = useToast();
     const isSolutionsSectionActive = hash === '#solutions';
     const {
+        organization: membershipOrganization,
+        organizationId: membershipOrganizationId,
+        role: organizationRole,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organization);
+    const {
         organization: organizationDetails,
         members,
         invitations,
-        role: organizationRole,
         isLoading: isOrganizationLoading,
         error: organizationError,
-    } = useOrganization(organization);
+    } = useOrganization(isSolutionsSectionActive ? undefined : membershipOrganizationId);
     const {
         solutions,
         isLoading: isSolutionsLoading,
         error: solutionsError,
-    } = useOrganizationSolutions(organization, isSolutionsSectionActive);
-    const isLoading = isOrganizationLoading || isSolutionsLoading;
-    const error = organizationError ?? solutionsError;
-    const organizationName = organizationDetails?.name ?? organization;
-    const organizationAvatar = organizationDetails?.avatar ?? '';
-    const organizationId = organizationDetails?.id ?? '';
+    } = useOrganizationSolutions(membershipOrganizationId, isSolutionsSectionActive);
+
+    // Preserve the page's loading state and details-first error precedence.
+    const isLoading = isMembershipLoading || isOrganizationLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = organizationError ?? membershipError ?? solutionsError;
+    const organizationName = organizationDetails?.name ?? membershipOrganization?.name ?? organization;
+    const organizationAvatar = organizationDetails?.avatar ?? membershipOrganization?.avatar ?? '';
+    const organizationId = organizationDetails?.id ?? membershipOrganization?.id ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
     const hasOrganizationSolutionAccess = hasMinimumRole(organizationRole, 'maintain');
     const [logsTargetId, setLogsTargetId] = useState<string | null>(null);
@@ -162,51 +170,127 @@ export default function OrganizationSettings() {
         return <NotFoundLayout />;
     }
 
-    return (
-        <PageContainer gap={8} padding={2}>
-            <NoIndex title="Organization Settings | LongLink" />
-            <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
-                <AvatarDialog
-                    key={organizationId}
-                    avatar={organizationAvatar}
-                    formId="organization-avatar-form"
-                    isSaving={updateOrganization.isPending}
-                    isDisabled={!canManageOrganization || organizationId.length === 0}
-                    onSave={(avatar) =>
-                        updateOrganization.mutateAsync(
-                            { avatar },
-                            {
-                                onSuccess: () => toast({ body: 'Avatar saved' }),
-                            }
-                        )
-                    }
-                    placeholder="https://example.com/org.png"
-                    title="Organization avatar"
-                >
-                    {(avatar, open) => (
-                        <IconButton
-                            className="size-12"
-                            icon={<Avatar kind="organization" name={organizationName} size="lg" src={avatar} />}
-                            isDisabled={!canManageOrganization}
-                            label="Edit organization avatar"
-                            tooltip="Edit avatar"
-                            variant="ghost"
-                            onClick={open}
-                        />
-                    )}
-                </AvatarDialog>
+    // Define row rendering separately from the nested settings panels.
+    const memberColumns: TableColumn<OrganizationMemberAccessResponse>[] = [
+        {
+            key: 'member',
+            header: 'User',
+            width: proportional(1),
+            renderCell: (member) => <UserCell user={member.user} />,
+        },
+        {
+            key: 'membership',
+            header: 'Role',
+            width: pixel(128),
+            renderCell: (member) => <Badge label={member.role} />,
+        },
+        {
+            align: 'end',
+            key: 'actions',
+            header: 'Action',
+            width: pixel(96),
+            renderCell: (member) => (
+                <MoreMenu
+                    label={`Open actions for ${member.user.name}`}
+                    size="sm"
+                    isDisabled={!canManageOrganization}
+                    items={ROLE_NAMES.filter((role) => role !== member.role).map((role) => ({
+                        label: `Grant ${roleLabel(role)} permission`,
+                        onClick: () => setRoleChangeTarget({ memberId: member.user.id, role }),
+                    }))}
+                />
+            ),
+        },
+    ];
+    const invitationColumns: TableColumn<OrganizationInvitationResponse>[] = [
+        {
+            key: 'email',
+            header: 'Email',
+            width: proportional(1),
+            renderCell: (invitation) => <Text weight="semibold">{invitation.email}</Text>,
+        },
+        { key: 'role', header: 'Role', width: pixel(128), renderCell: (invitation) => invitation.role },
+        {
+            key: 'created_at',
+            header: 'Created',
+            width: pixel(144),
+            renderCell: (invitation) => dateFormatter.format(new Date(invitation.created_at)),
+        },
+    ];
+    const solutionColumns: TableColumn<OrganizationSolutionSummary>[] = [
+        {
+            key: 'name',
+            header: 'Solution',
+            width: proportional(1),
+            renderCell: (solution) => (
                 <Stack>
-                    <Heading accessibilityLevel={1} level={4}>
-                        {organizationName}
-                    </Heading>
-                    <Text size="sm" type="supporting">
-                        Organization
-                    </Text>
+                    <Stack direction="horizontal" gap={1} align="center">
+                        <Link href={`/orgs/${organization}/solutions/${solution.slug}`} weight="semibold">
+                            {solution.name}
+                        </Link>
+                        <StatusBadge status={solution.status} />
+                        {solution.deployment_pending && solution.status !== 'creating' ? (
+                            <Text type="supporting">Deployment queued</Text>
+                        ) : null}
+                    </Stack>
+                    {solution.description ? <Text type="supporting">{solution.description}</Text> : null}
                 </Stack>
-            </Stack>
-            <Menu>
-                <MenuSection title="Settings" isHeaderHidden>
-                    <MenuItem icon="building2" label="Organization">
+            ),
+        },
+    ];
+
+    // Include action columns only for users with organization-level solution access.
+    if (hasOrganizationSolutionAccess) {
+        invitationColumns.push({
+            align: 'end',
+            key: 'actions',
+            header: 'Action',
+            width: pixel(96),
+            renderCell: (invitation) => (
+                <MoreMenu
+                    label={`Open actions for ${invitation.email}`}
+                    size="sm"
+                    isDisabled={!hasMinimumRole(organizationRole, invitation.role)}
+                    items={[{ label: 'Revoke', onClick: () => setRevokeInvitationId(invitation.id) }]}
+                />
+            ),
+        });
+        solutionColumns.push({
+            align: 'end',
+            key: 'action',
+            header: 'Action',
+            width: pixel(224),
+            renderCell: (solution) => (
+                <Stack direction="horizontal" gap={2} align="center" justify="end" wrap="wrap">
+                    <SolutionUpdate
+                        key={`${solution.id}:${solution.desired_revision_id}:${solution.deployment_pending}:${solution.status}`}
+                        solution={solution}
+                        organizationId={organizationId}
+                    />
+                    <MoreMenu
+                        label={`Open actions for ${solution.name}`}
+                        size="sm"
+                        items={[
+                            { label: 'Logs', onClick: () => setLogsTargetId(solution.id) },
+                            { label: 'Delete', onClick: () => deleteDialog.openFor(solution) },
+                        ]}
+                    />
+                </Stack>
+            ),
+        });
+    }
+
+    // Prepare settings panels while Menu mounts only the selected content.
+    const sections: MenuSection[] = [
+        {
+            title: 'Settings',
+            isHeaderHidden: true,
+            entries: [
+                {
+                    kind: 'item',
+                    icon: 'building2',
+                    label: 'Organization',
+                    content: (
                         <Stack gap={3}>
                             <Heading level={2}>Organization</Heading>
                             <Divider />
@@ -261,6 +345,10 @@ export default function OrganizationSettings() {
                                     key={organizationId}
                                     organization={organizationDetails}
                                     canManage={canManageOrganization}
+                                    isSaving={updateOrganization.isPending}
+                                    onSave={(databaseIdleSeconds) =>
+                                        updateOrganization.mutateAsync({ database_idle_seconds: databaseIdleSeconds })
+                                    }
                                 />
                             )}
                             <ProgressBar
@@ -276,134 +364,72 @@ export default function OrganizationSettings() {
                                 variant="neutral"
                             />
                         </Stack>
-                    </MenuItem>
-                    <MenuSubSection icon="users" label="People">
-                        <MenuItem label="Members">
-                            <Stack gap={4}>
-                                <Heading level={2}>Members</Heading>
-                                <Divider />
-                                {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
-                                    <Banner status="error" title="Failed to load people." />
-                                ) : (
-                                    <Table
-                                        data={members}
-                                        density="compact"
-                                        emptyState={<EmptyState title="No people found." isCompact />}
-                                        hasHover
-                                        idKey={(member) => member.user.id}
-                                    >
-                                        <TableColumn<OrganizationMemberAccessResponse>
-                                            field="member"
-                                            header="User"
-                                            width={proportional(1)}
-                                        >
-                                            {(member) => <UserCell user={member.user} />}
-                                        </TableColumn>
-                                        <TableColumn<OrganizationMemberAccessResponse>
-                                            field="membership"
-                                            header="Role"
-                                            width={pixel(128)}
-                                        >
-                                            {(member) => <Badge label={member.role} />}
-                                        </TableColumn>
-                                        <TableColumn<OrganizationMemberAccessResponse>
-                                            align="end"
-                                            field="actions"
-                                            header="Action"
-                                            width={pixel(96)}
-                                        >
-                                            {(member) => (
-                                                <MoreMenu
-                                                    label={`Open actions for ${member.user.name}`}
-                                                    size="sm"
-                                                    isDisabled={!canManageOrganization}
-                                                    items={ROLE_NAMES.filter((role) => role !== member.role).map(
-                                                        (role) => ({
-                                                            label: `Grant ${roleLabel(role)} permission`,
-                                                            onClick: () =>
-                                                                setRoleChangeTarget({
-                                                                    memberId: member.user.id,
-                                                                    role,
-                                                                }),
-                                                        })
-                                                    )}
-                                                />
-                                            )}
-                                        </TableColumn>
-                                    </Table>
-                                )}
-                            </Stack>
-                        </MenuItem>
-                        <MenuItem label="Invitations">
-                            <Stack gap={4}>
-                                <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
-                                    <Heading level={2}>Invitations</Heading>
-                                    <Button
-                                        label="Invite"
-                                        isDisabled={organizationId.length === 0 || !hasOrganizationSolutionAccess}
-                                        onClick={() => setInviteOpen(true)}
-                                    />
+                    ),
+                },
+                {
+                    kind: 'subsection',
+                    icon: 'users',
+                    label: 'People',
+                    items: [
+                        {
+                            kind: 'item',
+                            label: 'Members',
+                            content: (
+                                <Stack gap={4}>
+                                    <Heading level={2}>Members</Heading>
+                                    <Divider />
+                                    {isLoading && members.length === 0 ? null : error && members.length === 0 ? (
+                                        <Banner status="error" title="Failed to load people." />
+                                    ) : (
+                                        <Table
+                                            columns={memberColumns}
+                                            data={members}
+                                            density="compact"
+                                            emptyState={<EmptyState title="No people found." isCompact />}
+                                            hasHover
+                                            idKey={(member) => member.user.id}
+                                        />
+                                    )}
                                 </Stack>
-                                <Divider />
-                                {isLoading && invitations.length === 0 ? null : error && invitations.length === 0 ? (
-                                    <Banner status="error" title="Failed to load invitations." />
-                                ) : (
-                                    <Table
-                                        data={invitations}
-                                        density="compact"
-                                        emptyState={<EmptyState title="No invitations yet." isCompact />}
-                                        hasHover
-                                        idKey="id"
-                                    >
-                                        <TableColumn<OrganizationInvitationResponse>
-                                            field="email"
-                                            header="Email"
-                                            width={proportional(1)}
-                                        >
-                                            {(invitation) => <Text weight="semibold">{invitation.email}</Text>}
-                                        </TableColumn>
-                                        <TableColumn<OrganizationInvitationResponse>
-                                            field="role"
-                                            header="Role"
-                                            width={pixel(128)}
-                                        >
-                                            {(invitation) => invitation.role}
-                                        </TableColumn>
-                                        <TableColumn<OrganizationInvitationResponse>
-                                            field="created_at"
-                                            header="Created"
-                                            width={pixel(144)}
-                                        >
-                                            {(invitation) => dateFormatter.format(new Date(invitation.created_at))}
-                                        </TableColumn>
-                                        {hasOrganizationSolutionAccess ? (
-                                            <TableColumn<OrganizationInvitationResponse>
-                                                align="end"
-                                                field="actions"
-                                                header="Action"
-                                                width={pixel(96)}
-                                            >
-                                                {(invitation) => (
-                                                    <MoreMenu
-                                                        label={`Open actions for ${invitation.email}`}
-                                                        size="sm"
-                                                        isDisabled={!hasMinimumRole(organizationRole, invitation.role)}
-                                                        items={[
-                                                            {
-                                                                label: 'Revoke',
-                                                                onClick: () => setRevokeInvitationId(invitation.id),
-                                                            },
-                                                        ]}
-                                                    />
-                                                )}
-                                            </TableColumn>
-                                        ) : null}
-                                    </Table>
-                                )}
-                            </Stack>
-                        </MenuItem>
-                    </MenuSubSection>
-                    <MenuItem icon="boxes" label="Solutions">
+                            ),
+                        },
+                        {
+                            kind: 'item',
+                            label: 'Invitations',
+                            content: (
+                                <Stack gap={4}>
+                                    <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
+                                        <Heading level={2}>Invitations</Heading>
+                                        <Button
+                                            label="Invite"
+                                            isDisabled={organizationId.length === 0 || !hasOrganizationSolutionAccess}
+                                            onClick={() => setInviteOpen(true)}
+                                        />
+                                    </Stack>
+                                    <Divider />
+                                    {isLoading && invitations.length === 0 ? null : error &&
+                                      invitations.length === 0 ? (
+                                        <Banner status="error" title="Failed to load invitations." />
+                                    ) : (
+                                        <Table
+                                            columns={invitationColumns}
+                                            data={invitations}
+                                            density="compact"
+                                            emptyState={<EmptyState title="No invitations yet." isCompact />}
+                                            hasHover
+                                            idKey="id"
+                                        />
+                                    )}
+                                </Stack>
+                            ),
+                        },
+                    ],
+                },
+                {
+                    kind: 'item',
+                    icon: 'boxes',
+                    label: 'Solutions',
+                    content: (
                         <Stack gap={4}>
                             <Stack direction="horizontal" gap={4} justify="between" align="end" wrap="wrap">
                                 <Heading level={2}>Solutions</Heading>
@@ -417,81 +443,64 @@ export default function OrganizationSettings() {
                                 <Banner status="error" title="Failed to load solutions." />
                             ) : (
                                 <Table
+                                    columns={solutionColumns}
                                     data={solutions}
                                     density="compact"
                                     emptyState={<EmptyState title="No solutions found." isCompact />}
                                     hasHover
                                     idKey="id"
-                                >
-                                    <TableColumn<OrganizationSolutionSummary>
-                                        field="name"
-                                        header="Solution"
-                                        width={proportional(1)}
-                                    >
-                                        {(solution) => (
-                                            <Stack>
-                                                <Stack direction="horizontal" gap={1} align="center">
-                                                    <Link
-                                                        href={`/orgs/${organization}/solutions/${solution.slug}`}
-                                                        weight="semibold"
-                                                    >
-                                                        {solution.name}
-                                                    </Link>
-                                                    <StatusBadge status={solution.status} />
-                                                    {solution.deployment_pending && solution.status !== 'creating' ? (
-                                                        <Text type="supporting">Deployment queued</Text>
-                                                    ) : null}
-                                                </Stack>
-                                                {solution.description ? (
-                                                    <Text type="supporting">{solution.description}</Text>
-                                                ) : null}
-                                            </Stack>
-                                        )}
-                                    </TableColumn>
-                                    {hasOrganizationSolutionAccess ? (
-                                        <TableColumn<OrganizationSolutionSummary>
-                                            align="end"
-                                            field="action"
-                                            header="Action"
-                                            width={pixel(224)}
-                                        >
-                                            {(solution) => (
-                                                <Stack
-                                                    direction="horizontal"
-                                                    gap={2}
-                                                    align="center"
-                                                    justify="end"
-                                                    wrap="wrap"
-                                                >
-                                                    <SolutionUpdate
-                                                        key={`${solution.id}:${solution.desired_revision_id}:${solution.deployment_pending}:${solution.status}`}
-                                                        solution={solution}
-                                                        organizationId={organizationId}
-                                                    />
-                                                    <MoreMenu
-                                                        label={`Open actions for ${solution.name}`}
-                                                        size="sm"
-                                                        items={[
-                                                            {
-                                                                label: 'Logs',
-                                                                onClick: () => setLogsTargetId(solution.id),
-                                                            },
-                                                            {
-                                                                label: 'Delete',
-                                                                onClick: () => deleteDialog.openFor(solution),
-                                                            },
-                                                        ]}
-                                                    />
-                                                </Stack>
-                                            )}
-                                        </TableColumn>
-                                    ) : null}
-                                </Table>
+                                />
                             )}
                         </Stack>
-                    </MenuItem>
-                </MenuSection>
-            </Menu>
+                    ),
+                },
+            ],
+        },
+    ];
+
+    return (
+        <PageContainer gap={8} padding={2}>
+            <NoIndex title="Organization Settings | LongLink" />
+            <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
+                <AvatarDialog
+                    key={organizationId}
+                    avatar={organizationAvatar}
+                    formId="organization-avatar-form"
+                    isSaving={updateOrganization.isPending}
+                    isDisabled={!canManageOrganization || organizationId.length === 0}
+                    onSave={(avatar) =>
+                        updateOrganization.mutateAsync(
+                            { avatar },
+                            {
+                                onSuccess: () => toast({ body: 'Avatar saved' }),
+                            }
+                        )
+                    }
+                    placeholder="https://example.com/org.png"
+                    title="Organization avatar"
+                >
+                    {(avatar, open) => (
+                        <IconButton
+                            className="size-12"
+                            icon={<Avatar kind="organization" name={organizationName} size="lg" src={avatar} />}
+                            isDisabled={!canManageOrganization}
+                            label="Edit organization avatar"
+                            tooltip="Edit avatar"
+                            variant="ghost"
+                            onClick={open}
+                        />
+                    )}
+                </AvatarDialog>
+                <Stack>
+                    <Heading accessibilityLevel={1} level={4}>
+                        {organizationName}
+                    </Heading>
+                    <Text size="sm" type="supporting">
+                        Organization
+                    </Text>
+                </Stack>
+            </Stack>
+            <Menu sections={sections} />
             {logsTarget ? (
                 <Logs
                     kind="solution"
@@ -654,7 +663,7 @@ export default function OrganizationSettings() {
                     </Stack>
                 </form>
             </Dialog>
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </PageContainer>
     );
 }

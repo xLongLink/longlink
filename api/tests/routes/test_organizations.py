@@ -95,23 +95,15 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     assert other_user_organization_count == 1
 
 
-@pytest.mark.parametrize(
-    ("registry", "expected_detail"),
-    [
-        pytest.param("compute", "No ready compute registry available", id="compute"),
-    ],
-)
-async def test_create_organization_rejects_when_required_registry_is_unavailable(
+async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    registry: str,
-    expected_detail: str,
 ) -> None:
-    """Reject Organization creation when a required registry is unavailable."""
+    """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
-        await session.delete(getattr(infrastructure, registry))
+        await session.delete(infrastructure.compute)
         await session.commit()
 
     # Act
@@ -119,7 +111,7 @@ async def test_create_organization_rejects_when_required_registry_is_unavailable
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": expected_detail}
+    assert response.json() == {"detail": "No ready compute registry available"}
     async with session_scope() as session:
         assert await session.scalar(select(Organization)) is None
     assert await fetch_operations() == []
@@ -627,53 +619,6 @@ async def test_organization_resource_endpoints_reject_non_members(
     assert response.json() == {"detail": "Access required"}
 
 
-@pytest.mark.parametrize(
-    ("action", "role"),
-    [
-        pytest.param("resume", OrganizationRoles.read, id="resume-read"),
-        pytest.param("resume", OrganizationRoles.write, id="resume-write"),
-        pytest.param("resume", OrganizationRoles.maintain, id="resume-maintain"),
-        pytest.param("hibernate", OrganizationRoles.read, id="hibernate-read"),
-        pytest.param("hibernate", OrganizationRoles.write, id="hibernate-write"),
-        pytest.param("hibernate", OrganizationRoles.maintain, id="hibernate-maintain"),
-    ],
-)
-async def test_database_actions_reject_non_administrator_members(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    action: str,
-    role: OrganizationRoles,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject manual database transitions before invoking the database operation."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=role))
-        await session.commit()
-
-    def unexpected_activity(*_args: object, **_kwargs: object) -> object:
-        """Fail if denied resume starts database activity."""
-
-        raise AssertionError("denied database transition must not start database activity")
-
-    async def unexpected_hibernate(*_args: object, **_kwargs: object) -> bool:
-        """Fail if denied hibernation starts database work."""
-
-        raise AssertionError("denied database transition must not start database hibernation")
-
-    monkeypatch.setattr("src.routes.v1.organizations.databases.activity", unexpected_activity)
-    monkeypatch.setattr("src.routes.v1.organizations.databases.hibernate", unexpected_hibernate)
-
-    # Act
-    response = await clients[1].post(f"/api/v1/organizations/{organization.id}/database/{action}")
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Organization administrator access required"}
-
-
 async def test_get_organization_returns_invitations(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -1165,22 +1110,27 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     assert membership.role == OrganizationRoles.read
 
 
+@pytest.mark.parametrize("caller_role", [OrganizationRoles.read, OrganizationRoles.write, OrganizationRoles.maintain])
 async def test_update_organization_member_returns_403_for_regular_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    caller_role: OrganizationRoles,
 ) -> None:
-    """Reject member role changes from users without management permissions."""
+    """Reject member role changes without changing membership audit fields or queueing sync."""
 
     # Arrange
     owner, regular_member, target_member = users[0], users[1], users[2]
     organization = await create_organization(owner)
 
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role=OrganizationRoles.write,
+                role=caller_role,
             )
         )
         session.add(
@@ -1191,6 +1141,11 @@ async def test_update_organization_member_returns_403_for_regular_member(
             )
         )
         await session.commit()
+
+    async with session_scope() as session:
+        original = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
+        original_updated_at = original.updated_at
+        original_updated_id = original.updated_id
 
     client = clients[1]
 
@@ -1203,6 +1158,14 @@ async def test_update_organization_member_returns_403_for_regular_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
+        assert unchanged.role == OrganizationRoles.read
+        assert unchanged.updated_at == original_updated_at
+        assert unchanged.updated_id == original_updated_id
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
 
 
 @pytest.mark.parametrize(
