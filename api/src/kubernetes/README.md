@@ -37,10 +37,11 @@ check succeeds.
   `longlink.io/platform: 'true'` **and** Pod label `longlink.io/component: api`.
   Tenant operators must not have permission to change trusted namespace labels,
   shared policies, or create workloads in shared namespaces.
-- API/worker processes need private routing and DNS resolution to database
-  `.svc.cluster.local` addresses. The database policy admits those labelled
-  Platform Pods. External workers need a separate narrowly scoped operator-owned
-  database ingress policy for TCP `5432`, plus private routing/DNS.
+- API/worker processes reach private PostgreSQL through authenticated Kubernetes
+  port-forwarding in both hosted and development environments. Their compute
+  credentials need Service/Pod discovery and `pods/portforward` access. No database
+  LoadBalancer, cross-cluster routing, or runtime resolution of compute-local DNS
+  is required. Solution Pods connect directly inside their compute cluster.
 - Supply a working CNPG-compatible `database_storage_class`. PVC retention at the
   storage-provider level follows that class's reclaim policy. Backups and disaster
   recovery are operator responsibilities, not part of this bootstrap.
@@ -105,6 +106,7 @@ databases.resume(organization_id: UUID) -> None
 databases.is_hibernated(organization_id: UUID) -> bool
 databases.idle(organization_id: UUID) -> bool
 databases.certificate(organization_id: UUID) -> str
+databases.portforward(organization_id: UUID) -> int
 databases.delete(organization_id: UUID) -> None
 ```
 
@@ -130,9 +132,11 @@ containers inherit these same resource requirements. The default single-instance
 cluster gets three Pod/resource slots and two configured-size PVC slots; init
 container resource accounting does not add a second simultaneous instance budget.
 
-Lifecycle code owns the SQL connection configuration: host
-`database-rw.longlink-database-{hex}.svc.cluster.local`, port `5432`, username
-`postgres`, and the Organization's persisted password.
+Lifecycle code owns the SQL connection configuration: TLS host
+`database-rw.longlink-database-{hex}.svc.cluster.local`, username `postgres`, and
+the Organization's persisted password. Platform SQL uses `hostaddr=127.0.0.1`
+and an automatically assigned local port forwarding to the compute's
+`database-rw:5432` Service. The tunnel closes with its owning Kubernetes client.
 `certificate()` reads and validates PEM CA text from Secret `database-ca`, key
 `ca.crt`; this is not a filesystem path. Lifecycle code supplies the PEM to the
 SQL provisioning utility for hostname-verified TLS. Clients must refresh trust when the CNPG

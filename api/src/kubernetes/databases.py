@@ -214,7 +214,7 @@ class Databases:
     async def portforward(self, organization_id: UUID) -> int:
         """Forward private SQL to loopback until the owning Kubernetes client closes."""
 
-        # Share Service selection and tunnel cleanup with the other development transports.
+        # Share Service selection and tunnel cleanup with the owning Kubernetes client.
         return await self._client.portforward(
             "database-rw",
             f"longlink-database-{organization_id.hex}",
