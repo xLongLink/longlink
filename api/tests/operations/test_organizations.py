@@ -94,10 +94,6 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             assert organization_id == organization.id
             calls.append("database")
 
-    class Storage(StorageKubernetes):
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
     class Organizations:
         async def apply(self, namespace: str) -> None:
             """Record namespace reconciliation."""
@@ -110,7 +106,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
-            self.storage = Storage()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""

@@ -6,6 +6,12 @@ from typing import Literal, Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 from src.models.statuses import Status
 
+# Both backing storage classes use the same Kubernetes DNS-name constraints.
+StorageClassName = Annotated[
+    str,
+    Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$"),
+]
+
 
 def kubeconfig_mapping(value: object) -> dict[str, object]:
     """Parse one YAML or mapping kubeconfig into a JSON-compatible mapping."""
@@ -94,14 +100,10 @@ class ComputeRegistryCreate(BaseModel):
     # Database
     database_size_gib: int = Field(default=10, ge=1, le=65536, strict=True)
     database_instances: int = Field(default=1, ge=1, le=3, strict=True)
-    database_storage_class: str = Field(
-        min_length=1,
-        max_length=253,
-        pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
-    )
+    database_storage_class: StorageClassName
 
     # Object storage
-    storage_class: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$")
+    storage_class: StorageClassName
     storage_endpoint: str = Field(max_length=512)
     storage_size_gib: int = Field(default=100, ge=10, le=65536, strict=True)
     storage_instances: Literal[1, 3] = 3

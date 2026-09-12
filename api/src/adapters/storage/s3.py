@@ -110,7 +110,7 @@ class S3:
                     {
                         "Effect": "Deny",
                         "Principal": principal,
-                        "Action": ["s3:PutObject", "s3:PutObjectAcl", "s3:PutObjectVersionAcl"],
+                        "Action": ["s3:PutObject"],
                         "Resource": [f"{arn}/*"],
                         "Condition": {"StringLike": {f"s3:x-amz-grant-{header}": "?*"}},
                     }

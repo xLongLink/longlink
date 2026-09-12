@@ -29,9 +29,6 @@ class Databases:
     async def apply(self, organization_id: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
         """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
-        # Reject invalid capacity and credentials before creating the namespace.
-        if not password or not storage_class or size_gib < 1 or instances < 1:
-            raise ValueError("Database password, storage class, size, and instance count are required")
         namespace = f"longlink-database-{organization_id.hex}"
         documents = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "database.yml"),

@@ -211,7 +211,6 @@ async def deploy(
     session.add(revision)
     await session.flush()
     solution.desired_revision_id = revision.id
-    solution.desired_revision = revision
     solution.updated_id = user_id
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
@@ -226,7 +225,6 @@ async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID,
     if revision.deployed_at is None:
         raise ConflictError("Revision has never been deployed successfully")
     solution.desired_revision_id = revision.id
-    solution.desired_revision = revision
     solution.updated_id = user_id
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
