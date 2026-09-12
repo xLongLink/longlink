@@ -107,7 +107,7 @@ databases.delete(organization_id: UUID) -> None
 
 The namespace is `longlink-database-{organization_id.hex}`; the CNPG Cluster is
 `database`; the basic-auth Secret is `database-superuser`, username `postgres`.
-`enableSuperuserAccess: true` supports the existing SQL provisioning adapter.
+`enableSuperuserAccess: true` supports the organization SQL provisioning utility in `src/utils/postgres.py`.
 Independent database quotas do not consume compute capacity. Ingress allows the
 matching Organization's compute Pods, Platform workers, CNPG management, and
 replication. Plaintext TCP SQL is rejected by `pg_hba`.
@@ -132,7 +132,7 @@ Lifecycle code owns the SQL connection configuration: host
 `postgres`, and the Organization's persisted password.
 `certificate()` reads and validates PEM CA text from Secret `database-ca`, key
 `ca.crt`; this is not a filesystem path. Lifecycle code supplies the PEM to the
-SQL adapter for hostname-verified TLS. Clients must refresh trust when the CNPG
+SQL provisioning utility for hostname-verified TLS. Clients must refresh trust when the CNPG
 CA changes.
 
 `apply` and `resume` require the current desired hibernation annotation to be

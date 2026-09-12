@@ -116,7 +116,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
         """Accept the real shared-user snapshot at its database transport boundary."""
 
     monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(databases, "Postgres", DatabasePostgres)
+    monkeypatch.setattr(databases.postgres, "Postgres", DatabasePostgres)
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 

@@ -1,15 +1,14 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
+from src.utils import postgres
 from containers import postgres_container
 from contextlib import ExitStack
 from sqlalchemy import text
-from src.adapters import postgres
 from sqlalchemy.exc import DBAPIError
 from collections.abc import Iterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
-from src.adapters.postgres import Postgres
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -17,13 +16,13 @@ pytestmark = pytest.mark.no_db
 
 
 @pytest.fixture
-def postgres_adapter() -> Iterator[tuple[Postgres, UUID, UUID]]:
-    """Provide one disposable PostgreSQL adapter with stable resource identifiers."""
+def postgres_database() -> Iterator[tuple[postgres.Postgres, UUID, UUID]]:
+    """Provide SQL provisioning against a disposable PostgreSQL database."""
 
     with postgres_container("longlink", "secret", "postgres") as container:
         organization_id = UUID("33333333-3333-3333-3333-333333333333")
         solution_id = UUID("44444444-4444-4444-4444-444444444444")
-        adapter = Postgres(
+        adapter = postgres.Postgres(
             host=container.get_container_host_ip(),
             port=container.get_exposed_port(5432),
             username="longlink",
@@ -35,14 +34,14 @@ def postgres_adapter() -> Iterator[tuple[Postgres, UUID, UUID]]:
 
 
 @pytest.mark.integration
-async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_audit_access(
-    postgres_adapter: tuple[Postgres, UUID, UUID],
+async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_access(
+    postgres_database: tuple[postgres.Postgres, UUID, UUID],
     request: pytest.FixtureRequest,
 ) -> None:
     """Provision a runtime schema with stable credentials and read-only audit access."""
 
     # Arrange
-    adapter, organization_id, solution_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_database
     active_user = Audit(
         id=UUID("11111111-1111-1111-1111-111111111111"),
         name="Owner User",
@@ -119,13 +118,13 @@ async def test_postgres_adapter_creates_idempotent_runtime_schema_with_readonly_
 
 
 @pytest.mark.integration
-async def test_postgres_adapter_removes_runtime_identity_and_tolerates_repeated_schema_cleanup(
-    postgres_adapter: tuple[Postgres, UUID, UUID],
+async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_cleanup(
+    postgres_database: tuple[postgres.Postgres, UUID, UUID],
 ) -> None:
     """Remove runtime roles and schemas without requiring the role to remain present."""
 
     # Arrange
-    adapter, organization_id, solution_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_database
     await adapter.prepare_organization_database(organization_id)
     runtime_username = await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
 
@@ -143,13 +142,13 @@ async def test_postgres_adapter_removes_runtime_identity_and_tolerates_repeated_
 
 
 @pytest.mark.integration
-async def test_postgres_adapter_rejects_schema_provisioning_without_string_literal_support(
-    postgres_adapter: tuple[Postgres, UUID, UUID], monkeypatch: pytest.MonkeyPatch
+async def test_postgres_rejects_schema_provisioning_without_string_literal_support(
+    postgres_database: tuple[postgres.Postgres, UUID, UUID], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Fail before composing a role password when the active dialect cannot quote strings."""
 
     # Arrange
-    adapter, organization_id, solution_id = postgres_adapter
+    adapter, organization_id, solution_id = postgres_database
     await adapter.prepare_organization_database(organization_id)
     monkeypatch.setattr(postgres.String, "literal_processor", lambda _self, _dialect: None)
 
@@ -159,13 +158,13 @@ async def test_postgres_adapter_rejects_schema_provisioning_without_string_liter
 
 
 @pytest.mark.integration
-async def test_postgres_adapter_reports_usage_for_present_and_missing_databases(
-    postgres_adapter: tuple[Postgres, UUID, UUID],
+async def test_postgres_reports_usage_for_present_and_missing_databases(
+    postgres_database: tuple[postgres.Postgres, UUID, UUID],
 ) -> None:
     """Report nonzero usage for a provisioned database and None for a missing database."""
 
     # Arrange
-    adapter, organization_id, _ = postgres_adapter
+    adapter, organization_id, _ = postgres_database
     missing_organization_id = UUID("55555555-5555-5555-5555-555555555555")
     await adapter.prepare_organization_database(organization_id)
 

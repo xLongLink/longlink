@@ -154,7 +154,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
             calls.append(("prefix", prefix))
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
-    monkeypatch.setattr(solution_operations.databases, "Postgres", FakePostgres)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
     monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
 
     # Act
@@ -235,7 +235,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", FakePostgres)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
     monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
@@ -316,7 +316,7 @@ async def test_solution_creation_preserves_schema_failure_during_credential_comp
             if revoke_error is not None:
                 raise revoke_error
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", FailingPostgres)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FailingPostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
 
@@ -400,7 +400,7 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
@@ -422,7 +422,7 @@ async def test_solution_creation_skips_missing_solution_without_constructing_pro
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
@@ -527,7 +527,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
 
             return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", Postgres)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", Postgres)
     monkeypatch.setattr(solution_operations, "Exoscale", Storage)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
 
@@ -549,7 +549,7 @@ async def test_solution_deletion_skips_missing_solution_without_constructing_pro
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(solution_operations.databases, "Postgres", unexpected_provider)
+    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 

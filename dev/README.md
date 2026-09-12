@@ -102,8 +102,9 @@ connections in development mode. Tunnels bind to loopback on automatically assig
 and close with each operation's Kubernetes client. PostgreSQL still verifies the CNPG CA
 and cluster DNS hostname; no host DNS changes, database port exposure, or VPN is needed.
 Solutions and migration Jobs inside Kubernetes connect directly to the database Service.
-The loopback connection override is isolated in `api/src/adapters/development.py`, loaded
-only when `DEVELOPMENT=true`; the production PostgreSQL adapter has no transport-address override.
+The loopback connection override is isolated in `api/src/development/postgres.py`, loaded
+only when `DEVELOPMENT=true`; the SQL provisioning utility in `api/src/utils/postgres.py`
+has no transport-address override.
 
 `make seed` queues provisioning; watch Operations until compute creation, organization
 creation, and sample deployment finish. Exoscale credentials above are required even for

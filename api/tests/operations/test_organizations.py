@@ -59,7 +59,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
 
         calls.append("users")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", Database)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
@@ -125,7 +125,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
         calls.append("users")
         raise RuntimeError("user projection failed")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", Database)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Exoscale", Storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
@@ -154,7 +154,7 @@ async def test_reconcile_skips_missing_organization_without_constructing_provide
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -188,7 +188,7 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -217,7 +217,7 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
 
             calls.append("provider")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", Provider)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
     monkeypatch.setattr(organization_operations, "Exoscale", Provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
 
@@ -238,7 +238,7 @@ async def test_delete_skips_missing_organization_without_external_cleanup(monkey
 
         raise AssertionError("providers must not be constructed")
 
-    monkeypatch.setattr(organization_operations.databases, "Postgres", unexpected_provider)
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", unexpected_provider)
     monkeypatch.setattr(organization_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(organization_operations, "Kubernetes", unexpected_provider)
 

@@ -18,11 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.organizations import Organization, OrganizationActivity
 
-# Load the loopback-only adapter solely for the host-run development process.
+# Load the loopback-only SQL transport solely for the host-run development process.
 if env.DEVELOPMENT:
-    from src.adapters.development import Postgres
+    from src.development import postgres
 else:
-    from src.adapters.postgres import Postgres
+    from src.utils import postgres
 
 LEASE_SECONDS = 180
 RENEW_SECONDS = 30
@@ -40,7 +40,7 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(infrastructure: organizations.Infrastructure, cluster: Kubernetes) -> Postgres:
+async def connection(infrastructure: organizations.Infrastructure, cluster: Kubernetes) -> postgres.Postgres:
     """Build the Organization's private, CA-verified PostgreSQL connection."""
 
     # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
@@ -52,7 +52,7 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
         port = await cluster.databases.portforward(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    return Postgres(
+    return postgres.Postgres(
         host=f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         port=port,
         username="postgres",

@@ -411,7 +411,7 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
                 raise usage
             return usage
 
-    monkeypatch.setattr("src.operations.databases.Postgres", FakePostgres)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
 
@@ -557,7 +557,7 @@ async def test_organization_resource_endpoints_allow_members(
             assert bucket_name == organization.id.hex
             return 0
 
-    monkeypatch.setattr("src.operations.databases.Postgres", FakePostgres)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
     monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
@@ -600,7 +600,7 @@ async def test_organization_resource_endpoints_reject_non_members(
 
         raise AssertionError("cross-tenant resource access reached a provider")
 
-    monkeypatch.setattr("src.operations.databases.Postgres", unexpected_provider)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", unexpected_provider)
     monkeypatch.setattr("src.routes.v1.organizations.Exoscale", unexpected_provider)
 
     # Act

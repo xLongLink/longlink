@@ -1,6 +1,6 @@
 import contextlib
 from typing import override
-from src.adapters import postgres
+from src.utils import postgres
 from collections.abc import Iterator
 from sqlalchemy.engine import URL
 

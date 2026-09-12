@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from src.utils import names, roles
+from src.utils import names, roles, postgres
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
@@ -13,7 +13,6 @@ from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.adapters.postgres import Postgres
 from src.database.services import operations
 from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
@@ -257,7 +256,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
     await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
 
 
-async def project_users(session: AsyncSession, organization_id: UUID, db: Postgres) -> None:
+async def project_users(session: AsyncSession, organization_id: UUID, db: postgres.Postgres) -> None:
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
     # Include deleted memberships so the Organization database receives tombstones.

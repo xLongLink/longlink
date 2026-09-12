@@ -20,7 +20,7 @@ class Postgres:
     def __init__(
         self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode, certificate: str | None = None
     ) -> None:
-        """Initialize the PostgreSQL database adapter.
+        """Configure organization SQL provisioning.
 
         Args:
             host: PostgreSQL host.
@@ -86,7 +86,7 @@ class Postgres:
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
-        The adapter owns the engine lifecycle and disposes it after every operation.
+        The provisioning utility owns the engine lifecycle and disposes it after every operation.
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
