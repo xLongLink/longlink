@@ -1,11 +1,13 @@
 import pytest
 import asyncio
 from uuid import uuid4
+from alembic import command
 from containers import postgres_container
 from sqlalchemy import func, select
 from src.errors import UnavailableError
+from alembic.config import Config
+from src.environments import env
 from longlink.utils.time import utcnow
-from src.database.models import registry
 from src.models.statuses import Status
 from src.database.services import organizations
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -16,15 +18,21 @@ from src.database.models.organizations import Organization
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
 
 
-async def test_capacity_serializes_admission_and_retains_deleted_reservations() -> None:
+async def test_capacity_serializes_admission_and_retains_deleted_reservations(monkeypatch: pytest.MonkeyPatch) -> None:
     """Admit one concurrent creator and retain its capacity until the tombstone is purged."""
 
     # After replication and 50% headroom, two 2 GiB quotas fit only if the required object overhead is wrongly omitted.
     with postgres_container("longlink", "secret", "longlink") as container:
-        engine = create_async_engine(container.get_connection_url())
+        database_url = container.get_connection_url(driver="asyncpg")
+
+        # Use the deployed schema without altering shared ORM constraints during PostgreSQL DDL.
+        monkeypatch.setattr(env, "DATABASE_URL", f"{database_url}?ssl=disable")
+        config = Config("alembic.ini")
+        await asyncio.to_thread(command.upgrade, config, "head")
+
+        # Keep independent transactions on the same migrated database for concurrent admission.
+        engine = create_async_engine(database_url)
         try:
-            async with engine.begin() as connection:
-                await connection.run_sync(registry.metadata.create_all)
             sessions = async_sessionmaker(engine, expire_on_commit=False)
             compute = ComputeRegistry(
                 name="capacity",
