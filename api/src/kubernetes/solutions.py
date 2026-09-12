@@ -97,7 +97,6 @@ class Solutions:
         migration, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
             solution_id=str(solution_id),
-            solution_id_label=SOLUTION_ID_LABEL,
             image=json.dumps(image),
             namespace=namespace,
             runtime_revision=revision_id.hex,

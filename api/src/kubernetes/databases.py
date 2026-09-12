@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
 BackupResource = new_class("Backup", "postgresql.cnpg.io/v1", asyncio=True, plural="backups")
+ScheduledBackupResource = new_class("ScheduledBackup", "postgresql.cnpg.io/v1", asyncio=True, plural="scheduledbackups")
 
 
 class Databases:
@@ -182,6 +183,34 @@ class Databases:
         # Account for lingering Job Pods and standalone maintenance Pods, but not the database instances themselves.
         async for pod in Pod.list(api=api, namespace=namespace, label_selector="cnpg.io/podRole!=instance"):
             if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
+                return False
+        return True
+
+    async def can_hibernate(self, organization_id: UUID) -> bool:
+        """Reject sleep beneath compute, reconciliation, or autonomous backup schedules."""
+
+        # Scheduled work does not acquire Platform leases, so enabled schedules require an awake database.
+        if not await self.idle(organization_id):
+            return False
+        api = await self._client.api()
+        namespace = f"longlink-database-{organization_id.hex}"
+        cluster = ClusterResource(
+            "database",
+            api=api,
+            namespace=namespace,
+        )
+        await cluster.refresh()
+        status = cluster.raw.get("status", {})
+        if (
+            status.get("readyInstances") != cluster.spec.get("instances")
+            or status.get("currentPrimary") != status.get("targetPrimary")
+            or not any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in status.get("conditions", []))
+        ):
+            raise RuntimeError("Database is reconciling and cannot hibernate")
+
+        # Enabled schedules can start unleased database work after the current idle check.
+        async for schedule in ScheduledBackupResource.list(api=api, namespace=namespace):
+            if schedule.spec.get("suspend") is not True:
                 return False
         return True
 

@@ -61,43 +61,35 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
 
 
 async def test_organization_delete_waits_for_namespace_termination(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Delete an Organization Namespace once and poll until it is absent."""
+    """Delete an Organization Namespace once and wait until it is absent."""
 
     # Arrange
     deleted: list[bool] = []
-    sleeps: list[float] = []
+    waits: list[str] = []
 
     class Namespace:
         """Represent a Namespace through deletion and terminal absence."""
 
         def __init__(self, name: str, **_kwargs: object) -> None:
-            """Validate the Namespace and initialize its polling state."""
+            """Validate the Namespace."""
 
             assert name == "acme"
-            self.checks = 0
-
-        async def exists(self) -> bool:
-            """Report the Namespace absent after two polling iterations."""
-
-            self.checks += 1
-            return self.checks < 3
 
         async def delete(self) -> None:
             """Record the single deletion request."""
 
             deleted.append(True)
 
-    async def sleep(delay: float) -> None:
-        """Record polling without delaying the test."""
+        async def wait(self, condition: str) -> None:
+            """Record the terminal deletion wait."""
 
-        sleeps.append(delay)
+            waits.append(condition)
 
     monkeypatch.setattr(organizations, "Namespace", Namespace)
-    monkeypatch.setattr(organizations.asyncio, "sleep", sleep)
 
     # Act
     await organizations.Organizations(FakeKubernetes()).delete("acme")  # type: ignore[arg-type]
 
     # Assert
     assert deleted == [True]
-    assert sleeps == [5, 5]
+    assert waits == ["delete"]

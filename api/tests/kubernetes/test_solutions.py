@@ -37,7 +37,6 @@ def test_solution_template_constrains_workloads() -> None:
     migration, deployment = templates.readyml_list(
         files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
         solution_id="solution",
-        solution_id_label="longlink.io/solution-id",
         image='"ghcr.io/longlink/dashboard:latest"',
         namespace="acme",
         runtime_revision="revision",

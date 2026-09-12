@@ -10,7 +10,6 @@ from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from kr8s.asyncio.objects import new_class
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
@@ -26,8 +25,6 @@ else:
 
 LEASE_SECONDS = 180
 RENEW_SECONDS = 30
-Cluster = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
-ScheduledBackup = new_class("ScheduledBackup", "postgresql.cnpg.io/v1", asyncio=True, plural="scheduledbackups")
 
 
 async def lock(session: AsyncSession, organization_id: UUID) -> Organization | None:
@@ -114,24 +111,19 @@ class Lease:
         async def renew() -> None:
             """Extend the lease only while this worker still owns it."""
 
-            while True:
-                await asyncio.sleep(RENEW_SECONDS)
-                async with asyncio.timeout(RENEW_SECONDS), session_scope() as session:
-                    await lock(session, self.organization_id)
-                    if not await self.owned(session):
-                        raise RuntimeError("Organization activity lease was lost")
-                    expires_at = utcnow().replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
-                    await session.execute(
-                        update(OrganizationActivity).where(col(OrganizationActivity.id) == self.id).values(expires_at=expires_at)
-                    )
-                    self.expires_at = expires_at
-                    await session.commit()
-
-        async def monitor() -> None:
-            """Interrupt the owner if its activity cannot remain protected."""
-
             try:
-                await renew()
+                while True:
+                    await asyncio.sleep(RENEW_SECONDS)
+                    async with asyncio.timeout(RENEW_SECONDS), session_scope() as session:
+                        await lock(session, self.organization_id)
+                        if not await self.owned(session):
+                            raise RuntimeError("Organization activity lease was lost")
+                        expires_at = utcnow().replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
+                        await session.execute(
+                            update(OrganizationActivity).where(col(OrganizationActivity.id) == self.id).values(expires_at=expires_at)
+                        )
+                        self.expires_at = expires_at
+                        await session.commit()
             except Exception:
                 self.lost = True
                 for consumer in self.consumers:
@@ -139,7 +131,7 @@ class Lease:
                         consumer.cancel()
                 raise
 
-        renewal = asyncio.create_task(monitor())
+        renewal = asyncio.create_task(renew())
         try:
             with self.protect():
                 yield
@@ -338,35 +330,6 @@ async def ready(organization_id: UUID) -> None:
                 raise
 
 
-async def _idle(cluster: Kubernetes, organization_id: UUID) -> bool:
-    """Reject sleep beneath compute, unfinished backups, or autonomous backup schedules."""
-
-    # Scheduled work does not acquire Platform leases, so enabled schedules require an awake database.
-    if not await cluster.databases.idle(organization_id):
-        return False
-    api = await cluster.api()
-    namespace = f"longlink-database-{organization_id.hex}"
-    database = Cluster(
-        "database",
-        api=api,
-        namespace=namespace,
-    )
-    await database.refresh()
-    status = database.raw.get("status", {})
-    if (
-        status.get("readyInstances") != database.spec.get("instances")
-        or status.get("currentPrimary") != status.get("targetPrimary")
-        or not any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in status.get("conditions", []))
-    ):
-        raise RuntimeError("Database is reconciling and cannot hibernate")
-
-    # The Kubernetes idle check owns active backups; enabled schedules must also prevent future unleased work.
-    async for schedule in ScheduledBackup.list(api=api, namespace=namespace):
-        if schedule.spec.get("suspend") is not True:
-            return False
-    return True
-
-
 async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
@@ -409,7 +372,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
-                if await _idle(cluster, organization_id):
+                if await cluster.databases.can_hibernate(organization_id):
                     database = await connection(infrastructure, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
@@ -437,7 +400,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
                             await session.commit()
                             return False
                         await session.commit()
-                    if await _idle(cluster, organization_id):
+                    if await cluster.databases.can_hibernate(organization_id):
                         # New demand interrupts the wait, but only the next fenced resume may publish availability.
                         async def sleep() -> None:
                             """Revalidate the transition inside the task issuing the external mutation."""

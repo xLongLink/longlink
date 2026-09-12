@@ -1,7 +1,7 @@
 # LongLink Agent Guide
 
 - Project is in _MVP mode - No need for backwards compatibility - Collapse migrations_
-- Use the cleanup skill.
+- Use the cleanup skill located at `./opencode/skills/cleanup`
 - Focus on building complex things as simple as possible. Find ways to reduce complexity when solving problems
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - Prefer standard-library or established libraries over handwritten implementations.

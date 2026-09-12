@@ -6,7 +6,7 @@ metadata:
     name: $migration_id
     namespace: '$namespace'
     labels:
-        $solution_id_label: $solution_id
+        longlink.io/solution-id: $solution_id
         longlink.io/component: migration
 spec:
     backoffLimit: 0
@@ -14,7 +14,7 @@ spec:
     template:
         metadata:
             labels:
-                $solution_id_label: $solution_id
+                longlink.io/solution-id: $solution_id
                 longlink.io/component: migration
         spec:
             automountServiceAccountToken: false
@@ -65,7 +65,7 @@ metadata:
     name: solution-$solution_id
     namespace: '$namespace'
     labels:
-        $solution_id_label: $solution_id
+        longlink.io/solution-id: $solution_id
         networking.knative.dev/visibility: cluster-local
 spec:
     template:
@@ -76,7 +76,7 @@ spec:
                 autoscaling.knative.dev/max-scale: '2'
                 autoscaling.knative.dev/scale-to-zero-pod-retention-period: '1m'
             labels:
-                $solution_id_label: $solution_id
+                longlink.io/solution-id: $solution_id
                 longlink.io/component: solution
         spec:
             containerConcurrency: 80

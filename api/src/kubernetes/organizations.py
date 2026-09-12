@@ -1,4 +1,3 @@
-import asyncio
 from kr8s import NotFoundError
 from typing import TYPE_CHECKING
 from src.utils import templates
@@ -35,12 +34,11 @@ class Organizations:
     async def delete(self, namespace: str) -> None:
         """Delete one Organization Namespace and wait for completion."""
 
-        # Issue deletion once and then poll only the Namespace state.
+        # Issue deletion once and wait for Kubernetes to report terminal absence.
         resource = Namespace(namespace, api=await self._client.api())
         try:
             await resource.delete()
         except NotFoundError:
             return
 
-        while await resource.exists():
-            await asyncio.sleep(5)
+        await resource.wait("delete")
