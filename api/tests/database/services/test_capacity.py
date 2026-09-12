@@ -55,7 +55,6 @@ async def test_capacity_serializes_admission_and_retains_deleted_reservations() 
                         await session.commit()
                         return organization
                     except UnavailableError:
-                        await session.rollback()
                         return None
 
             # Both callers target the same compute; only the transaction holding the last reservation succeeds.

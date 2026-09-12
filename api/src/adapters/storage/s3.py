@@ -2,10 +2,10 @@ import json
 import aioboto3
 from uuid import UUID
 from typing import TYPE_CHECKING, cast
-from itertools import batched
+from itertools import chain, batched
 from contextlib import ExitStack, asynccontextmanager
 from dataclasses import field, dataclass
-from collections.abc import Sequence, AsyncIterator
+from collections.abc import Iterable, Sequence, AsyncIterator
 from longlink.storage import tls
 from aiobotocore.config import AioConfig
 from botocore.exceptions import ClientError
@@ -150,20 +150,20 @@ class S3:
                     for upload in page.get("Uploads", []):
                         await client.abort_multipart_upload(Bucket=bucket, Key=upload["Key"], UploadId=upload["UploadId"])
                 async for page in client.get_paginator("list_object_versions").paginate(Bucket=bucket, Prefix=prefix):
-                    versions: list[ObjectIdentifierTypeDef] = [
+                    versions: Iterable[ObjectIdentifierTypeDef] = (
                         {"Key": item["Key"], "VersionId": item["VersionId"]}
-                        for item in [*page.get("Versions", []), *page.get("DeleteMarkers", [])]
-                    ]
+                        for item in chain(page.get("Versions", []), page.get("DeleteMarkers", []))
+                    )
                     await self._delete_objects(client, bucket, versions)
                 async for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
-                    objects: list[ObjectIdentifierTypeDef] = [{"Key": item["Key"]} for item in page.get("Contents", [])]
+                    objects: Iterable[ObjectIdentifierTypeDef] = ({"Key": item["Key"]} for item in page.get("Contents", []))
                     await self._delete_objects(client, bucket, objects)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
 
     @staticmethod
-    async def _delete_objects(client: "S3Client", bucket: str, objects: Sequence["ObjectIdentifierTypeDef"]) -> None:
+    async def _delete_objects(client: "S3Client", bucket: str, objects: Iterable["ObjectIdentifierTypeDef"]) -> None:
         """Delete bounded batches and reject partial failures returned in successful HTTP responses."""
 
         # S3 accepts at most 1,000 identifiers; an empty page must not issue a deletion request.

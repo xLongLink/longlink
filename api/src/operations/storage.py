@@ -16,5 +16,5 @@ async def authorize(storage: S3, bucket: str, organization: UUID) -> None:
                 col(Solution.organization_id) == organization, col(Solution.deleted_at).is_(None)
             )
         )
-        identities = [solution_id for solution_id, secrets in result.all() if "LONGLINK_STORAGE_USERNAME" in secrets]
+        identities = [solution_id for solution_id, secrets in result if "LONGLINK_STORAGE_USERNAME" in secrets]
     await storage.authorize(bucket, identities)

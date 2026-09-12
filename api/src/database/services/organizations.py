@@ -261,11 +261,10 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
         .where(col(UserOrganization.organization_id) == organization_id)
     )
     memberships_result = await session.scalars(memberships_statement)
-    memberships = memberships_result.all()
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     rows: list[Audit] = []
-    for membership in memberships:
+    for membership in memberships_result:
         # Use the latest tombstone from either the user or the membership row.
         deleted_at = max((value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None)
 
@@ -424,7 +423,7 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
 
-    return await _persist(
+    return await create(
         session,
         name,
         user,
@@ -441,24 +440,6 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    # Admission locks and validates the immutable Compute assignment before persistence.
-    return await _persist(
-        session,
-        name,
-        user,
-        compute_id=compute_id,
-    )
-
-
-async def _persist(
-    session: AsyncSession,
-    name: str,
-    user: User,
-    *,
-    compute_id: UUID,
-) -> Organization:
-    """Persist an Organization after its infrastructure assignment is locked and validated."""
-
     # A no-op write serializes admission on every supported backend, including SQLite.
     await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
     compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
@@ -466,12 +447,13 @@ async def _persist(
         raise UnavailableError("No compute registry available")
 
     # Recount after acquiring the Compute lock: pre-lock selection may have a stale statement snapshot.
-    count = await session.scalar(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
+    count_result = await session.execute(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
+    count = count_result.scalar_one()
     reservation = compute.bucket_size_bytes + compute.bucket_max_objects * compute.storage_object_overhead_bytes
 
     # OSD count equals pool replication, so usable capacity is one OSD, not their raw sum.
     capacity = compute.storage_size_gib * 1024**3 * (100 - compute.storage_reserve_percent) // 100
-    if count is None or (count + 1) * reservation > capacity:
+    if (count + 1) * reservation > capacity:
         raise UnavailableError("Compute storage capacity is reserved; wait for cleanup or register more capacity")
 
     # Build the Organization with its immutable infrastructure assignments.

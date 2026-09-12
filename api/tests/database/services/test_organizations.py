@@ -222,24 +222,12 @@ async def test_sync_users_projects_active_organization_members(
     # Assert
     database_url, rows = synchronized[0]
     assert database_url.database == organization.id.hex
-    assert [
-        {
-            "id": row.id,
-            "name": row.name,
-            "email": row.email,
-            "role": row.role,
-            "deleted_at": row.deleted_at,
-        }
-        for row in rows
-    ] == [
-        {
-            "id": users[0].id,
-            "name": users[0].name,
-            "email": users[0].email,
-            "role": OrganizationRoles.owner.value,
-            "deleted_at": None,
-        }
-    ]
+    (row,) = rows
+    assert row.id == users[0].id
+    assert row.name == users[0].name
+    assert row.email == users[0].email
+    assert row.role == OrganizationRoles.owner.value
+    assert row.deleted_at is None
 
 
 async def test_sync_users_projects_deleted_memberships_as_tombstones(
@@ -545,30 +533,13 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
     assert organization.compute_id == available_infrastructure.compute.id
 
 
-@pytest.mark.parametrize(
-    ("registry", "error"),
-    [
-        pytest.param("compute", "No compute registry available", id="compute"),
-    ],
-)
-async def test_create_rejects_missing_assigned_infrastructure(
-    users: tuple[User, User, User],
-    registry: str,
-    error: str,
-) -> None:
-    """Reject direct Organization creation when any assigned registry is absent."""
-
-    # Arrange
-    infrastructure = await create_ready_infrastructure()
-    assignments = {
-        "compute_id": infrastructure.compute.id,
-    }
-    assignments[f"{registry}_id"] = uuid4()
+async def test_create_rejects_missing_assigned_infrastructure(users: tuple[User, User, User]) -> None:
+    """Reject direct Organization creation when the assigned Compute registry is absent."""
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(UnavailableError, match=error):
-            await organizations.create(session, "acme", users[0], **assignments)
+        with pytest.raises(UnavailableError, match="No compute registry available"):
+            await organizations.create(session, "acme", users[0], compute_id=uuid4())
 
 
 async def test_create_rejects_duplicate_organization_name(users: tuple[User, User, User]) -> None:

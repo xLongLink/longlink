@@ -56,21 +56,21 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         result = await session.execute(
             select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
         )
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resources[(OperationKind.compute_create, resource_id)] = OperationResource(id=resource_id, name=name)
 
     if organization_target_ids:
         result = await session.execute(
             select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
         )
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resource = OperationResource(id=resource_id, name=name)
             resources[(OperationKind.organization_create, resource_id)] = resource
             resources[(OperationKind.organization_delete, resource_id)] = resource
 
     if solution_target_ids:
         result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resources[(OperationKind.solution_delete, resource_id)] = OperationResource(id=resource_id, name=name)
 
     revision_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_deploy}
@@ -80,7 +80,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             .join(Solution, col(Solution.id) == col(Revision.solution_id))
             .where(col(Revision.id).in_(revision_ids))
         )
-        for revision_id, solution_id, name in result.all():
+        for revision_id, solution_id, name in result:
             resources[(OperationKind.solution_deploy, revision_id)] = OperationResource(id=solution_id, name=name)
 
     # Assemble response models with their resolved target resource.
