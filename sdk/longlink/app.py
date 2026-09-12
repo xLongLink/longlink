@@ -19,7 +19,7 @@ from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
-async def render_view(content: str) -> Response:
+def render_view(content: str) -> Response:
     """Return one static XML view."""
 
     return Response(content, media_type="application/xml")

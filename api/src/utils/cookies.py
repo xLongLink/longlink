@@ -3,8 +3,10 @@ from src.environments import env
 
 
 def set_browser_cookie(response: Response, name: str, value: str, path: str, max_age: int) -> None:
-    """Set a secure browser-only cookie with consistent security parameters."""
+    """Set a non-cacheable secure browser-only cookie with consistent security parameters."""
 
+    # Prevent intermediaries from retaining responses that create browser credentials.
+    response.headers["Cache-Control"] = "no-store"
     response.set_cookie(
         name,
         value,

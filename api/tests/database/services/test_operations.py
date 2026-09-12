@@ -174,6 +174,14 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
     assert (OperationKind.solution_deploy, desired.id) in scheduled
 
+    async with session_scope() as session:
+        await operations.schedule_reconciliation(session)
+        await session.commit()
+    scheduled = await fetch_operations()
+    assert [(operation.kind, operation.target_id) for operation in scheduled].count(
+        (OperationKind.solution_deploy, desired.id)
+    ) == 1
+
 
 async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
     """Queue only parent cleanup when an Organization and its Solutions are deleted."""

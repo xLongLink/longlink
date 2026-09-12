@@ -42,11 +42,9 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
 
     # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
     organization = infrastructure.organization
-    port = 5432
 
     # Host-run development workers reach private SQL through the authenticated Kubernetes API.
-    if env.DEVELOPMENT:
-        port = await cluster.databases.portforward(organization.id)
+    port = await cluster.databases.portforward(organization.id) if env.DEVELOPMENT else 5432
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     return postgres.Postgres(

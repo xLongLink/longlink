@@ -9,6 +9,7 @@ from src.logger import logger
 from sqlalchemy.orm import defer
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
+from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdate, RevisionResponse, SolutionResponse, SolutionUpdateCheck
 from src.database.services import solutions, organizations
 from src.kubernetes.client import Kubernetes
@@ -18,6 +19,16 @@ from src.database.models.users import User
 from src.database.models.solutions import Revision
 
 router = APIRouter()
+
+
+async def image_metadata(image: Image) -> LongLinkMetadata:
+    """Return required image metadata or preserve the public missing-image response."""
+
+    # Resolve the registry image before applying route-specific validation or mutations.
+    metadata = await images.metadata(image)
+    if metadata is None:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+    return metadata
 
 
 @router.get("/solutions", response_model=Page[SolutionResponse])
@@ -49,9 +60,7 @@ async def create_solution(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve immutable image metadata before creating durable Solution state.
-    metadata = await images.metadata(payload.image)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
+    metadata = await image_metadata(payload.image)
 
     # Enforce image-declared requirements while the submitted values remain at the API boundary.
     missing_envs = images.missing_envs(metadata, payload.envs)
@@ -87,9 +96,7 @@ async def update_solution(
     if payload.expected_revision_id is not None and payload.expected_revision_id != expected_revision:
         raise HTTPException(status_code=409, detail="Desired revision changed since review. Review the release again.")
     await session.commit()
-    metadata = await images.metadata(payload.image)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
+    metadata = await image_metadata(payload.image)
     solution = await solutions.access(session, solution_id, user.id)
     if solution.desired_revision_id != expected_revision:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Review the release again.")
@@ -108,9 +115,7 @@ async def check_update(solution_id: UUID, user: User = Depends(authuser), sessio
         raise HTTPException(status_code=409, detail="Solution has no desired revision")
     source, revision_id = Image(revision.source), revision.id
     await session.commit()
-    metadata = await images.metadata(source)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
+    metadata = await image_metadata(source)
 
     # Revalidate permissions and the source after inspection before returning a candidate.
     solution = await solutions.access(session, solution_id, user.id)
@@ -142,9 +147,7 @@ async def apply_update(
         raise HTTPException(status_code=409, detail="Solution has no desired revision")
     source, revision_id = Image(revision.source), revision.id
     await session.commit()
-    metadata = await images.metadata(source)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
+    metadata = await image_metadata(source)
 
     # Compare and merge only against the current serialized desired state.
     solution = await solutions.access(session, solution_id, user.id)

@@ -5,7 +5,7 @@ import { defineConfig, lazyPlugins, loadEnv } from 'vite-plus';
 const ignoredPaths = ['.react-router/**', 'build/**', 'src/lib/generated/**'];
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), '');
+    const env = loadEnv(mode, process.cwd(), 'VITE_');
 
     const devServerHost = env.VITE_DEV_HOST?.trim() || 'localhost';
     const devServerPort = env.VITE_DEV_PORT ? Number.parseInt(env.VITE_DEV_PORT, 10) : 5173;
