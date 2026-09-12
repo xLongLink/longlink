@@ -33,11 +33,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def bucket(self, organization: UUID, compute: object, *, create: bool = False):
+        async def bucket(self, organization: UUID, compute: object):
             """Record bucket creation."""
 
             calls.append("storage")
-            return await super().bucket(organization, compute, create=create)
+            return await super().bucket(organization, compute)
 
     class Organizations:
         async def apply(self, namespace: str) -> None:
@@ -94,16 +94,6 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             assert organization_id == organization.id
             calls.append("database")
 
-    class Storage(StorageKubernetes):
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def create(self, bucket: str) -> None:
-            """Record bucket creation."""
-
-            assert bucket == organization.id.hex
-            calls.append("storage")
-
     class Organizations:
         async def apply(self, namespace: str) -> None:
             """Record namespace reconciliation."""
@@ -116,7 +106,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
-            self.storage = Storage()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -269,11 +259,6 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def revoke_solution(self, name: str) -> None:
-            """Record unexpected credential revocation."""
-
-            calls.append("revoke")
-
         async def delete(self, bucket: str) -> None:
             """Record unexpected bucket deletion."""
 
@@ -333,12 +318,6 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     class Storage:
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
-
-        async def revoke_solution(self, name: str) -> None:
-            """Record Solution credential revocation."""
-
-            assert name == solution.id.hex
-            calls.append("revoke")
 
         async def delete(self, organization_id: UUID, compute: object) -> None:
             """Record Organization bucket and identity deletion."""

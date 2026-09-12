@@ -3100,6 +3100,31 @@
               }
             ],
             "title": "Storage Certificate"
+          },
+          "bucket_size_bytes": {
+            "type": "integer",
+            "multipleOf": 1024.0,
+            "maximum": 70368744177664.0,
+            "minimum": 1024.0,
+            "title": "Bucket Size Bytes"
+          },
+          "bucket_max_objects": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Bucket Max Objects"
+          },
+          "storage_reserve_percent": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Storage Reserve Percent"
+          },
+          "storage_object_overhead_bytes": {
+            "type": "integer",
+            "maximum": 1073741824.0,
+            "minimum": 4096.0,
+            "title": "Storage Object Overhead Bytes"
           }
         },
         "type": "object",
@@ -3109,7 +3134,11 @@
           "gateway_url",
           "database_storage_class",
           "storage_class",
-          "storage_endpoint"
+          "storage_endpoint",
+          "bucket_size_bytes",
+          "bucket_max_objects",
+          "storage_reserve_percent",
+          "storage_object_overhead_bytes"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
@@ -3157,6 +3186,22 @@
             "type": "integer",
             "title": "Storage Instances"
           },
+          "bucket_size_bytes": {
+            "type": "integer",
+            "title": "Bucket Size Bytes"
+          },
+          "bucket_max_objects": {
+            "type": "integer",
+            "title": "Bucket Max Objects"
+          },
+          "storage_reserve_percent": {
+            "type": "integer",
+            "title": "Storage Reserve Percent"
+          },
+          "storage_object_overhead_bytes": {
+            "type": "integer",
+            "title": "Storage Object Overhead Bytes"
+          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -3173,6 +3218,10 @@
           "storage_endpoint",
           "storage_size_gib",
           "storage_instances",
+          "bucket_size_bytes",
+          "bucket_max_objects",
+          "storage_reserve_percent",
+          "storage_object_overhead_bytes",
           "status"
         ],
         "title": "ComputeRegistryResponse",

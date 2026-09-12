@@ -3,10 +3,10 @@ import contextlib
 from uuid import UUID
 from datetime import datetime, timedelta
 from sqlmodel import col
+from src.utils import postgres
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from collections.abc import Iterator, AsyncIterator
-from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -16,12 +16,6 @@ from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.organizations import Organization, OrganizationActivity
-
-# Load the loopback-only SQL transport solely for the host-run development process.
-if env.DEVELOPMENT:
-    from src.development import postgres
-else:
-    from src.utils import postgres
 
 LEASE_SECONDS = 180
 RENEW_SECONDS = 30
@@ -42,11 +36,9 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
 
     # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
     organization = infrastructure.organization
-    port = 5432
 
-    # Host-run development workers reach private SQL through the authenticated Kubernetes API.
-    if env.DEVELOPMENT:
-        port = await cluster.databases.portforward(organization.id)
+    # Platform workers can run outside the compute cluster and its private DNS/network.
+    port = await cluster.databases.portforward(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     return postgres.Postgres(
@@ -56,6 +48,7 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,
         certificate=await cluster.databases.certificate(organization.id),
+        hostaddr="127.0.0.1",
     )
 
 

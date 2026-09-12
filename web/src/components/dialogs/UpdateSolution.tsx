@@ -47,7 +47,9 @@ export default function UpdateSolution({
     const formId = useId();
     const submitting = useRef(false);
     const environments = candidate.metadata.environments ?? [];
-    const configured = candidate.configured_envs;
+
+    // Reuse configured environment membership throughout this render.
+    const configured = new Set(candidate.configured_envs);
 
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
     const currentLabel = candidate.current_image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
@@ -57,13 +59,7 @@ export default function UpdateSolution({
         .superRefine((value, ctx) => {
             // Existing required secrets remain valid without exposing or resubmitting their values.
             for (const { name, required } of environments) {
-                if (
-                    isMissingRequiredEnv(
-                        value.envs[name] ?? { action: 'untouched' },
-                        required,
-                        configured.includes(name)
-                    )
-                ) {
+                if (isMissingRequiredEnv(value.envs[name] ?? { action: 'untouched' }, required, configured.has(name))) {
                     ctx.addIssue({ code: 'custom', path: ['envs', name], message: 'Required' });
                 }
             }
@@ -105,7 +101,7 @@ export default function UpdateSolution({
         alwaysOn !== (candidate.min_scale === 1) ||
         Object.values(envs).some((change) => change.action !== 'untouched');
     const missing = environments.some(({ name, required }) =>
-        isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.includes(name))
+        isMissingRequiredEnv(envs[name] ?? { action: 'untouched' }, required, configured.has(name))
     );
 
     /** Lock validation and submission together so repeated submits cannot queue duplicate releases. */
@@ -177,7 +173,7 @@ export default function UpdateSolution({
                         )}
                     />
                     {environments.map(({ name, required, description }) => {
-                        const isConfigured = configured.includes(name);
+                        const isConfigured = configured.has(name);
                         return (
                             <Controller
                                 control={form.control}

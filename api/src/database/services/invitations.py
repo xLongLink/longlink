@@ -81,7 +81,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
     cutoff = utcnow() - timedelta(days=7)
     active_invitations = [invitation for invitation in pending_invitations if invitation.created_at > cutoff]
     delete_pending_invitations = delete(OrganizationInvitation).where(
-        col(OrganizationInvitation.id).in_([invitation.id for invitation in pending_invitations])
+        col(OrganizationInvitation.id).in_(invitation.id for invitation in pending_invitations)
     )
     if not active_invitations:
         await session.execute(delete_pending_invitations)
@@ -92,7 +92,7 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
         select(UserOrganization)
         .where(
             col(UserOrganization.user_id) == user.id,
-            col(UserOrganization.organization_id).in_([invitation.organization_id for invitation in active_invitations]),
+            col(UserOrganization.organization_id).in_(invitation.organization_id for invitation in active_invitations),
         )
         .with_for_update()
     )

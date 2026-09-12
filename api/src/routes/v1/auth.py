@@ -14,10 +14,12 @@ from fastapi.responses import RedirectResponse
 from src.database.services import users, invitations, organizations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.users import User
 
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
+INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
 OAUTH_STATE_COOKIE = "longlink_oauth"
 OAUTH_STATE_COOKIE_PATH = "/api/v1/auth/oauth"
 
@@ -26,7 +28,6 @@ def set_auth_session(response: Response, credential: str) -> None:
     """Apply the browser response policy for one signed authentication credential."""
 
     # Publish authentication as a private, browser-only session.
-    response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, "longlink_auth", credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
@@ -38,6 +39,26 @@ def oauth_failure_response() -> RedirectResponse:
     response.headers["Cache-Control"] = "no-store"
     cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
     return response
+
+
+async def password_reset_user(session: AsyncSession, credential: str) -> User:
+    """Resolve valid password-reset proof or return its stable client error."""
+
+    # Convert invalid and expired credentials into one safe browser-facing response.
+    try:
+        return await token.password_reset_user(session, credential)
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=400, detail=INVALID_PASSWORD_RESET_LINK) from exc
+
+
+def registration_email(credential: str) -> Email:
+    """Resolve valid registration proof or return its stable client error."""
+
+    # Convert invalid and expired credentials into one safe browser-facing response.
+    try:
+        return token.registration_claims(credential)
+    except jwt.PyJWTError as exc:
+        raise HTTPException(status_code=400, detail=INVALID_REGISTRATION_LINK) from exc
 
 
 @router.get("/auth/oauth", response_model=OAuthAvailability)
@@ -201,13 +222,7 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
-    try:
-        await token.password_reset_user(session, payload.token)
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
-        ) from exc
-    response.headers["Cache-Control"] = "no-store"
+    await password_reset_user(session, payload.token)
     cookies.set_browser_cookie(response, "longlink_password_reset", payload.token, "/api/v1/auth/reset-password", 900)
 
 
@@ -220,12 +235,7 @@ async def get_password_reset_setup(
     """Restore password reset state from browser-only proof."""
 
     # Refreshes validate only the restricted cookie, never an exposed URL credential.
-    try:
-        await token.password_reset_user(session, password_reset_token or "")
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
-        ) from exc
+    await password_reset_user(session, password_reset_token or "")
     response.headers["Cache-Control"] = "no-store"
 
 
@@ -239,12 +249,7 @@ async def reset_password(
     """Replace a password using browser-only reset proof."""
 
     # Resolve the active account from one valid, current password-reset credential.
-    try:
-        user = await token.password_reset_user(session, password_reset_token or "")
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400, detail="This password reset link is invalid or has expired. Please request a new one."
-        ) from exc
+    user = await password_reset_user(session, password_reset_token or "")
 
     # Replace the credential so password-bound browser sessions become invalid.
     user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
@@ -276,14 +281,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     """Validate an emailed registration token without creating an account."""
 
     # Convert invalid and expired tokens into one stable authentication error.
-    try:
-        email = token.registration_claims(payload.token)
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=INVALID_REGISTRATION_LINK,
-        ) from exc
-    response.headers["Cache-Control"] = "no-store"
+    email = registration_email(payload.token)
     cookies.set_browser_cookie(
         response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS
     )
@@ -295,13 +293,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.
-    try:
-        email = token.registration_claims(registration_token or "")
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=INVALID_REGISTRATION_LINK,
-        ) from exc
+    email = registration_email(registration_token or "")
     response.headers["Cache-Control"] = "no-store"
     return {"email": email}
 
@@ -316,13 +308,7 @@ async def complete_registration(
     """Create and authenticate an account after stateless email verification."""
 
     # Bind account creation to the signed email rather than any client-supplied identity.
-    try:
-        email = token.registration_claims(registration_token or "")
-    except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=INVALID_REGISTRATION_LINK,
-        ) from exc
+    email = registration_email(registration_token or "")
 
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:

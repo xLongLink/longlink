@@ -33,7 +33,11 @@ export const zComputeRegistryCreate = z.object({
     storage_endpoint: z.string().max(512),
     storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
     storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
-    storage_certificate: z.string().max(65536).nullish()
+    storage_certificate: z.string().max(65536).nullish(),
+    bucket_size_bytes: z.int().gte(1024).lte(70368744177664),
+    bucket_max_objects: z.int().gte(1).lte(2147483647),
+    storage_reserve_percent: z.int().gte(1).lte(99),
+    storage_object_overhead_bytes: z.int().gte(4096).lte(1073741824)
 });
 
 /**
@@ -370,6 +374,10 @@ export const zComputeRegistryResponse = z.object({
     storage_endpoint: z.string(),
     storage_size_gib: z.int(),
     storage_instances: z.int(),
+    bucket_size_bytes: z.int(),
+    bucket_max_objects: z.int(),
+    storage_reserve_percent: z.int(),
+    storage_object_overhead_bytes: z.int(),
     status: zStatus
 });
 

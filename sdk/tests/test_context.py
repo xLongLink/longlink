@@ -1,14 +1,49 @@
+import jwt
 import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from fastapi import Depends, FastAPI, Request
+from datetime import UTC, datetime
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
+INVALID_IDENTITY_TOKENS = (
+    pytest.param("invalid-token", id="malformed"),
+    pytest.param(
+        identity.create_identity_token(UUID("00000000-0000-0000-0000-000000000001"), "wrong-identity-secret-01234567890"),
+        id="wrong-secret",
+    ),
+    pytest.param(
+        jwt.encode(
+            {
+                "sub": "00000000-0000-0000-0000-000000000001",
+                "aud": "wrong-audience",
+                "iat": datetime(2020, 1, 1, tzinfo=UTC),
+                "exp": datetime(2030, 1, 1, tzinfo=UTC),
+            },
+            IDENTITY_SECRET,
+            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
+        ),
+        id="wrong-audience",
+    ),
+    pytest.param(
+        jwt.encode(
+            {
+                "sub": "00000000-0000-0000-0000-000000000001",
+                "aud": identity.IDENTITY_TOKEN_AUDIENCE,
+                "iat": datetime(2020, 1, 1, tzinfo=UTC),
+                "exp": datetime(2020, 1, 1, 1, tzinfo=UTC),
+            },
+            IDENTITY_SECRET,
+            algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
+        ),
+        id="expired",
+    ),
+)
 
 
 def identity_headers(user_id: UUID) -> dict[str, str]:
@@ -149,8 +184,9 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     assert session_closed
 
 
-def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
-    """Ignore a malformed Platform identity token."""
+@pytest.mark.parametrize("token", INVALID_IDENTITY_TOKENS)
+def test_context_middleware_treats_invalid_identity_as_anonymous(token: str) -> None:
+    """Ignore Platform identity tokens that fail validation."""
 
     # Arrange
     app = FastAPI()
@@ -167,7 +203,7 @@ def test_context_middleware_treats_malformed_identity_as_anonymous() -> None:
     # Act
     response = client.get(
         "/",
-        headers={"x-longlink-identity": "invalid-token"},
+        headers={"x-longlink-identity": token},
     )
 
     # Assert

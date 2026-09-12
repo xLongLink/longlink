@@ -197,14 +197,13 @@ async def run_database_scheduler() -> None:
                 async with session_scope() as session:
                     await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.expires_at) <= utcnow()))
                     result = await session.scalars(select(col(Organization.id)).where(col(Organization.deleted_at).is_(None)))
-                    organization_ids = result.all()
                     await session.commit()
                 running = {organization_id: task for organization_id, task in running.items() if not task.done()}
             except Exception:
                 logger.exception("Database scheduler polling failed")
                 await asyncio.sleep(30)
                 continue
-            for organization_id in organization_ids:
+            for organization_id in result:
                 if organization_id not in running:
                     running[organization_id] = tasks.create_task(reconcile(organization_id))
             await asyncio.sleep(30)

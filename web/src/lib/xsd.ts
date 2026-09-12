@@ -50,13 +50,32 @@ function attribute(value: XsdRecord | undefined, name: string): string {
     return typeof entry === 'string' ? entry : '';
 }
 
+/** Return the first record child, skipping non-record entries in repeated nodes. */
+function firstNode(value: XsdRecord | undefined, name: string): XsdRecord | undefined {
+    // Handle singleton children without creating a collection.
+    const child = value?.[name];
+    if (!Array.isArray(child)) {
+        return record(child);
+    }
+
+    // Stop at the first valid record in document order.
+    for (const entry of child) {
+        const childRecord = record(entry);
+        if (childRecord !== undefined) {
+            return childRecord;
+        }
+    }
+
+    return undefined;
+}
+
 function text(value: XsdNode | undefined): string {
     const entry = typeof value === 'string' ? value : record(value)?.['#text'];
     return typeof entry === 'string' ? entry.trim() : '';
 }
 
 function annotation(value: XsdRecord): XsdRecord | undefined {
-    return nodes(value, 'xsd:annotation')[0];
+    return firstNode(value, 'xsd:annotation');
 }
 
 function documentation(value: XsdRecord): string {
@@ -64,7 +83,7 @@ function documentation(value: XsdRecord): string {
 }
 
 function appInfo(value: XsdRecord): XsdRecord | undefined {
-    return nodes(annotation(value), 'xsd:appinfo')[0];
+    return firstNode(annotation(value), 'xsd:appinfo');
 }
 
 function parseDocument(source: string, path: string): XsdRecord {
@@ -102,7 +121,7 @@ function parseElement(
     types: Map<string, XsdRecord>,
     runtimeAttributes: Attribute[]
 ): ElementDocumentation {
-    const inlineType = nodes(element, 'xsd:complexType')[0];
+    const inlineType = firstNode(element, 'xsd:complexType');
     const typeName = attribute(element, 'type');
     const info = appInfo(element);
 
@@ -204,10 +223,11 @@ function parseComponents(): ComponentDocumentation[] {
             {
                 ...component,
                 lastUpdated: attribute(metadata, 'lastUpdated'),
-                nested: Array.from(nestedNames)
-                    .map((name) => elements.get(name))
-                    .filter((nested): nested is XsdRecord => nested !== undefined)
-                    .map((nested) => parseElement(nested, types, runtimeAttributes)),
+                nested: Array.from(nestedNames).flatMap((name) => {
+                    // Resolve and parse each available nested element in insertion order.
+                    const nested = elements.get(name);
+                    return nested === undefined ? [] : [parseElement(nested, types, runtimeAttributes)];
+                }),
                 slug: attribute(metadata, 'slug'),
                 source: attribute(metadata, 'source'),
             },

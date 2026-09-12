@@ -7,7 +7,7 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from importlib.resources import files
-from kr8s.asyncio.objects import Job, Pod, Secret, Service, Namespace, new_class, object_from_spec
+from kr8s.asyncio.objects import Job, Pod, Secret, Namespace, new_class, object_from_spec
 from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
@@ -29,9 +29,6 @@ class Databases:
     async def apply(self, organization_id: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
         """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
-        # Reject invalid capacity and credentials before creating the namespace.
-        if not password or not storage_class or size_gib < 1 or instances < 1:
-            raise ValueError("Database password, storage class, size, and instance count are required")
         namespace = f"longlink-database-{organization_id.hex}"
         documents = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "database.yml"),
@@ -217,14 +214,12 @@ class Databases:
     async def portforward(self, organization_id: UUID) -> int:
         """Forward private SQL to loopback until the owning Kubernetes client closes."""
 
-        # Load the primary Service selector before kr8s selects its ready Pod.
-        service = Service(
+        # Share Service selection and tunnel cleanup with the owning Kubernetes client.
+        return await self._client.portforward(
             "database-rw",
-            namespace=f"longlink-database-{organization_id.hex}",
-            api=await self._client.api(),
+            f"longlink-database-{organization_id.hex}",
+            5432,
         )
-        await service.refresh()
-        return await self._client.connections.enter_async_context(service.portforward(5432, local_port="auto"))
 
     async def certificate(self, organization_id: UUID) -> str:
         """Read the CNPG-generated server CA as PEM text, not a filesystem path."""

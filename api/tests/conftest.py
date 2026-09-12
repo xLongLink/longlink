@@ -53,7 +53,12 @@ class StorageKubernetes:
     async def install(self, compute: object) -> None:
         """Accept shared storage reconciliation."""
 
-    async def bucket(self, organization: UUID, compute: object, *, create: bool = False) -> SimpleNamespace:
+    async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
+        """Accept provisioning and return the resulting bucket boundary."""
+
+        return await self.bucket(organization, compute)
+
+    async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
         return SimpleNamespace(name=organization.hex, storage=self)
@@ -62,6 +67,9 @@ class StorageKubernetes:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
+
+    async def quota(self, organization: UUID, compute: object) -> None:
+        """Accept quota reconciliation at the external storage boundary."""
 
     async def authorize(self, bucket: str, solutions: object) -> None:
         """Accept the real lifecycle policy snapshot."""

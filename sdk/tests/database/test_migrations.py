@@ -46,8 +46,7 @@ def test_migration_loader_discovers_nested_solution_models(isolated_model: Calla
 
     # Arrange
     table_name = "nested_inventory_items"
-    write_model = isolated_model
-    write_model(
+    isolated_model(
         table_name,
         "from sqlmodel import Field, SQLModel\n"
         "\n\n"
@@ -73,9 +72,8 @@ def test_migration_loader_skips_already_imported_models(
     """Avoid executing model modules that the Solution already loaded."""
 
     # Arrange
-    write_model = isolated_model
     module_name = "src.models.catalog.inventory"
-    write_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
+    isolated_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
     sys.modules[module_name] = ModuleType(module_name)
 
     def unexpected_spec(*_args: object, **_kwargs: object) -> object:

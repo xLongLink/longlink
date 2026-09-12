@@ -144,6 +144,18 @@ export default function AdminCompute() {
                             {metadataCompute.storage_size_gib} GiB
                         </MetadataListItem>
                         <MetadataListItem label="Ceph replicas">{metadataCompute.storage_instances}</MetadataListItem>
+                        <MetadataListItem label="Organization bucket byte quota">
+                            {metadataCompute.bucket_size_bytes.toLocaleString()} bytes
+                        </MetadataListItem>
+                        <MetadataListItem label="Organization bucket object quota">
+                            {metadataCompute.bucket_max_objects.toLocaleString()}
+                        </MetadataListItem>
+                        <MetadataListItem label="Ceph capacity headroom">
+                            {metadataCompute.storage_reserve_percent}%
+                        </MetadataListItem>
+                        <MetadataListItem label="Reserved overhead per object">
+                            {metadataCompute.storage_object_overhead_bytes.toLocaleString()} bytes
+                        </MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
             )}

@@ -374,10 +374,10 @@ def build_solution(build_context: Path) -> tuple[str, str]:
 
     # Write the generated Dockerfile into the temporary build context.
     dependency_source = "" if root == source_root else f"{root.relative_to(source_root).as_posix()}/"
-    manifest_lines: list[str] = []
-    for source_path in local_source_paths:
-        relative_path = source_path.relative_to(source_root).as_posix()
-        manifest_lines.append(f"COPY {relative_path}/pyproject.toml /workspace/{relative_path}/")
+    manifest_lines = [
+        f"COPY {relative_path}/pyproject.toml /workspace/{relative_path}/"
+        for relative_path in (source_path.relative_to(source_root).as_posix() for source_path in local_source_paths)
+    ]
     local_dependency_manifests = "\n".join(manifest_lines)
     build_context.joinpath("Dockerfile").write_text(
         DOCKERFILE_TEMPLATE.format(
