@@ -1,57 +1,37 @@
 import pytest
-from uuid import UUID, uuid4
+from uuid import uuid4
 from factories import create_compute, queue_operation, create_ready_infrastructure
 from src.errors import ConflictError, NotFoundError
-from collections.abc import Callable, Awaitable
 from src.database.session import session_scope
 from src.database.services import compute
 from src.models.operations import OperationKind
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 
-DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
 
-
-@pytest.mark.parametrize(
-    "delete",
-    [
-        pytest.param(compute.delete, id="compute"),
-    ],
-)
-async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
+async def test_delete_rejects_missing_registry() -> None:
     """Reject deletion when the requested registry does not exist."""
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(NotFoundError, match="registry not found"):
-            await delete(session, uuid4())
+            await compute.delete(session, uuid4())
 
 
-@pytest.mark.parametrize(
-    ("delete", "registry", "model"),
-    [
-        pytest.param(compute.delete, "compute", ComputeRegistry, id="compute"),
-    ],
-)
-async def test_delete_removes_unused_registry(
-    delete: DeleteRegistry,
-    registry: str,
-    model: type[ComputeRegistry],
-) -> None:
+async def test_delete_removes_unused_registry() -> None:
     """Delete a registry that has no organization assignment."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
-    registry_id = getattr(infrastructure, registry).id
+    registry_id = infrastructure.compute.id
 
     # Act
     async with session_scope() as session:
-        await delete(session, registry_id)
+        await compute.delete(session, registry_id)
         await session.commit()
 
     # Assert
     async with session_scope() as session:
-        persisted = await session.get(model, registry_id)
+        persisted = await session.get(ComputeRegistry, registry_id)
     assert persisted is None
 
 
