@@ -1,7 +1,7 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import create_ready_infrastructure
+from factories import create_ready_compute
 from src.database.session import session_scope
 from src.database.models.organizations import Organization
 
@@ -14,7 +14,7 @@ async def test_authenticated_organization_creation_rejects_untrusted_origin_befo
     """Reject unsafe cookie-authenticated writes before the route can persist data."""
 
     # Arrange
-    await create_ready_infrastructure()
+    await create_ready_compute()
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:

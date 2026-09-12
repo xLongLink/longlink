@@ -5,7 +5,7 @@ from httpx2 import AsyncClient
 from conftest import DatabasePostgres, DatabaseKubernetes
 from datetime import UTC, datetime
 from sqlmodel import select
-from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
+from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import func
 from urllib.parse import urlencode
 from sqlalchemy.exc import OperationalError
@@ -32,7 +32,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
 
     # Act
     response = await clients[0].post(
@@ -47,7 +47,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     async with session_scope() as session:
         organization = await session.get(Organization, UUID(payload["id"]))
     assert organization is not None
-    assert organization.compute_id == infrastructure.compute.id
+    assert organization.compute_id == compute.id
     assert organization.database_idle_seconds == 0
     assert organization.status == Status.creating
     operations = await fetch_operations()
@@ -64,9 +64,9 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
 
     # Arrange
     owner, other_user, _ = users
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
     for name in ("acme", "globex", "initech"):
-        await create_organization(owner, name=name, infrastructure=infrastructure)
+        await create_organization(owner, name=name, compute=compute)
 
     # Act
     blocked_response = await clients[0].post("/api/v1/organizations", json={"name": "umbrella"})
@@ -101,9 +101,9 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
     async with session_scope() as session:
-        await session.delete(infrastructure.compute)
+        await session.delete(compute)
         await session.commit()
 
     # Act
@@ -389,7 +389,7 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, infrastructure=await create_ready_infrastructure())
+    organization = await create_organization(owner, compute=await create_ready_compute())
 
     class FakePostgres(DatabasePostgres):
         """Provide database usage responses for the Organization resource endpoint."""
@@ -480,7 +480,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, infrastructure=await create_ready_infrastructure())
+    organization = await create_organization(owner, compute=await create_ready_compute())
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""

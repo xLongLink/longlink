@@ -3,7 +3,7 @@ from uuid import uuid4
 from conftest import DatabasePostgres
 from datetime import timedelta
 from sqlmodel import col
-from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
+from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
@@ -26,13 +26,13 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
 
     # Act
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    organization = await create_organization(owner, compute=compute)
 
     # Assert
-    assert organization.compute_id == infrastructure.compute.id
+    assert organization.compute_id == compute.id
     assert organization.database_idle_seconds == 0
     assert organization.database_sync_pending is True
     assert organization.status == Status.creating
@@ -493,22 +493,22 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
     async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, infrastructure.compute.id)
+        registry = await session.get(ComputeRegistry, compute.id)
         assert registry is not None
         registry.status = Status.creating
         await session.commit()
 
     # Act
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    organization = await create_organization(owner, compute=compute)
 
     # Assert
     async with session_scope() as session:
         fetched, total = await organizations.fetch_page(session, Pagination())
         assert fetched == [organization]
         assert total == 1
-        reloaded_compute = await session.get(ComputeRegistry, infrastructure.compute.id)
+        reloaded_compute = await session.get(ComputeRegistry, compute.id)
         assert reloaded_compute is not None
         assert reloaded_compute.status == Status.creating
         assert len(await fetch_operations()) == 1
@@ -519,9 +519,9 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
 
     # Arrange
     owner = users[0]
-    assigned_infrastructure = await create_ready_infrastructure()
-    available_infrastructure = await create_ready_infrastructure()
-    await create_organization(owner, infrastructure=assigned_infrastructure)
+    assigned_compute = await create_ready_compute()
+    available_compute = await create_ready_compute()
+    await create_organization(owner, compute=assigned_compute)
 
     # Act
     async with session_scope() as session:
@@ -529,7 +529,7 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
         await session.commit()
 
     # Assert
-    assert organization.compute_id == available_infrastructure.compute.id
+    assert organization.compute_id == available_compute.id
 
 
 async def test_create_rejects_missing_assigned_infrastructure(users: tuple[User, User, User]) -> None:
@@ -545,8 +545,8 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
     """Reject duplicate Organization names without persisting a second membership."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    await create_organization(users[0], compute=compute)
 
     # Act and assert
     async with session_scope() as session:
@@ -555,7 +555,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 session,
                 "acme",
                 users[0],
-                compute_id=infrastructure.compute.id,
+                compute_id=compute.id,
             )
 
 

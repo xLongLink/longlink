@@ -1,6 +1,6 @@
 import pytest
 from httpx2 import AsyncClient
-from factories import create_organization, create_ready_infrastructure
+from factories import create_organization, create_ready_compute
 from src.database.models.users import User
 
 
@@ -31,8 +31,7 @@ async def test_platform_user_cannot_delete_compute_registry(clients: tuple[Async
     """Reject registry deletion without modifying the registered backend."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    compute = infrastructure.compute
+    compute = await create_ready_compute()
 
     # Act
     response = await clients[1].delete(f"/api/v1/computes/{compute.id}")
@@ -134,8 +133,8 @@ async def test_compute_registry_deletes_unused_registration(clients: tuple[Async
     """Delete an unassigned Compute registry and reject repeated deletion."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    registry_id = infrastructure.compute.id
+    compute = await create_ready_compute()
+    registry_id = compute.id
 
     # Act
     delete_response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
@@ -155,9 +154,9 @@ async def test_compute_registry_delete_rejects_assigned_registry(
 ) -> None:
     """Keep a Compute registry while an Organization references it."""
 
-    infrastructure = await create_ready_infrastructure()
-    await create_organization(users[0], infrastructure=infrastructure)
-    registry_id = infrastructure.compute.id
+    compute = await create_ready_compute()
+    await create_organization(users[0], compute=compute)
+    registry_id = compute.id
 
     response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
     list_response = await clients[0].get("/api/v1/computes")

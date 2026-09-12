@@ -92,7 +92,7 @@ export default function OrganizationSettings() {
     const error: (Error & { status?: number }) | null = organizationError ?? membershipError ?? solutionsError;
     const organizationName = organizationDetails?.name ?? membershipOrganization?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? membershipOrganization?.avatar ?? '';
-    const organizationId = organizationDetails?.id ?? membershipOrganization?.id ?? '';
+    const organizationId = membershipOrganizationId ?? '';
     const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
     const hasOrganizationSolutionAccess = hasMinimumRole(organizationRole, 'maintain');
     const [logsTargetId, setLogsTargetId] = useState<string | null>(null);

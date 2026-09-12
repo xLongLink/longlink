@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from factories import create_compute, queue_operation, create_ready_infrastructure
+from factories import create_compute, queue_operation, create_ready_compute
 from src.errors import ConflictError, NotFoundError
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
@@ -22,8 +22,8 @@ async def test_delete_removes_unused_registry() -> None:
     """Delete a registry that has no organization assignment."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    registry_id = infrastructure.compute.id
+    compute_registry = await create_ready_compute()
+    registry_id = compute_registry.id
 
     # Act
     async with session_scope() as session:

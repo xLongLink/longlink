@@ -6,7 +6,7 @@ from factories import (
     claim_operation,
     fetch_operations,
     complete_operation,
-    create_ready_infrastructure,
+    create_ready_compute,
 )
 from factories import queue_operation as queue
 from longlink.utils.time import utcnow
@@ -101,12 +101,12 @@ async def test_operations_service_create_coalesces_and_reopens_completed_work() 
 async def test_operations_service_schedules_all_active_solution_creation_once() -> None:
     """Queue one reconciliation Operation for every Solution lifecycle state."""
 
-    infrastructure = await create_ready_infrastructure()
+    compute_registry = await create_ready_compute()
     async with session_scope() as session:
         organization = Organization(
             name="Acme",
             slug="acme",
-            compute_id=infrastructure.compute.id,
+            compute_id=compute_registry.id,
         )
         session.add(organization)
         await session.flush()
@@ -147,7 +147,7 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_create, infrastructure.compute.id),
+        (OperationKind.compute_create, compute_registry.id),
         (OperationKind.organization_create, organization.id),
         (OperationKind.solution_deploy, revision.id),
         (OperationKind.solution_delete, deleted.id),
@@ -176,20 +176,18 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
         await operations.schedule_reconciliation(session)
         await session.commit()
     scheduled = await fetch_operations()
-    assert [(operation.kind, operation.target_id) for operation in scheduled].count(
-        (OperationKind.solution_deploy, desired.id)
-    ) == 1
+    assert [(operation.kind, operation.target_id) for operation in scheduled].count((OperationKind.solution_deploy, desired.id)) == 1
 
 
 async def test_operations_service_schedules_only_organization_deletion_for_deleted_organization() -> None:
     """Queue only parent cleanup when an Organization and its Solutions are deleted."""
 
-    infrastructure = await create_ready_infrastructure()
+    compute_registry = await create_ready_compute()
     async with session_scope() as session:
         organization = Organization(
             name="Deleted Acme",
             slug="deleted-acme",
-            compute_id=infrastructure.compute.id,
+            compute_id=compute_registry.id,
             deleted_at=utcnow(),
         )
         session.add(organization)
@@ -210,7 +208,7 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_create, infrastructure.compute.id),
+        (OperationKind.compute_create, compute_registry.id),
         (OperationKind.organization_delete, organization.id),
     }
 
@@ -325,12 +323,12 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
 
     # Arrange
     compute = await create_compute()
-    infrastructure = await create_ready_infrastructure()
+    compute_registry = await create_ready_compute()
     async with session_scope() as session:
         organization = Organization(
             name="Acme",
             slug="acme",
-            compute_id=infrastructure.compute.id,
+            compute_id=compute_registry.id,
         )
         session.add(organization)
         await session.flush()

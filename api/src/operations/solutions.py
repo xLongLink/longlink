@@ -11,7 +11,9 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
+from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
+from src.database.models.organizations import Organization
 
 
 async def deploy(revision_id: UUID) -> None:
@@ -140,14 +142,17 @@ async def deploy(revision_id: UUID) -> None:
 async def delete(solution_id: UUID) -> None:
     """Protect workload and schema cleanup from database hibernation."""
 
+    # Admission needs only an active Organization identity with an assigned Compute target.
     async with session_scope() as session:
-        solution = await session.get(Solution, solution_id)
-        if solution is None:
+        organization_id = await session.scalar(
+            select(col(Solution.organization_id))
+            .join(Organization, col(Organization.id) == col(Solution.organization_id))
+            .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
+            .where(col(Solution.id) == solution_id, col(Organization.deleted_at).is_(None))
+        )
+        if organization_id is None:
             return
-        infrastructure = await organizations.infrastructure(session, solution.organization_id)
-        if infrastructure is None or infrastructure.organization.deleted_at is not None:
-            return
-    async with databases.activity(solution.organization_id):
+    async with databases.activity(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
             target = await organizations.solution_infrastructure(session, solution_id)

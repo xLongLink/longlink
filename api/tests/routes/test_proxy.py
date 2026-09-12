@@ -4,13 +4,14 @@ import asyncio
 from httpx2 import AsyncClient
 from typing import Protocol, TypedDict
 from longlink import identity
-from factories import Infrastructure, create_solution, create_organization, create_ready_infrastructure
+from factories import create_solution, create_organization, create_ready_compute
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -109,12 +110,12 @@ def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitab
     return request
 
 
-async def create_running_solution(user: User) -> tuple[Solution, Infrastructure]:
+async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry]:
     """Create one Solution with the running state required for gateway tests."""
 
     # Arrange an assignable gateway target and its running Solution.
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(user, infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(user, compute=compute)
     solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 
     # Set lifecycle state directly because proxy tests do not exercise reconciliation.
@@ -132,7 +133,7 @@ async def create_running_solution(user: User) -> tuple[Solution, Infrastructure]
         persisted_solution.status = Status.running
         await session.commit()
 
-    return solution, infrastructure
+    return solution, compute
 
 
 async def test_solution_proxy_forwards_safe_content(
