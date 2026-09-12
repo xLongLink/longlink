@@ -37,7 +37,7 @@ k3d cluster create compute \
   --k3s-arg "--disable=traefik@server:0"
 ```
 
-The local setup generates a development CA and a certificate for `localhost`, creates the Kourier TLS Secret and a local-only ingress policy for the host's Docker bridge address, and registers `https://localhost:8443`. Generated private material stays under the ignored `dev/certificates` directory and is removed by `make down`. LongLink does not generate gateway identities or certificates outside this local development workflow.
+The local setup generates a development CA and a certificate for `localhost`, creates the Kourier TLS Secret and a development-only policy that permits ingress to the gateway's TCP port `8444`, and registers `https://localhost:8443`. The broad local ingress exception is required because ServiceLB/NAT does not preserve stable source identity. Generated private material stays under the ignored `dev/certificates` directory and is removed by `make down`. LongLink does not generate gateway identities or certificates outside this local development workflow.
 Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
 
 Export the kubeconfig afterward:
@@ -55,12 +55,13 @@ Create the ignored seed configuration from the tracked sample:
 cp api/.env.seed.sample api/.env.seed
 ```
 
-Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env.seed`:
+Configure the Kubernetes object-storage backend in `api/.env.seed`:
 
 ```bash
-EXOSCALE_API_KEY=EXO...
-EXOSCALE_API_SECRET=replace-with-the-api-secret
-EXOSCALE_STORAGE_ENDPOINT_URL=https://sos-ch-gva-2.exo.io
+STORAGE_CLASS=longlink-development
+STORAGE_ENDPOINT=https://rook-ceph-rgw-longlink.rook-ceph.svc:443
+STORAGE_SIZE_GIB=20
+STORAGE_INSTANCES=1
 ```
 
 Local development defaults to `https://localhost:8443`, the k3d `local-path`
@@ -73,6 +74,16 @@ DATABASE_STORAGE_CLASS=local-path
 DATABASE_SIZE_GIB=10
 DATABASE_INSTANCES=1
 ```
+
+These storage settings are development defaults; no `STORAGE_CLASS` entry is
+required for local seeding. `make up` and `make seed` prepare the pinned CSI
+hostpath driver, the `longlink-development` StorageClass, and storage TLS using
+the local CA. The class supports filesystem monitor PVCs and loop-backed Block
+OSD PVCs. k3d nodes mount `/dev` and `/run/udev` for those development devices.
+An older cluster without these mounts needs a one-time `make down` / `make up`,
+which resets local Platform/sample data. Production still requires an explicitly
+chosen durable backing class; the development CSI driver is never installed by
+production reconciliation.
 
 For a non-default private gateway CA, set `GATEWAY_CERTIFICATE` to its PEM trust bundle, quoted with multiline dotenv syntax.
 Do not supply a private key. Omit it for system-trusted certificates. `make seed` automatically supplies the generated
@@ -97,18 +108,19 @@ make api
 make seed
 ```
 
-The host-run API uses authenticated Kubernetes port-forwarding for organization database
-connections in development mode. Tunnels bind to loopback on automatically assigned ports
-and close with each operation's Kubernetes client. PostgreSQL still verifies the CNPG CA
-and cluster DNS hostname; no host DNS changes, database port exposure, or VPN is needed.
-Solutions and migration Jobs inside Kubernetes connect directly to the database Service.
-The loopback connection override is isolated in `api/src/development/postgres.py`, loaded
-only when `DEVELOPMENT=true`; the SQL provisioning utility in `api/src/utils/postgres.py`
-has no transport-address override.
+The host-run API uses authenticated Kubernetes port-forwarding for PostgreSQL,
+Kourier, and S3. Tunnels bind to loopback on automatically assigned ports and
+close with their operation or streamed response. TLS still verifies the original
+hostname and CA; Kourier retains the Knative routing Host header, and S3 retains
+its signed endpoint authority. No permissive development gateway NetworkPolicy,
+public database/storage port, host DNS changes, or VPN is required.
+The transport overrides live under `api/src/development/` and are selected only
+when `DEVELOPMENT=true`. Solutions and migration Jobs connect directly to their
+in-cluster services.
 
 `make seed` queues provisioning; watch Operations until compute creation, organization
-creation, and sample deployment finish. Exoscale credentials above are required even for
-local development because object storage is provisioned remotely.
+creation, and sample deployment finish. Storage is provisioned in the registered
+compute; no external object-storage account or provider API keys are required.
 After correcting a setup failure, restart `make api` to reconcile infrastructure and run
 `make seed` again to retry a failed sample with a new revision. Successful samples are preserved.
 
@@ -117,15 +129,18 @@ After correcting a setup failure, restart `make api` to reconcile infrastructure
 Clean the compute, database, and storage resources configured in `api/.env.seed`:
 
 ```bash
-make clean
+DEVELOPMENT=true uv --directory api run --locked python -m scripts.cleanup
 ```
 
 LongLink resolves the pulled tag through the registry and deploys its immutable digest.
-LongLink creates short-lived Exoscale buckets and scoped Solution IAM credentials. Run `make clean` to remove those
+LongLink creates organization bucket claims and scoped Ceph Solution identities. Stop API workers and run the cleanup command to remove those
 resources before local Platform state is deleted. Cleanup deletes Organization namespaces, including CNPG clusters,
 Secrets and PVCs, and verifies namespace termination before clearing Platform records. Shared Knative, Kourier and
 CNPG controllers remain installed. StorageClasses with a `Retain` reclaim policy can leave persistent volumes behind;
 review those volumes separately before removing the cluster.
+
+`make down` then removes the local cluster, certificates, kubeconfig, and Platform database. It preserves Compose volumes,
+the Buildx cache, and `sdk/dev` so subsequent development starts faster and local sample edits are not discarded.
 
 <br/>
 <br/>

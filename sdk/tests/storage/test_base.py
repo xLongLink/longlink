@@ -87,6 +87,8 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
             "key": "access/key",
             "secret": "secret@key",
             "client_kwargs": {"region_name": "ch-gva-2"},
+            "config_kwargs": {"s3": {"addressing_style": "path"}, "http_session_cls": storage_base.tls.Session},
+            "skip_instance_cache": True,
         },
     }
 

@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
@@ -29,8 +30,6 @@ from src.models.organizations import (
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
-from src.database.models.storages import StorageRegistry
-from src.adapters.storage.exoscale import Exoscale
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
@@ -225,31 +224,30 @@ async def get_organization_storage_usage(
     """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
-    registry = await session.get(StorageRegistry, membership.organization.storage_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Storage registry not found")
+    infrastructure = await organizations.infrastructure(session, membership.organization_id)
+    if infrastructure is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    await session.commit()
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
-    bucket_name = membership.organization.id.hex
     try:
-        storage = Exoscale(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        )
-
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            usage = await storage.usage(bucket_name)
-    except (TimeoutError, BotoCoreError, ClientError) as exc:
+            cluster = Kubernetes(infrastructure.compute.kubeconfig)
+            async with contextlib.aclosing(cluster):
+                bucket = await cluster.storage.bucket(membership.organization_id, infrastructure.compute)
+                usage = await bucket.storage.usage(bucket.name)
+    except NotFoundError:
+        return None
+    except (TimeoutError, BotoCoreError, ClientError, ServerError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,
-            registry.name,
+            infrastructure.compute.id,
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return None if usage is None else {"bucket_name": bucket_name, "space_used": usage}
+    return None if usage is None else {"bucket_name": bucket.name, "space_used": usage}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

@@ -1,6 +1,6 @@
 import pytest
-from uuid import uuid4
-from conftest import DatabasePostgres, DatabaseKubernetes
+from uuid import UUID, uuid4
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes
 from factories import (
     claim_operation,
     create_solution,
@@ -16,6 +16,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
+from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
@@ -70,6 +71,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def delete(self, *_args: object) -> None:
             """Raise the Kubernetes deletion failure under test."""
@@ -87,7 +89,6 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FailingKubernetes)
     monkeypatch.setattr(DatabasePostgres, "delete_solution_schema", unexpected_provider, raising=False)
-    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
 
     # Act
     failed = await execute(claimed)
@@ -120,6 +121,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = FakeStorage()
 
         async def delete(self, solution_id: object, _organization_id: object) -> None:
             """Record workload removal."""
@@ -137,13 +139,13 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             calls.append(("schema", solution_id))
 
-    class FakeStorage:
+    class FakeStorage(StorageKubernetes):
         """Record object-storage cleanup."""
 
         def __init__(self, *_args: object) -> None:
             """Accept provider configuration."""
 
-        async def revoke_solution(self, solution_id: str) -> None:
+        async def revoke(self, solution_id: object) -> None:
             """Record credential revocation."""
 
             calls.append(("revoke", solution_id))
@@ -155,7 +157,6 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
-    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
 
     # Act
     await solution_operations.delete(solution.id)
@@ -164,7 +165,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     assert calls == [
         ("workload", solution.id),
         ("schema", solution.id),
-        ("revoke", solution.id.hex),
+        ("revoke", solution.id),
         ("prefix", f"solutions/{solution.id.hex}/"),
     ]
     async with session_scope() as session:
@@ -194,19 +195,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             database_passwords.append(password)
             return "solution"
 
-    class FakeStorage:
-        """Provide generated object-storage credentials without contacting storage."""
-
-        region = "ch-gva-2"
-
-        def __init__(self, *_args: object) -> None:
-            """Accept the configured registry connection values."""
-
-        async def solution_credentials(self, *_args: object) -> dict[str, str]:
-            """Return solution-scoped object-storage credentials."""
-
-            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
-
     class FakeKubernetes:
         """Capture the Kubernetes Secret submitted during deployment."""
 
@@ -215,6 +203,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -236,7 +225,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
-    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Run the actual lifecycle handler with fake external providers.
@@ -273,13 +261,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         assert updated.deployed_revision_id == revision_id
 
 
-@pytest.mark.parametrize("revoke_error", [None, RuntimeError("revoke failed")], ids=["success", "failure"])
-async def test_solution_creation_preserves_schema_failure_during_credential_compensation(
+async def test_solution_creation_preserves_schema_failure_before_storage_authorization(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
-    revoke_error: RuntimeError | None,
 ) -> None:
-    """Preserve schema failure while compensating generated storage credentials."""
+    """Keep initial storage credentials unauthorized when SQL provisioning fails."""
 
     # Arrange
     owner = users[0]
@@ -296,34 +282,25 @@ async def test_solution_creation_preserves_schema_failure_during_credential_comp
 
             raise RuntimeError("database unavailable")
 
-    class FakeStorage:
-        """Record generated credential cleanup."""
-
-        def __init__(self, *_args: object) -> None:
-            """Accept the configured registry connection values."""
-
-        async def solution_credentials(self, _name: str, _bucket: str, _prefix: str) -> dict[str, str]:
-            """Issue one solution-scoped credential."""
-
-            calls.append("credentials")
-            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
-
-        async def revoke_solution(self, name: str) -> None:
-            """Record credential revocation and optionally fail compensation."""
-
-            assert name == solution.id.hex
-            calls.append("revoke")
-            if revoke_error is not None:
-                raise revoke_error
-
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FailingPostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr(solution_operations, "Exoscale", FakeStorage)
+
+    async def user(self: StorageKubernetes, solution_id: UUID, organization_id: UUID) -> Credentials:
+        """Record credential creation at the external boundary."""
+
+        calls.append("credentials")
+        return Credentials("solution", "generated-secret")
+
+    monkeypatch.setattr(StorageKubernetes, "user", user)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="database unavailable"):
         await solution_operations.deploy(solution.desired_revision_id)
-    assert calls == ["credentials", "revoke"]
+    assert calls == ["credentials"]
+    async with session_scope() as session:
+        persisted = await session.get(Solution, solution.id)
+        assert persisted is not None
+        assert "LONGLINK_STORAGE_USERNAME" not in persisted.secrets
 
 
 async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
@@ -354,6 +331,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -374,7 +352,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(DatabasePostgres, "solution_schema", unexpected_provider, raising=False)
-    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Act
@@ -401,7 +378,6 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
         raise AssertionError("providers must not be constructed")
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act
@@ -423,7 +399,6 @@ async def test_solution_creation_skips_missing_solution_without_constructing_pro
         raise AssertionError("providers must not be constructed")
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act and assert
@@ -457,6 +432,7 @@ async def test_solution_creation_reuses_complete_runtime_secrets_for_running_sol
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -514,21 +490,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
                 await session.commit()
             return "solution"
 
-    class Storage:
-        """Provide object-storage credentials without contacting storage."""
-
-        region = "ch-gva-2"
-
-        def __init__(self, *_args: object) -> None:
-            """Accept the configured storage connection values."""
-
-        async def solution_credentials(self, *_args: object) -> dict[str, str]:
-            """Return solution-scoped object-storage credentials."""
-
-            return {"access_key_id": "solution", "secret_access_key": "generated-secret"}
-
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", Postgres)
-    monkeypatch.setattr(solution_operations, "Exoscale", Storage)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
 
     # Act
@@ -550,7 +512,6 @@ async def test_solution_deletion_skips_missing_solution_without_constructing_pro
         raise AssertionError("providers must not be constructed")
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Exoscale", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
 
     # Act and assert

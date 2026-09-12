@@ -1,7 +1,7 @@
 import asyncio
 import argparse
 from pathlib import Path
-from pydantic import Field, field_validator
+from pydantic import Field
 from sqlmodel import col
 from src.utils import images
 from contextlib import suppress
@@ -12,10 +12,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import ComputeRegistryCreate
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import users, compute, storage, solutions, organizations
-from src.models.infrastructure import exoscale_zone
+from src.database.services import users, compute, solutions, organizations
 from src.database.models.computes import ComputeRegistry
-from src.database.models.storages import StorageRegistry
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
@@ -34,10 +32,12 @@ class SeedSettings(BaseSettings):
     # Sample release configuration
     SAMPLE_ENVS: dict[str, str] = Field(default_factory=lambda: {"REQUIRED": "development"})
 
-    # Storage registry
-    EXOSCALE_API_KEY: str = Field(min_length=1)
-    EXOSCALE_API_SECRET: str = Field(min_length=1)
-    EXOSCALE_STORAGE_ENDPOINT_URL: str = Field(min_length=1)
+    # Shared Ceph storage; backing class must support raw Block PVCs and filesystem monitor PVCs.
+    STORAGE_CLASS: str = "longlink-development"
+    STORAGE_ENDPOINT: str = "https://rook-ceph-rgw-longlink.rook-ceph.svc:443"
+    STORAGE_SIZE_GIB: int = 20
+    STORAGE_INSTANCES: int = 1
+    STORAGE_CERTIFICATE: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env.seed",
@@ -45,17 +45,8 @@ class SeedSettings(BaseSettings):
         extra="ignore",
     )
 
-    @field_validator("EXOSCALE_STORAGE_ENDPOINT_URL")
-    @classmethod
-    def validate_storage_endpoint(cls, value: str) -> str:
-        """Require a supported Exoscale SOS endpoint."""
 
-        # Reject unsupported providers and malformed Exoscale endpoint URLs at the seed boundary.
-        exoscale_zone(value)
-        return value
-
-
-async def seed_infrastructure(settings: SeedSettings, *, compute_name: str, storage_name: str) -> tuple[ComputeRegistry, StorageRegistry]:
+async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> ComputeRegistry:
     """Register the configured infrastructure and return its registries."""
 
     # Validate the configured Kubernetes compute before mutating Platform state.
@@ -68,6 +59,11 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str, stor
             "database_storage_class": settings.DATABASE_STORAGE_CLASS,
             "database_size_gib": settings.DATABASE_SIZE_GIB,
             "database_instances": settings.DATABASE_INSTANCES,
+            "storage_class": settings.STORAGE_CLASS,
+            "storage_endpoint": settings.STORAGE_ENDPOINT,
+            "storage_size_gib": settings.STORAGE_SIZE_GIB,
+            "storage_instances": settings.STORAGE_INSTANCES,
+            "storage_certificate": settings.STORAGE_CERTIFICATE,
         }
     )
 
@@ -77,33 +73,25 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str, stor
             await compute.create(session, **payload.model_dump())
             await session.commit()
 
-    # Register the configured storage unless it already exists.
-    with suppress(ConflictError):
-        async with session_scope() as session:
-            await storage.create(
-                session,
-                storage_name,
-                settings.EXOSCALE_STORAGE_ENDPOINT_URL,
-                settings.EXOSCALE_API_KEY,
-                settings.EXOSCALE_API_SECRET,
-            )
-            await session.commit()
-
     async with session_scope() as session:
         compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == compute_name))
-        storage_registry = await session.scalar(select(StorageRegistry).where(col(StorageRegistry.name) == storage_name))
-        if compute_registry is None or storage_registry is None:
+        if compute_registry is None:
             raise RuntimeError("Configured infrastructure is not available")
-        return compute_registry, storage_registry
+        return compute_registry
 
 
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register local infrastructure and create the local example Organization and Solution."""
 
-    compute_registry, storage_registry = await seed_infrastructure(
+    # Existing k3d clusters receive the same idempotent prerequisites as new local installations.
+    if settings.STORAGE_CLASS == "longlink-development":
+        from src.development import setup
+
+        settings.STORAGE_CERTIFICATE = await setup.prepare(settings.KUBECONFIG)
+
+    compute_registry = await seed_infrastructure(
         settings,
         compute_name="development compute",
-        storage_name="local storage",
     )
 
     # The init workflow has no running API replica to create the administrator first.
@@ -117,7 +105,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 "Development",
                 administrator,
                 compute_id=compute_registry.id,
-                storage_id=storage_registry.id,
             )
 
         solution = await session.scalar(
@@ -156,6 +143,9 @@ class CloudSeedSettings(SeedSettings):
     # Cloud infrastructure must choose its externally reachable gateway and durable storage class.
     GATEWAY_URL: str = Field(default="", min_length=1, validate_default=True)
     DATABASE_STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
+    STORAGE_INSTANCES: int = 3
+    STORAGE_SIZE_GIB: int = 100
+    STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
 
     model_config = SettingsConfigDict(extra="ignore")
 
@@ -166,7 +156,6 @@ async def seed_cloud(settings: CloudSeedSettings) -> None:
     await seed_infrastructure(
         settings,
         compute_name="cloud compute",
-        storage_name="cloud storage",
     )
 
 

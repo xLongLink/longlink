@@ -64,18 +64,11 @@ def upgrade() -> None:
         sa.Column("database_size_gib", sa.Integer(), nullable=False),
         sa.Column("database_instances", sa.Integer(), nullable=False),
         sa.Column("database_storage_class", sa.String(length=253), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
-    )
-
-    # Create storage registries.
-    op.create_table(
-        "storage_registries",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sa.String(length=128), nullable=False),
-        sa.Column("endpoint_url", sa.String(length=255), nullable=False),
-        sa.Column("access_key_id", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("secret_access_key", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("storage_class", sa.String(length=253), nullable=False),
+        sa.Column("storage_endpoint", sa.String(length=512), nullable=False),
+        sa.Column("storage_size_gib", sa.Integer(), nullable=False),
+        sa.Column("storage_instances", sa.Integer(), nullable=False),
+        sa.Column("storage_certificate", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
     )
@@ -88,7 +81,6 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
-        sa.Column("storage_id", sa.Uuid(), nullable=False),
         sa.Column("database_password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column("database_idle_seconds", sa.Integer(), nullable=False),
         sa.Column("database_last_active_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -132,13 +124,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["storage_id"], ["storage_registries.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("slug"),
     )
     op.create_index("ix_organizations_compute_id", "organizations", ["compute_id"])
-    op.create_index("ix_organizations_storage_id", "organizations", ["storage_id"])
 
     # Track expiring database activity independently of actors and lifecycle operations.
     op.create_table(
@@ -327,6 +317,5 @@ def downgrade() -> None:
     op.drop_table("solutions")
     op.drop_table("organization_activities")
     op.drop_table("organizations")
-    op.drop_table("storage_registries")
     op.drop_table("compute_registries")
     op.drop_table("users")

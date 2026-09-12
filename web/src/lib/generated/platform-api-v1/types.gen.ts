@@ -60,6 +60,26 @@ export type ComputeRegistryCreate = {
      * Database Storage Class
      */
     database_storage_class: string;
+    /**
+     * Storage Class
+     */
+    storage_class: string;
+    /**
+     * Storage Endpoint
+     */
+    storage_endpoint: string;
+    /**
+     * Storage Size Gib
+     */
+    storage_size_gib?: number;
+    /**
+     * Storage Instances
+     */
+    storage_instances?: 1 | 3;
+    /**
+     * Storage Certificate
+     */
+    storage_certificate?: string | null;
 };
 
 /**
@@ -92,6 +112,22 @@ export type ComputeRegistryResponse = {
      * Database Storage Class
      */
     database_storage_class: string;
+    /**
+     * Storage Class
+     */
+    storage_class: string;
+    /**
+     * Storage Endpoint
+     */
+    storage_endpoint: string;
+    /**
+     * Storage Size Gib
+     */
+    storage_size_gib: number;
+    /**
+     * Storage Instances
+     */
+    storage_instances: number;
     status: Status;
 };
 
@@ -415,7 +451,7 @@ export type OrganizationSolutionSummary = {
 /**
  * OrganizationStorageUsageResponse
  *
- * Represent live usage for one Organization bucket.
+ * Report current logical object bytes for one organization bucket.
  */
 export type OrganizationStorageUsageResponse = {
     /**
@@ -524,20 +560,6 @@ export type PageSolutionResponse = {
      * Items
      */
     items: Array<SolutionResponse>;
-    /**
-     * Total
-     */
-    total: number;
-};
-
-/**
- * Page[StorageRegistryResponse]
- */
-export type PageStorageRegistryResponse = {
-    /**
-     * Items
-     */
-    items: Array<StorageRegistryResponse>;
     /**
      * Total
      */
@@ -819,50 +841,6 @@ export type SolutionUpdateCheck = {
  * Lifecycle states shared by Platform-managed resources.
  */
 export type Status = 'creating' | 'failed' | 'running';
-
-/**
- * StorageRegistryCreate
- *
- * Validate one storage registry creation payload.
- */
-export type StorageRegistryCreate = {
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Endpoint Url
-     */
-    endpoint_url: string;
-    /**
-     * Access Key Id
-     */
-    access_key_id: string;
-    /**
-     * Secret Access Key
-     */
-    secret_access_key: string;
-};
-
-/**
- * StorageRegistryResponse
- *
- * Describe one Exoscale SOS backend without exposing Platform credentials.
- */
-export type StorageRegistryResponse = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Endpoint Url
-     */
-    endpoint_url: string;
-};
 
 /**
  * TokenPayload
@@ -2353,141 +2331,6 @@ export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMembe
 };
 
 export type UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponses[keyof UpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponses];
-
-export type ListStorageRegistriesApiV1StoragesGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page
-         */
-        page?: number;
-        /**
-         * Page Size
-         */
-        page_size?: number;
-    };
-    url: '/api/v1/storages';
-};
-
-export type ListStorageRegistriesApiV1StoragesGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type ListStorageRegistriesApiV1StoragesGetError = ListStorageRegistriesApiV1StoragesGetErrors[keyof ListStorageRegistriesApiV1StoragesGetErrors];
-
-export type ListStorageRegistriesApiV1StoragesGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: PageStorageRegistryResponse;
-};
-
-export type ListStorageRegistriesApiV1StoragesGetResponse = ListStorageRegistriesApiV1StoragesGetResponses[keyof ListStorageRegistriesApiV1StoragesGetResponses];
-
-export type CreateStorageRegistryApiV1StoragesPostData = {
-    body: StorageRegistryCreate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/storages';
-};
-
-export type CreateStorageRegistryApiV1StoragesPostErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type CreateStorageRegistryApiV1StoragesPostError = CreateStorageRegistryApiV1StoragesPostErrors[keyof CreateStorageRegistryApiV1StoragesPostErrors];
-
-export type CreateStorageRegistryApiV1StoragesPostResponses = {
-    /**
-     * Successful Response
-     */
-    201: StorageRegistryResponse;
-};
-
-export type CreateStorageRegistryApiV1StoragesPostResponse = CreateStorageRegistryApiV1StoragesPostResponses[keyof CreateStorageRegistryApiV1StoragesPostResponses];
-
-export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/storages/{registry_id}';
-};
-
-export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteError = DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors[keyof DeleteStorageRegistryApiV1StoragesRegistryIdDeleteErrors];
-
-export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type DeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponse = DeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponses[keyof DeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponses];
-
-export type GetStorageRegistryApiV1StoragesRegistryIdGetData = {
-    body?: never;
-    path: {
-        /**
-         * Registry Id
-         */
-        registry_id: string;
-    };
-    query?: never;
-    url: '/api/v1/storages/{registry_id}';
-};
-
-export type GetStorageRegistryApiV1StoragesRegistryIdGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type GetStorageRegistryApiV1StoragesRegistryIdGetError = GetStorageRegistryApiV1StoragesRegistryIdGetErrors[keyof GetStorageRegistryApiV1StoragesRegistryIdGetErrors];
-
-export type GetStorageRegistryApiV1StoragesRegistryIdGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: StorageRegistryResponse;
-};
-
-export type GetStorageRegistryApiV1StoragesRegistryIdGetResponse = GetStorageRegistryApiV1StoragesRegistryIdGetResponses[keyof GetStorageRegistryApiV1StoragesRegistryIdGetResponses];
 
 export type GetMeApiV1MeGetData = {
     body?: never;

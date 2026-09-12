@@ -32,6 +32,12 @@ class Gateway:
         self._url = url.rstrip("/")
         self._certificate = certificate
 
+    def client(self) -> httpx2.AsyncClient:
+        """Create the operation-owned, hostname-verified gateway transport."""
+
+        tls = ssl.create_default_context(cadata=self._certificate)
+        return httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
+
     async def request(
         self,
         *,
@@ -55,13 +61,7 @@ class Gateway:
             headers["content-type"] = content_type
 
         # Verify the gateway hostname independently of the Knative routing authority.
-        tls = ssl.create_default_context(cadata=self._certificate)
-        client = httpx2.AsyncClient(
-            follow_redirects=False,
-            trust_env=False,
-            timeout=300.0,
-            verify=tls,
-        )
+        client = self.client()
         try:
             response = await client.send(
                 client.build_request(method, f"{self._url}/{path}{'?' + query if query else ''}", content=content, headers=headers),

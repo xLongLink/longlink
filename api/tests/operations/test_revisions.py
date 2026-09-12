@@ -44,6 +44,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def apply(
             self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool
@@ -201,6 +202,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
+            self.storage = self.databases.storage
 
         async def apply(
             self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool

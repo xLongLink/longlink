@@ -138,6 +138,12 @@ export default function AdminCompute() {
                             {metadataCompute.database_instances}
                         </MetadataListItem>
                         <MetadataListItem label="ID">{metadataCompute.id}</MetadataListItem>
+                        <MetadataListItem label="Storage endpoint">{metadataCompute.storage_endpoint}</MetadataListItem>
+                        <MetadataListItem label="Ceph backing class">{metadataCompute.storage_class}</MetadataListItem>
+                        <MetadataListItem label="Ceph capacity per OSD">
+                            {metadataCompute.storage_size_gib} GiB
+                        </MetadataListItem>
+                        <MetadataListItem label="Ceph replicas">{metadataCompute.storage_instances}</MetadataListItem>
                     </MetadataList>
                 </MetadataDialog>
             )}

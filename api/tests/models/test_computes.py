@@ -12,6 +12,8 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     payload = ComputeRegistryCreate.model_validate(
         {
             "name": "Compute",
+            "storage_class": "block-storage",
+            "storage_endpoint": "https://storage.example",
             "gateway_url": "https://gateway.example",
             "database_storage_class": "local-path",
             "kubeconfig": (

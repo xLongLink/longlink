@@ -2,6 +2,7 @@ import json
 import httpx2
 import asyncio
 from uuid import UUID
+from typing import TYPE_CHECKING
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, get_session
 from src.utils import roles
@@ -9,13 +10,19 @@ from contextlib import AsyncExitStack
 from src.logger import logger
 from src.operations import databases
 from collections.abc import AsyncIterator
+from src.environments import env
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.statuses import Status
 from src.adapters.gateway import Gateway
 from src.database.services import organizations
+from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
+
+# Load the tunneled adapter only for the host-run development process.
+if TYPE_CHECKING or env.DEVELOPMENT:
+    from src.development.gateway import Gateway as DevelopmentGateway
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -113,10 +120,14 @@ async def proxy_solution_request(
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
-            gateway = Gateway(
-                registry.gateway_url,
-                registry.gateway_certificate,
-            )
+            if env.DEVELOPMENT:
+                # Close the upstream stream before closing the tunnel, including disconnects.
+                cluster = Kubernetes(registry.kubeconfig)
+                runtime.push_async_callback(cluster.aclose)
+                port = await cluster.portforward("kourier", "kourier-system", 8444)
+                gateway = DevelopmentGateway(registry.gateway_url, registry.gateway_certificate, port)
+            else:
+                gateway = Gateway(registry.gateway_url, registry.gateway_certificate)
             gateway_response = await gateway.request(
                 solution_id=solution.id,
                 organization_id=solution.organization_id,

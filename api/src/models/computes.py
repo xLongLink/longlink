@@ -2,7 +2,7 @@ import ssl
 import json
 import yaml
 from uuid import UUID
-from typing import Annotated, cast
+from typing import Literal, Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 from src.models.statuses import Status
 
@@ -100,7 +100,14 @@ class ComputeRegistryCreate(BaseModel):
         pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
     )
 
-    @field_validator("gateway_url")
+    # Object storage
+    storage_class: str = Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$")
+    storage_endpoint: str = Field(max_length=512)
+    storage_size_gib: int = Field(default=100, ge=10, le=65536, strict=True)
+    storage_instances: Literal[1, 3] = 3
+    storage_certificate: str | None = Field(default=None, max_length=65536)
+
+    @field_validator("gateway_url", "storage_endpoint")
     @classmethod
     def validate_gateway_url(cls, value: str) -> str:
         """Require a credential-free HTTPS gateway origin."""
@@ -118,7 +125,7 @@ class ComputeRegistryCreate(BaseModel):
             raise ValueError("Gateway URL must be an HTTPS origin without credentials, path, query, or fragment")
         return str(url).rstrip("/")
 
-    @field_validator("gateway_certificate")
+    @field_validator("gateway_certificate", "storage_certificate")
     @classmethod
     def validate_gateway_certificate(cls, value: str | None) -> str | None:
         """Validate an optional PEM trust bundle without accepting private keys."""
@@ -134,7 +141,7 @@ class ComputeRegistryCreate(BaseModel):
             raise ValueError("Gateway certificate must be a valid PEM CA certificate bundle") from exc
         return value
 
-    @field_validator("database_storage_class")
+    @field_validator("database_storage_class", "storage_class")
     @classmethod
     def validate_storage_class(cls, value: str) -> str:
         """Require DNS labels within the Kubernetes storage class name."""
@@ -163,6 +170,12 @@ class ComputeRegistryResponse(BaseModel):
     database_size_gib: int
     database_instances: int
     database_storage_class: str
+
+    # Object storage
+    storage_class: str
+    storage_endpoint: str
+    storage_size_gib: int
+    storage_instances: int
 
     # State
     status: Status

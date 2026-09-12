@@ -48,6 +48,10 @@ async def get_compute_registry(registry_id: UUID, session: AsyncSession = Depend
                 ComputeRegistry.database_size_gib,
                 ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
+                ComputeRegistry.storage_class,
+                ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_size_gib,
+                ComputeRegistry.storage_instances,
                 ComputeRegistry.status,
             )
         ],

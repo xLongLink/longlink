@@ -26,6 +26,8 @@ async def create(compute_id: UUID) -> str | None:
     async with contextlib.aclosing(cluster):
         logger.info("Applying shared controllers for Compute %s", registry.id)
         await cluster.gateway.apply(registry.gateway_url, registry.gateway_certificate)
+        logger.info("Applying Rook/Ceph object storage for Compute %s", registry.id)
+        await cluster.storage.install(registry)
 
     # Preserve operator connection input and avoid overwriting a concurrent lifecycle change.
     async with session_scope() as session:

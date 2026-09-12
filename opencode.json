@@ -2,10 +2,10 @@
   "$schema": "https://opencode.ai/config.json",
   "permission": {
     "read": {
-      "*.env": "deny",
-      "*.env.*": "deny",
-      ".env*": "deny",
-      "**/.env*": "deny",
+      "*.env": "allow",
+      "*.env.*": "allow",
+      ".env*": "allow",
+      "**/.env*": "allow",
       ".env.sample": "allow",
       "**/.env.sample": "allow"
     }

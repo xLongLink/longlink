@@ -4,6 +4,7 @@ import httpx2
 import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
+from src.environments import env
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, Service, Namespace, Deployment, CustomResourceDefinition, new_class, object_from_spec
 from src.kubernetes.utils import apply, deployment_is_ready
@@ -192,7 +193,14 @@ class Gateway:
                                 await asyncio.sleep(1)
 
                 # Keep TLS SNI bound to the configured endpoint while addressing Kourier's local readiness vhost.
-                client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
+                if env.DEVELOPMENT:
+                    from src.development import gateway
+
+                    port = await self._client.portforward("kourier", "kourier-system", 8444)
+                    connection = gateway.Gateway(gateway_url, gateway_certificate, port)
+                    client = connection.client()
+                else:
+                    client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
                 async with client:
                     while True:
                         try:

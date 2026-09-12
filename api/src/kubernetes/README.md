@@ -44,8 +44,8 @@ check succeeds.
 - Supply a working CNPG-compatible `database_storage_class`. PVC retention at the
   storage-provider level follows that class's reclaim policy. Backups and disaster
   recovery are operator responsibilities, not part of this bootstrap.
-- Compute egress permits public HTTPS by default, including public Exoscale SOS/S3
-  endpoints, with no manual storage allowlist required. Private/link-local and
+- Compute egress permits public HTTPS and the compute's internal Ceph RGW S3
+  gateway. Private/link-local and
   special-use destinations are excluded; private storage endpoints or other
   protocols need narrowly scoped operator policies. The built-in DNS rule targets
   `kube-system` Pods labelled `k8s-app: kube-dns`; distributions using a different
@@ -91,6 +91,9 @@ surface immediately, including quota failures; stale observed generations do not
 fail a replacement rollout.
 
 ## Database Contract
+
+Object storage installation, TLS prerequisites, IAM, and cleanup are documented
+in [Rook/Ceph storage](STORAGE.md).
 
 All methods are async:
 
@@ -161,7 +164,7 @@ retains cluster RBAC and CRDs, avoiding accidental cascading database destructio
 ## Pinned Sources
 
 `api/kubernetes-manifests.json` locks every upstream release URL and SHA-256 checksum.
-Run `make api:manifests` from the repository root to download verified package data.
+Run `uv run --locked python scripts/manifests.py` from `api/` to download verified package data.
 The generated `.yml` files under `templates/platform/` are ignored by Git. The API
 container downloads them during its build, so cluster reconciliation never depends
 on GitHub availability. Bootstrap applies LongLink overrides in memory.

@@ -35,6 +35,11 @@ const schema = z.object({
         ),
     database_size_gib: z.number().int().min(1).max(65536),
     database_instances: z.number().int().min(1).max(3),
+    storage_class: z.string().min(1).max(253),
+    storage_endpoint: z.url({ protocol: /^https$/ }).max(512),
+    storage_size_gib: z.number().int().min(10).max(65536),
+    storage_instances: z.union([z.literal(1), z.literal(3)]),
+    storage_certificate: z.string().max(65536).nullable(),
 });
 
 /** Registers one compute target. */
@@ -48,6 +53,11 @@ export default function CreateCompute() {
             database_storage_class: '',
             database_size_gib: 10,
             database_instances: 1,
+            storage_class: '',
+            storage_endpoint: 'https://rook-ceph-rgw-longlink.rook-ceph.svc:443',
+            storage_size_gib: 100,
+            storage_instances: 3,
+            storage_certificate: null,
         },
         endpoint: '/api/v1/computes',
         schema,
@@ -163,6 +173,102 @@ export default function CreateCompute() {
                             isWheelEnabled={false}
                             onBlur={field.onBlur}
                             onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_class"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            ref={field.ref}
+                            label="Ceph backing storage class"
+                            description="Existing independent StorageClass supporting Block OSD PVCs and filesystem monitor PVCs."
+                            value={field.value}
+                            htmlName={field.name}
+                            isRequired
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_endpoint"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            ref={field.ref}
+                            label="Storage HTTPS endpoint"
+                            description="Reachable from Platform workers and Solutions; certificate must cover this hostname."
+                            value={field.value}
+                            htmlName={field.name}
+                            isRequired
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_size_gib"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Ceph capacity per OSD"
+                            units="GiB"
+                            min={10}
+                            max={65536}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_instances"
+                    render={({ field, fieldState }) => (
+                        <NumberInput
+                            ref={field.ref}
+                            label="Ceph replicas"
+                            description="3 across separate nodes for production; 1 for non-HA development."
+                            min={1}
+                            max={3}
+                            step={2}
+                            value={field.value}
+                            htmlName={field.name}
+                            isIntegerOnly
+                            isRequired
+                            isWheelEnabled={false}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                        />
+                    )}
+                />
+                <Controller
+                    control={dialog.form.control}
+                    name="storage_certificate"
+                    render={({ field, fieldState }) => (
+                        <TextArea
+                            ref={field.ref}
+                            label="Storage CA certificate"
+                            description="PEM CA trust bundle. TLS key and server certificate belong in rook-ceph/longlink-storage-tls."
+                            value={field.value ?? ''}
+                            htmlName={field.name}
+                            isOptional
+                            hasSpellCheck={false}
+                            rows={4}
+                            onBlur={field.onBlur}
+                            onChange={(value) => field.onChange(value.trim() === '' ? null : value)}
                             status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                         />
                     )}

@@ -39,3 +39,10 @@ class ComputeRegistry(PlatformModel, table=True):
     database_size_gib: int = Field(default=10)
     database_instances: int = Field(default=1)
     database_storage_class: str = Field(max_length=253)
+
+    # Object storage
+    storage_class: str = Field(max_length=253)
+    storage_endpoint: str = Field(max_length=512)
+    storage_size_gib: int = Field(default=100)
+    storage_instances: int = Field(default=3)
+    storage_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

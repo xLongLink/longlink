@@ -48,7 +48,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert organization is not None
     assert organization.compute_id == infrastructure.compute.id
     assert organization.database_idle_seconds == 0
-    assert organization.storage_id == infrastructure.storage.id
     assert organization.status == Status.creating
     operations = await fetch_operations()
     assert len(operations) == 1
@@ -99,7 +98,6 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     ("registry", "expected_detail"),
     [
         pytest.param("compute", "No ready compute registry available", id="compute"),
-        pytest.param("storage", "No storage registry available", id="storage"),
     ],
 )
 async def test_create_organization_rejects_when_required_registry_is_unavailable(
@@ -502,7 +500,10 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
                 raise usage
             return usage
 
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
+    from conftest import StorageKubernetes
+
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
@@ -559,7 +560,9 @@ async def test_organization_resource_endpoints_allow_members(
 
     monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", lambda *_args: FakeStorage())
+    from conftest import StorageKubernetes
+
+    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
     monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
 
     # Resource inspection starts from a ready Organization, not its queued creation state.
@@ -601,7 +604,7 @@ async def test_organization_resource_endpoints_reject_non_members(
         raise AssertionError("cross-tenant resource access reached a provider")
 
     monkeypatch.setattr("src.operations.databases.postgres.Postgres", unexpected_provider)
-    monkeypatch.setattr("src.routes.v1.organizations.Exoscale", unexpected_provider)
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_provider)
 
     # Act
     response = await clients[1].get(f"/api/v1/organizations/{organization.id}/{resource}")

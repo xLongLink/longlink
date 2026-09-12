@@ -21,7 +21,6 @@ from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.storages import StorageRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
@@ -35,7 +34,6 @@ class Infrastructure:
 
     organization: Organization
     compute: ComputeRegistry
-    storage: StorageRegistry
 
 
 async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
@@ -112,12 +110,12 @@ async def solution_runtime_access(
     return result.tuples().one_or_none()
 
 
-def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, StorageRegistry]]:
+def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
     """Select one Organization's provider connections for lifecycle work."""
 
     # Keep provider projections and assignment joins shared across lifecycle targets.
     return (
-        select(Organization, ComputeRegistry, StorageRegistry)
+        select(Organization, ComputeRegistry)
         .options(
             load_only(
                 ComputeRegistry.id,
@@ -125,16 +123,11 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry, Stora
                 ComputeRegistry.database_size_gib,
                 ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
-            ),
-            load_only(
-                StorageRegistry.id,
-                StorageRegistry.endpoint_url,
-                StorageRegistry.access_key_id,
-                StorageRegistry.secret_access_key,
+                ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_certificate,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-        .join(StorageRegistry, col(StorageRegistry.id) == col(Organization.storage_id))
     )
 
 
@@ -147,8 +140,8 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    organization, compute, storage = row
-    return Infrastructure(organization=organization, compute=compute, storage=storage)
+    organization, compute = row
+    return Infrastructure(organization=organization, compute=compute)
 
 
 async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Infrastructure] | None:
@@ -175,8 +168,8 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    organization, compute, storage, solution = row
-    return solution, Infrastructure(organization=organization, compute=compute, storage=storage)
+    organization, compute, solution = row
+    return solution, Infrastructure(organization=organization, compute=compute)
 
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
@@ -418,24 +411,11 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
 
-    # Lock the selected Storage until the Organization assignment is committed.
-    storage_assignments = (
-        select(func.count(col(Organization.id)))
-        .where(col(Organization.storage_id) == col(StorageRegistry.id), col(Organization.deleted_at).is_(None))
-        .scalar_subquery()
-    )
-    storage_id = await session.scalar(
-        select(col(StorageRegistry.id)).order_by(storage_assignments, col(StorageRegistry.name)).limit(1).with_for_update()
-    )
-    if storage_id is None:
-        raise UnavailableError("No storage registry available")
-
     return await _persist(
         session,
         name,
         user,
         compute_id=compute_id,
-        storage_id=storage_id,
     )
 
 
@@ -445,7 +425,6 @@ async def create(
     user: User,
     *,
     compute_id: UUID,
-    storage_id: UUID,
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
@@ -456,18 +435,11 @@ async def create(
     if compute_registry_id is None:
         raise UnavailableError("No compute registry available")
 
-    storage_registry_id = await session.scalar(
-        select(col(StorageRegistry.id)).where(col(StorageRegistry.id) == storage_id).with_for_update()
-    )
-    if storage_registry_id is None:
-        raise UnavailableError("No storage registry available")
-
     return await _persist(
         session,
         name,
         user,
         compute_id=compute_id,
-        storage_id=storage_id,
     )
 
 
@@ -477,7 +449,6 @@ async def _persist(
     user: User,
     *,
     compute_id: UUID,
-    storage_id: UUID,
 ) -> Organization:
     """Persist an Organization after its infrastructure assignment is locked and validated."""
 
@@ -486,7 +457,6 @@ async def _persist(
         name=name,
         slug=names.slugify(name),
         compute_id=compute_id,
-        storage_id=storage_id,
     )
 
     # Attach the creator as the initial owner for every organization.

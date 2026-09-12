@@ -38,11 +38,47 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
 os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
 os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 
+from types import SimpleNamespace
 from src.utils import mail, token
 from src.database import session
 from src.environments import env
 from src.database.models import registry
+from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
+
+
+class StorageKubernetes:
+    """Supply the external storage boundary for Platform lifecycle tests."""
+
+    async def install(self, compute: object) -> None:
+        """Accept shared storage reconciliation."""
+
+    async def bucket(self, organization: UUID, compute: object, *, create: bool = False) -> SimpleNamespace:
+        """Return the owner connection for an organization bucket."""
+
+        return SimpleNamespace(name=organization.hex, storage=self)
+
+    async def user(self, solution: UUID, organization: UUID) -> Credentials:
+        """Return stable scoped credentials."""
+
+        return Credentials("solution", "generated-secret")
+
+    async def authorize(self, bucket: str, solutions: object) -> None:
+        """Accept the real lifecycle policy snapshot."""
+
+    async def revoke(self, solution: UUID) -> None:
+        """Accept user deletion."""
+
+    async def delete_prefix(self, bucket: str, prefix: str) -> None:
+        """Accept owner-scoped object cleanup."""
+
+    async def delete(self, organization: UUID, compute: object) -> None:
+        """Accept organization storage deletion."""
+
+    async def usage(self, bucket: str) -> int:
+        """Return deterministic logical usage."""
+
+        return 128
 
 
 class DatabaseKubernetes:
@@ -52,6 +88,7 @@ class DatabaseKubernetes:
         """Expose database operations through the production client shape."""
 
         self.databases = self
+        self.storage = StorageKubernetes()
 
     async def apply(self, organization: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
         """Accept Organization cluster provisioning."""
@@ -127,6 +164,11 @@ class FakeKubernetes:
         """Return the fake API client used by resource fakes."""
 
         return cast(Api, object())
+
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
+        """Return a synthetic development gateway port without external I/O."""
+
+        return 18444
 
 
 @pytest.fixture

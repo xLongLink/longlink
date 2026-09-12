@@ -63,6 +63,8 @@ TEMP
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
 /api/src/kubernetes/templates/platform/cnpg-v*.yml
+/api/src/kubernetes/templates/platform/rook-*-v*.yml
+/api/src/development/templates/hostpath-*.yml
 /api/src/kubernetes/templates/platform/kourier-v*.yml
 /api/src/kubernetes/templates/platform/serving-core-v*.yml
 /api/src/kubernetes/templates/platform/serving-crds-v*.yml

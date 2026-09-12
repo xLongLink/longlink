@@ -36,7 +36,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert organization.compute_id == infrastructure.compute.id
     assert organization.database_idle_seconds == 0
     assert organization.database_sync_pending is True
-    assert organization.storage_id == infrastructure.storage.id
     assert organization.status == Status.creating
 
     async with session_scope() as session:
@@ -124,7 +123,6 @@ async def test_infrastructure_returns_all_organization_registry_assignments(user
     assert resolved is not None
     assert resolved.organization.id == organization.id
     assert resolved.compute.id == organization.compute_id
-    assert resolved.storage.id == organization.storage_id
 
 
 async def test_solution_infrastructure_returns_solution_registry_assignments(users: tuple[User, User, User]) -> None:
@@ -144,7 +142,6 @@ async def test_solution_infrastructure_returns_solution_registry_assignments(use
     assert resolved_solution.id == solution.id
     assert infrastructure.organization.id == organization.id
     assert infrastructure.compute.id == organization.compute_id
-    assert infrastructure.storage.id == organization.storage_id
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -546,14 +543,12 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
 
     # Assert
     assert organization.compute_id == available_infrastructure.compute.id
-    assert organization.storage_id == available_infrastructure.storage.id
 
 
 @pytest.mark.parametrize(
     ("registry", "error"),
     [
         pytest.param("compute", "No compute registry available", id="compute"),
-        pytest.param("storage", "No storage registry available", id="storage"),
     ],
 )
 async def test_create_rejects_missing_assigned_infrastructure(
@@ -567,7 +562,6 @@ async def test_create_rejects_missing_assigned_infrastructure(
     infrastructure = await create_ready_infrastructure()
     assignments = {
         "compute_id": infrastructure.compute.id,
-        "storage_id": infrastructure.storage.id,
     }
     assignments[f"{registry}_id"] = uuid4()
 
@@ -592,7 +586,6 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 "acme",
                 users[0],
                 compute_id=infrastructure.compute.id,
-                storage_id=infrastructure.storage.id,
             )
 
 

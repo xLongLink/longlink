@@ -31,7 +31,6 @@ class Organization(PlatformModel, table=True):
 
     # Infrastructure
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)
-    storage_id: UUID = Field(foreign_key="storage_registries.id", index=True)
 
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))

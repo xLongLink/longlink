@@ -2,6 +2,7 @@ import pytest
 from typing import Protocol
 from conftest import FakeKubernetes
 from src.kubernetes import gateway
+from src.development.gateway import Transport
 
 pytestmark = pytest.mark.no_db
 
@@ -92,6 +93,9 @@ def applied_resources(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]
 
             assert kwargs["trust_env"] is False
             assert kwargs["follow_redirects"] is False
+            if "transport" in kwargs:
+                assert isinstance(kwargs["transport"], Transport)
+                return
             context = kwargs["verify"]
             assert isinstance(context, gateway.ssl.SSLContext)
             assert context.verify_mode == gateway.ssl.CERT_REQUIRED

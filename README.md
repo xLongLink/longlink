@@ -85,13 +85,11 @@ To test a local Solution update, edit the generated project under `sdk/dev`, the
 make image  # Build and push localhost:15000/sample:dev, preserving your edits
 ```
 
-
 Cleanup
 
 ```bash
-make clean  # Remove tracked remote development resources
-make down   # Stop local services and the cluster; retain volumes
-make clear  # Remove local Compose volumes and sdk/dev (including your edits)
+DEVELOPMENT=true uv --directory api run --locked python -m scripts.cleanup  # Remove tracked remote resources first
+make down  # Stop local services and the cluster; preserve caches and sdk/dev
 ```
 
 <br />

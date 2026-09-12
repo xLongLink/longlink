@@ -19,9 +19,9 @@ Managed resources are connected to the platform:
 
 - Compute: Kubernetes using a kubeconfig, an HTTPS Kourier gateway origin, an optional PEM CA trust bundle, and a database StorageClass. LongLink installs pinned Knative Serving, Kourier, and CloudNativePG controllers.
 - Database: a dedicated CloudNativePG cluster in each Organization namespace, with encrypted, securely generated credentials. There is no external tenant database registration.
-- Storage: `STaaS` (Storage as a Service) using `provider API key`.
+- Storage: shared Rook/Ceph S3 object storage on each compute, with an organization bucket and scoped credentials per Solution.
 
-Compute and database provisioning use Kubernetes APIs. Storage requires a provider adapter because IAM differs by provider.
+Compute, database, and storage provisioning use Kubernetes APIs. Rook owns object-store users and keys; LongLink applies Ceph S3 bucket policies. See [storage installation and IAM](src/kubernetes/STORAGE.md).
 
 The Compute kubeconfig must allow LongLink to create namespaces, custom resource definitions, and cluster-scoped resources. Register a gateway HTTPS origin reachable from the API, without credentials, path, query, or fragment. The optional certificate is a PEM CA trust bundle, never a private key; system trust is used when omitted. Kubeconfig exec authentication is rejected.
 

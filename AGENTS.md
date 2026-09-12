@@ -28,7 +28,8 @@ LongLink
 │   ├── Shared infrastructure
 │   │   ├── Kourier → HTTPS routing
 │   │   ├── Knative → application lifecycle and scaling
-│   │   └── CloudNativePG → PostgreSQL lifecycle
+│   │   ├── CloudNativePG → PostgreSQL lifecycle
+│   │   └── Rook/Ceph → S3 object storage and identities
 │   └── Organization (many per cluster)
 │       ├── Compute namespace
 │       │   └── Solution (many per Organization)
@@ -38,8 +39,8 @@ LongLink
 │           └── PostgreSQL cluster + persistent volumes
 │               ├── Shared identity schema
 │               └── Schema + credentials per Solution
-└── Storage registration → object storage
-    └── Organization bucket → prefix per Solution
+└── Organization storage namespace → bucket claim and owner credentials
+    └── Organization bucket → prefix and scoped Ceph identity per Solution
 ```
 
 
@@ -47,7 +48,7 @@ LongLink
 
 - Platform metadata is separate from Solution business data.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
-- Compute registrations define CNPG storage and the HTTPS Kourier gateway; no external tenant database registry exists.
+- Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
 - Organization databases may hibernate when idle; activity wakes them and synchronizes shared users before work begins.
 - Diagnostics use cached data without waking databases, and storage allocation is reported per database instance.
 - Platform users and memberships flow one way into the Organization's shared schema.

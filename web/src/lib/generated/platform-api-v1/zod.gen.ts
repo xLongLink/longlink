@@ -28,7 +28,12 @@ export const zComputeRegistryCreate = z.object({
     gateway_certificate: z.string().max(65536).nullish(),
     database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
     database_instances: z.int().gte(1).lte(3).optional().default(1),
-    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/)
+    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
+    storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
+    storage_endpoint: z.string().max(512),
+    storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
+    storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
+    storage_certificate: z.string().max(65536).nullish()
 });
 
 /**
@@ -212,7 +217,7 @@ export const zOrganizationMemberUpdate = z.object({
 /**
  * OrganizationStorageUsageResponse
  *
- * Represent live usage for one Organization bucket.
+ * Report current logical object bytes for one organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
     bucket_name: z.string(),
@@ -361,6 +366,10 @@ export const zComputeRegistryResponse = z.object({
     database_size_gib: z.int(),
     database_instances: z.int(),
     database_storage_class: z.string(),
+    storage_class: z.string(),
+    storage_endpoint: z.string(),
+    storage_size_gib: z.int(),
+    storage_instances: z.int(),
     status: zStatus
 });
 
@@ -448,37 +457,6 @@ export const zSolutionResponse = z.object({
  */
 export const zPageSolutionResponse = z.object({
     items: z.array(zSolutionResponse),
-    total: z.int().gte(0)
-});
-
-/**
- * StorageRegistryCreate
- *
- * Validate one storage registry creation payload.
- */
-export const zStorageRegistryCreate = z.object({
-    name: z.string().min(1).max(128),
-    endpoint_url: z.string().min(1).max(255),
-    access_key_id: z.string().min(1).max(255),
-    secret_access_key: z.string().min(1).max(255)
-});
-
-/**
- * StorageRegistryResponse
- *
- * Describe one Exoscale SOS backend without exposing Platform credentials.
- */
-export const zStorageRegistryResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    endpoint_url: z.string()
-});
-
-/**
- * Page[StorageRegistryResponse]
- */
-export const zPageStorageRegistryResponse = z.object({
-    items: z.array(zStorageRegistryResponse),
     total: z.int().gte(0)
 });
 
@@ -927,41 +905,6 @@ export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMem
  * Successful Response
  */
 export const zUpdateOrganizationMemberApiV1OrganizationsOrganizationIdMembersMemberIdPatchResponse = z.void();
-
-export const zListStorageRegistriesApiV1StoragesGetQuery = z.object({
-    page: z.int().gte(1).optional().default(1),
-    page_size: z.int().gte(1).lte(100).optional().default(25)
-});
-
-/**
- * Successful Response
- */
-export const zListStorageRegistriesApiV1StoragesGetResponse = zPageStorageRegistryResponse;
-
-export const zCreateStorageRegistryApiV1StoragesPostBody = zStorageRegistryCreate;
-
-/**
- * Successful Response
- */
-export const zCreateStorageRegistryApiV1StoragesPostResponse = zStorageRegistryResponse;
-
-export const zDeleteStorageRegistryApiV1StoragesRegistryIdDeletePath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteStorageRegistryApiV1StoragesRegistryIdDeleteResponse = z.void();
-
-export const zGetStorageRegistryApiV1StoragesRegistryIdGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetStorageRegistryApiV1StoragesRegistryIdGetResponse = zStorageRegistryResponse;
 
 /**
  * Successful Response

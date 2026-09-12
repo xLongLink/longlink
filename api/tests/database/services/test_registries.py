@@ -4,11 +4,10 @@ from factories import create_compute, queue_operation, create_ready_infrastructu
 from src.errors import ConflictError, NotFoundError
 from collections.abc import Callable, Awaitable
 from src.database.session import session_scope
-from src.database.services import compute, storage
+from src.database.services import compute
 from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
-from src.database.models.storages import StorageRegistry
 
 DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
 
@@ -17,7 +16,6 @@ DeleteRegistry = Callable[[AsyncSession, UUID], Awaitable[None]]
     "delete",
     [
         pytest.param(compute.delete, id="compute"),
-        pytest.param(storage.delete, id="storage"),
     ],
 )
 async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
@@ -33,13 +31,12 @@ async def test_delete_rejects_missing_registry(delete: DeleteRegistry) -> None:
     ("delete", "registry", "model"),
     [
         pytest.param(compute.delete, "compute", ComputeRegistry, id="compute"),
-        pytest.param(storage.delete, "storage", StorageRegistry, id="storage"),
     ],
 )
 async def test_delete_removes_unused_registry(
     delete: DeleteRegistry,
     registry: str,
-    model: type[ComputeRegistry] | type[StorageRegistry],
+    model: type[ComputeRegistry],
 ) -> None:
     """Delete a registry that has no organization assignment."""
 
@@ -83,7 +80,13 @@ async def test_create_rejects_duplicate_compute_names() -> None:
     # Arrange
     async with session_scope() as session:
         await compute.create(
-            session, "Duplicate Compute", {"apiVersion": "v1"}, gateway_url="https://gateway.example", database_storage_class="local-path"
+            session,
+            "Duplicate Compute",
+            {"apiVersion": "v1"},
+            gateway_url="https://gateway.example",
+            database_storage_class="local-path",
+            storage_class="block-storage",
+            storage_endpoint="https://storage.example",
         )
         await session.commit()
 
@@ -96,30 +99,6 @@ async def test_create_rejects_duplicate_compute_names() -> None:
                 {"apiVersion": "v1"},
                 gateway_url="https://gateway.example",
                 database_storage_class="local-path",
-            )
-
-
-async def test_create_rejects_duplicate_storage_names() -> None:
-    """Translate duplicate Storage names into the stable domain conflict."""
-
-    # Arrange
-    async with session_scope() as session:
-        await storage.create(
-            session,
-            "Duplicate Storage",
-            "https://sos-ch-gva-2.exo.io",
-            "storage-access-key",
-            "storage-secret-key",
-        )
-        await session.commit()
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^Storage registry already exists$"):
-            await storage.create(
-                session,
-                "Duplicate Storage",
-                "https://sos-ch-gva-2.exo.io",
-                "storage-access-key",
-                "storage-secret-key",
+                storage_class="block-storage",
+                storage_endpoint="https://storage.example",
             )

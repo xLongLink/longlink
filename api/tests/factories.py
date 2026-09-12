@@ -10,7 +10,6 @@ from src.database.services import solutions, operations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.storages import StorageRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
@@ -21,7 +20,6 @@ class Infrastructure:
     """Hold one test compute and storage registry assignment."""
 
     compute: ComputeRegistry
-    storage: StorageRegistry
 
 
 async def queue_operation(*, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
@@ -78,6 +76,8 @@ async def create_compute() -> ComputeRegistry:
             name="Local compute",
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
+            storage_class="block-storage",
+            storage_endpoint="https://storage.example",
             kubeconfig={"apiVersion": "v1", "clusters": []},
         )
         session.add(compute)
@@ -96,18 +96,13 @@ async def create_ready_infrastructure() -> Infrastructure:
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
+            storage_class="block-storage",
+            storage_endpoint="https://storage.example",
             status=Status.running,
         )
-        storage = StorageRegistry(
-            name=f"Local testing storage {suffix}",
-            endpoint_url="https://sos-ch-gva-2.exo.io",
-            access_key_id="access-key",
-            secret_access_key="secret-key",
-        )
         session.add(compute)
-        session.add(storage)
         await session.commit()
-        return Infrastructure(compute=compute, storage=storage)
+        return Infrastructure(compute=compute)
 
 
 async def create_organization(
@@ -126,7 +121,6 @@ async def create_organization(
             name,
             owner,
             compute_id=infrastructure.compute.id,
-            storage_id=infrastructure.storage.id,
         )
         await session.commit()
         return organization

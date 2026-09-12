@@ -17,7 +17,6 @@ import {
     Building2,
     ChevronRight,
     ExternalLink,
-    HardDrive,
     Settings2,
     Users,
     Wrench,
@@ -102,12 +101,6 @@ export function ProfileMenu({ user }: { user: UserSummary }) {
                                     label="Organizations"
                                     onClickCapture={closeMenu}
                                     startContent={<Building2 aria-hidden="true" className="text-secondary" size={16} />}
-                                />
-                                <ListItem
-                                    href="/admin/storage"
-                                    label="Storage"
-                                    onClickCapture={closeMenu}
-                                    startContent={<HardDrive aria-hidden="true" className="text-secondary" size={16} />}
                                 />
                                 <ListItem
                                     href="/admin/compute"

@@ -32,6 +32,7 @@ class Envs(BaseSettings):
     STORAGE_PASSWORD: str | None = None
     STORAGE_USERNAME: str | None = None
     STORAGE_ENDPOINT_URL: str | None = None
+    STORAGE_CERTIFICATE: str | None = None
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> Self:

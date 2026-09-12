@@ -29,6 +29,35 @@ class ProxyCapture(TypedDict, total=False):
     user_id: str
 
 
+@pytest.fixture(autouse=True)
+def development_transport(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace the Kubernetes tunnel boundary while exercising the real request lifetime."""
+
+    class Kubernetes:
+        """Own one fake loopback transport for the request."""
+
+        def __init__(self, kubeconfig: object) -> None:
+            """Accept the authorized compute connection."""
+
+        async def portforward(self, name: str, namespace: str, port: int) -> int:
+            """Validate the private Kourier target."""
+
+            assert (name, namespace, port) == ("kourier", "kourier-system", 8444)
+            return 18444
+
+        async def aclose(self) -> None:
+            """Close the request-owned tunnel."""
+
+    def connection(url: str, certificate: str | None, port: int):
+        """Let each test exercise its existing gateway transport boundary."""
+
+        assert port == 18444
+        return proxy_routes.Gateway(url, certificate)
+
+    monkeypatch.setattr(proxy_routes, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(proxy_routes, "DevelopmentGateway", connection)
+
+
 def fake_ssl_context(
     tls: object,
     *,

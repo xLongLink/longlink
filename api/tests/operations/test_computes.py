@@ -1,4 +1,5 @@
 import pytest
+from conftest import StorageKubernetes
 from factories import create_compute, claim_operation, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
@@ -31,6 +32,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
 
             assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Close the provider client."""
@@ -80,6 +82,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
             """Initialize the provider boundary."""
 
             self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Close the provider client."""
@@ -153,6 +156,7 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
             """Initialize the provider boundary."""
 
             self.gateway = Gateway()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Close the provider client."""
