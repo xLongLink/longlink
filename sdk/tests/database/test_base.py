@@ -170,6 +170,37 @@ def test_connect_args_returns_driver_specific_settings(
     assert result == expected
 
 
+def test_connect_args_prioritizes_ca_certificate_over_sslmode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use a verified CA context instead of an sslmode when both are configured."""
+
+    # Arrange
+    certificate_context = object()
+    certificate_pems: list[str] = []
+
+    def create_default_context(*, cadata: str) -> object:
+        """Capture the CA certificate used to construct the SSL context."""
+
+        certificate_pems.append(cadata)
+        return certificate_context
+
+    monkeypatch.setattr(database_urls.ssl, "create_default_context", create_default_context)
+
+    # Act
+    result = database_urls.connect_args(
+        "postgresql+asyncpg://solution:secret@db/longlink",
+        schema="solution",
+        sslmode="disable",
+        certificate="database-ca-pem",
+    )
+
+    # Assert
+    assert certificate_pems == ["database-ca-pem"]
+    assert result == {
+        "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'},
+        "ssl": certificate_context,
+    }
+
+
 @pytest.mark.parametrize(
     ("env", "expected_url", "expected_kwargs"),
     [

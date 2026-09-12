@@ -217,6 +217,38 @@ async def test_update_organization_updates_metadata_for_administrator(
     assert updated.updated_id == owner.id
 
 
+async def test_update_organization_persists_valid_database_idle_seconds_and_rejects_short_intervals(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Persist valid idle settings without accepting sleep intervals that would thrash databases."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act
+    updated_response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}",
+        json={"database_idle_seconds": 300},
+    )
+    invalid_response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}",
+        json={"database_idle_seconds": 299},
+    )
+
+    # Assert
+    assert updated_response.status_code == 200
+    assert updated_response.json()["database_idle_seconds"] == 300
+    assert invalid_response.status_code == 422
+    assert invalid_response.json() == {"detail": "Invalid request. Please check your input and try again."}
+    async with session_scope() as session:
+        updated = await session.get(Organization, organization.id)
+    assert updated is not None
+    assert updated.database_idle_seconds == 300
+    assert updated.updated_id == owner.id
+
+
 async def test_update_organization_returns_not_found_when_active_organization_disappears(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

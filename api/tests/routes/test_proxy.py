@@ -5,6 +5,7 @@ from httpx2 import AsyncClient
 from typing import Protocol, TypedDict
 from longlink import identity
 from factories import create_solution, create_organization, create_ready_compute
+from contextlib import asynccontextmanager
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
@@ -667,6 +668,54 @@ async def test_solution_proxy_rejects_cross_organization_access(
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Verify authorization rejects the request.
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
+
+
+async def test_solution_proxy_rechecks_access_after_runtime_admission(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject proxy access revoked while the Organization database is waking."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+    member = users[1]
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=solution.organization_id,
+                role=OrganizationRoles.read,
+            )
+        )
+        await session.commit()
+
+    @asynccontextmanager
+    async def activity(organization_id: object) -> AsyncIterator[object]:
+        """Revoke member access while runtime admission holds the request."""
+
+        assert organization_id == solution.organization_id
+        async with session_scope() as session:
+            membership = await session.get(UserOrganization, (member.id, solution.organization_id))
+            assert membership is not None
+            await session.delete(membership)
+            await session.commit()
+        yield object()
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if revoked access reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(proxy_routes.databases, "activity", activity)
+    monkeypatch.setattr(proxy_routes.gateway, "Transport", unexpected_gateway)
+
+    # Act
+    response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
+
+    # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
 

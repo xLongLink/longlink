@@ -99,6 +99,47 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
     return parse_qs(urlparse(reset_url).fragment)["token"][0]
 
 
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Start configured OAuth login with browser-bound state and PKCE proof."""
+
+    # Arrange
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_ID", "github-client")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_SECRET", "github-secret")
+
+    # Act
+    response = await client.get(f"/api/v1/auth/oauth/{provider}", follow_redirects=False)
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["cache-control"] == "no-store"
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert "Max-Age=600" in response.headers["set-cookie"]
+    assert "Path=/api/v1/auth/oauth" in response.headers["set-cookie"]
+    credential = client.cookies.get("longlink_oauth")
+    assert credential is not None
+    state, verifier = token.oauth_state_claims(credential, provider)
+    redirect = urlparse(response.headers["location"])
+    parameters = parse_qs(redirect.query)
+    assert redirect.geturl().startswith(
+        oauth.GOOGLE_AUTHORIZATION_URL if provider == "google" else oauth.GITHUB_AUTHORIZATION_URL
+    )
+    assert parameters["client_id"] == [f"{provider}-client"]
+    assert parameters["redirect_uri"] == [oauth.redirect_uri(provider)]
+    assert parameters["response_type"] == ["code"]
+    assert parameters["state"] == [state]
+    assert parameters["code_challenge_method"] == ["S256"]
+    assert parameters["code_challenge"] != [verifier]
+    assert verifier not in response.headers["location"]
+
+
 async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
