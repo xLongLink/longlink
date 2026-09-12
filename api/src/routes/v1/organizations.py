@@ -196,7 +196,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"bucket_name": bucket.name, "space_used": usage}
+    return {"space_used": usage}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

@@ -1,7 +1,7 @@
 import os
 import pytest
 import pytest_asyncio
-from uuid import UUID
+from uuid import UUID, uuid4
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from typing import cast
@@ -182,6 +182,28 @@ class FakeKubernetes:
         return 18444
 
 
+class RegistryKubernetes:
+    """Resolve deterministic cluster identities without external Kubernetes I/O."""
+
+    def __init__(self, kubeconfig: dict[str, object]) -> None:
+        """Retain the submitted configuration for identity resolution."""
+
+        self.kubeconfig = kubeconfig
+
+    async def cluster_uid(self) -> str:
+        """Return the configured server or an independent test identity."""
+
+        clusters = self.kubeconfig.get("clusters")
+        if isinstance(clusters, list) and clusters and isinstance(clusters[0], dict):
+            cluster = clusters[0].get("cluster")
+            if isinstance(cluster, dict) and isinstance(cluster.get("server"), str):
+                return cluster["server"]
+        return str(uuid4())
+
+    async def aclose(self) -> None:
+        """Close the synthetic cluster client."""
+
+
 @pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""
@@ -214,6 +236,7 @@ async def reset_db(
     monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
     engine = create_async_engine(db_url)
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(registry.metadata.create_all)

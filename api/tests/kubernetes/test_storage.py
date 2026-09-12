@@ -59,7 +59,7 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mism
     initial_objects = "4" if mismatch == "object-count" else "2"
     observed = asyncio.Event()
     acknowledge = asyncio.Event()
-    compute = ComputeRegistry(bucket_size_bytes=8192, bucket_max_objects=2)
+    compute = ComputeRegistry(cluster_uid="storage-cluster", bucket_size_bytes=8192, bucket_max_objects=2)
 
     async def handle(request: web.Request) -> web.Response:
         """Serve the minimal Kubernetes resource protocol while controlling Rook's acknowledgement."""

@@ -35,11 +35,11 @@ import { skipToken, useQuery } from '@tanstack/react-query';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import DatabaseSettings from '@/components/settings/Database';
-import { Menu, type MenuSection } from '@/components/ui/Menu';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { invitationSchema } from '@/components/settings/validation';
 import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { Menu, resolveMenuItemId, type MenuSection } from '@/components/ui/Menu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import {
     useDeleteOrganizationSolution,
@@ -60,12 +60,15 @@ import type {
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
 
+const ORGANIZATION_SETTINGS_ITEM_IDS = ['organization', 'members', 'invitations', 'solutions'] as const;
+
 /** Renders the organization settings page. */
 export default function OrganizationSettings() {
     const { organization = '' } = useParams();
     const { hash } = useLocation();
     const toast = useToast();
-    const isSolutionsSectionActive = hash === '#solutions';
+    const activeItemId = resolveMenuItemId(ORGANIZATION_SETTINGS_ITEM_IDS, hash);
+    const isSolutionsSectionActive = activeItemId === 'solutions';
     const {
         organization: membershipOrganization,
         organizationId: membershipOrganizationId,
@@ -285,6 +288,7 @@ export default function OrganizationSettings() {
             entries: [
                 {
                     kind: 'item',
+                    id: 'organization',
                     icon: 'building2',
                     label: 'Organization',
                     content: (
@@ -370,6 +374,7 @@ export default function OrganizationSettings() {
                     items: [
                         {
                             kind: 'item',
+                            id: 'members',
                             label: 'Members',
                             content: (
                                 <Stack gap={4}>
@@ -392,6 +397,7 @@ export default function OrganizationSettings() {
                         },
                         {
                             kind: 'item',
+                            id: 'invitations',
                             label: 'Invitations',
                             content: (
                                 <Stack gap={4}>
@@ -424,6 +430,7 @@ export default function OrganizationSettings() {
                 },
                 {
                     kind: 'item',
+                    id: 'solutions',
                     icon: 'boxes',
                     label: 'Solutions',
                     content: (

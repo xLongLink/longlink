@@ -487,10 +487,6 @@ export type OrganizationSolutionSummary = {
  */
 export type OrganizationStorageUsageResponse = {
     /**
-     * Bucket Name
-     */
-    bucket_name: string;
-    /**
      * Space Used
      */
     space_used: number;

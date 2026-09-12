@@ -96,6 +96,7 @@ export default function Settings() {
             entries: [
                 {
                     kind: 'item',
+                    id: 'account',
                     icon: 'userRound',
                     label: 'Account',
                     content: (
@@ -138,6 +139,7 @@ export default function Settings() {
                 },
                 {
                     kind: 'item',
+                    id: 'organizations',
                     icon: 'building2',
                     label: 'Organizations',
                     content: (

@@ -23,8 +23,8 @@ longlink init
 Inspect the XML component catalog and individual component references from the CLI:
 
 ```bash
-longlink docs
-longlink docs Button
+longlink ui
+longlink ui Button
 ```
 
 <br/>

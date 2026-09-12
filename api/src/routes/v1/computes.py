@@ -1,9 +1,11 @@
+import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session
 from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
+from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
@@ -15,8 +17,13 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target and queue its initial creation."""
 
+    # Resolve the physical cluster before transactionally registering its stable identity.
+    cluster = Kubernetes(payload.kubeconfig)
+    async with contextlib.aclosing(cluster):
+        cluster_uid = await cluster.cluster_uid()
+
     # Persist the validated connection and queue compute provisioning.
-    registry = await compute.create(session, payload)
+    registry = await compute.create(session, payload, cluster_uid)
     await session.commit()
     return registry
 

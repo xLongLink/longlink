@@ -55,8 +55,8 @@ async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> N
     assert persisted is not None
 
 
-async def test_create_rejects_duplicate_compute_names() -> None:
-    """Translate duplicate Compute names into the stable domain conflict."""
+async def test_create_rejects_duplicate_compute_clusters() -> None:
+    """Translate duplicate physical clusters into the stable domain conflict."""
 
     # Arrange
     payload = ComputeRegistryCreate(
@@ -78,10 +78,10 @@ async def test_create_rejects_duplicate_compute_names() -> None:
         storage_endpoint="https://storage.example",
     )
     async with session_scope() as session:
-        await compute.create(session, payload)
+        await compute.create(session, payload, "cluster-uid")
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(session, payload)
+            await compute.create(session, payload.model_copy(update={"name": "Cluster Alias"}), "cluster-uid")

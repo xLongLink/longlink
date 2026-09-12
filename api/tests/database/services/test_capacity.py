@@ -36,6 +36,7 @@ async def test_capacity_serializes_admission_and_retains_deleted_reservations(mo
             sessions = async_sessionmaker(engine, expire_on_commit=False)
             compute = ComputeRegistry(
                 name="capacity",
+                cluster_uid="capacity-cluster",
                 kubeconfig={},
                 gateway_url="https://gateway.example",
                 database_storage_class="database",

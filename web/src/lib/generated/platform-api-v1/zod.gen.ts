@@ -224,7 +224,6 @@ export const zOrganizationMemberUpdate = z.object({
  * Report current logical object bytes for one organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
-    bucket_name: z.string(),
     space_used: z.int().gte(0)
 });
 

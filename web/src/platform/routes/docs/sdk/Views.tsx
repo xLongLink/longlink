@@ -298,8 +298,8 @@ export default function DocsArticleRoute() {
                                     {
                                         title: 'Settings',
                                         entries: [
-                                            { kind: 'item', label: 'General' },
-                                            { kind: 'item', label: 'Workflow' },
+                                            { kind: 'item', id: 'general', label: 'General' },
+                                            { kind: 'item', id: 'workflow', label: 'Workflow' },
                                         ],
                                     },
                                 ]}

@@ -50,16 +50,17 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(session: AsyncSession, payload: ComputeRegistryCreate) -> ComputeRegistry:
+async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_uid: str) -> ComputeRegistry:
     """Register one compute target."""
 
     # Persist the target and its initial reconciliation request atomically.
     registry = ComputeRegistry(
         **payload.model_dump(),
+        cluster_uid=cluster_uid,
     )
     session.add(registry)
 
-    # Translate unique registry names to one stable API conflict.
+    # Translate duplicate names or physical clusters to one stable API conflict.
     try:
         session.add(Operation(kind=OperationKind.compute_create, target_id=registry.id))
         await session.flush()

@@ -1,15 +1,15 @@
 name: Release
 
 on:
-    release:
-        types:
-            - published
+    push:
+        tags:
+            - 'v[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
     contents: read
 
 concurrency:
-    group: solution-release-${{ github.event.release.tag_name }}
+    group: solution-release-${{ github.ref_name }}
     cancel-in-progress: false
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
 
             - name: Build and push LongLink image
               env:
-                  RELEASE_TAG: ${{ github.event.release.tag_name }}
+                  RELEASE_TAG: ${{ github.ref_name }}
               run: |
                   registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
                   uv run --locked longlink build --registry "$registry" --push --tag "$RELEASE_TAG"

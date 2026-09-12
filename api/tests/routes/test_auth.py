@@ -128,9 +128,7 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     state, verifier = token.oauth_state_claims(credential, provider)
     redirect = urlparse(response.headers["location"])
     parameters = parse_qs(redirect.query)
-    assert redirect.geturl().startswith(
-        oauth.GOOGLE_AUTHORIZATION_URL if provider == "google" else oauth.GITHUB_AUTHORIZATION_URL
-    )
+    assert redirect.geturl().startswith(oauth.GOOGLE_AUTHORIZATION_URL if provider == "google" else oauth.GITHUB_AUTHORIZATION_URL)
     assert parameters["client_id"] == [f"{provider}-client"]
     assert parameters["redirect_uri"] == [oauth.redirect_uri(provider)]
     assert parameters["response_type"] == ["code"]

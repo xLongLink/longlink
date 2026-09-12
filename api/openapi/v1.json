@@ -3534,10 +3534,6 @@
       },
       "OrganizationStorageUsageResponse": {
         "properties": {
-          "bucket_name": {
-            "type": "string",
-            "title": "Bucket Name"
-          },
           "space_used": {
             "type": "integer",
             "minimum": 0.0,
@@ -3546,7 +3542,6 @@
         },
         "type": "object",
         "required": [
-          "bucket_name",
           "space_used"
         ],
         "title": "OrganizationStorageUsageResponse",

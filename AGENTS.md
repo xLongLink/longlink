@@ -55,6 +55,7 @@ LongLink
 
 - Platform metadata is separate from Solution business data.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
+- Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.
 - Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
 - Organization databases may hibernate when idle; activity wakes them and synchronizes shared users before work begins.
 - Diagnostics use cached data without waking databases, and storage allocation is reported per database instance.

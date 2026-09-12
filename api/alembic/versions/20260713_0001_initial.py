@@ -45,6 +45,7 @@ def upgrade() -> None:
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
+        sa.Column("cluster_uid", sa.String(length=128), nullable=False),
         sa.Column("kubeconfig", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "status",
@@ -74,6 +75,7 @@ def upgrade() -> None:
         sa.Column("storage_instances", sa.Integer(), nullable=False),
         sa.Column("storage_certificate", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("cluster_uid"),
         sa.UniqueConstraint("name"),
     )
 

@@ -16,19 +16,25 @@ export type MenuSection = {
 };
 export type MenuItem = {
     content?: ReactNode;
+    id: string;
     icon?: StoneIconName;
     kind: 'item';
     label: string;
 };
 export type MenuEntry = MenuItem | { icon?: StoneIconName; items: MenuItem[]; kind: 'subsection'; label: string };
 
-/** Converts a menu label into its hash navigation target. */
-function menuItemHref(label: string): string {
-    return `#${label
+/** Converts a menu label into its default stable identifier. */
+export function menuItemId(label: string): string {
+    return label
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')}`;
+        .replace(/^-|-$/g, '');
+}
+
+/** Resolves a URL hash to a known item, falling back to the first item. */
+export function resolveMenuItemId(itemIds: readonly string[], hash: string): string | undefined {
+    return itemIds.find((id) => `#${id}` === hash) ?? itemIds[0];
 }
 
 /** Renders a menu icon when one is configured. */
@@ -40,20 +46,24 @@ function renderMenuIcon(icon: StoneIconName | undefined) {
 export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: ComponentProps<typeof Stack>['gap'] }) {
     const { hash } = useLocation();
 
-    // Preserve label-based hashes and select the first match, including slug collisions.
+    // Resolve selection once from stable item identifiers.
     const items = sections.flatMap(({ entries }) =>
         entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry]))
     );
-    const activeItem = items.find((item) => menuItemHref(item.label) === hash) ?? items[0];
+    const activeItemId = resolveMenuItemId(
+        items.map((item) => item.id),
+        hash
+    );
+    const activeItem = items.find((item) => item.id === activeItemId);
 
     /** Renders direct and nested items with the same navigation and selection behavior. */
     function renderItem(item: MenuItem) {
         return (
             <AstryxSideNavItem
-                href={menuItemHref(item.label)}
+                href={`#${item.id}`}
                 icon={renderMenuIcon(item.icon)}
                 isSelected={item === activeItem}
-                key={item.label}
+                key={item.id}
                 label={item.label}
             />
         );

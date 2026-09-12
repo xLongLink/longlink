@@ -67,6 +67,7 @@ async def create_compute() -> ComputeRegistry:
     async with session_scope() as session:
         compute = ComputeRegistry(
             name="Local compute",
+            cluster_uid="local-cluster",
             bucket_size_bytes=1073741824,
             bucket_max_objects=10000,
             storage_reserve_percent=30,
@@ -90,6 +91,7 @@ async def create_ready_compute() -> ComputeRegistry:
         suffix = uuid4().hex[:8]
         compute = ComputeRegistry(
             name=f"Local testing compute {suffix}",
+            cluster_uid=f"local-testing-cluster-{suffix}",
             bucket_size_bytes=1073741824,
             bucket_max_objects=10000,
             storage_reserve_percent=30,

@@ -114,9 +114,4 @@ jobs:
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
                   git push --force origin "HEAD:${sample_branch}"
-
-                  # Recreate the release so its workflow publishes the newly synchronized image.
-                  if gh release view "$SAMPLE_VERSION" >/dev/null 2>&1; then
-                      gh release delete "$SAMPLE_VERSION" --yes --cleanup-tag
-                  fi
-                  gh release create "$SAMPLE_VERSION" --target "$sample_branch" --title "$SAMPLE_VERSION" --generate-notes
+                  git push --force origin "HEAD:refs/tags/${SAMPLE_VERSION}"
