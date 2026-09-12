@@ -82,6 +82,16 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
     async with owner.client() as client:
         await client.create_bucket(Bucket=bucket)
         await client.create_bucket(Bucket=other_bucket)
+
+        # RGW exposes never-versioned objects as deletable null versions.
+        await client.put_object(Bucket=bucket, Key=prefix + "unversioned", Body=b"null version")
+        versions = await client.list_object_versions(Bucket=bucket, Prefix=prefix)
+        assert [(item["Key"], item["VersionId"]) for item in versions["Versions"]] == [(prefix + "unversioned", "null")]
+        await owner.delete_prefix(bucket, prefix)
+        assert not (await client.list_objects_v2(Bucket=bucket, Prefix=prefix)).get("Contents")
+
+        # Preserve a pre-versioning null object alongside later versions and delete markers.
+        await client.put_object(Bucket=bucket, Key=prefix + "legacy", Body=b"legacy")
         await client.put_bucket_versioning(Bucket=bucket, VersioningConfiguration={"Status": "Enabled"})
         await client.put_object(Bucket=bucket, Key="shared/reference", Body=b"shared")
         await client.put_object(Bucket=bucket, Key=sibling_key, Body=b"private")
@@ -97,7 +107,7 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
         shared = await client.get_object(Bucket=bucket, Key="shared/reference")
         async with shared["Body"] as body:
             assert await body.read() == b"shared"
-        assert len((await client.list_objects_v2(Bucket=bucket, Prefix=prefix))["Contents"]) == 1
+        assert len((await client.list_objects_v2(Bucket=bucket, Prefix=prefix))["Contents"]) == 2
         for denied_prefix in ("", "solutions/", f"solutions/{sibling.hex}/", prefix.rstrip("/")):
             with pytest.raises(ClientError) as error:
                 await client.list_objects_v2(Bucket=bucket, Prefix=denied_prefix)
@@ -195,6 +205,17 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
     result = container.exec(["radosgw-admin", "user", "rm", "--uid", f"solution-{first.hex}"])
     assert result.exit_code == 0, result.output.decode()
     await owner.authorize(bucket, [sibling])
+
+    # Suspended buckets retain versions and markers while new writes use the null version.
+    async with owner.client() as client:
+        await client.delete_object(Bucket=bucket, Key=prefix + "file")
+        await client.put_bucket_versioning(Bucket=bucket, VersioningConfiguration={"Status": "Suspended"})
+        await client.put_object(Bucket=bucket, Key=prefix + "suspended", Body=b"suspended")
+        await client.delete_object(Bucket=bucket, Key=prefix + "legacy")
+        versions = await client.list_object_versions(Bucket=bucket, Prefix=prefix)
+        assert any(item["Key"] == prefix + "suspended" and item["VersionId"] == "null" for item in versions["Versions"])
+        assert any(item["VersionId"] == "null" for item in versions["DeleteMarkers"])
+
     async with runtime.client() as client:
         with pytest.raises(ClientError):
             await client.list_objects_v2(Bucket=bucket, Prefix=prefix)

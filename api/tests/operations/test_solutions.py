@@ -1,5 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
+from types import SimpleNamespace
 from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes
 from factories import (
     claim_operation,
@@ -185,6 +186,38 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
     database_passwords: list[str] = []
+    calls: list[str] = []
+
+    class Storage(StorageKubernetes):
+        """Observe quota admission and authorization around persisted credentials."""
+
+        async def quota(self, organization: UUID, compute: object) -> None:
+            """Record acknowledged quota admission."""
+
+            calls.append("quota")
+
+        async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+            """Record the owner connection resolution."""
+
+            calls.append("bucket")
+            return await super().bucket(organization, compute)
+
+        async def user(self, solution: UUID, organization: UUID) -> Credentials:
+            """Record credential creation after quota admission."""
+
+            calls.append("credentials")
+            return await super().user(solution, organization)
+
+        async def authorize(self, bucket: str, solutions: object) -> None:
+            """Require committed credentials before enabling the storage principal."""
+
+            async with session_scope() as session:
+                persisted = await session.get(Solution, solution.id)
+                assert persisted is not None
+                assert persisted.secrets["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
+                assert persisted.secrets["LONGLINK_IDENTITY_SECRET"]
+                assert persisted.deployed_revision_id != persisted.desired_revision_id
+            calls.append("authorize")
 
     class FakePostgres(DatabasePostgres):
         """Provide generated schema credentials without contacting PostgreSQL."""
@@ -193,6 +226,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             """Return the generated solution database username."""
 
             database_passwords.append(password)
+            calls.append("schema")
             return "solution"
 
     class FakeKubernetes:
@@ -203,7 +237,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
-            self.storage = self.databases.storage
+            self.storage = Storage()
+            calls.append("open")
 
         async def apply(
             self,
@@ -220,9 +255,12 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
             assert _namespace == f"longlink-compute-{organization.id.hex}"
             captured["secrets"] = secrets
+            calls.append("workload")
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
+
+            calls.append("close")
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
@@ -231,6 +269,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
+    assert calls == ["open", "quota", "bucket", "credentials", "schema", "authorize", "workload", "close"]
+    calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local"
     assert captured["secrets"]["LONGLINK_DATABASE_NAME"] == organization.id.hex
@@ -252,6 +292,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
+    assert calls == ["open", "quota", "bucket", "authorize", "workload", "close"]
     assert len(database_passwords) == 1
     assert captured["secrets"] == {"API_KEY": "replacement", **persisted.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
     async with session_scope() as session:

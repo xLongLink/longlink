@@ -11,7 +11,7 @@ from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvai
 from src.environments import env
 from src.models.users import UserSummary
 from fastapi.responses import RedirectResponse
-from src.database.services import users, invitations, organizations
+from src.database.services import users, invitations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -135,9 +135,7 @@ async def complete_oauth_login(
     if user.deleted_at is not None:
         return oauth_failure_response()
     try:
-        changed_organization_ids = await invitations.accept(session, user)
-        for organization_id in sorted(changed_organization_ids):
-            await organizations.sync_users(session, organization_id)
+        await invitations.accept(session, user)
         await session.commit()
     except IntegrityError:
         return oauth_failure_response()
@@ -169,9 +167,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    changed_organization_ids = await invitations.accept(session, user)
-    for organization_id in sorted(changed_organization_ids):
-        await organizations.sync_users(session, organization_id)
+    await invitations.accept(session, user)
     await session.commit()
     credential = token.create_auth_token(user)
 
@@ -313,9 +309,7 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         user = await users.register(session, payload.name, email, payload.password)
-        changed_organization_ids = await invitations.accept(session, user)
-        for organization_id in sorted(changed_organization_ids):
-            await organizations.sync_users(session, organization_id)
+        await invitations.accept(session, user)
         await session.commit()
     except IntegrityError as exc:
         raise HTTPException(

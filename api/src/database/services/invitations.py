@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
@@ -61,7 +61,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
 
 
 async def accept(session: AsyncSession, user: User) -> set[UUID]:
-    """Accept active email grants and return the Organizations with changed memberships."""
+    """Accept email grants and request projection for changed memberships in the caller's transaction."""
 
     # Lock the recipient's pending grants before separating active and expired invitations.
     result = await session.scalars(
@@ -123,5 +123,9 @@ async def accept(session: AsyncSession, user: User) -> set[UUID]:
 
     # Consumed and expired grants no longer need an active or audit record.
     await session.execute(delete_pending_invitations)
+
+    # Durably request projection only for changed memberships, in a stable lock order.
+    for organization_id in sorted(changed_organization_ids):
+        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
 
     return changed_organization_ids

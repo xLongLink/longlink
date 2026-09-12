@@ -1,7 +1,6 @@
 import pytest
 from src import auth
 from main import app
-from uuid import UUID
 from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col, select
@@ -16,6 +15,7 @@ from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
+from src.database.models.organizations import Organization
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
 
@@ -50,21 +50,6 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
     # Extract browser-only proof from the password-reset link fragment.
     reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
     return parse_qs(urlparse(reset_url).fragment)["token"][0]
-
-
-def capture_synchronized_organization_ids(monkeypatch: pytest.MonkeyPatch) -> list[UUID]:
-    """Record Organization membership projections without a database adapter."""
-
-    # Replace the external projection boundary with an observable local sink.
-    synchronized_organization_ids: list[UUID] = []
-
-    async def sync_users(_session: object, organization_id: UUID) -> None:
-        """Record one requested Organization projection."""
-
-        synchronized_organization_ids.append(organization_id)
-
-    monkeypatch.setattr("src.routes.v1.auth.organizations.sync_users", sync_users)
-    return synchronized_organization_ids
 
 
 async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange(
@@ -379,7 +364,6 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     client: AsyncClient,
     captured_mail: list[tuple[str, str, str, str | None]],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Accept an email-bound Organization role while creating a verified account."""
 
@@ -387,9 +371,11 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     email = "invited@example.com"
     organization = await create_organization(users[0])
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
-    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
     await register_and_verify(client, captured_mail, email)
 
     # Act
@@ -401,6 +387,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     organizations_response = await client.get("/api/v1/me/organizations")
     async with session_scope() as session:
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        persisted = await session.get(Organization, organization.id)
 
     # Assert
     assert response.status_code == 201
@@ -412,14 +399,14 @@ async def test_registration_completion_accepts_pending_organization_invitation(
         }
     ]
     assert invitation is None
-    assert synchronized_organization_ids == [organization.id]
+    assert persisted is not None
+    assert persisted.database_sync_pending is True
     assert client.cookies.get("longlink_auth") is not None
 
 
 async def test_password_login_accepts_pending_organization_invitation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Accept pending Organization access when an existing user signs in."""
 
@@ -427,9 +414,11 @@ async def test_password_login_accepts_pending_organization_invitation(
     owner, invited_user, _ = users
     organization = await create_organization(owner)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
         await session.commit()
-    synchronized_organization_ids = capture_synchronized_organization_ids(monkeypatch)
 
     # Act
     response = await clients[1].post(
@@ -437,6 +426,7 @@ async def test_password_login_accepts_pending_organization_invitation(
         json={"email": invited_user.email, "password": TEST_PASSWORD},
     )
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         membership = await session.scalar(
             select(UserOrganization).where(
@@ -450,7 +440,8 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert invitation is None
     assert membership is not None
     assert membership.role == OrganizationRoles.write
-    assert synchronized_organization_ids == [organization.id]
+    assert persisted is not None
+    assert persisted.database_sync_pending is True
 
 
 async def test_registration_completion_rejects_duplicate_account(

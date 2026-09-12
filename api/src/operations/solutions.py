@@ -53,67 +53,64 @@ async def _deploy(revision_id: UUID) -> None:
     organization = infrastructure.organization
     runtime_secrets = solution.secrets
 
-    # Converge providers and the workload while the Solution is not yet published.
-    # Reuse generated credentials after an interrupted creation attempt.
-    if "LONGLINK_ENV" not in runtime_secrets:
-        # Rook preserves generated credentials across retries; owner keys never reach workloads.
-        prefix = f"solutions/{solution.id.hex}/"
-        logger.info("Creating object storage credentials for Solution %s", solution.id)
-        database_password = secrets.token_urlsafe(24)
-        cluster = Kubernetes(infrastructure.compute.kubeconfig)
-        async with contextlib.aclosing(cluster):
-            await cluster.storage.quota(organization.id, infrastructure.compute)
-            bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
-            credentials = await cluster.storage.user(solution.id, organization.id)
-            database = await databases.connection(infrastructure, cluster)
-            database_username = await database.solution_schema(organization.id, solution.id, database_password)
-
-        # Build and commit the complete runtime contract before creating the workload.
-        runtime_secrets = {
-            **runtime_secrets,
-            "LONGLINK_ENV": "production",
-            "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
-            "LONGLINK_DATABASE_NAME": organization.id.hex,
-            "LONGLINK_DATABASE_PASSWORD": database_password,
-            "LONGLINK_DATABASE_PORT": "5432",
-            "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-            "LONGLINK_DATABASE_SSLMODE": "require",
-            "LONGLINK_DATABASE_USERNAME": database_username,
-            "LONGLINK_STORAGE_BUCKET": bucket.name,
-            "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.compute.storage_endpoint,
-            "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
-            "LONGLINK_STORAGE_PREFIX": prefix,
-            "LONGLINK_STORAGE_REGION": "us-east-1",
-            "LONGLINK_STORAGE_USERNAME": credentials.access_key,
-        }
-
-    # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
-    if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
-        logger.info("Persisting runtime credentials for Solution %s", solution.id)
-        runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
-        async with session_scope() as session:
-            # Persist credentials only while the Solution remains active.
-            result = await session.execute(
-                update(Solution)
-                .where(
-                    col(Solution.id) == solution.id,
-                    col(Solution.deleted_at).is_(None),
-                )
-                .values(secrets=runtime_secrets)
-            )
-            if result.rowcount != 1:
-                return
-
-            await session.commit()
-
-    # Apply the captured desired release so reconciliation repairs workload drift.
-    logger.info("Applying Kubernetes workload for Solution %s", solution.id)
+    # Acknowledge quota before credentials, keeping the bucket transport alive through authorization.
     cluster = Kubernetes(
         infrastructure.compute.kubeconfig,
     )
     async with contextlib.aclosing(cluster):
         await cluster.storage.quota(organization.id, infrastructure.compute)
         bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+
+        # Reuse generated credentials after an interrupted creation attempt.
+        if "LONGLINK_ENV" not in runtime_secrets:
+            # Rook preserves generated credentials across retries; owner keys never reach workloads.
+            prefix = f"solutions/{solution.id.hex}/"
+            logger.info("Creating object storage credentials for Solution %s", solution.id)
+            database_password = secrets.token_urlsafe(24)
+            credentials = await cluster.storage.user(solution.id, organization.id)
+            database = await databases.connection(infrastructure, cluster)
+            database_username = await database.solution_schema(organization.id, solution.id, database_password)
+
+            # Build and commit the complete runtime contract before creating the workload.
+            runtime_secrets = {
+                **runtime_secrets,
+                "LONGLINK_ENV": "production",
+                "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
+                "LONGLINK_DATABASE_NAME": organization.id.hex,
+                "LONGLINK_DATABASE_PASSWORD": database_password,
+                "LONGLINK_DATABASE_PORT": "5432",
+                "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
+                "LONGLINK_DATABASE_SSLMODE": "require",
+                "LONGLINK_DATABASE_USERNAME": database_username,
+                "LONGLINK_STORAGE_BUCKET": bucket.name,
+                "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.compute.storage_endpoint,
+                "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
+                "LONGLINK_STORAGE_PREFIX": prefix,
+                "LONGLINK_STORAGE_REGION": "us-east-1",
+                "LONGLINK_STORAGE_USERNAME": credentials.access_key,
+            }
+
+        # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
+        if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
+            logger.info("Persisting runtime credentials for Solution %s", solution.id)
+            runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
+            async with session_scope() as session:
+                # Persist credentials only while the Solution remains active.
+                result = await session.execute(
+                    update(Solution)
+                    .where(
+                        col(Solution.id) == solution.id,
+                        col(Solution.deleted_at).is_(None),
+                    )
+                    .values(secrets=runtime_secrets)
+                )
+                if result.rowcount != 1:
+                    return
+
+                await session.commit()
+
+        # Apply the captured desired release so reconciliation repairs workload drift.
+        logger.info("Applying Kubernetes workload for Solution %s", solution.id)
         await storage.authorize(bucket.storage, bucket.name, organization.id)
         await cluster.solutions.apply(
             solution.id,

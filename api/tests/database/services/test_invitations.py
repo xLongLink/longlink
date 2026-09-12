@@ -142,6 +142,9 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     organization = await create_organization(owner)
     now = datetime(2026, 8, 30, tzinfo=UTC)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             OrganizationInvitation(
                 organization_id=organization.id,
@@ -164,6 +167,10 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     assert changed_organization_ids == set()
     assert invitation is None
     assert membership is None
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
 
 
 async def test_accept_restores_deleted_membership_with_invited_role(users: tuple[User, User, User]) -> None:
@@ -173,6 +180,9 @@ async def test_accept_restores_deleted_membership_with_invited_role(users: tuple
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=invitee.id,
@@ -187,6 +197,20 @@ async def test_accept_restores_deleted_membership_with_invited_role(users: tuple
 
     # Act
     async with session_scope() as session:
+        changed_organization_ids = await invitations.accept(session, invitee)
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is True
+        await session.rollback()
+
+    # Membership, invitation consumption, and projection demand share the caller's rollback.
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
+        membership = await session.get(UserOrganization, (invitee.id, organization.id))
+        assert membership is not None
+        assert membership.deleted_at is not None
         changed_organization_ids = await invitations.accept(session, invitee)
         await session.commit()
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
@@ -213,6 +237,9 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=invitee.id,
@@ -241,6 +268,10 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     assert membership is not None
     assert membership.role == OrganizationRoles.read
     assert invitation is None
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
 
 
 async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple[User, User, User]) -> None:

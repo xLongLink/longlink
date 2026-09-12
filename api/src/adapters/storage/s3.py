@@ -155,9 +155,6 @@ class S3:
                         for item in chain(page.get("Versions", []), page.get("DeleteMarkers", []))
                     )
                     await self._delete_objects(client, bucket, versions)
-                async for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
-                    objects: Iterable[ObjectIdentifierTypeDef] = ({"Key": item["Key"]} for item in page.get("Contents", []))
-                    await self._delete_objects(client, bucket, objects)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
