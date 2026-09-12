@@ -330,7 +330,7 @@ async def ready(organization_id: UUID) -> None:
                 raise
 
 
-async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
+async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
     # Recheck both the idle interval and persisted leases under the admission lock.
@@ -344,8 +344,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             or organization.status != Status.running
             or organization.database_idle_seconds == 0
             or organization.database_state != DatabaseState.available
-            or not manual
-            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -393,8 +392,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
                         if (
                             active is not None
                             or organization.database_idle_seconds == 0
-                            or not manual
-                            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
                         ):
                             organization.database_state = DatabaseState.available
                             await session.commit()

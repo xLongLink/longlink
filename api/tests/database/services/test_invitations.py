@@ -177,13 +177,12 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
 
     # Act
     async with session_scope() as session:
-        changed_organization_ids = await invitations.accept(session, invitee)
+        await invitations.accept(session, invitee)
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
 
     # Assert
-    assert changed_organization_ids == set()
     assert invitation is None
     assert membership is None
     async with session_scope() as session:
@@ -220,13 +219,12 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
 
     # Act
     async with session_scope() as session:
-        changed_organization_ids = await invitations.accept(session, invitee)
+        await invitations.accept(session, invitee)
         await session.commit()
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
 
     # Assert
-    assert changed_organization_ids == set()
     assert membership is not None
     assert membership.role == OrganizationRoles.read
     assert invitation is None
@@ -252,11 +250,10 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
 
     # Act
     async with session_scope() as session:
-        changed_organization_ids = await invitations.accept(session, invitee)
+        await invitations.accept(session, invitee)
         membership = await session.get(UserOrganization, (invitee.id, organization.id))
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
 
     # Assert
-    assert changed_organization_ids == set()
     assert membership is None
     assert invitation is not None

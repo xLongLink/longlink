@@ -14,8 +14,8 @@ import {
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Returns current-user membership data for one organization route slug. */
-export function useOrganizationMembership(organizationSlug: string) {
+/** Fetches membership and solutions for one organization route. */
+export function useOrganizationRoute(organizationSlug: string, solutionsEnabled = true) {
     const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
     const membershipQuery = useQuery({
         queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
@@ -29,8 +29,34 @@ export function useOrganizationMembership(organizationSlug: string) {
     const organization = membership?.organization;
     const organizationId = organization?.id;
     const role = membership?.role ?? null;
+    const solutionsPath =
+        solutionsEnabled && organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
+    const solutionsQuery = useQuery({
+        queryKey: ['api', solutionsPath],
+        queryFn: solutionsPath
+            ? async ({ signal }) =>
+                  zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
+                      await api(solutionsPath, { signal }).json()
+                  )
+            : skipToken,
+        refetchInterval: (query) =>
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                ? 5000
+                : false,
+        meta: { polling: true },
+        retry: false,
+    });
 
-    return { organization, organizationId, role, isLoading: membershipQuery.isLoading, error: membershipQuery.error };
+    return {
+        organization,
+        organizationId,
+        role,
+        solutions: solutionsQuery.data ?? [],
+        isMembershipLoading: membershipQuery.isLoading,
+        isSolutionsLoading: solutionsQuery.isLoading,
+        membershipError: membershipQuery.error,
+        solutionsError: solutionsQuery.error,
+    };
 }
 
 /** Invalidates cached organization solution collections. */
@@ -62,32 +88,6 @@ export function useOrganization(organizationId: string | undefined) {
         invitations,
         isLoading: organizationQuery.isLoading,
         error: organizationQuery.error,
-    };
-}
-
-/** Fetches organization solutions without loading people-management data. */
-export function useOrganizationSolutions(organizationId: string | undefined, enabled = true) {
-    const solutionsPath = enabled && organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
-    const solutionsQuery = useQuery({
-        queryKey: ['api', solutionsPath],
-        queryFn: solutionsPath
-            ? async ({ signal }) =>
-                  zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
-                      await api(solutionsPath, { signal }).json()
-                  )
-            : skipToken,
-        refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
-                ? 5000
-                : false,
-        meta: { polling: true },
-        retry: false,
-    });
-
-    return {
-        solutions: solutionsQuery.data ?? [],
-        isLoading: solutionsQuery.isLoading,
-        error: solutionsQuery.error,
     };
 }
 

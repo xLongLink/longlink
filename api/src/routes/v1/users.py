@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_session
 from src.models.users import UserUpdate, UserSummary, UserOrganizationMembership
-from src.database.services import users, organizations
+from src.database.services import users
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -40,18 +40,8 @@ async def list_users(
 async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
     """Update the authenticated user's details."""
 
-    # Avoid persistence and synchronization for unchanged profile values.
-    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
+    # Commit profile changes and durable projection demand together, without a no-op transaction.
+    if not await users.update_profile(session, user, payload):
         return user
-
-    # Lock Organizations in stable order before changing the user, matching membership mutation lock order.
-    for organization_id in sorted(await users.organization_ids(session, user.id)):
-        await organizations.sync_users(session, organization_id)
-
-    # Commit profile changes and durable projection demand together.
-    if payload.name is not None:
-        user.name = payload.name
-    if payload.avatar is not None:
-        user.avatar = payload.avatar
     await session.commit()
     return user

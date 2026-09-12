@@ -33,7 +33,7 @@ make test     # Build required bundles and run all tests
 
 make up       # Initialize local services, cluster, and sample image
 make down     # Stop local services and cluster; preserve caches and sdk/dev
-make seed     # Migrate and seed the Platform test Organization
+make seed     # Seed the Platform test Organization after the API starts
 make api      # Run the Platform API
 make web      # Run the Web development server
 make sdk      # Run the local sample Solution

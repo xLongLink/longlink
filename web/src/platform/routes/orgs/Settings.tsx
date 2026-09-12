@@ -44,9 +44,8 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import {
     useDeleteOrganizationSolution,
     useOrganization,
-    useOrganizationMembership,
-    useOrganizationSolutions,
     useOrganizationMembers,
+    useOrganizationRoute,
     useUpdateOrganization,
 } from '@/lib/hooks/use-organization';
 import {
@@ -71,9 +70,12 @@ export default function OrganizationSettings() {
         organization: membershipOrganization,
         organizationId: membershipOrganizationId,
         role: organizationRole,
-        isLoading: isMembershipLoading,
-        error: membershipError,
-    } = useOrganizationMembership(organization);
+        solutions,
+        isMembershipLoading,
+        isSolutionsLoading,
+        membershipError,
+        solutionsError,
+    } = useOrganizationRoute(organization, isSolutionsSectionActive);
     const {
         organization: organizationDetails,
         members,
@@ -81,11 +83,6 @@ export default function OrganizationSettings() {
         isLoading: isOrganizationLoading,
         error: organizationError,
     } = useOrganization(isSolutionsSectionActive ? undefined : membershipOrganizationId);
-    const {
-        solutions,
-        isLoading: isSolutionsLoading,
-        error: solutionsError,
-    } = useOrganizationSolutions(membershipOrganizationId, isSolutionsSectionActive);
 
     // Preserve the page's loading state and details-first error precedence.
     const isLoading = isMembershipLoading || isOrganizationLoading || isSolutionsLoading;

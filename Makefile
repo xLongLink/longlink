@@ -138,8 +138,6 @@ sdk:
 	cd sdk/dev && uv run longlink dev
 
 
-# Prepare the Platform database and seed the example Organization and Solution.
+# Seed the example Organization and Solution after the Platform API starts.
 seed:
-	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" uv run --locked python -m scripts.seed

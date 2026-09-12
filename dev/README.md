@@ -97,8 +97,8 @@ To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
 KUBECONFIG=../kubeconfig.yml
 ```
 
-Start the Platform API first so its lifespan creates the configured administrator. In a separate terminal, run migrations
-and seed local or remote compute data:
+Start the Platform API first so it prepares the database and creates the configured administrator. In a separate terminal,
+seed local or remote compute data:
 
 ```bash
 make api

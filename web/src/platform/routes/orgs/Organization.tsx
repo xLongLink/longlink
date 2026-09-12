@@ -11,9 +11,9 @@ import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateSolution from '@/components/dialogs/CreateSolution';
+import { useOrganizationRoute } from '@/lib/hooks/use-organization';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { useOrganizationMembership, useOrganizationSolutions } from '@/lib/hooks/use-organization';
 
 /** Renders the organization solutions page. */
 export default function Organization() {
@@ -21,14 +21,12 @@ export default function Organization() {
     const {
         organizationId,
         role,
-        isLoading: isMembershipLoading,
-        error: membershipError,
-    } = useOrganizationMembership(organization);
-    const {
         solutions,
-        isLoading: isSolutionsLoading,
-        error: solutionsError,
-    } = useOrganizationSolutions(organizationId);
+        isMembershipLoading,
+        isSolutionsLoading,
+        membershipError,
+        solutionsError,
+    } = useOrganizationRoute(organization);
 
     // Preserve the page's loading state and solutions-first error precedence.
     const isLoading = isMembershipLoading || isSolutionsLoading;

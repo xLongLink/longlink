@@ -2,12 +2,13 @@ import asyncio
 from uuid import UUID
 from pwdlib import PasswordHash
 from sqlmodel import col
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only, contains_eager
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
+from src.models.users import UserUpdate
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -106,20 +107,35 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
     return result.all()
 
 
-async def organization_ids(session: AsyncSession, user_id: UUID) -> Sequence[UUID]:
-    """Return active Organization IDs for one user."""
+async def update_profile(session: AsyncSession, user: User, payload: UserUpdate) -> bool:
+    """Update a user profile and request every affected Organization projection."""
+
+    # Avoid persistence and synchronization for unchanged profile values.
+    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
+        return False
 
     # Resolve synchronization targets without loading membership or Organization objects.
     statement = (
         select(col(UserOrganization.organization_id))
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
         .where(
-            col(UserOrganization.user_id) == user_id,
+            col(UserOrganization.user_id) == user.id,
             col(Organization.deleted_at).is_(None),
         )
     )
     result = await session.scalars(statement)
-    return result.all()
+
+    # Lock Organizations in stable order before changing the user, matching membership mutation lock order.
+    for organization_id in sorted(result.all()):
+        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+
+    # Keep profile changes and projection demand in the caller's transaction.
+    if payload.name is not None:
+        user.name = payload.name
+    if payload.avatar is not None:
+        user.avatar = payload.avatar
+
+    return True
 
 
 async def ensure_administrator(session: AsyncSession) -> User:
