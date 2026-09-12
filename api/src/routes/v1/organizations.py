@@ -147,7 +147,7 @@ async def get_organization_database_usage(
                 return usage
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
-                database = await databases.connection(infrastructure, cluster)
+                database = await databases.connection(organization, cluster)
                 size_bytes = await database.database_usage(organization.id.hex)
             measured_at = utcnow()
             async with session_scope() as usage_session:

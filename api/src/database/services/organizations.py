@@ -364,7 +364,6 @@ async def update_member_role(
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
-    membership.updated_id = user_id
     membership.role = role
     await sync_users(session, organization_id)
 
@@ -470,8 +469,6 @@ async def create(
                     user_id=user.id,
                     organization_id=organization.id,
                     role=OrganizationRoles.owner,
-                    created_id=user.id,
-                    updated_id=user.id,
                 )
             )
             session.add(organization)

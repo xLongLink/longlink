@@ -169,7 +169,7 @@ async def rollback_solution(
 
     # Select and queue the exact historical release in one authorized transaction.
     solution = await solutions.access(session, solution_id, user.id)
-    await solutions.rollback(session, solution, revision_id, user.id)
+    await solutions.rollback(session, solution, revision_id)
     await session.commit()
 
 

@@ -83,7 +83,6 @@ export default function OrganizationSolution() {
         <SolutionRuntime
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
-            requestBaseUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/`}
         >
             {({ content, tabs, title }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>

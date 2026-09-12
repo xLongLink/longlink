@@ -27,7 +27,7 @@ async def data(request: Request) -> AsyncGenerator[Context, None]:
 
     # Open one Solution-owned database session and resolve the authenticated shared user for this request.
     async with request.app.state.longlink.database.session() as database:
-        user_id = request.state.longlink_identity
+        user_id = _current_identity.get()
         user = await database.get(Audit, user_id) if user_id is not None else None
         yield Context(user=user, storage=request.app.state.longlink.storage, database=database)
 
@@ -46,7 +46,6 @@ def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
             user_id = None
 
         # Keep the request identity available to both FastAPI and database audit hooks.
-        request.state.longlink_identity = user_id
         token = _current_identity.set(user_id)
         try:
             return await call_next(request)

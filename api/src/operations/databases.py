@@ -32,11 +32,8 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(infrastructure: organizations.Infrastructure, cluster: Kubernetes) -> postgres.Postgres:
+async def connection(organization: Organization, cluster: Kubernetes) -> postgres.Postgres:
     """Build the Organization's private, CA-verified PostgreSQL connection."""
-
-    # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
-    organization = infrastructure.organization
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
     port = await cluster.databases.portforward(organization.id)
@@ -288,7 +285,7 @@ async def ready(organization_id: UUID) -> None:
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     if infrastructure.organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
@@ -372,7 +369,7 @@ async def hibernate(organization_id: UUID) -> bool:
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)

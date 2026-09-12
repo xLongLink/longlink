@@ -236,8 +236,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 # A,B,A while A is applying reuses A's active lease and leaves B obsolete.
                 async with session_scope() as session:
                     current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.rollback(session, current, latest_id, users[0].id)
-                    await solutions.rollback(session, current, revision_id, users[0].id)
+                    await solutions.rollback(session, current, latest_id)
+                    await solutions.rollback(session, current, revision_id)
                     duplicate = await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision_id)
                     assert duplicate.lease_expires_at is not None
                     await session.commit()
@@ -268,7 +268,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     # A superseded rollback is skipped without retargeting its immutable operation.
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id, users[0].id)
+        await solutions.rollback(session, current, initial.target_id)
         await solutions.deploy(session, current, users[0].id, metadata, {"KEY": "second"})
         await session.commit()
         newest_id = current.desired_revision_id
@@ -288,9 +288,9 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     # A,B,A coalesces A and skips B so the final runtime still matches desired A.
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id, users[0].id)
+        await solutions.rollback(session, current, initial.target_id)
         await solutions.deploy(session, current, users[0].id, metadata, {"KEY": "second"})
-        await solutions.rollback(session, current, initial.target_id, users[0].id)
+        await solutions.rollback(session, current, initial.target_id)
         await session.commit()
     for kind in (OperationKind.solution_deploy, OperationKind.solution_deploy):
         command = await claim_operation()
@@ -307,7 +307,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     return_to_active = True
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id, users[0].id)
+        await solutions.rollback(session, current, initial.target_id)
         await session.commit()
     active = await claim_operation()
     assert active is not None
@@ -322,15 +322,15 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     return_to_active = False
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, latest_id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id, users[0].id)
+        await solutions.rollback(session, current, latest_id)
+        await solutions.rollback(session, current, initial.target_id)
         await session.commit()
     skipped = await claim_operation()
     assert skipped is not None and skipped.target_id == latest_id
     await runtime.deploy(skipped.target_id)
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, latest_id, users[0].id)
+        await solutions.rollback(session, current, latest_id)
         await session.commit()
     await complete_operation(skipped.id)
     while (pending := await claim_operation()) is not None:

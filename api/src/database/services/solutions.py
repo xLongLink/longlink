@@ -214,7 +214,7 @@ async def deploy(
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
 
-async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID, user_id: UUID) -> None:
+async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID) -> None:
     """Select a previously deployed snapshot without reversing migrations."""
 
     # Only this Solution's proven releases are safe rollback candidates.

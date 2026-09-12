@@ -64,7 +64,7 @@ async def deploy(revision_id: UUID) -> None:
                 logger.info("Creating object storage credentials for Solution %s", solution.id)
                 database_password = secrets.token_urlsafe(24)
                 credentials = await cluster.storage.user(solution.id, organization.id)
-                database = await databases.connection(infrastructure, cluster)
+                database = await databases.connection(organization, cluster)
                 database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
                 # Build and commit the complete runtime contract before creating the workload.
@@ -169,7 +169,7 @@ async def delete(solution_id: UUID) -> None:
         )
         async with contextlib.aclosing(cluster):
             await cluster.solutions.delete(solution.id, f"longlink-compute-{organization.id.hex}")
-            db = await databases.connection(infrastructure, cluster)
+            db = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)
 

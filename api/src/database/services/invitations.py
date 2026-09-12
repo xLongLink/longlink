@@ -108,8 +108,6 @@ async def accept(session: AsyncSession, user: User) -> None:
                     user_id=user.id,
                     organization_id=invitation.organization_id,
                     role=invitation.role,
-                    created_id=user.id,
-                    updated_id=user.id,
                 )
             )
             changed_organization_ids.add(invitation.organization_id)

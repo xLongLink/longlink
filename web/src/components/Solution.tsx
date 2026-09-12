@@ -17,7 +17,6 @@ type SolutionRuntimeProps = {
     children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
-    requestBaseUrl?: string;
 };
 
 const EMPTY_VIEWS = [] as const;
@@ -67,13 +66,13 @@ function SolutionXmlRuntime({
 }
 
 /** Resolves and renders the current manifest-defined View. */
-export function SolutionRuntime({
-    children,
-    navigationBaseUrl = '/',
-    viewsUrl = '/views.json',
-    requestBaseUrl = '/',
-}: SolutionRuntimeProps) {
+export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = '/views.json' }: SolutionRuntimeProps) {
     const { '*': routePath = '' } = useParams();
+
+    // Resolve XML requests beside the manifest without changing its URL form.
+    const viewsLocation = new URL(viewsUrl, 'http://longlink.local');
+    const requestBaseLocation = new URL('.', viewsLocation);
+    const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
         queryFn: async ({ signal }) => viewsSchema.parse(await api(viewsUrl, { signal }).json()),
@@ -136,14 +135,7 @@ export function SolutionRuntime({
         content = (
             <SolutionXmlRuntime
                 ast={activeViewAst}
-                key={JSON.stringify([
-                    viewsUrl,
-                    navigationBaseUrl,
-                    requestBaseUrl,
-                    activeView.route,
-                    activeView.path,
-                    routePath,
-                ])}
+                key={JSON.stringify([viewsUrl, navigationBaseUrl, activeView.route, activeView.path, routePath])}
                 navigationBaseUrl={navigationBaseUrl}
                 params={match.params}
                 requestBaseUrl={requestBaseUrl}

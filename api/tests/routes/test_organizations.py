@@ -1038,7 +1038,6 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
         original_updated_at = original.updated_at
-        original_updated_id = original.updated_id
 
     # Act
     response = await clients[0].patch(
@@ -1055,7 +1054,6 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
         assert persisted.database_sync_pending is False
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
-    assert unchanged.updated_id == original_updated_id
 
 
 async def test_update_organization_member_returns_not_found_for_non_member(
@@ -1173,7 +1171,6 @@ async def test_update_organization_member_returns_403_for_regular_member(
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
         original_updated_at = original.updated_at
-        original_updated_id = original.updated_id
 
     client = clients[1]
 
@@ -1190,7 +1187,6 @@ async def test_update_organization_member_returns_403_for_regular_member(
         unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
         assert unchanged.role == OrganizationRoles.read
         assert unchanged.updated_at == original_updated_at
-        assert unchanged.updated_id == original_updated_id
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.database_sync_pending is False
