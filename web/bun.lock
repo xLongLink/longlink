@@ -24,7 +24,7 @@
         "zod": "^4.5.4",
       },
       "devDependencies": {
-        "@astryxdesign/cli": "0.5.1",
+        "@astryxdesign/cli": "0.5.2",
         "@hey-api/openapi-ts": "0.99.0",
         "@react-router/dev": "8.3.1",
         "@testing-library/user-event": "14.6.1",
@@ -49,7 +49,7 @@
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
   },
   "packages": {
-    "@astryxdesign/cli": ["@astryxdesign/cli@0.5.1", "", { "dependencies": { "commander": "^12.1.0", "jiti": "^2.7.0", "jscodeshift": "^17.3.0", "zod": "^4.4.3" }, "peerDependencies": { "@astryxdesign/charts": "*", "@astryxdesign/core": "*", "@astryxdesign/lab": "*", "@astryxdesign/theme-neutral": "*", "gpt-tokenizer": "^3.4.0" }, "optionalPeers": ["@astryxdesign/charts", "@astryxdesign/core", "@astryxdesign/lab", "@astryxdesign/theme-neutral"], "bin": { "cli": "./clients/cli/bin/astryx.mjs", "astryx": "./clients/cli/bin/astryx.mjs" } }, "sha512-sui7UTl47I4Z3Rgo7tmDeKIrX9rIE5WjACGvNTr87C03FAVK97GXSwvXE5gZCQhi2gLfrlRy14rWP3FyvVnl9w=="],
+    "@astryxdesign/cli": ["@astryxdesign/cli@0.5.2", "", { "dependencies": { "commander": "^12.1.0", "jiti": "^2.7.0", "jscodeshift": "^17.3.0", "zod": "^4.4.3" }, "peerDependencies": { "@astryxdesign/charts": "*", "@astryxdesign/core": "*", "@astryxdesign/lab": "*", "@astryxdesign/theme-neutral": "*", "gpt-tokenizer": "^3.4.0" }, "optionalPeers": ["@astryxdesign/charts", "@astryxdesign/core", "@astryxdesign/lab", "@astryxdesign/theme-neutral"], "bin": { "cli": "./clients/cli/bin/astryx.mjs", "astryx": "./clients/cli/bin/astryx.mjs" } }, "sha512-JKEV7JJZjapMB8fPe+HR/ZRRYD3Qce0c0tt/YjNsHDCUSAYxg0ZSWJgb1zKpqVaJzRws/IN9rKws2GsIDYkrMA=="],
 
     "@astryxdesign/core": ["@astryxdesign/core@0.5.2", "", { "dependencies": { "intl-messageformat": "^11.2.9" }, "peerDependencies": { "@stylexjs/stylex": "^0.19.0", "react": ">=19.0.0", "react-dom": ">=19.0.0" } }, "sha512-wJXjKIDpvqHG6t6BFzqRSuaJWIC2vMH3+9b4kVjwQE8LTYI5uUY6m8e5RQq06OC4BVTOHmnrhWfAzhsTaXFelw=="],
 
@@ -936,8 +936,6 @@
     "yuku-parser": ["yuku-parser@0.5.48", "", { "dependencies": { "@yuku-toolchain/types": "0.5.43" }, "optionalDependencies": { "@yuku-parser/binding-darwin-arm64": "0.5.48", "@yuku-parser/binding-darwin-x64": "0.5.48", "@yuku-parser/binding-freebsd-x64": "0.5.48", "@yuku-parser/binding-linux-arm-gnu": "0.5.48", "@yuku-parser/binding-linux-arm-musl": "0.5.48", "@yuku-parser/binding-linux-arm64-gnu": "0.5.48", "@yuku-parser/binding-linux-arm64-musl": "0.5.48", "@yuku-parser/binding-linux-x64-gnu": "0.5.48", "@yuku-parser/binding-linux-x64-musl": "0.5.48", "@yuku-parser/binding-win32-arm64": "0.5.48", "@yuku-parser/binding-win32-x64": "0.5.48" } }, "sha512-OWBfhrpgK9+/4+IXG9oT8Bao4AhViQA7vdyNNH7EUg8dQYgwa70XtIBWTpCEme1P1ECyoDNYkn0wT63f8XRcVA=="],
 
     "zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
-
-    "@astryxdesign/cli/zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "@babel/core/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
