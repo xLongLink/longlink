@@ -121,18 +121,8 @@ class Postgres:
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # SDK migrations create the organization schema before users or solution schemas rely on it.
-        await shared_migrations.migrate_database(
-            URL.create(
-                "postgresql+asyncpg",
-                username=self._username,
-                password=self._password,
-                host=self._host,
-                port=self._port,
-                database=organization.hex,
-                query={"ssl": self._sslmode.value},
-            ),
-            certificate=self._certificate,
-        )
+        with self.url(organization.hex) as url:
+            await shared_migrations.migrate_database(url)
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:

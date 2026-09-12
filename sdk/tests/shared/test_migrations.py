@@ -92,11 +92,11 @@ async def postgres_engine(postgresql_url: URL) -> AsyncIterator[AsyncEngine]:
         await engine.dispose()
 
 
-def test_migration_config_rejects_non_asyncpg_postgresql_urls() -> None:
-    """Reject shared migration URLs that cannot use the asyncpg driver."""
+def test_migration_config_rejects_non_async_postgresql_urls() -> None:
+    """Reject shared migration URLs without a supported async PostgreSQL driver."""
 
     # Act and assert
-    with pytest.raises(ValueError, match="Shared migrations require a postgresql\\+asyncpg database URL"):
+    with pytest.raises(ValueError, match="Shared migrations require an async PostgreSQL database URL"):
         migration_config("postgresql://db/longlink")
 
 

@@ -10,6 +10,7 @@ from src.errors import ConflictError
 from src.models.types import Image
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import ComputeRegistryCreate
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import users, compute, storage, solutions, organizations
 from src.models.infrastructure import exoscale_zone
@@ -125,22 +126,27 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 col(Solution.slug) == "sample",
             )
         )
-        if solution is None:
+        if solution is None or solution.status == Status.failed:
             # Pin the development registry image just like a hosted release snapshot.
             source = Image("localhost:15000/sample:dev")
             metadata = await images.metadata(source)
             if metadata is None:
                 raise RuntimeError("Development image metadata not found")
-            await solutions.create(
-                session,
-                organization.id,
-                "Sample",
-                metadata,
-                settings.SAMPLE_ENVS,
-                "A sample solution for local development.",
-                user_id=administrator.id,
-                source=source,
-            )
+            if solution is None:
+                await solutions.create(
+                    session,
+                    organization.id,
+                    "Sample",
+                    metadata,
+                    settings.SAMPLE_ENVS,
+                    "A sample solution for local development.",
+                    user_id=administrator.id,
+                    source=source,
+                )
+            else:
+                # Retry failed sample provisioning through a fresh immutable revision.
+                solution = await solutions.access(session, solution.id, administrator.id)
+                await solutions.deploy(session, solution, administrator.id, metadata, settings.SAMPLE_ENVS, source=source)
         await session.commit()
 
 

@@ -11,10 +11,10 @@ Development tools
 
 Solution runtimes and migration Jobs require Linux AMD64 nodes. An ARM-only k3d cluster cannot schedule them, even when Docker can build AMD64 images through emulation.
 
-`make up` creates the private `longlink-dev` Docker network, starts the Platform metadata PostgreSQL service and OCI
-registry, creates the k3d cluster, and builds the local sample Solution image. Tenant databases run inside Kubernetes
-with CloudNativePG, not in Compose. The metadata database binds only to loopback; k3d reaches the registry through
-the private bridge gateway. These services are not exposed to the local network.
+`make up` creates the private `longlink-dev` Docker network, starts the OCI registry, creates the k3d cluster,
+and builds the local sample Solution image. The Platform API defaults to SQLite in `api/dev.db`.
+Organization and Solution data live in Kubernetes-managed CloudNativePG databases. k3d reaches the registry
+through the private bridge gateway; its host-facing port binds only to loopback.
 
 ```bash
 make up
@@ -96,6 +96,20 @@ make api
 ```bash
 make seed
 ```
+
+The host-run API uses authenticated Kubernetes port-forwarding for organization database
+connections in development mode. Tunnels bind to loopback on automatically assigned ports
+and close with each operation's Kubernetes client. PostgreSQL still verifies the CNPG CA
+and cluster DNS hostname; no host DNS changes, database port exposure, or VPN is needed.
+Solutions and migration Jobs inside Kubernetes connect directly to the database Service.
+The loopback connection override is isolated in `api/src/adapters/development.py`, loaded
+only when `DEVELOPMENT=true`; the production PostgreSQL adapter has no transport-address override.
+
+`make seed` queues provisioning; watch Operations until compute creation, organization
+creation, and sample deployment finish. Exoscale credentials above are required even for
+local development because object storage is provisioned remotely.
+After correcting a setup failure, restart `make api` to reconcile infrastructure and run
+`make seed` again to retry a failed sample with a new revision. Successful samples are preserved.
 
 ## Cleanup
 

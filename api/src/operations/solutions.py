@@ -188,6 +188,8 @@ async def _delete(solution_id: UUID) -> None:
     async with contextlib.aclosing(cluster):
         await cluster.solutions.delete(solution.id, f"longlink-compute-{organization.id.hex}")
         db = await databases.connection(infrastructure, cluster)
+        logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
+        await db.delete_solution_schema(organization.id, solution.id)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     object_storage = Exoscale(
@@ -195,8 +197,6 @@ async def _delete(solution_id: UUID) -> None:
         infrastructure.storage.access_key_id,
         infrastructure.storage.secret_access_key,
     )
-    logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
-    await db.delete_solution_schema(organization.id, solution.id)
     logger.info("Revoking object storage credentials for Solution %s", solution.id)
     await object_storage.revoke_solution(solution.id.hex)
     logger.info("Deleting object storage objects for Solution %s", solution.id)

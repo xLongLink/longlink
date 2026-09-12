@@ -1,5 +1,6 @@
 import kr8s
 from typing import cast
+from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
 from src.kubernetes.gateway import Gateway
 from src.kubernetes.databases import Databases
@@ -15,6 +16,7 @@ class Kubernetes:
 
         self._kubeconfig = kubeconfig
         self._api_client: Api | None = None
+        self.connections = AsyncExitStack()
 
         self.gateway = Gateway(self)
         self.databases = Databases(self)
@@ -30,9 +32,10 @@ class Kubernetes:
         return self._api_client
 
     async def aclose(self) -> None:
-        """Close the cached Kubernetes HTTP session when one was opened."""
+        """Close local tunnels before releasing their Kubernetes HTTP session."""
 
-        # kr8s retains its HTTPX session on the lazily created API client.
+        # Tunnels depend on the kr8s session and must finish before its transport closes.
+        await self.connections.aclose()
         if self._api_client is not None and self._api_client._session is not None:
             await self._api_client._session.aclose()
         self._api_client = None

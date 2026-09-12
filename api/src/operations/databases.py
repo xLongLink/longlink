@@ -6,17 +6,23 @@ from sqlmodel import col
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from collections.abc import Iterator, AsyncIterator
+from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from kr8s.asyncio.objects import new_class
 from src.database.session import session_scope
-from src.adapters.postgres import Postgres
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.organizations import Organization, OrganizationActivity
+
+# Load the loopback-only adapter solely for the host-run development process.
+if env.DEVELOPMENT:
+    from src.adapters.development import Postgres
+else:
+    from src.adapters.postgres import Postgres
 
 LEASE_SECONDS = 180
 RENEW_SECONDS = 30
@@ -39,9 +45,16 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
 
     # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
     organization = infrastructure.organization
+    port = 5432
+
+    # Host-run development workers reach private SQL through the authenticated Kubernetes API.
+    if env.DEVELOPMENT:
+        port = await cluster.databases.portforward(organization.id)
+
+    # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     return Postgres(
         host=f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
-        port=5432,
+        port=port,
         username="postgres",
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,

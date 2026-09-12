@@ -11,8 +11,8 @@ def migration_config(database_url: str | URL, certificate: str | None = None) ->
 
     # Normalize structured and string URLs before validating the database driver.
     url = make_url(database_url)
-    if url.drivername != "postgresql+asyncpg":
-        raise ValueError("Shared migrations require a postgresql+asyncpg database URL")
+    if url.drivername not in {"postgresql+asyncpg", "postgresql+psycopg"}:
+        raise ValueError("Shared migrations require an async PostgreSQL database URL")
 
     # Shared migrations ship with the SDK package that defines the shared contract.
     packaged_location = files("longlink.shared").joinpath("alembic")
