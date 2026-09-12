@@ -11,7 +11,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import EnvironmentValues
+from src.models.solutions import SolutionCreate, EnvironmentValues
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -47,14 +47,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def create(
     session: AsyncSession,
     organization_id: UUID,
-    name: str,
+    payload: SolutionCreate,
     metadata: LongLinkMetadata,
-    secrets: dict[str, str],
-    description: str | None = None,
     *,
     user_id: UUID,
-    source: Image | None = None,
-    min_scale: Literal[0, 1] = 0,
 ) -> Solution:
     """Create an Organization-owned LongLink Solution."""
 
@@ -76,7 +72,7 @@ async def create(
         populate_existing=True,
         with_for_update=True,
     )
-    if membership is None or membership.deleted_at is not None:
+    if membership is None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise ForbiddenError("Permission required")
@@ -97,13 +93,11 @@ async def create(
 
     # Build the Solution row before checking its Organization-scoped uniqueness.
     solution = Solution(
-        created_id=user_id,
         organization_id=organization_id,
-        name=name,
-        slug=names.slugify(name),
-        description=description,
+        name=payload.name,
+        slug=names.slugify(payload.name),
+        description=payload.description,
         secrets={},
-        updated_id=user_id,
     )
 
     # Let the Organization-scoped database constraint arbitrate slug uniqueness.
@@ -115,7 +109,15 @@ async def create(
         raise ConflictError("Solution slug already exists") from exc
 
     # Creation uses the same immutable release boundary as subsequent updates.
-    await deploy(session, solution, user_id, metadata, secrets, source=source, min_scale=min_scale)
+    await deploy(
+        session,
+        solution,
+        user_id,
+        metadata,
+        payload.envs,
+        source=payload.image,
+        min_scale=payload.min_scale,
+    )
 
     return solution
 
@@ -138,7 +140,6 @@ async def access(session: AsyncSession, solution_id: UUID, user_id: UUID, *, loc
             col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.deleted_at).is_(None),
         )
         .execution_options(populate_existing=True)
     )
@@ -210,7 +211,6 @@ async def deploy(
     session.add(revision)
     await session.flush()
     solution.desired_revision_id = revision.id
-    solution.updated_id = user_id
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
 
@@ -224,7 +224,6 @@ async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID,
     if revision.deployed_at is None:
         raise ConflictError("Revision has never been deployed successfully")
     solution.desired_revision_id = revision.id
-    solution.updated_id = user_id
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
 
@@ -237,9 +236,7 @@ async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> Non
     # Record the tombstone and schedule external cleanup in one transaction.
     now = utcnow()
     solution.deleted_at = now
-    solution.deleted_id = user_id
     solution.updated_at = now
-    solution.updated_id = user_id
 
     await operations.enqueue(
         session,

@@ -1,7 +1,6 @@
 import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
-from datetime import timedelta
 from sqlmodel import col
 from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import update
@@ -11,6 +10,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
@@ -230,45 +230,6 @@ async def test_sync_users_projects_active_organization_members(
     assert row.deleted_at is None
 
 
-async def test_sync_users_projects_deleted_memberships_as_tombstones(
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Publish deleted memberships as Organization database tombstones."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    synchronized: list[list[Audit]] = []
-
-    async def capture_sync(_conn: DatabasePostgres, rows: list[Audit]) -> None:
-        """Capture projected membership rows without opening a connection."""
-
-        synchronized.append(rows)
-
-    monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        membership = await session.get(UserOrganization, (users[0].id, organization.id))
-        assert persisted is not None
-        assert membership is not None
-        persisted.status = Status.running
-        deleted_at = membership.updated_at + timedelta(minutes=1)
-        membership.deleted_at = deleted_at
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        await organizations.project_users(session, organization.id, DatabasePostgres())
-
-    # Assert
-    (rows,) = synchronized
-    (projected,) = rows
-    assert projected.id == users[0].id
-    assert projected.role == OrganizationRoles.owner.value
-    assert projected.deleted_at == deleted_at
-    assert projected.updated_at == deleted_at
-
-
 async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:
     """Reject role changes for absent organization members."""
 
@@ -399,7 +360,7 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
     assert membership.role == OrganizationRoles.maintain
 
 
-async def test_mutation_services_revalidate_revoked_administrator_access(users: tuple[User, User, User]) -> None:
+async def test_mutation_services_revalidate_demoted_administrator_access(users: tuple[User, User, User]) -> None:
     """Reject stale administrator requests while retaining the owner's current mutation access."""
 
     # Arrange an owner and a current administrator with access to every affected mutation.
@@ -425,7 +386,7 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
     async with session_scope() as session:
         invitation_id = (await organizations.invitations(session, organization.id))[0].id
 
-    # Cache authorization in independent request sessions before concurrently revoking the administrator.
+    # Cache authorization in independent request sessions before concurrently demoting the administrator.
     async with (
         session_scope() as update_session,
         session_scope() as create_invitation_session,
@@ -439,13 +400,13 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
         async with session_scope() as concurrent_session:
             membership = await concurrent_session.get(UserOrganization, (administrator.id, organization.id))
             assert membership is not None
-            membership.deleted_at = membership.updated_at
+            membership.role = OrganizationRoles.read
             await concurrent_session.commit()
 
         # Act and assert every service refreshes the persisted membership under its Organization lock.
-        with pytest.raises(ForbiddenError, match="Access required"):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.update(update_session, organization.id, "https://example.com/blocked.png", administrator.id)
-        with pytest.raises(ForbiddenError, match="Access required"):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.create_invitation(
                 create_invitation_session,
                 organization.id,
@@ -453,9 +414,9 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
                 OrganizationRoles.read,
                 administrator.id,
             )
-        with pytest.raises(ForbiddenError, match="Access required"):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.revoke_invitation(revoke_invitation_session, organization.id, invitation_id, administrator.id)
-        with pytest.raises(ForbiddenError, match="Access required"):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.update_member_role(
                 role_session,
                 organization.id,
@@ -465,21 +426,22 @@ async def test_mutation_services_revalidate_revoked_administrator_access(users: 
             )
 
 
-async def test_soft_delete_revalidates_revoked_owner_access(users: tuple[User, User, User]) -> None:
-    """Reject an organization deletion after the initiating owner has been revoked."""
+async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, User, User]) -> None:
+    """Reject an organization deletion after the initiating owner has been demoted."""
 
-    # Arrange and revoke a non-administrator owner so the tenant authorization path remains active.
-    owner = users[1]
+    # Arrange another owner so the initiating owner can be demoted through the supported role workflow.
+    owner, second_owner = users[1], users[2]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        membership = await session.get(UserOrganization, (owner.id, organization.id))
-        assert membership is not None
-        membership.deleted_at = membership.updated_at
+        session.add(UserOrganization(user_id=second_owner.id, organization_id=organization.id, role=OrganizationRoles.owner))
+        await session.commit()
+    async with session_scope() as session:
+        await organizations.update_member_role(session, organization.id, owner.id, OrganizationRoles.read, second_owner.id)
         await session.commit()
 
-    # Act and assert the stale owner cannot tombstone the Organization.
+    # Act and assert the demoted owner cannot tombstone the Organization.
     async with session_scope() as session:
-        with pytest.raises(ForbiddenError, match="Access required"):
+        with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.soft_delete(session, organization.id, owner)
 
     async with session_scope() as session:
@@ -571,7 +533,7 @@ async def test_update_returns_none_for_missing_organization(users: tuple[User, U
 
 
 async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tuple[User, User, User]) -> None:
-    """Return the locked Organization without changing its audit actor for an identical avatar."""
+    """Return the locked Organization for an identical avatar."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -582,7 +544,7 @@ async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tu
 
     # Assert
     assert updated is not None
-    assert updated.updated_id == users[0].id
+    assert updated.avatar == organization.avatar
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:
@@ -596,9 +558,8 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
         solution = await solutions.create(
             session,
             organization.id,
-            "Dashboard",
+            SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
-            {},
             user_id=owner.id,
         )
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)

@@ -337,9 +337,6 @@ export const zSolutionUpdate = z.object({
  * Expose a candidate and configured names, never environment values.
  */
 export const zSolutionUpdateCheck = z.object({
-    source: z.string(),
-    image: z.string(),
-    available: z.boolean(),
     min_scale: z.union([z.literal(0), z.literal(1)]),
     revision_id: z.uuid(),
     current_image: z.string(),

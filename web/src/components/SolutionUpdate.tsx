@@ -37,6 +37,7 @@ export default function SolutionUpdate({
         gcTime: 0,
     });
     const candidate = inspection.isSuccess ? inspection.data : undefined;
+    const updateAvailable = candidate ? candidate.metadata.image !== candidate.current_image : false;
 
     /** Discard reviewed metadata after deployment or a stale-source conflict. */
     async function resetReview() {
@@ -51,7 +52,7 @@ export default function SolutionUpdate({
     return (
         <>
             <Button
-                label={candidate ? (candidate.available ? 'Update' : 'Configure') : 'Check for updates'}
+                label={candidate ? (updateAvailable ? 'Update' : 'Configure') : 'Check for updates'}
                 size="sm"
                 isLoading={inspection.isFetching}
                 isDisabled={

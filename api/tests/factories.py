@@ -5,6 +5,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, operations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -143,8 +144,11 @@ async def create_solution(
         solution = await solutions.create(
             session,
             organization.id,
-            name,
-            secrets={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
+            SolutionCreate(
+                name=name,
+                image=resolved_image,
+                envs={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
+            ),
             user_id=organization.created_id,
             metadata=LongLinkMetadata(image=resolved_image),
         )

@@ -83,9 +83,6 @@ class SolutionUpdate(SolutionPatch):
 class SolutionUpdateCheck(BaseModel):
     """Expose a candidate and configured names, never environment values."""
 
-    source: str
-    image: str
-    available: bool
     min_scale: Literal[0, 1]
     revision_id: UUID
     current_image: str = Field(description="Immutable image of the desired revision used for this update check.")

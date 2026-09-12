@@ -12,6 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import ComputeRegistryCreate
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import users, compute, solutions, organizations
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -131,12 +132,14 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 await solutions.create(
                     session,
                     organization.id,
-                    "Sample",
+                    SolutionCreate(
+                        name="Sample",
+                        image=source,
+                        envs=settings.SAMPLE_ENVS,
+                        description="A sample solution for local development.",
+                    ),
                     metadata,
-                    settings.SAMPLE_ENVS,
-                    "A sample solution for local development.",
                     user_id=administrator.id,
-                    source=source,
                 )
             else:
                 # Retry failed sample provisioning through a fresh immutable revision.

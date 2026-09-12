@@ -116,7 +116,7 @@ jobs:
             - name: Smoke test SDK wheel
               if: matrix.python-version == '3.14.6'
               working-directory: sdk
-              run: uv run --isolated --no-project --with ./dist/*.whl python -c "from importlib.resources import files; assert files('longlink').joinpath('.static/web').is_dir()"
+              run: uv run --isolated --no-project --with ./dist/*.whl python -c "from importlib.resources import files; assert files('longlink').joinpath('.static/web/index.html').is_file()"
 
     # Build the production image independently so publishing cannot discover Docker-only failures.
     api-image:

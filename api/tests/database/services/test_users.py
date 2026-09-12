@@ -203,7 +203,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
 async def test_user_service_registers_user_and_returns_active_organization_memberships(
     users: tuple[User, User, User],
 ) -> None:
-    """Persist registrations and exclude deleted memberships and organizations."""
+    """Persist registrations and exclude deleted organizations from memberships."""
 
     # Arrange
     password_hash = PasswordHash.recommended()

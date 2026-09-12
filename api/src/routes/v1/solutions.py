@@ -72,13 +72,9 @@ async def create_solution(
     await solutions.create(
         session,
         organization_id,
-        payload.name,
+        payload,
         metadata=metadata,
-        description=payload.description,
-        secrets=payload.envs,
         user_id=user.id,
-        source=payload.image,
-        min_scale=payload.min_scale,
     )
     await session.commit()
 
@@ -121,14 +117,11 @@ async def check_update(solution_id: UUID, user: User = Depends(authuser), sessio
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
     return {
-        "source": source,
-        "image": metadata.image,
         "current_image": revision.image,
         "metadata": metadata,
         "revision_id": revision_id,
         "configured_envs": revision.configured_envs,
         "min_scale": revision.min_scale,
-        "available": metadata.image != revision.image,
     }
 
 

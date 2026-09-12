@@ -6,6 +6,7 @@ from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
 from src.database.models.users import User
@@ -29,8 +30,7 @@ async def test_create_rejects_tombstoned_organization(users: tuple[User, User, U
             await solutions.create(
                 session,
                 organization.id,
-                "Dashboard",
-                secrets={},
+                SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=owner.id,
             )
@@ -51,8 +51,7 @@ async def test_create_rejects_missing_organization(users: tuple[User, User, User
             await solutions.create(
                 session,
                 uuid4(),
-                "Dashboard",
-                secrets={},
+                SolutionCreate(name="Dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=users[0].id,
             )
@@ -86,28 +85,24 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
             await solutions.create(
                 session,
                 organization.id,
-                "Blocked dashboard",
-                secrets={},
+                SolutionCreate(name="Blocked dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
                 user_id=maintainer.id,
             )
         solution = await solutions.create(
             session,
             organization.id,
-            "Owner dashboard",
-            secrets={},
+            SolutionCreate(name="Owner dashboard", image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             metadata=LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             user_id=owner.id,
         )
         await session.commit()
 
     assert solution.organization_id == organization.id
-    assert solution.created_id == owner.id
-    assert solution.updated_id == owner.id
 
 
-async def test_delete_records_the_maintainer_audit_fields(users: tuple[User, User, User]) -> None:
-    """Record the maintainer who tombstones a Solution."""
+async def test_delete_records_the_solution_tombstone(users: tuple[User, User, User]) -> None:
+    """Record when a maintainer tombstones a Solution."""
 
     # Arrange
     owner = users[0]
@@ -124,8 +119,6 @@ async def test_delete_records_the_maintainer_audit_fields(users: tuple[User, Use
     assert deleted_solution is not None
     assert deleted_solution.deleted_at is not None
     assert deleted_solution.updated_at == deleted_solution.deleted_at
-    assert deleted_solution.deleted_id == owner.id
-    assert deleted_solution.updated_id == owner.id
 
 
 @pytest.mark.parametrize(

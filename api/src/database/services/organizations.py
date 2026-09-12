@@ -47,7 +47,6 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
         .where(
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.organization_id) == organization_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )
@@ -65,7 +64,6 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
         .where(
             col(UserOrganization.user_id) == user_id,
             col(Organization.slug) == organization_slug,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )
@@ -104,7 +102,6 @@ async def solution_runtime_access(
             col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.deleted_at).is_(None),
         )
     )
     return result.tuples().one_or_none()
@@ -236,7 +233,6 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
         .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
         .where(
             col(UserOrganization.organization_id) == organization_id,
-            col(UserOrganization.deleted_at).is_(None),
         )
     )
 
@@ -254,7 +250,7 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
 async def project_users(session: AsyncSession, organization_id: UUID, db: postgres.Postgres) -> None:
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
-    # Include deleted memberships so the Organization database receives tombstones.
+    # Load every authoritative membership for the Organization database snapshot.
     memberships_statement = (
         select(UserOrganization)
         .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar, User.updated_at, User.deleted_at))
@@ -265,10 +261,8 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     rows: list[Audit] = []
     for membership in memberships_result:
-        # Use the latest tombstone from either the user or the membership row.
-        deleted_at = max((value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None)
-
-        # Tombstone recency must be reflected in the projected update time.
+        # Account tombstones and membership changes determine projection recency.
+        deleted_at = membership.user.deleted_at
         updated_at = max(value for value in (membership.user.updated_at, membership.updated_at, deleted_at) if value is not None)
 
         rows.append(
@@ -305,7 +299,7 @@ async def _locked_membership(
         populate_existing=True,
         with_for_update=True,
     )
-    if membership is None or membership.deleted_at is not None:
+    if membership is None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, minimum_role):
         raise ForbiddenError("Permission required")
@@ -334,7 +328,6 @@ async def update_member_role(
         .where(
             col(UserOrganization.organization_id) == organization_id,
             col(UserOrganization.user_id) == member_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(User.deleted_at).is_(None),
         )
         .with_for_update()
@@ -362,7 +355,6 @@ async def update_member_role(
             .where(
                 col(UserOrganization.organization_id) == organization_id,
                 col(UserOrganization.role) == OrganizationRoles.owner,
-                col(UserOrganization.deleted_at).is_(None),
                 col(UserOrganization.user_id) != member_id,
             )
             .limit(1)
@@ -469,7 +461,6 @@ async def create(
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
-    organization.updated_id = user.id
 
     # Translate unique conflicts from autoflush without invalidating the caller's transaction.
     try:
@@ -510,10 +501,8 @@ async def update(
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
-        organization.updated_id = user_id
     if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
         organization.database_idle_seconds = database_idle_seconds
-        organization.updated_id = user_id
 
     return organization
 
@@ -571,7 +560,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     # Revalidate active owners while the Organization is locked; only the original actor may retry a tombstone.
     if organization.deleted_at is None and not user.administrator:
         membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
-        if membership is None or membership.deleted_at is not None:
+        if membership is None:
             raise ForbiddenError("Access required")
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise ForbiddenError("Permission required")
@@ -584,7 +573,6 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now
-        organization.updated_id = user.id
 
         # Tombstone every active Solution without loading each object.
         await session.execute(

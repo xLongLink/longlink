@@ -835,18 +835,6 @@ export type SolutionUpdate = {
  */
 export type SolutionUpdateCheck = {
     /**
-     * Source
-     */
-    source: string;
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Available
-     */
-    available: boolean;
-    /**
      * Min Scale
      */
     min_scale: 0 | 1;

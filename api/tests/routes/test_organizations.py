@@ -214,7 +214,6 @@ async def test_update_organization_updates_metadata_for_administrator(
         updated = await session.get(Organization, organization.id)
     assert updated is not None
     assert updated.avatar == "https://example.com/acme.png"
-    assert updated.updated_id == owner.id
 
 
 async def test_update_organization_persists_valid_database_idle_seconds_and_rejects_short_intervals(
@@ -246,7 +245,6 @@ async def test_update_organization_persists_valid_database_idle_seconds_and_reje
         updated = await session.get(Organization, organization.id)
     assert updated is not None
     assert updated.database_idle_seconds == 300
-    assert updated.updated_id == owner.id
 
 
 async def test_update_organization_returns_not_found_when_active_organization_disappears(
@@ -282,7 +280,6 @@ async def test_update_organization_rejects_write_member(
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     original_updated_at = organization.updated_at
-    original_updated_id = organization.updated_id
     async with session_scope() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
@@ -298,7 +295,6 @@ async def test_update_organization_rejects_write_member(
     assert unchanged is not None
     assert unchanged.avatar == organization.avatar
     assert unchanged.updated_at == original_updated_at
-    assert unchanged.updated_id == original_updated_id
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(

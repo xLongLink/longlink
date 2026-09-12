@@ -99,7 +99,6 @@ async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrga
         .options(contains_eager(UserOrganization.organization))
         .where(
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )
@@ -116,7 +115,6 @@ async def organization_ids(session: AsyncSession, user_id: UUID) -> Sequence[UUI
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
         .where(
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )

@@ -19,28 +19,35 @@
 ```text
 LongLink
 ├── Control plane
-│   ├── Web + API → authentication, memberships, Views, request proxy
-│   ├── Operation worker → provisioning and deployments
-│   ├── Database coordinator → activity, wake/sleep, identity sync
-│   └── Platform database → desired state and operation history
-├── Container registry → Solution images
-├── Compute registration → Kubernetes cluster
-│   ├── Shared infrastructure
-│   │   ├── Kourier → HTTPS routing
-│   │   ├── Knative → application lifecycle and scaling
-│   │   ├── CloudNativePG → PostgreSQL lifecycle
-│   │   └── Rook/Ceph → S3 object storage and identities
-│   └── Organization (many per cluster)
-│       ├── Compute namespace
-│       │   └── Solution (many per Organization)
-│       │       ├── Knative Service → FastAPI + SDK Pods
-│       │       └── Migration Jobs
-│       └── Database namespace
-│           └── PostgreSQL cluster + persistent volumes
-│               ├── Shared identity schema
-│               └── Schema + credentials per Solution
-└── Organization storage namespace → bucket claim and owner credentials
-    └── Organization bucket → prefix and scoped Ceph identity per Solution
+│   ├── API replicas
+│   │   ├── Authentication, authorization, memberships, and request proxy
+│   │   ├── Operation scheduler → provisioning and deployments
+│   │   └── Database scheduler → activity, wake/sleep, and identity sync
+│   ├── Web → renders Views served by Solutions
+│   └── Platform database → desired state, activity, operation leases, and history
+├── External container registry → immutable Solution images
+└── Compute registration → operator-provided Kubernetes cluster
+    ├── Shared infrastructure
+    │   ├── Kourier → private Platform-to-Solution HTTPS routing
+    │   ├── Knative → application lifecycle and scaling
+    │   ├── CloudNativePG → PostgreSQL lifecycle
+    │   └── Rook/Ceph → S3 object storage and scoped Solution identities
+    └── Organization (many per cluster)
+        ├── Compute namespace
+        │   └── Solution (many per Organization)
+        │       ├── Cluster-local Knative Service and runtime Pods
+        │       ├── Revision Secrets
+        │       └── Migration Jobs
+        ├── Database namespace
+        │   └── CloudNativePG cluster + persistent volumes
+        │       └── Organization PostgreSQL database
+        │           ├── Shared identity schema
+        │           └── Schema + role per Solution
+        └── Storage namespace
+            └── Bucket claim and owner credentials
+                └── Organization bucket
+                    ├── Shared S3 key prefix
+                    └── S3 key prefix per Solution
 ```
 
 

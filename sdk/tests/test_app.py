@@ -44,21 +44,16 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
 
 
 @pytest.mark.usefixtures("solution_source")
-def test_longlink_solution_serves_runtime_routes_without_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Keep SDK runtime routes available when package frontend assets are absent."""
+def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Require the packaged frontend entry point during startup."""
 
-    # Arrange
+    # Point the runtime at a package root without the required frontend artifact.
     monkeypatch.setattr(longlink_app, "ROOT", tmp_path)
-    client = create_runtime_client()
 
-    # Act
-    views_response = client.get("/views.json")
-    frontend_response = client.get("/", headers={"accept": "text/html"})
-
-    # Assert
-    assert views_response.status_code == 200
-    assert views_response.json() == []
-    assert frontend_response.status_code == 404
+    # Reject startup with the missing artifact's exact location.
+    frontend_index = tmp_path / ".static" / "web" / "index.html"
+    with pytest.raises(RuntimeError, match=f"LongLink embedded frontend is required: {frontend_index}"):
+        LongLink(FastAPI())
 
 
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
