@@ -34,7 +34,7 @@ describe('SolutionRuntime XML integration', () => {
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         apiRequest.mockImplementation((url: string, options?: RequestInit) => {
             if (url.endsWith('/views.json')) {
-                return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home', tab: 'home' }] };
+                return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home' }] };
             }
 
             expect(options?.headers).toEqual({ Accept: 'application/xml' });

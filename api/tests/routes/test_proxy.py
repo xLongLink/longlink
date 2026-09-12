@@ -211,6 +211,88 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("content_type") == "text/plain"
 
 
+async def test_solution_proxy_sanitizes_json_upstream_error(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Preserve public error details and retry metadata without exposing private diagnostics."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    class FakeProxyResponse:
+        """Return a public error alongside private upstream diagnostics."""
+
+        status_code = 429
+        headers = {
+            "content-type": "application/json",
+            "retry-after": "17",
+            "set-cookie": "upstream_session=private-json-cookie",
+            "x-debug": "private-json-diagnostics",
+        }
+
+        async def aiter_bytes(self) -> AsyncIterator[bytes]:
+            """Yield public detail and a distinctive private diagnostic field."""
+
+            yield b'{"detail":"Please retry shortly.","diagnostics":"private-json-diagnostics"}'
+
+    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    monkeypatch.setattr(proxy_routes.gateway.Transport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 429
+    assert response.json() == {"detail": "Please retry shortly."}
+    assert response.headers["content-type"] == "application/json"
+    assert response.headers["retry-after"] == "17"
+    assert "set-cookie" not in response.headers
+    assert "x-debug" not in response.headers
+
+
+async def test_solution_proxy_sanitizes_html_upstream_error(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Replace private HTML errors with the public fallback while preserving upstream status."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    class FakeProxyResponse:
+        """Return a private upstream HTML error page."""
+
+        status_code = 503
+        headers = {
+            "content-type": "text/html",
+            "retry-after": "23",
+            "set-cookie": "upstream_session=private-html-cookie",
+            "x-debug": "private-html-diagnostics",
+        }
+
+        async def aiter_bytes(self) -> AsyncIterator[bytes]:
+            """Yield an HTML page containing distinctive private diagnostics."""
+
+            yield b"<html><body>private-html-diagnostics</body></html>"
+
+    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    monkeypatch.setattr(proxy_routes.gateway.Transport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}
+    assert response.headers["content-type"] == "application/json"
+    assert response.headers["retry-after"] == "23"
+    assert "set-cookie" not in response.headers
+    assert "x-debug" not in response.headers
+
+
 @pytest.mark.parametrize("origin", [None, "https://attacker.example"])
 async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
@@ -446,7 +528,7 @@ async def test_solution_proxy_rejects_oversized_request_body(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject request bodies larger than the configured proxy limit."""
+    """Reject individually permitted chunks whose total exceeds the configured proxy limit."""
 
     # Arrange a running Solution and consume its guarded request stream at the gateway boundary.
     solution, _infrastructure = await create_running_solution(users[0])
@@ -460,8 +542,14 @@ async def test_solution_proxy_rejects_oversized_request_body(
     monkeypatch.setattr(proxy_routes.gateway.Transport, "handle_async_request", request)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
+    async def content() -> AsyncIterator[bytes]:
+        """Stream individually permitted chunks totaling one byte over the limit."""
+
+        yield b"x" * 512
+        yield b"x" * 513
+
     # Act
-    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=b"x" * 1025)
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=content())
 
     # Assert
     assert response.status_code == 413
@@ -473,7 +561,7 @@ async def test_solution_proxy_forwards_request_body_at_configured_limit(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Forward request bodies equal to the configured proxy byte limit."""
+    """Forward individually permitted chunks totaling exactly the configured proxy byte limit."""
 
     # Arrange
     solution, _infrastructure = await create_running_solution(users[0])
@@ -488,8 +576,14 @@ async def test_solution_proxy_forwards_request_body_at_configured_limit(
     monkeypatch.setattr(proxy_routes.gateway.Transport, "handle_async_request", send)
     monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
+    async def content() -> AsyncIterator[bytes]:
+        """Stream two individually permitted chunks totaling the exact limit."""
+
+        yield b"x" * 512
+        yield b"x" * 512
+
     # Act
-    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=b"x" * 1024)
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=content())
 
     # Assert
     assert response.status_code == 200

@@ -78,7 +78,7 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, **payload.model_dump())
+            await compute.create(session, payload)
             await session.commit()
 
     async with session_scope() as session:

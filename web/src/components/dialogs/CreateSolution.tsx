@@ -31,9 +31,37 @@ const defaultCreateSolutionValues: CreateSolutionInput = {
 
 /** Renders the create-solution dialog for an organization. */
 export default function CreateSolution({ organizationId }: { organizationId: string }) {
+    const [open, setOpen] = useState(false);
+    const [attempt, setAttempt] = useState(0);
+
+    return (
+        <>
+            <Button
+                label="Create Solution"
+                isDisabled={organizationId.length === 0}
+                clickAction={() => {
+                    // Start fresh on opening; retain the previous dialog through its close effects.
+                    setAttempt((current) => current + 1);
+                    setOpen(true);
+                }}
+            />
+            <CreateSolutionAttempt key={attempt} organizationId={organizationId} open={open} onOpenChange={setOpen} />
+        </>
+    );
+}
+
+/** Owns one wizard attempt, remaining mounted on close so Astryx restores trigger focus. */
+function CreateSolutionAttempt({
+    organizationId,
+    open,
+    onOpenChange,
+}: {
+    organizationId: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}) {
     const createSolution = useCreateOrganizationSolution(organizationId);
     const formId = useId();
-    const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const submitting = useRef(false);
     const schema = createSolutionFormSchema.superRefine((value, ctx) => {
@@ -107,13 +135,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
         }
     }
 
-    /** Reset the dialog state when the flow closes or completes. */
-    function resetDialogState() {
-        setStep('image');
-        form.reset(defaultCreateSolutionValues);
-        inspectImage.reset();
-    }
-
     /** Create the solution after the image metadata has been reviewed. */
     async function handleCreateSolution(payload: CreateSolutionInput) {
         // Collect configured environment values, dropping empty fields.
@@ -133,8 +154,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                 description: payload.description.length > 0 ? payload.description : null,
                 envs,
             });
-            setOpen(false);
-            resetDialogState();
+            onOpenChange(false);
         } catch {
             // The mutation cache reports failures; preserve the wizard for retry.
         }
@@ -142,46 +162,64 @@ export default function CreateSolution({ organizationId }: { organizationId: str
 
     const handleOpenChange = createGuardedOpenChange(pending, (nextOpen) => {
         if (submitting.current) return;
-        setOpen(nextOpen);
-
-        // Reset the wizard once the dialog is fully closed.
-        if (!nextOpen) {
-            resetDialogState();
-        }
+        onOpenChange(nextOpen);
     });
 
     return (
-        <>
-            <Button
-                label="Create Solution"
-                isDisabled={organizationId.length === 0}
-                clickAction={() => setOpen(true)}
-            />
-
-            <Dialog
-                isOpen={open}
-                onOpenChange={handleOpenChange}
-                purpose={pending ? 'required' : 'form'}
-                title={stepTitle}
-                width={step === 'envs' ? 520 : 640}
-                maxHeight="calc(100dvh - 2rem)"
+        <Dialog
+            isOpen={open}
+            onOpenChange={handleOpenChange}
+            purpose={pending ? 'required' : 'form'}
+            title={stepTitle}
+            width={step === 'envs' ? 520 : 640}
+            maxHeight="calc(100dvh - 2rem)"
+        >
+            <form
+                id={formId}
+                noValidate
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleSubmit();
+                }}
             >
-                <form
-                    id={formId}
-                    noValidate
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void handleSubmit();
-                    }}
-                >
-                    <FormLayout>
-                        {step === 'image' ? (
+                <FormLayout>
+                    {step === 'image' ? (
+                        <Controller
+                            control={form.control}
+                            name="image"
+                            render={({ field, fieldState }) => (
+                                <TextInput
+                                    label="Image"
+                                    value={field.value}
+                                    ref={field.ref}
+                                    isDisabled={pending}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
+                                    htmlName={field.name}
+                                    isRequired
+                                    placeholder="ghcr.io/longlink/dashboard:latest"
+                                    onBlur={field.onBlur}
+                                    onChange={(value) =>
+                                        field.onChange(
+                                            value.startsWith('docker pull ')
+                                                ? value.slice('docker pull '.length)
+                                                : value
+                                        )
+                                    }
+                                />
+                            )}
+                        />
+                    ) : step === 'metadata' ? (
+                        <>
                             <Controller
                                 control={form.control}
-                                name="image"
+                                name="name"
                                 render={({ field, fieldState }) => (
                                     <TextInput
-                                        label="Image"
+                                        label="Name"
                                         value={field.value}
                                         ref={field.ref}
                                         isDisabled={pending}
@@ -192,96 +230,90 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                                         }
                                         htmlName={field.name}
                                         isRequired
-                                        placeholder="ghcr.io/longlink/dashboard:latest"
                                         onBlur={field.onBlur}
-                                        onChange={(value) =>
-                                            field.onChange(
-                                                value.startsWith('docker pull ')
-                                                    ? value.slice('docker pull '.length)
-                                                    : value
-                                            )
-                                        }
+                                        onChange={field.onChange}
                                     />
                                 )}
                             />
-                        ) : step === 'metadata' ? (
-                            <>
-                                <Controller
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field, fieldState }) => (
-                                        <TextInput
-                                            label="Name"
-                                            value={field.value}
-                                            ref={field.ref}
-                                            isDisabled={pending}
-                                            status={
-                                                fieldState.error
-                                                    ? { type: 'error', message: fieldState.error.message }
-                                                    : undefined
-                                            }
-                                            htmlName={field.name}
-                                            isRequired
-                                            onBlur={field.onBlur}
-                                            onChange={field.onChange}
-                                        />
-                                    )}
-                                />
-                                <Controller
-                                    control={form.control}
-                                    name="description"
-                                    render={({ field, fieldState }) => (
-                                        <TextInput
-                                            label="Description"
-                                            value={field.value}
-                                            ref={field.ref}
-                                            isDisabled={pending}
-                                            status={
-                                                fieldState.error
-                                                    ? { type: 'error', message: fieldState.error.message }
-                                                    : undefined
-                                            }
-                                            htmlName={field.name}
-                                            isOptional
-                                            placeholder="Dashboard solution"
-                                            onBlur={field.onBlur}
-                                            onChange={field.onChange}
-                                        />
-                                    )}
-                                />
-                            </>
-                        ) : (
-                            declaredEnvironments.map((env) => (
-                                <Controller
-                                    control={form.control}
-                                    key={env.name}
-                                    name={`envs.${env.name}`}
-                                    render={({ field, fieldState }) => (
-                                        <TextInput
-                                            label={env.name}
-                                            value={field.value}
-                                            ref={field.ref}
-                                            isDisabled={pending}
-                                            status={
-                                                fieldState.error
-                                                    ? { type: 'error', message: fieldState.error.message }
-                                                    : undefined
-                                            }
-                                            htmlName={field.name}
-                                            isOptional={!env.required}
-                                            isRequired={env.required}
-                                            placeholder={env.description ?? `Enter ${env.name}`}
-                                            onBlur={field.onBlur}
-                                            onChange={field.onChange}
-                                        />
-                                    )}
-                                />
-                            ))
-                        )}
-                    </FormLayout>
-                </form>
-                {step === 'image' ? (
-                    <Stack direction="horizontal" gap={2} justify="end">
+                            <Controller
+                                control={form.control}
+                                name="description"
+                                render={({ field, fieldState }) => (
+                                    <TextInput
+                                        label="Description"
+                                        value={field.value}
+                                        ref={field.ref}
+                                        isDisabled={pending}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                        htmlName={field.name}
+                                        isOptional
+                                        placeholder="Dashboard solution"
+                                        onBlur={field.onBlur}
+                                        onChange={field.onChange}
+                                    />
+                                )}
+                            />
+                        </>
+                    ) : (
+                        declaredEnvironments.map((env) => (
+                            <Controller
+                                control={form.control}
+                                key={env.name}
+                                name={`envs.${env.name}`}
+                                render={({ field, fieldState }) => (
+                                    <TextInput
+                                        label={env.name}
+                                        value={field.value}
+                                        ref={field.ref}
+                                        isDisabled={pending}
+                                        status={
+                                            fieldState.error
+                                                ? { type: 'error', message: fieldState.error.message }
+                                                : undefined
+                                        }
+                                        htmlName={field.name}
+                                        isOptional={!env.required}
+                                        isRequired={env.required}
+                                        placeholder={env.description ?? `Enter ${env.name}`}
+                                        onBlur={field.onBlur}
+                                        onChange={field.onChange}
+                                    />
+                                )}
+                            />
+                        ))
+                    )}
+                </FormLayout>
+            </form>
+            {step === 'image' ? (
+                <Stack direction="horizontal" gap={2} justify="end">
+                    <Button
+                        label="Cancel"
+                        variant="ghost"
+                        isDisabled={pending}
+                        clickAction={() => handleOpenChange(false)}
+                    />
+                    <Button
+                        form={formId}
+                        type="submit"
+                        label={inspectImage.isPending ? 'Inspecting...' : 'Inspect image'}
+                        variant="primary"
+                        isDisabled={pending || !hasImage}
+                        isLoading={inspectImage.isPending}
+                    />
+                </Stack>
+            ) : (
+                <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                    <Button
+                        label="Back"
+                        variant="ghost"
+                        isDisabled={pending}
+                        clickAction={() => setStep(step === 'metadata' ? 'image' : 'metadata')}
+                    />
+                    <Stack direction="horizontal" gap={2}>
                         <Button
                             label="Cancel"
                             variant="ghost"
@@ -291,41 +323,14 @@ export default function CreateSolution({ organizationId }: { organizationId: str
                         <Button
                             form={formId}
                             type="submit"
-                            label={inspectImage.isPending ? 'Inspecting...' : 'Inspect image'}
+                            label={step === 'metadata' ? 'Next' : createSolution.isPending ? 'Creating...' : 'Create'}
                             variant="primary"
-                            isDisabled={pending || !hasImage}
-                            isLoading={inspectImage.isPending}
+                            isDisabled={pending || !hasName || (step === 'envs' && missingEnvs)}
+                            isLoading={step === 'metadata' ? undefined : createSolution.isPending}
                         />
                     </Stack>
-                ) : (
-                    <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
-                        <Button
-                            label="Back"
-                            variant="ghost"
-                            isDisabled={pending}
-                            clickAction={() => setStep(step === 'metadata' ? 'image' : 'metadata')}
-                        />
-                        <Stack direction="horizontal" gap={2}>
-                            <Button
-                                label="Cancel"
-                                variant="ghost"
-                                isDisabled={pending}
-                                clickAction={() => handleOpenChange(false)}
-                            />
-                            <Button
-                                form={formId}
-                                type="submit"
-                                label={
-                                    step === 'metadata' ? 'Next' : createSolution.isPending ? 'Creating...' : 'Create'
-                                }
-                                variant="primary"
-                                isDisabled={pending || !hasName || (step === 'envs' && missingEnvs)}
-                                isLoading={step === 'metadata' ? undefined : createSolution.isPending}
-                            />
-                        </Stack>
-                    </Stack>
-                )}
-            </Dialog>
-        </>
+                </Stack>
+            )}
+        </Dialog>
     );
 }

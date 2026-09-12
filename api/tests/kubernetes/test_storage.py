@@ -47,12 +47,16 @@ def test_storage_topology_matches_pinned_rook_schemas(instances: int) -> None:
     assert storage_class["reclaimPolicy"] == "Delete"
 
 
-async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim() -> None:
-    """Exercise real Kubernetes HTTP calls: Bound with stale quotas cannot release the lifecycle gate."""
+@pytest.mark.parametrize("mismatch", ["bytes", "object-count", "stale-claim-uid"])
+async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mismatch: str) -> None:
+    """Keep the lifecycle gate closed until the bound bucket matches the claim UID and both quotas."""
 
-    # The transport boundary starts with a Bound claim whose associated bucket still has old quotas.
+    # Arrange: start with a Bound claim and exactly one mismatched bucket admission predicate.
     organization = uuid4()
     uid = str(uuid4())
+    initial_uid = str(uuid4()) if mismatch == "stale-claim-uid" else uid
+    initial_size = "16384" if mismatch == "bytes" else "8192"
+    initial_objects = "4" if mismatch == "object-count" else "2"
     observed = asyncio.Event()
     acknowledge = asyncio.Event()
     compute = ComputeRegistry(bucket_size_bytes=8192, bucket_max_objects=2)
@@ -83,11 +87,11 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim() ->
                     "kind": "ObjectBucket",
                     "metadata": {"name": "bound-bucket"},
                     "spec": {
-                        "claimRef": {"uid": uid},
+                        "claimRef": {"uid": uid if acknowledge.is_set() else initial_uid},
                         "endpoint": {
                             "additionalConfig": {
-                                "bucketMaxSize": "8192" if acknowledge.is_set() else "16384",
-                                "bucketMaxObjects": "2",
+                                "bucketMaxSize": "8192" if acknowledge.is_set() else initial_size,
+                                "bucketMaxObjects": "2" if acknowledge.is_set() else initial_objects,
                             }
                         },
                     },
@@ -95,7 +99,7 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim() ->
             )
         raise web.HTTPNotFound()
 
-    # Run the production reconciler against a real local HTTP server without replacing resource methods or timers.
+    # Act: run the production reconciler against a real local HTTP server with its normal polling interval.
     app = web.Application()
     app.router.add_route("*", "/{path:.*}", handle)
     async with TestServer(app) as server:
@@ -111,13 +115,21 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim() ->
         try:
             try:
                 await asyncio.wait_for(observed.wait(), timeout=5)
+                observed.clear()
+
+                # Assert: another poll proves the first mismatched response did not release the gate.
+                await asyncio.wait_for(observed.wait(), timeout=5)
             except TimeoutError:
                 if task.done():
                     await task
                 raise
             assert not task.done()
+
+            # Act: acknowledge the current claim UID and both requested quotas together.
             acknowledge.set()
-            await asyncio.wait_for(task, timeout=5)
+
+            # Assert: the corrected bucket response releases the lifecycle gate.
+            assert await asyncio.wait_for(task, timeout=5) is None
         finally:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)

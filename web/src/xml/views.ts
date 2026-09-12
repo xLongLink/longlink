@@ -18,7 +18,6 @@ function isRoute(route: string): boolean {
 }
 
 const viewSchema = z.object({
-    tab: z.string().trim().min(1),
     path: z
         .string()
         .trim()
@@ -38,7 +37,6 @@ const viewSchema = z.object({
 
 export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
     const routes = new Set<string>();
-    const staticTabs = new Set<string>();
 
     for (const [index, view] of views.entries()) {
         // Require each route to resolve one unambiguous View.
@@ -46,14 +44,5 @@ export const viewsSchema = z.array(viewSchema).superRefine((views, context) => {
             context.addIssue({ code: 'custom', message: 'Routes must be unique', path: [index, 'route'] });
         }
         routes.add(view.route);
-
-        // Dynamic detail routes may share the navigation tab of their static list view.
-        const isDynamicRoute = view.route.includes('/:');
-        if (!isDynamicRoute) {
-            if (staticTabs.has(view.tab)) {
-                context.addIssue({ code: 'custom', message: 'Static view tabs must be unique', path: [index, 'tab'] });
-            }
-            staticTabs.add(view.tab);
-        }
     }
 });

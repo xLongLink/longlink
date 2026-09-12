@@ -248,8 +248,8 @@ function Location({ tabs }: { tabs: string }) {
 }
 
 /** Creates a minimal manifest view. */
-function view(tab: string, route: string, path = `${tab}.xml`) {
-    return { name: tab, path, route, tab };
+function view(name: string, route: string, path = `${name}.xml`) {
+    return { name, path, route };
 }
 
 /** Stubs fetch at the runtime's HTTP boundary. */

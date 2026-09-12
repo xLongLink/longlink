@@ -22,6 +22,12 @@ type SolutionRuntimeProps = {
 
 const EMPTY_VIEWS = [] as const;
 
+/** Formats the SDK's route-derived fallback label when a View has no explicit name. */
+function routeLabel(route: string): string {
+    // Remove the leading slash and truncate at the first nested dynamic segment.
+    return startCase(route.slice(1).split('/:', 1)[0] || 'index');
+}
+
 /** Owns one XML runtime for the lifetime selected by its React key. */
 function SolutionXmlRuntime({
     ast,
@@ -86,7 +92,7 @@ export function SolutionRuntime({
 
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = !routePath ? firstTabView : match?.route.view;
-    const activeViewTitle = activeView ? (activeView.name ?? startCase(activeView.tab)) : undefined;
+    const activeViewTitle = activeView ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
@@ -107,7 +113,7 @@ export function SolutionRuntime({
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
                 icon: view.icon ? iconComponents[view.icon] : undefined,
-                label: view.name ?? startCase(view.tab),
+                label: view.name ?? routeLabel(view.route),
             }) satisfies NavigationTab
     );
 

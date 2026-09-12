@@ -5,6 +5,7 @@ from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
+from src.models.computes import ComputeRegistryCreate
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,46 +50,12 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(
-    session: AsyncSession,
-    name: str,
-    kubeconfig: dict[str, object],
-    *,
-    gateway_url: str,
-    database_storage_class: str,
-    storage_class: str,
-    storage_endpoint: str,
-    bucket_size_bytes: int,
-    bucket_max_objects: int,
-    storage_reserve_percent: int,
-    storage_object_overhead_bytes: int,
-    storage_size_gib: int = 100,
-    storage_instances: int = 3,
-    storage_certificate: str | None = None,
-    gateway_certificate: str | None = None,
-    database_size_gib: int = 10,
-    database_instances: int = 1,
-) -> ComputeRegistry:
+async def create(session: AsyncSession, payload: ComputeRegistryCreate) -> ComputeRegistry:
     """Register one compute target."""
 
     # Persist the target and its initial reconciliation request atomically.
     registry = ComputeRegistry(
-        name=name,
-        kubeconfig=kubeconfig,
-        gateway_url=gateway_url,
-        gateway_certificate=gateway_certificate,
-        database_storage_class=database_storage_class,
-        database_size_gib=database_size_gib,
-        database_instances=database_instances,
-        storage_class=storage_class,
-        storage_endpoint=storage_endpoint,
-        storage_size_gib=storage_size_gib,
-        storage_instances=storage_instances,
-        storage_certificate=storage_certificate,
-        bucket_size_bytes=bucket_size_bytes,
-        bucket_max_objects=bucket_max_objects,
-        storage_reserve_percent=storage_reserve_percent,
-        storage_object_overhead_bytes=storage_object_overhead_bytes,
+        **payload.model_dump(),
     )
     session.add(registry)
 

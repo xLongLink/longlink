@@ -2,6 +2,7 @@ import pytest
 from datetime import UTC, datetime, timedelta
 from sqlmodel import select
 from factories import create_organization
+from sqlalchemy import Select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
@@ -83,31 +84,49 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
     # Arrange
     organization = await create_organization(users[0])
+    refreshed_at = datetime(2026, 8, 24, tzinfo=UTC)
     concurrent_invitation = OrganizationInvitation(
         organization_id=organization.id,
         email="invited@example.com",
         role=OrganizationRoles.read,
+        created_at=refreshed_at - timedelta(days=1),
     )
-    responses = iter((None, None, concurrent_invitation))
-
-    async def return_concurrent_invitation(_statement: object) -> OrganizationInvitation | None:
-        """Model the invitation appearing after the unique-index conflict."""
-
-        return next(responses)
-
-    async def raise_unique_conflict() -> None:
-        """Model the competing transaction winning the insert race."""
-
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
+    async with session_scope() as session:
+        session.add(concurrent_invitation)
+        await session.commit()
+    monkeypatch.setattr(invitations, "utcnow", lambda: refreshed_at)
 
     # Act
     async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_concurrent_invitation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
+        scalar = session.scalar
+
+        async def suppress_first_invitation[T](statement: Select[tuple[T]]) -> T | None:
+            """Hide only the first invitation result to simulate a stale read."""
+
+            # Run real queries and restore normal reads once the winning row is hidden.
+            result = await scalar(statement)
+            if isinstance(result, OrganizationInvitation):
+                monkeypatch.setattr(session, "scalar", scalar)
+                return None
+            return result
+
+        monkeypatch.setattr(session, "scalar", suppress_first_invitation)
         await invitations.create(session, organization.id, concurrent_invitation.email, OrganizationRoles.admin)
 
+        # The outer transaction remains usable after the failed insert's savepoint rolls back.
+        assert await session.scalar(select(1)) == 1
+        await session.commit()
+
+    # Read the committed grant independently of the recovering session's identity map.
+    async with session_scope() as session:
+        result = await session.scalars(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
+        replacement = result.one()
+
     # Assert
-    assert concurrent_invitation.role == OrganizationRoles.admin
+    assert replacement.id == concurrent_invitation.id
+    assert replacement.email == concurrent_invitation.email
+    assert replacement.role == OrganizationRoles.admin
+    assert replacement.created_at == refreshed_at
 
 
 async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
