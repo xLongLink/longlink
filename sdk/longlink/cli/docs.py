@@ -19,8 +19,9 @@ def _schemas() -> tuple[etree._Element, ...]:
     parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
     root = ROOT / ".static" / "xsd"
     schema = etree.parse(str(root / "schema.xsd"), parser).getroot()
-    paths = [root / include.attrib["schemaLocation"] for include in schema.findall(f"{XSD}include")]
-    return tuple(etree.parse(str(path), parser).getroot() for path in paths)
+    return tuple(
+        etree.parse(str(root / include.attrib["schemaLocation"]), parser).getroot() for include in schema.iterfind(f"{XSD}include")
+    )
 
 
 def _text(node: etree._Element, path: str) -> str:
@@ -40,7 +41,7 @@ def _complex_type(element: etree._Element, schemas: tuple[etree._Element, ...]) 
     if inline is not None:
         return inline
     name = element.get("type", "").rsplit(":", 1)[-1]
-    return next((node for schema in schemas for node in schema.findall(f"{XSD}complexType") if node.get("name") == name), None)
+    return next((node for schema in schemas for node in schema.iterfind(f"{XSD}complexType") if node.get("name") == name), None)
 
 
 def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...]) -> list[str]:
@@ -51,16 +52,24 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     description = _text(element, f"{XSD}annotation/{XSD}documentation")
     attributes = type_node.findall(f"{XSD}attribute") if type_node is not None else []
     if type_node is not None and type_node.find(f"{XSD}attributeGroup") is not None:
-        groups = (group for schema in schemas for group in schema.findall(f"{XSD}attributeGroup"))
+        groups = (group for schema in schemas for group in schema.iterfind(f"{XSD}attributeGroup"))
         runtime = next((group for group in groups if group.get("name") == "XmlRuntimeAttributes"), None)
         if runtime is not None:
-            attributes.extend(runtime.findall(f"{XSD}attribute"))
+            attributes.extend(runtime.iterfind(f"{XSD}attribute"))
     lines = [element.get("name", "")]
     if description:
         lines.append(description)
     lines.append("Attributes")
     if not attributes:
         lines.append("- none")
+
+    # Index named simple types in schema order, preserving the first declaration.
+    simple_types: dict[str, etree._Element] = {}
+    for schema in schemas:
+        for node in schema.iterfind(f"{XSD}simpleType"):
+            name = node.get("name")
+            if name is not None:
+                simple_types.setdefault(name, node)
 
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:
@@ -69,11 +78,10 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
 
         # Resolve named types only when no inline type is declared.
         if simple_type is None:
-            simple_types = (node for schema in schemas for node in schema.findall(f"{XSD}simpleType"))
-            simple_type = next((node for node in simple_types if node.get("name") == type_name), None)
+            simple_type = simple_types.get(type_name)
 
         values = (
-            [] if simple_type is None else [value.get("value", "") for value in simple_type.findall(f"{XSD}restriction/{XSD}enumeration")]
+            [] if simple_type is None else [value.get("value", "") for value in simple_type.iterfind(f"{XSD}restriction/{XSD}enumeration")]
         )
         details = ["required" if attribute.get("use") == "required" else "optional"]
         details.extend(f"{name}={attribute.get(name)}" for name in ("default", "fixed") if attribute.get(name) is not None)
@@ -121,20 +129,22 @@ def docs_command(component: str | None) -> None:
 
     # Build the catalog from top-level elements carrying docs metadata.
     schemas = _schemas()
-    elements = {node.get("name", ""): node for schema in schemas for node in schema.findall(f"{XSD}element") if node.get("name")}
+    elements = {node.get("name", ""): node for schema in schemas for node in schema.iterfind(f"{XSD}element") if node.get("name")}
     metadata_path = f"{XSD}annotation/{XSD}appinfo/{DOCS}docs"
     documented = [(element, metadata) for element in elements.values() if (metadata := element.find(metadata_path)) is not None]
     # A missing component prints the grouped discovery catalog.
     if component is None:
         lines = ["LongLink XML components"]
         documented.sort(key=lambda entry: entry[0].get("name", ""))
-        for category in sorted({metadata.get("category", "") for _, metadata in documented}):
+        categories: dict[str, list[etree._Element]] = {}
+        for element, metadata in documented:
+            categories.setdefault(metadata.get("category", ""), []).append(element)
+        for category in sorted(categories):
             lines.append("")
             lines.append(category)
-            for element, metadata in documented:
-                if metadata.get("category") == category:
-                    description = _text(element, f"{XSD}annotation/{XSD}documentation")
-                    lines.append(f"- {element.get('name')} - {description}")
+            for element in categories[category]:
+                description = _text(element, f"{XSD}annotation/{XSD}documentation")
+                lines.append(f"- {element.get('name')} - {description}")
         lines.append("")
         lines.append("Run `longlink docs <component>` for attributes and examples.")
         click.echo("\n".join(lines))

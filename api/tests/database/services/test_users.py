@@ -27,12 +27,11 @@ async def test_ensure_administrator_creates_absent_configured_user() -> None:
     # Assert
     async with session_scope() as session:
         result = await session.scalars(select(User).where(col(User.administrator).is_(True)))
-        administrators = result.all()
-    assert len(administrators) == 1
-    assert administrators[0].name == env.ADMIN_NAME
-    assert administrators[0].email == env.ADMIN_EMAIL
-    assert password_hash.verify(env.ADMIN_PASSWORD, administrators[0].password)
-    assert administrators[0].deleted_at is None
+        administrator = result.one()
+    assert administrator.name == env.ADMIN_NAME
+    assert administrator.email == env.ADMIN_EMAIL
+    assert password_hash.verify(env.ADMIN_PASSWORD, administrator.password)
+    assert administrator.deleted_at is None
 
 
 async def test_ensure_administrator_restores_soft_deleted_configured_user(password_hash: str) -> None:
@@ -214,4 +213,5 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     assert persisted_user.email == "registered@example.com"
     assert password_hash.verify("test-password", persisted_user.password)
     assert [membership.organization_id for membership in memberships] == [active_organization.id]
-    assert list(organization_ids) == [active_organization.id]
+    (organization_id,) = organization_ids
+    assert organization_id == active_organization.id

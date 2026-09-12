@@ -261,9 +261,8 @@ async def test_sync_users_projects_deleted_memberships_as_tombstones(
         await organizations.project_users(session, organization.id, DatabasePostgres())
 
     # Assert
-    assert len(synchronized) == 1
-    assert len(synchronized[0]) == 1
-    projected = synchronized[0][0]
+    (rows,) = synchronized
+    (projected,) = rows
     assert projected.id == users[0].id
     assert projected.role == OrganizationRoles.owner.value
     assert projected.deleted_at == deleted_at
