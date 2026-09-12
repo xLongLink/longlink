@@ -4,12 +4,7 @@ import { useXmlRuntime } from '../core/context';
 import type { ASTNode, Props, Scope } from '../types';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
 import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
-import {
-    Menu as SolutionMenu,
-    MenuItem as SolutionMenuItem,
-    MenuSection as SolutionMenuSection,
-    MenuSubSection as SolutionMenuSubSection,
-} from '@/components/ui/Menu';
+import { Menu as SolutionMenu, type MenuItem, type MenuSection, type MenuEntry } from '@/components/ui/Menu';
 
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
 const menuPropsSchema = z.object({ gap: xmlSpacingSchema.default(3) });
@@ -29,58 +24,62 @@ export function Menu({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { gap } = resolveXmlProps(props, ctx, menuPropsSchema);
 
-    return (
-        <SolutionMenu gap={gap}>
-            {nodes
-                .filter((node) => isVisibleXmlNode(node, ctx))
-                .map((section) => {
-                    if (section.name !== 'MenuSection') {
-                        throw new Error('Menu only supports MenuSection children');
-                    }
+    // Prepare every visible panel before selection so content errors remain observable.
+    const sections = nodes
+        .filter((node) => isVisibleXmlNode(node, ctx))
+        .map((section) => {
+            if (section.name !== 'MenuSection') {
+                throw new Error('Menu only supports MenuSection children');
+            }
 
-                    return renderSection(section, ctx);
-                })}
-        </SolutionMenu>
-    );
+            return renderSection(section, ctx);
+        });
+
+    return <SolutionMenu gap={gap} sections={sections} />;
 }
 
-/** Converts an XML menu section into the solution menu marker. */
-function renderSection(node: ASTNode, ctx: Scope) {
+/** Converts a validated XML section into navigation data. */
+function renderSection(node: ASTNode, ctx: Scope): MenuSection {
     const { isHeaderHidden, title } = resolveXmlProps(node.params, ctx, menuSectionPropsSchema, ['title']);
 
-    return (
-        <SolutionMenuSection isHeaderHidden={isHeaderHidden} key={title} title={title}>
-            {node.children.filter((child) => isVisibleXmlNode(child, ctx)).map((child) => renderEntry(child, ctx))}
-        </SolutionMenuSection>
-    );
+    return {
+        isHeaderHidden,
+        title,
+        entries: node.children.filter((child) => isVisibleXmlNode(child, ctx)).map((child) => renderEntry(child, ctx)),
+    };
 }
 
-/** Converts an XML menu item or subsection into the solution menu marker. */
-function renderEntry(node: ASTNode, ctx: Scope) {
+/** Converts an XML item into navigation data and prepares its panel content. */
+function renderItem(node: ASTNode, ctx: Scope): MenuItem {
     const { icon, label } = resolveXmlProps(node.params, ctx, menuEntryPropsSchema, ['label']);
 
+    return { content: renderNode(node.children, ctx), icon, kind: 'item', label };
+}
+
+/** Converts an XML item or subsection into navigation data. */
+function renderEntry(node: ASTNode, ctx: Scope): MenuEntry {
+    // Resolve item content eagerly, including panels that are not selected.
     if (node.name === 'MenuItem') {
-        return (
-            <SolutionMenuItem icon={icon} key={label} label={label}>
-                {renderNode(node.children, ctx)}
-            </SolutionMenuItem>
-        );
+        return renderItem(node, ctx);
     }
 
-    if (node.name === 'MenuSubSection') {
-        return (
-            <SolutionMenuSubSection icon={icon} key={label} label={label}>
-                {node.children
-                    .filter((child) => isVisibleXmlNode(child, ctx))
-                    .map((child) => {
-                        if (child.name !== 'MenuItem') {
-                            throw new Error('MenuSubSection only supports MenuItem children');
-                        }
+    const { icon, label } = resolveXmlProps(node.params, ctx, menuEntryPropsSchema, ['label']);
 
-                        return renderEntry(child, ctx);
-                    })}
-            </SolutionMenuSubSection>
-        );
+    if (node.name === 'MenuSubSection') {
+        return {
+            icon,
+            kind: 'subsection',
+            label,
+            items: node.children
+                .filter((child) => isVisibleXmlNode(child, ctx))
+                .map((child) => {
+                    if (child.name !== 'MenuItem') {
+                        throw new Error('MenuSubSection only supports MenuItem children');
+                    }
+
+                    return renderItem(child, ctx);
+                }),
+        };
     }
 
     throw new Error(`MenuSection does not support ${node.name} children`);

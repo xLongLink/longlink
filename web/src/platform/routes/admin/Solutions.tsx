@@ -12,15 +12,14 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { OrganizationCell } from '@/components/Cells';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import MetadataDialog from '@/components/dialogs/Metadata';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import type { SolutionResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin solutions page. */
@@ -85,39 +84,54 @@ export default function AdminSolutions() {
                 hasHover
                 idKey="id"
                 plugins={{ pagination }}
-            >
-                <TableColumn<SolutionResponse> field="name" header="Solution" width={proportional(2)}>
-                    {(solution) => (
-                        <Stack>
-                            <Stack direction="horizontal" gap={1} align="center">
-                                <Link
-                                    href={`/orgs/${solution.organization.slug}/solutions/${solution.slug}`}
-                                    weight="semibold"
-                                >
-                                    {solution.name}
-                                </Link>
-                                <StatusBadge status={solution.status} />
-                            </Stack>
-                            {solution.description ? <Text type="supporting">{solution.description}</Text> : null}
-                        </Stack>
-                    )}
-                </TableColumn>
-                <TableColumn<SolutionResponse> field="organization" header="Organization" width={proportional(1)}>
-                    {(solution) => <OrganizationCell organization={solution.organization} />}
-                </TableColumn>
-                <TableColumn<SolutionResponse> align="end" field="metadata" header="" width={pixel(56)}>
-                    {(solution) => (
-                        <IconButton
-                            icon={<Ellipsis />}
-                            label={`View metadata for ${solution.name}`}
-                            tooltip="View metadata"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setMetadataSolution(solution)}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'name',
+                            header: 'Solution',
+                            width: proportional(2),
+                            renderCell: (solution) => (
+                                <Stack>
+                                    <Stack direction="horizontal" gap={1} align="center">
+                                        <Link
+                                            href={`/orgs/${solution.organization.slug}/solutions/${solution.slug}`}
+                                            weight="semibold"
+                                        >
+                                            {solution.name}
+                                        </Link>
+                                        <StatusBadge status={solution.status} />
+                                    </Stack>
+                                    {solution.description ? (
+                                        <Text type="supporting">{solution.description}</Text>
+                                    ) : null}
+                                </Stack>
+                            ),
+                        },
+                        {
+                            key: 'organization',
+                            header: 'Organization',
+                            width: proportional(1),
+                            renderCell: (solution) => <OrganizationCell organization={solution.organization} />,
+                        },
+                        {
+                            align: 'end',
+                            key: 'metadata',
+                            header: '',
+                            width: pixel(56),
+                            renderCell: (solution) => (
+                                <IconButton
+                                    icon={<Ellipsis />}
+                                    label={`View metadata for ${solution.name}`}
+                                    tooltip="View metadata"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMetadataSolution(solution)}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<SolutionResponse>[]
+                }
+            />
             {metadataSolution && (
                 <MetadataDialog
                     onClose={() => setMetadataSolution(null)}

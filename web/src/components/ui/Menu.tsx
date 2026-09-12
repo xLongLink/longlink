@@ -1,27 +1,26 @@
 import { useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
+import type { ComponentProps, ReactNode } from 'react';
 import { Icon, type StoneIconName } from '@/components/ui/Icon';
 import { Layout, LayoutPanel } from '@astryxdesign/core/Layout';
-import { Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import {
     SideNav as AstryxSideNav,
     SideNavItem as AstryxSideNavItem,
     SideNavSection as AstryxSideNavSection,
 } from '@astryxdesign/core/SideNav';
 
-type MenuSectionProps = {
-    children?: ReactNode;
+export type MenuSection = {
+    entries: MenuEntry[];
     isHeaderHidden?: boolean;
     title: string;
 };
-type MenuMarkerProps = {
-    children?: ReactNode;
+export type MenuItem = {
+    content?: ReactNode;
     icon?: StoneIconName;
+    kind: 'item';
     label: string;
 };
-type MenuEntry =
-    | { item: ReactElement<MenuMarkerProps>; kind: 'item' }
-    | { items: ReactElement<MenuMarkerProps>[]; kind: 'subsection'; subSection: ReactElement<MenuMarkerProps> };
+export type MenuEntry = MenuItem | { icon?: StoneIconName; items: MenuItem[]; kind: 'subsection'; label: string };
 
 /** Converts a menu label into its hash navigation target. */
 function menuItemHref(label: string): string {
@@ -37,50 +36,25 @@ function renderMenuIcon(icon: StoneIconName | undefined) {
     return icon ? <Icon icon={icon} size="sm" /> : undefined;
 }
 
-/** Returns whether a node defines selectable menu content. */
-function isMenuItem(node: ReactNode): node is ReactElement<MenuMarkerProps> {
-    return isValidElement(node) && node.type === MenuItem;
-}
-
 /** Renders section navigation beside the selected item's content. */
-export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: ComponentProps<typeof Stack>['gap'] }) {
+export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: ComponentProps<typeof Stack>['gap'] }) {
     const { hash } = useLocation();
-    const sections = Children.toArray(children)
-        .filter((child): child is ReactElement<MenuSectionProps> => isValidElement(child) && child.type === MenuSection)
-        .map((section) => ({
-            entries: Children.toArray(section.props.children).flatMap<MenuEntry>((child) => {
-                if (isMenuItem(child)) {
-                    return [{ item: child, kind: 'item' as const }];
-                }
 
-                if (isValidElement<MenuMarkerProps>(child) && child.type === MenuSubSection) {
-                    return [
-                        {
-                            items: Children.toArray(child.props.children).filter(isMenuItem),
-                            kind: 'subsection' as const,
-                            subSection: child,
-                        },
-                    ];
-                }
-
-                return [];
-            }),
-            section,
-        }));
+    // Preserve label-based hashes and select the first match, including slug collisions.
     const items = sections.flatMap(({ entries }) =>
-        entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry.item]))
+        entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry]))
     );
-    const activeItem = items.find((item) => menuItemHref(item.props.label) === hash) ?? items[0];
+    const activeItem = items.find((item) => menuItemHref(item.label) === hash) ?? items[0];
 
-    // Render direct and nested items with the same navigation and selection behavior.
-    function renderItem(item: ReactElement<MenuMarkerProps>) {
+    /** Renders direct and nested items with the same navigation and selection behavior. */
+    function renderItem(item: MenuItem) {
         return (
             <AstryxSideNavItem
-                href={menuItemHref(item.props.label)}
-                icon={renderMenuIcon(item.props.icon)}
+                href={menuItemHref(item.label)}
+                icon={renderMenuIcon(item.icon)}
                 isSelected={item === activeItem}
-                key={item.props.label}
-                label={item.props.label}
+                key={item.label}
+                label={item.label}
             />
         );
     }
@@ -91,12 +65,12 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
             start={
                 <LayoutPanel isScrollable={false} label="Settings navigation" padding={0} role="navigation" width={260}>
                     <AstryxSideNav className="w-full pr-4 [&>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pt-0 [&_.astryx-side-nav-section>div:first-child]:pl-0">
-                        {sections.map(({ entries, section }) => {
+                        {sections.map(({ entries, ...section }) => {
                             return (
-                                <AstryxSideNavSection {...section.props} className="pt-0" key={section.props.title}>
+                                <AstryxSideNavSection {...section} className="pt-0" key={section.title}>
                                     {entries.map((entry) => {
                                         if (entry.kind === 'subsection') {
-                                            const { icon, label } = entry.subSection.props;
+                                            const { icon, label } = entry;
 
                                             return (
                                                 <AstryxSideNavItem
@@ -110,7 +84,7 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                                             );
                                         }
 
-                                        return renderItem(entry.item);
+                                        return renderItem(entry);
                                     })}
                                 </AstryxSideNavSection>
                             );
@@ -119,22 +93,7 @@ export function Menu({ children, gap = 3 }: { children?: ReactNode; gap?: Compon
                 </LayoutPanel>
             }
         >
-            <Stack gap={gap}>{activeItem?.props.children}</Stack>
+            <Stack gap={gap}>{activeItem?.content}</Stack>
         </Layout>
     );
-}
-
-/** Defines a navigation section for Menu. */
-export function MenuSection(_props: MenuSectionProps) {
-    return null;
-}
-
-/** Defines a navigation item and its associated content for Menu. */
-export function MenuItem(_props: MenuMarkerProps) {
-    return null;
-}
-
-/** Defines a collapsible group of related MenuItems. */
-export function MenuSubSection(_props: MenuMarkerProps) {
-    return null;
 }

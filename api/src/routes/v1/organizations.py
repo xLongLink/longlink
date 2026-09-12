@@ -193,7 +193,7 @@ async def get_organization_database_usage(
 
     # Inspect the exact Organization database while distinguishing absence from backend failures.
     try:
-        async with asyncio.timeout(20), databases.activity(organization.id, wake=False) as admitted:
+        async with asyncio.timeout(20), databases.activity(organization.id, mode="observe") as admitted:
             if not admitted:
                 return usage
             cluster = Kubernetes(infrastructure.compute.kubeconfig)

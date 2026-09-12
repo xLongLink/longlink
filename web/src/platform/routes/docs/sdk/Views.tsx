@@ -1,15 +1,17 @@
+import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { Seo } from '@/components/Seo';
 import { Icon } from '@/components/ui/Icon';
+import { Menu } from '@/components/ui/Menu';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
-import { Tab, Tabs } from '@/components/ui/Tabs';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Table } from '@astryxdesign/core/Table';
 import { Link as RouterLink } from 'react-router';
 import { componentDocumentation } from '@/lib/xsd';
 import { Button } from '@astryxdesign/core/Button';
@@ -25,10 +27,9 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Table, TableColumn } from '@/components/ui/Table';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Menu, MenuItem, MenuSection } from '@/components/ui/Menu';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
@@ -87,6 +88,8 @@ const article = {
 };
 
 export default function DocsArticleRoute() {
+    const [selectedTab, setSelectedTab] = useState('overview');
+
     return (
         <Article page={article}>
             <Seo
@@ -290,12 +293,17 @@ export default function DocsArticleRoute() {
                             </Grid>
                         </SummaryCard>
                         <SummaryCard name="Menu" padding={3}>
-                            <Menu>
-                                <MenuSection title="Settings">
-                                    <MenuItem label="General" />
-                                    <MenuItem label="Workflow" />
-                                </MenuSection>
-                            </Menu>
+                            <Menu
+                                sections={[
+                                    {
+                                        title: 'Settings',
+                                        entries: [
+                                            { kind: 'item', label: 'General' },
+                                            { kind: 'item', label: 'Workflow' },
+                                        ],
+                                    },
+                                ]}
+                            />
                         </SummaryCard>
                         <SummaryCard name="Stack">
                             <Stack align="center" gap={2} width="100%">
@@ -305,10 +313,13 @@ export default function DocsArticleRoute() {
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Tabs">
-                            <Tabs>
-                                <Tab label="Overview" value="overview" />
-                                <Tab label="Activity" value="activity" />
-                            </Tabs>
+                            <Stack gap={3}>
+                                <TabList onChange={setSelectedTab} value={selectedTab}>
+                                    <Tab label="Overview" value="overview" />
+                                    <Tab label="Activity" value="activity" />
+                                </TabList>
+                                <Stack gap={3} />
+                            </Stack>
                         </SummaryCard>
                         <SummaryCard name="Dialog">
                             <Dialog aria-label="Dialog preview" isInline isOpen width={160} onOpenChange={noop}>
@@ -339,10 +350,14 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Table">
                             <Stack width={170}>
-                                <Table data={[{ item: 'Order', status: 'Open' }]} density="compact">
-                                    <TableColumn field="item" header="Item" />
-                                    <TableColumn field="status" header="Status" />
-                                </Table>
+                                <Table
+                                    data={[{ item: 'Order', status: 'Open' }]}
+                                    density="compact"
+                                    columns={[
+                                        { key: 'item', header: 'Item' },
+                                        { key: 'status', header: 'Status' },
+                                    ]}
+                                />
                             </Stack>
                         </SummaryCard>
                     </Grid>

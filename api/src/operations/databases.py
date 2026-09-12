@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 from uuid import UUID
+from typing import Literal
 from datetime import datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
@@ -166,7 +167,7 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
 
 
 @contextlib.asynccontextmanager
-async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool = False) -> AsyncIterator[Lease | None]:
+async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", "recover"] = "demand") -> AsyncIterator[Lease | None]:
     """Keep SQL awake for requests, migrations, deployment, and schema cleanup."""
 
     # Persist demand before waking; a concurrent hibernation must finish before admission.
@@ -176,14 +177,18 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
             raise RuntimeError("Organization is unavailable")
         transition = await session.get(OrganizationActivity, organization_id)
         lease = None
-        admit = wake or (
-            organization.status == Status.running
-            and organization.database_state == DatabaseState.available
-            and (transition is None or transition.expires_at <= utcnow())
-        )
 
-        # Recovery is not runtime demand: check fresh state and claim under the same admission lock.
-        if recovery:
+        # Select admission from fresh state under the same lock used to claim activity.
+        if mode == "demand":
+            admit = True
+        elif mode == "observe":
+            admit = (
+                organization.status == Status.running
+                and organization.database_state == DatabaseState.available
+                and (transition is None or transition.expires_at <= utcnow())
+            )
+        else:
+            # Recovery admits only interrupted transitions or pending synchronization, not runtime demand.
             admit = (
                 organization.status == Status.running
                 and (transition is None or transition.expires_at <= utcnow())
@@ -195,6 +200,8 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
                     and organization.database_sync_pending
                 )
             )
+
+        # Persist admitted activity before releasing the admission lock.
         if admit:
             lease = await _claim(session, organization_id)
             organization.database_last_active_at = utcnow()
@@ -203,7 +210,7 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
         yield None
         return
     async with lease.maintain():
-        if wake:
+        if mode != "observe":
             await ready(organization_id)
         yield lease
 
@@ -454,6 +461,6 @@ async def reconcile(organization_id: UUID) -> None:
         organization = await session.get(Organization, organization_id)
     if organization is None or organization.deleted_at is not None or organization.status != Status.running:
         return
-    async with activity(organization_id, recovery=True):
+    async with activity(organization_id, mode="recover"):
         pass
     await hibernate(organization_id)
