@@ -189,8 +189,8 @@ class Gateway:
                     from src.development import gateway
 
                     port = await self._client.portforward("kourier", "kourier-system", 8444)
-                    connection = gateway.Gateway(gateway_url, gateway_certificate, port)
-                    client = connection.client()
+                    transport = gateway.Transport(port, gateway_certificate)
+                    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
                 else:
                     client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)
                 async with client:

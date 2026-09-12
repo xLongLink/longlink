@@ -8,7 +8,6 @@ from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
-from sqlalchemy.engine import URL
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -173,12 +172,12 @@ async def test_sync_users_skips_creating_and_deleted_organizations(
 
     # Arrange
     organization = await create_organization(users[0])
-    synchronized: list[tuple[str, object]] = []
+    synchronized: list[tuple[DatabasePostgres, object]] = []
 
-    async def capture_sync(database_url: str, rows: object) -> None:
+    async def capture_sync(conn: DatabasePostgres, rows: object) -> None:
         """Record unexpected shared-database synchronization attempts."""
 
-        synchronized.append((database_url, rows))
+        synchronized.append((conn, rows))
 
     monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
 
@@ -201,12 +200,12 @@ async def test_sync_users_projects_active_organization_members(
 
     # Arrange
     organization = await create_organization(users[0])
-    synchronized: list[tuple[URL, list[Audit]]] = []
+    synchronized: list[tuple[DatabasePostgres, list[Audit]]] = []
 
-    async def capture_sync(database_url: URL, rows: list[Audit]) -> None:
+    async def capture_sync(conn: DatabasePostgres, rows: list[Audit]) -> None:
         """Capture the shared-database projection without opening a connection."""
 
-        synchronized.append((database_url, rows))
+        synchronized.append((conn, rows))
 
     monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
     async with session_scope() as session:
@@ -220,8 +219,9 @@ async def test_sync_users_projects_active_organization_members(
         await organizations.project_users(session, organization.id, DatabasePostgres())
 
     # Assert
-    database_url, rows = synchronized[0]
-    assert database_url.database == organization.id.hex
+    conn, rows = synchronized[0]
+    assert conn.database == organization.id.hex
+    assert conn.search_path == "shared"
     (row,) = rows
     assert row.id == users[0].id
     assert row.name == users[0].name
@@ -240,7 +240,7 @@ async def test_sync_users_projects_deleted_memberships_as_tombstones(
     organization = await create_organization(users[0])
     synchronized: list[list[Audit]] = []
 
-    async def capture_sync(_database_url: str, rows: list[Audit]) -> None:
+    async def capture_sync(_conn: DatabasePostgres, rows: list[Audit]) -> None:
         """Capture projected membership rows without opening a connection."""
 
         synchronized.append(rows)

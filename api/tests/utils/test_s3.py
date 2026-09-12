@@ -246,14 +246,16 @@ async def test_development_transports_preserve_tls_and_s3_signing(ceph: tuple[Do
             await client.list_buckets()
 
     # Knative's routing authority differs from the certificate identity and must not alter SNI.
-    routed = gateway.Gateway("https://localhost", certificate, port)
-    async with routed.client() as client:
+    transport = gateway.Transport(port, certificate)
+    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    async with client:
         response = await client.get("https://localhost/", headers={"Host": "internalkourier"})
         # RGW interprets this foreign authority as a missing bucket, proving Host survived the tunnel.
         assert response.status_code == 404
         assert "<Code>NoSuchBucket</Code>" in response.text
-    routed = gateway.Gateway("https://wrong-host.example", certificate, port)
-    async with routed.client() as client:
+    transport = gateway.Transport(port, certificate)
+    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    async with client:
         with pytest.raises(httpx2.ConnectError):
             await client.get("https://wrong-host.example/", headers={"Host": "internalkourier"})
 

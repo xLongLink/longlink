@@ -53,10 +53,10 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     )
     urls = ExitStack()
     request.addfinalizer(urls.close)
-    shared_schema_url = urls.enter_context(adapter.url(organization_id.hex, search_path="shared"))
     await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
-    await shared_audit.sync(shared_schema_url, [active_user])
+    async with adapter._connection(organization_id.hex, search_path="shared") as conn:
+        await shared_audit.sync(conn, [active_user])
     runtime_password = "stable-runtime-password"
 
     # Act
@@ -95,7 +95,8 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
 
     inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
     inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
-    await shared_audit.sync(shared_schema_url, [inactive_user])
+    async with adapter._connection(organization_id.hex, search_path="shared") as conn:
+        await shared_audit.sync(conn, [inactive_user])
     maintenance_engine = create_async_engine(urls.enter_context(adapter.url(organization_id.hex)))
     try:
         async with maintenance_engine.begin() as connection:

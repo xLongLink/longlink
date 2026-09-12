@@ -284,9 +284,13 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
             )
         )
 
-    # The Platform is authoritative over Organization user projections.
-    with db.url(organization_id.hex, search_path="shared") as url:
-        await shared_audit.sync(url, rows)
+    # Empty snapshots must not open an Organization database connection.
+    if not rows:
+        return
+
+    # The Platform owns the transaction for its authoritative Organization user projection.
+    async with db._connection(organization_id.hex, search_path="shared") as conn:
+        await shared_audit.sync(conn, rows)
 
 
 async def _locked_membership(
