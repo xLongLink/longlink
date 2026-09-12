@@ -70,49 +70,31 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.records).toEqual({ version: 2 });
     });
 
-    it('rejects unsafe query paths before fetching', async () => {
+    it.each([
+        {
+            scenario: 'unsafe',
+            path: 'https://evil.example/issues',
+            error: 'XML request URL must be solution-relative',
+        },
+        {
+            scenario: 'non-string',
+            path: '${{id: "123"}}',
+            error: 'Query path must resolve to a string',
+        },
+    ])('rejects $scenario query paths before fetching', async ({ path, error }) => {
+        // Arrange
         const ctx = createContext();
         const fetchImpl = vi.fn();
+        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
 
         ctx.services.requestBaseUrl = '/proxy';
         vi.stubGlobal('fetch', fetchImpl);
 
-        await expect(
-            setupContext(
-                getSetupNodes([
-                    {
-                        name: 'Query',
-                        params: compileProps({ id: 'issue', path: 'https://evil.example/issues' }),
-                        children: [],
-                    },
-                ]),
-                ctx
-            )
-        ).rejects.toThrow('XML request URL must be solution-relative');
+        // Act
+        const setup = setupContext(getSetupNodes(ast), ctx);
 
-        expect(fetchImpl).not.toHaveBeenCalled();
-    });
-
-    it('rejects non-string query paths before fetching', async () => {
-        // Arrange
-        const ctx = createContext();
-        const fetchImpl = vi.fn();
-        vi.stubGlobal('fetch', fetchImpl);
-
-        // Act and assert
-        await expect(
-            setupContext(
-                getSetupNodes([
-                    {
-                        name: 'Query',
-                        params: compileProps({ id: 'issue', path: '${{id: "123"}}' }),
-                        children: [],
-                    },
-                ]),
-                ctx
-            )
-        ).rejects.toThrow('Query path must resolve to a string');
-
+        // Assert
+        await expect(setup).rejects.toThrow(new Error(error));
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 });

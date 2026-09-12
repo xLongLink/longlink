@@ -168,23 +168,27 @@ describe('Action', () => {
             error: 'The request could not be completed. Please try again.',
             fetch: async () => Promise.reject(new Error('Network unavailable')),
         },
-    ])('does not navigate or close when a request fails: $error', async ({ error, fetch }) => {
+    ])('does not patch state, navigate, or close when a request fails: $error', async ({ error, fetch }) => {
+        // Arrange
         const ctx = createContext();
         const closeDialog = vi.fn();
         ctx.services.navigate = vi.fn();
         vi.stubGlobal('fetch', fetch);
 
         const button = await renderAction(
-            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link to="/orders">Save</Link></Action>',
+            '<State id="form" value="draft" /><Action><Request url="/orders" method="POST" closeDialog="true" /><Patch state="form" value="${{value: \'published\'}}" /><Link to="/orders">Save</Link></Action>',
             ctx,
             closeDialog
         );
 
+        // Act
         await act(async () => {
             button.click();
             await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
         });
 
+        // Assert
+        expect(ctx.scope.bindings.form).toEqual({ value: 'draft' });
         expect(ctx.services.navigate).not.toHaveBeenCalled();
         expect(closeDialog).not.toHaveBeenCalled();
         expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
