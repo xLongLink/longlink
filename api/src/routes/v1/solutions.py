@@ -162,7 +162,7 @@ async def list_revisions(solution_id: UUID, user: User = Depends(authuser), sess
     """Return newest-first release history to Solution maintainers."""
 
     # History projects configured names, never the environment values themselves.
-    await solutions.access(session, solution_id, user.id)
+    await solutions.access(session, solution_id, user.id, lock=False)
     result = await session.scalars(
         select(Revision)
         .options(defer(Revision.image_metadata))

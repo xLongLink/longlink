@@ -6,13 +6,13 @@ import asyncio
 from uuid import uuid4
 from pathlib import Path
 from containers import require_docker_daemon
+from src.utils.s3 import S3, Credentials
 from urllib.parse import urlsplit
 from collections.abc import Iterator
 from src.development import gateway, storage
 from botocore.exceptions import SSLError, ClientError
 from longlink.storage.base import create_fs
 from longlink.utils.settings import Envs
-from src.adapters.storage.s3 import S3, Credentials
 from testcontainers.core.container import DockerContainer
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
@@ -25,7 +25,7 @@ def ceph() -> Iterator[tuple[DockerContainer, str, str]]:
 
     require_docker_daemon()
     container = DockerContainer(CEPH_IMAGE, entrypoint="bash")
-    container.with_volume_mapping(str(Path(__file__).resolve().parents[2] / "ceph.sh"), "/test/ceph.sh", mode="ro")
+    container.with_volume_mapping(str(Path(__file__).resolve().parents[1] / "ceph.sh"), "/test/ceph.sh", mode="ro")
     container.with_command("/test/ceph.sh")
     container.with_exposed_ports(8080)
     container.with_exposed_ports(8443)
@@ -235,10 +235,12 @@ async def test_development_transports_preserve_tls_and_s3_signing(ceph: tuple[Do
     _, endpoint, certificate = ceph
     port = urlsplit(endpoint).port
     assert port is not None
-    connection = storage.S3("https://localhost", Credentials("owner-key", "owner-secret"), certificate, port)
+    resolver = storage.Resolver("https://localhost", port)
+    connection = S3("https://localhost", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
     async with connection.client() as client:
         await client.list_buckets()
-    connection = storage.S3("https://wrong-host.example", Credentials("owner-key", "owner-secret"), certificate, port)
+    resolver = storage.Resolver("https://wrong-host.example", port)
+    connection = S3("https://wrong-host.example", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
     async with connection.client() as client:
         with pytest.raises(SSLError):
             await client.list_buckets()

@@ -1,12 +1,12 @@
 from uuid import UUID
 from sqlmodel import col
+from src.utils import s3
 from sqlalchemy import select
 from src.database.session import session_scope
-from src.adapters.storage.s3 import S3
 from src.database.models.solutions import Solution
 
 
-async def authorize(storage: S3, bucket: str, organization: UUID) -> None:
+async def authorize(storage: s3.S3, bucket: str, organization: UUID) -> None:
     """Reconcile bucket policy from persisted live identities in the serial operation worker."""
 
     # Include only provisioned identities so RGW can resolve every named policy principal.

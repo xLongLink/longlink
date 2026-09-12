@@ -41,9 +41,9 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 from types import SimpleNamespace
 from src.utils import mail, token
 from src.database import session
+from src.utils.s3 import Credentials
 from src.environments import env
 from src.database.models import registry
-from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
 
 

@@ -4,6 +4,7 @@ from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
 from contextlib import ExitStack, asynccontextmanager
+from aiohttp.abc import AbstractResolver
 from dataclasses import field, dataclass
 from collections.abc import Iterable, Sequence, AsyncIterator
 from longlink.storage import tls
@@ -26,17 +27,21 @@ class Credentials:
 class S3:
     """Perform bucket-owner operations against a TLS-verified Ceph RGW endpoint."""
 
-    def __init__(self, endpoint: str, credentials: Credentials, certificate: str | None = None) -> None:
+    def __init__(
+        self,
+        endpoint: str,
+        credentials: Credentials,
+        certificate: str | None = None,
+        *,
+        resolver: AbstractResolver | None = None,
+    ) -> None:
         """Store connection settings without opening a transport."""
 
-        self.endpoint = endpoint
-        self.credentials = credentials
-        self.certificate = certificate
-
-    def config(self) -> AioConfig:
-        """Configure bounded, path-style S3 requests."""
-
-        return AioConfig(s3={"addressing_style": "path"}, connect_timeout=10, read_timeout=30, http_session_cls=tls.Session)
+        # Keep transport routing separate from the signed and TLS-verified endpoint.
+        self._endpoint = endpoint
+        self._credentials = credentials
+        self._certificate = certificate
+        self._resolver = resolver
 
     @asynccontextmanager
     async def client(self) -> AsyncIterator["S3Client"]:
@@ -45,17 +50,26 @@ class S3:
         # Private CA verification follows the same lifetime as the client session.
         with ExitStack() as stack:
             verify: bool | str = True
-            if self.certificate is not None:
-                verify = stack.enter_context(tls.certificate_file(self.certificate))
+            if self._certificate is not None:
+                verify = stack.enter_context(tls.certificate_file(self._certificate))
+
+            # Bound path-style requests and optionally route them through a development tunnel.
+            config = AioConfig(
+                s3={"addressing_style": "path"},
+                connect_timeout=10,
+                read_timeout=30,
+                connector_args={"resolver": self._resolver} if self._resolver is not None else {},
+                http_session_cls=tls.Session,
+            )
             session = aioboto3.Session()
             async with session.client(
                 "s3",
-                endpoint_url=self.endpoint,
+                endpoint_url=self._endpoint,
                 region_name="us-east-1",
                 verify=verify,
-                aws_access_key_id=self.credentials.access_key,
-                aws_secret_access_key=self.credentials.secret_key,
-                config=self.config(),
+                aws_access_key_id=self._credentials.access_key,
+                aws_secret_access_key=self._credentials.secret_key,
+                config=config,
             ) as client:
                 yield cast("S3Client", client)
 
@@ -100,6 +114,7 @@ class S3:
                     {"Effect": "Deny", "Principal": principal, "Action": writes, "NotResource": [f"{arn}/{prefix}*"]},
                 ]
             )
+
             # Upload-time grant headers can otherwise create an ACL without a separate PutObjectAcl call.
             for header in ("read", "write", "read-acp", "write-acp", "full-control"):
                 statements.append(
@@ -134,6 +149,7 @@ class S3:
     async def usage(self, bucket: str) -> int:
         """Measure current object bytes without including replicas or old versions."""
 
+        # Sum current objects across every listing page.
         total = 0
         async with self.client() as client:
             async for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket):
@@ -154,18 +170,13 @@ class S3:
                         {"Key": item["Key"], "VersionId": item["VersionId"]}
                         for item in chain(page.get("Versions", []), page.get("DeleteMarkers", []))
                     )
-                    await self._delete_objects(client, bucket, versions)
+
+                    # S3 accepts at most 1,000 identifiers and can report partial failures in successful responses.
+                    for batch in batched(versions, 1000):
+                        response = await client.delete_objects(Bucket=bucket, Delete={"Objects": list(batch), "Quiet": True})
+                        errors = response.get("Errors", [])
+                        if errors:
+                            raise RuntimeError(f"S3 failed to delete {len(errors)} objects")
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
-
-    @staticmethod
-    async def _delete_objects(client: "S3Client", bucket: str, objects: Iterable["ObjectIdentifierTypeDef"]) -> None:
-        """Delete bounded batches and reject partial failures returned in successful HTTP responses."""
-
-        # S3 accepts at most 1,000 identifiers; an empty page must not issue a deletion request.
-        for batch in batched(objects, 1000):
-            response = await client.delete_objects(Bucket=bucket, Delete={"Objects": list(batch), "Quiet": True})
-            errors = response.get("Errors", [])
-            if errors:
-                raise RuntimeError(f"S3 failed to delete {len(errors)} objects")

@@ -9,6 +9,7 @@ from factories import (
     create_organization,
     create_ready_infrastructure,
 )
+from src.utils.s3 import Credentials
 from src.operations import solutions as solution_operations
 from src.utils.jobs import execute
 from src.models.types import Image
@@ -17,7 +18,6 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import solutions
 from src.models.operations import OperationKind, OperationStatus
-from src.adapters.storage.s3 import Credentials
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization

@@ -167,7 +167,7 @@ delete existing excess data; reads and owner cleanup remain possible.
 From `api/`:
 
 ```bash
-uv run --extra dev pytest tests/adapters/storage/test_s3.py -v
+uv run --extra dev pytest tests/utils/test_s3.py -v
 uv run --extra dev pytest tests/database/services/test_capacity.py tests/kubernetes/test_storage.py -v
 ```
 

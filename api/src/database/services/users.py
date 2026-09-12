@@ -135,7 +135,12 @@ async def ensure_administrator(session: AsyncSession) -> User:
     if user is None:
         user = await session.scalar(statement)
     if user is None:
-        user = User(name=env.ADMIN_NAME, email=env.ADMIN_EMAIL, password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD))
+        user = User(
+            name=env.ADMIN_NAME,
+            email=env.ADMIN_EMAIL,
+            password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD),
+            administrator=True,
+        )
 
         # Concurrent Platform startup may create the configured administrator first.
         try:
@@ -146,6 +151,8 @@ async def ensure_administrator(session: AsyncSession) -> User:
             user = await session.scalar(statement)
             if user is None:
                 raise
+        else:
+            return user
 
     # Reconcile the configured account, including one created concurrently by another replica.
     if not PASSWORD_HASH.verify(env.ADMIN_PASSWORD, user.password):
