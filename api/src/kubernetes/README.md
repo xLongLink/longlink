@@ -163,11 +163,10 @@ retains cluster RBAC and CRDs, avoiding accidental cascading database destructio
 
 ## Pinned Sources
 
-`api/kubernetes-manifests.json` locks every upstream release URL and SHA-256 checksum.
-Run `uv run --locked python scripts/manifests.py` from `api/` to download verified package data.
-The generated `.yml` files under `templates/platform/` are ignored by Git. The API
-container downloads them during its build, so cluster reconciliation never depends
-on GitHub availability. Bootstrap applies LongLink overrides in memory.
+Release manifests are downloaded once and committed under `templates/`, locking
+their exact contents in the repository. The API container packages those files
+directly, so cluster reconciliation never depends on GitHub availability. Bootstrap
+applies LongLink overrides in memory.
 
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml

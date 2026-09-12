@@ -38,10 +38,6 @@ jobs:
               working-directory: api
               run: uv sync --locked --extra dev
 
-            - name: Prepare Kubernetes manifests
-              working-directory: api
-              run: uv run --locked python scripts/manifests.py
-
             - name: Lint API
               working-directory: api
               run: uv run --locked ruff check .

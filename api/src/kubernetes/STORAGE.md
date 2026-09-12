@@ -2,8 +2,7 @@
 
 LongLink installs Rook **v1.19.11** and Ceph **v19.2.6**, then creates one
 `CephObjectStore` named `longlink` in `rook-ceph` per compute. The upstream
-operator, common resources, and CRDs are checksum-locked in
-`api/kubernetes-manifests.json` and packaged by `scripts/manifests.py`.
+operator, common resources, and CRDs are committed under `templates/platform/`.
 Ceph CSI drivers and the separate CSI operator are disabled: this integration
 provides S3, and consumes an independently installed backing PVC provisioner.
 

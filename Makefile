@@ -11,7 +11,6 @@ install:
 
 # Run lint, type, and contract checks.
 check:
-	cd api && uv run --locked python scripts/manifests.py
 	cd api && uv run --locked ruff check .
 	cd api && uv run --locked --extra dev ty check
 	cd sdk && uv run --locked ruff check .
@@ -36,7 +35,6 @@ build:
 
 # Build required bundles and run all test suites.
 test:
-	cd api && uv run --locked python scripts/manifests.py
 	cd web && vp run build:api:bundle --logLevel warn
 	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 	cd web && vp run build:sdk:bundle --logLevel warn
@@ -93,7 +91,6 @@ up:
 	@kubectl --kubeconfig api/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
 		--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key \
 		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	cd api && uv run --locked python scripts/manifests.py
 	cd api && DEVELOPMENT=true uv run --locked python -m src.development.setup
 	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
 	$(MAKE) image
@@ -121,7 +118,6 @@ down:
 
 # Prepare and run the local LongLink Platform API server.
 api:
-	cd api && uv run --locked python scripts/manifests.py
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
@@ -144,7 +140,6 @@ sdk:
 
 # Prepare the Platform database and seed the example Organization and Solution.
 seed:
-	cd api && uv run --locked python scripts/manifests.py
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
 	cd api && DEVELOPMENT=true GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" uv run --locked python -m scripts.seed

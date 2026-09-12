@@ -40,7 +40,6 @@ COPY sdk/ /sdk/
 RUN --mount=type=cache,target=/root/.cache/uv SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-install-project
 ENV VERSION=${VERSION}
 COPY api/ /app/
-RUN python scripts/manifests.py
 COPY --chown=10001:10001 --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000
