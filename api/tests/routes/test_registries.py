@@ -94,54 +94,40 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     assert response.json() == {"items": [{"id": beta_id, "name": "Beta Registry"} | expected_item], "total": 2}
 
 
-@pytest.mark.parametrize(
-    ("path", "payload", "secret_fields", "duplicate_error", "create_status"),
-    [
-        pytest.param(
-            "computes",
-            {
-                "name": "Ephemeral Compute",
-                "bucket_size_bytes": 1073741824,
-                "bucket_max_objects": 10000,
-                "storage_reserve_percent": 30,
-                "storage_object_overhead_bytes": 65536,
-                "storage_class": "block-storage",
-                "storage_endpoint": "https://storage.example",
-                "gateway_url": "https://gateway.example",
-                "database_storage_class": "local-path",
-                "kubeconfig": {
-                    "clusters": [{"name": "cluster", "cluster": {}}],
-                    "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
-                    "current-context": "context",
-                    "users": [{"name": "user", "user": {}}],
-                },
-            },
-            ["kubeconfig"],
-            "Compute registry already exists",
-            202,
-            id="compute",
-        ),
-    ],
-)
-async def test_registry_creation_rejects_duplicate_name(
+async def test_compute_registry_creation_redacts_credentials_and_rejects_duplicate_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    path: str,
-    payload: dict[str, object],
-    secret_fields: list[str],
-    duplicate_error: str,
-    create_status: int,
 ) -> None:
-    """Create each registry type and reject a duplicate name."""
+    """Create a Compute registry without exposing credentials and reject a duplicate name."""
 
-    create_response = await clients[0].post(f"/api/v1/{path}", json=payload)
-    duplicate_response = await clients[0].post(f"/api/v1/{path}", json=payload)
+    # Arrange
+    payload = {
+        "name": "Ephemeral Compute",
+        "bucket_size_bytes": 1073741824,
+        "bucket_max_objects": 10000,
+        "storage_reserve_percent": 30,
+        "storage_object_overhead_bytes": 65536,
+        "storage_class": "block-storage",
+        "storage_endpoint": "https://storage.example",
+        "gateway_url": "https://gateway.example",
+        "database_storage_class": "local-path",
+        "kubeconfig": {
+            "clusters": [{"name": "cluster", "cluster": {}}],
+            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
+            "current-context": "context",
+            "users": [{"name": "user", "user": {"token": "compute-credential-must-not-leak"}}],
+        },
+    }
+
+    create_response = await clients[0].post("/api/v1/computes", json=payload)
+    duplicate_response = await clients[0].post("/api/v1/computes", json=payload)
     created = create_response.json()
 
-    assert create_response.status_code == create_status
+    assert create_response.status_code == 202
     assert created["name"] == payload["name"]
-    assert all(field not in created and str(payload[field]) not in create_response.text for field in secret_fields)
+    assert "kubeconfig" not in created
+    assert "compute-credential-must-not-leak" not in create_response.text
     assert duplicate_response.status_code == 409
-    assert duplicate_response.json() == {"detail": duplicate_error}
+    assert duplicate_response.json() == {"detail": "Compute registry already exists"}
 
 
 async def test_compute_registry_deletes_unused_registration(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:

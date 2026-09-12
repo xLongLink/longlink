@@ -217,6 +217,30 @@ describe('Action', () => {
         expect(closeDialog).toHaveBeenCalledOnce();
     });
 
+    it('navigates instead of closing or toasting after a successful Action Link request', async () => {
+        // Arrange
+        const ctx = createContext();
+        const closeDialog = vi.fn();
+        ctx.services.navigate = vi.fn();
+        ctx.services.requestBaseUrl = '/proxy/';
+        vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
+        const link = await renderAction(
+            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link href="/orders">Save</Link></Action>',
+            ctx,
+            closeDialog
+        );
+
+        // Act
+        await act(async () => {
+            link.click();
+            await vi.waitFor(() => expect(ctx.services.navigate).toHaveBeenCalledWith('/proxy/orders'));
+        });
+
+        // Assert
+        expect(closeDialog).not.toHaveBeenCalled();
+        expect(toast).not.toHaveBeenCalled();
+    });
+
     it.each([
         {
             error: 'Request cannot send both form and json payloads',

@@ -2,7 +2,7 @@ import { viewsSchema } from '@/xml/views';
 import { describe, expect, it } from 'vitest';
 
 /** Creates a valid manifest view with optional overrides. */
-function view(overrides: Partial<{ path: string; route: string }> = {}) {
+function view(overrides: Partial<{ path: string; route: string; name: string; icon: string }> = {}) {
     return { path: 'home.xml', route: '/home', ...overrides };
 }
 
@@ -33,5 +33,13 @@ describe('viewsSchema', () => {
                 view({ path: 'issue.xml', route: '/issues/:issueId' }),
             ]).success
         ).toBe(true);
+    });
+
+    it.each([{ name: '  ' }, { icon: '' }])('rejects blank optional display metadata', (metadata) => {
+        expect(viewsSchema.safeParse([view(metadata)]).success).toBe(false);
+    });
+
+    it('allows nonblank optional display metadata', () => {
+        expect(viewsSchema.safeParse([view({ name: 'Issues', icon: 'list' })]).success).toBe(true);
     });
 });

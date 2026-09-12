@@ -122,7 +122,7 @@ def test_identity_token_user_rejects_malformed_subject() -> None:
     assert str(exc_info.value) == "Invalid identity token user"
 
 
-@pytest.mark.parametrize("missing_claim", ["sub", "iat", "exp"])
+@pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp"])
 def test_identity_token_user_rejects_missing_required_claim(missing_claim: str) -> None:
     """Reject an otherwise valid identity token missing any required claim."""
 

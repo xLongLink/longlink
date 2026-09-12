@@ -57,8 +57,8 @@ def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(monkeypatch: pyt
     assert any(middleware.cls is main.CORSMiddleware for middleware in app.user_middleware) is development
 
 
-async def test_lifespan_reconciles_administrator_and_stops_operation_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile the administrator before starting and cancelling Operation jobs."""
+async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reconcile the administrator before starting and cancelling background jobs."""
 
     # Arrange
     events: list[str] = []
@@ -102,10 +102,21 @@ async def test_lifespan_reconciles_administrator_and_stops_operation_jobs(monkey
             events.append("cleanup cancel")
             raise
 
+    async def database_scheduler() -> None:
+        """Record database scheduling startup and cancellation from lifespan shutdown."""
+
+        events.append("database start")
+        try:
+            await main.asyncio.Event().wait()
+        except main.asyncio.CancelledError:
+            events.append("database cancel")
+            raise
+
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", scheduler)
     monkeypatch.setattr(main.jobs, "run_operation_log_cleanup", log_cleanup)
+    monkeypatch.setattr(main.jobs, "run_database_scheduler", database_scheduler)
 
     # Act
     async with main.lifespan(main.app):
@@ -118,9 +129,11 @@ async def test_lifespan_reconciles_administrator_and_stops_operation_jobs(monkey
         "commit",
         "scheduler start",
         "cleanup start",
+        "database start",
         "serving",
         "scheduler cancel",
         "cleanup cancel",
+        "database cancel",
     ]
 
 

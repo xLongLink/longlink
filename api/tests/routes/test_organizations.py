@@ -95,23 +95,15 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
     assert other_user_organization_count == 1
 
 
-@pytest.mark.parametrize(
-    ("registry", "expected_detail"),
-    [
-        pytest.param("compute", "No ready compute registry available", id="compute"),
-    ],
-)
-async def test_create_organization_rejects_when_required_registry_is_unavailable(
+async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    registry: str,
-    expected_detail: str,
 ) -> None:
-    """Reject Organization creation when a required registry is unavailable."""
+    """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
     infrastructure = await create_ready_infrastructure()
     async with session_scope() as session:
-        await session.delete(getattr(infrastructure, registry))
+        await session.delete(infrastructure.compute)
         await session.commit()
 
     # Act
@@ -119,7 +111,7 @@ async def test_create_organization_rejects_when_required_registry_is_unavailable
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": expected_detail}
+    assert response.json() == {"detail": "No ready compute registry available"}
     async with session_scope() as session:
         assert await session.scalar(select(Organization)) is None
     assert await fetch_operations() == []

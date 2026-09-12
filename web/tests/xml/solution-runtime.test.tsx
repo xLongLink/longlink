@@ -80,6 +80,15 @@ describe('SolutionRuntime XML integration', () => {
 
         // Assert
         expect(container.textContent).toContain('Welcome');
-        expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/proxy/views.json', '/proxy/home.xml']);
+        expect(apiRequest).toHaveBeenNthCalledWith(
+            1,
+            '/proxy/views.json',
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        );
+        expect(apiRequest).toHaveBeenNthCalledWith(
+            2,
+            '/proxy/home.xml',
+            expect.objectContaining({ headers: { Accept: 'application/xml' }, signal: expect.any(AbortSignal) })
+        );
     });
 });

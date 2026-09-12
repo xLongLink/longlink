@@ -24,8 +24,14 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     # Assert
     assert profile_response.status_code == 200
     assert profile_response.headers["cache-control"] == "no-store"
-    assert profile_response.json()["id"] == str(user.id)
-    assert profile_response.json()["administrator"] is True
+    assert profile_response.json() == {
+        "id": str(user.id),
+        "name": user.name,
+        "email": user.email,
+        "avatar": user.avatar,
+        "administrator": user.administrator,
+    }
+    assert user.password not in profile_response.text
 
     assert organizations_response.status_code == 200
     assert organizations_response.headers["cache-control"] == "no-store"
