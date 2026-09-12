@@ -53,8 +53,41 @@ async def test_update_history_and_explicit_rollback(
     assert "revision-secret" not in history.text and '"envs"' not in history.text
     assert history.json()[0]["image"] == "ghcr.io/longlink/dashboard@sha256:resolved"
     assert (await clients[1].get(f"{url}/revisions")).status_code == 403
-    assert (await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")).status_code == 404
-    assert (await clients[0].post(f"{url}/revisions/{initial_id}/rollback")).status_code == 409
+
+    # Arrange: Snapshot desired revisions and queued work before rejected rollbacks.
+    desired_revisions_query = (
+        select(Solution.id, Solution.desired_revision_id).where(col(Solution.organization_id) == organization.id).order_by(Solution.id)
+    )
+    operations_query = select(Operation.__table__).order_by(Operation.id)
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        desired_revisions_before = desired_revisions_result.all()
+        operations_result = await session.execute(operations_query)
+        operations_before = operations_result.all()
+
+    # Act
+    foreign_revision_response = await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")
+
+    # Assert
+    assert foreign_revision_response.status_code == 404
+    assert foreign_revision_response.json() == {"detail": "Revision not found"}
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        assert desired_revisions_result.all() == desired_revisions_before
+        operations_result = await session.execute(operations_query)
+        assert operations_result.all() == operations_before
+
+    # Act
+    undeployed_revision_response = await clients[0].post(f"{url}/revisions/{initial_id}/rollback")
+
+    # Assert
+    assert undeployed_revision_response.status_code == 409
+    assert undeployed_revision_response.json() == {"detail": "Revision has never been deployed successfully"}
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        assert desired_revisions_result.all() == desired_revisions_before
+        operations_result = await session.execute(operations_query)
+        assert operations_result.all() == operations_before
 
     # Arrange: Mark setup deployments complete so operation completion does not requeue them.
     async with session_scope() as session:
@@ -132,7 +165,6 @@ async def test_revision_references_require_same_solution(users: tuple[User, User
         ("solution_id", uuid4()),
         ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
         ("source", "ghcr.io/longlink/dashboard:replacement"),
-        ("image_metadata", {"description": "replacement"}),
         ("envs", {"KEY": "replacement"}),
         ("created_at", utcnow()),
         ("created_id", uuid4()),

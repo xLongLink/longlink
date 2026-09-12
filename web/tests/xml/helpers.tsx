@@ -6,6 +6,11 @@ import { LayerProvider } from '@astryxdesign/core/Layer';
 import { compileAttribute } from '@/xml/expressions/compile';
 import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
 
+/** Parses fragment fixtures through the document parser and returns their children. */
+export function parseFragment(fragment: string): ASTNode[] {
+    return xml.parseXML(`<longlink>${fragment}</longlink>`).children;
+}
+
 /** Compiles string fixture attributes through the same document compiler rules. */
 export function compileProps(props: Record<string, string>): ASTProps {
     return Object.fromEntries(Object.entries(props).map(([name, value]) => [name, compileAttribute(value)]));

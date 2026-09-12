@@ -15,11 +15,11 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateCompute from '@/components/dialogs/CreateCompute';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageComputeRegistryResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ComputeRegistryResponse } from '@/lib/generated/platform-api-v1/types.gen';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
@@ -168,7 +168,7 @@ export default function AdminCompute() {
                     </MetadataList>
                 </MetadataDialog>
             )}
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </Stack>
     );
 }

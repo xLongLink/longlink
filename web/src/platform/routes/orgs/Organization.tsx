@@ -11,14 +11,28 @@ import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import CreateSolution from '@/components/dialogs/CreateSolution';
-import { useOrganizationSolutions } from '@/lib/hooks/use-organization';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { useOrganizationMembership, useOrganizationSolutions } from '@/lib/hooks/use-organization';
 
 /** Renders the organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const { solutions, organizationId, role, isLoading, error } = useOrganizationSolutions(organization);
+    const {
+        organizationId,
+        role,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organization);
+    const {
+        solutions,
+        isLoading: isSolutionsLoading,
+        error: solutionsError,
+    } = useOrganizationSolutions(organizationId);
+
+    // Preserve the page's loading state and solutions-first error precedence.
+    const isLoading = isMembershipLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const canManageSolutions = hasMinimumRole(role, 'maintain');
     const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 
@@ -59,7 +73,7 @@ export default function Organization() {
                         Manage the solutions attached to this organization.
                     </Text>
                 </Stack>
-                {canManageSolutions ? <CreateSolution organizationId={organizationId} /> : null}
+                {canManageSolutions ? <CreateSolution organizationId={organizationId ?? ''} /> : null}
             </Stack>
             <Table
                 data={solutions}

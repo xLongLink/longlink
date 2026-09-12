@@ -39,11 +39,12 @@ import { Menu, type MenuSection } from '@/components/ui/Menu';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { invitationSchema } from '@/components/settings/validation';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import {
     useDeleteOrganizationSolution,
     useOrganization,
+    useOrganizationMembership,
     useOrganizationSolutions,
     useOrganizationMembers,
     useUpdateOrganization,
@@ -67,20 +68,27 @@ export default function OrganizationSettings() {
     const toast = useToast();
     const isSolutionsSectionActive = hash === '#solutions';
     const {
+        organizationId: membershipOrganizationId,
+        role: organizationRole,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organization);
+    const {
         organization: organizationDetails,
         members,
         invitations,
-        role: organizationRole,
         isLoading: isOrganizationLoading,
         error: organizationError,
-    } = useOrganization(organization);
+    } = useOrganization(membershipOrganizationId);
     const {
         solutions,
         isLoading: isSolutionsLoading,
         error: solutionsError,
-    } = useOrganizationSolutions(organization, isSolutionsSectionActive);
-    const isLoading = isOrganizationLoading || isSolutionsLoading;
-    const error = organizationError ?? solutionsError;
+    } = useOrganizationSolutions(membershipOrganizationId, isSolutionsSectionActive);
+
+    // Preserve the page's loading state and details-first error precedence.
+    const isLoading = isMembershipLoading || isOrganizationLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = organizationError ?? membershipError ?? solutionsError;
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
@@ -650,7 +658,7 @@ export default function OrganizationSettings() {
                     </Stack>
                 </form>
             </Dialog>
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </PageContainer>
     );
 }

@@ -20,8 +20,8 @@ import { Menu, type MenuSection } from '@/components/ui/Menu';
 import { accountNameSchema } from '@/components/settings/validation';
 import { useDeleteOrganization } from '@/lib/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { useAuthenticatedUser, useUpdateUser, useUserOrganizations } from '@/lib/hooks/use-user';
 /** Renders the authenticated settings page. */
 export default function Settings() {
@@ -239,7 +239,7 @@ export default function Settings() {
 
             <Menu sections={sections} />
 
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </PageContainer>
     );
 }

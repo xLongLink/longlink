@@ -16,11 +16,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { zPageSolutionResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import type { SolutionResponse } from '@/lib/generated/platform-api-v1/types.gen';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin solutions page. */
 export default function AdminSolutions() {
@@ -161,7 +161,7 @@ export default function AdminSolutions() {
                     </MetadataList>
                 </MetadataDialog>
             )}
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </Stack>
     );
 }

@@ -11,13 +11,26 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useOrganizationSolutions } from '@/lib/hooks/use-organization';
+import { useOrganizationMembership, useOrganizationSolutions } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const { solutions, isLoading, error } = useOrganizationSolutions(organization);
+    const {
+        organizationId,
+        isLoading: isMembershipLoading,
+        error: membershipError,
+    } = useOrganizationMembership(organization);
+    const {
+        solutions,
+        isLoading: isSolutionsLoading,
+        error: solutionsError,
+    } = useOrganizationSolutions(organizationId);
+
+    // Preserve the page's loading state and solutions-first error precedence.
+    const isLoading = isMembershipLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const solutionAccess = solutions.find((item) => item.slug === solution);
     const pageMetadata = <NoIndex title="Solution | LongLink" />;
 

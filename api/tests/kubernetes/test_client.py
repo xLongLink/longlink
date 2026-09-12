@@ -33,10 +33,16 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
 
 
 async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Close the HTTP session opened by the cached kr8s client."""
+    """Close tunnels before their cached HTTP session exactly once across repeated closes."""
 
     # Arrange
-    closed: list[bool] = []
+    closed: list[str] = []
+
+    async def close_tunnel() -> None:
+        """Record tunnel cleanup on the real connection exit stack."""
+
+        # Record completion before the dependent HTTP session closes.
+        closed.append("tunnel")
 
     class Session:
         """Record asynchronous HTTP session closure."""
@@ -44,7 +50,8 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
         async def aclose(self) -> None:
             """Record one session closure."""
 
-            closed.append(True)
+            # Record closure after dependent tunnels have finished cleanup.
+            closed.append("http")
 
     class Api:
         """Expose the kr8s session retained by the client."""
@@ -59,9 +66,16 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
     kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     await kubernetes.api()
+    kubernetes.connections.push_async_callback(close_tunnel)
 
     # Act
     await kubernetes.aclose()
 
     # Assert
-    assert closed == [True]
+    assert closed == ["tunnel", "http"]
+
+    # Act
+    await kubernetes.aclose()
+
+    # Assert
+    assert closed == ["tunnel", "http"]

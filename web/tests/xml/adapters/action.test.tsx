@@ -3,9 +3,9 @@ import { act } from 'react';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import { createContext } from '@/xml/core/context';
-import { RenderXML, renderXmlToMarkup } from '../helpers';
 import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
 
 const toast = vi.fn();
 
@@ -35,7 +35,7 @@ describe('Action', () => {
             xml: '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>',
         },
     ])('rejects invalid structure: $error', ({ error, xml }) => {
-        expect(() => renderXmlToMarkup(parseXML(xml))).toThrow(error);
+        expect(() => renderXmlToMarkup(parseFragment(xml))).toThrow(error);
     });
 
     it('sends the configured request method and JSON payload before navigating', async () => {
@@ -327,11 +327,18 @@ describe('Action', () => {
             setup: '<Query id="records" path="/records" />',
             patch: '<Patch state="records" value="${{value: \'published\'}}" />',
         },
-    ])('rejects invalid Patch contracts: $error', async ({ setup, patch }) => {
+    ])('rejects invalid Patch contracts without executing downstream requests: $error', async ({ setup, patch }) => {
         // Arrange
         const ctx = createContext();
-        vi.stubGlobal('fetch', async () => new Response('{}'));
-        const button = await renderAction(`${setup}<Action>${patch}<Button>Save</Button></Action>`, ctx);
+        const fetchRequest = vi.fn(async () => new Response('{}'));
+        vi.stubGlobal('fetch', fetchRequest);
+        const button = await renderAction(
+            `${setup}<Action>${patch}<Request url="/orders" method="POST" /><Button>Save</Button></Action>`,
+            ctx
+        );
+
+        // Exclude the Query's initial setup request.
+        fetchRequest.mockClear();
 
         // Act
         await act(async () => {
@@ -340,6 +347,8 @@ describe('Action', () => {
         });
 
         // Assert
+        expect(fetchRequest).not.toHaveBeenCalled();
+        expect(toast).toHaveBeenCalledOnce();
         expect(toast).toHaveBeenCalledWith(
             expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );
@@ -350,7 +359,7 @@ describe('Action', () => {
         ctx: ReturnType<typeof createContext>,
         closeDialog: (() => void) | null = null
     ) {
-        const ast = parseXML(`<longlink>${xml}</longlink>`)[0];
+        const ast = parseXML(`<longlink>${xml}</longlink>`);
         const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

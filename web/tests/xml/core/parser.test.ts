@@ -1,10 +1,10 @@
+import { parseFragment } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { parseXML as parseDocument } from '@/xml';
 
 describe('parseXML', () => {
     it('compiles literal attribute params', () => {
-        expect(parseXML('<Button isDisabled="false" count="5" />')).toEqual([
+        expect(parseFragment('<Button isDisabled="false" count="5" />')).toEqual([
             {
                 name: 'Button',
                 params: {
@@ -27,25 +27,23 @@ describe('parseXML', () => {
                     <State id="second" />
                 </longlink>`
             )
-        ).toEqual([
-            {
-                name: 'longlink',
-                params: {},
-                children: [
-                    {
-                        name: 'Button',
-                        params: {},
-                        children: [{ name: '$text', params: { value: { kind: 'text', value: 'Save' } }, children: [] }],
-                    },
-                    { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },
-                    { name: 'State', params: { id: { kind: 'text', value: 'second' } }, children: [] },
-                ],
-            },
-        ]);
+        ).toEqual({
+            name: 'longlink',
+            params: {},
+            children: [
+                {
+                    name: 'Button',
+                    params: {},
+                    children: [{ name: '$text', params: { value: { kind: 'text', value: 'Save' } }, children: [] }],
+                },
+                { name: 'State', params: { id: { kind: 'text', value: 'first' } }, children: [] },
+                { name: 'State', params: { id: { kind: 'text', value: 'second' } }, children: [] },
+            ],
+        });
     });
 
     it('compiles visible text nodes as Text components', () => {
-        expect(parseXML('<Heading level="1">  Hello, world  </Heading>')).toEqual([
+        expect(parseFragment('<Heading level="1">  Hello, world  </Heading>')).toEqual([
             {
                 name: 'Heading',
                 params: { level: { kind: 'text', value: '1' } },
@@ -65,11 +63,11 @@ describe('parseXML', () => {
     });
 
     it('rejects an empty document', () => {
-        expect(() => parseDocument('')).toThrow('XML is invalid');
+        expect(() => parseXML('')).toThrow('XML is invalid');
     });
 
     it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {
-        expect(() => parseDocument(xml)).toThrow('XML views must contain exactly one longlink root');
+        expect(() => parseXML(xml)).toThrow('XML views must contain exactly one longlink root');
     });
 
     it.each([

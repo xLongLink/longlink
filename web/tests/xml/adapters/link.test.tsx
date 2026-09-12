@@ -1,13 +1,15 @@
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { renderXmlToMarkup } from '../helpers';
 import { createContext } from '@/xml/core/context';
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Link', () => {
     it('renders solution navigation', () => {
         const navigationContext = createContext();
         navigationContext.services.navigationBaseUrl = '/orgs/acme/solutions/tracker';
-        const navigationOutput = renderXmlToMarkup(parseXML('<Link to="/issues/123">Issue</Link>'), navigationContext);
+        const navigationOutput = renderXmlToMarkup(
+            parseFragment('<Link to="/issues/123">Issue</Link>'),
+            navigationContext
+        );
 
         expect(navigationOutput).toContain('href="/orgs/acme/solutions/tracker/issues/123"');
     });
@@ -21,7 +23,7 @@ describe('Link', () => {
 
         // Act
         const output = renderXmlToMarkup(
-            parseXML('<Link to="${destination}" href="${fallback}">Document</Link>'),
+            parseFragment('<Link to="${destination}" href="${fallback}">Document</Link>'),
             context
         );
 

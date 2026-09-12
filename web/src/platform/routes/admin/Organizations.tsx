@@ -13,11 +13,11 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useDeleteOrganization } from '@/lib/hooks/use-organization';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -125,7 +125,7 @@ export default function AdminOrganizations() {
                     </MetadataList>
                 </MetadataDialog>
             )}
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </Stack>
     );
 }

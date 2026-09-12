@@ -1165,22 +1165,27 @@ async def test_update_organization_member_rejects_owner_escalation_from_admin(
     assert membership.role == OrganizationRoles.read
 
 
+@pytest.mark.parametrize("caller_role", [OrganizationRoles.read, OrganizationRoles.write, OrganizationRoles.maintain])
 async def test_update_organization_member_returns_403_for_regular_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    caller_role: OrganizationRoles,
 ) -> None:
-    """Reject member role changes from users without management permissions."""
+    """Reject member role changes without changing membership audit fields or queueing sync."""
 
     # Arrange
     owner, regular_member, target_member = users[0], users[1], users[2]
     organization = await create_organization(owner)
 
     async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_sync_pending = False
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role=OrganizationRoles.write,
+                role=caller_role,
             )
         )
         session.add(
@@ -1191,6 +1196,11 @@ async def test_update_organization_member_returns_403_for_regular_member(
             )
         )
         await session.commit()
+
+    async with session_scope() as session:
+        original = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
+        original_updated_at = original.updated_at
+        original_updated_id = original.updated_id
 
     client = clients[1]
 
@@ -1203,6 +1213,14 @@ async def test_update_organization_member_returns_403_for_regular_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
+        assert unchanged.role == OrganizationRoles.read
+        assert unchanged.updated_at == original_updated_at
+        assert unchanged.updated_id == original_updated_id
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.database_sync_pending is False
 
 
 @pytest.mark.parametrize(

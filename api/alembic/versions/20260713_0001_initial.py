@@ -206,7 +206,6 @@ def upgrade() -> None:
         sa.Column("source", sa.String(512), nullable=False),
         sa.Column("min_scale", sa.Integer(), server_default="0", nullable=False),
         sa.CheckConstraint("min_scale IN (0, 1)", name="revision_min_scale"),
-        sa.Column("image_metadata", sa.JSON(), nullable=False),
         sa.Column("envs", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), sa.ForeignKey("users.id"), nullable=True),

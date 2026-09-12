@@ -1,6 +1,5 @@
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { renderXmlToMarkup } from '../helpers';
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('setup adapters', () => {
     it.each([
@@ -15,6 +14,6 @@ describe('setup adapters', () => {
         '<Query id="params" path="/api/params" />',
         '<State id="data" value="first" /><Query id="data" path="/api/data" />',
     ])('renders validation error: %s', (xml) => {
-        expect(renderXmlToMarkup(parseXML(xml))).toContain('Unable to initialize this view');
+        expect(renderXmlToMarkup(parseFragment(xml))).toContain('Unable to initialize this view');
     });
 });
