@@ -104,7 +104,6 @@ up:
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
-	$(MAKE) image
 
 
 # Build and push the local sample, preserving an existing development project.
@@ -115,7 +114,6 @@ image: sample
 
 # Stop local services and remove generated cluster and API state.
 down:
-	docker compose -f dev/compose.yml stop
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	docker compose -f dev/compose.yml down --volumes --remove-orphans
 	rm -f api/dev.db api/kubeconfig.yaml

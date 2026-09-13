@@ -80,3 +80,15 @@ reclaimPolicy: Delete
 parameters:
     objectStoreName: longlink
     objectStoreNamespace: rook-ceph
+---
+apiVersion: ceph.rook.io/v1
+kind: CephObjectStoreUser
+metadata:
+    name: longlink-health
+    namespace: rook-ceph
+spec:
+    store: longlink
+    quotas:
+        maxBuckets: -1
+    opMask:
+        - read

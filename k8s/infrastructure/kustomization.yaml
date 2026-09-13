@@ -4,4 +4,3 @@ commonAnnotations:
     helm.sh/resource-policy: keep
 resources:
     - storage.yml
-    - health.yml

@@ -33,6 +33,7 @@ make up
 make api
 make web
 # After the API is ready:
+make image
 make seed
 ```
 

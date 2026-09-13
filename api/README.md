@@ -102,9 +102,10 @@ Work that is too long for an API request is queued as a durable, typed Operation
 <br />
 
 ```
-make up     # Prepare infrastructure, endpoint connections, and the sample image
+make up     # Prepare infrastructure and endpoint connections
 make api    # In one terminal
-make seed   # In another terminal after the API starts
+make image  # Build and push the sample image after the API starts
+make seed   # In another terminal after the image is available
 ```
 
 Run from `api/`:

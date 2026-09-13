@@ -44,8 +44,7 @@ variables and `.env`; no development mode is required.
 
 `make up` creates the private Docker network, registry, mail capture service,
 cluster, backing storage, TLS certificates, and shared Compute infrastructure.
-It then checks gateway and storage HTTPS connectivity and builds/pushes the sample
-Solution image. Run it again to reapply
+It then checks gateway and storage HTTPS connectivity. Run it again to reapply
 resources or retry an interrupted setup. `make down` removes those resources.
 Cluster settings are declared in `dev/cluster.yaml`.
 Generated private material lives under ignored `dev/certificates/`.
@@ -60,9 +59,10 @@ storage overlay and permits loop-backed OSDs.
 `make image` and `make sdk` share `make sample`, which builds the SDK web bundle
 and initializes `sdk/dev` only when absent. Existing sample edits are preserved.
 
-Backing storage is declared in `dev/compute/backing/kustomization.yaml`. It selects
-the CSI attacher/provisioner components and sets their namespaces and RBAC subjects.
-Render it with `kubectl kustomize dev/compute/backing`.
+Backing storage is declared in `dev/compute/backing/kustomization.yaml`. It uses
+pinned upstream CSI manifests and local patches to select the attacher/provisioner
+components and set their namespaces and RBAC subjects. Render it with
+`kubectl kustomize dev/compute/backing`.
 
 Setup uses OpenSSL and `dev/tls.cnf` to generate gateway and storage
 certificates and apply their TLS Secrets. It reuses the local CA and valid matching
@@ -80,6 +80,7 @@ make web
 To provision the sample after the API is ready:
 
 ```bash
+make image
 make seed
 ```
 
@@ -101,7 +102,7 @@ services and their networks.
 k3d publishes loopback ports through its load balancer to the local NodePort
 Services: `8443` → gateway `30443`, and `9443` → storage `30943`. Kubernetes routes
 to ready Pods as they are replaced. `make up` checks the gateway readiness route
-and S3 HTTPS endpoint with the generated CA before building the sample image.
+and S3 HTTPS endpoint with the generated CA.
 
 The gateway origin is `https://localhost:8443`. The API uses an ordinary HTTPS
 client. The local gateway policy admits TLS traffic from the workstation-owned
@@ -157,6 +158,7 @@ Stop API workers, update the package or local overlays, and run:
 ```bash
 make up
 make api
+make image
 make seed
 ```
 
@@ -166,12 +168,13 @@ operators. The sample is retained unless a failed deployment needs a retry.
 
 Existing kubectl-managed installations require an explicit migration to Helm
 ownership; `make up` does not automatically adopt or replace them. For disposable
-local data, stop workers and use `make down`, `make up`, `make api`, and `make seed`.
+local data, stop workers and use `make down`, `make up`, `make api`, `make image`,
+and `make seed`.
 Hosted installations need a reviewed ownership migration; see `k8s/README.md`.
 
 Settings in `dev/cluster.yaml`, including registry mirrors, are applied by k3d only
 when creating the cluster. After changing them, stop workers and run `make down`,
-`make up`, `make api`, and `make seed` to recreate disposable local state. This
+`make up`, `make api`, `make image`, and `make seed` to recreate disposable local state. This
 includes clusters using the former Compose gateway/storage port-forwards,
 `host.k3d.internal:15000` registry mirror, and
 manually created Docker network. For that older setup, also remove the old network
