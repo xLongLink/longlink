@@ -12,7 +12,7 @@ Development tools
 Solution runtimes and migration Jobs require Linux AMD64 nodes. An ARM-only k3d cluster cannot schedule them, even when Docker can build AMD64 images through emulation.
 
 `make up` creates the private `longlink-dev` Docker network, starts the OCI registry, creates the k3d cluster,
-and builds the local sample Solution image. The Platform API defaults to SQLite in `api/dev.db`.
+installs the shared Compute package, and builds the local sample Solution image. The Platform API defaults to SQLite in `api/dev.db`.
 Organization and Solution data live in Kubernetes-managed CloudNativePG databases. k3d reaches the registry
 through the private bridge gateway; its host-facing port binds only to loopback.
 
@@ -22,22 +22,14 @@ make up
 
 If a `compute` cluster predates the isolated network, run `make down` before `make up` so k3d can recreate it safely.
 
-The equivalent manual setup is:
+The package lives in [`k8s/compute`](../k8s/compute/README.md); local configuration lives in
+`dev/compute/`. `make up` installs Knative, Kourier, CNPG, Rook, and Ceph before the API starts.
+The API only validates that installation and provisions tenants.
 
-```bash
-docker network inspect longlink-dev >/dev/null 2>&1 || docker network create longlink-dev
-gateway=$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')
-LONGLINK_DEV_GATEWAY="$gateway" docker compose -f dev/compose.yml up --detach --wait
-k3d cluster create compute \
-  --image rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5 \
-  --network longlink-dev \
-  --api-port 127.0.0.1:8001 \
-  -p "127.0.0.1:8443:443@loadbalancer" \
-  --registry-config dev/registries.yml \
-  --k3s-arg "--disable=traefik@server:0"
-```
-
-The local setup generates a development CA and a certificate for `localhost`, creates the Kourier TLS Secret and a development-only policy that permits ingress to the gateway's TCP port `8444`, and registers `https://localhost:8443`. The broad local ingress exception is required because ServiceLB/NAT does not preserve stable source identity. Generated private material stays under the ignored `dev/certificates` directory and is removed by `make down`. LongLink does not generate gateway identities or certificates outside this local development workflow.
+The local setup generates a development CA and a certificate for `localhost`, creates the Kourier TLS Secret,
+and registers `https://localhost:8443`. Access uses authenticated Kubernetes tunnels, without a permissive
+gateway ingress policy. Generated private material stays under the ignored `dev/certificates` directory
+and is removed by `make down`.
 Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
 
 Export the kubeconfig afterward:
@@ -55,7 +47,7 @@ Create the ignored seed configuration from the tracked sample:
 cp api/.env.seed.sample api/.env.seed
 ```
 
-Configure the Kubernetes object-storage backend in `api/.env.seed`:
+The seed describes the already-installed Kubernetes object-storage backend:
 
 ```bash
 STORAGE_CLASS=longlink-development
@@ -75,8 +67,9 @@ DATABASE_SIZE_GIB=10
 DATABASE_INSTANCES=1
 ```
 
-These storage settings are development defaults; no `STORAGE_CLASS` entry is
-required for local seeding. `make up` and `make seed` prepare the pinned CSI
+These storage settings must match `dev/compute/infrastructure/kustomization.yaml`;
+they no longer install or resize storage. No `STORAGE_CLASS` entry is required for
+default local seeding. `make up` prepares the pinned CSI
 hostpath driver, the `longlink-development` StorageClass, and storage TLS using
 the local CA. The class supports filesystem monitor PVCs and loop-backed Block
 OSD PVCs. k3d nodes mount `/dev` and `/run/udev` for those development devices.
@@ -121,8 +114,11 @@ in-cluster services.
 `make seed` queues provisioning; watch Operations until compute creation, organization
 creation, and sample deployment finish. Storage is provisioned in the registered
 compute; no external object-storage account or provider API keys are required.
-After correcting a setup failure, restart `make api` to reconcile infrastructure and run
-`make seed` again to retry a failed sample with a new revision. Successful samples are preserved.
+After an infrastructure setup failure, stop API workers and run `make compute` to retry
+the external installation. Restart `make api` to revalidate it and run `make seed` again
+to retry a failed sample with a new revision. Successful samples are preserved.
+`make api` and `make compute` use a local shared/exclusive file lock to prevent concurrent
+infrastructure mutation. Stop independently launched workers too.
 
 ## Cleanup
 

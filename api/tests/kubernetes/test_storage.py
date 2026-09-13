@@ -2,11 +2,11 @@ import yaml
 import pytest
 import asyncio
 import jsonschema
+import subprocess
 from uuid import uuid4
 from aiohttp import web
-from src.utils import templates
+from pathlib import Path
 from aiohttp.test_utils import TestServer
-from importlib.resources import files
 from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 
@@ -18,28 +18,25 @@ def test_storage_topology_matches_pinned_rook_schemas(instances: int) -> None:
     """Validate actual production manifests against their pinned operator contracts."""
 
     # Read the packaged CRDs, rather than duplicating the Rook field definitions.
-    root = files("src.kubernetes.templates").joinpath("platform")
+    root = Path(__file__).resolve().parents[3]
     schemas = {
         document["spec"]["names"]["kind"]: next(
             version["schema"]["openAPIV3Schema"] for version in document["spec"]["versions"] if version["storage"]
         )
-        for document in yaml.safe_load_all(root.joinpath("rook-crds-v1.19.11.yml").read_text())
+        for document in yaml.safe_load_all(root.joinpath("k8s/compute/operators/rook-crds/release.yml").read_text())
         if document and document["kind"] == "CustomResourceDefinition"
     }
-    documents = templates.readyml_list(
-        root.joinpath("storage.yml"),
-        storage_class='"block-storage"',
-        size_gib=100,
-        instances=instances,
-        managers=min(instances, 2),
-        safe_replica_size="true" if instances > 1 else "false",
-    )
+    directory = root / ("dev/compute/infrastructure" if instances == 1 else "k8s/compute/infrastructure")
+    result = subprocess.run(["kubectl", "kustomize", str(directory)], check=True, capture_output=True, text=True)
+    documents = list(yaml.safe_load_all(result.stdout))
     for document in documents:
         if document["kind"] in schemas:
             jsonschema.validate(document, schemas[document["kind"]])
 
     # Production consumes explicitly assigned PVCs and never discovers arbitrary host disks.
-    cluster, store, storage_class = documents
+    cluster = next(document for document in documents if document["kind"] == "CephCluster")
+    store = next(document for document in documents if document["kind"] == "CephObjectStore")
+    storage_class = next(document for document in documents if document["kind"] == "StorageClass")
     assert cluster["spec"]["storage"]["useAllDevices"] is False
     assert cluster["spec"]["storage"]["storageClassDeviceSets"][0]["volumeClaimTemplates"][0]["spec"]["volumeMode"] == "Block"
     assert store["spec"]["gateway"]["securePort"] == 443

@@ -98,11 +98,9 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register local infrastructure and create the local example Organization and Solution."""
 
-    # Existing k3d clusters receive the same idempotent prerequisites as new local installations.
-    if settings.STORAGE_CLASS == "longlink-development":
-        from src.development import setup
-
-        settings.STORAGE_CERTIFICATE = await setup.prepare(settings.KUBECONFIG)
+    # Local infrastructure is installed by make up; seeding only reads its public trust.
+    if settings.STORAGE_CLASS == "longlink-development" and settings.STORAGE_CERTIFICATE is None:
+        settings.STORAGE_CERTIFICATE = (Path(__file__).resolve().parents[2] / "dev/certificates/ca.crt").read_text()
 
     compute_registry = await seed_infrastructure(
         settings,

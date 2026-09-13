@@ -1,20 +1,22 @@
-# Fresh Compute Installation
+# Compute validation and tenant lifecycle
 
-`Kubernetes(kubeconfig)` is unchanged. `gateway.apply(gateway_url,
-gateway_certificate=None) -> None` installs the bundled releases, waits for their
-Deployments and CRDs, then requests `/ready` with `Host: internalkourier` over
+Install the external [Compute package](../../../../k8s/compute/README.md) before registering a cluster.
+`gateway.verify(gateway_url, gateway_certificate=None) -> None` checks its completed
+release record, contract and cluster identity, observes controller readiness,
+then requests `/ready` with `Host: internalkourier` over
 hostname-verified HTTPS. The configured endpoint remains the TLS SNI name.
 The HTTP `Host` used for Knative routing does not change that TLS identity: the
 gateway certificate covers the configured gateway host, not each `.svc` name.
 No server keys, CA keys, or client identities are generated or stored in Platform
-metadata. `operations.computes.create` only records `Status.running` after this
-check succeeds.
+metadata. `operations.computes.create` only records `Status.running` after gateway
+and storage validation succeed. An interrupted package deployment prevents
+registration from reporting readiness. These checks never install or repair operators.
 
 ## Operator Prerequisites
 
-- Use a dedicated, fresh Kubernetes cluster with a NetworkPolicy-enforcing CNI.
-  CNPG 1.29 supports Kubernetes 1.33-1.35; validate the chosen distribution against
-  Knative's requirements too. Bootstrap needs cluster-admin-equivalent access.
+- Use a dedicated Kubernetes cluster with a NetworkPolicy-enforcing CNI and a
+  version supported by `k8s/compute/release.yaml`. Package installation requires
+  cluster-admin-equivalent access and is executed outside Platform reconciliation.
 - Pre-create namespace `knative-serving` and TLS Secret `longlink-gateway-tls`
   with `tls.crt` and `tls.key`. Its certificate must cover `gateway_url`'s host.
   Certificate issuance and renewal belong to the operator. A public certificate
@@ -161,16 +163,16 @@ Knative scale-to-zero alone does not wake a hibernated database: Platform must
 resume it before forwarding traffic.
 
 `organizations.apply(namespace: str)` and `delete(namespace: str)` retain their
-string APIs; callers supply the new compute prefix. `gateway.delete()` is only for
-dedicated-cluster teardown after tenant cleanup. It removes shared namespaces but
-retains cluster RBAC and CRDs, avoiding accidental cascading database destruction.
+string APIs; callers supply the compute prefix. Tenant cleanup leaves shared
+infrastructure installed. Dedicated-cluster teardown belongs to deployment tooling;
+local `make down` removes the entire development cluster.
 
 ## Pinned Sources
 
-Release manifests are downloaded once and committed under `templates/`, locking
-their exact contents in the repository. The API container packages those files
-directly, so cluster reconciliation never depends on GitHub availability. Bootstrap
-applies LongLink overrides in memory.
+Release manifests are downloaded once and committed under `k8s/compute/operators/`,
+locking their contents in the infrastructure package. Kustomize expresses LongLink
+overrides beside those manifests. The API container includes only tenant templates;
+runtime validation and reconciliation do not download infrastructure releases.
 
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml

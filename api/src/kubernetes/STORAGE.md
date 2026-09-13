@@ -1,8 +1,8 @@
 # Rook/Ceph object storage
 
-LongLink installs Rook **v1.19.11** and Ceph **v19.2.6**, then creates one
+The external `k8s/compute` package installs Rook **v1.19.11** and Ceph **v19.2.6**, then creates one
 `CephObjectStore` named `longlink` in `rook-ceph` per compute. The upstream
-operator, common resources, and CRDs are committed under `templates/platform/`.
+operator, common resources, and CRDs are committed under `k8s/compute/operators/` at the repository root.
 Ceph CSI drivers and the separate CSI operator are disabled: this integration
 provides S3, and consumes an independently installed backing PVC provisioner.
 
@@ -18,7 +18,7 @@ provides S3, and consumes an independently installed backing PVC provisioner.
   failure domains. `storage_size_gib` is capacity **per OSD**, not a bucket quota
   or the sum of usable replicated capacity. Monitors additionally request 10 GiB
   each. `storage_instances=1` is an explicitly non-HA development topology.
-  `make up` and local seeding provision the `longlink-development` CSI hostpath
+  `make up` provisions the `longlink-development` CSI hostpath
   class automatically. Local k3d nodes mount `/dev` and `/run/udev` to support
   the driver's loop-backed Block PVCs; only explicitly provisioned PVCs are
   selected by Ceph. Production must supply a durable backing provisioner.
@@ -34,18 +34,19 @@ provides S3, and consumes an independently installed backing PVC provisioner.
   Host-run development workers instead use authenticated Kubernetes port-forwarding
   with a client-scoped resolver. The endpoint hostname remains the TLS identity
   and SigV4 signing authority; in-cluster workloads use the service directly.
-- Allow enough provisioning time using `OPERATION_TIMEOUT_SECONDS` (up to 1740).
-  Reconciliation is idempotent, so a timed-out installation can be retried.
+- Install the Compute package before registering it. The installer has separate
+  readiness deadlines; API operation timeouts no longer govern shared installation.
+  Stop local API workers and run `make compute` to retry installation.
 
 ## Quotas and capacity admission
 
 Administrators must explicitly supply these immutable Compute registration fields:
 
-| Field | Meaning |
-| --- | --- |
-| `bucket_size_bytes` | Positive organization-wide byte quota, a multiple of 1024 (Ceph quota granularity). |
-| `bucket_max_objects` | Positive organization-wide object quota shared by all Solution writers. |
-| `storage_reserve_percent` | 1–99% of replicated usable capacity withheld from admission. |
+| Field                           | Meaning                                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `bucket_size_bytes`             | Positive organization-wide byte quota, a multiple of 1024 (Ceph quota granularity).             |
+| `bucket_max_objects`            | Positive organization-wide object quota shared by all Solution writers.                         |
+| `storage_reserve_percent`       | 1–99% of replicated usable capacity withheld from admission.                                    |
 | `storage_object_overhead_bytes` | Per-object allocation/index/metadata budget, at least 4096 bytes, additional to the byte quota. |
 
 These are separate from `storage_size_gib`. Admission uses:

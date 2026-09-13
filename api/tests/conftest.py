@@ -50,8 +50,8 @@ from src.database.models.users import User
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    async def install(self, compute: object) -> None:
-        """Accept shared storage reconciliation."""
+    async def verify(self, compute: object) -> None:
+        """Accept read-only shared storage verification."""
 
     async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Accept provisioning and return the resulting bucket boundary."""
@@ -175,6 +175,11 @@ class FakeKubernetes:
         """Return the fake API client used by resource fakes."""
 
         return cast(Api, object())
+
+    async def cluster_uid(self) -> str:
+        """Return the identity expected by the installed package fixture."""
+
+        return "test-cluster"
 
     async def portforward(self, name: str, namespace: str, port: int) -> int:
         """Return a synthetic development gateway port without external I/O."""

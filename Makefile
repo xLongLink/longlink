@@ -1,4 +1,4 @@
-.PHONY: install check format build test up image down api web sdk seed
+.PHONY: install check format build test up compute image down api web sdk seed
 
 DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
 
@@ -11,8 +11,9 @@ install:
 
 # Run lint, type, and contract checks.
 check:
-	cd api && uv run --locked ruff check .
+	cd api && uv run --locked ruff check . ../k8s/compute/scripts
 	cd api && uv run --locked --extra dev ty check
+	cd api && uv run --locked --extra dev ty check ../k8s/compute/scripts/deploy.py
 	cd sdk && uv run --locked ruff check .
 	cd sdk && uv run --locked --group dev ty check
 	cd web && vp run check
@@ -92,8 +93,14 @@ up:
 		--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key \
 		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
 	cd api && DEVELOPMENT=true uv run --locked python -m src.development.setup
+	$(MAKE) compute
 	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
 	$(MAKE) image
+
+
+# Install the local Compute package before starting Platform workers.
+compute:
+	uv run --script k8s/compute/scripts/deploy.py apply --local --overlay dev/compute --kubeconfig api/kubeconfig.yaml --cluster-uid "$$(kubectl --kubeconfig api/kubeconfig.yaml get namespace kube-system -o jsonpath='{.metadata.uid}')"
 
 
 # Build and push the local sample, preserving an existing development project.
@@ -120,7 +127,7 @@ down:
 api:
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+	cd api && DEVELOPMENT=true flock --shared --nonblock ../dev/compute.lock uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Run the Vite web app.

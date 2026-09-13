@@ -9,16 +9,16 @@ spec:
         allowUnsupported: false
     dataDirHostPath: /var/lib/rook
     mon:
-        count: $instances
+        count: 3
         allowMultiplePerNode: false
         volumeClaimTemplate:
             spec:
-                storageClassName: $storage_class
+                storageClassName: block-storage
                 resources:
                     requests:
                         storage: 10Gi
     mgr:
-        count: $managers
+        count: 2
         allowMultiplePerNode: false
     dashboard:
         enabled: false
@@ -27,8 +27,8 @@ spec:
         useAllDevices: false
         storageClassDeviceSets:
             - name: longlink
-              count: $instances
-              portable: false
+              count: 3
+              resources: {}
               placement:
                   topologySpreadConstraints:
                       - maxSkew: 1
@@ -41,12 +41,12 @@ spec:
                   - metadata:
                         name: data
                     spec:
-                        storageClassName: $storage_class
+                        storageClassName: block-storage
                         volumeMode: Block
                         accessModes: [ReadWriteOnce]
                         resources:
                             requests:
-                                storage: '${size_gib}Gi'
+                                storage: 100Gi
 ---
 apiVersion: ceph.rook.io/v1
 kind: CephObjectStore
@@ -57,16 +57,16 @@ spec:
     metadataPool:
         failureDomain: host
         replicated:
-            size: $instances
-            requireSafeReplicaSize: $safe_replica_size
+            size: 3
+            requireSafeReplicaSize: true
     dataPool:
         failureDomain: host
         replicated:
-            size: $instances
-            requireSafeReplicaSize: $safe_replica_size
+            size: 3
+            requireSafeReplicaSize: true
     preservePoolsOnDelete: true
     gateway:
-        instances: $managers
+        instances: 2
         port: 0
         securePort: 443
         sslCertificateRef: longlink-storage-tls

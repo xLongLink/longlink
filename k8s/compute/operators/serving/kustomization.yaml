@@ -1,0 +1,50 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+    - release.yml
+patches:
+    - target:
+          kind: ConfigMap
+          name: config-network
+      patch: |-
+          - op: add
+            path: /data/ingress-class
+            value: kourier.ingress.networking.knative.dev
+    - target:
+          kind: ConfigMap
+          name: config-features
+      patch: |-
+          - op: add
+            path: /data/kubernetes.podspec-nodeselector
+            value: enabled
+          - op: add
+            path: /data/kubernetes.podspec-securitycontext
+            value: enabled
+          - op: add
+            path: /data/kubernetes.podspec-volumes-emptydir
+            value: enabled
+          - op: add
+            path: /data/secure-pod-defaults
+            value: enabled
+    - target:
+          kind: ConfigMap
+          name: config-deployment
+      patch: |-
+          - op: add
+            path: /data/queue-sidecar-cpu-request
+            value: 25m
+          - op: add
+            path: /data/queue-sidecar-cpu-limit
+            value: 200m
+          - op: add
+            path: /data/queue-sidecar-memory-request
+            value: 64Mi
+          - op: add
+            path: /data/queue-sidecar-memory-limit
+            value: 128Mi
+          - op: add
+            path: /data/queue-sidecar-ephemeral-storage-request
+            value: 64Mi
+          - op: add
+            path: /data/queue-sidecar-ephemeral-storage-limit
+            value: 128Mi

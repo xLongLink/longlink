@@ -7,21 +7,24 @@
 - Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.
 
-
 ## Terminology
 
 - Platform: Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
-- Solution: Simplest possible representation of a business process expressed as code. 
+- Solution: Simplest possible representation of a business process expressed as code.
 - View: XML interface definition rendered by the shared Web runtime.
 
 ## Architecture
 
 ```text
 LongLink
+├── Deployment configuration
+│   ├── k8s/compute → versioned shared infrastructure package
+│   ├── dev/compute → local Kustomize overlays, installed by make up / make compute
+│   └── Hosting repository → cloud topology, release selection, and deployment workflows
 ├── Control plane
 │   ├── API replicas
 │   │   ├── Authentication, authorization, memberships, and request proxy
-│   │   ├── Operation scheduler → provisioning and deployments
+│   │   ├── Operation scheduler → tenant provisioning, deployments, and Compute validation
 │   │   └── Database scheduler → activity, wake/sleep, and identity sync
 │   ├── Web → renders Views served by Solutions
 │   └── Platform database → desired state, activity, operation leases, and history
@@ -50,10 +53,11 @@ LongLink
                     └── S3 key prefix per Solution
 ```
 
-
 ## Boundaries and Contracts
 
 - Platform metadata is separate from Solution business data.
+- Shared Compute infrastructure is installed externally from `k8s/compute`; API reconciliation validates it without installing operators.
+- Local development installs infrastructure before starting API workers. Stop workers before `make compute`; `make api` and the installer coordinate through `dev/compute.lock`.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
 - Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.
 - Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
@@ -65,7 +69,6 @@ LongLink
 - Edit source contracts, not generated files, and keep implementations aligned.
 - API and SDK define safe errors; shared Web reports API failures while local UI handles interaction recovery.
 - XML permits declarative UI only, and frontend access controls never replace backend authorization.
-
 
 ## Python Guidelines
 
@@ -93,12 +96,10 @@ LongLink
 - Add a docstring to every Python function.
 - Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
 
-
 ### Testing
 
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
-
 
 ## JavaScript / TypeScript Guidelines
 
@@ -125,7 +126,6 @@ LongLink
 - Run formatting, linting, type checking, and relevant existing tests, then review the implementation for further simplification.
 - Use only `lucide-react` icons, do not use `Astryx` icons
 - Each page shall be simple and standalone, prefer duplication of code where clarity benefict.
-
 
 ## Astryx Guidelines
 
@@ -154,7 +154,6 @@ template --list page + block recipes
 docs <topic> color, elevation, icons, illustrations, internationalization, layout, migration, motion, principles, shape, spacing, styling, theme, tokens, typography
 swizzle <Name> eject component source for deep customization
 upgrade --apply run after any @astryxdesign/core bump
-
 
 ## Commit Message Structure
 
