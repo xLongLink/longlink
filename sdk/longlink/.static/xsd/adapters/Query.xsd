@@ -11,12 +11,6 @@
         <xsd:documentation>Solution-relative JSON endpoint path.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="page" type="xsd:string">
-      <xsd:annotation><xsd:documentation>Current page binding for a paginated query.</xsd:documentation></xsd:annotation>
-    </xsd:attribute>
-    <xsd:attribute name="pageSize" type="xsd:positiveInteger">
-      <xsd:annotation><xsd:documentation>Enables server pagination with this page size.</xsd:documentation></xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="pollInterval" type="xsd:positiveInteger">
       <xsd:annotation><xsd:documentation>Milliseconds between automatic refreshes.</xsd:documentation></xsd:annotation>
     </xsd:attribute>

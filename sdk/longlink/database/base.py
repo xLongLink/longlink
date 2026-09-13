@@ -2,6 +2,7 @@ import asyncio
 from uuid import UUID
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from sqlmodel import Session as SyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
@@ -141,4 +142,6 @@ class Database:
 
 
 # Register shared audit listeners after AuditTable is fully defined.
-from longlink.database import audit  # noqa: F401
+from longlink.database import audit
+
+audit.install_listener(SyncSession, AuditTable)

@@ -1,16 +1,13 @@
 import jwt
-from uuid import UUID
 from fastapi import FastAPI, Request
 from longlink import identity
-from contextvars import ContextVar
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from starlette.responses import Response
 from longlink.shared.models import Audit
+from longlink.database.audit import current_actor as _current_identity
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-_current_identity: ContextVar[UUID | None] = ContextVar("current_identity", default=None)
 
 
 @dataclass(frozen=True, slots=True)

@@ -36,6 +36,7 @@ export type RuntimeServices = {
     invalidate: (id: string) => Promise<void>;
     navigate: (url: string) => void;
     navigationBaseUrl: string;
+    requestCompleted?: (url: string) => Promise<void>;
     requestBaseUrl: string;
     setups: Record<string, () => Promise<void> | void>;
 };

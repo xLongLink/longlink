@@ -6,12 +6,12 @@ from typing import Annotated
 from fastapi import Body, Query, Cookie, Header, Depends, Response, APIRouter, HTTPException, BackgroundTasks
 from src.auth import get_session
 from src.utils import mail, oauth, token, cookies
-from src.database import audit as database_audit
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvailability, RegistrationComplete, PasswordResetComplete
 from src.environments import env
 from src.models.users import UserSummary
 from fastapi.responses import RedirectResponse
+from longlink.database import audit
 from src.database.services import users, invitations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -136,7 +136,7 @@ async def complete_oauth_login(
     if user.deleted_at is not None:
         return oauth_failure_response()
     # Attribute profile linking and accepted invitations to the verified external identity.
-    with database_audit.actor(user.id):
+    with audit.actor(user.id):
         try:
             await invitations.accept(session, user)
             await session.commit()
@@ -170,7 +170,7 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    with database_audit.actor(user.id):
+    with audit.actor(user.id):
         await invitations.accept(session, user)
         await session.commit()
     credential = token.create_auth_token(user)
@@ -252,7 +252,7 @@ async def reset_password(
     user = await password_reset_user(session, password_reset_token or "")
 
     # Replace the credential so password-bound browser sessions become invalid.
-    with database_audit.actor(user.id):
+    with audit.actor(user.id):
         user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
         await session.commit()
 
@@ -314,7 +314,7 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         user = await users.register(session, payload.name, email, payload.password)
-        with database_audit.actor(user.id):
+        with audit.actor(user.id):
             await invitations.accept(session, user)
             await session.commit()
     except IntegrityError as exc:

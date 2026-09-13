@@ -3,9 +3,9 @@ import hmac
 from uuid import UUID
 from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import token
-from src.database import audit as database_audit
 from src.database import session as database
 from collections.abc import AsyncIterator
+from longlink.database import audit
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +47,7 @@ async def authuser(
     request.state.authenticated = True
 
     # Keep the current user available to database audit hooks for the whole route lifecycle.
-    with database_audit.actor(user.id):
+    with audit.actor(user.id):
         yield user
 
 

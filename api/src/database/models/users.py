@@ -1,10 +1,10 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field
-from src.database.models.base import TombstoneAuditTable
+from src.database.models.base import AuditTable
 
 
-class User(TombstoneAuditTable, table=True):
+class User(AuditTable, table=True):
     """Represent a local LongLink user account."""
 
     __tablename__: ClassVar[str] = "users"

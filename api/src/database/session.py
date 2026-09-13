@@ -2,9 +2,13 @@ import contextlib
 from typing import Protocol
 from src.utils import urls
 from sqlalchemy import event
+from sqlalchemy.orm import Session as SyncSession
 from collections.abc import AsyncGenerator
 from src.environments import env
+from longlink.database import audit
+from src.database.models import registry  # noqa: F401
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from src.database.models.base import AuditTable
 
 Session: async_sessionmaker[AsyncSession] | None = None
 
@@ -71,5 +75,5 @@ async def session_scope() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-# Register audit listeners after the Platform audit models are available.
-from src.database import audit  # noqa: F401
+# Register shared audit listeners after the Platform audit models are available.
+audit.install_listener(SyncSession, AuditTable)

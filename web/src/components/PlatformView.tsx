@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 /** Renders a bundled XML View with platform-root navigation and API requests. */
 export function PlatformView({ source }: { source: string }) {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [ast] = useState(() => parseXML(source));
     const [runtime] = useState(() => {
         return createXmlContext({
@@ -20,6 +22,9 @@ export function PlatformView({ source }: { source: string }) {
             },
             navigationBaseUrl: '/',
             params: {},
+            requestCompleted: async (url) => {
+                await queryClient.invalidateQueries({ queryKey: ['api', url], exact: true });
+            },
             requestBaseUrl: '/',
         });
     });

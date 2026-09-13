@@ -134,6 +134,7 @@ async function executeAction(
             const result = await executeRequest(step.params, ctx, services.requestBaseUrl);
             closeOnSuccess ||= result.closeDialog;
             status = result.status;
+            await services.requestCompleted?.(result.url);
             continue;
         }
 
@@ -235,7 +236,7 @@ async function executeRequest(
     props: ASTProps,
     ctx: Scope,
     requestBaseUrl: string
-): Promise<{ closeDialog: boolean; status: number }> {
+): Promise<{ closeDialog: boolean; status: number; url: string }> {
     const { url, method, form, json, closeDialog } = resolveXmlProps(props, ctx, requestPropsSchema, ['form', 'json']);
     if (form !== undefined && json !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
@@ -250,7 +251,7 @@ async function executeRequest(
         form !== undefined ? { body: createActionFormData(form), method } : { json, method }
     );
 
-    return { closeDialog, status: response.status };
+    return { closeDialog, status: response.status, url: requestUrl };
 }
 
 /** Updates a State value or invalidates one State or Query setup. */

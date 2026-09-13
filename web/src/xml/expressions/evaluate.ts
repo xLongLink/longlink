@@ -106,6 +106,12 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             throw new Error('Operator not allowed');
         }
 
+        case 'ConditionalExpression':
+            // Evaluate only the selected branch, matching JavaScript conditional semantics.
+            return evaluateNode(node.test, ctx)
+                ? evaluateNode(node.consequent, ctx)
+                : evaluateNode(node.alternate, ctx);
+
         case 'UnaryExpression': {
             const value = evaluateNode(node.argument, ctx);
 

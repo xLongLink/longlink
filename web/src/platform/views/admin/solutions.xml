@@ -3,7 +3,7 @@
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <State id="deletion" item="${null}" open="${false}" />
-    <Query id="solutions" path="/api/v1/solutions" page="$pages.value" pageSize="25" pollInterval="5000" />
+    <Query id="solutions" path="/api/v1/solutions?page=${pages.value}&amp;page_size=25" pollInterval="5000" />
 
     <Stack gap="8">
         <Stack><Heading level="1">Solutions</Heading><Text color="secondary">Review all solutions across organizations and deployment states.</Text></Stack>

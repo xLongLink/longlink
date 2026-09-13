@@ -9,6 +9,11 @@
         <xsd:documentation>Semantic heading level from 1 to 6.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="accessibilityLevel" type="HeadingLevelType">
+      <xsd:annotation>
+        <xsd:documentation>Semantic heading level when it differs from the visual level.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Heading" type="HeadingType">

@@ -9,14 +9,14 @@ from sqlalchemy.engine import Connection
 from src.database.types import EncryptedType
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
-from src.database.models.base import AuditTable, TombstoneAuditTable
+from src.database.models.base import AuditTable
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.organizations import Organization
 
 
-class Solution(TombstoneAuditTable, table=True):
+class Solution(AuditTable, table=True):
     """Persist desired and observed runtime state for one Organization-owned LongLink Solution.
 
     A deletion tombstone remains until reconciliation removes the Solution's external resources.

@@ -3,7 +3,7 @@
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <State id="deletion" item="${null}" open="${false}" />
-    <Query id="organizations" path="/api/v1/organizations" page="$pages.value" pageSize="25" />
+    <Query id="organizations" path="/api/v1/organizations?page=${pages.value}&amp;page_size=25" />
 
     <Stack gap="8">
         <Stack>

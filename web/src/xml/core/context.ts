@@ -14,6 +14,7 @@ export type CreateContextOptions = {
     navigate: RuntimeServices['navigate'];
     navigationBaseUrl: string;
     params: Record<string, string>;
+    requestCompleted?: RuntimeServices['requestCompleted'];
     requestBaseUrl: string;
 };
 
@@ -27,6 +28,7 @@ export function createContext(options: CreateContextOptions): XmlRuntime {
             invalidate: async () => {},
             navigate: options.navigate,
             navigationBaseUrl: options.navigationBaseUrl,
+            requestCompleted: options.requestCompleted,
             requestBaseUrl: options.requestBaseUrl,
             setups: {},
         },
@@ -158,21 +160,7 @@ export async function setupContext(
                     throw new Error('Query path must resolve to a string');
                 }
 
-                const pageSize =
-                    node.params.pageSize == null ? undefined : Number(evaluate(node.params.pageSize, scope));
-                const page = node.params.page == null ? 1 : Number(evaluate(node.params.page, scope));
-                let url = resolveRequestUrl(services.requestBaseUrl, String(path));
-
-                // Paginated queries keep their response envelope so Table can control the current page.
-                if (pageSize !== undefined) {
-                    const request = new URL(
-                        url,
-                        typeof window === 'undefined' ? 'http://longlink.local' : window.location.origin
-                    );
-                    request.searchParams.set('page', String(page));
-                    request.searchParams.set('page_size', String(pageSize));
-                    url = request.pathname + request.search;
-                }
+                const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
                 scope.bindings[id] = await api(url, {
                     signal,

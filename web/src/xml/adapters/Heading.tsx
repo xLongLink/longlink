@@ -6,12 +6,19 @@ import { resolveXmlProps } from '../core/props';
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 
 const headingPropsSchema = z.object({
+    accessibilityLevel: z
+        .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)])
+        .optional(),
     level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
 });
 
 export function Heading({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { level } = resolveXmlProps(props, ctx, headingPropsSchema);
+    const { accessibilityLevel, level } = resolveXmlProps(props, ctx, headingPropsSchema);
 
-    return <AstryxHeading level={level}>{renderNode(nodes, ctx)}</AstryxHeading>;
+    return (
+        <AstryxHeading accessibilityLevel={accessibilityLevel} level={level}>
+            {renderNode(nodes, ctx)}
+        </AstryxHeading>
+    );
 }

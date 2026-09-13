@@ -5,7 +5,7 @@
     <State id="deletion" item="${null}" open="${false}" />
     <State id="registrationDialog" open="${false}" />
     <State id="registration" name="" kubeconfig="" gateway_url="" gateway_certificate="" database_storage_class="" database_size_gib="${10}" database_instances="${1}" storage_class="" storage_endpoint="https://rook-ceph-rgw-longlink.rook-ceph.svc:443" storage_size_gib="${100}" storage_instances="${3}" storage_certificate="" bucket_size_bytes="${1024}" bucket_max_objects="${1}" storage_reserve_percent="${1}" storage_object_overhead_bytes="${4096}" />
-    <Query id="computes" path="/api/v1/computes" page="$pages.value" pageSize="25" pollInterval="5000" />
+    <Query id="computes" path="/api/v1/computes?page=${pages.value}&amp;page_size=25" pollInterval="5000" />
 
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap"><Stack><Heading level="1">Compute</Heading><Text color="secondary">Manage Kubernetes connections, Kourier gateways, and database provisioning settings.</Text></Stack><Action><Patch state="registration" value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', database_size_gib: 10, database_instances: 1, storage_class: '', storage_endpoint: 'https://rook-ceph-rgw-longlink.rook-ceph.svc:443', storage_size_gib: 100, storage_instances: 3, storage_certificate: '', bucket_size_bytes: 1024, bucket_max_objects: 1, storage_reserve_percent: 1, storage_object_overhead_bytes: 4096 }}" /><Patch state="registrationDialog" value="${{ open: true }}" /><Button>Register Compute</Button></Action></Stack>

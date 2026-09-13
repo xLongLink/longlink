@@ -9,11 +9,11 @@ from src.database.types import EncryptedType
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel, TombstoneAuditTable
+from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
 
 
-class Organization(TombstoneAuditTable, table=True):
+class Organization(AuditTable, table=True):
     """Persist the tenant boundary and its immutable infrastructure assignments.
 
     A deletion tombstone remains until reconciliation removes the Organization's external resources.

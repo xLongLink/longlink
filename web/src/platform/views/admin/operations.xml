@@ -3,7 +3,7 @@
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <State id="log" idValue="" open="${false}" />
-    <Query id="operations" path="/api/v1/operations" page="$pages.value" pageSize="25" pollInterval="5000" />
+    <Query id="operations" path="/api/v1/operations?page=${pages.value}&amp;page_size=25" pollInterval="5000" />
     <Query id="logs" path="/api/v1/operations/${log.idValue}/logs" if="$log.idValue" />
 
     <Stack gap="8">

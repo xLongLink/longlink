@@ -2,7 +2,7 @@
 <longlink name="Users" icon="users">
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
-    <Query id="users" path="/api/v1/users" page="$pages.value" pageSize="25" />
+    <Query id="users" path="/api/v1/users?page=${pages.value}&amp;page_size=25" />
 
     <Stack gap="8">
         <Stack>
