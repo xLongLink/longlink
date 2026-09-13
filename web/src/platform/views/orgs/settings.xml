@@ -1,0 +1,109 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Organization Settings" icon="settings2">
+    <Query id="membership" path="/api/v1/organizations/slug/${params.organization}" />
+    <Query id="details" path="/api/v1/organizations/${membership.organization.id}" />
+    <Query id="database" path="/api/v1/organizations/${membership.organization.id}/database" />
+    <Query id="storage" path="/api/v1/organizations/${membership.organization.id}/storage" />
+    <Query id="solutions" path="/api/v1/organizations/${membership.organization.id}/solutions" pollInterval="5000" />
+    <State id="invitation" email="" role="write" />
+
+    <Stack gap="8">
+        <Stack direction="horizontal" gap="3" align="center">
+            <Avatar kind="organization" name="$details.organization.name" src="$details.organization.avatar" />
+            <Stack>
+                <Heading level="4" accessibilityLevel="1">$details.organization.name</Heading>
+                <Text type="supporting">Organization</Text>
+            </Stack>
+        </Stack>
+
+        <Menu>
+            <MenuSection title="Settings" isHeaderHidden="true">
+                <MenuItem label="Organization" icon="building2">
+                    <Stack gap="4">
+                        <Heading level="2">Organization</Heading>
+                        <Divider />
+                        <ProgressBar label="Database" value="${database.size_bytes ?? 0}" max="$database.allocated_bytes" />
+                        <ProgressBar if="$storage" label="Storage" value="$storage.space_used" max="$storage.quota_bytes" />
+                    </Stack>
+                </MenuItem>
+                <MenuSubSection label="People" icon="users">
+                    <MenuItem label="Members">
+                        <Stack gap="4">
+                            <Heading level="2">Members</Heading>
+                            <Divider />
+                            <Table data="$details.members" idKey="user.id" hasHover="true">
+                                <TableColumn field="user.name" header="User">
+                                    <Stack direction="horizontal" gap="3" align="center">
+                                        <Avatar name="$row.user.name" src="$row.user.avatar" />
+                                        <Text>$row.user.name</Text>
+                                    </Stack>
+                                </TableColumn>
+                                <TableColumn field="role" header="Role"><Badge>$row.role</Badge></TableColumn>
+                                <TableColumn if="${membership.role === 'admin' || membership.role === 'owner'}" field="user.id" header="Actions">
+                                    <Stack direction="horizontal" gap="1" wrap="wrap">
+                                        <Action if="${row.role !== 'read'}"><Request url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}" method="PATCH" json="${{ role: 'read' }}" /><Patch state="details" invalidate="true" /><Button variant="ghost">Read</Button></Action>
+                                        <Action if="${row.role !== 'write'}"><Request url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}" method="PATCH" json="${{ role: 'write' }}" /><Patch state="details" invalidate="true" /><Button variant="ghost">Write</Button></Action>
+                                        <Action if="${row.role !== 'maintain'}"><Request url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}" method="PATCH" json="${{ role: 'maintain' }}" /><Patch state="details" invalidate="true" /><Button variant="ghost">Maintain</Button></Action>
+                                        <Action if="${row.role !== 'admin'}"><Request url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}" method="PATCH" json="${{ role: 'admin' }}" /><Patch state="details" invalidate="true" /><Button variant="ghost">Admin</Button></Action>
+                                    </Stack>
+                                </TableColumn>
+                            </Table>
+                        </Stack>
+                    </MenuItem>
+                    <MenuItem label="Invitations">
+                        <Stack gap="4">
+                            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                                <Heading level="2">Invitations</Heading>
+                                <Dialog if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}" title="Invite user" subtitle="Send an invitation to join this organization." triggerLabel="Invite" purpose="form">
+                                    <Stack gap="3">
+                                        <TextInput label="Email" value="$invitation.email" placeholder="user@example.com" isRequired="true" />
+                                        <Selector label="Role" value="$invitation.role"><Option value="read" /><Option value="write" /><Option value="maintain" /><Option value="admin" /></Selector>
+                                        <Action>
+                                            <Validate value="$invitation" rules="${{ email: { type: 'string', trim: true, minLength: 3 }, role: { type: 'string', trim: true, minLength: 1 } }}" />
+                                            <Request url="/api/v1/organizations/${membership.organization.id}/invitations" method="POST" closeDialog="true" json="$invitation" />
+                                            <Patch state="details" invalidate="true" />
+                                            <Button variant="primary">Invite</Button>
+                                        </Action>
+                                    </Stack>
+                                </Dialog>
+                            </Stack>
+                            <Divider />
+                            <Table data="$details.invitations" idKey="id" hasHover="true">
+                                <TableColumn field="email" header="Email" />
+                                <TableColumn field="role" header="Role"><Badge>$row.role</Badge></TableColumn>
+                                <TableColumn if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}" field="id" header="Actions">
+                                    <Action><Request url="/api/v1/organizations/${membership.organization.id}/invitations/${row.id}" method="DELETE" /><Patch state="details" invalidate="true" /><Button variant="destructive">Revoke</Button></Action>
+                                </TableColumn>
+                            </Table>
+                        </Stack>
+                    </MenuItem>
+                </MenuSubSection>
+                <MenuItem label="Solutions" icon="boxes">
+                    <Stack gap="4">
+                        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                            <Heading level="2">Solutions</Heading>
+                            <CreateSolution if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}" organizationId="$membership.organization.id" />
+                        </Stack>
+                        <Divider />
+                        <Table data="$solutions" idKey="id" hasHover="true">
+                            <TableColumn field="name" header="Solution">
+                                <Stack>
+                                    <Link to="/orgs/${params.organization}/solutions/${row.slug}">$row.name</Link>
+                                    <Text if="$row.description" type="supporting">$row.description</Text>
+                                </Stack>
+                            </TableColumn>
+                            <TableColumn field="status" header="Status"><StatusBadge status="$row.status" /></TableColumn>
+                            <TableColumn if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}" field="id" header="Actions">
+                                <Stack direction="horizontal" gap="1" wrap="wrap">
+                                    <SolutionUpdate organizationId="$membership.organization.id" solution="$row" />
+                                    <SolutionLogs solutionId="$row.id" />
+                                    <Action><Request url="/api/v1/solutions/${row.id}" method="DELETE" /><Patch state="solutions" invalidate="true" /><Button variant="destructive">Delete</Button></Action>
+                                </Stack>
+                            </TableColumn>
+                        </Table>
+                    </Stack>
+                </MenuItem>
+            </MenuSection>
+        </Menu>
+    </Stack>
+</longlink>

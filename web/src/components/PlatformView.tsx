@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 /** Renders a bundled XML View with platform-root navigation and API requests. */
-export function PlatformView({ source }: { source: string }) {
+export function PlatformView({ source, params = {} }: { source: string; params?: Record<string, string> }) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [ast] = useState(() => parseXML(source));
@@ -21,7 +21,7 @@ export function PlatformView({ source }: { source: string }) {
                 window.location.assign(url);
             },
             navigationBaseUrl: '/',
-            params: {},
+            params,
             requestCompleted: async (url) => {
                 await queryClient.invalidateQueries({ queryKey: ['api', url], exact: true });
             },

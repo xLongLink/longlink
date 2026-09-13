@@ -583,6 +583,33 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
+                "description": "Accessible progress label.",
+                "name": "label"
+            },
+            {
+                "description": "Current byte usage expression.",
+                "name": "value"
+            },
+            {
+                "description": "Byte quota expression.",
+                "name": "max"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "Displays byte usage against a fixed allocation or quota.",
+        "example": "<ProgressBar label=\"Storage\" value=\"$storage.space_used\" max=\"$storage.quota_bytes\" />",
+        "name": "ProgressBar",
+        "lastUpdated": "2026-09-14",
+        "nested": [],
+        "slug": "progress-bar",
+        "source": "adapters/ProgressBar.xsd"
+    },
+    {
+        "attributes": [
+            {
                 "description": "Literal runtime identifier.",
                 "name": "id"
             },
