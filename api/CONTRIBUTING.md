@@ -17,6 +17,10 @@ uv run pytest --cov=main --cov=src --cov-report=term-missing  # Run tests with b
 
 Production images start the Platform API without applying schema changes. Before every API rollout, the deployment pipeline must run `alembic upgrade head` and then `python -m src.release` once with the shared database before starting replicas.
 
+Kubernetes package tests require kubectl, Helm, Helmfile, and standalone Kustomize
+at the versions documented in [`k8s/README.md`](../k8s/README.md). They render the
+pinned upstream charts and need access to the chart repositories, but no cluster.
+
 ## Architecture
 
 The combined repository architecture is maintained in `../AGENTS.md`.

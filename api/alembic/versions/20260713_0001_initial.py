@@ -250,7 +250,7 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "compute.create",
+                "compute.validate",
                 "solution.deploy",
                 "solution.delete",
                 "organization.create",

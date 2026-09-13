@@ -47,15 +47,25 @@ jobs:
               working-directory: api
               run: uv run --locked ruff check .
 
+            - name: Setup Kustomize for Helmfile
+              uses: imranismail/setup-kustomize@ab2f6c276a92396da9967066f67ef300563038cf
+              with:
+                  kustomize-version: 5.8.1
+
+            - name: Setup Helm and Helmfile
+              uses: helmfile/helmfile-action@b56e977d7c89d1cb0e8728cb70b92b576822ac16
+              with:
+                  helm-version: v4.3.0
+                  helmfile-version: v1.8.0
+                  helm-plugins: ''
+                  helmfile-args: --file k8s/setup.yaml.gotmpl list
+
             - name: Render Compute package
               run: |
                   set -euo pipefail
-                  for stage in boundaries operators/serving-crds operators/serving operators/kourier operators/cnpg operators/rook-crds operators/rook infrastructure release; do
-                      kubectl kustomize "k8s/${stage}" > /dev/null
-                  done
-                  kubectl kustomize dev/compute/operators/rook > /dev/null
-                  kubectl kustomize dev/compute/infrastructure > /dev/null
-                  kubectl kustomize dev/compute/backing > /dev/null
+                  helmfile --file k8s/setup.yaml.gotmpl template > /dev/null
+                  helmfile --file k8s/setup.yaml.gotmpl --environment development template > /dev/null
+                  kubectl kustomize dev/compute/bootstrap > /dev/null
                   kubectl kustomize dev/compute/connectivity > /dev/null
 
             - name: Verify Docker daemon

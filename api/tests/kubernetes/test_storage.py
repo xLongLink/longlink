@@ -17,13 +17,19 @@ pytestmark = pytest.mark.no_db
 def test_storage_topology_matches_pinned_rook_schemas(instances: int) -> None:
     """Validate actual production manifests against their pinned operator contracts."""
 
-    # Read the packaged CRDs, rather than duplicating the Rook field definitions.
+    # Render the installed chart's CRDs, rather than duplicating Rook field definitions.
     root = Path(__file__).resolve().parents[3]
+    operator = subprocess.run(
+        ["helmfile", "--file", str(root / "k8s/setup.yaml.gotmpl"), "--selector", "name=rook-ceph", "template"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     schemas = {
         document["spec"]["names"]["kind"]: next(
             version["schema"]["openAPIV3Schema"] for version in document["spec"]["versions"] if version["storage"]
         )
-        for document in yaml.safe_load_all(root.joinpath("k8s/operators/rook-crds/release.yml").read_text())
+        for document in yaml.safe_load_all(operator.stdout)
         if document and document["kind"] == "CustomResourceDefinition"
     }
     directory = root / ("dev/compute/infrastructure" if instances == 1 else "k8s/infrastructure")

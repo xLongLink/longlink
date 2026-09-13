@@ -3,6 +3,13 @@ kind: Kustomization
 resources:
     - release.yml
 patches:
+    # Shared namespaces belong to the bootstrap stage, not individual Helm releases.
+    - patch: |-
+          $patch: delete
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+              name: kourier-system
     - target:
           kind: ConfigMap
           name: config-kourier

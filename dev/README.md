@@ -15,16 +15,18 @@ Workstation
 │   ├── Gateway connection → localhost:8443 → Kourier TLS
 │   └── Storage connection → storage.localhost:9443 → RGW TLS
 └── k3d Compute cluster
-    ├── dev/compute/backing → backing provisioner manifests and Kustomize patches
+    ├── dev/compute/bootstrap → shared boundaries and backing provisioner
     ├── dev/compute/connectivity → S3 Service and split DNS
-    ├── k8s + dev overlays → Knative, CNPG, Rook, and Ceph
+    ├── k8s/setup.yaml.gotmpl → Helm releases for Knative, CNPG, Rook, and Ceph
     └── Organizations and Solutions → provisioned by the Platform
 ```
 
 ## Start
 
-Requirements: Linux AMD64, Docker, k3d, kubectl with Kustomize, OpenSSL, `flock`, uv,
-and the repository's Vite+ tooling. The host must resolve `storage.localhost` to
+Requirements: Linux AMD64, Docker, k3d, kubectl, Helm **4.3.0**, Helmfile **1.8.0**,
+standalone Kustomize **5.8.1**, OpenSSL, `flock`, uv, and the repository's Vite+
+tooling. Helmfile uses the standalone `kustomize` binary to package the retained
+manifests; no Helm plugins are required. The host must resolve `storage.localhost` to
 loopback. systemd-resolved supplies this on the supported workstation; if your
 resolver does not, configure `127.0.0.1 storage.localhost` in your host resolver.
 The setup checks resolution and never edits system DNS configuration.
@@ -42,10 +44,18 @@ variables and `.env`; no development mode is required.
 
 `make up` creates the private Docker network, registry, mail capture service,
 cluster, backing storage, TLS certificates, and shared Compute infrastructure.
-It then starts the gateway and storage connections. Run it again to reapply
+It then starts the gateway and storage connections and builds/pushes the sample
+Solution image. Run it again to reapply
 resources or retry an interrupted setup. `make down` removes those resources.
 Cluster settings are declared in `dev/cluster.yaml`.
 Generated private material lives under ignored `dev/certificates/`.
+
+`k8s/setup.yaml.gotmpl` owns the Kubernetes release order, chart versions, and
+operator settings. Helm installs the upstream CNPG and Rook charts and packages
+the retained Knative/Kourier Kustomizations. It waits for controller rollouts;
+three explicit hooks check webhook certificates and Ceph readiness before the
+release marker is published. The `development` environment selects the local
+storage overlay and permits loop-backed OSDs.
 
 `make image` and `make sdk` share `make sample`, which builds the SDK web bundle
 and initializes `sdk/dev` only when absent. Existing sample edits are preserved.
@@ -67,10 +77,9 @@ make api
 make web
 ```
 
-To build and provision the sample after the API is ready:
+To provision the sample after the API is ready:
 
 ```bash
-make image
 make seed
 ```
 
@@ -152,9 +161,14 @@ preparation, and its worker lifetime. Stop independently launched workers too. A
 restart revalidates infrastructure and reconciles tenant state without installing
 operators. The sample is retained unless a failed deployment needs a retry.
 
+Existing kubectl-managed installations require an explicit migration to Helm
+ownership; `make up` does not automatically adopt or replace them. For disposable
+local data, stop workers and use `make down`, `make up`, `make api`, and `make seed`.
+Hosted installations need a reviewed ownership migration; see `k8s/README.md`.
+
 Settings in `dev/cluster.yaml`, including registry mirrors, are applied by k3d only
 when creating the cluster. After changing them, stop workers and run `make down`,
-`make up`, `make image`, `make api`, and `make seed` to recreate disposable local state. This
+`make up`, `make api`, and `make seed` to recreate disposable local state. This
 includes clusters using the former `host.k3d.internal:15000` registry mirror and
 manually created Docker network. For that older setup, also remove the old network
 with `docker network rm longlink-dev` after `make down` and before `make up`.

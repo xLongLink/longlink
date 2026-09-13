@@ -8,7 +8,7 @@ hostname-verified HTTPS. The configured endpoint remains the TLS SNI name.
 The HTTP `Host` used for Knative routing does not change that TLS identity: the
 gateway certificate covers the configured gateway host, not each `.svc` name.
 No server keys, CA keys, or client identities are generated or stored in Platform
-metadata. `operations.computes.create` only records `Status.running` after gateway
+metadata. `operations.computes.validate` only records `Status.running` after gateway
 and storage validation succeed. The release contract is applied as the final
 deployment stage. These checks never install or repair operators.
 

@@ -277,7 +277,7 @@ export type OAuthAvailability = {
  *
  * Supported registered operation handlers.
  */
-export type OperationKind = 'compute.create' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
+export type OperationKind = 'compute.validate' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
  * OperationResource

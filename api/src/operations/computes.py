@@ -9,7 +9,7 @@ from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 
 
-async def create(compute_id: UUID) -> str | None:
+async def validate(compute_id: UUID) -> str | None:
     """Validate externally installed infrastructure and publish Compute readiness."""
 
     # Load the operator-configured endpoint and trust without tenant relationships.

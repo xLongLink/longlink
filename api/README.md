@@ -74,7 +74,7 @@ The runtime receives:
 
 Work that is too long for an API request is queued as a durable, typed Operation:
 
-- `compute.create` reconciles the shared Knative Serving, Kourier, and CNPG controllers. It never deploys, deletes, or repairs Organization or Solution resources.
+- `compute.validate` validates the shared package contract, controllers, gateway, and storage, then publishes Compute readiness. It never installs or repairs shared infrastructure.
 - `organization.create` and `organization.delete` own one Organization's provider resources, shared audit records, and Kubernetes Namespace lifecycle.
 - `solution.deploy` targets an immutable revision; `solution.delete` targets a Solution. They own provider resources and Knative Service lifecycle. The explicit rollback API queues `solution.deploy` for a previously successful revision.
 - Deployment runs migrations only for revisions that have never deployed successfully. A failed new revision is marked failed and durably queues the last successful revision; failure restoring a proven revision does not mark it failed or recursively queue recovery.
@@ -87,7 +87,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
 ## Deployment Reconciliation
 
 - Stop existing API replicas before deployment, run Alembic migrations, then `python -m src.release` once before new API replicas start. The release command rejects live leases; interrupted leases must be released or expire first. This prevents old workers from consuming reconciliation intended for new provider templates or SDK migrations. It schedules desired-state reconciliation Operations:
-    - One `compute.create` for every Compute.
+    - One `compute.validate` for every Compute.
     - One create or delete operation for every Organization according to its tombstone.
     - One deploy or delete operation for every Solution in an active Organization according to its tombstone and effective desired revision.
 - Repeated scheduling coalesces visible unfinished work, including leased attempts. Concurrent requests may queue duplicates, so lifecycle handlers must tolerate repeated reconciliation. Completion rechecks Solution desired state so requests coalesced with an active attempt are not lost.
@@ -102,8 +102,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
 <br />
 
 ```
-make up     # Prepare infrastructure and dev-owned endpoint connections
-make image  # Build and push the sample Solution
+make up     # Prepare infrastructure, endpoint connections, and the sample image
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 ```

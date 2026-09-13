@@ -78,11 +78,10 @@ _up:
 	fi
 	@umask 077; k3d kubeconfig get compute > api/kubeconfig.yaml
 	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/backing
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 
 	# Preserve the CA and reuse valid certificates when reapplying resources.
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -f dev/compute/namespaces.yaml
 	@set -eu; umask 077; mkdir -p dev/certificates; \
 		temporary="$$(mktemp -d dev/certificates/.generate.XXXXXX)"; \
 		trap 'rm -rf "$$temporary"' EXIT; \
@@ -118,33 +117,9 @@ _up:
 	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/connectivity
 	kubectl --kubeconfig api/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/boundaries
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/serving-crds
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/serving
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' validatingwebhookconfiguration/config.webhook.serving.knative.dev mutatingwebhookconfiguration/webhook.serving.knative.dev validatingwebhookconfiguration/validation.webhook.serving.knative.dev --timeout=180s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/kourier
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace kourier-system --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/cnpg
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace cnpg-system --timeout=900s
-	@set -eu; for configuration in mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration; do \
-		hooks="$$(kubectl --kubeconfig api/kubeconfig.yaml get "$$configuration" -o jsonpath='{.webhooks[*].name}')"; \
-		test -n "$$hooks"; \
-		for hook in $$hooks; do \
-			kubectl --kubeconfig api/kubeconfig.yaml wait --for="jsonpath={.webhooks[?(@.name=='$$hook')].clientConfig.caBundle}" "$$configuration" --timeout=180s; \
-		done; \
-	done
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/rook-crds
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/operators/rook
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace rook-ceph --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/infrastructure
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.status.phase}'=Ready cephcluster/rook-ceph cephobjectstore/longlink cephobjectstoreuser/longlink-health --namespace rook-ceph --timeout=1800s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/release
+	KUBECONFIG="$(abspath api/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
 	docker compose -f dev/compose.yml up --detach --wait gateway storage
+	$(MAKE) image
 
 
 # Build and push the local sample, preserving an existing development project.

@@ -1,0 +1,111 @@
+environments:
+    default:
+        values:
+            - infrastructure: ./infrastructure
+              allowLoopDevices: false
+    development:
+        values:
+            - infrastructure: ../dev/compute/infrastructure
+              allowLoopDevices: true
+---
+repositories:
+    - name: cnpg
+      url: https://cloudnative-pg.github.io/charts
+    - name: rook
+      url: https://charts.rook.io/release
+
+helmDefaults:
+    wait: true
+    timeout: 900
+    createNamespace: true
+
+releases:
+    - name: serving-crds
+      namespace: knative-serving
+      chart: ./operators/serving-crds
+
+    - name: serving
+      namespace: knative-serving
+      chart: ./operators/serving
+      needs:
+          - knative-serving/serving-crds
+      hooks:
+          - events: [postsync]
+            showlogs: true
+            command: kubectl
+            args:
+                - wait
+                - --for=jsonpath={.webhooks[*].clientConfig.caBundle}
+                - validatingwebhookconfiguration/config.webhook.serving.knative.dev
+                - mutatingwebhookconfiguration/webhook.serving.knative.dev
+                - validatingwebhookconfiguration/validation.webhook.serving.knative.dev
+                - --timeout=180s
+
+    - name: kourier
+      # Preserve upstream's split between knative-serving and kourier-system.
+      # A release namespace would make Chartify rewrite both into one namespace.
+      chart: ./operators/kourier
+      needs:
+          - knative-serving/serving
+
+    - name: cnpg
+      namespace: cnpg-system
+      chart: cnpg/cloudnative-pg
+      version: 0.28.1
+      values:
+          - fullnameOverride: cnpg-controller-manager
+      hooks:
+          - events: [postsync]
+            showlogs: true
+            command: sh
+            args:
+                - -ec
+                - |
+                    for configuration in mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration; do
+                        hooks="$(kubectl get "$configuration" -o jsonpath='{.webhooks[*].name}')"
+                        test -n "$hooks"
+                        for hook in $hooks; do
+                            kubectl wait --for="jsonpath={.webhooks[?(@.name=='$hook')].clientConfig.caBundle}" "$configuration" --timeout=180s
+                        done
+                    done
+
+    - name: rook-ceph
+      namespace: rook-ceph
+      chart: rook/rook-ceph
+      version: v1.19.11
+      values:
+          - allowLoopDevices: {{ .Values.allowLoopDevices }}
+            obcAllowAdditionalConfigFields: bucketMaxSize,bucketMaxObjects
+            csi:
+                rookUseCsiOperator: false
+                disableCsiDriver: "true"
+                enableRbdDriver: false
+                enableCephfsDriver: false
+
+    - name: storage
+      namespace: rook-ceph
+      chart: {{ .Values.infrastructure }}
+      # Ceph uses its own readiness status, checked by the hook below.
+      wait: false
+      needs:
+          - rook-ceph/rook-ceph
+      hooks:
+          - events: [postsync]
+            showlogs: true
+            command: kubectl
+            args:
+                - wait
+                - --for=jsonpath={.status.phase}=Ready
+                - cephcluster/rook-ceph
+                - cephobjectstore/longlink
+                - cephobjectstoreuser/longlink-health
+                - --namespace=rook-ceph
+                - --timeout=1800s
+
+    # Publish readiness only after every controller and the object store are ready.
+    - name: compute-release
+      chart: ./release
+      needs:
+          - kourier
+          - cnpg-system/cnpg
+          - rook-ceph/storage

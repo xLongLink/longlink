@@ -42,7 +42,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     operations = result.all()
 
     # Group targets by their concrete resource table.
-    compute_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.compute_create}
+    compute_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.compute_validate}
     organization_target_ids = {
         operation.target_id
         for operation in operations
@@ -57,7 +57,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
         )
         for resource_id, name in result:
-            resources[(OperationKind.compute_create, resource_id)] = OperationResource(id=resource_id, name=name)
+            resources[(OperationKind.compute_validate, resource_id)] = OperationResource(id=resource_id, name=name)
 
     if organization_target_ids:
         result = await session.execute(
@@ -135,7 +135,7 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
 
     # Create or reuse every desired-state operation in one transaction.
     for compute_id in compute_result:
-        await enqueue(session, kind=OperationKind.compute_create, target_id=compute_id)
+        await enqueue(session, kind=OperationKind.compute_validate, target_id=compute_id)
     for organization_id, deleted in organization_result:
         await enqueue(
             session,
@@ -302,9 +302,9 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
         return None
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
-    # Expose failed creation work on its target without changing deletion lifecycle state.
+    # Expose failed initial validation or creation on its target without changing deletion lifecycle state.
     model = {
-        OperationKind.compute_create: ComputeRegistry,
+        OperationKind.compute_validate: ComputeRegistry,
         OperationKind.organization_create: Organization,
     }.get(operation.kind)
     if model is not None:

@@ -1232,7 +1232,7 @@
     "/api/v1/computes": {
       "post": {
         "summary": "Create Compute Registry",
-        "description": "Register a compute target and queue its initial creation.",
+        "description": "Register a compute target and queue its initial validation.",
         "operationId": "create_compute_registry_api_v1_computes_post",
         "parameters": [
           {
@@ -3193,7 +3193,7 @@
       "OperationKind": {
         "type": "string",
         "enum": [
-          "compute.create",
+          "compute.validate",
           "solution.deploy",
           "solution.delete",
           "organization.create",

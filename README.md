@@ -69,8 +69,7 @@ Work on the LongLink Platform:
 
 ```bash
 make install
-make up     # Create local infrastructure
-make image  # Build and push the sample Solution
+make up     # Create local infrastructure and build the sample Solution
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 make web    # In another terminal

@@ -36,17 +36,17 @@ async def test_delete_removes_unused_registry() -> None:
     assert persisted is None
 
 
-async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> None:
-    """Retain a compute registry while its creation operation is unfinished."""
+async def test_delete_rejects_compute_with_unfinished_validation_operation() -> None:
+    """Retain a compute registry while its validation operation is unfinished."""
 
     # Arrange
     compute_registry = await create_compute()
     compute_id = compute_registry.id
-    await queue_operation(kind=OperationKind.compute_create, target_id=compute_id)
+    await queue_operation(kind=OperationKind.compute_validate, target_id=compute_id)
 
     # Act and assert
     async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^Compute registry has unfinished lifecycle operation$"):
+        with pytest.raises(ConflictError, match=r"^Compute registry has unfinished validation operation$"):
             await compute.delete(session, compute_id)
 
     # Assert

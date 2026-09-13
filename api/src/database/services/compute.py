@@ -53,7 +53,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_uid: str) -> ComputeRegistry:
     """Register one compute target."""
 
-    # Persist the target and its initial reconciliation request atomically.
+    # Persist the target and its initial validation request atomically.
     registry = ComputeRegistry(
         **payload.model_dump(),
         cluster_uid=cluster_uid,
@@ -62,7 +62,7 @@ async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_
 
     # Translate duplicate names or physical clusters to one stable API conflict.
     try:
-        session.add(Operation(kind=OperationKind.compute_create, target_id=registry.id))
+        session.add(Operation(kind=OperationKind.compute_validate, target_id=registry.id))
         await session.flush()
     except IntegrityError as exc:
         raise ConflictError("Compute registry already exists") from exc
@@ -87,12 +87,12 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
     if await session.scalar(select(col(Organization.id)).where(col(Organization.compute_id) == registry_id).limit(1)) is not None:
         raise ConflictError("Compute registry is used by organizations")
 
-    # Retain the Compute while its Gateway lifecycle may still use its Kubernetes credentials.
+    # Retain the Compute while validation may still use its Kubernetes credentials.
     if (
         await session.scalar(
             select(col(Operation.id))
             .where(
-                col(Operation.kind) == OperationKind.compute_create,
+                col(Operation.kind) == OperationKind.compute_validate,
                 col(Operation.target_id) == registry_id,
                 col(Operation.finished_at).is_(None),
             )
@@ -100,7 +100,7 @@ async def delete(session: AsyncSession, registry_id: UUID) -> None:
         )
         is not None
     ):
-        raise ConflictError("Compute registry has unfinished lifecycle operation")
+        raise ConflictError("Compute registry has unfinished validation operation")
 
-    # Delete only after no Organization or active Compute lifecycle depends on the registration.
+    # Delete only after no Organization or active Compute validation depends on the registration.
     await session.delete(registry)
