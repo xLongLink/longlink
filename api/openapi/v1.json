@@ -1017,147 +1017,6 @@
         }
       }
     },
-    "/api/v1/solutions/{solution_id}/revisions": {
-      "get": {
-        "summary": "List Revisions",
-        "description": "Return newest-first release history to Solution maintainers.",
-        "operationId": "list_revisions_api_v1_solutions__solution_id__revisions_get",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RevisionResponse"
-                  },
-                  "title": "Response List Revisions Api V1 Solutions  Solution Id  Revisions Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
-    "/api/v1/solutions/{solution_id}/revisions/{revision_id}/rollback": {
-      "post": {
-        "summary": "Rollback Solution",
-        "description": "Restore a successful release while retaining the current database schema.",
-        "operationId": "rollback_solution_api_v1_solutions__solution_id__revisions__revision_id__rollback_post",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "revision_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Revision Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
     "/api/v1/solutions/{solution_id}/logs": {
       "get": {
         "summary": "Get Solution Logs",
@@ -1232,7 +1091,7 @@
     "/api/v1/computes": {
       "post": {
         "summary": "Create Compute Registry",
-        "description": "Register a compute target and queue its initial creation.",
+        "description": "Register a compute target and queue its initial validation.",
         "operationId": "create_compute_registry_api_v1_computes_post",
         "parameters": [
           {
@@ -2877,7 +2736,7 @@
           "storage_size_gib": {
             "type": "integer",
             "maximum": 65536.0,
-            "minimum": 10.0,
+            "minimum": 1.0,
             "title": "Storage Size Gib",
             "default": 100
           },
@@ -3193,7 +3052,7 @@
       "OperationKind": {
         "type": "string",
         "enum": [
-          "compute.create",
+          "compute.validate",
           "solution.deploy",
           "solution.delete",
           "organization.create",
@@ -3804,85 +3663,6 @@
         ],
         "title": "RegistrationComplete",
         "description": "Validate profile and password setup after email authentication."
-      },
-      "RevisionResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "configured_envs": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Configured Envs"
-          },
-          "min_scale": {
-            "type": "integer",
-            "enum": [
-              0,
-              1
-            ],
-            "title": "Min Scale"
-          },
-          "failed": {
-            "type": "boolean",
-            "title": "Failed"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "created_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created Id"
-          },
-          "deployed_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deployed At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "image",
-          "source",
-          "configured_envs",
-          "min_scale",
-          "failed",
-          "created_at",
-          "created_id",
-          "deployed_at"
-        ],
-        "title": "RevisionResponse",
-        "description": "Expose release history without encrypted environment values."
       },
       "SolutionCreate": {
         "properties": {

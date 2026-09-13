@@ -18,7 +18,7 @@ pytestmark = pytest.mark.no_db
 def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     """Supply authorized runtime boundaries while exercising the real proxy resource ownership."""
 
-    # Keep activity and tunnel cleanup observable independently of HTTP cleanup.
+    # Keep activity cleanup observable independently of HTTP cleanup.
     closed: list[str] = []
     solution = SimpleNamespace(
         id=uuid4(),
@@ -46,26 +46,8 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
         finally:
             closed.append("activity")
 
-    class Kubernetes:
-        """Supply the request-owned tunnel boundary."""
-
-        def __init__(self, kubeconfig: object) -> None:
-            """Accept persisted compute credentials."""
-
-        async def portforward(self, name: str, namespace: str, port: int) -> int:
-            """Validate Kourier's private target."""
-
-            assert (name, namespace, port) == ("kourier", "kourier-system", 8444)
-            return 18444
-
-        async def aclose(self) -> None:
-            """Record tunnel cleanup."""
-
-            closed.append("tunnel")
-
     monkeypatch.setattr(proxy.organizations, "solution_runtime_access", access)
     monkeypatch.setattr(proxy.databases, "activity", activity)
-    monkeypatch.setattr(proxy, "Kubernetes", Kubernetes)
     request = Request(
         {
             "type": "http",
@@ -95,7 +77,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
 async def test_gateway_response_closes_client_when_response_close_fails(
     monkeypatch: pytest.MonkeyPatch, request_scope: SimpleNamespace
 ) -> None:
-    """Close client, tunnel, and activity even when the streamed response fails to close."""
+    """Close client and activity even when the streamed response fails to close."""
 
     # Provide independently observable response and client cleanup paths.
     class Response:
@@ -134,7 +116,7 @@ async def test_gateway_response_closes_client_when_response_close_fails(
         async with asynccontextmanager(proxy.runtime_scope)() as runtime:
             await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
             assert request_scope.closed == []
-    assert request_scope.closed == ["response", "client", "tunnel", "activity"]
+    assert request_scope.closed == ["response", "client", "activity"]
 
 
 async def test_gateway_request_closes_client_when_send_is_cancelled(
@@ -167,8 +149,8 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
     async with asynccontextmanager(proxy.runtime_scope)() as runtime:
         with pytest.raises(asyncio.CancelledError):
             await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
-        assert request_scope.closed == ["client", "tunnel"]
-    assert request_scope.closed == ["client", "tunnel", "activity"]
+        assert request_scope.closed == ["client"]
+    assert request_scope.closed == ["client", "activity"]
 
 
 async def test_gateway_request_forwards_identity_and_defers_cleanup(
@@ -228,7 +210,6 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         assert cadata == "gateway-ca"
         return tls
 
-    monkeypatch.setattr(proxy.env, "DEVELOPMENT", False)
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
     monkeypatch.setattr(proxy.ssl, "create_default_context", context)
 

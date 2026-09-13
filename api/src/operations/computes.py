@@ -9,8 +9,8 @@ from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 
 
-async def create(compute_id: UUID) -> str | None:
-    """Reconcile shared controllers and publish readiness without generating credentials."""
+async def validate(compute_id: UUID) -> str | None:
+    """Validate externally installed infrastructure and publish Compute readiness."""
 
     # Load the operator-configured endpoint and trust without tenant relationships.
     async with session_scope() as session:
@@ -24,10 +24,12 @@ async def create(compute_id: UUID) -> str | None:
 
     # Readiness includes Serving, Kourier, CNPG, and the verified HTTPS endpoint.
     async with contextlib.aclosing(cluster):
-        logger.info("Applying shared controllers for Compute %s", registry.id)
-        await cluster.gateway.apply(registry.gateway_url, registry.gateway_certificate)
-        logger.info("Applying Rook/Ceph object storage for Compute %s", registry.id)
-        await cluster.storage.install(registry)
+        if await cluster.cluster_uid() != registry.cluster_uid:
+            raise ValueError("Registered Compute connection points to a different physical cluster")
+        logger.info("Validating shared controllers for Compute %s", registry.id)
+        await cluster.gateway.verify(registry.gateway_url, registry.gateway_certificate)
+        logger.info("Validating Rook/Ceph object storage for Compute %s", registry.id)
+        await cluster.storage.verify(registry)
 
     # Preserve operator connection input and avoid overwriting a concurrent lifecycle change.
     async with session_scope() as session:

@@ -84,13 +84,11 @@ async def registry_json(
 async def metadata(image: Image) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
-    # Allow only public GHCR and the exact development registry, never caller-selected URLs.
-    if image.registry == "ghcr.io":
-        base = "https://ghcr.io"
-    elif env.DEVELOPMENT and image.registry == "localhost:15000":
-        base = "http://localhost:15000"
-    else:
-        raise ForbiddenError("Image registry is not allowed; use public ghcr.io images")
+    # Only administrator-configured registry origins may receive image requests.
+    origin = env.IMAGE_REGISTRIES.get(image.registry)
+    if origin is None:
+        raise ForbiddenError("Image registry is not allowed")
+    base = str(origin).rstrip("/")
 
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
         try:

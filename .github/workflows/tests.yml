@@ -38,9 +38,34 @@ jobs:
               working-directory: api
               run: uv sync --locked --extra dev
 
+            - name: Setup kubectl for Compute package checks
+              uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
+              with:
+                  version: v1.35.4
+
             - name: Lint API
               working-directory: api
               run: uv run --locked ruff check .
+
+            - name: Setup Kustomize for Helmfile
+              uses: imranismail/setup-kustomize@ab2f6c276a92396da9967066f67ef300563038cf
+              with:
+                  kustomize-version: 5.8.1
+
+            - name: Setup Helm and Helmfile
+              uses: helmfile/helmfile-action@b56e977d7c89d1cb0e8728cb70b92b576822ac16
+              with:
+                  helm-version: v4.3.0
+                  helmfile-version: v1.8.0
+                  helm-plugins: ''
+                  helmfile-args: --file k8s/setup.yaml.gotmpl template --output-dir /tmp/longlink-compute
+
+            - name: Render Compute package
+              run: |
+                  set -euo pipefail
+                  helmfile --file k8s/setup.yaml.gotmpl --environment development template > /dev/null
+                  kubectl kustomize dev/compute/bootstrap > /dev/null
+                  kubectl kustomize dev/compute/connectivity > /dev/null
 
             - name: Verify Docker daemon
               run: docker info
@@ -150,7 +175,7 @@ jobs:
                   trap 'docker logs longlink-api-smoke || true; docker rm --force longlink-api-smoke >/dev/null 2>&1 || true' EXIT
 
                   docker run --detach --name "$container" --publish 127.0.0.1:18000:8000 \
-                      --env DEVELOPMENT=true \
+                      --env SMTP_HOST=smtp.example.com \
                       --env SESSION_KEY=ci-session-key-with-at-least-32-characters \
                       --env ADMIN_NAME=Administrator \
                       --env ADMIN_EMAIL=administrator@example.com \

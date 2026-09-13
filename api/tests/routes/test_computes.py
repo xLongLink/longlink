@@ -10,10 +10,10 @@ from factories import (
 from src.models.operations import OperationKind
 
 
-async def test_compute_registry_creation_queues_lifecycle_operation(
+async def test_compute_registry_creation_queues_validation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Queue one Compute creation operation when registering a Compute."""
+    """Queue one Compute validation operation when registering a Compute."""
 
     # Arrange
     payload = {
@@ -41,15 +41,15 @@ async def test_compute_registry_creation_queues_lifecycle_operation(
     assert response.status_code == 202
     operations = await fetch_operations()
     assert len(operations) == 1
-    assert operations[0].kind == OperationKind.compute_create
+    assert operations[0].kind == OperationKind.compute_validate
     assert str(operations[0].target_id) == response.json()["id"]
     assert operations[0].finished_at is None
 
 
-async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
+async def test_compute_registry_deletion_rejects_pending_validation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Retain a Compute registry while its lifecycle operation is pending."""
+    """Retain a Compute registry while its validation operation is pending."""
 
     # Arrange
     compute = await create_compute()
@@ -60,13 +60,13 @@ async def test_compute_registry_deletion_rejects_pending_lifecycle_operation(
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "Compute registry has unfinished lifecycle operation"}
+    assert response.json() == {"detail": "Compute registry has unfinished validation operation"}
 
 
-async def test_compute_registry_deletes_registration_after_completed_lifecycle(
+async def test_compute_registry_deletes_registration_after_completed_validation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Remove a Compute registration after its lifecycle Operation completes."""
+    """Remove a Compute registration after its validation Operation completes."""
 
     # Arrange
     compute = await create_compute()

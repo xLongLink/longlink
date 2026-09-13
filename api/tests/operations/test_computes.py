@@ -9,8 +9,10 @@ from src.models.operations import OperationStatus
 from src.database.models.computes import ComputeRegistry
 
 
-async def test_execute_compute_create_operation_reapplies_gateway_without_rotating_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile shared controllers while preserving the operator's gateway connection."""
+async def test_execute_compute_validate_operation_verifies_gateway_without_rotating_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Validate shared controllers while preserving the operator's gateway connection."""
 
     # Arrange
     registry = await create_compute()
@@ -19,7 +21,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     class Gateway:
         """Capture shared-controller reconciliation."""
 
-        async def apply(self, url: str, certificate: str | None) -> None:
+        async def verify(self, url: str, certificate: str | None) -> None:
             """Record the configured gateway connection."""
 
             connections.append((url, certificate))
@@ -33,6 +35,11 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
             assert kubeconfig == registry.kubeconfig
             self.gateway = Gateway()
             self.storage = StorageKubernetes()
+
+        async def cluster_uid(self) -> str:
+            """Return the registered physical cluster identity."""
+
+            return registry.cluster_uid
 
         async def aclose(self) -> None:
             """Close the provider client."""
@@ -61,7 +68,7 @@ async def test_execute_compute_create_operation_reapplies_gateway_without_rotati
     assert refreshed.gateway_certificate == registry.gateway_certificate
 
 
-async def test_execute_compute_create_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_execute_compute_validate_operation_fails_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make a Compute and its Operation terminal after a provider error."""
 
     # Arrange
@@ -70,7 +77,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     class Gateway:
         """Fail shared-controller reconciliation."""
 
-        async def apply(self, url: str, certificate: str | None) -> None:
+        async def verify(self, url: str, certificate: str | None) -> None:
             """Report the provider failure."""
 
             raise RuntimeError("gateway unavailable")
@@ -83,6 +90,11 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
 
             self.gateway = Gateway()
             self.storage = StorageKubernetes()
+
+        async def cluster_uid(self) -> str:
+            """Return the registered physical cluster identity."""
+
+            return registry.cluster_uid
 
         async def aclose(self) -> None:
             """Close the provider client."""
@@ -103,7 +115,7 @@ async def test_execute_compute_create_operation_fails_provider_error(monkeypatch
     assert refreshed.status == Status.failed
 
 
-async def test_create_missing_compute_skips_gateway_reconciliation(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_validate_missing_compute_skips_gateway_reconciliation(monkeypatch: pytest.MonkeyPatch) -> None:
     """Treat a removed Compute as an already completed reconciliation target."""
 
     # Arrange
@@ -125,13 +137,13 @@ async def test_create_missing_compute_skips_gateway_reconciliation(monkeypatch: 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 
     # Act
-    reason = await compute_operations.create(registry.id)
+    reason = await compute_operations.validate(registry.id)
 
     # Assert
     assert reason is None
 
 
-async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_validate_rejects_stale_compute_publication(monkeypatch: pytest.MonkeyPatch) -> None:
     """Do not publish readiness after the Compute lifecycle changes concurrently."""
 
     # Arrange
@@ -140,7 +152,7 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
     class Gateway:
         """Change the Compute lifecycle during reconciliation."""
 
-        async def apply(self, url: str, certificate: str | None) -> None:
+        async def verify(self, url: str, certificate: str | None) -> None:
             """Record the concurrent lifecycle change."""
 
             async with session_scope() as session:
@@ -158,13 +170,18 @@ async def test_create_rejects_stale_compute_publication(monkeypatch: pytest.Monk
             self.gateway = Gateway()
             self.storage = StorageKubernetes()
 
+        async def cluster_uid(self) -> str:
+            """Return the registered physical cluster identity."""
+
+            return registry.cluster_uid
+
         async def aclose(self) -> None:
             """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 
     # Act
-    reason = await compute_operations.create(registry.id)
+    reason = await compute_operations.validate(registry.id)
 
     # Assert
     assert reason == "Compute readiness was not recorded"

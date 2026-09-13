@@ -3,7 +3,6 @@ import json
 import httpx2
 import asyncio
 from uuid import UUID
-from typing import TYPE_CHECKING
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from longlink import identity
 from src.auth import authuser, get_session
@@ -12,18 +11,12 @@ from contextlib import AsyncExitStack
 from src.logger import logger
 from src.operations import databases
 from collections.abc import AsyncIterator
-from src.environments import env
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
 from src.models.statuses import Status
 from src.database.services import organizations
-from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
-
-# Load the tunneled adapter only for the host-run development process.
-if TYPE_CHECKING or env.DEVELOPMENT:
-    from src.development import gateway
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -122,16 +115,9 @@ async def proxy_solution_request(
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
             async with AsyncExitStack() as acquisition:
-                # Close partial acquisitions on failure; keep the tunnel alive until the upstream closes.
-                if env.DEVELOPMENT:
-                    cluster = Kubernetes(registry.kubeconfig)
-                    acquisition.push_async_callback(cluster.aclose)
-                    port = await cluster.portforward("kourier", "kourier-system", 8444)
-                    transport = gateway.Transport(port, registry.gateway_certificate)
-                    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
-                else:
-                    tls = ssl.create_default_context(cadata=registry.gateway_certificate)
-                    client = httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
+                # Close partial acquisitions on failure; infrastructure owns endpoint connectivity.
+                tls = ssl.create_default_context(cadata=registry.gateway_certificate)
+                client = httpx2.AsyncClient(follow_redirects=False, trust_env=False, timeout=300.0, verify=tls)
                 acquisition.push_async_callback(client.aclose)
 
                 # Sign platform identity while keeping Knative's Host independent of the verified TLS hostname.

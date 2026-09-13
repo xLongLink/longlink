@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: compute-release
+    namespace: longlink-system
+data:
+    version: 0.1.0
+    contract: '1'

@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
-os.environ["DEVELOPMENT"] = "true"
+os.environ["SMTP_HOST"] = "smtp.example.com"
+os.environ["IMAGE_REGISTRIES"] = '{"ghcr.io":"https://ghcr.io","localhost:15000":"http://localhost:15000"}'
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
@@ -30,7 +31,6 @@ os.environ["SMTP_USE_TLS"] = "false"
 os.environ["SMTP_START_TLS"] = "true"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ.pop("SMTP_HOST", None)
 os.environ.pop("SMTP_PASSWORD", None)
 os.environ.pop("SMTP_USERNAME", None)
 os.environ.pop("GITHUB_OAUTH_CLIENT_ID", None)
@@ -50,13 +50,13 @@ from src.database.models.users import User
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    async def install(self, compute: object) -> None:
-        """Accept shared storage reconciliation."""
+    async def verify(self, compute: object) -> None:
+        """Accept read-only shared storage verification."""
 
     async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Accept provisioning and return the resulting bucket boundary."""
 
-        return await self.bucket(organization, compute)
+        return await self.quota(organization, compute)
 
     async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
@@ -68,8 +68,10 @@ class StorageKubernetes:
 
         return Credentials("solution", "generated-secret")
 
-    async def quota(self, organization: UUID, compute: object) -> None:
-        """Accept quota reconciliation at the external storage boundary."""
+    async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
+        """Accept quota reconciliation and return the resulting bucket boundary."""
+
+        return await self.bucket(organization, compute)
 
     async def authorize(self, bucket: str, solutions: object) -> None:
         """Accept the real lifecycle policy snapshot."""
@@ -175,6 +177,11 @@ class FakeKubernetes:
         """Return the fake API client used by resource fakes."""
 
         return cast(Api, object())
+
+    async def cluster_uid(self) -> str:
+        """Return the identity expected by the installed package fixture."""
+
+        return "test-cluster"
 
     async def portforward(self, name: str, namespace: str, port: int) -> int:
         """Return a synthetic development gateway port without external I/O."""

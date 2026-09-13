@@ -71,7 +71,9 @@ export default function CreateCompute() {
             }}
             endpoint="/api/v1/computes"
             schema={schema}
-            title="Connect compute"
+            title="Register Compute"
+            submitLabel="Register"
+            pendingLabel="Registering..."
             width={640}
         >
             {(control) => (

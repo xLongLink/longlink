@@ -35,7 +35,9 @@ longlink ui Button
 make sdk
 ```
 
-This builds the SDK web bundle, recreates `sdk/dev`, links the generated project to the local SDK source, and starts its development service. Do not keep manual changes in `sdk/dev`; it is recreated by this command.
+This builds the SDK web bundle, initializes `sdk/dev` when absent, links the project
+to the local SDK source, and starts its development service. Existing local edits are
+preserved.
 
 > Requirements: Python 3.12 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
 
@@ -62,7 +64,7 @@ Without a certificate, `LONGLINK_DATABASE_SSLMODE` defaults to `require` (encryp
 <div align="center">
 LongLink 2026
 
-[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 
 </div>
 

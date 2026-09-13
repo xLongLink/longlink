@@ -31,7 +31,7 @@ export const zComputeRegistryCreate = z.object({
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_endpoint: z.string().max(512),
-    storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
+    storage_size_gib: z.int().gte(1).lte(65536).optional().default(100),
     storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
     storage_certificate: z.string().max(65536).nullish(),
     bucket_size_bytes: z.int().gte(1024).lte(70368744177664),
@@ -120,7 +120,7 @@ export const zOAuthAvailability = z.object({
  * Supported registered operation handlers.
  */
 export const zOperationKind = z.enum([
-    'compute.create',
+    'compute.validate',
     'solution.deploy',
     'solution.delete',
     'organization.create',
@@ -275,23 +275,6 @@ export const zPasswordResetComplete = z.object({
 export const zRegistrationComplete = z.object({
     name: z.string().min(1).max(255),
     password: z.string().min(1).max(1024)
-});
-
-/**
- * RevisionResponse
- *
- * Expose release history without encrypted environment values.
- */
-export const zRevisionResponse = z.object({
-    id: z.uuid(),
-    image: z.string(),
-    source: z.string(),
-    configured_envs: z.array(z.string()),
-    min_scale: z.union([z.literal(0), z.literal(1)]),
-    failed: z.boolean(),
-    created_at: z.iso.datetime(),
-    created_id: z.uuid().nullable(),
-    deployed_at: z.iso.datetime().nullable()
 });
 
 /**
@@ -672,27 +655,6 @@ export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostPath = z.object({
  * Successful Response
  */
 export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = z.void();
-
-export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
- *
- * Successful Response
- */
-export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = z.array(zRevisionResponse);
-
-export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostPath = z.object({
-    solution_id: z.uuid(),
-    revision_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = z.void();
 
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
     solution_id: z.uuid()

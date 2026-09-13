@@ -1,15 +1,13 @@
 import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from sqlmodel import col
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import roles, images
-from sqlalchemy import select
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdate, RevisionResponse, SolutionResponse, SolutionUpdateCheck
+from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdate, SolutionResponse, SolutionUpdateCheck
 from src.database.services import solutions, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
@@ -60,14 +58,6 @@ async def create_solution(
 
     # Resolve immutable image metadata before creating durable Solution state.
     metadata = await image_metadata(payload.image)
-
-    # Enforce image-declared requirements while the submitted values remain at the API boundary.
-    missing_envs = images.missing_envs(metadata, payload.envs)
-    if missing_envs:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Solution environment does not satisfy required image variables: {', '.join(missing_envs)}",
-        )
 
     await solutions.create(
         session,
@@ -146,30 +136,6 @@ async def apply_update(
     if solution.desired_revision_id != revision_id:
         raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Check again.")
     await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=source, min_scale=payload.min_scale)
-    await session.commit()
-
-
-@router.get("/solutions/{solution_id}/revisions", response_model=list[RevisionResponse])
-async def list_revisions(solution_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
-    """Return newest-first release history to Solution maintainers."""
-
-    # History projects configured names, never the environment values themselves.
-    await solutions.access(session, solution_id, user.id, lock=False)
-    result = await session.scalars(
-        select(Revision).where(col(Revision.solution_id) == solution_id).order_by(col(Revision.created_at).desc(), col(Revision.id).desc())
-    )
-    return result.all()
-
-
-@router.post("/solutions/{solution_id}/revisions/{revision_id}/rollback", status_code=204)
-async def rollback_solution(
-    solution_id: UUID, revision_id: UUID, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
-):
-    """Restore a successful release while retaining the current database schema."""
-
-    # Select and queue the exact historical release in one authorized transaction.
-    solution = await solutions.access(session, solution_id, user.id)
-    await solutions.rollback(session, solution, revision_id)
     await session.commit()
 
 

@@ -1,6 +1,5 @@
-import os
 from typing import Self
-from pydantic import Field, model_validator
+from pydantic import Field, HttpUrl, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from longlink.shared.models import Email
 
@@ -8,8 +7,7 @@ from longlink.shared.models import Email
 class Env(BaseSettings):
     """Define startup-validated settings for one LongLink Platform API replica."""
 
-    # Runtime mode
-    DEVELOPMENT: bool = False
+    # Runtime scheduling
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
 
     # Authentication
@@ -27,6 +25,7 @@ class Env(BaseSettings):
     ADMIN_PASSWORD: str = Field(min_length=1)
 
     # Authentication email delivery
+    SMTP_FROM: Email = "no-reply@longlink.dev"
     SMTP_HOST: str | None = None
     SMTP_PORT: int = Field(default=587, ge=1, le=65535)
     SMTP_USE_TLS: bool = False
@@ -40,9 +39,13 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
+    # Administrator-controlled registry origins, keyed by the image registry name.
+    IMAGE_REGISTRIES: dict[str, HttpUrl] = Field(default_factory=lambda: {"ghcr.io": HttpUrl("https://ghcr.io")})
+
     model_config = SettingsConfigDict(
-        env_file=(".env.sample", ".env") if os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"} else (".env",),
+        env_file=".env",
         env_file_encoding="utf-8",
+        env_parse_none_str="null",
         extra="ignore",
     )
 
@@ -50,13 +53,17 @@ class Env(BaseSettings):
     def validate_authentication(self) -> Self:
         """Validate authentication email-delivery configuration."""
 
-        # Public browser origins carrying authentication flows must be encrypted outside development.
-        if not self.DEVELOPMENT and not self.PUBLIC_URL.startswith("https://"):
-            raise ValueError("PUBLIC_URL must use HTTPS outside development")
+        # Only loopback browser origins may use plaintext HTTP, independently of deployment mode.
+        public = HttpUrl(self.PUBLIC_URL)
+        if public.scheme != "https" and public.host not in {"localhost", "127.0.0.1", "[::1]"}:
+            raise ValueError("PUBLIC_URL must use HTTPS except on loopback")
+        if public.username is not None or public.password is not None or public.path not in {None, "/"} or public.query or public.fragment:
+            raise ValueError("PUBLIC_URL must be an origin without credentials, path, query, or fragment")
+        self.PUBLIC_URL = str(public).rstrip("/")
 
-        # Production authentication workflows require a usable email-delivery host.
-        if not self.DEVELOPMENT and (self.SMTP_HOST is None or not self.SMTP_HOST.strip()):
-            raise ValueError("SMTP_HOST is required outside development")
+        # All authentication workflows use a real SMTP server, including local mail capture.
+        if self.SMTP_HOST is None or not self.SMTP_HOST.strip():
+            raise ValueError("SMTP_HOST is required")
 
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:
@@ -65,8 +72,11 @@ class Env(BaseSettings):
         # Authenticated SMTP requires a complete credential pair and a delivery host.
         if (self.SMTP_USERNAME is None) != (self.SMTP_PASSWORD is None):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
-        if self.SMTP_USERNAME is not None and self.SMTP_HOST is None:
-            raise ValueError("SMTP_HOST is required when SMTP authentication is configured")
+
+        # Registry configuration must contain only credential-free origins; requests cannot supply new destinations.
+        for url in self.IMAGE_REGISTRIES.values():
+            if url.username is not None or url.password is not None or url.path not in {None, "/"} or url.query or url.fragment:
+                raise ValueError("IMAGE_REGISTRIES must contain origins without credentials, path, query, or fragment")
 
         # OAuth providers require both confidential client credentials before their routes are enabled.
         if (self.GOOGLE_OAUTH_CLIENT_ID is None) != (self.GOOGLE_OAUTH_CLIENT_SECRET is None):
@@ -79,16 +89,8 @@ class Env(BaseSettings):
     def trusted_origins(self) -> set[str]:
         """Return the browser origins allowed to perform cookie-authenticated requests."""
 
-        # The configured frontend origin is the only production trust anchor.
-        public_origin = self.PUBLIC_URL.rstrip("/")
-        trusted_origins = {public_origin}
-
-        # Development frontends are reachable through both loopback hostnames.
-        if self.DEVELOPMENT:
-            trusted_origins.add(public_origin.replace("://localhost", "://127.0.0.1"))
-            trusted_origins.add(public_origin.replace("://127.0.0.1", "://localhost"))
-
-        return trusted_origins
+        # Trust only the configured frontend origin in every environment.
+        return {self.PUBLIC_URL.rstrip("/")}
 
 
 env = Env()

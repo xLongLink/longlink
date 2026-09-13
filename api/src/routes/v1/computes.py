@@ -15,14 +15,14 @@ router = APIRouter(dependencies=[Depends(authadmin)])
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202)
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
-    """Register a compute target and queue its initial creation."""
+    """Register a compute target and queue its initial validation."""
 
     # Resolve the physical cluster before transactionally registering its stable identity.
     cluster = Kubernetes(payload.kubeconfig)
     async with contextlib.aclosing(cluster):
         cluster_uid = await cluster.cluster_uid()
 
-    # Persist the validated connection and queue compute provisioning.
+    # Persist the connection and queue full Compute validation.
     registry = await compute.create(session, payload, cluster_uid)
     await session.commit()
     return registry
@@ -42,6 +42,6 @@ async def list_compute_registries(
 async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Depends(get_session)) -> None:
     """Remove one unused compute registration without changing its cluster."""
 
-    # Remove only a registered Compute with no Organization or unfinished lifecycle dependency.
+    # Remove only a registered Compute with no Organization or unfinished validation dependency.
     await compute.delete(session, registry_id)
     await session.commit()

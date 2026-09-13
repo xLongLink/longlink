@@ -12,7 +12,7 @@ def set_browser_cookie(response: Response, name: str, value: str, path: str, max
         value,
         max_age=max_age,
         path=path,
-        secure=not env.DEVELOPMENT,
+        secure=env.PUBLIC_URL.startswith("https://"),
         httponly=True,
         samesite="lax",
     )
@@ -24,7 +24,7 @@ def delete_browser_cookie(response: Response, name: str, path: str) -> None:
     response.delete_cookie(
         name,
         path=path,
-        secure=not env.DEVELOPMENT,
+        secure=env.PUBLIC_URL.startswith("https://"),
         httponly=True,
         samesite="lax",
     )

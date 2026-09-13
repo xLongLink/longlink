@@ -1,4 +1,0 @@
-mirrors:
-    'localhost:15000':
-        endpoint:
-            - 'http://host.k3d.internal:15000'

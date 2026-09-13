@@ -11,7 +11,12 @@ from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
-    """Expose Kubernetes lifecycle abstractions."""
+    """Own one Compute API connection and expose its resource lifecycle boundaries.
+
+    Storage and database resources have dedicated Organization namespaces;
+    Solutions run in the Organization compute namespace. All child facades share
+    this client's lazy kr8s connection and its port-forward lifetime.
+    """
 
     def __init__(self, kubeconfig: dict[str, object]) -> None:
         """Initialize components that share one lazy cluster connection."""

@@ -25,7 +25,6 @@ class User(PlatformModel, table=True):
     github_id: str | None = Field(default=None, unique=True, index=True, max_length=255)
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 

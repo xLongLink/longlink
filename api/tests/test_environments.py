@@ -5,7 +5,6 @@ from src.environments import Env
 pytestmark = pytest.mark.no_db
 
 ENVIRONMENT_SETTINGS = {
-    "DEVELOPMENT": False,
     "PUBLIC_URL": "https://platform.example",
     "SESSION_KEY": "test-session-key-that-is-long-enough",
     "GITHUB_OAUTH_CLIENT_ID": None,
@@ -28,10 +27,10 @@ ENVIRONMENT_SETTINGS = {
     [
         pytest.param({"SMTP_USE_TLS": True}, "SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled", id="tls-and-starttls"),
         pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
-        pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required outside development", id="production-without-host"),
+        pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
         pytest.param(
-            {"DEVELOPMENT": True, "SMTP_HOST": None, "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
-            "SMTP_HOST is required when SMTP authentication is configured",
+            {"SMTP_HOST": None, "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
+            "SMTP_HOST is required",
             id="credentials-without-host",
         ),
     ],
@@ -47,7 +46,7 @@ def test_env_rejects_invalid_smtp_authentication_settings(settings: dict[str, ob
 @pytest.mark.parametrize(
     ("settings", "message"),
     [
-        pytest.param({"PUBLIC_URL": "http://platform.example"}, "PUBLIC_URL must use HTTPS outside development", id="insecure-origin"),
+        pytest.param({"PUBLIC_URL": "http://platform.example"}, "PUBLIC_URL must use HTTPS except on loopback", id="insecure-origin"),
         pytest.param(
             {"GOOGLE_OAUTH_CLIENT_ID": "google-client"},
             "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together",
@@ -76,11 +75,12 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     assert Env.model_validate(settings).SMTP_HOST == "smtp.example.com"
 
 
-def test_env_accepts_development_without_smtp_delivery() -> None:
-    """Allow development to retain its log-only email delivery fallback."""
+def test_env_accepts_loopback_with_smtp_delivery() -> None:
+    """Use explicit loopback and SMTP settings for a host-run instance."""
 
     # Act
-    environment = Env.model_validate(ENVIRONMENT_SETTINGS | {"DEVELOPMENT": True, "SMTP_HOST": None})
+    environment = Env.model_validate(ENVIRONMENT_SETTINGS | {"PUBLIC_URL": "http://localhost:5173", "SMTP_HOST": "127.0.0.1"})
 
     # Assert
-    assert environment.SMTP_HOST is None
+    assert environment.SMTP_HOST == "127.0.0.1"
+    assert environment.trusted_origins() == {"http://localhost:5173"}

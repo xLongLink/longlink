@@ -13,7 +13,6 @@ from longlink.middleware import FrontendMiddleware
 from src.database.session import session_scope
 from starlette.exceptions import HTTPException
 from src.database.services import users as user_service
-from fastapi.middleware.cors import CORSMiddleware
 
 
 @contextlib.asynccontextmanager
@@ -124,14 +123,5 @@ if static_dir.exists():
 # Local development entrypoint. Production imports the app with Uvicorn, so this block is not executed.
 if __name__ == "__main__":
     import uvicorn
-
-    if env.DEVELOPMENT:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["http://localhost:5173"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
 
     uvicorn.run(app, host="127.0.0.1", port=8000)

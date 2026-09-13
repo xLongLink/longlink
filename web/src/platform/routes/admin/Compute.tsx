@@ -39,15 +39,12 @@ export default function AdminCompute() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/computes', zPageComputeRegistryResponse, 5000);
-    const deleteDialog = useDeleteDialog({
+    const deleteDialog = useDeleteDialog<(typeof computes)[number]>({
         title: 'Delete compute',
         mutation: deleteCompute,
-        items: computes,
         getId: (compute) => compute.id,
         description: (compute) =>
             `Remove compute ${compute.name} from the LongLink Platform? Its Kubernetes resources will remain unchanged.`,
-        fallbackDescription:
-            'Remove this compute from the LongLink Platform? Its Kubernetes resources will remain unchanged.',
     });
     const pageMetadata = <NoIndex title="Compute | LongLink" />;
 

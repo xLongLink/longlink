@@ -644,15 +644,16 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
             self.kind = kind
             self.metadata: dict[str, object] = {}
 
-        async def exists(self) -> bool:
-            """Report resources absent after their deletion request."""
+        @classmethod
+        async def list(cls, *, api: object, namespace: str, field_selector: dict[str, str]):
+            """Return the named Service only before its deletion request."""
 
+            assert namespace == "acme"
+            assert field_selector == {"metadata.name": "solution-00000000-0000-4000-8000-000000000001"}
             nonlocal resource_checks
             resource_checks += 1
-            return resource_checks == 1
-
-        async def refresh(self) -> None:
-            """Keep the fake resource metadata unchanged."""
+            if resource_checks == 1:
+                yield cls("Service")
 
         async def delete(self) -> None:
             """Record the resource cleanup request."""
@@ -705,13 +706,8 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
         sleeps.append(delay)
 
-    def resource(kind: str):
-        """Create a fake Kubernetes resource constructor."""
-
-        return lambda *_args, **_kwargs: Resource(kind)
-
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
-    monkeypatch.setattr(solutions, "KnativeServiceResource", resource("Service"))
+    monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
     monkeypatch.setattr(solutions, "Secret", SecretResource)
     monkeypatch.setattr(solutions, "Job", JobResource)
     monkeypatch.setattr(solutions, "Pod", PodResource)
@@ -746,13 +742,12 @@ async def test_solution_delete_skips_cleanup_when_namespace_is_absent(monkeypatc
     class Resource:
         """Fail if cleanup inspects resources for a missing Namespace."""
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept resource construction before the Namespace presence check."""
-
-        async def exists(self) -> bool:
+        @classmethod
+        async def list(cls, **_kwargs: object):
             """Reject resource inspection after Namespace deletion."""
 
             raise AssertionError("Solution resources must not be inspected after namespace deletion")
+            yield cls()
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
@@ -790,30 +785,16 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
         metadata: ClassVar[dict[str, object]] = {"deletionTimestamp": "2026-08-24T00:00:00Z"}
 
-        def __init__(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the Kubernetes resource constructor arguments."""
+        @classmethod
+        async def list(cls, **_kwargs: object):
+            """Keep the terminating resource visible during the cleanup poll."""
 
-        async def exists(self) -> bool:
-            """Keep the resource visible during the cleanup poll."""
-
-            return True
-
-        async def refresh(self) -> None:
-            """Keep the terminating metadata unchanged."""
+            yield cls()
 
         async def delete(self) -> None:
             """Record an invalid duplicate deletion request."""
 
             deleted.append("resource")
-
-    class JobResource(Resource):
-        """Represent a terminating migration Job."""
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the retained terminating Job."""
-
-            yield cls()
 
     async def sleep(delay: float) -> None:
         """Record the cleanup retry without waiting."""
@@ -822,8 +803,8 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
     monkeypatch.setattr(solutions, "Namespace", NamespaceResource)
     monkeypatch.setattr(solutions, "KnativeServiceResource", Resource)
-    monkeypatch.setattr(solutions, "Secret", JobResource)
-    monkeypatch.setattr(solutions, "Job", JobResource)
+    monkeypatch.setattr(solutions, "Secret", Resource)
+    monkeypatch.setattr(solutions, "Job", Resource)
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
 
     # Act

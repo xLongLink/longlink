@@ -54,8 +54,7 @@ async def deploy(revision_id: UUID) -> None:
             infrastructure.compute.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            await cluster.storage.quota(organization.id, infrastructure.compute)
-            bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+            bucket = await cluster.storage.quota(organization.id, infrastructure.compute)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:

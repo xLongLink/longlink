@@ -19,7 +19,11 @@ from longlink.database import migrations as database_migrations
         ),
         pytest.param(
             ["--folder", "sample-solution", "--ci", "github"],
-            [".github/workflows/release.yml", ".github/workflows/tests.yml"],
+            [
+                ".github/actions/setup-python/action.yml",
+                ".github/workflows/release.yml",
+                ".github/workflows/tests.yml",
+            ],
             "sample-solution",
             id="github-ci",
         ),
@@ -49,7 +53,6 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             "src/views",
             "src/routes",
             "src/schemas",
-            "src/services",
             "tests/test_app.py",
             *ci_paths,
         ]:

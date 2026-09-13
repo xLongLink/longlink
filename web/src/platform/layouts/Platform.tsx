@@ -18,13 +18,8 @@ export type NavigationTab = {
 
 type PlatformProps = {
     action: ReactNode;
-    activeTab?: string;
     breadcrumb?: ReactNode;
     children: ReactNode;
-    height?: 'auto' | 'fill';
-    isContentCentered?: boolean;
-    contentMinHeight?: string;
-    isDevelopmentNoticeShown?: boolean;
     tabs: readonly NavigationTab[];
 };
 
@@ -43,23 +38,13 @@ function findActiveTab(tabs: readonly NavigationTab[], pathname: string): string
 }
 
 /** Renders the shared Platform frame with contextual navigation and actions. */
-export default function Platform({
-    action,
-    activeTab,
-    breadcrumb,
-    children,
-    height = 'auto',
-    isContentCentered = false,
-    contentMinHeight = 'calc(100dvh - var(--_app-shell-header-height, 0px))',
-    isDevelopmentNoticeShown = true,
-    tabs,
-}: PlatformProps) {
+export default function Platform({ action, breadcrumb, children, tabs }: PlatformProps) {
     const { pathname } = useLocation();
 
     return (
         <AppShell
-            banner={isDevelopmentNoticeShown ? <DevelopmentNotice /> : undefined}
-            height={height}
+            banner={<DevelopmentNotice />}
+            height="auto"
             mobileNav={false}
             topNav={
                 <Stack>
@@ -81,7 +66,7 @@ export default function Platform({
                                 aria-label="Section navigation"
                                 onChange={() => undefined}
                                 size="sm"
-                                value={activeTab ?? findActiveTab(tabs, pathname) ?? ''}
+                                value={findActiveTab(tabs, pathname) ?? ''}
                             >
                                 {tabs.map((tab) => {
                                     const Icon = tab.icon;
@@ -103,11 +88,7 @@ export default function Platform({
             }
             variant="wash"
         >
-            <Stack
-                className="relative"
-                height={isContentCentered ? contentMinHeight : undefined}
-                minHeight={contentMinHeight}
-            >
+            <Stack className="relative" minHeight="calc(100dvh - var(--_app-shell-header-height, 0px))">
                 <Card
                     aria-hidden="true"
                     className="pointer-events-none absolute z-0 inset-0 overflow-clip bg-body px-2 pb-2 pt-0"
@@ -116,13 +97,7 @@ export default function Platform({
                 >
                     <Card className="border-0" height="100%" width="100%" />
                 </Card>
-                <Stack
-                    align={isContentCentered ? 'center' : undefined}
-                    className="relative z-10"
-                    height={isContentCentered ? '100%' : undefined}
-                    justify={isContentCentered ? 'center' : undefined}
-                    padding={2}
-                >
+                <Stack className="relative z-10" padding={2}>
                     {children}
                 </Stack>
             </Stack>
