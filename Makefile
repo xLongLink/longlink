@@ -118,7 +118,9 @@ _up:
 	kubectl --kubeconfig api/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
 	KUBECONFIG="$(abspath api/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
-	docker compose -f dev/compose.yml up --detach --wait gateway storage
+	# Verify host TLS connectivity through the k3d port mappings.
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
 	$(MAKE) image
 
 

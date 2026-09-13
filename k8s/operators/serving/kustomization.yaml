@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-    - release.yml
+    - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml
 patches:
     # CRDs have a separate release so they are established before Serving starts.
     - target:
@@ -19,51 +19,38 @@ patches:
           kind: Namespace
           metadata:
               name: knative-serving
-    - target:
+    - patch: |-
+          apiVersion: v1
           kind: ConfigMap
-          name: config-network
-      patch: |-
-          - op: add
-            path: /data/ingress-class
-            value: kourier.ingress.networking.knative.dev
-    - target:
+          metadata:
+              name: config-network
+              namespace: knative-serving
+          data:
+              ingress-class: kourier.ingress.networking.knative.dev
+    - patch: |-
+          apiVersion: v1
           kind: ConfigMap
-          name: config-features
-      patch: |-
-          - op: add
-            path: /data/kubernetes.podspec-nodeselector
-            value: enabled
-          - op: add
-            path: /data/kubernetes.podspec-securitycontext
-            value: enabled
-          - op: add
-            path: /data/kubernetes.podspec-volumes-emptydir
-            value: enabled
-          - op: add
-            path: /data/secure-pod-defaults
-            value: enabled
-    - target:
+          metadata:
+              name: config-features
+              namespace: knative-serving
+          data:
+              kubernetes.podspec-nodeselector: enabled
+              kubernetes.podspec-securitycontext: enabled
+              kubernetes.podspec-volumes-emptydir: enabled
+              secure-pod-defaults: enabled
+    - patch: |-
+          apiVersion: v1
           kind: ConfigMap
-          name: config-deployment
-      patch: |-
-          - op: add
-            path: /data/queue-sidecar-cpu-request
-            value: 25m
-          - op: add
-            path: /data/queue-sidecar-cpu-limit
-            value: 200m
-          - op: add
-            path: /data/queue-sidecar-memory-request
-            value: 64Mi
-          - op: add
-            path: /data/queue-sidecar-memory-limit
-            value: 128Mi
-          - op: add
-            path: /data/queue-sidecar-ephemeral-storage-request
-            value: 64Mi
-          - op: add
-            path: /data/queue-sidecar-ephemeral-storage-limit
-            value: 128Mi
+          metadata:
+              name: config-deployment
+              namespace: knative-serving
+          data:
+              queue-sidecar-cpu-request: 25m
+              queue-sidecar-cpu-limit: 200m
+              queue-sidecar-memory-request: 64Mi
+              queue-sidecar-memory-limit: 128Mi
+              queue-sidecar-ephemeral-storage-request: 64Mi
+              queue-sidecar-ephemeral-storage-limit: 128Mi
     - target:
           kind: MutatingWebhookConfiguration
           name: webhook.serving.knative.dev

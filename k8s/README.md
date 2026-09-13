@@ -10,20 +10,20 @@ longlink/
 ├── k8s/ → shared infrastructure package
 │   ├── boundaries/ → shared namespaces and ingress policies
 │   ├── setup.yaml.gotmpl → chart versions, values, dependencies, and readiness hooks
-│   ├── operators/ → pinned Knative/Kourier manifests and Kustomize customizations
+│   ├── operators/ → pinned Knative/Kourier release URLs and Kustomize customizations
 │   ├── infrastructure/ → shared Ceph resources and health identity
 │   └── release/ → package version and Platform compatibility contract
 └── dev/ → local setup and connectivity outside the API
     ├── tls.cnf → local gateway and S3 certificate extensions for OpenSSL
-    ├── cluster.yaml → k3d cluster settings and registry mirror
-    ├── compose.yml → registry, SMTP capture, and loopback endpoint connections
-    └── compute/ → backing Kustomization, split DNS, Service, and storage overlays
+    ├── cluster.yaml → k3d settings, registry mirror, and loopback port mappings
+    ├── compose.yml → registry, SMTP capture, and private Docker network
+    └── compute/ → backing Kustomization, split DNS, NodePorts, and storage overlays
 ```
 
 ## Local installation
 
 Requirements: Linux AMD64, Docker, k3d, kubectl **v1.35.4**, Helm **4.3.0**,
-Helmfile **1.8.0**, standalone Kustomize **5.8.1**, OpenSSL, `flock`, uv, and the
+Helmfile **1.8.0**, standalone Kustomize **5.8.1**, OpenSSL, curl, `flock`, uv, and the
 existing Vite+ development tooling. No Helm plugins are required.
 
 ```bash
@@ -39,8 +39,8 @@ make seed
 `make up` creates the local cluster, registry, CSI hostpath backing provisioner,
 and TLS Secrets, then runs Helmfile with the `development` environment. Helmfile
 installs the releases in dependency order and publishes `release/release.yml`
-last. Make then starts dev-owned gateway/S3
-connections. The API runs directly on the host with ordinary HTTPS clients; local
+last. Make then verifies gateway/S3 HTTPS through k3d's loopback port mappings.
+The API runs directly on the host with ordinary HTTPS clients; local
 CoreDNS makes the same S3 origin reachable by Solution Pods. See
 [`dev/README.md`](../dev/README.md) for the complete connectivity contract.
 
@@ -71,7 +71,7 @@ Rook's Ceph CSI drivers and CSI operator remain disabled; its OBC provisioner
 permits the two Organization bucket quota fields. Both charts manage their CRDs
 as chart templates, including updates.
 
-Helmfile packages the retained Kustomizations into temporary charts using its
+Helmfile packages the Kustomizations into temporary charts using its
 built-in Chartify integration. There are no custom Helm charts to maintain.
 Serving CRDs have a separate release, and bootstrap owns shared namespaces.
 Kourier preserves its two upstream resource namespaces, so its Helm release record
@@ -92,8 +92,8 @@ Registration storage class, instance count, and per-OSD size describe the instal
 topology and must match its overlay. Database defaults and tenant bucket policy
 remain Platform-owned. Storage resizing is not supported by this release.
 
-Render the entire setup without accessing a cluster (chart downloads require
-access to the upstream repositories):
+Render the entire setup without accessing a cluster (upstream downloads require
+access to the upstream chart repositories and pinned GitHub release assets):
 
 ```bash
 helmfile --file k8s/setup.yaml.gotmpl template
@@ -148,10 +148,12 @@ resources carry Helm's `keep` policy; they are not removed by release uninstall.
 
 `release/release.yml` is both a Kubernetes ConfigMap and the authoritative package
 version and Platform contract. Chart versions and values are pinned in
-`setup.yaml.gotmpl`; Knative/Kourier and Ceph images remain pinned in their
-manifests. To publish a release:
+`setup.yaml.gotmpl`; Knative/Kourier release URLs are pinned in their
+Kustomizations, and Ceph's image is pinned in its manifest. The archive contains
+these references and customizations; it does not bundle upstream charts or Knative
+release assets. To publish a release:
 
-1. Update chart versions/values or retained manifests and Kustomize customizations.
+1. Update chart versions/values, upstream release URLs, or Kustomize customizations.
 2. Update `release/release.yml`.
 3. Render both Helmfile environments and the local bootstrap/connectivity stages.
 4. Verify a fresh install and retained tenant data on every supported transition.

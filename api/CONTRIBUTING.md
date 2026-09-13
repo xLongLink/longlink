@@ -19,7 +19,8 @@ Production images start the Platform API without applying schema changes. Before
 
 Kubernetes package tests require kubectl, Helm, Helmfile, and standalone Kustomize
 at the versions documented in [`k8s/README.md`](../k8s/README.md). They render the
-pinned upstream charts and need access to the chart repositories, but no cluster.
+pinned upstream charts and Knative release assets and need access to the chart
+repositories and GitHub, but no cluster.
 
 ## Architecture
 

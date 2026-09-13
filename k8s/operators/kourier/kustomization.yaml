@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-    - release.yml
+    - https://github.com/knative-extensions/net-kourier/releases/download/knative-v1.23.0/kourier.yaml
 patches:
     # Shared namespaces belong to the bootstrap stage, not individual Helm releases.
     - patch: |-
@@ -10,13 +10,14 @@ patches:
           kind: Namespace
           metadata:
               name: kourier-system
-    - target:
+    - patch: |-
+          apiVersion: v1
           kind: ConfigMap
-          name: config-kourier
-      patch: |-
-          - op: add
-            path: /data/cluster-cert-secret
-            value: longlink-gateway-tls
+          metadata:
+              name: config-kourier
+              namespace: knative-serving
+          data:
+              cluster-cert-secret: longlink-gateway-tls
     - target:
           kind: Deployment
           name: 3scale-kourier-gateway

@@ -3,4 +3,4 @@ kind: Kustomization
 commonAnnotations:
     helm.sh/resource-policy: keep
 resources:
-    - release.yml
+    - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml

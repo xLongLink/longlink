@@ -11,12 +11,11 @@ Workstation
 │   └── make web → Vite frontend
 ├── dev/compose.yml
 │   ├── Registry → localhost:15000
-│   ├── Mailpit → SMTP localhost:1025, inbox localhost:8025
-│   ├── Gateway connection → localhost:8443 → Kourier TLS
-│   └── Storage connection → storage.localhost:9443 → RGW TLS
+│   └── Mailpit → SMTP localhost:1025, inbox localhost:8025
 └── k3d Compute cluster
+    ├── Loopback port mappings → localhost:8443 → Kourier, storage.localhost:9443 → RGW
     ├── dev/compute/bootstrap → shared boundaries and backing provisioner
-    ├── dev/compute/connectivity → S3 Service and split DNS
+    ├── dev/compute/connectivity → NodePort Services, gateway allowlist, and split DNS
     ├── k8s/setup.yaml.gotmpl → Helm releases for Knative, CNPG, Rook, and Ceph
     └── Organizations and Solutions → provisioned by the Platform
 ```
@@ -24,9 +23,10 @@ Workstation
 ## Start
 
 Requirements: Linux AMD64, Docker, k3d, kubectl, Helm **4.3.0**, Helmfile **1.8.0**,
-standalone Kustomize **5.8.1**, OpenSSL, `flock`, uv, and the repository's Vite+
+standalone Kustomize **5.8.1**, OpenSSL, curl, `flock`, uv, and the repository's Vite+
 tooling. Helmfile uses the standalone `kustomize` binary to package the retained
-manifests; no Helm plugins are required. The host must resolve `storage.localhost` to
+manifests; chart repositories and pinned GitHub release assets must be reachable.
+No Helm plugins are required. The host must resolve `storage.localhost` to
 loopback. systemd-resolved supplies this on the supported workstation; if your
 resolver does not, configure `127.0.0.1 storage.localhost` in your host resolver.
 The setup checks resolution and never edits system DNS configuration.
@@ -44,7 +44,7 @@ variables and `.env`; no development mode is required.
 
 `make up` creates the private Docker network, registry, mail capture service,
 cluster, backing storage, TLS certificates, and shared Compute infrastructure.
-It then starts the gateway and storage connections and builds/pushes the sample
+It then checks gateway and storage HTTPS connectivity and builds/pushes the sample
 Solution image. Run it again to reapply
 resources or retry an interrupted setup. `make down` removes those resources.
 Cluster settings are declared in `dev/cluster.yaml`.
@@ -95,21 +95,26 @@ The k3d container runtime uses the mirror in `dev/cluster.yaml` to reach that sa
 directly at `registry:5000` on the private `longlink-dev` Docker network. No Docker
 gateway address or extra host port binding is needed.
 Compose owns this network and waits for the registry health check before cluster
-setup. Teardown stops connections, deletes the cluster, then removes Compose
+setup. Teardown stops Compose services, deletes the cluster, then removes Compose
 services and their networks.
 
-Compose owns two long-lived `kubectl port-forward` processes. They bind only to
-host loopback, use the generated kubeconfig read-only, restart when the selected
-Pod disappears, and expose health checks. `make up` starts or repairs them;
-`make down` stops them before deleting the cluster.
+k3d publishes loopback ports through its load balancer to the local NodePort
+Services: `8443` → gateway `30443`, and `9443` → storage `30943`. Kubernetes routes
+to ready Pods as they are replaced. `make up` checks the gateway readiness route
+and S3 HTTPS endpoint with the generated CA before building the sample image.
 
 The gateway origin is `https://localhost:8443`. The API uses an ordinary HTTPS
-client; Kourier retains its restricted ingress policies. There is no permissive
-development gateway NetworkPolicy or custom API transport.
+client. The local gateway policy admits TLS traffic from the workstation-owned
+`longlink-dev` Docker subnet, `172.30.0.0/24`, declared in `dev/compose.yml`.
+`externalTrafficPolicy: Local` preserves Docker-side source addresses at the
+Service boundary. Solution namespace
+policies deny access to that private subnet and the gateway; their S3 access stays
+explicitly scoped to RGW Pods. Changing the Docker subnet requires updating
+`dev/compute/connectivity/gateway.yaml` with it.
 
 The S3 origin is **`https://storage.localhost:9443`** for both the API and Solutions:
 
-- On the host, the name resolves to loopback and reaches the dev-owned connection.
+- On the host, the name resolves to loopback and reaches the k3d port mapping.
 - In Kubernetes, CoreDNS rewrites the name to the local RGW Service, whose port
   9443 forwards to RGW's TLS port 443.
 - The certificate covers `storage.localhost` and Rook's internal RGW service names.
@@ -169,7 +174,8 @@ Hosted installations need a reviewed ownership migration; see `k8s/README.md`.
 Settings in `dev/cluster.yaml`, including registry mirrors, are applied by k3d only
 when creating the cluster. After changing them, stop workers and run `make down`,
 `make up`, `make api`, and `make seed` to recreate disposable local state. This
-includes clusters using the former `host.k3d.internal:15000` registry mirror and
+includes clusters using the former Compose gateway/storage port-forwards,
+`host.k3d.internal:15000` registry mirror, and
 manually created Docker network. For that older setup, also remove the old network
 with `docker network rm longlink-dev` after `make down` and before `make up`.
 `make down` deletes local tenant data; it is not an in-place migration procedure.
@@ -184,5 +190,5 @@ uv --directory api run --locked python -m scripts.cleanup
 ```
 
 Shared operators remain installed. `make down` removes the local cluster,
-connections, certificates, kubeconfig, and Platform database. It preserves
+port mappings, certificates, kubeconfig, and Platform database. It preserves
 `api/.env`, the Buildx cache, and `sdk/dev`, including local sample edits.

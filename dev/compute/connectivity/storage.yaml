@@ -4,11 +4,14 @@ metadata:
     name: longlink-storage
     namespace: rook-ceph
 spec:
+    type: NodePort
+    externalTrafficPolicy: Local
     selector:
         app: rook-ceph-rgw
         rook_object_store: longlink
     ports:
         - name: https
           port: 9443
+          nodePort: 30943
           targetPort: 443
           protocol: TCP
