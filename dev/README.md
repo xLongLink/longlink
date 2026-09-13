@@ -118,7 +118,8 @@ After an infrastructure setup failure, stop API workers and run `make compute` t
 the external installation. Restart `make api` to revalidate it and run `make seed` again
 to retry a failed sample with a new revision. Successful samples are preserved.
 `make api` and `make compute` use a local shared/exclusive file lock to prevent concurrent
-infrastructure mutation. Stop independently launched workers too.
+infrastructure mutation. Hosted deployment coordination belongs to the hosting repository.
+Stop independently launched workers too.
 
 ## Cleanup
 

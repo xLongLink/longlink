@@ -1,4 +1,4 @@
-.PHONY: install check format build test up compute image down api web sdk seed
+.PHONY: install check format build test up compute _compute image down api web sdk seed
 
 DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
 
@@ -11,9 +11,8 @@ install:
 
 # Run lint, type, and contract checks.
 check:
-	cd api && uv run --locked ruff check . ../k8s/compute/scripts
+	cd api && uv run --locked ruff check .
 	cd api && uv run --locked --extra dev ty check
-	cd api && uv run --locked --extra dev ty check ../k8s/compute/scripts/deploy.py
 	cd sdk && uv run --locked ruff check .
 	cd sdk && uv run --locked --group dev ty check
 	cd web && vp run check
@@ -98,9 +97,35 @@ up:
 	$(MAKE) image
 
 
-# Install the local Compute package before starting Platform workers.
+# Apply the local Compute package while Platform workers are stopped.
 compute:
-	uv run --script k8s/compute/scripts/deploy.py apply --local --overlay dev/compute --kubeconfig api/kubeconfig.yaml --cluster-uid "$$(kubectl --kubeconfig api/kubeconfig.yaml get namespace kube-system -o jsonpath='{.metadata.uid}')"
+	flock --exclusive --nonblock dev/compute.lock $(MAKE) _compute COMPUTE_LOCKED=1
+
+
+# Apply dependency-ordered Kustomize stages and publish the contract last.
+_compute:
+	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make compute to acquire the deployment lock.\n"; exit 1; }
+	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/boundaries
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/serving-crds
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/serving
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace knative-serving --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' validatingwebhookconfiguration/config.webhook.serving.knative.dev mutatingwebhookconfiguration/webhook.serving.knative.dev validatingwebhookconfiguration/validation.webhook.serving.knative.dev --timeout=180s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/kourier
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace knative-serving --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace kourier-system --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/cnpg
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace cnpg-system --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration --timeout=180s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/rook-crds
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/operators/rook
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace rook-ceph --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/infrastructure
+	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.status.phase}'=Ready cephcluster/rook-ceph cephobjectstore/longlink cephobjectstoreuser/longlink-health --namespace rook-ceph --timeout=1800s
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/release
 
 
 # Build and push the local sample, preserving an existing development project.

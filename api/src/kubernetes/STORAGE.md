@@ -34,9 +34,9 @@ provides S3, and consumes an independently installed backing PVC provisioner.
   Host-run development workers instead use authenticated Kubernetes port-forwarding
   with a client-scoped resolver. The endpoint hostname remains the TLS identity
   and SigV4 signing authority; in-cluster workloads use the service directly.
-- Install the Compute package before registering it. The installer has separate
-  readiness deadlines; API operation timeouts no longer govern shared installation.
-  Stop local API workers and run `make compute` to retry installation.
+- Install the Compute package before registering it. Deployment readiness and
+  retry belong to the hosting workflow, not API operation timeouts. Stop local API
+  workers and run `make compute` to retry local installation.
 
 ## Quotas and capacity admission
 
@@ -155,11 +155,12 @@ it does not alter a database already stamped with the old initial revision.
 Use the project's fresh-install workflow for this MVP schema replacement.
 Supply explicit cloud seed values or complete the administrator Compute form.
 
-For release reconciliation, stop Platform replicas and follow the existing
-`python -m src.release` workflow before restarting workers. It queues Compute
-installation (including the Rook quota allow list), Organization reconciliation,
-and Solution deployments. Writers using pre-existing unbounded buckets must be
-quiesced until their Organization reconciliation succeeds. A failed/stale quota
+For infrastructure changes, stop Platform replicas and apply the versioned Compute
+package through the hosting deployment workflow. Apply its release contract only
+after Rook and Ceph are ready. Restart workers, then run `python -m src.release`
+to queue Compute validation, Organization reconciliation, and Solution deployments.
+Writers using pre-existing unbounded buckets must be quiesced until their
+Organization reconciliation succeeds. A failed/stale quota
 acknowledgement must be resolved before resuming those writers. Quotas do not
 delete existing excess data; reads and owner cleanup remain possible.
 

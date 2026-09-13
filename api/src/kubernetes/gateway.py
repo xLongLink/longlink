@@ -37,15 +37,12 @@ class Gateway:
         context = ssl.create_default_context(cadata=gateway_certificate)
         api = await self._client.api()
 
-        # A release record is written only by the external installer after convergence.
-        pending = ConfigMap("compute-deployment", namespace="longlink-system", api=api)
-        if await pending.exists():
-            raise ValueError("Compute deployment is incomplete; finish the external installation before starting Platform workers")
+        # The deployment owner applies the release contract only after shared infrastructure.
         release = ConfigMap("compute-release", namespace="longlink-system", api=api)
         await release.refresh()
         data = release.raw.get("data", {})
-        if data.get("contract") != "1" or data.get("clusterUID") != await self._client.cluster_uid():
-            raise ValueError("Compute package is incompatible or belongs to another cluster; run the Compute deployment workflow")
+        if data.get("contract") != "1":
+            raise ValueError("Compute package is incompatible; deploy a supported Compute package")
         secret = Secret("longlink-gateway-tls", namespace="knative-serving", api=api)
         await secret.refresh()
         if not secret.raw.get("data", {}).get("tls.crt") or not secret.raw.get("data", {}).get("tls.key"):

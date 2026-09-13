@@ -48,3 +48,15 @@ patches:
           - op: add
             path: /data/queue-sidecar-ephemeral-storage-limit
             value: 128Mi
+    - target:
+          kind: MutatingWebhookConfiguration
+          name: webhook.serving.knative.dev
+      patch: |-
+          - op: remove
+            path: /webhooks/0/rules
+    - target:
+          kind: ValidatingWebhookConfiguration
+          name: validation.webhook.serving.knative.dev
+      patch: |-
+          - op: remove
+            path: /webhooks/0/rules

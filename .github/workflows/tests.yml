@@ -45,10 +45,16 @@ jobs:
 
             - name: Lint API
               working-directory: api
-              run: uv run --locked ruff check . ../k8s/compute/scripts
+              run: uv run --locked ruff check .
 
             - name: Render Compute package
-              run: uv run --script k8s/compute/scripts/deploy.py render --overlay dev/compute > "$RUNNER_TEMP/compute.yaml"
+              run: |
+                  set -euo pipefail
+                  for stage in boundaries operators/serving-crds operators/serving operators/kourier operators/cnpg operators/rook-crds operators/rook infrastructure release; do
+                      kubectl kustomize "k8s/compute/${stage}" > /dev/null
+                  done
+                  kubectl kustomize dev/compute/operators/rook > /dev/null
+                  kubectl kustomize dev/compute/infrastructure > /dev/null
 
             - name: Verify Docker daemon
               run: docker info
@@ -67,9 +73,7 @@ jobs:
 
             - name: Run type checks
               working-directory: api
-              run: |
-                  uv run --locked --extra dev ty check
-                  uv run --locked --extra dev ty check ../k8s/compute/scripts/deploy.py
+              run: uv run --locked --extra dev ty check
 
     # The SDK requires Python 3.12 or newer.
     sdk-tests:

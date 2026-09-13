@@ -24,7 +24,7 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
 
             observed.append((namespace, name))
             self.raw = {
-                "data": {"contract": "1", "clusterUID": "test-cluster", "tls.crt": "certificate", "tls.key": "key"},
+                "data": {"contract": "1", "tls.crt": "certificate", "tls.key": "key"},
                 "spec": {"replicas": 1},
                 "status": {"observedGeneration": 1, "replicas": 1, "updatedReplicas": 1, "readyReplicas": 1, "availableReplicas": 1},
             }
@@ -33,11 +33,6 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
 
         async def refresh(self) -> None:
             """Return the current observation."""
-
-        async def exists(self) -> bool:
-            """Report no interrupted deployment marker."""
-
-            return False
 
     class Client:
         """Validate the transport settings and return a gateway readiness response."""

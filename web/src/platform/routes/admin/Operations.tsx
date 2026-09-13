@@ -23,7 +23,7 @@ const statusLabels: Record<OperationResponse['status'], string> = {
     failed: 'Failed',
 };
 const kindLabels: Record<OperationResponse['kind'], string> = {
-    'compute.create': 'Compute creation',
+    'compute.create': 'Compute validation',
     'solution.deploy': 'Solution deployment',
     'solution.delete': 'Solution deletion',
     'organization.create': 'Organization creation',
