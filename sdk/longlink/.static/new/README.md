@@ -40,7 +40,7 @@ gh release create v0.1.0 --generate-notes
 <div align="center">
 LongLink 2026
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+[License](https://github.com/xLongLink/longlink/blob/main/LICENSE) &nbsp; - &nbsp; [Contributing](https://github.com/xLongLink/longlink/blob/main/CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](https://github.com/xLongLink/longlink/blob/main/CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 </div>
 
 ---

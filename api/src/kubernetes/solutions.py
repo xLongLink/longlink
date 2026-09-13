@@ -60,35 +60,34 @@ async def _log_migration_diagnostics(migration_job: Job) -> None:
             logger.error("Migration Job %s status: %s", migration_id, json.dumps(status, sort_keys=True, default=str))
 
             # Capture each bounded Job Pod's status and available output once.
-            resource_names = {migration_id}
-            pod_found = False
+            resource_names: set[str] = set()
             async for candidate in Pod.list(
                 api=migration_job.api,
                 namespace=migration_job.namespace,
                 label_selector={"job-name": migration_id},
             ):
-                pod_found = True
                 pod = cast(Pod, candidate)
                 resource_names.add(pod.name)
                 pod_status = pod.raw.get("status", {})
                 logger.error("Migration Pod %s status: %s", pod.name, json.dumps(pod_status, sort_keys=True, default=str))
 
-                phase = pod_status.get("phase") if isinstance(pod_status, dict) else None
+                phase = pod_status.get("phase")
                 if phase in {"Running", "Succeeded", "Failed"}:
                     output = [line async for line in pod.logs(tail_lines=200)]
                     logger.error("Recent output from migration Pod %s:\n%s", pod.name, "\n".join(output) or "(no output)")
-            if not pod_found:
+            if not resource_names:
                 logger.error("Migration Job %s has not created a Pod", migration_id)
 
             # One namespace Event query covers admission, quota, scheduling, volume, and image failures.
+            resource_names.add(migration_id)
             async for event in Event.list(
                 api=migration_job.api,
                 namespace=migration_job.namespace,
                 field_selector={"type": "Warning"},
             ):
                 event_resource = cast(Event, event)
-                involved_object = event_resource.raw.get("involvedObject")
-                if not isinstance(involved_object, dict) or involved_object.get("name") not in resource_names:
+                involved_object = event_resource.raw.get("involvedObject", {})
+                if involved_object.get("name") not in resource_names:
                     continue
                 logger.error(
                     "Kubernetes warning for %s: %s: %s",
@@ -248,15 +247,13 @@ class Solutions:
         # Recheck only Kubernetes state while resources and Pods terminate.
         api = await self._client.api()
         namespace_resource = Namespace(namespace, api=api)
-        resource = KnativeServiceResource(
-            f"solution-{solution_id}",
-            namespace=namespace,
-            api=api,
-        )
         while await namespace_resource.exists():
             remaining = False
-            if await resource.exists():
-                await resource.refresh()
+            async for resource in KnativeServiceResource.list(
+                api=api,
+                namespace=namespace,
+                field_selector={"metadata.name": f"solution-{solution_id}"},
+            ):
                 remaining = True
                 if resource.metadata.get("deletionTimestamp") is None:
                     await resource.delete()
@@ -289,8 +286,7 @@ class Solutions:
             migration_pod: Pod | None = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 pod = cast(Pod, candidate)
-                status = pod.raw.get("status")
-                phase = status.get("phase") if isinstance(status, dict) else None
+                phase = pod.raw.get("status", {}).get("phase")
                 component = pod.metadata.get("labels", {}).get("longlink.io/component")
                 if component != "migration" and phase not in {"Succeeded", "Failed"}:
                     return [line async for line in pod.logs(container="solution", tail_lines=200)]
@@ -299,10 +295,8 @@ class Solutions:
 
             # Derive fallback context only from the selected migration Pod.
             if migration_pod is not None:
-                status = migration_pod.raw.get("status")
-                phase = status.get("phase") if isinstance(status, dict) else None
-                migration_phase = phase if isinstance(phase, str) else None
-                migration_name = migration_pod.metadata.get("name", "unknown")
+                migration_phase = migration_pod.raw.get("status", {}).get("phase")
+                migration_name = migration_pod.metadata["name"]
                 if migration_phase == "Failed":
                     output = [line async for line in migration_pod.logs(tail_lines=200)]
                     return [f"Migration Pod {migration_name} failed:", *output]

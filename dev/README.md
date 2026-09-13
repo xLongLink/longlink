@@ -1,3 +1,14 @@
+<div align="center">
+
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
+
+[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+
+</div>
+
+<br />
+<br />
+
 # Local development
 
 The API runs on the host. `dev/` owns local infrastructure.
@@ -35,3 +46,17 @@ local infrastructure. `make down` deletes the local cluster and tenant data, but
 keeps `api/.env` and `sdk/dev`.
 
 See [`k8s/README.md`](../k8s/README.md) for Compute package deployment.
+
+<br />
+<br />
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+
+</div>
+
+---

@@ -1,3 +1,14 @@
+<div align="center">
+
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
+
+[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+
+</div>
+
+<br />
+<br />
+
 # LongLink Compute package
 
 The package installs Knative, Kourier, CloudNativePG, Rook, and Ceph. The Platform
@@ -36,3 +47,17 @@ helmfile --file k8s/setup.yaml.gotmpl \
 
 Never delete or recreate Ceph or PostgreSQL to transfer ownership. Existing
 kubectl-managed installations require a reviewed migration.
+
+<br />
+<br />
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+
+</div>
+
+---
