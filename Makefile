@@ -120,16 +120,16 @@ _compute:
 	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make compute to acquire the deployment lock.\n"; exit 1; }
 	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
 	uv run --script dev/setup.py prepare
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/boundaries
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/serving-crds
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/boundaries
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/serving-crds
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/serving
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/serving
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' validatingwebhookconfiguration/config.webhook.serving.knative.dev mutatingwebhookconfiguration/webhook.serving.knative.dev validatingwebhookconfiguration/validation.webhook.serving.knative.dev --timeout=180s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/kourier
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/kourier
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace kourier-system --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/cnpg
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/cnpg
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace cnpg-system --timeout=900s
 	@set -eu; for configuration in mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration; do \
@@ -139,13 +139,13 @@ _compute:
 			kubectl --kubeconfig api/kubeconfig.yaml wait --for="jsonpath={.webhooks[?(@.name=='$$hook')].clientConfig.caBundle}" "$$configuration" --timeout=180s; \
 		done; \
 	done
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/rook-crds
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/rook-crds
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/operators/rook
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace rook-ceph --timeout=900s
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/infrastructure
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.status.phase}'=Ready cephcluster/rook-ceph cephobjectstore/longlink cephobjectstoreuser/longlink-health --namespace rook-ceph --timeout=1800s
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/release
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/release
 	$(MAKE) connect
 
 

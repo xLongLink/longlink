@@ -114,7 +114,7 @@ def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
     """Validate the actual external package's network boundary and TLS-only listener."""
 
     # Render the production Kustomize bases rather than reproducing their patches in tests.
-    root = Path(__file__).resolve().parents[3] / "k8s/compute"
+    root = Path(__file__).resolve().parents[3] / "k8s"
     policies = subprocess.run(["kubectl", "kustomize", str(root / "boundaries")], check=True, capture_output=True, text=True)
     gateway_release = subprocess.run(["kubectl", "kustomize", str(root / "operators/kourier")], check=True, capture_output=True, text=True)
     assert any(document["kind"] == "NetworkPolicy" for document in yaml.safe_load_all(policies.stdout))

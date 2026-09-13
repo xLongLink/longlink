@@ -51,7 +51,7 @@ jobs:
               run: |
                   set -euo pipefail
                   for stage in boundaries operators/serving-crds operators/serving operators/kourier operators/cnpg operators/rook-crds operators/rook infrastructure release; do
-                      kubectl kustomize "k8s/compute/${stage}" > /dev/null
+                      kubectl kustomize "k8s/${stage}" > /dev/null
                   done
                   kubectl kustomize dev/compute/operators/rook > /dev/null
                   kubectl kustomize dev/compute/infrastructure > /dev/null

@@ -23,10 +23,10 @@ def test_storage_topology_matches_pinned_rook_schemas(instances: int) -> None:
         document["spec"]["names"]["kind"]: next(
             version["schema"]["openAPIV3Schema"] for version in document["spec"]["versions"] if version["storage"]
         )
-        for document in yaml.safe_load_all(root.joinpath("k8s/compute/operators/rook-crds/release.yml").read_text())
+        for document in yaml.safe_load_all(root.joinpath("k8s/operators/rook-crds/release.yml").read_text())
         if document and document["kind"] == "CustomResourceDefinition"
     }
-    directory = root / ("dev/compute/infrastructure" if instances == 1 else "k8s/compute/infrastructure")
+    directory = root / ("dev/compute/infrastructure" if instances == 1 else "k8s/infrastructure")
     result = subprocess.run(["kubectl", "kustomize", str(directory)], check=True, capture_output=True, text=True)
     documents = list(yaml.safe_load_all(result.stdout))
     for document in documents:

@@ -7,7 +7,7 @@ installs or upgrades shared infrastructure.
 
 ```text
 longlink/
-├── k8s/compute/ → shared infrastructure package
+├── k8s/ → shared infrastructure package
 │   ├── boundaries/ → shared namespaces and ingress policies
 │   ├── operators/ → vendored upstream manifests and Kustomize customizations
 │   ├── infrastructure/ → shared Ceph resources and health identity
@@ -39,7 +39,7 @@ in dependency order, waits for local controllers and storage, and applies
 `release/release.yml` last. `make connect` then starts dev-owned gateway/S3
 connections. The API runs directly on the host with ordinary HTTPS clients; local
 CoreDNS makes the same S3 origin reachable by Solution Pods. See
-[`dev/README.md`](../../dev/README.md) for the complete connectivity contract.
+[`dev/README.md`](../dev/README.md) for the complete connectivity contract.
 
 To change or retry local infrastructure:
 
@@ -68,7 +68,7 @@ remain Platform-owned. Storage resizing is not supported by this release.
 Render a stage without accessing a cluster:
 
 ```bash
-kubectl kustomize k8s/compute/infrastructure
+kubectl kustomize k8s/infrastructure
 kubectl kustomize dev/compute/infrastructure
 ```
 
@@ -77,6 +77,7 @@ kubectl kustomize dev/compute/infrastructure
 The hosting repository owns deployment coordination, retries, upgrades, and
 rollback. It must supply the Kubernetes cluster, metrics service, storage
 provisioner, endpoint Services, source allowlists, and certificate lifecycle.
+This release supports Kubernetes 1.34 and 1.35.
 Create these Secrets before applying the operator stages:
 
 - `knative-serving/longlink-gateway-tls` for the registered gateway hostname.

@@ -1,8 +1,8 @@
 # Rook/Ceph object storage
 
-The external `k8s/compute` package installs Rook **v1.19.11** and Ceph **v19.2.6**, then creates one
+The external `k8s` package installs Rook **v1.19.11** and Ceph **v19.2.6**, then creates one
 `CephObjectStore` named `longlink` in `rook-ceph` per compute. The upstream
-operator, common resources, and CRDs are committed under `k8s/compute/operators/` at the repository root.
+operator, common resources, and CRDs are committed under `k8s/operators/` at the repository root.
 Ceph CSI drivers and the separate CSI operator are disabled: this integration
 provides S3, and consumes an independently installed backing PVC provisioner.
 

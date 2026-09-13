@@ -17,7 +17,7 @@ Workstation
 └── k3d Compute cluster
     ├── dev/setup.py → backing provisioner and storage certificate
     ├── dev/compute/connectivity → S3 Service and split DNS
-    ├── k8s/compute + dev overlays → Knative, CNPG, Rook, and Ceph
+    ├── k8s + dev overlays → Knative, CNPG, Rook, and Ceph
     └── Organizations and Solutions → provisioned by the Platform
 ```
 

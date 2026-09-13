@@ -36,10 +36,10 @@ jobs:
               run: |
                   set -euo pipefail
                   git merge-base --is-ancestor "${GITHUB_SHA}^{commit}" "origin/${DEFAULT_BRANCH}"
-                  version="$(awk '$1 == "version:" {print $2}' k8s/compute/release/release.yml)"
+                  version="$(awk '$1 == "version:" {print $2}' k8s/release/release.yml)"
                   test "$GITHUB_REF_NAME" = "compute-v${version}"
                   archive="${GITHUB_REF_NAME}.tar.gz"
-                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s compute
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
                   sha256sum "$archive" > "${archive}.sha256"
 
             - name: Publish immutable release assets

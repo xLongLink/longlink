@@ -1,6 +1,6 @@
 # Compute validation and tenant lifecycle
 
-Install the external [Compute package](../../../../k8s/compute/README.md) before registering a cluster.
+Install the external [Compute package](../../../k8s/README.md) before registering a cluster.
 `gateway.verify(gateway_url, gateway_certificate=None) -> None` checks its release
 contract, observes controller readiness,
 then requests `/ready` with `Host: internalkourier` over
@@ -14,8 +14,8 @@ deployment stage. These checks never install or repair operators.
 
 ## Operator Prerequisites
 
-- Use a dedicated Kubernetes cluster with a NetworkPolicy-enforcing CNI and a
-  version supported by `k8s/compute/release/release.yml`. Package installation requires
+- Use a dedicated Kubernetes 1.34 or 1.35 cluster with a NetworkPolicy-enforcing
+  CNI. Package installation requires
   cluster-admin-equivalent access and is executed outside Platform reconciliation.
 - Pre-create namespace `knative-serving` and TLS Secret `longlink-gateway-tls`
   with `tls.crt` and `tls.key`. Its certificate must cover `gateway_url`'s host.
@@ -169,7 +169,7 @@ local `make down` removes the entire development cluster.
 
 ## Pinned Sources
 
-Release manifests are downloaded once and committed under `k8s/compute/operators/`,
+Release manifests are downloaded once and committed under `k8s/operators/`,
 locking their contents in the infrastructure package. Kustomize expresses LongLink
 overrides beside those manifests. The API container includes only tenant templates;
 runtime validation and reconciliation do not download infrastructure releases.
