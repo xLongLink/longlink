@@ -1,11 +1,14 @@
 import pytest
+from uuid import UUID
 from pathlib import Path
+from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col
 from sqlalchemy import func, select
 from dev.scripts.seed import SeedSettings, seed
 from src.environments import env
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -13,29 +16,7 @@ from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
-class SeedKubernetes:
-    """Provide the cluster identity boundary without external Kubernetes I/O."""
-
-    def __init__(self, _kubeconfig: dict[str, object]) -> None:
-        """Accept the validated seed kubeconfig."""
-
-    async def cluster_uid(self) -> str:
-        """Return the stable synthetic cluster identity."""
-
-        return "seed-cluster"
-
-    async def aclose(self) -> None:
-        """Close the synthetic cluster client."""
-
-
-@pytest.fixture(autouse=True)
-def cluster_identity(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace cluster identity I/O at the seed boundary."""
-
-    monkeypatch.setattr("dev.scripts.seed.Kubernetes", SeedKubernetes)
-
-
-def settings(tmp_path: Path) -> SeedSettings:
+def settings(tmp_path: Path, administrator_email: str) -> SeedSettings:
     """Build valid seed settings with a temporary compute configuration."""
 
     kubeconfig = tmp_path / "kubeconfig.yml"
@@ -57,6 +38,9 @@ def settings(tmp_path: Path) -> SeedSettings:
         BUCKET_MAX_OBJECTS=1000,
         STORAGE_RESERVE_PERCENT=30,
         STORAGE_OBJECT_OVERHEAD_BYTES=65536,
+        ADMIN_EMAIL=administrator_email,
+        ADMIN_PASSWORD=TEST_PASSWORD,
+        PUBLIC_URL=env.PUBLIC_URL,
     )
 
 
@@ -68,11 +52,16 @@ async def count(model: type[object]) -> int:
         return result.scalar_one()
 
 
-async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_local_seed_creates_example_through_api(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    users: tuple[User, User, User],
+) -> None:
     """Keep local seed resources stable across repeated initialization."""
 
     # Arrange
-    local_settings = settings(tmp_path)
+    administrator = users[0]
+    local_settings = settings(tmp_path, str(administrator.email))
 
     # Isolate registry transport from the workstation's mutable sample tag.
     async def metadata(image: Image) -> LongLinkMetadata:
@@ -81,22 +70,41 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monk
         assert image == "localhost:15000/sample:dev"
         return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
 
-    monkeypatch.setattr("dev.scripts.seed.images.metadata", metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
     # Act
-    await seed(local_settings)
-    await seed(local_settings)
+    async with create_client(administrator) as client:
+        compute_response = await client.post(
+            "/api/v1/computes",
+            json={
+                "name": "development compute",
+                "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
+                "gateway_url": local_settings.GATEWAY_URL,
+                "database_storage_class": local_settings.DATABASE_STORAGE_CLASS,
+                "storage_class": local_settings.STORAGE_CLASS,
+                "storage_endpoint": local_settings.STORAGE_ENDPOINT,
+                "bucket_size_bytes": local_settings.BUCKET_SIZE_BYTES,
+                "bucket_max_objects": local_settings.BUCKET_MAX_OBJECTS,
+                "storage_reserve_percent": local_settings.STORAGE_RESERVE_PERCENT,
+                "storage_object_overhead_bytes": local_settings.STORAGE_OBJECT_OVERHEAD_BYTES,
+            },
+        )
+        assert compute_response.status_code == 202
+        async with session_scope() as session:
+            compute = await session.get(ComputeRegistry, UUID(compute_response.json()["id"]))
+            assert compute is not None
+            compute.status = Status.running
+            await session.commit()
+
+        await seed(local_settings, client)
+        await seed(local_settings, client)
 
     # Assert
-    assert await count(User) == 1
     assert await count(ComputeRegistry) == 1
     assert await count(Organization) == 1
     assert await count(Solution) == 1
     async with session_scope() as session:
-        administrator = await session.scalar(select(User).where(User.email == env.ADMIN_EMAIL))
         solution = await session.scalar(select(Solution).where(col(Solution.slug) == "sample"))
-    assert administrator is not None
-    assert administrator.administrator is True
     assert solution is not None
     assert solution.description == "A sample solution for local development."
     assert solution.desired_revision.source == "localhost:15000/sample:dev"

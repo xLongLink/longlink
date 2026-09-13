@@ -39,7 +39,8 @@ Each organization is created with:
 
 Compute and database namespaces have independent resource quotas. PostgreSQL volumes provide a physical capacity boundary, not a graceful SQL byte quota. Object storage enforces administrator-configured Organization bucket byte and object quotas, with serialized aggregate capacity reservations including headroom and object overhead. Databases are always on by default (`database_idle_seconds=0`). Hibernation is opt-in, with idle settings from 300 to 604,800 seconds. Expiring Organization activity leases protect active work; database state and timestamped usage are stored separately from Organization lifecycle status. The API resumes and synchronizes the database before forwarding requests to sleeping applications. Active Pods, migration Jobs, backups, and enabled autonomous backup schedules prevent hibernation.
 
-Cluster prerequisites, TLS provisioning, source-IP restrictions, network policies, and operator-owned backup requirements are documented in [the Kubernetes installation guide](src/kubernetes/README.md). This is a fresh-install schema replacement, not a migration of existing tenant data.
+See the [Compute package guide](../k8s/README.md) for installation. This is a
+fresh-install schema replacement, not a migration of existing tenant data.
 
 <br />
 

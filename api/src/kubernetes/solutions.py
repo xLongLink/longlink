@@ -5,8 +5,9 @@ from uuid import UUID
 from typing import TYPE_CHECKING, Literal, cast
 from src.utils import templates
 from src.logger import logger
+from kr8s.asyncio import Api
 from importlib.resources import files
-from kr8s.asyncio.objects import Job, Pod, Event, Secret, Namespace, new_class
+from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
 from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
@@ -15,6 +16,37 @@ if TYPE_CHECKING:
 SOLUTION_ID_LABEL = "longlink.io/solution-id"
 MIGRATION_DIAGNOSTIC_TIMEOUT_SECONDS = 10
 KnativeServiceResource = new_class("Service", "serving.knative.dev/v1", asyncio=True, plural="services")
+
+
+async def _has_active_pods(api: Api, namespace: str, selector: dict[str, str]) -> bool:
+    """Return whether matching Pods still need to terminate before cleanup proceeds."""
+
+    # Missing or non-terminal phases still block schema and credential cleanup.
+    async for pod in Pod.list(api=api, namespace=namespace, label_selector=selector):
+        if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
+            return True
+    return False
+
+
+async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_job: str | None) -> None:
+    """Suspend conflicting migrations and wait until their Pods stop using the schema."""
+
+    # Preserve terminal Jobs for diagnostics and the current Job for interrupted retries.
+    async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+        job = cast(Job, candidate)
+        if job.name == resume_job:
+            continue
+        if any(
+            condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
+            for condition in job.raw.get("status", {}).get("conditions", [])
+        ):
+            continue
+
+        # Controller acknowledgement precedes checking for remaining migration Pods.
+        await job.patch({"spec": {"suspend": True}})
+        await job.wait(["condition=Suspended"])
+        while await _has_active_pods(api, namespace, {"job-name": job.name}):
+            await asyncio.sleep(5)
 
 
 async def _log_migration_diagnostics(migration_job: Job) -> None:
@@ -70,6 +102,76 @@ async def _log_migration_diagnostics(migration_job: Job) -> None:
         logger.exception("Could not collect migration Job %s diagnostics", migration_id)
 
 
+async def _run_migration(migration_job: Job) -> None:
+    """Apply a migration once and report terminal failure or cancellation diagnostics."""
+
+    # Keep the rendered identity available even before Kubernetes accepts the Job.
+    metadata = migration_job.raw["metadata"]
+    migration_id = metadata["name"]
+    await apply(migration_job)
+    try:
+        await migration_job.wait(["condition=Complete", "condition=Failed"])
+    except asyncio.CancelledError:
+        # Preserve the operation timeout or worker shutdown after bounded diagnostics.
+        logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
+        await _log_migration_diagnostics(migration_job)
+        raise
+
+    # Treat the Kubernetes terminal condition as the authoritative Job outcome.
+    if any(
+        condition.get("type") == "Failed" and condition.get("status") == "True" for condition in migration_job.raw["status"]["conditions"]
+    ):
+        logger.error(
+            "Migration Job %s failed for Solution %s in namespace %s",
+            migration_id,
+            metadata["labels"][SOLUTION_ID_LABEL],
+            metadata["namespace"],
+        )
+        await _log_migration_diagnostics(migration_job)
+        raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
+
+
+async def _wait_for_rollout(deployed: APIObject) -> None:
+    """Wait for the current Knative revision, surfacing explicit rollout failures."""
+
+    # Poll status without repeatedly applying the same Solution revision.
+    while True:
+        try:
+            await deployed.refresh()
+        except NotFoundError as exc:
+            raise RuntimeError("Knative Solution Service disappeared during rollout") from exc
+
+        # Ignore stale failures while the controller observes a replacement or fallback revision.
+        status = deployed.raw.get("status")
+        generation = deployed.metadata.get("generation")
+        if not isinstance(status, dict) or status.get("observedGeneration") not in {None, generation}:
+            await asyncio.sleep(5)
+            continue
+
+        # Explicit False conditions fail; Unknown conditions still represent progress.
+        conditions = status.get("conditions") or []
+        for condition in conditions:
+            if condition.get("status") != "False":
+                continue
+            message = condition.get("message", "")
+            reason = condition.get("reason", "Unknown")
+            if "exceeded quota" in message.lower():
+                raise RuntimeError("Kubernetes Solution capacity exhausted")
+            if condition.get("type") in {"Ready", "ConfigurationsReady", "RoutesReady"}:
+                raise RuntimeError(f"Knative Solution rollout failed ({reason}): {message}")
+
+        # An older ready route cannot satisfy readiness for the desired revision.
+        desired_revision = status.get("latestCreatedRevisionName")
+        if (
+            status.get("observedGeneration") == generation
+            and desired_revision is not None
+            and status.get("latestReadyRevisionName") == desired_revision
+            and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
+        ):
+            return
+        await asyncio.sleep(5)
+
+
 class Solutions:
     """Manage explicit Solution deployment, deletion, readiness, and logs."""
 
@@ -108,25 +210,7 @@ class Solutions:
         api = await self._client.api()
 
         # Stop interrupted migrations before another release or fallback can use the schema.
-        # Preserve Jobs for diagnostics; shutdown retries may resume their own exact Job.
-        async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
-            job = cast(Job, candidate)
-            if migrate and job.name == migration_id:
-                continue
-            if any(
-                condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
-                for condition in job.raw.get("status", {}).get("conditions", [])
-            ):
-                continue
-            await job.patch({"spec": {"suspend": True}})
-            await job.wait(["condition=Suspended"])
-            while True:
-                async for pod in Pod.list(api=api, namespace=namespace, label_selector={"job-name": job.name}):
-                    if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
-                        break
-                else:
-                    break
-                await asyncio.sleep(5)
+        await _stop_migrations(api, namespace, solution_id, resume_job=migration_id if migrate else None)
 
         # Keep each revision's environment isolated from the currently running Pods.
         solution_secret = Secret(
@@ -148,23 +232,7 @@ class Solutions:
                 "Starting migration Job %s for Solution %s in namespace %s from image %s", migration_id, solution_id, namespace, image
             )
             migration_job = Job(migration, api=api)
-            await apply(migration_job)
-            try:
-                await migration_job.wait(["condition=Complete", "condition=Failed"])
-            except asyncio.CancelledError:
-                # Preserve the operation timeout or worker shutdown after bounded diagnostics.
-                logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
-                await _log_migration_diagnostics(migration_job)
-                raise
-
-            # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-            if any(
-                condition.get("type") == "Failed" and condition.get("status") == "True"
-                for condition in migration_job.raw["status"]["conditions"]
-            ):
-                logger.error("Migration Job %s failed for Solution %s in namespace %s", migration_id, solution_id, namespace)
-                await _log_migration_diagnostics(migration_job)
-                raise RuntimeError(f"Solution migration Job '{migration_id}' failed")
+            await _run_migration(migration_job)
             logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, namespace)
         else:
             logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
@@ -172,45 +240,7 @@ class Solutions:
         # Knative owns revision Deployments, Services, routing, and scale-to-zero activation.
         deployed = KnativeServiceResource(service, api=api)
         await apply(deployed)
-
-        # Poll rollout status without repeatedly applying the same Solution revision.
-        while True:
-            try:
-                await deployed.refresh()
-            except NotFoundError as exc:
-                raise RuntimeError("Knative Solution Service disappeared during rollout") from exc
-
-            # Ignore stale failures while the controller observes a replacement or fallback revision.
-            status = deployed.raw.get("status")
-            if not isinstance(status, dict):
-                await asyncio.sleep(5)
-                continue
-            generation = deployed.metadata.get("generation")
-            if status.get("observedGeneration") not in {None, generation}:
-                await asyncio.sleep(5)
-                continue
-
-            # Surface explicit terminal failures; Unknown conditions still represent progressing rollouts.
-            conditions = status.get("conditions") or []
-            for condition in conditions:
-                if condition.get("status") != "False":
-                    continue
-                message = condition.get("message", "")
-                reason = condition.get("reason", "Unknown")
-                if "exceeded quota" in message.lower():
-                    raise RuntimeError("Kubernetes Solution capacity exhausted")
-                if condition.get("type") in {"Ready", "ConfigurationsReady", "RoutesReady"}:
-                    raise RuntimeError(f"Knative Solution rollout failed ({reason}): {message}")
-
-            # Require the latest desired revision and current generation, not an older ready route.
-            if (
-                status.get("observedGeneration") == generation
-                and status.get("latestCreatedRevisionName") is not None
-                and status.get("latestReadyRevisionName") == status.get("latestCreatedRevisionName")
-                and any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in conditions)
-            ):
-                return
-            await asyncio.sleep(5)
+        await _wait_for_rollout(deployed)
 
     async def delete(self, solution_id: UUID, namespace: str) -> None:
         """Delete one Solution and wait until its Pods have terminated."""
@@ -246,13 +276,8 @@ class Solutions:
                     await secret.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            if not remaining:
-                async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
-                    pod = cast(Pod, candidate)
-                    if pod.raw["status"].get("phase") not in {"Succeeded", "Failed"}:
-                        break
-                else:
-                    return
+            if not remaining and not await _has_active_pods(api, namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
+                return
             await asyncio.sleep(5)
 
     async def logs(self, solution_id: UUID, namespace: str) -> list[str]:
@@ -262,7 +287,6 @@ class Solutions:
         try:
             api = await self._client.api()
             migration_pod: Pod | None = None
-            migration_phase: str | None = None
             async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 pod = cast(Pod, candidate)
                 status = pod.raw.get("status")
@@ -272,14 +296,16 @@ class Solutions:
                     return [line async for line in pod.logs(container="solution", tail_lines=200)]
                 if component == "migration":
                     migration_pod = pod
-                    migration_phase = phase if isinstance(phase, str) else None
+
+            # Derive fallback context only from the selected migration Pod.
             if migration_pod is not None:
+                status = migration_pod.raw.get("status")
+                phase = status.get("phase") if isinstance(status, dict) else None
+                migration_phase = phase if isinstance(phase, str) else None
                 migration_name = migration_pod.metadata.get("name", "unknown")
                 if migration_phase == "Failed":
-                    logs = [f"Migration Pod {migration_name} failed:"]
-                    async for line in migration_pod.logs(tail_lines=200):
-                        logs.append(line)
-                    return logs
+                    output = [line async for line in migration_pod.logs(tail_lines=200)]
+                    return [f"Migration Pod {migration_name} failed:", *output]
                 return [f"Migration Pod {migration_name} is {migration_phase or 'unknown'}; Solution Pod unavailable"]
             raise RuntimeError("Solution logs unavailable")
         except (APITimeoutError, ConnectionClosedError, NotFoundError, ServerError) as exc:
