@@ -93,10 +93,10 @@ the `solution` container, not queue-proxy. Explicit failed readiness conditions
 surface immediately, including quota failures; stale observed generations do not
 fail a replacement rollout.
 
-## Database Contract
+## Lifecycle APIs
 
-Object storage installation, TLS prerequisites, IAM, and cleanup are documented
-in [Rook/Ceph storage](STORAGE.md).
+The concise resource contracts for shared Rook/Ceph storage and per-Organization
+CloudNativePG clusters live with [Storage](storage.py) and [Databases](databases.py).
 
 All methods are async:
 
@@ -169,20 +169,19 @@ local `make down` removes the entire development cluster.
 
 ## Pinned Sources
 
-Release manifests are downloaded once and committed under `k8s/operators/`,
-locking their contents in the infrastructure package. Kustomize expresses LongLink
-overrides beside those manifests. The API container includes only tenant templates;
-runtime validation and reconciliation do not download infrastructure releases.
+Kustomizations reference immutable Knative and Kourier release assets, with LongLink
+overrides beside those references. Helmfile pins the CNPG and Rook chart versions.
+The API container includes only tenant templates; runtime validation and
+reconciliation do not download infrastructure releases.
 
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml
 - https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml
 - https://github.com/knative-extensions/net-kourier/releases/download/knative-v1.23.0/kourier.yaml
-- https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/v1.29.1/releases/cnpg-1.29.1.yaml
 
 Kourier's upstream mutable `envoy:v1.37-latest` is overridden with the multiarch
 image digest `sha256:ea33a83e4bb1b34b9345f1d98930af9c70d19a0ee1680d9ff087789636fdbc34`
 resolved from Docker Hub on 2026-09-09. Knative controller/queue images already use
-digests; CNPG uses its explicit `1.29.1` release tag.
+digests; Helmfile uses CNPG chart `0.28.1` for operator `1.29.1`.
 
 Validated upstream references:
 

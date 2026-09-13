@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from sqlmodel import col
 from sqlalchemy import func, select
-from scripts.seed import SeedSettings, CloudSeedSettings, seed_cloud, seed_local_development
+from dev.scripts.seed import SeedSettings, seed
 from src.environments import env
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -32,10 +32,10 @@ class SeedKubernetes:
 def cluster_identity(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace cluster identity I/O at the seed boundary."""
 
-    monkeypatch.setattr("scripts.seed.Kubernetes", SeedKubernetes)
+    monkeypatch.setattr("dev.scripts.seed.Kubernetes", SeedKubernetes)
 
 
-def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -> SeedSettings:
+def settings(tmp_path: Path) -> SeedSettings:
     """Build valid seed settings with a temporary compute configuration."""
 
     kubeconfig = tmp_path / "kubeconfig.yml"
@@ -47,7 +47,7 @@ def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -
         "users:\n- name: user\n  user:\n    token: secret\n",
         encoding="utf-8",
     )
-    return settings_type(
+    return SeedSettings(
         KUBECONFIG=kubeconfig,
         GATEWAY_URL="https://gateway.example",
         DATABASE_STORAGE_CLASS="local-path",
@@ -81,11 +81,11 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monk
         assert image == "localhost:15000/sample:dev"
         return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
 
-    monkeypatch.setattr("scripts.seed.images.metadata", metadata)
+    monkeypatch.setattr("dev.scripts.seed.images.metadata", metadata)
 
     # Act
-    await seed_local_development(local_settings)
-    await seed_local_development(local_settings)
+    await seed(local_settings)
+    await seed(local_settings)
 
     # Assert
     assert await count(User) == 1
@@ -100,16 +100,3 @@ async def test_local_seed_creates_administrator_and_example(tmp_path: Path, monk
     assert solution is not None
     assert solution.description == "A sample solution for local development."
     assert solution.desired_revision.source == "localhost:15000/sample:dev"
-
-
-async def test_cloud_seed_registers_only_infrastructure(tmp_path: Path) -> None:
-    """Create only infrastructure registries for a cloud deployment."""
-
-    # Act
-    await seed_cloud(settings(tmp_path, CloudSeedSettings))
-
-    # Assert
-    assert await count(ComputeRegistry) == 1
-    assert await count(User) == 0
-    assert await count(Organization) == 0
-    assert await count(Solution) == 0

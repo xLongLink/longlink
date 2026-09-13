@@ -1,5 +1,4 @@
 import asyncio
-import argparse
 from pathlib import Path
 from pydantic import Field
 from sqlmodel import col
@@ -21,7 +20,7 @@ from src.database.models.organizations import Organization
 
 
 class SeedSettings(BaseSettings):
-    """Define development infrastructure registrations."""
+    """Define the local development infrastructure registration."""
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
@@ -46,19 +45,19 @@ class SeedSettings(BaseSettings):
     STORAGE_OBJECT_OVERHEAD_BYTES: int = 65536
 
     model_config = SettingsConfigDict(
-        env_file=".env.seed",
+        env_file=Path(__file__).resolve().parents[1] / ".env.seed",
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
 
-async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> ComputeRegistry:
-    """Register the configured infrastructure and return its registries."""
+async def seed_infrastructure(settings: SeedSettings) -> ComputeRegistry:
+    """Register the configured local Compute and return it."""
 
-    # Validate the configured Kubernetes compute before mutating Platform state.
+    # Validate the configured Kubernetes Compute before mutating Platform state.
     payload = ComputeRegistryCreate.model_validate(
         {
-            "name": compute_name,
+            "name": "development compute",
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": settings.GATEWAY_URL,
             "gateway_certificate": settings.GATEWAY_CERTIFICATE,
@@ -82,26 +81,25 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
     async with aclosing(cluster):
         cluster_uid = await cluster.cluster_uid()
 
-    # Register the configured compute and queue its reconciliation when newly created.
+    # Register the local Compute and queue reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
             await compute.create(session, payload, cluster_uid)
             await session.commit()
 
     async with session_scope() as session:
-        compute_registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.name) == compute_name))
+        compute_registry = await session.scalar(
+            select(ComputeRegistry).where(col(ComputeRegistry.name) == "development compute")
+        )
         if compute_registry is None:
-            raise RuntimeError("Configured infrastructure is not available")
+            raise RuntimeError("Local Compute is not available")
         return compute_registry
 
 
-async def seed_local_development(settings: SeedSettings) -> None:
+async def seed(settings: SeedSettings) -> None:
     """Register local infrastructure and create the local example Organization and Solution."""
 
-    compute_registry = await seed_infrastructure(
-        settings,
-        compute_name="development compute",
-    )
+    compute_registry = await seed_infrastructure(settings)
 
     # The init workflow has no running API replica to create the administrator first.
     async with session_scope() as session:
@@ -148,42 +146,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
         await session.commit()
 
 
-class CloudSeedSettings(SeedSettings):
-    """Define the infrastructure connections registered by a cloud deployment."""
-
-    # Cloud infrastructure must choose its externally reachable gateway and durable storage class.
-    GATEWAY_URL: str = Field(default="", min_length=1, validate_default=True)
-    DATABASE_STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
-    STORAGE_INSTANCES: int = 3
-    STORAGE_SIZE_GIB: int = 100
-    STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
-    BUCKET_SIZE_BYTES: int = Field(default=0, gt=0, validate_default=True)
-    BUCKET_MAX_OBJECTS: int = Field(default=0, gt=0, validate_default=True)
-    STORAGE_RESERVE_PERCENT: int = Field(default=0, gt=0, validate_default=True)
-    STORAGE_OBJECT_OVERHEAD_BYTES: int = Field(default=0, gt=0, validate_default=True)
-
-    model_config = SettingsConfigDict(extra="ignore")
-
-
-async def seed_cloud(settings: CloudSeedSettings) -> None:
-    """Register cloud infrastructure without creating local example data."""
-
-    await seed_infrastructure(
-        settings,
-        compute_name="cloud compute",
-    )
-
-
 def main() -> None:
-    """Seed either local example data or cloud infrastructure from a synchronous entrypoint."""
+    """Seed local development from a synchronous entrypoint."""
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--cloud", action="store_true", help="register cloud infrastructure without local example data")
-    arguments = parser.parse_args()
-    if arguments.cloud:
-        asyncio.run(seed_cloud(CloudSeedSettings()))
-    else:
-        asyncio.run(seed_local_development(SeedSettings()))
+    asyncio.run(seed(SeedSettings()))
 
 
 if __name__ == "__main__":

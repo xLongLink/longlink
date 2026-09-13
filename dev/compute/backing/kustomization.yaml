@@ -6,14 +6,13 @@ resources:
     - storageclass.yaml
     # Pinned upstream CSI manifests retain only the local namespace and sidecar patches.
     - https://raw.githubusercontent.com/kubernetes-csi/external-provisioner/12a344a40072d655cb9374a93483305f1a1be557/deploy/kubernetes/rbac.yaml
-    - https://raw.githubusercontent.com/kubernetes-csi/external-attacher/16acc03adce9ae492e6e5cd4e6ef4a31cb9df7cc/deploy/kubernetes/rbac.yaml
     - https://raw.githubusercontent.com/kubernetes-csi/csi-driver-host-path/8b88d04ec388312df1b910bf1cb48926c63c2660/deploy/kubernetes-1.30/hostpath/csi-hostpath-driverinfo.yaml
     - https://raw.githubusercontent.com/kubernetes-csi/csi-driver-host-path/8b88d04ec388312df1b910bf1cb48926c63c2660/deploy/kubernetes-1.30/hostpath/csi-hostpath-plugin.yaml
 patches:
-    # Only the attacher and provisioner controllers run in this local deployment.
+    # Only the provisioner controller runs in this local deployment.
     - target:
           kind: ClusterRoleBinding
-          name: csi-hostpathplugin-(health-monitor-controller|resizer|snapshotter|snapshot-metadata)-cluster-role
+          name: csi-hostpathplugin-(attacher|health-monitor-controller|resizer|snapshotter|snapshot-metadata)-cluster-role
       patch: |-
           $patch: delete
           apiVersion: rbac.authorization.k8s.io/v1
@@ -22,7 +21,7 @@ patches:
             name: unused
     - target:
           kind: RoleBinding
-          name: csi-hostpathplugin-(health-monitor-controller|resizer|snapshotter)-role
+          name: csi-hostpathplugin-(attacher|health-monitor-controller|resizer|snapshotter)-role
       patch: |-
           $patch: delete
           apiVersion: rbac.authorization.k8s.io/v1

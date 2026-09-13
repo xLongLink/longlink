@@ -19,7 +19,24 @@ ScheduledBackupResource = new_class("ScheduledBackup", "postgresql.cnpg.io/v1", 
 
 
 class Databases:
-    """Manage one isolated CloudNativePG cluster per Organization."""
+    """Reconcile, hibernate, connect to, and delete isolated Organization CNPG clusters.
+
+    An Organization database lives in ``longlink-database-{organization UUID hex}``
+    with its Cluster, credentials, quota, and network policy. ``apply`` renders that
+    boundary before creating CNPG resources. Hibernation retains the cluster PVCs
+    but is allowed only after compute work, migration Jobs, backups, and enabled
+    backup schedules can no longer use PostgreSQL. ``resume`` confirms both CNPG
+    status and ready instance Pods before callers connect.
+
+        Structure::
+
+        Organization
+        └── Namespace longlink-database-{organization UUID hex}
+            ├── Cluster database
+            ├── Secret database-superuser
+            ├── ResourceQuota database
+            └── NetworkPolicy database
+    """
 
     def __init__(self, client: "Kubernetes") -> None:
         """Share the Compute Kubernetes connection."""

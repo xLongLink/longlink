@@ -9,7 +9,6 @@ connectivity, configuration, and SMTP capture. Then run from `api/`:
 uv sync --extra dev                # Create the development environment
 uv run alembic upgrade head        # Apply database migrations
 uv run python -m src.release       # Schedule deployment reconciliation once
-make -C .. seed                    # Register local endpoints with their public CA bundles
 uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run ruff check --fix .           # Format imports and apply safe lint fixes
 uv run pytest --cov=main --cov=src --cov-report=term-missing  # Run tests with branch coverage

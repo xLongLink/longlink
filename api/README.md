@@ -21,7 +21,7 @@ Managed resources are connected to the platform:
 - Database: a dedicated CloudNativePG cluster in each Organization namespace, with encrypted, securely generated credentials. There is no external tenant database registration.
 - Storage: shared Rook/Ceph S3 object storage on each compute, with an organization bucket and scoped credentials per Solution.
 
-Compute, database, and storage provisioning use Kubernetes APIs. Rook owns object-store users and keys; LongLink applies Ceph S3 bucket policies. See [storage installation and IAM](src/kubernetes/STORAGE.md).
+Compute, database, and storage provisioning use Kubernetes APIs. Rook owns object-store users and keys; LongLink applies Ceph S3 bucket policies. The Kubernetes `Storage` and `Databases` classes document their resource boundaries and lifecycle guarantees.
 
 The Compute kubeconfig must allow LongLink to create namespaces, custom resource definitions, and cluster-scoped resources. Register a gateway HTTPS origin reachable from the API, without credentials, path, query, or fragment. The optional certificate is a PEM CA trust bundle, never a private key; system trust is used when omitted. Kubeconfig exec authentication is rejected.
 
@@ -37,7 +37,7 @@ Each organization is created with:
 - A CloudNativePG cluster with a database and a `shared` schema.
 - A `bucket` in the storage, with a `shared` folder.
 
-Compute and database namespaces have independent resource quotas. PostgreSQL volumes provide a physical capacity boundary, not a graceful SQL byte quota. Object storage enforces administrator-configured Organization bucket byte and object quotas, with serialized aggregate capacity reservations including headroom and object overhead; see [quota policy and limits](src/kubernetes/STORAGE.md#quotas-and-capacity-admission). Databases are always on by default (`database_idle_seconds=0`). Hibernation is opt-in, with idle settings from 300 to 604,800 seconds. Expiring Organization activity leases protect active work; database state and timestamped usage are stored separately from Organization lifecycle status. The API resumes and synchronizes the database before forwarding requests to sleeping applications. Active Pods, migration Jobs, backups, and enabled autonomous backup schedules prevent hibernation.
+Compute and database namespaces have independent resource quotas. PostgreSQL volumes provide a physical capacity boundary, not a graceful SQL byte quota. Object storage enforces administrator-configured Organization bucket byte and object quotas, with serialized aggregate capacity reservations including headroom and object overhead. Databases are always on by default (`database_idle_seconds=0`). Hibernation is opt-in, with idle settings from 300 to 604,800 seconds. Expiring Organization activity leases protect active work; database state and timestamped usage are stored separately from Organization lifecycle status. The API resumes and synchronizes the database before forwarding requests to sleeping applications. Active Pods, migration Jobs, backups, and enabled autonomous backup schedules prevent hibernation.
 
 Cluster prerequisites, TLS provisioning, source-IP restrictions, network policies, and operator-owned backup requirements are documented in [the Kubernetes installation guide](src/kubernetes/README.md). This is a fresh-install schema replacement, not a migration of existing tenant data.
 
@@ -105,7 +105,6 @@ Work that is too long for an API request is queued as a durable, typed Operation
 make up     # Prepare infrastructure and endpoint connections
 make api    # In one terminal
 make image  # Build and push the sample image after the API starts
-make seed   # In another terminal after the image is available
 ```
 
 Run from `api/`:
@@ -115,11 +114,9 @@ uv sync --extra dev
 uv run alembic upgrade head
 uv run python -m src.release             # Schedule deployment reconciliation once
 uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-# In another terminal:
-make -C .. seed  # Supply local endpoints and public CA bundles
 ```
 
-The local seed inspects `localhost:15000/sample:dev` through the same metadata resolver as the API. If your sample image declares required variables, set `SAMPLE_ENVS` to a JSON string dictionary in `.env.seed`; missing requirements fail rather than silently bypassing release validation.
+See [`dev/README.md`](../dev/README.md) for local infrastructure and sample provisioning.
 
 The API always reads `.env` and process environment variables. Make
 copies local defaults only when `.env` is absent; existing files are not merged or

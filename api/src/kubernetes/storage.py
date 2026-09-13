@@ -28,7 +28,26 @@ class Bucket:
 
 
 class Storage:
-    """Validate shared storage and manage Organization storage resources."""
+    """Validate shared storage, reconcile Organization buckets, and manage Solution identities.
+
+    The Compute package owns the shared ``longlink`` object store and its health
+    identity. Each Organization receives a storage Namespace containing an
+    ``ObjectBucketClaim`` named ``storage``; Rook creates the bucket and keeps its
+    owner credentials in that Namespace. Each Solution receives an unprivileged
+    ``CephObjectStoreUser`` in ``rook-ceph``. Callers apply the corresponding bucket
+    policy and publish only the Solution credentials. Quota changes wait for Rook's
+    ``ObjectBucket`` acknowledgement, rather than treating a bound claim as current.
+
+        Structure::
+
+        Compute
+        ├── rook-ceph
+        │   ├── CephObjectStore longlink
+        │   └── CephObjectStoreUser solution-{solution UUID hex}
+        └── Organization
+            └── Namespace longlink-storage-{organization UUID hex}
+                └── ObjectBucketClaim storage
+    """
 
     def __init__(self, client: "Kubernetes") -> None:
         """Share the authenticated compute connection."""

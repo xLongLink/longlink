@@ -59,10 +59,10 @@ up:
 	@if ! k3d cluster list compute >/dev/null 2>&1; then \
 		k3d cluster create --config dev/cluster.yaml; \
 	fi
-	@umask 077; k3d kubeconfig get compute > api/kubeconfig.yaml
-	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
+	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
+	kubectl --kubeconfig dev/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
+	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 
 	# Preserve the CA and reuse valid certificates when reapplying resources.
 	@set -eu; umask 077; mkdir -p dev/certificates; \
@@ -91,16 +91,16 @@ up:
 				cat dev/certificates/ca.crt >> "$$temporary/$$name.crt"; \
 				mv "$$temporary/$$name.key" "$$key"; mv "$$temporary/$$name.crt" "$$certificate"; \
 			fi; \
-			kubectl --kubeconfig api/kubeconfig.yaml --namespace "$$namespace" create secret tls "longlink-$$name-tls" \
+			kubectl --kubeconfig dev/kubeconfig.yaml --namespace "$$namespace" create secret tls "longlink-$$name-tls" \
 				--cert="$$certificate" --key="$$key" --dry-run=client --output=yaml > "$$temporary/secret.yaml"; \
-			kubectl --kubeconfig api/kubeconfig.yaml apply --filename="$$temporary/secret.yaml"; \
+			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename="$$temporary/secret.yaml"; \
 		done
 
 	# Install connectivity and shared controllers before publishing the release.
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/connectivity
-	kubectl --kubeconfig api/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	KUBECONFIG="$(abspath api/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
+	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
@@ -116,7 +116,7 @@ image: sample
 down:
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	docker compose -f dev/compose.yml down --volumes --remove-orphans
-	rm -f api/dev.db api/kubeconfig.yaml
+	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates
 
 
@@ -146,6 +146,6 @@ sdk: sample
 	cd sdk/dev && uv run longlink dev
 
 
-# Seed the example Organization and Solution after the Platform API starts.
+# Seed the local example Organization and Solution after the Platform API starts.
 seed: api/.env
-	cd api && GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_ENDPOINT=https://storage.localhost:9443 uv run --locked python -m scripts.seed
+	cd api && GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_ENDPOINT=https://storage.localhost:9443 uv run --locked python ../dev/scripts/seed.py

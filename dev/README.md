@@ -47,7 +47,7 @@ cluster, backing storage, TLS certificates, and shared Compute infrastructure.
 It then checks gateway and storage HTTPS connectivity. Run it again to reapply
 resources or retry an interrupted setup. `make down` removes those resources.
 Cluster settings are declared in `dev/cluster.yaml`.
-Generated private material lives under ignored `dev/certificates/`.
+Generated private material, including the local kubeconfig, lives under ignored `dev/` paths.
 
 `k8s/setup.yaml.gotmpl` owns the Kubernetes release order, chart versions, and
 operator settings. Helm installs the upstream CNPG and Rook charts and packages
@@ -140,12 +140,10 @@ Existing SMTP settings are preserved. To select Mailpit, set `SMTP_HOST=127.0.0.
 `SMTP_USERNAME` and `SMTP_PASSWORD` to `null` to clear previously configured
 credentials. Hosted deployments use their own SMTP settings through the same code.
 
-Optional `api/.env.seed` settings customize sample configuration. The default
+Optional `dev/.env.seed` settings customize sample configuration. The default
 storage topology is one 1 GiB OSD and monitor on `longlink-development`; database defaults are
 one 10 GiB instance on `local-path`. These must match `dev/compute` overlays.
 `make seed` supplies both public CA bundles and the local S3 origin explicitly.
-For remote registration, use the normal cloud seed command with remote connection
-configuration, rather than this local Make target.
 
 Seeding an existing named Compute preserves its registration. Changing environment
 variables does not rewrite its stored connection. Replacing a cluster requires a
@@ -174,11 +172,7 @@ Hosted installations need a reviewed ownership migration; see `k8s/README.md`.
 
 Settings in `dev/cluster.yaml`, including registry mirrors, are applied by k3d only
 when creating the cluster. After changing them, stop workers and run `make down`,
-`make up`, `make api`, `make image`, and `make seed` to recreate disposable local state. This
-includes clusters using the former Compose gateway/storage port-forwards,
-`host.k3d.internal:15000` registry mirror, and
-manually created Docker network. For that older setup, also remove the old network
-with `docker network rm longlink-dev` after `make down` and before `make up`.
+`make up`, `make api`, `make image`, and `make seed` to recreate disposable local state.
 `make down` deletes local tenant data; it is not an in-place migration procedure.
 
 ## Cleanup

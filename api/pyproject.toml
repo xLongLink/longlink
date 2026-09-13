@@ -95,6 +95,7 @@ no-matching-overload = "ignore"
 unresolved-attribute = "ignore"
 
 [tool.pytest.ini_options]
+pythonpath = [".."]
 markers = [
     "integration: marks tests requiring container-backed infrastructure",
     "no_db: skips the API test database fixture for pure unit tests",
