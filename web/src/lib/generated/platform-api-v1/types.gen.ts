@@ -443,13 +443,17 @@ export type OrganizationSolutionSummary = {
 /**
  * OrganizationStorageUsageResponse
  *
- * Report current logical object bytes for one organization bucket.
+ * Report current logical object usage and quota for one Organization bucket.
  */
 export type OrganizationStorageUsageResponse = {
     /**
      * Space Used
      */
     space_used: number;
+    /**
+     * Quota Bytes
+     */
+    quota_bytes: number;
 };
 
 /**

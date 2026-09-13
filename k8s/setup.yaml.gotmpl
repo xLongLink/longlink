@@ -2,11 +2,9 @@ environments:
     default:
         values:
             - infrastructure: ./infrastructure
-              allowLoopDevices: false
     development:
         values:
-            - infrastructure: ../dev/compute/infrastructure
-              allowLoopDevices: true
+            - infrastructure: ./infrastructure
 ---
 repositories:
     - name: cnpg

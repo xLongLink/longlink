@@ -499,7 +499,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
     if isinstance(usage, NotFoundError):
 
-        async def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
+        def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
             """Report the missing Kubernetes bucket claim at its actual transport boundary."""
 
             assert organization_id == organization.id
@@ -514,7 +514,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = None if expected_usage is None else {"space_used": expected_usage}
+        expected_payload = None if expected_usage is None else {"space_used": expected_usage, "quota_bytes": 1073741824}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -584,7 +584,7 @@ async def test_organization_resource_endpoints_allow_members(
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
         "database": {"size_bytes": 0, "measured_at": "2026-09-09T12:00:00Z", "allocated_bytes": 10 * 1024**3},
-        "storage": {"space_used": 0},
+        "storage": {"space_used": 0, "quota_bytes": 1073741824},
     }
     assert response.json() == expected_payloads[resource]
 

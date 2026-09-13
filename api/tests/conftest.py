@@ -53,12 +53,12 @@ class StorageKubernetes:
     async def verify(self, compute: object) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
-        """Accept provisioning and return the resulting bucket boundary."""
+    async def apply(self, organization: UUID, compute: object) -> None:
+        """Accept provisioning."""
 
-        return await self.quota(organization, compute)
+        await self.quota(organization, compute)
 
-    async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+    def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
         return SimpleNamespace(name=organization.hex, storage=self)
@@ -71,7 +71,7 @@ class StorageKubernetes:
     async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Accept quota reconciliation and return the resulting bucket boundary."""
 
-        return await self.bucket(organization, compute)
+        return self.bucket(organization, compute)
 
     async def revoke(self, solution: UUID, bucket: object) -> None:
         """Accept user deletion."""

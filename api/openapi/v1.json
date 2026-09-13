@@ -3268,14 +3268,20 @@
             "type": "integer",
             "minimum": 0.0,
             "title": "Space Used"
+          },
+          "quota_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Quota Bytes"
           }
         },
         "type": "object",
         "required": [
-          "space_used"
+          "space_used",
+          "quota_bytes"
         ],
         "title": "OrganizationStorageUsageResponse",
-        "description": "Report current logical object bytes for one organization bucket."
+        "description": "Report current logical object usage and quota for one Organization bucket."
       },
       "OrganizationSummary": {
         "properties": {

@@ -326,13 +326,15 @@ export default function OrganizationSettings() {
                             </Stack>
                             <ProgressBar
                                 formatValueLabel={(value) =>
-                                    storageError ? 'Unavailable' : `${formatBytes(value)} used`
+                                    storageError
+                                        ? 'Unavailable'
+                                        : `${formatBytes(value)} used / ${formatBytes(storageUsage?.quota_bytes ?? 0)}`
                                 }
                                 hasValueLabel
                                 isDisabled={storageError !== null}
                                 isIndeterminate={isStorageLoading}
                                 label="Storage"
-                                max={Math.max(storageUsage?.space_used ?? 0, 1)}
+                                max={storageUsage?.quota_bytes ?? 1}
                                 value={storageUsage?.space_used ?? 0}
                                 variant="neutral"
                             />

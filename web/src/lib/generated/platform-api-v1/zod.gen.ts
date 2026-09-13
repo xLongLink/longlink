@@ -217,10 +217,11 @@ export const zOrganizationMemberUpdate = z.object({
 /**
  * OrganizationStorageUsageResponse
  *
- * Report current logical object bytes for one organization bucket.
+ * Report current logical object usage and quota for one Organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
-    space_used: z.int().gte(0)
+    space_used: z.int().gte(0),
+    quota_bytes: z.int().gte(0)
 });
 
 /**

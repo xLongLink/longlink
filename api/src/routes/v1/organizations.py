@@ -183,7 +183,7 @@ async def get_organization_storage_usage(
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
-                bucket = await cluster.storage.bucket(membership.organization_id, infrastructure.compute)
+                bucket = cluster.storage.bucket(membership.organization_id, infrastructure.compute)
                 usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
@@ -195,7 +195,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage}
+    return {"space_used": usage, "quota_bytes": infrastructure.compute.bucket_size_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

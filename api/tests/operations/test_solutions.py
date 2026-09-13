@@ -197,11 +197,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("quota")
             return await super().quota(organization, compute)
 
-        async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+        def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
             """Record the owner connection resolution."""
 
             calls.append("bucket")
-            return await super().bucket(organization, compute)
+            return super().bucket(organization, compute)
 
         async def user(self, solution: UUID, bucket: object) -> Credentials:
             """Record credential creation after quota admission."""

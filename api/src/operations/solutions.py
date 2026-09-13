@@ -172,7 +172,7 @@ async def delete(solution_id: UUID) -> None:
             await db.delete_solution_schema(organization.id, solution.id)
 
             # Revoke the service account before owner credentials remove its private objects.
-            bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
+            bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
             await cluster.storage.revoke(solution.id, bucket)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 
