@@ -31,7 +31,7 @@ export const zComputeRegistryCreate = z.object({
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_endpoint: z.string().max(512),
-    storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
+    storage_size_gib: z.int().gte(1).lte(65536).optional().default(100),
     storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
     storage_certificate: z.string().max(65536).nullish(),
     bucket_size_bytes: z.int().gte(1024).lte(70368744177664),

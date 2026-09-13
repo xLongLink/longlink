@@ -135,7 +135,7 @@ Existing SMTP settings are preserved. To select Mailpit, set `SMTP_HOST=127.0.0.
 credentials. Hosted deployments use their own SMTP settings through the same code.
 
 Optional `api/.env.seed` settings customize sample configuration. The default
-storage topology is one 20 GiB OSD on `longlink-development`; database defaults are
+storage topology is one 1 GiB OSD and monitor on `longlink-development`; database defaults are
 one 10 GiB instance on `local-path`. These must match `dev/compute` overlays.
 `make seed` supplies both public CA bundles and the local S3 origin explicitly.
 For remote registration, use the normal cloud seed command with remote connection

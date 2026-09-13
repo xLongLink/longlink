@@ -84,7 +84,7 @@ hook stops the dependent releases. The release marker depends on Kourier, CNPG,
 and storage, so it is always installed last.
 
 Environment overlays reference and patch the shared Ceph resources. The local
-infrastructure overlay selects one 20 GiB OSD using `longlink-development`; the
+infrastructure overlay selects one 1 GiB OSD and monitor using `longlink-development`; the
 shared base uses an illustrative `block-storage` StorageClass. Hosted environments
 must supply overlays for their actual durable Block and filesystem provisioner.
 

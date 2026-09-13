@@ -37,11 +37,11 @@ class SeedSettings(BaseSettings):
     # Shared Ceph storage; backing class must support raw Block PVCs and filesystem monitor PVCs.
     STORAGE_CLASS: str = "longlink-development"
     STORAGE_ENDPOINT: str = "https://storage.localhost:9443"
-    STORAGE_SIZE_GIB: int = 20
+    STORAGE_SIZE_GIB: int = 1
     STORAGE_INSTANCES: int = 1
     STORAGE_CERTIFICATE: str | None = None
-    BUCKET_SIZE_BYTES: int = 1073741824
-    BUCKET_MAX_OBJECTS: int = 10000
+    BUCKET_SIZE_BYTES: int = 134217728
+    BUCKET_MAX_OBJECTS: int = 1000
     STORAGE_RESERVE_PERCENT: int = 30
     STORAGE_OBJECT_OVERHEAD_BYTES: int = 65536
 

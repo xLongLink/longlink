@@ -17,8 +17,9 @@ provides S3, and consumes an independently installed backing PVC provisioner.
 - For production, three nodes and `storage_instances=3`. The supported topology
   provisions three OSDs and three monitors, with replicated pools using host
   failure domains. `storage_size_gib` is capacity **per OSD**, not a bucket quota
-  or the sum of usable replicated capacity. Monitors additionally request 10 GiB
-  each. `storage_instances=1` is an explicitly non-HA development topology.
+  or the sum of usable replicated capacity. Monitors request 10 GiB each in the
+  shared package; the local overlay uses 1 GiB. `storage_instances=1` is an
+  explicitly non-HA development topology.
   `make up` provisions the `longlink-development` CSI hostpath
   class automatically. Local k3d nodes mount `/dev` and `/run/udev` to support
   the driver's loop-backed Block PVCs; only explicitly provisioned PVCs are
@@ -82,8 +83,8 @@ publishes the ObjectBucket afterward. Failure or a stale acknowledgement prevent
 credential access/publication. This is controller acknowledgement, not a live
 RGW quota audit; privileged out-of-band quota edits are outside this contract.
 
-Local seed defaults are explicitly **1 GiB and 10,000 objects per Organization,
-30% headroom, and 64 KiB extra per object** on a 20 GiB single-OSD development
+Local seed defaults are explicitly **128 MiB and 1,000 objects per Organization,
+30% headroom, and 64 KiB extra per object** on a 1 GiB single-OSD development
 store. Cloud seeding requires `BUCKET_SIZE_BYTES`, `BUCKET_MAX_OBJECTS`,
 `STORAGE_RESERVE_PERCENT`, and `STORAGE_OBJECT_OVERHEAD_BYTES`; it does not inherit
 development quota policy.

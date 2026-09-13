@@ -2877,7 +2877,7 @@
           "storage_size_gib": {
             "type": "integer",
             "maximum": 65536.0,
-            "minimum": 10.0,
+            "minimum": 1.0,
             "title": "Storage Size Gib",
             "default": 100
           },

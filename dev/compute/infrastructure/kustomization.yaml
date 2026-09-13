@@ -14,6 +14,9 @@ patches:
             path: /spec/mon/volumeClaimTemplate/spec/storageClassName
             value: longlink-development
           - op: replace
+            path: /spec/mon/volumeClaimTemplate/spec/resources/requests/storage
+            value: 1Gi
+          - op: replace
             path: /spec/mgr/count
             value: 1
           - op: replace
@@ -24,7 +27,7 @@ patches:
             value: longlink-development
           - op: replace
             path: /spec/storage/storageClassDeviceSets/0/volumeClaimTemplates/0/spec/resources/requests/storage
-            value: 20Gi
+            value: 1Gi
     - target:
           kind: CephObjectStore
           name: longlink
