@@ -3,8 +3,8 @@ import pytest
 import sqlite3
 from pathlib import Path
 from contextlib import chdir, closing
-from click.testing import CliRunner
-from longlink.cli.init import init_command
+from typer.testing import CliRunner
+from longlink.cli.main import main
 from longlink.database import migrations as database_migrations
 
 
@@ -39,7 +39,7 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
 
     with chdir(tmp_path):
         # Act
-        result = runner.invoke(init_command, arguments)
+        result = runner.invoke(main, ["init", *arguments])
 
         # Assert
         target = Path.cwd() / "sample-solution"
@@ -73,7 +73,7 @@ def test_init_refuses_existing_folder(tmp_path: Path) -> None:
         target.mkdir()
 
         # Act
-        result = runner.invoke(init_command, ["--folder", "sample-solution"])
+        result = runner.invoke(main, ["init", "--folder", "sample-solution"])
 
         # Assert
         assert result.exit_code == 1
@@ -88,7 +88,7 @@ def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Pat
 
     with chdir(tmp_path):
         # Act
-        result = runner.invoke(init_command, ["--folder", "sample-solution", "--name", "../invalid"])
+        result = runner.invoke(main, ["init", "--folder", "sample-solution", "--name", "../invalid"])
 
         # Assert
         assert result.exit_code == 1
@@ -106,7 +106,7 @@ def test_initialized_project_applies_bundled_migration_through_deployment_entryp
     monkeypatch.setenv("LONGLINK_ENV", "development")
 
     with chdir(tmp_path):
-        result = runner.invoke(init_command, ["--folder", "sample-solution"])
+        result = runner.invoke(main, ["init", "--folder", "sample-solution"])
         assert result.exit_code == 0
         target = Path.cwd() / "sample-solution"
 

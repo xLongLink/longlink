@@ -6,31 +6,33 @@ import { Button } from '@astryxdesign/core/Button';
 import { createGuardedOpenChange } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useId, useState, type ReactNode } from 'react';
-import { useForm, type DefaultValues } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm, type Control, type DefaultValues } from 'react-hook-form';
 
-type RegistryDialogOptions<TValues extends Record<string, unknown>> = {
+type RegistryDialogProps<TValues extends Record<string, unknown>> = {
+    children: (control: Control<TValues, unknown, TValues>) => ReactNode;
     defaultValues: DefaultValues<NoInfer<TValues>>;
     endpoint: string;
     schema: z.ZodType<TValues, TValues>;
     additionalInvalidateKeys?: string[][];
-};
-
-type RegistryDialogProps<TValues extends Record<string, unknown>> = {
-    children: ReactNode;
-    dialog: ReturnType<typeof useRegistryDialog<TValues>>;
     title: string;
     triggerLabel?: string;
     width: number;
 };
 
-/** Manages a registry creation form and its request lifecycle. */
-export function useRegistryDialog<TValues extends Record<string, unknown>>({
+/** Owns a registry creation form, its request lifecycle, and resource-specific fields. */
+export function RegistryDialog<TValues extends Record<string, unknown>>({
+    children,
     defaultValues,
     endpoint,
     schema,
     additionalInvalidateKeys = [],
-}: RegistryDialogOptions<TValues>) {
+    title,
+    triggerLabel = title,
+    width,
+}: RegistryDialogProps<TValues>) {
+    // Keep the form and request lifecycle mounted across dialog visibility changes.
+    const formId = useId();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const closeDialog = () => {
@@ -52,6 +54,8 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         resolver: zodResolver(schema),
         mode: 'onChange',
     });
+
+    // Guard submissions and dismissal while creation is pending.
     const handleSubmit = form.handleSubmit((value) => {
         if (!mutation.isPending) {
             mutation.mutate(value);
@@ -66,32 +70,14 @@ export function useRegistryDialog<TValues extends Record<string, unknown>>({
         setOpen(true);
     });
 
-    return {
-        form,
-        isPending: mutation.isPending,
-        open,
-        handleOpenChange,
-        handleSubmit,
-    };
-}
-
-/** Renders a registry creation dialog around a resource-specific form. */
-export function RegistryDialog<TValues extends Record<string, unknown>>({
-    children,
-    dialog,
-    title,
-    triggerLabel = title,
-    width,
-}: RegistryDialogProps<TValues>) {
-    const formId = useId();
-
+    // Render resource fields with only the form control exposed to callers.
     return (
         <>
-            <Button label={triggerLabel} clickAction={() => dialog.handleOpenChange(true)} />
+            <Button label={triggerLabel} clickAction={() => handleOpenChange(true)} />
             <Dialog
-                isOpen={dialog.open}
-                onOpenChange={dialog.handleOpenChange}
-                purpose={dialog.isPending ? 'required' : 'form'}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={mutation.isPending ? 'required' : 'form'}
                 title={title}
                 width={width}
                 maxHeight="calc(100dvh - 2rem)"
@@ -100,29 +86,27 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                     id={formId}
                     onSubmit={(event) => {
                         event.preventDefault();
-                        if (!dialog.isPending && !dialog.form.formState.isSubmitting) {
-                            void dialog.handleSubmit(event);
+                        if (!mutation.isPending && !form.formState.isSubmitting) {
+                            void handleSubmit(event);
                         }
                     }}
                 >
-                    {children}
+                    {children(form.control)}
                 </form>
                 <Stack direction="horizontal" gap={2} justify="end">
                     <Button
                         label="Cancel"
                         variant="ghost"
-                        isDisabled={dialog.isPending}
-                        clickAction={() => dialog.handleOpenChange(false)}
+                        isDisabled={mutation.isPending}
+                        clickAction={() => handleOpenChange(false)}
                     />
                     <Button
                         form={formId}
                         type="submit"
-                        label={dialog.isPending ? 'Creating...' : 'Create'}
+                        label={mutation.isPending ? 'Creating...' : 'Create'}
                         variant="primary"
-                        isDisabled={
-                            !dialog.form.formState.isValid || dialog.form.formState.isSubmitting || dialog.isPending
-                        }
-                        isLoading={dialog.isPending}
+                        isDisabled={!form.formState.isValid || form.formState.isSubmitting || mutation.isPending}
+                        isLoading={mutation.isPending}
                     />
                 </Stack>
             </Dialog>

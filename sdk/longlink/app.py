@@ -19,7 +19,7 @@ from longlink.database.base import Database
 from longlink.utils.settings import Envs
 
 
-async def render_view(content: str) -> Response:
+def render_view(content: str) -> Response:
     """Return one static XML view."""
 
     return Response(content, media_type="application/xml")
@@ -42,6 +42,11 @@ class LongLink:
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
+
+        # Require the frontend entry point supplied by the packaged SDK.
+        frontend_index = ROOT / ".static" / "web" / "index.html"
+        if not frontend_index.is_file():
+            raise RuntimeError(f"LongLink embedded frontend is required: {frontend_index}")
 
         # Solutions provide XML views in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
@@ -102,8 +107,7 @@ class LongLink:
                 return RedirectResponse(first_tab_view.route)
 
         # Serve the embedded frontend last so Solution routes retain precedence.
-        if (ROOT / ".static" / "web").exists():
-            app.frontend("/", directory=ROOT / ".static" / "web")
+        app.frontend("/", directory=frontend_index.parent)
 
     @staticmethod
     def _discover_views(views_directory: Path, solution_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:
@@ -128,7 +132,6 @@ class LongLink:
             view_route = view_stem_route(path_without_suffix)
             relative_route = view_route.removeprefix("/")
             route_key = "/".join(":" if segment.startswith(":") else segment for segment in relative_route.split("/"))
-            tab = relative_route.split("/:", 1)[0] or "index"
 
             # View endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:
@@ -144,7 +147,6 @@ class LongLink:
                     ViewDefinition(
                         path=view_path,
                         route=view_route,
-                        tab=tab,
                         name=view_name,
                         icon=view_icon,
                     ),

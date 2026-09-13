@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import Field
 from sqlmodel import col
 from src.utils import images
-from contextlib import suppress
+from contextlib import aclosing, suppress
 from sqlalchemy import select
 from src.errors import ConflictError
 from src.models.types import Image
@@ -12,7 +12,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import ComputeRegistryCreate
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import users, compute, solutions, organizations
+from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
@@ -38,6 +40,10 @@ class SeedSettings(BaseSettings):
     STORAGE_SIZE_GIB: int = 20
     STORAGE_INSTANCES: int = 1
     STORAGE_CERTIFICATE: str | None = None
+    BUCKET_SIZE_BYTES: int = 1073741824
+    BUCKET_MAX_OBJECTS: int = 10000
+    STORAGE_RESERVE_PERCENT: int = 30
+    STORAGE_OBJECT_OVERHEAD_BYTES: int = 65536
 
     model_config = SettingsConfigDict(
         env_file=".env.seed",
@@ -64,13 +70,22 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
             "storage_size_gib": settings.STORAGE_SIZE_GIB,
             "storage_instances": settings.STORAGE_INSTANCES,
             "storage_certificate": settings.STORAGE_CERTIFICATE,
+            "bucket_size_bytes": settings.BUCKET_SIZE_BYTES,
+            "bucket_max_objects": settings.BUCKET_MAX_OBJECTS,
+            "storage_reserve_percent": settings.STORAGE_RESERVE_PERCENT,
+            "storage_object_overhead_bytes": settings.STORAGE_OBJECT_OVERHEAD_BYTES,
         }
     )
+
+    # Resolve the physical cluster before transactionally registering its stable identity.
+    cluster = Kubernetes(payload.kubeconfig)
+    async with aclosing(cluster):
+        cluster_uid = await cluster.cluster_uid()
 
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, **payload.model_dump())
+            await compute.create(session, payload, cluster_uid)
             await session.commit()
 
     async with session_scope() as session:
@@ -123,12 +138,14 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 await solutions.create(
                     session,
                     organization.id,
-                    "Sample",
+                    SolutionCreate(
+                        name="Sample",
+                        image=source,
+                        envs=settings.SAMPLE_ENVS,
+                        description="A sample solution for local development.",
+                    ),
                     metadata,
-                    settings.SAMPLE_ENVS,
-                    "A sample solution for local development.",
                     user_id=administrator.id,
-                    source=source,
                 )
             else:
                 # Retry failed sample provisioning through a fresh immutable revision.
@@ -146,6 +163,10 @@ class CloudSeedSettings(SeedSettings):
     STORAGE_INSTANCES: int = 3
     STORAGE_SIZE_GIB: int = 100
     STORAGE_CLASS: str = Field(default="", min_length=1, validate_default=True)
+    BUCKET_SIZE_BYTES: int = Field(default=0, gt=0, validate_default=True)
+    BUCKET_MAX_OBJECTS: int = Field(default=0, gt=0, validate_default=True)
+    STORAGE_RESERVE_PERCENT: int = Field(default=0, gt=0, validate_default=True)
+    STORAGE_OBJECT_OVERHEAD_BYTES: int = Field(default=0, gt=0, validate_default=True)
 
     model_config = SettingsConfigDict(extra="ignore")
 

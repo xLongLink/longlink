@@ -33,8 +33,8 @@ describe('SolutionRuntime XML integration', () => {
         // Arrange
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         apiRequest.mockImplementation((url: string, options?: RequestInit) => {
-            if (url.endsWith('/views.json')) {
-                return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home', tab: 'home' }] };
+            if (url === '/proxy/views.json?version=1#manifest') {
+                return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home' }] };
             }
 
             expect(options?.headers).toEqual({ Accept: 'application/xml' });
@@ -59,7 +59,7 @@ describe('SolutionRuntime XML integration', () => {
                             <Routes>
                                 <Route
                                     element={
-                                        <SolutionRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
+                                        <SolutionRuntime viewsUrl="/proxy/views.json?version=1#manifest">
                                             {({ content }) => content}
                                         </SolutionRuntime>
                                     }
@@ -80,6 +80,15 @@ describe('SolutionRuntime XML integration', () => {
 
         // Assert
         expect(container.textContent).toContain('Welcome');
-        expect(apiRequest.mock.calls.map(([url]) => url)).toEqual(['/proxy/views.json', '/proxy/home.xml']);
+        expect(apiRequest).toHaveBeenNthCalledWith(
+            1,
+            '/proxy/views.json?version=1#manifest',
+            expect.objectContaining({ signal: expect.any(AbortSignal) })
+        );
+        expect(apiRequest).toHaveBeenNthCalledWith(
+            2,
+            '/proxy/home.xml',
+            expect.objectContaining({ headers: { Accept: 'application/xml' }, signal: expect.any(AbortSignal) })
+        );
     });
 });

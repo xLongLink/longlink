@@ -2,8 +2,8 @@ import { viewsSchema } from '@/xml/views';
 import { describe, expect, it } from 'vitest';
 
 /** Creates a valid manifest view with optional overrides. */
-function view(overrides: Partial<{ path: string; route: string; tab: string }> = {}) {
-    return { path: 'home.xml', route: '/home', tab: 'home', ...overrides };
+function view(overrides: Partial<{ path: string; route: string; name: string; icon: string }> = {}) {
+    return { path: 'home.xml', route: '/home', ...overrides };
 }
 
 describe('viewsSchema', () => {
@@ -21,17 +21,25 @@ describe('viewsSchema', () => {
         }
     );
 
-    it('rejects duplicate routes and static navigation tabs', () => {
-        expect(viewsSchema.safeParse([view(), view({ tab: 'other' })]).success).toBe(false);
-        expect(viewsSchema.safeParse([view(), view({ route: '/settings', tab: 'home' })]).success).toBe(false);
+    it('rejects duplicate routes and allows distinct static routes', () => {
+        expect(viewsSchema.safeParse([view(), view({ path: 'other.xml' })]).success).toBe(false);
+        expect(viewsSchema.safeParse([view(), view({ route: '/settings' })]).success).toBe(true);
     });
 
     it('allows a dynamic detail view to share its static list tab', () => {
         expect(
             viewsSchema.safeParse([
-                view({ path: 'issues.xml', route: '/issues', tab: 'issues' }),
-                view({ path: 'issue.xml', route: '/issues/:issueId', tab: 'issues' }),
+                view({ path: 'issues.xml', route: '/issues' }),
+                view({ path: 'issue.xml', route: '/issues/:issueId' }),
             ]).success
         ).toBe(true);
+    });
+
+    it.each([{ name: '  ' }, { icon: '' }])('rejects blank optional display metadata', (metadata) => {
+        expect(viewsSchema.safeParse([view(metadata)]).success).toBe(false);
+    });
+
+    it('allows nonblank optional display metadata', () => {
+        expect(viewsSchema.safeParse([view({ name: 'Issues', icon: 'list' })]).success).toBe(true);
     });
 });

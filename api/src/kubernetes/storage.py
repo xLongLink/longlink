@@ -5,13 +5,12 @@ import asyncio
 from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
-from src.utils import templates
+from src.utils import s3, templates
 from dataclasses import dataclass
 from src.environments import env
 from importlib.resources import files
 from kr8s.asyncio.objects import Secret, APIObject, ConfigMap, Namespace, Deployment, CustomResourceDefinition, new_class, object_from_spec
-from src.kubernetes.utils import apply, deployment_is_ready
-from src.adapters.storage.s3 import S3, Credentials
+from src.kubernetes.utils import apply, deployment_is_ready, wait_crd_established
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -21,6 +20,7 @@ User = new_class("CephObjectStoreUser", "ceph.rook.io/v1", asyncio=True, plural=
 Store = new_class("CephObjectStore", "ceph.rook.io/v1", asyncio=True, plural="cephobjectstores")
 Cluster = new_class("CephCluster", "ceph.rook.io/v1", asyncio=True, plural="cephclusters")
 BucketClaim = new_class("ObjectBucketClaim", "objectbucket.io/v1alpha1", asyncio=True, plural="objectbucketclaims")
+ObjectBucket = new_class("ObjectBucket", "objectbucket.io/v1alpha1", asyncio=True, namespaced=False, plural="objectbuckets")
 StorageClass = new_class("StorageClass", "storage.k8s.io/v1", asyncio=True, namespaced=False, plural="storageclasses")
 ROOK_VERSION = "v1.19.11"
 
@@ -30,7 +30,7 @@ class Bucket:
     """Describe one reconciled bucket and its control-plane connection."""
 
     name: str
-    storage: S3
+    storage: s3.S3
 
 
 class Storage:
@@ -61,20 +61,13 @@ class Storage:
                                 "ROOK_CSI_ENABLE_RBD": "false",
                                 "ROOK_CSI_ENABLE_CEPHFS": "false",
                                 "ROOK_CEPH_ALLOW_LOOP_DEVICES": "true" if env.DEVELOPMENT else "false",
+                                "ROOK_OBC_ALLOW_ADDITIONAL_CONFIG_FIELDS": "bucketMaxSize,bucketMaxObjects",
                             }
                         )
                     resource = object_from_spec(document, api=api)
                     await apply(resource)
                     if isinstance(resource, CustomResourceDefinition):
-                        # Fresh CRDs can report null conditions before establishment, which kr8s.wait cannot unpack.
-                        while True:
-                            await resource.refresh()
-                            conditions = resource.raw.get("status", {}).get("conditions") or []
-                            if any(
-                                condition.get("type") == "Established" and condition.get("status") == "True" for condition in conditions
-                            ):
-                                break
-                            await asyncio.sleep(1)
+                        await wait_crd_established(resource)
             operator = Deployment("rook-ceph-operator", namespace="rook-ceph", api=api)
             while True:
                 await operator.refresh()
@@ -120,22 +113,64 @@ class Storage:
             async with storage.client() as client:
                 await client.list_buckets()
 
-    async def bucket(self, organization: UUID, compute: "ComputeRegistry", *, create: bool = False) -> Bucket:
-        """Resolve bucket-owner credentials, optionally provisioning the organization claim."""
+    async def apply(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
+        """Provision the organization namespace and bucket claim before resolving owner credentials."""
 
+        # Only explicit lifecycle creation may mutate the storage boundary.
         api = await self._client.api()
         namespace = f"longlink-storage-{organization.hex}"
+        resource = Namespace({"metadata": {"name": namespace, "labels": {"longlink.io/namespace": "storage"}}}, api=api)
+        await apply(resource)
         claim = BucketClaim(
             {
                 "metadata": {"name": "storage", "namespace": namespace},
-                "spec": {"generateBucketName": f"longlink-{organization.hex}", "storageClassName": "longlink-buckets"},
+                "spec": {
+                    "generateBucketName": f"longlink-{organization.hex}",
+                    "storageClassName": "longlink-buckets",
+                    "additionalConfig": {
+                        "bucketMaxSize": str(compute.bucket_size_bytes),
+                        "bucketMaxObjects": str(compute.bucket_max_objects),
+                    },
+                },
             },
             api=api,
         )
-        if create:
-            resource = Namespace({"metadata": {"name": namespace, "labels": {"longlink.io/namespace": "storage"}}}, api=api)
-            await apply(resource)
-            await apply(claim)
+        await apply(claim)
+        await self.quota(organization, compute)
+        return await self.bucket(organization, compute)
+
+    async def quota(self, organization: UUID, compute: "ComputeRegistry") -> None:
+        """Reconcile an existing claim and wait for Rook to acknowledge the requested bucket quotas."""
+
+        # Patch only an existing boundary; deployment must never recreate deleted organization storage.
+        api = await self._client.api()
+        claim = BucketClaim("storage", namespace=f"longlink-storage-{organization.hex}", api=api)
+        desired = {"bucketMaxSize": str(compute.bucket_size_bytes), "bucketMaxObjects": str(compute.bucket_max_objects)}
+        await claim.patch({"spec": {"additionalConfig": desired}})
+
+        # Bound remains set during updates. Rook publishes the OB endpoint config only after SetIndividualBucketQuota succeeds.
+        async with asyncio.timeout(300):
+            while True:
+                await claim.refresh()
+                name = claim.raw.get("spec", {}).get("objectBucketName")
+                if claim.raw.get("status", {}).get("phase") == "Bound" and name:
+                    bucket = ObjectBucket(name, api=api)
+                    await bucket.refresh()
+                    spec = bucket.raw.get("spec", {})
+                    configured = spec.get("endpoint", {}).get("additionalConfig", {})
+                    if spec.get("claimRef", {}).get("uid") == claim.metadata.get("uid") and all(
+                        configured.get(key) == value for key, value in desired.items()
+                    ):
+                        return
+                await asyncio.sleep(2)
+
+    async def bucket(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
+        """Resolve an existing bucket and its owner credentials without provisioning resources."""
+
+        # Read-only callers wait for binding but cannot create a missing namespace or claim.
+        api = await self._client.api()
+        namespace = f"longlink-storage-{organization.hex}"
+        claim = BucketClaim("storage", namespace=namespace, api=api)
         async with asyncio.timeout(300):
             while True:
                 await claim.refresh()
@@ -146,24 +181,26 @@ class Storage:
         config = ConfigMap("storage", namespace=namespace, api=api)
         await secret.refresh()
         await config.refresh()
-        credentials = Credentials(
+        credentials = s3.Credentials(
             base64.b64decode(secret.raw["data"]["AWS_ACCESS_KEY_ID"], validate=True).decode(),
             base64.b64decode(secret.raw["data"]["AWS_SECRET_ACCESS_KEY"], validate=True).decode(),
         )
         storage = await self.connection(compute, credentials)
         return Bucket(config.raw["data"]["BUCKET_NAME"], storage)
 
-    async def connection(self, compute: "ComputeRegistry", credentials: Credentials) -> S3:
+    async def connection(self, compute: "ComputeRegistry", credentials: s3.Credentials) -> s3.S3:
         """Resolve the S3 transport while retaining the registered TLS and signing identity."""
 
+        # Only development changes the transport destination; TLS and signing retain the endpoint.
+        resolver = None
         if env.DEVELOPMENT:
             from src.development import storage
 
             port = await self._client.portforward("rook-ceph-rgw-longlink", "rook-ceph", 443)
-            return storage.S3(compute.storage_endpoint, credentials, compute.storage_certificate, port)
-        return S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+            resolver = storage.Resolver(compute.storage_endpoint, port)
+        return s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate, resolver=resolver)
 
-    async def user(self, solution: UUID, organization: UUID) -> Credentials:
+    async def user(self, solution: UUID, organization: UUID) -> s3.Credentials:
         """Converge a stable unprivileged RGW user that cannot create buckets."""
 
         # Rook user names are RGW UIDs; UUID-based names remain unique across organization namespaces.
@@ -188,7 +225,7 @@ class Storage:
         await apply(resource)
         return await self._credentials(resource)
 
-    async def _credentials(self, resource: APIObject) -> Credentials:
+    async def _credentials(self, resource: APIObject) -> s3.Credentials:
         """Wait for Rook to reconcile an identity before reading its generated key Secret."""
 
         # Observed generation prevents consuming stale keys after an identity specification changes.
@@ -201,7 +238,7 @@ class Storage:
                 await asyncio.sleep(2)
         secret = Secret(status["info"]["secretName"], namespace="rook-ceph", api=await self._client.api())
         await secret.refresh()
-        return Credentials(
+        return s3.Credentials(
             base64.b64decode(secret.raw["data"]["AccessKey"], validate=True).decode(),
             base64.b64decode(secret.raw["data"]["SecretKey"], validate=True).decode(),
         )

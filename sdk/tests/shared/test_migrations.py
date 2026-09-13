@@ -10,6 +10,7 @@ from pathlib import Path
 from datetime import UTC, datetime
 from contextlib import nullcontext
 from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
@@ -46,39 +47,6 @@ def audit_user() -> Audit:
         created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
         updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
     )
-
-
-class FakeAuditEngine:
-    """Provide a failing audit transaction and disposal tracking."""
-
-    def __init__(self, error: RuntimeError) -> None:
-        """Initialize observable state for one synchronization attempt."""
-
-        self.error = error
-        self.disposed = False
-
-    def begin(self) -> "FakeAuditEngine":
-        """Return the fake transaction context."""
-
-        return self
-
-    async def __aenter__(self) -> "FakeAuditEngine":
-        """Enter the fake transaction context."""
-
-        return self
-
-    async def __aexit__(self, *_args: object) -> None:
-        """Exit the fake transaction context."""
-
-    async def execute(self, _statement: object, _parameters: list[dict[str, object]]) -> None:
-        """Raise the configured database error."""
-
-        raise self.error
-
-    async def dispose(self) -> None:
-        """Record operation-scoped engine disposal."""
-
-        self.disposed = True
 
 
 @pytest_asyncio.fixture
@@ -127,36 +95,38 @@ def test_migration_config_rejects_missing_packaged_resources(tmp_path, monkeypat
         shared_migrations.migration_config("postgresql+asyncpg://control:secret@db/longlink")
 
 
-async def test_empty_shared_audit_sync_does_not_create_an_engine(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Treat empty shared audit synchronization as a no-op."""
+async def test_empty_shared_audit_sync_does_not_execute_sql() -> None:
+    """Treat empty shared audit synchronization as a no-op on the supplied connection."""
 
-    # Arrange
-    def fail_to_create_engine(*_args: object, **_kwargs: object) -> None:
-        """Fail if an empty synchronization attempts database access."""
-
-        pytest.fail("empty shared audit synchronization must not create an engine")
-
-    monkeypatch.setattr(shared_audit, "create_async_engine", fail_to_create_engine)
-
-    # Act
-    await shared_audit.sync("postgresql+asyncpg://db/longlink", [])
+    # An unopened connection fails if synchronization attempts SQL or starts a transaction.
+    engine = create_async_engine("sqlite+aiosqlite://")
+    try:
+        conn = engine.connect()
+        await shared_audit.sync(conn, [])
+    finally:
+        await engine.dispose()
 
 
-async def test_shared_audit_sync_disposes_engine_when_upsert_fails(
-    monkeypatch: pytest.MonkeyPatch,
-    audit_user: Audit,
-) -> None:
-    """Dispose the operation-scoped engine when shared audit synchronization fails."""
+async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: Audit) -> None:
+    """Propagate SQL failures while leaving connection and transaction ownership with the caller."""
 
-    # Arrange
-    engine = FakeAuditEngine(RuntimeError("database unavailable"))
-    monkeypatch.setattr(shared_audit, "create_async_engine", lambda *_args, **_kwargs: engine)
+    # Missing shared tables cause a real SQL failure within a caller-owned transaction.
+    engine = create_async_engine("sqlite+aiosqlite://")
+    try:
+        async with engine.connect() as conn:
+            with pytest.raises(DBAPIError, match="no such table: audit"):
+                async with conn.begin():
+                    try:
+                        await shared_audit.sync(conn, [audit_user])
+                    finally:
+                        assert not conn.closed
+                        assert conn.in_transaction()
 
-    # Act and assert
-    with pytest.raises(RuntimeError, match="database unavailable"):
-        await shared_audit.sync("postgresql+asyncpg://db/longlink", [audit_user])
-
-    assert engine.disposed
+            # The caller's transaction context rolls back and leaves its connection usable.
+            assert not conn.in_transaction()
+            assert await conn.scalar(text("SELECT 1")) == 1
+    finally:
+        await engine.dispose()
 
 
 @pytest.mark.integration
@@ -203,17 +173,13 @@ async def test_shared_user_sync_updates_one_postgresql_row(
     # Prepare the shared schema through the public migration entrypoint.
     await migrate_database(postgresql_url)
 
-    # Match the shared schema search path used by the Platform database adapter.
-    async with postgres_engine.begin() as connection:
-        await connection.execute(
-            text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = shared")
-        )
-
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = audit_user.id
     created_at = audit_user.created_at
     active_user = audit_user.model_copy(update={"avatar": ""})
-    await shared_audit.sync(postgresql_url, [active_user])
+    async with postgres_engine.begin() as connection:
+        await connection.execute(text("SET LOCAL search_path TO shared"))
+        await shared_audit.sync(connection, [active_user])
 
     # Upsert changed mutable fields and an explicit control-plane deactivation.
     deactivated_at = datetime(2026, 7, 7, 9, tzinfo=UTC)
@@ -228,7 +194,9 @@ async def test_shared_user_sync_updates_one_postgresql_row(
             "deleted_at": deactivated_at,
         }
     )
-    await shared_audit.sync(postgresql_url, [deactivated_user])
+    async with postgres_engine.begin() as connection:
+        await connection.execute(text("SET LOCAL search_path TO shared"))
+        await shared_audit.sync(connection, [deactivated_user])
 
     # Read the persisted row from its qualified shared table and verify no duplicate was created.
     async with postgres_engine.connect() as connection:

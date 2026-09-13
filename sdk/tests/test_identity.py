@@ -97,28 +97,50 @@ def test_identity_token_user_rejects_unapproved_algorithm() -> None:
         identity.identity_token_user(encoded, identity_secret)
 
 
-@pytest.mark.parametrize(
-    ("claims", "message"),
-    [
-        pytest.param({}, "Invalid identity token claims", id="missing-subject"),
-        pytest.param({"sub": "not-a-uuid"}, "Invalid identity token user", id="malformed-subject"),
-    ],
-)
-def test_identity_token_user_rejects_invalid_subject_claims(claims: dict[str, str], message: str) -> None:
-    """Reject validly signed identity tokens without a valid UUID subject."""
+def test_identity_token_user_rejects_malformed_subject() -> None:
+    """Reject an otherwise valid identity token with a malformed UUID subject."""
 
     # Arrange
+    issued_at = datetime.now(UTC)
     token = jwt.encode(
         {
+            "sub": "not-a-uuid",
             "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-            "iat": datetime.now(UTC),
-            "exp": datetime.now(UTC) + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
-            **claims,
+            "iat": issued_at,
+            "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
         },
         IDENTITY_SECRET,
         algorithm=identity.IDENTITY_TOKEN_ALGORITHM,
     )
 
-    # Act and assert
-    with pytest.raises(jwt.InvalidTokenError, match=message):
+    # Act
+    with pytest.raises(jwt.InvalidTokenError) as exc_info:
         identity.identity_token_user(token, IDENTITY_SECRET)
+
+    # Assert
+    assert type(exc_info.value) is jwt.InvalidTokenError
+    assert str(exc_info.value) == "Invalid identity token user"
+
+
+@pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp"])
+def test_identity_token_user_rejects_missing_required_claim(missing_claim: str) -> None:
+    """Reject an otherwise valid identity token missing any required claim."""
+
+    # Arrange
+    issued_at = datetime.now(UTC)
+    claims = {
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "aud": identity.IDENTITY_TOKEN_AUDIENCE,
+        "iat": issued_at,
+        "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+    }
+    del claims[missing_claim]
+    token = jwt.encode(claims, IDENTITY_SECRET, algorithm=identity.IDENTITY_TOKEN_ALGORITHM)
+
+    # Act
+    with pytest.raises(jwt.InvalidTokenError) as exc_info:
+        identity.identity_token_user(token, IDENTITY_SECRET)
+
+    # Assert
+    assert type(exc_info.value) is jwt.InvalidTokenError
+    assert str(exc_info.value) == "Invalid identity token claims"

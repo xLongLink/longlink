@@ -2,10 +2,12 @@ import pytest
 from typing import Literal
 from pathlib import Path
 from pydantic import ValidationError
+from contextlib import contextmanager
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 from fsspec.implementations.local import LocalFileSystem
+from fsspec.implementations.memory import MemoryFileSystem
 
 PRODUCTION_SETTINGS = {
     "LONGLINK_IDENTITY_SECRET": "identity-secret",
@@ -93,6 +95,45 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     }
 
 
+def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use the Platform storage CA to verify the remote S3 endpoint."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    @contextmanager
+    def certificate_file(pem: str):
+        """Capture the configured PEM and yield its temporary filename."""
+
+        captured["pem"] = pem
+        yield "/tmp/storage-ca.crt"
+
+    def fake_filesystem_factory(_protocol: str, **kwargs: object) -> LocalFileSystem:
+        """Capture the remote filesystem configuration."""
+
+        captured["kwargs"] = kwargs
+        return LocalFileSystem()
+
+    monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
+    monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
+
+    # Act
+    storage_base.create_fs(Envs())
+
+    # Assert
+    assert captured["pem"] == "storage-ca-pem"
+    assert captured["kwargs"] == {
+        "endpoint_url": "http://storage.runtime.longlink.internal:19000",
+        "key": "access/key",
+        "secret": "secret@key",
+        "client_kwargs": {"region_name": "ch-gva-2", "verify": "/tmp/storage-ca.crt"},
+        "config_kwargs": {"s3": {"addressing_style": "path"}, "http_session_cls": storage_base.tls.Session},
+        "skip_instance_cache": True,
+    }
+
+
 def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
     """Require a bucket before constructing a scoped storage prefix."""
 
@@ -105,33 +146,20 @@ def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) 
         storage_base.create_fs(settings)
 
 
-@pytest.mark.parametrize(
-    ("environment", "expected_protocol"),
-    [
-        pytest.param("testing", "memory", id="testing"),
-        pytest.param("development", "file", id="development"),
-    ],
-)
+@pytest.mark.parametrize(("environment", "expected_filesystem"), [("testing", MemoryFileSystem), ("development", LocalFileSystem)])
 def test_nonproduction_storage_selects_local_filesystem(
-    monkeypatch: pytest.MonkeyPatch, environment: Literal["testing", "development"], expected_protocol: str
+    environment: Literal["testing", "development"], expected_filesystem: type[MemoryFileSystem] | type[LocalFileSystem]
 ) -> None:
     """Use memory storage for tests and local files for development."""
 
     # Arrange
-    filesystem = object()
-    protocols: list[str] = []
+    settings = Envs(ENV=environment, STORAGE_BUCKET=None, STORAGE_PREFIX=None)
 
-    def create_filesystem(protocol: str) -> object:
-        """Record the requested non-production storage backend."""
-
-        protocols.append(protocol)
-        return filesystem
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", create_filesystem)
+    # Act
+    filesystem = storage_base.create_fs(settings)
 
     # Assert
-    assert storage_base.create_fs(Envs(ENV=environment)) is filesystem
-    assert protocols == [expected_protocol]
+    assert isinstance(filesystem, expected_filesystem)
 
 
 @pytest.mark.parametrize("name", ["DATABASE_HOST", "DATABASE_PASSWORD", "STORAGE_BUCKET", "STORAGE_PREFIX"])

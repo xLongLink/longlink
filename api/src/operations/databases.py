@@ -1,12 +1,13 @@
 import asyncio
 import contextlib
 from uuid import UUID
+from typing import Literal
 from datetime import datetime, timedelta
 from sqlmodel import col
+from src.utils import postgres
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from collections.abc import Iterator, AsyncIterator
-from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -16,12 +17,6 @@ from src.kubernetes.client import Kubernetes
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.organizations import Organization, OrganizationActivity
-
-# Load the loopback-only SQL transport solely for the host-run development process.
-if env.DEVELOPMENT:
-    from src.development import postgres
-else:
-    from src.utils import postgres
 
 LEASE_SECONDS = 180
 RENEW_SECONDS = 30
@@ -37,16 +32,11 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(infrastructure: organizations.Infrastructure, cluster: Kubernetes) -> postgres.Postgres:
+async def connection(organization: Organization, cluster: Kubernetes) -> postgres.Postgres:
     """Build the Organization's private, CA-verified PostgreSQL connection."""
 
-    # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
-    organization = infrastructure.organization
-    port = 5432
-
-    # Host-run development workers reach private SQL through the authenticated Kubernetes API.
-    if env.DEVELOPMENT:
-        port = await cluster.databases.portforward(organization.id)
+    # Platform workers can run outside the compute cluster and its private DNS/network.
+    port = await cluster.databases.portforward(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     return postgres.Postgres(
@@ -56,6 +46,7 @@ async def connection(infrastructure: organizations.Infrastructure, cluster: Kube
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,
         certificate=await cluster.databases.certificate(organization.id),
+        hostaddr="127.0.0.1",
     )
 
 
@@ -173,7 +164,7 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
 
 
 @contextlib.asynccontextmanager
-async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool = False) -> AsyncIterator[Lease | None]:
+async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", "recover"] = "demand") -> AsyncIterator[Lease | None]:
     """Keep SQL awake for requests, migrations, deployment, and schema cleanup."""
 
     # Persist demand before waking; a concurrent hibernation must finish before admission.
@@ -183,14 +174,18 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
             raise RuntimeError("Organization is unavailable")
         transition = await session.get(OrganizationActivity, organization_id)
         lease = None
-        admit = wake or (
-            organization.status == Status.running
-            and organization.database_state == DatabaseState.available
-            and (transition is None or transition.expires_at <= utcnow())
-        )
 
-        # Recovery is not runtime demand: check fresh state and claim under the same admission lock.
-        if recovery:
+        # Select admission from fresh state under the same lock used to claim activity.
+        if mode == "demand":
+            admit = True
+        elif mode == "observe":
+            admit = (
+                organization.status == Status.running
+                and organization.database_state == DatabaseState.available
+                and (transition is None or transition.expires_at <= utcnow())
+            )
+        else:
+            # Recovery admits only interrupted transitions or pending synchronization, not runtime demand.
             admit = (
                 organization.status == Status.running
                 and (transition is None or transition.expires_at <= utcnow())
@@ -202,6 +197,8 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
                     and organization.database_sync_pending
                 )
             )
+
+        # Persist admitted activity before releasing the admission lock.
         if admit:
             lease = await _claim(session, organization_id)
             organization.database_last_active_at = utcnow()
@@ -210,7 +207,7 @@ async def activity(organization_id: UUID, *, wake: bool = True, recovery: bool =
         yield None
         return
     async with lease.maintain():
-        if wake:
+        if mode != "observe":
             await ready(organization_id)
         yield lease
 
@@ -288,7 +285,7 @@ async def ready(organization_id: UUID) -> None:
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     if infrastructure.organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
@@ -330,7 +327,7 @@ async def ready(organization_id: UUID) -> None:
                 raise
 
 
-async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
+async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
     # Recheck both the idle interval and persisted leases under the admission lock.
@@ -344,8 +341,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             or organization.status != Status.running
             or organization.database_idle_seconds == 0
             or organization.database_state != DatabaseState.available
-            or not manual
-            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -373,7 +369,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)
@@ -393,8 +389,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
                         if (
                             active is not None
                             or organization.database_idle_seconds == 0
-                            or not manual
-                            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
                         ):
                             organization.database_state = DatabaseState.available
                             await session.commit()
@@ -461,6 +456,6 @@ async def reconcile(organization_id: UUID) -> None:
         organization = await session.get(Organization, organization_id)
     if organization is None or organization.deleted_at is not None or organization.status != Status.running:
         return
-    async with activity(organization_id, recovery=True):
+    async with activity(organization_id, mode="recover"):
         pass
     await hibernate(organization_id)

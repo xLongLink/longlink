@@ -8,14 +8,13 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { usePaginate } from '@/lib/hooks/pagination';
 import { Heading } from '@astryxdesign/core/Heading';
 import MetadataDialog from '@/components/dialogs/Metadata';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { zPageOperationResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import type { OperationResponse } from '@/lib/generated/platform-api-v1/types.gen';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 
 const statusLabels: Record<OperationResponse['status'], string> = {
     scheduled: 'Scheduled',
@@ -88,50 +87,63 @@ export default function AdminOperations() {
                 hasHover
                 idKey="id"
                 plugins={{ pagination }}
-            >
-                <TableColumn<OperationResponse> field="operation" header="Operation" width={proportional(1)}>
-                    {(operation) => (
-                        <Stack>
-                            <Text weight="semibold">{kindLabels[operation.kind]}</Text>
-                            <Text type="supporting">
-                                {operation.finished_at
-                                    ? `${statusLabels[operation.status]} - ${formatOperationDate(operation.finished_at)}`
-                                    : `Started - ${formatOperationDate(operation.created_at)}`}
-                            </Text>
-                        </Stack>
-                    )}
-                </TableColumn>
-                <TableColumn<OperationResponse> field="resource" header="Resource" width={proportional(1)}>
-                    {(operation) => (
-                        <Stack>
-                            <Text weight="semibold">{operation.resource?.name ?? 'Resource unavailable'}</Text>
-                            <Text type="supporting">{resourceLabels[operation.kind]}</Text>
-                        </Stack>
-                    )}
-                </TableColumn>
-                <TableColumn<OperationResponse> align="end" field="actions" header="" width={pixel(56)}>
-                    {(operation) => (
-                        <DropdownMenu
-                            button={{
-                                icon: <Ellipsis />,
-                                isIconOnly: true,
-                                label: `Actions for ${kindLabels[operation.kind]}`,
-                                size: 'sm',
-                                variant: 'ghost',
-                            }}
-                            hasChevron={false}
-                            items={[
-                                { label: 'Metadata', onClick: () => setMetadataOperation(operation) },
-                                {
-                                    isDisabled: operation.finished_at === null,
-                                    label: 'Logs',
-                                    onClick: () => setLogOperationId(operation.id),
-                                },
-                            ]}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'operation',
+                            header: 'Operation',
+                            width: proportional(1),
+                            renderCell: (operation) => (
+                                <Stack>
+                                    <Text weight="semibold">{kindLabels[operation.kind]}</Text>
+                                    <Text type="supporting">
+                                        {operation.finished_at
+                                            ? `${statusLabels[operation.status]} - ${formatOperationDate(operation.finished_at)}`
+                                            : `Started - ${formatOperationDate(operation.created_at)}`}
+                                    </Text>
+                                </Stack>
+                            ),
+                        },
+                        {
+                            key: 'resource',
+                            header: 'Resource',
+                            width: proportional(1),
+                            renderCell: (operation) => (
+                                <Stack>
+                                    <Text weight="semibold">{operation.resource?.name ?? 'Resource unavailable'}</Text>
+                                    <Text type="supporting">{resourceLabels[operation.kind]}</Text>
+                                </Stack>
+                            ),
+                        },
+                        {
+                            align: 'end',
+                            key: 'actions',
+                            header: '',
+                            width: pixel(56),
+                            renderCell: (operation) => (
+                                <DropdownMenu
+                                    button={{
+                                        icon: <Ellipsis />,
+                                        isIconOnly: true,
+                                        label: `Actions for ${kindLabels[operation.kind]}`,
+                                        size: 'sm',
+                                        variant: 'ghost',
+                                    }}
+                                    hasChevron={false}
+                                    items={[
+                                        { label: 'Metadata', onClick: () => setMetadataOperation(operation) },
+                                        {
+                                            isDisabled: operation.finished_at === null,
+                                            label: 'Logs',
+                                            onClick: () => setLogOperationId(operation.id),
+                                        },
+                                    ]}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<OperationResponse>[]
+                }
+            />
             {metadataOperation ? (
                 <MetadataDialog onClose={() => setMetadataOperation(null)} title="Operation metadata">
                     <MetadataList>

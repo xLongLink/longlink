@@ -240,7 +240,13 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 
         raise AssertionError("invalid solution payload must not inspect image metadata")
 
+    async def unexpected_organization_access(*_args: object, **_kwargs: object) -> object:
+        """Fail if invalid input reaches Organization authorization."""
+
+        raise AssertionError("invalid solution payload must not inspect organization access")
+
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.organization_access", unexpected_organization_access)
 
     # Act
     response = await clients[1].post(
@@ -339,6 +345,7 @@ async def test_solution_responses_do_not_expose_environment_secrets(
 async def test_create_app_returns_403_for_regular_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject solution creation when the organization member lacks deployment permissions."""
 
@@ -356,6 +363,14 @@ async def test_create_app_returns_403_for_regular_member(
             )
         )
         await session.commit()
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if denied creation reaches remote image inspection."""
+
+        raise AssertionError("denied solution creation must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
 
     # Act
     response = await clients[1].post(
@@ -366,6 +381,9 @@ async def test_create_app_returns_403_for_regular_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
 
 
 async def test_create_app_allows_maintainer_and_queues_reconciliation(

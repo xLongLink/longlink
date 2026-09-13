@@ -56,21 +56,21 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         result = await session.execute(
             select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
         )
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resources[(OperationKind.compute_create, resource_id)] = OperationResource(id=resource_id, name=name)
 
     if organization_target_ids:
         result = await session.execute(
             select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
         )
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resource = OperationResource(id=resource_id, name=name)
             resources[(OperationKind.organization_create, resource_id)] = resource
             resources[(OperationKind.organization_delete, resource_id)] = resource
 
     if solution_target_ids:
         result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
-        for resource_id, name in result.all():
+        for resource_id, name in result:
             resources[(OperationKind.solution_delete, resource_id)] = OperationResource(id=resource_id, name=name)
 
     revision_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_deploy}
@@ -80,7 +80,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             .join(Solution, col(Solution.id) == col(Revision.solution_id))
             .where(col(Revision.id).in_(revision_ids))
         )
-        for revision_id, solution_id, name in result.all():
+        for revision_id, solution_id, name in result:
             resources[(OperationKind.solution_deploy, revision_id)] = OperationResource(id=solution_id, name=name)
 
     # Assemble response models with their resolved target resource.
@@ -123,29 +123,26 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
 
     # Reconcile every present resource and clean up every tombstone.
     compute_result = await session.scalars(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
-    compute_ids = compute_result.all()
-    result = await session.execute(
+    organization_result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )
-    organization_rows = result.all()
-    result = await session.execute(
+    solution_result = await session.scalars(
         select(Solution)
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.compute_id), col(Solution.id))
     )
-    solution_rows = result.scalars().all()
 
     # Create or reuse every desired-state operation in one transaction.
-    for compute_id in compute_ids:
+    for compute_id in compute_result:
         await enqueue(session, kind=OperationKind.compute_create, target_id=compute_id)
-    for organization_id, deleted in organization_rows:
+    for organization_id, deleted in organization_result:
         await enqueue(
             session,
             kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
             target_id=organization_id,
         )
-    for solution in solution_rows:
+    for solution in solution_result:
         if solution.deleted_at is not None:
             await enqueue(session, kind=OperationKind.solution_delete, target_id=solution.id)
         else:

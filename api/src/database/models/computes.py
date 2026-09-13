@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field
-from sqlalchemy import Enum, Text, Column
+from sqlalchemy import Enum, Text, Column, BigInteger
 from src.environments import env
 from src.database.types import EncryptedType
 from src.models.statuses import Status
@@ -21,6 +21,7 @@ class ComputeRegistry(PlatformModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
+    cluster_uid: str = Field(unique=True, max_length=128)
     kubeconfig: dict[str, object] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
 
     # Reconciliation
@@ -46,3 +47,9 @@ class ComputeRegistry(PlatformModel, table=True):
     storage_size_gib: int = Field(default=100)
     storage_instances: int = Field(default=3)
     storage_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
+    # Storage admission policy
+    bucket_size_bytes: int = Field(sa_column=Column(BigInteger, nullable=False))
+    bucket_max_objects: int
+    storage_reserve_percent: int
+    storage_object_overhead_bytes: int

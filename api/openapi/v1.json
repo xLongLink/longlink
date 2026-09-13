@@ -1375,71 +1375,6 @@
       }
     },
     "/api/v1/computes/{registry_id}": {
-      "get": {
-        "summary": "Get Compute Registry",
-        "description": "Return one compute backend registration.",
-        "operationId": "get_compute_registry_api_v1_computes__registry_id__get",
-        "parameters": [
-          {
-            "name": "registry_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Registry Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ComputeRegistryResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      },
       "delete": {
         "summary": "Delete Compute Registry",
         "description": "Remove one unused compute registration without changing its cluster.",
@@ -2220,140 +2155,6 @@
         }
       }
     },
-    "/api/v1/organizations/{organization_id}/database/resume": {
-      "post": {
-        "summary": "Resume Organization Database",
-        "description": "Wake and synchronize an Organization database without changing its idle policy.",
-        "operationId": "resume_organization_database_api_v1_organizations__organization_id__database_resume_post",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatabaseState"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
-    "/api/v1/organizations/{organization_id}/database/hibernate": {
-      "post": {
-        "summary": "Hibernate Organization Database",
-        "description": "Hibernate an eligible database without overriding active work or its always-on policy.",
-        "operationId": "hibernate_organization_database_api_v1_organizations__organization_id__database_hibernate_post",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatabaseState"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
@@ -3100,6 +2901,31 @@
               }
             ],
             "title": "Storage Certificate"
+          },
+          "bucket_size_bytes": {
+            "type": "integer",
+            "multipleOf": 1024.0,
+            "maximum": 70368744177664.0,
+            "minimum": 1024.0,
+            "title": "Bucket Size Bytes"
+          },
+          "bucket_max_objects": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Bucket Max Objects"
+          },
+          "storage_reserve_percent": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Storage Reserve Percent"
+          },
+          "storage_object_overhead_bytes": {
+            "type": "integer",
+            "maximum": 1073741824.0,
+            "minimum": 4096.0,
+            "title": "Storage Object Overhead Bytes"
           }
         },
         "type": "object",
@@ -3109,7 +2935,11 @@
           "gateway_url",
           "database_storage_class",
           "storage_class",
-          "storage_endpoint"
+          "storage_endpoint",
+          "bucket_size_bytes",
+          "bucket_max_objects",
+          "storage_reserve_percent",
+          "storage_object_overhead_bytes"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
@@ -3157,6 +2987,22 @@
             "type": "integer",
             "title": "Storage Instances"
           },
+          "bucket_size_bytes": {
+            "type": "integer",
+            "title": "Bucket Size Bytes"
+          },
+          "bucket_max_objects": {
+            "type": "integer",
+            "title": "Bucket Max Objects"
+          },
+          "storage_reserve_percent": {
+            "type": "integer",
+            "title": "Storage Reserve Percent"
+          },
+          "storage_object_overhead_bytes": {
+            "type": "integer",
+            "title": "Storage Object Overhead Bytes"
+          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -3173,6 +3019,10 @@
           "storage_endpoint",
           "storage_size_gib",
           "storage_instances",
+          "bucket_size_bytes",
+          "bucket_max_objects",
+          "storage_reserve_percent",
+          "storage_object_overhead_bytes",
           "status"
         ],
         "title": "ComputeRegistryResponse",
@@ -3684,10 +3534,6 @@
       },
       "OrganizationStorageUsageResponse": {
         "properties": {
-          "bucket_name": {
-            "type": "string",
-            "title": "Bucket Name"
-          },
           "space_used": {
             "type": "integer",
             "minimum": 0.0,
@@ -3696,7 +3542,6 @@
         },
         "type": "object",
         "required": [
-          "bucket_name",
           "space_used"
         ],
         "title": "OrganizationStorageUsageResponse",
@@ -4289,18 +4134,6 @@
       },
       "SolutionUpdateCheck": {
         "properties": {
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "available": {
-            "type": "boolean",
-            "title": "Available"
-          },
           "min_scale": {
             "type": "integer",
             "enum": [
@@ -4332,9 +4165,6 @@
         },
         "type": "object",
         "required": [
-          "source",
-          "image",
-          "available",
           "min_scale",
           "revision_id",
           "current_image",

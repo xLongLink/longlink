@@ -3,19 +3,21 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { Button } from '@astryxdesign/core/Button';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { useUpdateOrganization } from '@/lib/hooks/use-organization';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Edits the Organization's opt-in database hibernation interval. */
 export default function DatabaseSettings({
     organization,
     canManage,
+    isSaving,
+    onSave,
 }: {
     organization: OrganizationSummary;
     canManage: boolean;
+    isSaving: boolean;
+    onSave: (databaseIdleSeconds: number) => Promise<unknown>;
 }) {
     const [draft, setDraft] = useState<number | null>(null);
-    const update = useUpdateOrganization(organization.id);
     const toast = useToast();
     const seconds = draft ?? organization.database_idle_seconds;
     const valid = Number.isInteger(seconds) && (seconds === 0 || (seconds >= 300 && seconds <= 604800));
@@ -32,16 +34,16 @@ export default function DatabaseSettings({
                 isIntegerOnly
                 isWheelEnabled={false}
                 isReadOnly={!canManage}
-                isDisabled={update.isPending}
+                isDisabled={isSaving}
                 onChange={setDraft}
                 status={valid ? undefined : { type: 'error', message: 'Use 0 (always on) or at least 300 seconds.' }}
             />
             {canManage && (
                 <Button
                     label="Save database settings"
-                    isDisabled={!valid || seconds === organization.database_idle_seconds || update.isPending}
+                    isDisabled={!valid || seconds === organization.database_idle_seconds || isSaving}
                     clickAction={async () => {
-                        await update.mutateAsync({ database_idle_seconds: seconds });
+                        await onSave(seconds);
                         setDraft(null);
                         toast({ body: 'Database settings saved' });
                     }}

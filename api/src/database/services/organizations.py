@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles, postgres
-from sqlalchemy import Select, func, delete, select
+from sqlalchemy import Select, BigInteger, cast, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -47,7 +47,6 @@ async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID
         .where(
             col(UserOrganization.user_id) == user_id,
             col(UserOrganization.organization_id) == organization_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )
@@ -65,7 +64,6 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
         .where(
             col(UserOrganization.user_id) == user_id,
             col(Organization.slug) == organization_slug,
-            col(UserOrganization.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
         )
     )
@@ -104,7 +102,6 @@ async def solution_runtime_access(
             col(Solution.deleted_at).is_(None),
             col(Organization.deleted_at).is_(None),
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.deleted_at).is_(None),
         )
     )
     return result.tuples().one_or_none()
@@ -125,6 +122,8 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_certificate,
+                ComputeRegistry.bucket_size_bytes,
+                ComputeRegistry.bucket_max_objects,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -234,7 +233,6 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
         .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
         .where(
             col(UserOrganization.organization_id) == organization_id,
-            col(UserOrganization.deleted_at).is_(None),
         )
     )
 
@@ -252,22 +250,19 @@ async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
 async def project_users(session: AsyncSession, organization_id: UUID, db: postgres.Postgres) -> None:
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
-    # Include deleted memberships so the Organization database receives tombstones.
+    # Load every authoritative membership for the Organization database snapshot.
     memberships_statement = (
         select(UserOrganization)
         .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar, User.updated_at, User.deleted_at))
         .where(col(UserOrganization.organization_id) == organization_id)
     )
     memberships_result = await session.scalars(memberships_statement)
-    memberships = memberships_result.all()
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     rows: list[Audit] = []
-    for membership in memberships:
-        # Use the latest tombstone from either the user or the membership row.
-        deleted_at = max((value for value in (membership.user.deleted_at, membership.deleted_at) if value is not None), default=None)
-
-        # Tombstone recency must be reflected in the projected update time.
+    for membership in memberships_result:
+        # Account tombstones and membership changes determine projection recency.
+        deleted_at = membership.user.deleted_at
         updated_at = max(value for value in (membership.user.updated_at, membership.updated_at, deleted_at) if value is not None)
 
         rows.append(
@@ -283,9 +278,13 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
             )
         )
 
-    # The Platform is authoritative over Organization user projections.
-    with db.url(organization_id.hex, search_path="shared") as url:
-        await shared_audit.sync(url, rows)
+    # Empty snapshots must not open an Organization database connection.
+    if not rows:
+        return
+
+    # The Platform owns the transaction for its authoritative Organization user projection.
+    async with db._connection(organization_id.hex, search_path="shared") as conn:
+        await shared_audit.sync(conn, rows)
 
 
 async def _locked_membership(
@@ -300,7 +299,7 @@ async def _locked_membership(
         populate_existing=True,
         with_for_update=True,
     )
-    if membership is None or membership.deleted_at is not None:
+    if membership is None:
         raise ForbiddenError("Access required")
     if not roles.atleast(membership.role, minimum_role):
         raise ForbiddenError("Permission required")
@@ -329,7 +328,6 @@ async def update_member_role(
         .where(
             col(UserOrganization.organization_id) == organization_id,
             col(UserOrganization.user_id) == member_id,
-            col(UserOrganization.deleted_at).is_(None),
             col(User.deleted_at).is_(None),
         )
         .with_for_update()
@@ -357,7 +355,6 @@ async def update_member_role(
             .where(
                 col(UserOrganization.organization_id) == organization_id,
                 col(UserOrganization.role) == OrganizationRoles.owner,
-                col(UserOrganization.deleted_at).is_(None),
                 col(UserOrganization.user_id) != member_id,
             )
             .limit(1)
@@ -367,7 +364,6 @@ async def update_member_role(
             raise ConflictError("Organization must have at least one owner")
 
     # Persist the role change.
-    membership.updated_id = user_id
     membership.role = role
     await sync_users(session, organization_id)
 
@@ -397,13 +393,24 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
 
     # Lock the selected Compute until the Organization assignment is committed.
     compute_assignments = (
-        select(func.count(col(Organization.id)))
-        .where(col(Organization.compute_id) == col(ComputeRegistry.id), col(Organization.deleted_at).is_(None))
-        .scalar_subquery()
+        select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
         select(col(ComputeRegistry.id))
-        .where(col(ComputeRegistry.status) == Status.running)
+        .where(
+            col(ComputeRegistry.status) == Status.running,
+            compute_assignments + 1
+            <= (
+                cast(col(ComputeRegistry.storage_size_gib), BigInteger)
+                * 1024**3
+                * (100 - col(ComputeRegistry.storage_reserve_percent))
+                / 100
+            )
+            / (
+                col(ComputeRegistry.bucket_size_bytes)
+                + cast(col(ComputeRegistry.bucket_max_objects), BigInteger) * col(ComputeRegistry.storage_object_overhead_bytes)
+            ),
+        )
         .order_by(compute_assignments, col(ComputeRegistry.name))
         .limit(1)
         .with_for_update()
@@ -411,7 +418,7 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")
 
-    return await _persist(
+    return await create(
         session,
         name,
         user,
@@ -428,29 +435,21 @@ async def create(
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
 
-    # Lock each requested registry while validating the immutable infrastructure assignment.
-    compute_registry_id = await session.scalar(
-        select(col(ComputeRegistry.id)).where(col(ComputeRegistry.id) == compute_id).with_for_update()
-    )
-    if compute_registry_id is None:
+    # A no-op write serializes admission on every supported backend, including SQLite.
+    await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
+    compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
+    if compute is None:
         raise UnavailableError("No compute registry available")
 
-    return await _persist(
-        session,
-        name,
-        user,
-        compute_id=compute_id,
-    )
+    # Recount after acquiring the Compute lock: pre-lock selection may have a stale statement snapshot.
+    count_result = await session.execute(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
+    count = count_result.scalar_one()
+    reservation = compute.bucket_size_bytes + compute.bucket_max_objects * compute.storage_object_overhead_bytes
 
-
-async def _persist(
-    session: AsyncSession,
-    name: str,
-    user: User,
-    *,
-    compute_id: UUID,
-) -> Organization:
-    """Persist an Organization after its infrastructure assignment is locked and validated."""
+    # OSD count equals pool replication, so usable capacity is one OSD, not their raw sum.
+    capacity = compute.storage_size_gib * 1024**3 * (100 - compute.storage_reserve_percent) // 100
+    if (count + 1) * reservation > capacity:
+        raise UnavailableError("Compute storage capacity is reserved; wait for cleanup or register more capacity")
 
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(
@@ -461,7 +460,6 @@ async def _persist(
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
-    organization.updated_id = user.id
 
     # Translate unique conflicts from autoflush without invalidating the caller's transaction.
     try:
@@ -471,8 +469,6 @@ async def _persist(
                     user_id=user.id,
                     organization_id=organization.id,
                     role=OrganizationRoles.owner,
-                    created_id=user.id,
-                    updated_id=user.id,
                 )
             )
             session.add(organization)
@@ -502,10 +498,8 @@ async def update(
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
-        organization.updated_id = user_id
     if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
         organization.database_idle_seconds = database_idle_seconds
-        organization.updated_id = user_id
 
     return organization
 
@@ -563,7 +557,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     # Revalidate active owners while the Organization is locked; only the original actor may retry a tombstone.
     if organization.deleted_at is None and not user.administrator:
         membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
-        if membership is None or membership.deleted_at is not None:
+        if membership is None:
             raise ForbiddenError("Access required")
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise ForbiddenError("Permission required")
@@ -576,7 +570,6 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now
-        organization.updated_id = user.id
 
         # Tombstone every active Solution without loading each object.
         await session.execute(

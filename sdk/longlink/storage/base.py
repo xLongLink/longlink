@@ -1,7 +1,5 @@
-import ssl
 import fsspec
 import weakref
-import tempfile
 from pathlib import PurePosixPath
 from contextlib import ExitStack
 from fsspec.spec import AbstractFileSystem
@@ -32,16 +30,13 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
         with ExitStack() as files:
             certificate = None
             if settings.STORAGE_CERTIFICATE is not None:
-                ssl.create_default_context(cadata=settings.STORAGE_CERTIFICATE)
-                certificate = files.enter_context(tempfile.NamedTemporaryFile(mode="w", suffix=".crt"))
-                certificate.write(settings.STORAGE_CERTIFICATE)
-                certificate.flush()
+                certificate = files.enter_context(tls.certificate_file(settings.STORAGE_CERTIFICATE))
             filesystem = fsspec.filesystem(
                 "s3",
                 endpoint_url=settings.STORAGE_ENDPOINT_URL,
                 key=settings.STORAGE_USERNAME,
                 secret=settings.STORAGE_PASSWORD,
-                client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate.name} if certificate is not None else {})},
+                client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate} if certificate is not None else {})},
                 config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
                 skip_instance_cache=True,
             )

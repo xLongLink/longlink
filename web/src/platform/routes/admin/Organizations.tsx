@@ -9,16 +9,15 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { OrganizationCell } from '@/components/Cells';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import MetadataDialog from '@/components/dialogs/Metadata';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { PageError, PageLoading } from '@/components/Utils';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useDeleteOrganization } from '@/lib/hooks/use-organization';
+import { useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { zPageOrganizationSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import type { OrganizationSummary } from '@/lib/generated/platform-api-v1/types.gen';
-import { DeleteConfirmation, useDeleteDialog } from '@/components/dialogs/DeleteConfirmation';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
@@ -79,28 +78,38 @@ export default function AdminOrganizations() {
                 hasHover
                 idKey="id"
                 plugins={{ pagination }}
-            >
-                <TableColumn<OrganizationSummary> field="name" header="Name" width={proportional(1)}>
-                    {(organization) => (
-                        <OrganizationCell
-                            endContent={<StatusBadge status={organization.status} />}
-                            organization={organization}
-                        />
-                    )}
-                </TableColumn>
-                <TableColumn<OrganizationSummary> align="end" field="metadata" header="" width={pixel(56)}>
-                    {(organization) => (
-                        <IconButton
-                            icon={<Ellipsis />}
-                            label={`View metadata for ${organization.name}`}
-                            size="sm"
-                            tooltip="View metadata"
-                            variant="ghost"
-                            onClick={() => setMetadataOrganization(organization)}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'name',
+                            header: 'Name',
+                            width: proportional(1),
+                            renderCell: (organization) => (
+                                <OrganizationCell
+                                    endContent={<StatusBadge status={organization.status} />}
+                                    organization={organization}
+                                />
+                            ),
+                        },
+                        {
+                            align: 'end',
+                            key: 'metadata',
+                            header: '',
+                            width: pixel(56),
+                            renderCell: (organization) => (
+                                <IconButton
+                                    icon={<Ellipsis />}
+                                    label={`View metadata for ${organization.name}`}
+                                    size="sm"
+                                    tooltip="View metadata"
+                                    variant="ghost"
+                                    onClick={() => setMetadataOrganization(organization)}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<OrganizationSummary>[]
+                }
+            />
             {metadataOrganization && (
                 <MetadataDialog
                     onClose={() => setMetadataOrganization(null)}
@@ -116,7 +125,7 @@ export default function AdminOrganizations() {
                     </MetadataList>
                 </MetadataDialog>
             )}
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
+            {deleteDialog.dialog}
         </Stack>
     );
 }

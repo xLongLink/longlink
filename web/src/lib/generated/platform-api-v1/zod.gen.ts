@@ -33,7 +33,11 @@ export const zComputeRegistryCreate = z.object({
     storage_endpoint: z.string().max(512),
     storage_size_gib: z.int().gte(10).lte(65536).optional().default(100),
     storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
-    storage_certificate: z.string().max(65536).nullish()
+    storage_certificate: z.string().max(65536).nullish(),
+    bucket_size_bytes: z.int().gte(1024).lte(70368744177664),
+    bucket_max_objects: z.int().gte(1).lte(2147483647),
+    storage_reserve_percent: z.int().gte(1).lte(99),
+    storage_object_overhead_bytes: z.int().gte(4096).lte(1073741824)
 });
 
 /**
@@ -220,7 +224,6 @@ export const zOrganizationMemberUpdate = z.object({
  * Report current logical object bytes for one organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
-    bucket_name: z.string(),
     space_used: z.int().gte(0)
 });
 
@@ -333,9 +336,6 @@ export const zSolutionUpdate = z.object({
  * Expose a candidate and configured names, never environment values.
  */
 export const zSolutionUpdateCheck = z.object({
-    source: z.string(),
-    image: z.string(),
-    available: z.boolean(),
     min_scale: z.union([z.literal(0), z.literal(1)]),
     revision_id: z.uuid(),
     current_image: z.string(),
@@ -370,6 +370,10 @@ export const zComputeRegistryResponse = z.object({
     storage_endpoint: z.string(),
     storage_size_gib: z.int(),
     storage_instances: z.int(),
+    bucket_size_bytes: z.int(),
+    bucket_max_objects: z.int(),
+    storage_reserve_percent: z.int(),
+    storage_object_overhead_bytes: z.int(),
     status: zStatus
 });
 
@@ -727,15 +731,6 @@ export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeletePath = z.object(
  */
 export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = z.void();
 
-export const zGetComputeRegistryApiV1ComputesRegistryIdGetPath = z.object({
-    registry_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetComputeRegistryApiV1ComputesRegistryIdGetResponse = zComputeRegistryResponse;
-
 /**
  * Response Healthz Api V1 Healthz Get
  *
@@ -834,24 +829,6 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  * Successful Response
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationSummary;
-
-export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zResumeOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseResumePostResponse = zDatabaseState;
-
-export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zHibernateOrganizationDatabaseApiV1OrganizationsOrganizationIdDatabaseHibernatePostResponse = zDatabaseState;
 
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()

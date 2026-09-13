@@ -14,7 +14,7 @@ from src.database.models.organizations import Organization
 
 
 async def test_ensure_administrator_creates_absent_configured_user() -> None:
-    """Create the configured administrator when it is absent."""
+    """Create the configured administrator and preserve its ID and credential hash on repeated reconciliation."""
 
     # Arrange
     password_hash = PasswordHash.recommended()
@@ -27,12 +27,27 @@ async def test_ensure_administrator_creates_absent_configured_user() -> None:
     # Assert
     async with session_scope() as session:
         result = await session.scalars(select(User).where(col(User.administrator).is_(True)))
-        administrators = result.all()
-    assert len(administrators) == 1
-    assert administrators[0].name == env.ADMIN_NAME
-    assert administrators[0].email == env.ADMIN_EMAIL
-    assert password_hash.verify(env.ADMIN_PASSWORD, administrators[0].password)
-    assert administrators[0].deleted_at is None
+        administrator = result.one()
+    assert administrator.name == env.ADMIN_NAME
+    assert administrator.email == env.ADMIN_EMAIL
+    assert password_hash.verify(env.ADMIN_PASSWORD, administrator.password)
+    assert administrator.deleted_at is None
+
+    # Arrange
+    administrator_id = administrator.id
+    administrator_password = administrator.password
+
+    # Act
+    async with session_scope() as session:
+        await user_service.ensure_administrator(session)
+        await session.commit()
+
+    # Assert
+    async with session_scope() as session:
+        result = await session.scalars(select(User).where(col(User.administrator).is_(True)))
+        persisted_administrator = result.one()
+    assert persisted_administrator.id == administrator_id
+    assert persisted_administrator.password == administrator_password
 
 
 async def test_ensure_administrator_restores_soft_deleted_configured_user(password_hash: str) -> None:
@@ -188,7 +203,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
 async def test_user_service_registers_user_and_returns_active_organization_memberships(
     users: tuple[User, User, User],
 ) -> None:
-    """Persist registrations and exclude deleted memberships and organizations."""
+    """Persist registrations and exclude deleted organizations from memberships."""
 
     # Arrange
     password_hash = PasswordHash.recommended()
@@ -206,7 +221,6 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     async with session_scope() as session:
         persisted_user = await session.get(User, registered.id)
         memberships = await user_service.memberships(session, member.id)
-        organization_ids = await user_service.organization_ids(session, member.id)
 
     # Assert
     assert registered.id is not None
@@ -214,4 +228,3 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     assert persisted_user.email == "registered@example.com"
     assert password_hash.verify("test-password", persisted_user.password)
     assert [membership.organization_id for membership in memberships] == [active_organization.id]
-    assert list(organization_ids) == [active_organization.id]

@@ -11,13 +11,18 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useOrganizationSolutions } from '@/lib/hooks/use-organization';
+import { useOrganizationRoute } from '@/lib/hooks/use-organization';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const { solutions, isLoading, error } = useOrganizationSolutions(organization);
+    const { solutions, isMembershipLoading, isSolutionsLoading, membershipError, solutionsError } =
+        useOrganizationRoute(organization);
+
+    // Preserve the page's loading state and solutions-first error precedence.
+    const isLoading = isMembershipLoading || isSolutionsLoading;
+    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const solutionAccess = solutions.find((item) => item.slug === solution);
     const pageMetadata = <NoIndex title="Solution | LongLink" />;
 
@@ -78,7 +83,6 @@ export default function OrganizationSolution() {
         <SolutionRuntime
             navigationBaseUrl={`/orgs/${organization}/solutions/${solution}`}
             viewsUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/views.json`}
-            requestBaseUrl={`/api/v1/solutions/${solutionAccess.id}/proxy/`}
         >
             {({ content, tabs, title }) => (
                 <Platform action={action} breadcrumb={breadcrumb} tabs={tabs}>

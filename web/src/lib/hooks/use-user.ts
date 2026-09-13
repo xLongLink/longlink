@@ -1,10 +1,7 @@
 import { api } from '@/lib/api';
-import { createContext, useContext } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
+import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-
-export const AuthenticatedUserContext = createContext<UserSummary | null>(null);
 
 /** Updates the current profile and publishes the saved user to the cache. */
 export function useUpdateUser() {
@@ -33,8 +30,8 @@ export function useCurrentUser() {
 
 /** Reads the user guaranteed by the authenticated route boundary. */
 export function useAuthenticatedUser() {
-    const user = useContext(AuthenticatedUserContext);
-    if (user === null) {
+    const { data: user } = useQuery<UserSummary>({ queryKey: ['api', '/api/v1/me'], queryFn: skipToken });
+    if (user === undefined) {
         throw new Error('useAuthenticatedUser must be used within an authenticated route');
     }
 
@@ -52,12 +49,10 @@ export function useUserOrganizations() {
 
 /** Provides an action that ends the current user session. */
 export function useSignOut() {
-    const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
         onSuccess: () => {
-            queryClient.clear();
+            // A full navigation disposes the query cache without exposing a transient unauthenticated render.
             window.location.assign('/user/organizations');
         },
     });

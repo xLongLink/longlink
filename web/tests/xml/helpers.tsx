@@ -1,10 +1,26 @@
 import * as xml from '@/xml';
 import { ApiProvider } from '@/providers';
-import { createContext } from '@/xml/core/context';
+import * as context from '@/xml/core/context';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { compileAttribute } from '@/xml/expressions/compile';
 import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
+
+/** Creates a complete XML runtime with inert host services for tests. */
+export function createContext(options: Partial<context.CreateContextOptions> = {}): XmlRuntime {
+    return context.createContext({
+        navigate: () => {},
+        navigationBaseUrl: '',
+        params: {},
+        requestBaseUrl: '',
+        ...options,
+    });
+}
+
+/** Parses fragment fixtures through the document parser and returns their children. */
+export function parseFragment(fragment: string): ASTNode[] {
+    return xml.parseXML(`<longlink>${fragment}</longlink>`).children;
+}
 
 /** Compiles string fixture attributes through the same document compiler rules. */
 export function compileProps(props: Record<string, string>): ASTProps {

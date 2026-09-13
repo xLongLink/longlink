@@ -123,11 +123,13 @@ async def identity(provider: OAuthProvider, code: str, verifier: str) -> OAuthId
                 GITHUB_USER_URL,
                 headers=github_headers,
             )
+            if not profile_response.is_success:
+                return None
             emails_response = await client.get(
                 GITHUB_EMAILS_URL,
                 headers=github_headers,
             )
-            if not profile_response.is_success or not emails_response.is_success:
+            if not emails_response.is_success:
                 return None
             return _github_identity(profile_response.json(), emails_response.json())
     except (httpx2.HTTPError, TypeError, ValueError):

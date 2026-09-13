@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID, uuid4
 from conftest import DatabasePostgres, StorageKubernetes
 from datetime import UTC, datetime
-from factories import create_solution, create_organization, create_ready_infrastructure
+from factories import create_solution, create_organization, create_ready_compute
 from src.operations import organizations as organization_operations
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -19,8 +19,8 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     """Reconcile every Organization boundary before publishing the Organization."""
 
     # Arrange an unpublished Organization with ready immutable infrastructure.
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
     class Database(DatabasePostgres):
@@ -33,11 +33,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def bucket(self, organization: UUID, compute: object, *, create: bool = False):
+        async def bucket(self, organization: UUID, compute: object):
             """Record bucket creation."""
 
             calls.append("storage")
-            return await super().bucket(organization, compute, create=create)
+            return await super().bucket(organization, compute)
 
     class Organizations:
         async def apply(self, namespace: str) -> None:
@@ -83,8 +83,8 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
     """Keep an Organization unpublished when its user projection fails."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
     class Database(DatabasePostgres):
@@ -93,16 +93,6 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
 
             assert organization_id == organization.id
             calls.append("database")
-
-    class Storage(StorageKubernetes):
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def create(self, bucket: str) -> None:
-            """Record bucket creation."""
-
-            assert bucket == organization.id.hex
-            calls.append("storage")
 
     class Organizations:
         async def apply(self, namespace: str) -> None:
@@ -116,7 +106,7 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
-            self.storage = Storage()
+            self.storage = StorageKubernetes()
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -171,8 +161,8 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
     """Avoid provider work after an Organization has been tombstoned."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -204,8 +194,8 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
     """Reject cleanup for an active Organization before constructing providers."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
     class Provider:
@@ -247,8 +237,8 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     """Keep provider data intact when Kubernetes namespace deletion fails."""
 
     # Arrange a tombstoned Organization whose namespace cannot terminate.
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None
@@ -268,11 +258,6 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     class Storage:
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
-
-        async def revoke_solution(self, name: str) -> None:
-            """Record unexpected credential revocation."""
-
-            calls.append("revoke")
 
         async def delete(self, bucket: str) -> None:
             """Record unexpected bucket deletion."""
@@ -308,10 +293,10 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     """Delete the namespace, database and roles, storage, then the Organization tombstone."""
 
     # Arrange a tombstoned Organization and an active sibling on the same infrastructure.
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(organization)
-    sibling_organization = await create_organization(users[1], name="sibling", infrastructure=infrastructure)
+    sibling_organization = await create_organization(users[1], name="sibling", compute=compute)
     sibling_solution = await create_solution(sibling_organization)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
@@ -333,12 +318,6 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     class Storage:
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
-
-        async def revoke_solution(self, name: str) -> None:
-            """Record Solution credential revocation."""
-
-            assert name == solution.id.hex
-            calls.append("revoke")
 
         async def delete(self, organization_id: UUID, compute: object) -> None:
             """Record Organization bucket and identity deletion."""

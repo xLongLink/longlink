@@ -1,11 +1,11 @@
 from uuid import UUID, uuid4
 from sqlalchemy import select
-from dataclasses import dataclass
 from collections.abc import Sequence
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import solutions, operations, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -13,13 +13,6 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
-
-
-@dataclass(frozen=True, slots=True)
-class Infrastructure:
-    """Hold one test compute and storage registry assignment."""
-
-    compute: ComputeRegistry
 
 
 async def queue_operation(*, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
@@ -74,6 +67,11 @@ async def create_compute() -> ComputeRegistry:
     async with session_scope() as session:
         compute = ComputeRegistry(
             name="Local compute",
+            cluster_uid="local-cluster",
+            bucket_size_bytes=1073741824,
+            bucket_max_objects=10000,
+            storage_reserve_percent=30,
+            storage_object_overhead_bytes=65536,
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
             storage_class="block-storage",
@@ -85,14 +83,19 @@ async def create_compute() -> ComputeRegistry:
         return compute
 
 
-async def create_ready_infrastructure() -> Infrastructure:
-    """Create independent registries with a ready compute target and no provider side effects."""
+async def create_ready_compute() -> ComputeRegistry:
+    """Create a ready Compute registry without provider side effects."""
 
     # Test setup persists the exact assignable registry shape while avoiding provider side effects.
     async with session_scope() as session:
         suffix = uuid4().hex[:8]
         compute = ComputeRegistry(
             name=f"Local testing compute {suffix}",
+            cluster_uid=f"local-testing-cluster-{suffix}",
+            bucket_size_bytes=1073741824,
+            bucket_max_objects=10000,
+            storage_reserve_percent=30,
+            storage_object_overhead_bytes=65536,
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
@@ -102,25 +105,25 @@ async def create_ready_infrastructure() -> Infrastructure:
         )
         session.add(compute)
         await session.commit()
-        return Infrastructure(compute=compute)
+        return compute
 
 
 async def create_organization(
     owner: User,
     name: str = "acme",
-    infrastructure: Infrastructure | None = None,
+    compute: ComputeRegistry | None = None,
 ) -> Organization:
-    """Create one Organization with the specified or independent ready infrastructure."""
+    """Create one Organization with the specified or independent ready Compute registry."""
 
-    if infrastructure is None:
-        infrastructure = await create_ready_infrastructure()
+    if compute is None:
+        compute = await create_ready_compute()
 
     async with session_scope() as session:
         organization = await organizations.create(
             session,
             name,
             owner,
-            compute_id=infrastructure.compute.id,
+            compute_id=compute.id,
         )
         await session.commit()
         return organization
@@ -143,8 +146,11 @@ async def create_solution(
         solution = await solutions.create(
             session,
             organization.id,
-            name,
-            secrets={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
+            SolutionCreate(
+                name=name,
+                image=resolved_image,
+                envs={name: value for name, value in (secrets or {}).items() if not name.startswith("LONGLINK_")},
+            ),
             user_id=organization.created_id,
             metadata=LongLinkMetadata(image=resolved_image),
         )

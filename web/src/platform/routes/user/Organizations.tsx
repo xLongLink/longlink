@@ -3,14 +3,13 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { OrganizationCell } from '@/components/Cells';
-import { proportional } from '@astryxdesign/core/Table';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { PageContainer } from '@/components/PageContainer';
-import { Table, TableColumn } from '@/components/ui/Table';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useUserOrganizations } from '@/lib/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { UserOrganizationMembership } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Renders the organizations landing page for the authenticated user. */
@@ -61,16 +60,22 @@ export default function Organizations() {
                 emptyState={<EmptyState title="No results." isCompact />}
                 hasHover
                 idKey={(membership) => membership.organization.id}
-            >
-                <TableColumn<UserOrganizationMembership> field="name" header="Name" width={proportional(1)}>
-                    {(membership) => (
-                        <OrganizationCell
-                            endContent={<StatusBadge status={membership.organization.status} />}
-                            organization={membership.organization}
-                        />
-                    )}
-                </TableColumn>
-            </Table>
+                columns={
+                    [
+                        {
+                            key: 'name',
+                            header: 'Name',
+                            width: proportional(1),
+                            renderCell: (membership) => (
+                                <OrganizationCell
+                                    endContent={<StatusBadge status={membership.organization.status} />}
+                                    organization={membership.organization}
+                                />
+                            ),
+                        },
+                    ] satisfies TableColumn<UserOrganizationMembership>[]
+                }
+            />
         </PageContainer>
     );
 }

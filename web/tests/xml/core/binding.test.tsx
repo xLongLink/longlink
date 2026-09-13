@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { createContext } from '@/xml/core/context';
 import userEvent from '@testing-library/user-event';
+import { createContext, RenderXML } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('useBindableValue', () => {
@@ -26,7 +25,7 @@ describe('useBindableValue', () => {
         const ctx = createContext();
         const ast = parseXML(
             '<longlink><State id="form" value="first" /><TextInput label="Name" value="form.value" /></longlink>'
-        )[0];
+        );
         container = document.createElement('div');
         root = createRoot(container);
 
@@ -54,7 +53,7 @@ describe('useBindableValue', () => {
         const ctx = createContext();
         const ast = parseXML(
             '<longlink><State id="form" value="first" /><TextInput label="Name" value="$form.value" /></longlink>'
-        )[0];
+        );
         container = document.createElement('div');
         document.body.append(container);
         root = createRoot(container);
@@ -84,7 +83,7 @@ describe('useBindableValue', () => {
         const ctx = createContext();
         const ast = parseXML(
             '<longlink><State id="form" value="first" /><TextInput label="Name" value="$form.__proto__" /></longlink>'
-        )[0];
+        );
         container = document.createElement('div');
         root = createRoot(container);
 
@@ -99,7 +98,7 @@ describe('useBindableValue', () => {
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {
         const ctx = createContext();
-        const ast = parseXML('<longlink><Query id="records" path="/records" /><Text>Loaded child</Text></longlink>')[0];
+        const ast = parseXML('<longlink><Query id="records" path="/records" /><Text>Loaded child</Text></longlink>');
         const output = document.createElement('div');
         container = output;
         root = createRoot(output);
@@ -119,7 +118,7 @@ describe('useBindableValue', () => {
     it('rejects an invalid Query setup before fetching', async () => {
         // Arrange
         const ctx = createContext();
-        const ast = parseXML('<longlink><Query id="records" /></longlink>')[0];
+        const ast = parseXML('<longlink><Query id="records" /></longlink>');
         const fetchImpl = vi.fn();
         container = document.createElement('div');
         root = createRoot(container);

@@ -18,7 +18,15 @@ class Postgres:
     """
 
     def __init__(
-        self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode, certificate: str | None = None
+        self,
+        host: str,
+        port: int,
+        username: str,
+        password: str,
+        sslmode: DatabaseSSLMode,
+        certificate: str | None = None,
+        *,
+        hostaddr: str | None = None,
     ) -> None:
         """Configure organization SQL provisioning.
 
@@ -29,11 +37,13 @@ class Postgres:
             password: PostgreSQL password.
             sslmode: PostgreSQL SSL mode.
             certificate: PEM CA certificate; when supplied, require certificate and hostname verification.
+            hostaddr: Optional transport IP; host remains the PostgreSQL TLS identity.
         """
 
         # Store organization cluster connection settings.
         self._host = host
         self._port = port
+        self._hostaddr = hostaddr
         self._username = username
         self._password = password
         self._sslmode = sslmode
@@ -46,6 +56,10 @@ class Postgres:
         # Configure PostgreSQL driver options before creating the structured URL.
         sslmode = "verify-full" if self._certificate is not None else self._sslmode.value
         query = {"sslmode": sslmode, "options": "-c timezone=UTC"}
+
+        # A tunnel changes only the transport address, preserving hostname verification.
+        if self._hostaddr is not None:
+            query["hostaddr"] = self._hostaddr
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:
@@ -83,6 +97,7 @@ class Postgres:
         database: str,
         *,
         autocommit: bool = False,
+        search_path: str | None = None,
     ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
@@ -90,7 +105,7 @@ class Postgres:
         """
 
         # Build a short-lived engine with autocommit only for PostgreSQL database lifecycle statements.
-        with self.url(database) as url:
+        with self.url(database, search_path=search_path) as url:
             engine = create_async_engine(
                 url,
                 **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),

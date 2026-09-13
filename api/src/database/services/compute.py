@@ -5,6 +5,7 @@ from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
+from src.models.computes import ComputeRegistryCreate
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +32,10 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_size_gib,
                 ComputeRegistry.storage_instances,
+                ComputeRegistry.bucket_size_bytes,
+                ComputeRegistry.bucket_max_objects,
+                ComputeRegistry.storage_reserve_percent,
+                ComputeRegistry.storage_object_overhead_bytes,
                 ComputeRegistry.status,
             )
         )
@@ -45,42 +50,17 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(
-    session: AsyncSession,
-    name: str,
-    kubeconfig: dict[str, object],
-    *,
-    gateway_url: str,
-    database_storage_class: str,
-    storage_class: str,
-    storage_endpoint: str,
-    storage_size_gib: int = 100,
-    storage_instances: int = 3,
-    storage_certificate: str | None = None,
-    gateway_certificate: str | None = None,
-    database_size_gib: int = 10,
-    database_instances: int = 1,
-) -> ComputeRegistry:
+async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_uid: str) -> ComputeRegistry:
     """Register one compute target."""
 
     # Persist the target and its initial reconciliation request atomically.
     registry = ComputeRegistry(
-        name=name,
-        kubeconfig=kubeconfig,
-        gateway_url=gateway_url,
-        gateway_certificate=gateway_certificate,
-        database_storage_class=database_storage_class,
-        database_size_gib=database_size_gib,
-        database_instances=database_instances,
-        storage_class=storage_class,
-        storage_endpoint=storage_endpoint,
-        storage_size_gib=storage_size_gib,
-        storage_instances=storage_instances,
-        storage_certificate=storage_certificate,
+        **payload.model_dump(),
+        cluster_uid=cluster_uid,
     )
     session.add(registry)
 
-    # Translate unique registry names to one stable API conflict.
+    # Translate duplicate names or physical clusters to one stable API conflict.
     try:
         session.add(Operation(kind=OperationKind.compute_create, target_id=registry.id))
         await session.flush()

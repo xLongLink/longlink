@@ -53,8 +53,41 @@ async def test_update_history_and_explicit_rollback(
     assert "revision-secret" not in history.text and '"envs"' not in history.text
     assert history.json()[0]["image"] == "ghcr.io/longlink/dashboard@sha256:resolved"
     assert (await clients[1].get(f"{url}/revisions")).status_code == 403
-    assert (await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")).status_code == 404
-    assert (await clients[0].post(f"{url}/revisions/{initial_id}/rollback")).status_code == 409
+
+    # Arrange: Snapshot desired revisions and queued work before rejected rollbacks.
+    desired_revisions_query = (
+        select(Solution.id, Solution.desired_revision_id).where(col(Solution.organization_id) == organization.id).order_by(Solution.id)
+    )
+    operations_query = select(Operation.__table__).order_by(Operation.id)
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        desired_revisions_before = desired_revisions_result.all()
+        operations_result = await session.execute(operations_query)
+        operations_before = operations_result.all()
+
+    # Act
+    foreign_revision_response = await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")
+
+    # Assert
+    assert foreign_revision_response.status_code == 404
+    assert foreign_revision_response.json() == {"detail": "Revision not found"}
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        assert desired_revisions_result.all() == desired_revisions_before
+        operations_result = await session.execute(operations_query)
+        assert operations_result.all() == operations_before
+
+    # Act
+    undeployed_revision_response = await clients[0].post(f"{url}/revisions/{initial_id}/rollback")
+
+    # Assert
+    assert undeployed_revision_response.status_code == 409
+    assert undeployed_revision_response.json() == {"detail": "Revision has never been deployed successfully"}
+    async with session_scope() as session:
+        desired_revisions_result = await session.execute(desired_revisions_query)
+        assert desired_revisions_result.all() == desired_revisions_before
+        operations_result = await session.execute(operations_query)
+        assert operations_result.all() == operations_before
 
     # Arrange: Mark setup deployments complete so operation completion does not requeue them.
     async with session_scope() as session:
@@ -132,7 +165,6 @@ async def test_revision_references_require_same_solution(users: tuple[User, User
         ("solution_id", uuid4()),
         ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
         ("source", "ghcr.io/longlink/dashboard:replacement"),
-        ("image_metadata", {"description": "replacement"}),
         ("envs", {"KEY": "replacement"}),
         ("created_at", utcnow()),
         ("created_id", uuid4()),
@@ -186,10 +218,11 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert (await clients[0].put(url, json={"image": source, "expected_revision_id": str(uuid4())})).status_code == 409
     assert inspected == []
     check = await clients[0].get(f"{url}/update")
-    assert check.status_code == 200 and check.json()["available"] is False
-    assert check.json()["source"] == source
-    assert check.json()["current_image"] == check.json()["image"] == resolved.image
-    assert check.json()["configured_envs"] == ["DROP", "KEEP"]
+    assert check.status_code == 200
+    check_payload = check.json()
+    assert check_payload["current_image"] == check_payload["metadata"]["image"] == resolved.image
+    assert {"source", "image", "available"}.isdisjoint(check_payload)
+    assert check_payload["configured_envs"] == ["DROP", "KEEP"]
     assert "private-value" not in check.text
     assert check.json()["min_scale"] == 0
     assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "private-value"}})).status_code == 409
@@ -201,9 +234,8 @@ async def test_source_update_preserves_patches_and_reresolves(
     # A review is advisory: submission re-resolves a moved tag and enforces its new requirements.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
     check = await clients[0].get(f"{url}/update")
-    assert check.json()["available"] is True
     assert check.json()["current_image"] == "ghcr.io/longlink/dashboard@sha256:first"
-    assert check.json()["image"] == resolved.image
+    assert check.json()["metadata"]["image"] == resolved.image
     resolved = LongLinkMetadata(
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
@@ -230,7 +262,7 @@ async def test_source_update_preserves_patches_and_reresolves(
     digest = str(resolved.image)
     assert (await clients[0].put(url, json={"image": digest, "envs": {"NEW": "replacement"}})).status_code == 204
     check = await clients[0].get(f"{url}/update")
-    assert check.json()["source"] == digest and check.json()["available"] is False
+    assert check.json()["current_image"] == check.json()["metadata"]["image"] == digest
     assert check.json()["min_scale"] == 1
     assert inspected[-1] == digest
     assert (await clients[0].post(f"{url}/update", json={"min_scale": 0})).status_code == 204
@@ -372,8 +404,8 @@ async def test_local_registry_release_roundtrip(
     url = f"/api/v1/solutions/{solution_id}"
     check = await clients[0].get(f"{url}/update")
     assert check.status_code == 200
-    assert check.json()["source"] == source and check.json()["image"] == metadata.image
-    assert check.json()["available"] is False
+    assert check.json()["current_image"] == check.json()["metadata"]["image"] == metadata.image
+    assert {"source", "image", "available"}.isdisjoint(check.json())
     assert "integration-value" not in check.text
     assert (await clients[0].post(f"{url}/update", json={})).status_code == 409
     assert (await clients[0].put(url, json={"image": source, "envs": {"EXTRA": "replacement"}})).status_code == 204

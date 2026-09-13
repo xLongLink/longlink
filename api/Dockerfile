@@ -4,7 +4,6 @@ WORKDIR /repo/web
 COPY --chown=vp:vp web/package.json web/bun.lock ./
 RUN vp install --frozen-lockfile
 COPY --chown=vp:vp web/ ./
-COPY --chown=vp:vp api/ /repo/api/
 COPY --chown=vp:vp sdk/ /repo/sdk/
 ARG VERSION=v0.0.0
 ENV VERSION=${VERSION}
@@ -29,11 +28,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.32@sha256:df4cae8f3a96d175e2e5f992e5975500
 
 COPY api/pyproject.toml api/uv.lock /app/
 COPY sdk/pyproject.toml sdk/README.md sdk/LICENSE /sdk/
-RUN --mount=type=cache,target=/root/.cache/uv apt-get update \
-    && apt-get install --no-install-recommends --yes git \
-    && uv sync --frozen --no-dev --no-editable --no-install-local --no-install-project \
-    && apt-get purge --auto-remove --yes git \
-    && rm -rf /var/lib/apt/lists/* \
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-editable --no-install-local --no-install-project \
     && groupadd --system --gid 10001 longlink \
     && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink
 COPY sdk/ /sdk/
