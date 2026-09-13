@@ -69,3 +69,7 @@ async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     # Open one session for the caller's scoped work.
     async with session_factory() as session:
         yield session
+
+
+# Register audit listeners after the Platform audit models are available.
+from src.database import audit  # noqa: F401

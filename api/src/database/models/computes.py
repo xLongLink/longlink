@@ -5,10 +5,10 @@ from sqlalchemy import Enum, Text, Column, BigInteger
 from src.environments import env
 from src.database.types import EncryptedType
 from src.models.statuses import Status
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable
 
 
-class ComputeRegistry(PlatformModel, table=True):
+class ComputeRegistry(AuditTable, table=True):
     """Persist one Compute target and its Kourier and CNPG configuration.
 
     The kubeconfig manages Kubernetes resources while the Gateway exposes only Platform-authenticated Solution traffic.

@@ -15,6 +15,7 @@ import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types'
 import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
+const VALIDATE_ALLOWED_PROPS = new Set(['rules', 'value']);
 
 const requestPropsSchema = z.object({
     url: xmlNonblankStringSchema,
@@ -75,7 +76,7 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
     let control: ASTNode | undefined;
 
     for (const node of nodes) {
-        if (node.name === 'Request' || node.name === 'Patch') {
+        if (node.name === 'Request' || node.name === 'Patch' || node.name === 'Validate') {
             if (control) {
                 throw new Error('Action effects must precede its Button or Link trigger');
             }
@@ -83,7 +84,12 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
                 throw new Error(`${node.name} cannot have children`);
             }
 
-            const allowedProps = node.name === 'Request' ? REQUEST_ALLOWED_PROPS : PATCH_ALLOWED_PROPS;
+            const allowedProps =
+                node.name === 'Request'
+                    ? REQUEST_ALLOWED_PROPS
+                    : node.name === 'Patch'
+                      ? PATCH_ALLOWED_PROPS
+                      : VALIDATE_ALLOWED_PROPS;
             for (const name of Object.keys(node.params)) {
                 if (!allowedProps.has(name)) {
                     throw new Error(`${node.name} does not support ${name}`);
@@ -131,7 +137,12 @@ async function executeAction(
             continue;
         }
 
-        await executePatch(step.params, ctx, services);
+        if (step.name === 'Patch') {
+            await executePatch(step.params, ctx, services);
+            continue;
+        }
+
+        validateActionValue(step.params, ctx);
     }
 
     const { to, href } = resolveXmlProps(plan.control.params, ctx, navigationPropsSchema);
@@ -152,6 +163,70 @@ async function executeAction(
 
     if (status !== undefined) {
         toast({ body: `Request completed with status ${status}` });
+    }
+}
+
+/** Validates and normalizes a declarative object before the following request runs. */
+function validateActionValue(props: ASTProps, ctx: Scope): void {
+    const value = evaluate(readXmlProp(props, 'value') ?? { kind: 'text', value: '' }, ctx);
+    const rules = evaluate(readXmlProp(props, 'rules') ?? { kind: 'text', value: '' }, ctx);
+
+    if (
+        value == null ||
+        typeof value !== 'object' ||
+        Array.isArray(value) ||
+        rules == null ||
+        typeof rules !== 'object'
+    ) {
+        throw new Error('Validate requires object value and rules');
+    }
+
+    for (const [key, rawRule] of Object.entries(rules)) {
+        const rule = rawRule as Record<string, unknown>;
+        const record = value as Record<string, unknown>;
+        let entry = record[key];
+
+        if (rule.type === 'string') {
+            if (typeof entry !== 'string') throw new Error(`${key} must be text`);
+            const text = rule.trim === true ? entry.trim() : entry;
+            entry = rule.nullable === true && text === '' ? null : text;
+            if (text !== '' || entry !== null) {
+                if (typeof rule.minLength === 'number' && text.length < rule.minLength)
+                    throw new Error(`${key} is too short`);
+                if (typeof rule.maxLength === 'number' && text.length > rule.maxLength)
+                    throw new Error(`${key} is too long`);
+                if (typeof rule.pattern === 'string' && !new RegExp(rule.pattern).test(text))
+                    throw new Error(`${key} has an invalid format`);
+                if (rule.format === 'https-url' || rule.format === 'https-origin') {
+                    let url: URL;
+                    try {
+                        url = new URL(text);
+                    } catch {
+                        throw new Error(`${key} must be an HTTPS URL`);
+                    }
+                    if (
+                        url.protocol !== 'https:' ||
+                        (rule.format === 'https-origin' &&
+                            (url.username || url.password || url.pathname !== '/' || url.search || url.hash))
+                    ) {
+                        throw new Error(`${key} must be an HTTPS origin`);
+                    }
+                }
+            }
+            record[key] = entry;
+            continue;
+        }
+
+        if (rule.type === 'number') {
+            if (typeof entry !== 'number' || !Number.isFinite(entry)) throw new Error(`${key} must be a number`);
+            if (rule.integer === true && !Number.isInteger(entry)) throw new Error(`${key} must be an integer`);
+            if (typeof rule.min === 'number' && entry < rule.min) throw new Error(`${key} is below the minimum`);
+            if (typeof rule.max === 'number' && entry > rule.max) throw new Error(`${key} is above the maximum`);
+            if (typeof rule.multipleOf === 'number' && entry % rule.multipleOf !== 0)
+                throw new Error(`${key} must use the required increment`);
+            if (typeof rule.oneOf === 'string' && !rule.oneOf.split(',').map(Number).includes(entry))
+                throw new Error(`${key} is not an allowed value`);
+        }
     }
 }
 

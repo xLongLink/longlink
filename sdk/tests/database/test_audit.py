@@ -48,11 +48,11 @@ def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
         metadata.remove(metadata.tables[table_name])
 
 
-async def test_audit_hook_persists_fields_and_converts_soft_deletes(
+async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
     audit_model_cleanup: Callable[[str], None],
     _audit_engine: database_base.Database,
 ) -> None:
-    """Persist audit fields and convert a real AsyncSession delete into a soft delete."""
+    """Persist audit fields while retaining explicit soft and ordinary hard deletes."""
 
     # Define one isolated mapped table for the real SQLite lifecycle.
     class AuditLifecycleItem(database_base.AuditTable, table=True):
@@ -113,14 +113,14 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             item.deleted_at = soft_deleted_at
             await session.commit()
 
-        # Assert the explicit soft delete before hard-delete conversion overwrites it.
+        # Assert the explicit soft-delete audit fields.
         assert item.updated_at is not None
         assert item.deleted_at == soft_deleted_at
         assert item.updated_id == soft_deleter_id
         assert item.deleted_id == soft_deleter_id
         assert item.updated_at >= updated_at
 
-    # Delete the reloaded row and commit the listener's soft-delete conversion.
+    # Delete the reloaded row through the ordinary hard-delete lifecycle.
     async with _audit_engine.session() as session:
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
@@ -129,13 +129,9 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(
             await session.delete(item)
             await session.commit()
 
-    # Reload after deletion to prove the row remains as a soft-deleted record.
+    # Reload after deletion to prove the row was removed.
     async with _audit_engine.session() as session:
-        item = await session.get(AuditLifecycleItem, item_id)
-        assert item is not None
-        assert item.deleted_at is not None
-        assert item.deleted_at.tzinfo is UTC
-        assert item.deleted_id == deleter_id
+        assert await session.get(AuditLifecycleItem, item_id) is None
 
 
 async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(

@@ -7,17 +7,16 @@ from sqlalchemy.orm import Mapper
 from src.environments import env
 from sqlalchemy.engine import Connection
 from src.database.types import EncryptedType
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable, TombstoneAuditTable
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.organizations import Organization
 
 
-class Solution(PlatformModel, table=True):
+class Solution(TombstoneAuditTable, table=True):
     """Persist desired and observed runtime state for one Organization-owned LongLink Solution.
 
     A deletion tombstone remains until reconciliation removes the Solution's external resources.
@@ -61,11 +60,6 @@ class Solution(PlatformModel, table=True):
         ),
     )
 
-    # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
-    updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
-    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
-
     # Relationships
     organization: "Organization" = Relationship()
     desired_revision: "Revision" = Relationship(
@@ -103,7 +97,7 @@ class Solution(PlatformModel, table=True):
         return self.desired_revision_id != self.deployed_revision_id and not self.desired_revision.failed
 
 
-class Revision(PlatformModel, table=True):
+class Revision(AuditTable, table=True):
     """Retain an immutable release snapshot and its observed deployment outcome."""
 
     __tablename__: ClassVar[str] = "revisions"
@@ -116,9 +110,6 @@ class Revision(PlatformModel, table=True):
     source: str = Field(max_length=512)
     min_scale: Literal[0, 1] = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
-    created_id: UUID | None = Field(default=None, foreign_key="users.id")
-
     # Observed state does not modify the snapshot.
     failed: bool = Field(default=False)
     deployed_at: datetime | None = Field(default=None, sa_type=UTCDateTime)

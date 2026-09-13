@@ -33,4 +33,6 @@
   <xsd:include schemaLocation="adapters/Dialog.xsd" />
   <xsd:include schemaLocation="adapters/TabList.xsd" />
   <xsd:include schemaLocation="adapters/Table.xsd" />
+  <xsd:include schemaLocation="adapters/CodeBlock.xsd" />
+  <xsd:include schemaLocation="adapters/StatusBadge.xsd" />
 </xsd:schema>

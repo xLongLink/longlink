@@ -28,6 +28,8 @@ import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
 import { Bold, Italic, Text } from '../adapters/Text';
 import { CheckboxInput } from '../adapters/CheckboxInput';
+import { CodeBlock } from '../adapters/CodeBlock';
+import { StatusBadge } from '../adapters/StatusBadge';
 
 /** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
@@ -38,6 +40,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Button,
     Card,
     CheckboxInput,
+    CodeBlock,
     Dialog,
     Divider,
     FileInput,
@@ -55,6 +58,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Slider,
     Stack,
     StackItem,
+    StatusBadge,
     Switch,
     Tabs,
     Table,

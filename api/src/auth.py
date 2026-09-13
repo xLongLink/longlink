@@ -3,6 +3,7 @@ import hmac
 from uuid import UUID
 from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import token
+from src.database import audit as database_audit
 from src.database import session as database
 from collections.abc import AsyncIterator
 from src.database.services import users as user_service
@@ -24,7 +25,7 @@ async def authuser(
     request: Request,
     credential: str | None = Cookie(default=None, alias="longlink_auth"),
     session: AsyncSession = Depends(get_session),
-) -> User:
+) -> AsyncIterator[User]:
     """Return the authenticated user with current LongLink resource access."""
 
     # Convert missing, expired, and invalidated sessions into one stable authentication error.
@@ -44,7 +45,10 @@ async def authuser(
 
     # Mark validated browser sessions so response middleware can prevent sensitive caching.
     request.state.authenticated = True
-    return user
+
+    # Keep the current user available to database audit hooks for the whole route lifecycle.
+    with database_audit.actor(user.id):
+        yield user
 
 
 def authadmin(user: User = Depends(authuser)) -> User:

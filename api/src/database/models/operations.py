@@ -7,10 +7,10 @@ from sqlalchemy import Enum, Index, Column
 from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable
 
 
-class Operation(PlatformModel, table=True):
+class Operation(AuditTable, table=True):
     """Persist one durable Platform request and its expiring worker lock."""
 
     __tablename__: ClassVar[str] = "operations"
@@ -49,7 +49,6 @@ class Operation(PlatformModel, table=True):
     lease_expires_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # Timestamps
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     finished_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     @property

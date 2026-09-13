@@ -223,7 +223,9 @@ async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> Non
     # Record the tombstone and schedule external cleanup in one transaction.
     now = utcnow()
     solution.deleted_at = now
+    solution.deleted_id = user_id
     solution.updated_at = now
+    solution.updated_id = user_id
 
     await operations.enqueue(
         session,

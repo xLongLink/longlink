@@ -566,7 +566,9 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     if organization.deleted_at is None:
         now = utcnow()
         organization.deleted_at = now
+        organization.deleted_id = user.id
         organization.updated_at = now
+        organization.updated_id = user.id
 
         # Tombstone every active Solution without loading each object.
         await session.execute(
@@ -575,7 +577,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
                 col(Solution.organization_id) == organization_id,
                 col(Solution.deleted_at).is_(None),
             )
-            .values(deleted_at=now, updated_at=now)
+            .values(deleted_at=now, deleted_id=user.id, updated_at=now, updated_id=user.id)
         )
 
         # Organization cleanup supersedes unleased Solution lifecycle work.

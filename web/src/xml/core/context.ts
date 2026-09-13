@@ -8,7 +8,7 @@ import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlRuntime } fro
 
 type SetupDeclaration =
     | { name: 'State'; id: string; params: ASTProps }
-    | { name: 'Query'; id: string; path: ASTAttribute };
+    | { name: 'Query'; id: string; params: ASTProps; path: ASTAttribute };
 
 export type CreateContextOptions = {
     navigate: RuntimeServices['navigate'];
@@ -110,7 +110,7 @@ function validateSetupNode(node: ASTNode): SetupDeclaration {
     // Keep Query declarations leaf-only.
     if (node.children.length > 0) throw new Error('Query cannot have children');
 
-    return { name: 'Query', id, path: node.params.path };
+    return { name: 'Query', id, params: node.params, path: node.params.path };
 }
 
 /** Resolves validated State and Query declarations before rendering the View tree. */
@@ -144,6 +144,13 @@ export async function setupContext(
         } else {
             // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
             const setup = async () => {
+                const active = node.params.if == null || Boolean(evaluate(node.params.if, scope));
+
+                // Deferred queries retain an empty value until their condition becomes true.
+                if (!active) {
+                    scope.bindings[id] = [];
+                    return;
+                }
                 const path = evaluate(node.path, scope);
 
                 // Query paths may interpolate route params, but must still resolve to a URL string.
@@ -151,12 +158,37 @@ export async function setupContext(
                     throw new Error('Query path must resolve to a string');
                 }
 
-                const url = resolveRequestUrl(services.requestBaseUrl, String(path));
+                const pageSize =
+                    node.params.pageSize == null ? undefined : Number(evaluate(node.params.pageSize, scope));
+                const page = node.params.page == null ? 1 : Number(evaluate(node.params.page, scope));
+                let url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
-                scope.bindings[id] = await api(url, { signal }).json();
+                // Paginated queries keep their response envelope so Table can control the current page.
+                if (pageSize !== undefined) {
+                    const request = new URL(
+                        url,
+                        typeof window === 'undefined' ? 'http://longlink.local' : window.location.origin
+                    );
+                    request.searchParams.set('page', String(page));
+                    request.searchParams.set('page_size', String(pageSize));
+                    url = request.pathname + request.search;
+                }
+
+                scope.bindings[id] = await api(url, {
+                    signal,
+                }).json();
             };
             services.setups[id] = setup;
             await setup();
+
+            const pollInterval =
+                node.params.pollInterval == null ? undefined : Number(evaluate(node.params.pollInterval, scope));
+            if (pollInterval !== undefined && Number.isFinite(pollInterval) && pollInterval > 0) {
+                const timer = window.setInterval(() => void services.invalidate(id), pollInterval);
+                signal?.addEventListener('abort', () => window.clearInterval(timer), {
+                    once: true,
+                });
+            }
         }
     }
 }

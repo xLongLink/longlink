@@ -57,15 +57,3 @@ def apply_audit_fields(session: SyncSession, _flush_context: object, _instances:
         # Record who performed pending soft deletes.
         if obj.deleted_at is not None and obj.deleted_id is None:
             obj.deleted_id = user_id
-
-    # Convert hard deletes into soft deletes.
-    for obj in session.deleted:
-        if not isinstance(obj, AuditTable):
-            continue
-
-        session.add(obj)
-
-        obj.deleted_at = now
-        obj.deleted_id = user_id
-        obj.updated_at = now
-        obj.updated_id = user_id
