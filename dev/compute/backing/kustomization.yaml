@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: longlink-development
+resources:
+    - namespace.yaml
+    - storageclass.yaml
+    - hostpath-provisioner.yml
+    - hostpath-attacher.yml
+    - hostpath-driver.yml
+    - hostpath-plugin.yml
+patches:
+    # Only the attacher and provisioner controllers run in this local deployment.
+    - target:
+          kind: ClusterRoleBinding
+          name: csi-hostpathplugin-(health-monitor-controller|resizer|snapshotter|snapshot-metadata)-cluster-role
+      patch: |-
+          $patch: delete
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: unused
+    - target:
+          kind: RoleBinding
+          name: csi-hostpathplugin-(health-monitor-controller|resizer|snapshotter)-role
+      patch: |-
+          $patch: delete
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: unused
+    - path: containers.yaml
+    # All retained bindings have one ServiceAccount subject in the local namespace.
+    - target:
+          kind: (ClusterRoleBinding|RoleBinding)
+      patch: |-
+          - op: add
+            path: /subjects/0/namespace
+            value: longlink-development

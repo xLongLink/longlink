@@ -45,7 +45,7 @@ jobs:
 
             - name: Lint API
               working-directory: api
-              run: uv run --locked ruff check . ../dev/setup.py
+              run: uv run --locked ruff check .
 
             - name: Render Compute package
               run: |
@@ -55,6 +55,8 @@ jobs:
                   done
                   kubectl kustomize dev/compute/operators/rook > /dev/null
                   kubectl kustomize dev/compute/infrastructure > /dev/null
+                  kubectl kustomize dev/compute/backing > /dev/null
+                  kubectl kustomize dev/compute/connectivity > /dev/null
 
             - name: Verify Docker daemon
               run: docker info
@@ -73,9 +75,7 @@ jobs:
 
             - name: Run type checks
               working-directory: api
-              run: |
-                  uv run --locked --extra dev ty check
-                  uv run --locked --extra dev ty check ../dev/setup.py
+              run: uv run --locked --extra dev ty check
 
     # The SDK requires Python 3.12 or newer.
     sdk-tests:

@@ -121,7 +121,8 @@ make -C .. seed  # Supply local endpoints and public CA bundles
 The local seed inspects `localhost:15000/sample:dev` through the same metadata resolver as the API. If your sample image declares required variables, set `SAMPLE_ENVS` to a JSON string dictionary in `.env.seed`; missing requirements fail rather than silently bypassing release validation.
 
 The API always reads `.env` and process environment variables. `make configure`
-prepares local defaults without replacing existing values. SMTP is required in all
+copies local defaults only when `.env` is absent; existing files are not merged or
+overwritten. SMTP is required in all
 environments; local setup supplies Mailpit. `SMTP_FROM` sets the sender address
 independently of authentication credentials. `PUBLIC_URL` controls trusted origin
 and secure cookies; HTTP is accepted only for loopback hosts. There is no runtime

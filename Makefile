@@ -1,4 +1,4 @@
-.PHONY: install check format build test up _up compute _compute connect configure image down api web sdk seed
+.PHONY: install check format build test up _up compute _compute certificates _certificates connect configure image down api web sdk seed
 
 DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
 
@@ -10,17 +10,15 @@ install:
 	$(MAKE) configure
 
 
-# Prepare local configuration without importing the API.
+# Initialize local configuration once; existing settings remain operator-owned.
 configure:
-	uv run --script dev/setup.py configure
+	@umask 077; test -e api/.env || cp -n api/.env.sample api/.env
 
 
 # Run lint, type, and contract checks.
 check:
 	cd api && uv run --locked ruff check .
-	cd api && uv run --locked ruff check ../dev/setup.py
 	cd api && uv run --locked --extra dev ty check
-	cd api && uv run --locked --extra dev ty check ../dev/setup.py
 	cd sdk && uv run --locked ruff check .
 	cd sdk && uv run --locked --group dev ty check
 	cd web && vp run check
@@ -82,32 +80,50 @@ _up:
 		k3d cluster create compute --image "$(DEV_K3S_IMAGE)" --network longlink-dev --api-port 127.0.0.1:8001 --volume "/dev:/dev@server:0" --volume "/run/udev:/run/udev:ro@server:0" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
 	fi
 	@umask 077; k3d kubeconfig get compute > api/kubeconfig.yaml
-	@mkdir -p dev/certificates
-	@if [ ! -f dev/certificates/ca.crt ] || [ ! -f dev/certificates/gateway.crt ] || [ ! -f dev/certificates/gateway.key ]; then \
-		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
-			-subj "/CN=LongLink Development CA" \
-			-addext "basicConstraints=critical,CA:TRUE" \
-			-addext "keyUsage=critical,keyCertSign,cRLSign" >/dev/null 2>&1; \
-		openssl req -newkey rsa:2048 -nodes \
-			-keyout dev/certificates/gateway.key -out dev/certificates/gateway.csr \
-			-subj "/CN=localhost" \
-			-addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1; \
-		printf "subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n" > dev/certificates/gateway.ext; \
-		openssl x509 -req -days 3650 \
-			-in dev/certificates/gateway.csr \
-			-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -CAcreateserial \
-			-out dev/certificates/gateway.crt -extfile dev/certificates/gateway.ext >/dev/null 2>&1; \
-		rm -f dev/certificates/gateway.csr dev/certificates/gateway.ext dev/certificates/ca.srl; \
-	fi
-	@kubectl --kubeconfig api/kubeconfig.yaml create namespace knative-serving --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	@kubectl --kubeconfig api/kubeconfig.yaml create namespace kourier-system --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	@kubectl --kubeconfig api/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
-		--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key \
-		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
 	$(MAKE) _compute COMPUTE_LOCKED=1
 	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
 	$(MAKE) image
+
+
+# Issue local certificates without racing Platform workers.
+certificates:
+	flock --exclusive --nonblock dev/compute.lock $(MAKE) _certificates COMPUTE_LOCKED=1
+
+
+# Preserve the CA and reusable certificates; generate keys only inside ignored private storage.
+_certificates:
+	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make certificates to acquire the deployment lock.\n"; exit 1; }
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -f dev/compute/namespaces.yaml
+	@set -eu; umask 077; mkdir -p dev/certificates; \
+		temporary="$$(mktemp -d dev/certificates/.generate.XXXXXX)"; \
+		trap 'rm -rf "$$temporary"' EXIT; \
+		if [ ! -e dev/certificates/ca.crt ] && [ ! -e dev/certificates/ca.key ]; then \
+			openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+				-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
+				-subj "/CN=LongLink Development CA" \
+				-addext "basicConstraints=critical,CA:TRUE" \
+				-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		fi; \
+		test -s dev/certificates/ca.key; \
+		openssl verify -CAfile dev/certificates/ca.crt dev/certificates/ca.crt; \
+		for name in gateway storage; do \
+			case "$$name" in gateway) hostname=localhost; namespace=knative-serving ;; storage) hostname=storage.localhost; namespace=rook-ceph ;; esac; \
+			key="dev/certificates/$$name.key"; certificate="dev/certificates/$$name.crt"; \
+			if [ ! -s "$$key" ] || [ ! -s "$$certificate" ] \
+				|| ! openssl x509 -in "$$certificate" -checkend 86400 -noout >/dev/null 2>&1 \
+				|| ! openssl verify -CAfile dev/certificates/ca.crt -verify_hostname "$$hostname" "$$certificate" >/dev/null 2>&1 \
+				|| [ "$$(openssl pkey -in "$$key" -pubout)" != "$$(openssl x509 -in "$$certificate" -pubkey -noout)" ]; then \
+				openssl req -new -newkey rsa:2048 -nodes -keyout "$$temporary/$$name.key" -out "$$temporary/$$name.csr" -subj "/CN=$$hostname"; \
+				openssl x509 -req -days 365 -in "$$temporary/$$name.csr" \
+					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
+					-extfile dev/tls.cnf -extensions "$$name" -out "$$temporary/$$name.crt"; \
+				cat dev/certificates/ca.crt >> "$$temporary/$$name.crt"; \
+				mv "$$temporary/$$name.key" "$$key"; mv "$$temporary/$$name.crt" "$$certificate"; \
+			fi; \
+			kubectl --kubeconfig api/kubeconfig.yaml --namespace "$$namespace" create secret tls "longlink-$$name-tls" \
+				--cert="$$certificate" --key="$$key" --dry-run=client --output=yaml > "$$temporary/secret.yaml"; \
+			kubectl --kubeconfig api/kubeconfig.yaml apply --filename="$$temporary/secret.yaml"; \
+		done
 
 
 # Apply the local Compute package while Platform workers are stopped.
@@ -118,8 +134,17 @@ compute:
 # Apply dependency-ordered Kustomize stages and publish the contract last.
 _compute:
 	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make compute to acquire the deployment lock.\n"; exit 1; }
+	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
+		printf '%s\n' "$$addresses" | while read -r address rest; do \
+			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
+		done
 	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
-	uv run --script dev/setup.py prepare
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/backing
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
+	$(MAKE) _certificates COMPUTE_LOCKED=1
+	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/connectivity
+	kubectl --kubeconfig api/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/boundaries
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/operators/serving-crds
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s

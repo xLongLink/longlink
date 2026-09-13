@@ -13,9 +13,9 @@ longlink/
 │   ├── infrastructure/ → shared Ceph resources and health identity
 │   └── release/ → package version and Platform compatibility contract
 └── dev/ → local setup and connectivity outside the API
-    ├── setup.py → configuration, backing driver, and S3 certificate
+    ├── tls.cnf → local gateway and S3 certificate extensions for OpenSSL
     ├── compose.yml → registry, SMTP capture, and loopback endpoint connections
-    └── compute/ → backing manifests, split DNS, Service, and storage overlays
+    └── compute/ → backing Kustomization, split DNS, Service, and storage overlays
 ```
 
 ## Local installation

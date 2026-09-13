@@ -15,7 +15,7 @@ Workstation
 │   ├── Gateway connection → localhost:8443 → Kourier TLS
 │   └── Storage connection → storage.localhost:9443 → RGW TLS
 └── k3d Compute cluster
-    ├── dev/setup.py → backing provisioner and storage certificate
+    ├── dev/compute/backing → backing provisioner manifests and Kustomize patches
     ├── dev/compute/connectivity → S3 Service and split DNS
     ├── k8s + dev overlays → Knative, CNPG, Rook, and Ceph
     └── Organizations and Solutions → provisioned by the Platform
@@ -34,15 +34,29 @@ make install
 make up
 ```
 
-`make configure` fills missing settings in the ignored `api/.env` from
-`api/.env.sample`, preserving existing values and credentials. It runs as part of
-installation and API startup. The API itself always reads ordinary environment
+`make configure` copies `api/.env.sample` to the ignored `api/.env` only when that
+file is absent, with owner-only permissions. Existing files are preserved exactly;
+add newly required settings explicitly. Configuration initialization runs as part
+of installation and API startup. The API itself always reads ordinary environment
 variables and `.env`; no development mode is required.
 
 `make up` creates the private Docker network, registry, mail capture service,
 cluster, backing storage, TLS certificates, and shared Compute infrastructure.
 It then starts endpoint connections and builds/pushes the local sample image.
 Generated private material lives under ignored `dev/certificates/`.
+
+Backing storage is declared in `dev/compute/backing/kustomization.yaml`. It selects
+the CSI attacher/provisioner components and sets their namespaces and RBAC subjects.
+Render it with `kubectl kustomize dev/compute/backing`.
+
+`make certificates` uses OpenSSL and `dev/tls.cnf` to generate gateway and storage
+certificates and apply their TLS Secrets. It reuses the local CA and valid matching
+certificates, renewing leaves that expire within a day. The CA is generated only
+when both CA files are absent; partial or expired CA state requires explicit
+repair. Stop API workers before certificate changes; this target uses the same
+deployment lock as `make compute`. `make up` and `make compute` invoke it as part
+of their locked workflow. No Python setup script or setup-specific dependencies
+are needed.
 
 Run in separate terminals:
 
