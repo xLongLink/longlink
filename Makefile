@@ -60,7 +60,6 @@ up:
 		k3d cluster create --config dev/cluster.yaml; \
 	fi
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 

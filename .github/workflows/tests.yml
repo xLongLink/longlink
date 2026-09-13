@@ -58,12 +58,11 @@ jobs:
                   helm-version: v4.3.0
                   helmfile-version: v1.8.0
                   helm-plugins: ''
-                  helmfile-args: --file k8s/setup.yaml.gotmpl list
+                  helmfile-args: --file k8s/setup.yaml.gotmpl template --output-dir /tmp/longlink-compute
 
             - name: Render Compute package
               run: |
                   set -euo pipefail
-                  helmfile --file k8s/setup.yaml.gotmpl template > /dev/null
                   helmfile --file k8s/setup.yaml.gotmpl --environment development template > /dev/null
                   kubectl kustomize dev/compute/bootstrap > /dev/null
                   kubectl kustomize dev/compute/connectivity > /dev/null

@@ -11,6 +11,7 @@
         "typecheck:api": "react-router typegen --mode api && tsc -b",
         "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
         "build:api": "vp run check:docs && vp run typecheck:api && react-router build --mode api",
+        "build:api:container": "vp run generate:docs && vp run typecheck:api && react-router build --mode api",
         "build:api:bundle": "vp run check:docs && react-router build --mode api",
         "build:sdk": "vp run check:docs && vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "vp run check:docs && react-router build --mode sdk",

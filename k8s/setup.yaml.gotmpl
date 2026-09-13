@@ -22,6 +22,16 @@ releases:
     - name: serving-crds
       namespace: knative-serving
       chart: ./operators/serving-crds
+      hooks:
+          - events: [presync]
+            showlogs: true
+            command: kubectl
+            args:
+                - delete
+                - configmap
+                - compute-release
+                - --namespace=longlink-system
+                - --ignore-not-found
 
     - name: serving
       namespace: knative-serving
