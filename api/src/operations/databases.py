@@ -32,11 +32,8 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(infrastructure: organizations.Infrastructure, cluster: Kubernetes) -> postgres.Postgres:
+async def connection(organization: Organization, cluster: Kubernetes) -> postgres.Postgres:
     """Build the Organization's private, CA-verified PostgreSQL connection."""
-
-    # Persisted credentials remain authoritative; Kubernetes supplies the server trust anchor.
-    organization = infrastructure.organization
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
     port = await cluster.databases.portforward(organization.id)
@@ -288,7 +285,7 @@ async def ready(organization_id: UUID) -> None:
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     if infrastructure.organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
@@ -330,7 +327,7 @@ async def ready(organization_id: UUID) -> None:
                 raise
 
 
-async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
+async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
     # Recheck both the idle interval and persisted leases under the admission lock.
@@ -344,8 +341,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             or organization.status != Status.running
             or organization.database_idle_seconds == 0
             or organization.database_state != DatabaseState.available
-            or not manual
-            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -373,7 +369,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(infrastructure, cluster)
+                    database = await connection(infrastructure.organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)
@@ -393,8 +389,7 @@ async def hibernate(organization_id: UUID, *, manual: bool = False) -> bool:
                         if (
                             active is not None
                             or organization.database_idle_seconds == 0
-                            or not manual
-                            and organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
                         ):
                             organization.database_state = DatabaseState.available
                             await session.commit()

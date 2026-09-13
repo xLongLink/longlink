@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import Field
 from sqlmodel import col
 from src.utils import images
-from contextlib import suppress
+from contextlib import aclosing, suppress
 from sqlalchemy import select
 from src.errors import ConflictError
 from src.models.types import Image
@@ -12,7 +12,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.computes import ComputeRegistryCreate
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.solutions import SolutionCreate
 from src.database.services import users, compute, solutions, organizations
+from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
@@ -75,10 +77,15 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
         }
     )
 
+    # Resolve the physical cluster before transactionally registering its stable identity.
+    cluster = Kubernetes(payload.kubeconfig)
+    async with aclosing(cluster):
+        cluster_uid = await cluster.cluster_uid()
+
     # Register the configured compute and queue its reconciliation when newly created.
     with suppress(ConflictError):
         async with session_scope() as session:
-            await compute.create(session, payload)
+            await compute.create(session, payload, cluster_uid)
             await session.commit()
 
     async with session_scope() as session:
@@ -131,12 +138,14 @@ async def seed_local_development(settings: SeedSettings) -> None:
                 await solutions.create(
                     session,
                     organization.id,
-                    "Sample",
+                    SolutionCreate(
+                        name="Sample",
+                        image=source,
+                        envs=settings.SAMPLE_ENVS,
+                        description="A sample solution for local development.",
+                    ),
                     metadata,
-                    settings.SAMPLE_ENVS,
-                    "A sample solution for local development.",
                     user_id=administrator.id,
-                    source=source,
                 )
             else:
                 # Retry failed sample provisioning through a fresh immutable revision.

@@ -3534,10 +3534,6 @@
       },
       "OrganizationStorageUsageResponse": {
         "properties": {
-          "bucket_name": {
-            "type": "string",
-            "title": "Bucket Name"
-          },
           "space_used": {
             "type": "integer",
             "minimum": 0.0,
@@ -3546,7 +3542,6 @@
         },
         "type": "object",
         "required": [
-          "bucket_name",
           "space_used"
         ],
         "title": "OrganizationStorageUsageResponse",
@@ -4139,18 +4134,6 @@
       },
       "SolutionUpdateCheck": {
         "properties": {
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          },
-          "available": {
-            "type": "boolean",
-            "title": "Available"
-          },
           "min_scale": {
             "type": "integer",
             "enum": [
@@ -4182,9 +4165,6 @@
         },
         "type": "object",
         "required": [
-          "source",
-          "image",
-          "available",
           "min_scale",
           "revision_id",
           "current_image",

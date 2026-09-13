@@ -2,7 +2,7 @@ import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import update
+from sqlalchemy import select, update
 from src.logger import logger
 from src.operations import storage, databases
 from src.models.statuses import Status
@@ -17,8 +17,13 @@ async def reconcile(organization_id: UUID) -> None:
 
     # Removed lifecycle targets are already converged and must not acquire runtime demand.
     async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
-    if organization is None or organization.deleted_at is not None:
+        active_organization_id = await session.scalar(
+            select(col(Organization.id)).where(
+                col(Organization.id) == organization_id,
+                col(Organization.deleted_at).is_(None),
+            )
+        )
+    if active_organization_id is None:
         return
     async with databases.activity(organization_id):
         # Skip removed Organizations.
@@ -62,10 +67,14 @@ async def delete(organization_id: UUID) -> str | None:
 
     # Reject active targets before waiting for their admitted runtime work.
     async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
-    if organization is None:
+        result = await session.execute(
+            select(col(Organization.id), col(Organization.deleted_at)).where(col(Organization.id) == organization_id)
+        )
+        target = result.tuples().one_or_none()
+    if target is None:
         return None
-    if organization.deleted_at is None:
+    _, deleted_at = target
+    if deleted_at is None:
         return "Active Organizations cannot be deleted by lifecycle cleanup"
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.

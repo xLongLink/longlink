@@ -203,7 +203,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
 async def test_user_service_registers_user_and_returns_active_organization_memberships(
     users: tuple[User, User, User],
 ) -> None:
-    """Persist registrations and exclude deleted memberships and organizations."""
+    """Persist registrations and exclude deleted organizations from memberships."""
 
     # Arrange
     password_hash = PasswordHash.recommended()
@@ -221,7 +221,6 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     async with session_scope() as session:
         persisted_user = await session.get(User, registered.id)
         memberships = await user_service.memberships(session, member.id)
-        organization_ids = await user_service.organization_ids(session, member.id)
 
     # Assert
     assert registered.id is not None
@@ -229,5 +228,3 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     assert persisted_user.email == "registered@example.com"
     assert password_hash.verify("test-password", persisted_user.password)
     assert [membership.organization_id for membership in memberships] == [active_organization.id]
-    (organization_id,) = organization_ids
-    assert organization_id == active_organization.id

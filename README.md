@@ -19,7 +19,7 @@
 
 AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
 
-LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a LongLink Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
+LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
 
 Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
 

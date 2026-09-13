@@ -5,7 +5,7 @@ from httpx2 import AsyncClient
 from conftest import DatabasePostgres, DatabaseKubernetes
 from datetime import UTC, datetime
 from sqlmodel import select
-from factories import create_solution, fetch_operations, create_organization, create_ready_infrastructure
+from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import func
 from urllib.parse import urlencode
 from sqlalchemy.exc import OperationalError
@@ -32,7 +32,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
 
     # Act
     response = await clients[0].post(
@@ -47,7 +47,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     async with session_scope() as session:
         organization = await session.get(Organization, UUID(payload["id"]))
     assert organization is not None
-    assert organization.compute_id == infrastructure.compute.id
+    assert organization.compute_id == compute.id
     assert organization.database_idle_seconds == 0
     assert organization.status == Status.creating
     operations = await fetch_operations()
@@ -64,9 +64,9 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
 
     # Arrange
     owner, other_user, _ = users
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
     for name in ("acme", "globex", "initech"):
-        await create_organization(owner, name=name, infrastructure=infrastructure)
+        await create_organization(owner, name=name, compute=compute)
 
     # Act
     blocked_response = await clients[0].post("/api/v1/organizations", json={"name": "umbrella"})
@@ -101,9 +101,9 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
+    compute = await create_ready_compute()
     async with session_scope() as session:
-        await session.delete(infrastructure.compute)
+        await session.delete(compute)
         await session.commit()
 
     # Act
@@ -214,7 +214,37 @@ async def test_update_organization_updates_metadata_for_administrator(
         updated = await session.get(Organization, organization.id)
     assert updated is not None
     assert updated.avatar == "https://example.com/acme.png"
-    assert updated.updated_id == owner.id
+
+
+async def test_update_organization_persists_valid_database_idle_seconds_and_rejects_short_intervals(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Persist valid idle settings without accepting sleep intervals that would thrash databases."""
+
+    # Arrange
+    owner = users[0]
+    organization = await create_organization(owner)
+
+    # Act
+    updated_response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}",
+        json={"database_idle_seconds": 300},
+    )
+    invalid_response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}",
+        json={"database_idle_seconds": 299},
+    )
+
+    # Assert
+    assert updated_response.status_code == 200
+    assert updated_response.json()["database_idle_seconds"] == 300
+    assert invalid_response.status_code == 422
+    assert invalid_response.json() == {"detail": "Invalid request. Please check your input and try again."}
+    async with session_scope() as session:
+        updated = await session.get(Organization, organization.id)
+    assert updated is not None
+    assert updated.database_idle_seconds == 300
 
 
 async def test_update_organization_returns_not_found_when_active_organization_disappears(
@@ -250,7 +280,6 @@ async def test_update_organization_rejects_write_member(
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     original_updated_at = organization.updated_at
-    original_updated_id = organization.updated_id
     async with session_scope() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
         await session.commit()
@@ -266,7 +295,6 @@ async def test_update_organization_rejects_write_member(
     assert unchanged is not None
     assert unchanged.avatar == organization.avatar
     assert unchanged.updated_at == original_updated_at
-    assert unchanged.updated_id == original_updated_id
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
@@ -389,7 +417,7 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, infrastructure=await create_ready_infrastructure())
+    organization = await create_organization(owner, compute=await create_ready_compute())
 
     class FakePostgres(DatabasePostgres):
         """Provide database usage responses for the Organization resource endpoint."""
@@ -480,7 +508,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, infrastructure=await create_ready_infrastructure())
+    organization = await create_organization(owner, compute=await create_ready_compute())
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
@@ -516,7 +544,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = None if expected_usage is None else {"bucket_name": organization.id.hex, "space_used": expected_usage}
+        expected_payload = None if expected_usage is None else {"space_used": expected_usage}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -586,7 +614,7 @@ async def test_organization_resource_endpoints_allow_members(
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
         "database": {"size_bytes": 0, "measured_at": "2026-09-09T12:00:00Z", "allocated_bytes": 10 * 1024**3},
-        "storage": {"bucket_name": organization.id.hex, "space_used": 0},
+        "storage": {"space_used": 0},
     }
     assert response.json() == expected_payloads[resource]
 
@@ -1010,7 +1038,6 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
         original_updated_at = original.updated_at
-        original_updated_id = original.updated_id
 
     # Act
     response = await clients[0].patch(
@@ -1027,7 +1054,6 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
         assert persisted.database_sync_pending is False
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
-    assert unchanged.updated_id == original_updated_id
 
 
 async def test_update_organization_member_returns_not_found_for_non_member(
@@ -1145,7 +1171,6 @@ async def test_update_organization_member_returns_403_for_regular_member(
     async with session_scope() as session:
         original = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
         original_updated_at = original.updated_at
-        original_updated_id = original.updated_id
 
     client = clients[1]
 
@@ -1162,7 +1187,6 @@ async def test_update_organization_member_returns_403_for_regular_member(
         unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == target_member.id)
         assert unchanged.role == OrganizationRoles.read
         assert unchanged.updated_at == original_updated_at
-        assert unchanged.updated_id == original_updated_id
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         assert persisted.database_sync_pending is False

@@ -2,6 +2,7 @@ import pytest
 from typing import Literal
 from pathlib import Path
 from pydantic import ValidationError
+from contextlib import contextmanager
 from longlink.storage import base as storage_base
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
@@ -91,6 +92,45 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
             "config_kwargs": {"s3": {"addressing_style": "path"}, "http_session_cls": storage_base.tls.Session},
             "skip_instance_cache": True,
         },
+    }
+
+
+def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use the Platform storage CA to verify the remote S3 endpoint."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    @contextmanager
+    def certificate_file(pem: str):
+        """Capture the configured PEM and yield its temporary filename."""
+
+        captured["pem"] = pem
+        yield "/tmp/storage-ca.crt"
+
+    def fake_filesystem_factory(_protocol: str, **kwargs: object) -> LocalFileSystem:
+        """Capture the remote filesystem configuration."""
+
+        captured["kwargs"] = kwargs
+        return LocalFileSystem()
+
+    monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
+    monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
+
+    # Act
+    storage_base.create_fs(Envs())
+
+    # Assert
+    assert captured["pem"] == "storage-ca-pem"
+    assert captured["kwargs"] == {
+        "endpoint_url": "http://storage.runtime.longlink.internal:19000",
+        "key": "access/key",
+        "secret": "secret@key",
+        "client_kwargs": {"region_name": "ch-gva-2", "verify": "/tmp/storage-ca.crt"},
+        "config_kwargs": {"s3": {"addressing_style": "path"}, "http_session_cls": storage_base.tls.Session},
+        "skip_instance_cache": True,
     }
 
 

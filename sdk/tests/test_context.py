@@ -3,7 +3,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
@@ -182,10 +182,10 @@ def test_context_middleware_treats_invalid_identity_as_anonymous(case: str) -> N
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
-    async def get_identity(request: Request) -> dict[str, bool]:
+    async def get_identity() -> dict[str, bool]:
         """Expose whether the middleware accepted the supplied identity."""
 
-        return {"authenticated": request.state.longlink_identity is not None}
+        return {"authenticated": context._current_identity.get() is not None}
 
     client = TestClient(app)
 

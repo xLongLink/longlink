@@ -17,11 +17,8 @@ const solution = {
     deployment_pending: false,
 };
 const candidate = {
-    source: 'ghcr.io/owner/sample:dev',
-    image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     revision_id: revisionId,
-    available: true,
     min_scale: 1,
     configured_envs: ['KEEP', 'DROP', 'UNDECLARED'],
     metadata: {
@@ -126,7 +123,7 @@ describe('Solution source update dialog', () => {
         let checks = 0;
         vi.stubGlobal('fetch', async () => {
             checks += 1;
-            return Response.json({ ...candidate, available: false });
+            return Response.json({ ...candidate, current_image: candidate.metadata.image });
         });
         await render();
         expect(checks).toBe(0);

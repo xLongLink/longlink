@@ -2,9 +2,8 @@
 import { act } from 'react';
 import type { ASTNode } from '@/xml/types';
 import { createRoot } from 'react-dom/client';
-import { createContext } from '@/xml/core/context';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { compileProps, RenderXML, renderXmlToMarkup } from './helpers';
+import { compileProps, createContext, RenderXML, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     let root: ReturnType<typeof createRoot> | undefined;

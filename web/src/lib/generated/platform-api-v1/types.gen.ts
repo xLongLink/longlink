@@ -487,10 +487,6 @@ export type OrganizationSolutionSummary = {
  */
 export type OrganizationStorageUsageResponse = {
     /**
-     * Bucket Name
-     */
-    bucket_name: string;
-    /**
      * Space Used
      */
     space_used: number;
@@ -834,18 +830,6 @@ export type SolutionUpdate = {
  * Expose a candidate and configured names, never environment values.
  */
 export type SolutionUpdateCheck = {
-    /**
-     * Source
-     */
-    source: string;
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Available
-     */
-    available: boolean;
     /**
      * Min Scale
      */

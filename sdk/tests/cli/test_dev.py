@@ -1,6 +1,7 @@
 import pytest
 from longlink.cli import dev
-from click.testing import CliRunner
+from typer.testing import CliRunner
+from longlink.cli.main import main
 
 
 @pytest.mark.parametrize(
@@ -35,7 +36,7 @@ def test_dev_command_warns_only_for_public_hosts(
     monkeypatch.setattr(dev.logger, "warning", warning)
 
     # Act
-    result = CliRunner().invoke(dev.dev_command, ["--host", host])
+    result = CliRunner().invoke(main, ["dev", "--host", host])
 
     # Assert
     assert result.exit_code == 0

@@ -53,7 +53,7 @@ export default function UpdateSolution({
 
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
     const currentLabel = candidate.current_image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
-    const candidateLabel = candidate.image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
+    const candidateLabel = candidate.metadata.image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
     const schema = z
         .object({ alwaysOn: z.boolean(), envs: z.record(z.string(), environmentChangeSchema) })
         .superRefine((value, ctx) => {
@@ -97,7 +97,7 @@ export default function UpdateSolution({
     const envs = useWatch({ control: form.control, name: 'envs' });
     const alwaysOn = useWatch({ control: form.control, name: 'alwaysOn' });
     const changed =
-        candidate.available ||
+        candidate.metadata.image !== candidate.current_image ||
         alwaysOn !== (candidate.min_scale === 1) ||
         Object.values(envs).some((change) => change.action !== 'untouched');
     const missing = environments.some(({ name, required }) =>
@@ -153,7 +153,7 @@ export default function UpdateSolution({
                         </Text>
                         <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-secondary" />
                         <Text type="supporting" color="primary" wordBreak="break-all">
-                            New {currentLabel === candidateLabel ? candidate.image : candidateLabel}
+                            New {currentLabel === candidateLabel ? candidate.metadata.image : candidateLabel}
                         </Text>
                     </Stack>
                     <Controller

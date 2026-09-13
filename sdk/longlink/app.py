@@ -43,6 +43,11 @@ class LongLink:
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
 
+        # Require the frontend entry point supplied by the packaged SDK.
+        frontend_index = ROOT / ".static" / "web" / "index.html"
+        if not frontend_index.is_file():
+            raise RuntimeError(f"LongLink embedded frontend is required: {frontend_index}")
+
         # Solutions provide XML views in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
         if not views_directory.is_dir():
@@ -102,8 +107,7 @@ class LongLink:
                 return RedirectResponse(first_tab_view.route)
 
         # Serve the embedded frontend last so Solution routes retain precedence.
-        if (ROOT / ".static" / "web").exists():
-            app.frontend("/", directory=ROOT / ".static" / "web")
+        app.frontend("/", directory=frontend_index.parent)
 
     @staticmethod
     def _discover_views(views_directory: Path, solution_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:

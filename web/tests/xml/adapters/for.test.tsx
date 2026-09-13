@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createContext } from '@/xml/core/context';
-import { parseFragment, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('For', () => {
     it.each([

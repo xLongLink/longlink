@@ -21,6 +21,7 @@ class ComputeRegistry(PlatformModel, table=True):
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
+    cluster_uid: str = Field(unique=True, max_length=128)
     kubeconfig: dict[str, object] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
 
     # Reconciliation

@@ -224,7 +224,6 @@ export const zOrganizationMemberUpdate = z.object({
  * Report current logical object bytes for one organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
-    bucket_name: z.string(),
     space_used: z.int().gte(0)
 });
 
@@ -337,9 +336,6 @@ export const zSolutionUpdate = z.object({
  * Expose a candidate and configured names, never environment values.
  */
 export const zSolutionUpdateCheck = z.object({
-    source: z.string(),
-    image: z.string(),
-    available: z.boolean(),
     min_scale: z.union([z.literal(0), z.literal(1)]),
     revision_id: z.uuid(),
     current_image: z.string(),

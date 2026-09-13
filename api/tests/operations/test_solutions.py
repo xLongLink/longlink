@@ -7,7 +7,7 @@ from factories import (
     create_solution,
     complete_operation,
     create_organization,
-    create_ready_infrastructure,
+    create_ready_compute,
 )
 from src.utils.s3 import Credentials
 from src.operations import solutions as solution_operations
@@ -29,8 +29,8 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     """Create one Solution tombstone with assigned infrastructure."""
 
     # Persist the complete deletion target used by Solution cleanup tests.
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization)
     async with session_scope() as session:
         await solutions.delete(session, solution.id, owner.id)
@@ -181,8 +181,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
     # Persist a Solution with a user-owned runtime value.
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
     database_passwords: list[str] = []
@@ -310,8 +310,8 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(owner, infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     initial_secrets = dict(solution.secrets)
     initial_deployed_revision_id = solution.deployed_revision_id
@@ -371,8 +371,8 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     """Apply a retry without rotating persisted provider credentials."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(
         organization,
         secrets={"API_KEY": "runtime-secret"},
@@ -513,8 +513,8 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
     """Do not deploy credentials after the solution is deleted concurrently."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    organization = await create_organization(users[0], infrastructure=infrastructure)
+    compute = await create_ready_compute()
+    organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(organization)
 
     class Postgres(DatabasePostgres):

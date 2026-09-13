@@ -2,7 +2,7 @@ import kr8s
 from typing import cast
 from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
-from kr8s.asyncio.objects import Service
+from kr8s.asyncio.objects import Service, Namespace
 from src.kubernetes.gateway import Gateway
 from src.kubernetes.storage import Storage
 from src.kubernetes.databases import Databases
@@ -42,6 +42,18 @@ class Kubernetes:
         if self._api_client is not None and self._api_client._session is not None:
             await self._api_client._session.aclose()
         self._api_client = None
+
+    async def cluster_uid(self) -> str:
+        """Return the stable UID of the configured Kubernetes cluster."""
+
+        # The system Namespace is created with the cluster and provides an identity independent of kubeconfig aliases.
+        namespace = Namespace("kube-system", api=await self.api())
+        await namespace.refresh()
+        metadata = namespace.raw.get("metadata")
+        uid = metadata.get("uid") if isinstance(metadata, dict) else None
+        if not isinstance(uid, str) or not uid:
+            raise RuntimeError("Kubernetes cluster identity is unavailable")
+        return uid
 
     async def portforward(self, name: str, namespace: str, port: int) -> int:
         """Keep a loopback Service tunnel alive until this Kubernetes client closes."""

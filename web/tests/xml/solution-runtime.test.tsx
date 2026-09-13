@@ -33,7 +33,7 @@ describe('SolutionRuntime XML integration', () => {
         // Arrange
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         apiRequest.mockImplementation((url: string, options?: RequestInit) => {
-            if (url.endsWith('/views.json')) {
+            if (url === '/proxy/views.json?version=1#manifest') {
                 return { json: async () => [{ name: 'home', path: 'home.xml', route: '/home' }] };
             }
 
@@ -59,7 +59,7 @@ describe('SolutionRuntime XML integration', () => {
                             <Routes>
                                 <Route
                                     element={
-                                        <SolutionRuntime viewsUrl="/proxy/views.json" requestBaseUrl="/proxy/">
+                                        <SolutionRuntime viewsUrl="/proxy/views.json?version=1#manifest">
                                             {({ content }) => content}
                                         </SolutionRuntime>
                                     }
@@ -82,7 +82,7 @@ describe('SolutionRuntime XML integration', () => {
         expect(container.textContent).toContain('Welcome');
         expect(apiRequest).toHaveBeenNthCalledWith(
             1,
-            '/proxy/views.json',
+            '/proxy/views.json?version=1#manifest',
             expect.objectContaining({ signal: expect.any(AbortSignal) })
         );
         expect(apiRequest).toHaveBeenNthCalledWith(

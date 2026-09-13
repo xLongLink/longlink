@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import { compileProps } from '../helpers';
 import { describe, expect, it } from 'vitest';
-import { createContext } from '@/xml/core/context';
+import { compileProps, createContext } from '../helpers';
 import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '@/xml/core/props';
 
 describe('resolveXmlProps', () => {

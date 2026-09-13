@@ -45,6 +45,7 @@ def upgrade() -> None:
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
+        sa.Column("cluster_uid", sa.String(length=128), nullable=False),
         sa.Column("kubeconfig", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column(
             "status",
@@ -74,6 +75,7 @@ def upgrade() -> None:
         sa.Column("storage_instances", sa.Integer(), nullable=False),
         sa.Column("storage_certificate", sa.Text(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("cluster_uid"),
         sa.UniqueConstraint("name"),
     )
 
@@ -122,13 +124,11 @@ def upgrade() -> None:
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
         sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["updated_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("slug"),
     )
@@ -171,27 +171,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
             ondelete="CASCADE",
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("organization_id", "slug"),
@@ -245,27 +230,11 @@ def upgrade() -> None:
             "role", sa.Enum("read", "write", "maintain", "admin", "owner", name="organization_role_enum", native_enum=False), nullable=False
         ),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
             ondelete="CASCADE",
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
         ),
         sa.ForeignKeyConstraint(
             ["user_id"],

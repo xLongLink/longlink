@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from factories import create_compute, queue_operation, create_ready_infrastructure
+from factories import create_compute, queue_operation, create_ready_compute
 from src.errors import ConflictError, NotFoundError
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
@@ -22,8 +22,8 @@ async def test_delete_removes_unused_registry() -> None:
     """Delete a registry that has no organization assignment."""
 
     # Arrange
-    infrastructure = await create_ready_infrastructure()
-    registry_id = infrastructure.compute.id
+    compute_registry = await create_ready_compute()
+    registry_id = compute_registry.id
 
     # Act
     async with session_scope() as session:
@@ -55,8 +55,8 @@ async def test_delete_rejects_compute_with_unfinished_lifecycle_operation() -> N
     assert persisted is not None
 
 
-async def test_create_rejects_duplicate_compute_names() -> None:
-    """Translate duplicate Compute names into the stable domain conflict."""
+async def test_create_rejects_duplicate_compute_clusters() -> None:
+    """Translate duplicate physical clusters into the stable domain conflict."""
 
     # Arrange
     payload = ComputeRegistryCreate(
@@ -78,10 +78,10 @@ async def test_create_rejects_duplicate_compute_names() -> None:
         storage_endpoint="https://storage.example",
     )
     async with session_scope() as session:
-        await compute.create(session, payload)
+        await compute.create(session, payload, "cluster-uid")
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(session, payload)
+            await compute.create(session, payload.model_copy(update={"name": "Cluster Alias"}), "cluster-uid")

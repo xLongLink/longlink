@@ -17,7 +17,6 @@ type SolutionRuntimeProps = {
     children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
     navigationBaseUrl?: string;
     viewsUrl?: string;
-    requestBaseUrl?: string;
 };
 
 const EMPTY_VIEWS = [] as const;
@@ -42,38 +41,38 @@ function SolutionXmlRuntime({
 }) {
     const navigate = useNavigate();
     const [runtime] = useState(() => {
-        // Normalize route params only when creating this keyed XML runtime.
-        const context = createXmlContext(
-            Object.fromEntries(Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null))
-        );
+        return createXmlContext({
+            // Keep XML-triggered solution navigation within the client router.
+            navigate: (url) => {
+                const destination = new URL(url, window.location.origin);
 
-        // Keep XML-triggered solution navigation within the client router.
-        context.services.navigate = (url) => {
-            const destination = new URL(url, window.location.origin);
+                if (destination.origin === window.location.origin) {
+                    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+                    return;
+                }
 
-            if (destination.origin === window.location.origin) {
-                navigate(`${destination.pathname}${destination.search}${destination.hash}`);
-                return;
-            }
-
-            window.location.assign(url);
-        };
-        context.services.navigationBaseUrl = navigationBaseUrl;
-        context.services.requestBaseUrl = requestBaseUrl;
-        return context;
+                window.location.assign(url);
+            },
+            navigationBaseUrl,
+            // Normalize route params only when creating this keyed XML runtime.
+            params: Object.fromEntries(
+                Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null)
+            ),
+            requestBaseUrl,
+        });
     });
 
     return <RenderXML ast={ast} ctx={runtime} />;
 }
 
 /** Resolves and renders the current manifest-defined View. */
-export function SolutionRuntime({
-    children,
-    navigationBaseUrl = '/',
-    viewsUrl = '/views.json',
-    requestBaseUrl = '/',
-}: SolutionRuntimeProps) {
+export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = '/views.json' }: SolutionRuntimeProps) {
     const { '*': routePath = '' } = useParams();
+
+    // Resolve XML requests beside the manifest without changing its URL form.
+    const viewsLocation = new URL(viewsUrl, 'http://longlink.local');
+    const requestBaseLocation = new URL('.', viewsLocation);
+    const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
         queryFn: async ({ signal }) => viewsSchema.parse(await api(viewsUrl, { signal }).json()),
@@ -136,14 +135,7 @@ export function SolutionRuntime({
         content = (
             <SolutionXmlRuntime
                 ast={activeViewAst}
-                key={JSON.stringify([
-                    viewsUrl,
-                    navigationBaseUrl,
-                    requestBaseUrl,
-                    activeView.route,
-                    activeView.path,
-                    routePath,
-                ])}
+                key={JSON.stringify([viewsUrl, navigationBaseUrl, activeView.route, activeView.path, routePath])}
                 navigationBaseUrl={navigationBaseUrl}
                 params={match.params}
                 requestBaseUrl={requestBaseUrl}

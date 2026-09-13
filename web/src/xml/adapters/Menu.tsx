@@ -4,7 +4,13 @@ import { useXmlRuntime } from '../core/context';
 import type { ASTNode, Props, Scope } from '../types';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
 import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
-import { Menu as SolutionMenu, type MenuItem, type MenuSection, type MenuEntry } from '@/components/ui/Menu';
+import {
+    Menu as SolutionMenu,
+    menuItemId,
+    type MenuItem,
+    type MenuSection,
+    type MenuEntry,
+} from '@/components/ui/Menu';
 
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
 const menuPropsSchema = z.object({ gap: xmlSpacingSchema.default(3) });
@@ -53,7 +59,7 @@ function renderSection(node: ASTNode, ctx: Scope): MenuSection {
 function renderItem(node: ASTNode, ctx: Scope): MenuItem {
     const { icon, label } = resolveXmlProps(node.params, ctx, menuEntryPropsSchema, ['label']);
 
-    return { content: renderNode(node.children, ctx), icon, kind: 'item', label };
+    return { content: renderNode(node.children, ctx), id: menuItemId(label), icon, kind: 'item', label };
 }
 
 /** Converts an XML item or subsection into navigation data. */

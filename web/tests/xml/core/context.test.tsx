@@ -1,6 +1,6 @@
-import { compileProps } from '../helpers';
+import { compileProps, createContext } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, getSetupNodes, setupContext } from '@/xml/core/context';
+import { getSetupNodes, setupContext } from '@/xml/core/context';
 
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
@@ -30,14 +30,12 @@ describe('core/context', () => {
     });
 
     it('evaluates query paths against route params', async () => {
-        const ctx = createContext();
+        const ctx = createContext({ params: { issue: '123' }, requestBaseUrl: 'http://localhost/proxy' });
         const ast = [
             { name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] },
         ];
         let requestedUrl = '';
 
-        ctx.scope.bindings.params = { issue: '123' };
-        ctx.services.requestBaseUrl = 'http://localhost/proxy';
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
             requestedUrl = input instanceof Request ? input.url : String(input);
 
@@ -52,13 +50,12 @@ describe('core/context', () => {
 
     it('refetches Query data through its registered setup', async () => {
         // Arrange
-        const ctx = createContext();
+        const ctx = createContext({ requestBaseUrl: 'http://localhost/proxy' });
         const ast = [{ name: 'Query', params: compileProps({ id: 'records', path: '/records' }), children: [] }];
         const fetchImpl = vi
             .fn()
             .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
             .mockResolvedValueOnce(new Response(JSON.stringify({ version: 2 })));
-        ctx.services.requestBaseUrl = 'http://localhost/proxy';
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
@@ -83,11 +80,10 @@ describe('core/context', () => {
         },
     ])('rejects $scenario query paths before fetching', async ({ path, error }) => {
         // Arrange
-        const ctx = createContext();
+        const ctx = createContext({ requestBaseUrl: '/proxy' });
         const fetchImpl = vi.fn();
         const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
 
-        ctx.services.requestBaseUrl = '/proxy';
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act

@@ -218,10 +218,11 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert (await clients[0].put(url, json={"image": source, "expected_revision_id": str(uuid4())})).status_code == 409
     assert inspected == []
     check = await clients[0].get(f"{url}/update")
-    assert check.status_code == 200 and check.json()["available"] is False
-    assert check.json()["source"] == source
-    assert check.json()["current_image"] == check.json()["image"] == resolved.image
-    assert check.json()["configured_envs"] == ["DROP", "KEEP"]
+    assert check.status_code == 200
+    check_payload = check.json()
+    assert check_payload["current_image"] == check_payload["metadata"]["image"] == resolved.image
+    assert {"source", "image", "available"}.isdisjoint(check_payload)
+    assert check_payload["configured_envs"] == ["DROP", "KEEP"]
     assert "private-value" not in check.text
     assert check.json()["min_scale"] == 0
     assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "private-value"}})).status_code == 409
@@ -233,9 +234,8 @@ async def test_source_update_preserves_patches_and_reresolves(
     # A review is advisory: submission re-resolves a moved tag and enforces its new requirements.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
     check = await clients[0].get(f"{url}/update")
-    assert check.json()["available"] is True
     assert check.json()["current_image"] == "ghcr.io/longlink/dashboard@sha256:first"
-    assert check.json()["image"] == resolved.image
+    assert check.json()["metadata"]["image"] == resolved.image
     resolved = LongLinkMetadata(
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
@@ -262,7 +262,7 @@ async def test_source_update_preserves_patches_and_reresolves(
     digest = str(resolved.image)
     assert (await clients[0].put(url, json={"image": digest, "envs": {"NEW": "replacement"}})).status_code == 204
     check = await clients[0].get(f"{url}/update")
-    assert check.json()["source"] == digest and check.json()["available"] is False
+    assert check.json()["current_image"] == check.json()["metadata"]["image"] == digest
     assert check.json()["min_scale"] == 1
     assert inspected[-1] == digest
     assert (await clients[0].post(f"{url}/update", json={"min_scale": 0})).status_code == 204
@@ -404,8 +404,8 @@ async def test_local_registry_release_roundtrip(
     url = f"/api/v1/solutions/{solution_id}"
     check = await clients[0].get(f"{url}/update")
     assert check.status_code == 200
-    assert check.json()["source"] == source and check.json()["image"] == metadata.image
-    assert check.json()["available"] is False
+    assert check.json()["current_image"] == check.json()["metadata"]["image"] == metadata.image
+    assert {"source", "image", "available"}.isdisjoint(check.json())
     assert "integration-value" not in check.text
     assert (await clients[0].post(f"{url}/update", json={})).status_code == 409
     assert (await clients[0].put(url, json={"image": source, "envs": {"EXTRA": "replacement"}})).status_code == 204

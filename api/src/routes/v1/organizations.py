@@ -147,7 +147,7 @@ async def get_organization_database_usage(
                 return usage
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
-                database = await databases.connection(infrastructure, cluster)
+                database = await databases.connection(organization, cluster)
                 size_bytes = await database.database_usage(organization.id.hex)
             measured_at = utcnow()
             async with session_scope() as usage_session:
@@ -196,7 +196,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"bucket_name": bucket.name, "space_used": usage}
+    return {"space_used": usage}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

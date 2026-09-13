@@ -1,10 +1,8 @@
-import { RenderXML } from '../helpers';
 import { MemoryRouter } from 'react-router';
 import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
-import { createContext } from '@/xml/core/context';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { parseFragment, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
 
 describe('Menu', () => {
     it.each([

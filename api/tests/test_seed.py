@@ -13,6 +13,28 @@ from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
+class SeedKubernetes:
+    """Provide the cluster identity boundary without external Kubernetes I/O."""
+
+    def __init__(self, _kubeconfig: dict[str, object]) -> None:
+        """Accept the validated seed kubeconfig."""
+
+    async def cluster_uid(self) -> str:
+        """Return the stable synthetic cluster identity."""
+
+        return "seed-cluster"
+
+    async def aclose(self) -> None:
+        """Close the synthetic cluster client."""
+
+
+@pytest.fixture(autouse=True)
+def cluster_identity(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace cluster identity I/O at the seed boundary."""
+
+    monkeypatch.setattr("scripts.seed.Kubernetes", SeedKubernetes)
+
+
 def settings(tmp_path: Path, settings_type: type[SeedSettings] = SeedSettings) -> SeedSettings:
     """Build valid seed settings with a temporary compute configuration."""
 

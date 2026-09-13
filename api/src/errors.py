@@ -38,8 +38,7 @@ async def unexpected_error_response(_request: Request, error: Exception) -> JSON
 
     # Record stack locations without exception values, SQL parameters, or submitted inputs.
     stack = "\n".join(
-        f"  {frame.f_code.co_filename}:{lineno} in {frame.f_code.co_name}"
-        for frame, lineno in traceback.walk_tb(error.__traceback__)
+        f"  {frame.f_code.co_filename}:{lineno} in {frame.f_code.co_name}" for frame, lineno in traceback.walk_tb(error.__traceback__)
     )
     logger.error("Unhandled API error\n%s", stack)
     return JSONResponse(
