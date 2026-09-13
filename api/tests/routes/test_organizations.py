@@ -301,16 +301,18 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an Organization and return its transitional resource state."""
+    """Allow active owners to retry Organization cleanup and return its transitional state."""
 
     # Arrange
-    owner = users[0]
-    client = clients[0]
+    owner, second_owner = users[0], users[2]
     organization = await create_organization(owner)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=second_owner.id, organization_id=organization.id, role=OrganizationRoles.owner))
+        await session.commit()
 
     # Act
-    response = await client.delete(f"/api/v1/organizations/{organization.id}")
-    retry_response = await client.delete(f"/api/v1/organizations/{organization.id}")
+    response = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+    retry_response = await clients[2].delete(f"/api/v1/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 202

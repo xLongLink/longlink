@@ -584,9 +584,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
 
     # Assert
     assert result is not None
-    assert result.deleted_id == owner.id
     assert deleted_organization is not None
-    assert deleted_organization.deleted_id == owner.id
     async with session_scope() as session:
         members = await organizations.members(session, organization.id)
         assert await organizations.invitations(session, organization.id) == []

@@ -43,15 +43,10 @@ import { Menu, resolveMenuItemId, type MenuSection } from '@/components/ui/Menu'
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import {
     useDeleteOrganizationSolution,
-    useOrganization,
     useOrganizationMembers,
     useOrganizationRoute,
     useUpdateOrganization,
 } from '@/lib/hooks/use-organization';
-import {
-    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
-    zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse,
-} from '@/lib/generated/platform-api-v1/zod.gen';
 import type {
     OrganizationInvitationCreate,
     OrganizationSolutionSummary,
@@ -59,6 +54,11 @@ import type {
     OrganizationMemberAccessResponse,
     OrganizationRoles,
 } from '@/lib/generated/platform-api-v1/types.gen';
+import {
+    zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse,
+    zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse,
+    zOrganizationDetails,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 const ORGANIZATION_SETTINGS_ITEM_IDS = ['organization', 'members', 'invitations', 'solutions'] as const;
 
@@ -79,13 +79,20 @@ export default function OrganizationSettings() {
         membershipError,
         solutionsError,
     } = useOrganizationRoute(organization, isSolutionsSectionActive);
-    const {
-        organization: organizationDetails,
-        members,
-        invitations,
-        isLoading: isOrganizationLoading,
-        error: organizationError,
-    } = useOrganization(isSolutionsSectionActive ? undefined : membershipOrganizationId);
+    const organizationPath =
+        !isSolutionsSectionActive && membershipOrganizationId
+            ? `/api/v1/organizations/${membershipOrganizationId}`
+            : null;
+    const organizationQuery = useQuery({
+        queryKey: ['api', organizationPath],
+        queryFn: organizationPath
+            ? async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json())
+            : skipToken,
+        retry: false,
+    });
+    const { organization: organizationDetails, members = [], invitations = [] } = organizationQuery.data ?? {};
+    const isOrganizationLoading = organizationQuery.isLoading;
+    const organizationError = organizationQuery.error;
 
     // Preserve the page's loading state and details-first error precedence.
     const isLoading = isMembershipLoading || isOrganizationLoading || isSolutionsLoading;

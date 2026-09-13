@@ -554,21 +554,18 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
             return None
         raise ForbiddenError("Access required")
 
-    # Revalidate active owners while the Organization is locked; only the original actor may retry a tombstone.
-    if organization.deleted_at is None and not user.administrator:
+    # Revalidate active owners while the Organization is locked for deletion and retries.
+    if not user.administrator:
         membership = await session.get(UserOrganization, (user.id, organization_id), with_for_update=True)
         if membership is None:
             raise ForbiddenError("Access required")
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise ForbiddenError("Permission required")
-    elif not user.administrator and organization.deleted_id != user.id:
-        raise ForbiddenError("Access required")
 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
     if organization.deleted_at is None:
         now = utcnow()
         organization.deleted_at = now
-        organization.deleted_id = user.id
         organization.updated_at = now
 
         # Tombstone every active Solution without loading each object.

@@ -37,7 +37,8 @@ Run `make down` only for disposable local data.
 ## Hosted
 
 The hosting environment owns cluster access, storage, TLS, deployment, and rollback.
-Create the gateway and storage TLS Secrets, stop Platform workers, then run:
+Create the gateway and storage TLS Secrets, stop Platform workers, then apply the
+boundaries before Helmfile installs shared controllers:
 
 ```bash
 kubectl apply --server-side --field-manager=longlink-compute -k k8s/boundaries
