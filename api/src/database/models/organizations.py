@@ -9,11 +9,11 @@ from src.database.types import EncryptedType
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
 
 
-class Organization(PlatformModel, table=True):
+class Organization(AuditTable, table=True):
     """Persist the tenant boundary and its immutable infrastructure assignments.
 
     A deletion tombstone remains until reconciliation removes the Organization's external resources.
@@ -34,7 +34,6 @@ class Organization(PlatformModel, table=True):
 
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    database_idle_seconds: int = Field(default=0)
     database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     database_state: DatabaseState = Field(
         default=DatabaseState.available,
@@ -55,11 +54,6 @@ class Organization(PlatformModel, table=True):
             nullable=False,
         ),
     )
-
-    # Audit
-    created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
-    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
 
 class OrganizationActivity(PlatformModel, table=True):

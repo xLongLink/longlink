@@ -34,7 +34,7 @@ LongLink
     │   ├── Kourier → private Platform-to-Solution HTTPS routing
     │   ├── Knative → application lifecycle and scaling
     │   ├── CloudNativePG → PostgreSQL lifecycle
-    │   └── Rook/Ceph → S3 object storage and scoped Solution identities
+    │   └── RustFS → S3 object storage and scoped Solution service accounts
     └── Organization (many per cluster)
         ├── Compute namespace
         │   └── Solution (many per Organization)
@@ -46,11 +46,10 @@ LongLink
         │       └── Organization PostgreSQL database
         │           ├── Shared identity schema
         │           └── Schema + role per Solution
-        └── Storage namespace
-            └── Bucket claim and owner credentials
-                └── Organization bucket
-                    ├── Shared S3 key prefix
-                    └── S3 key prefix per Solution
+        └── RustFS
+            └── Organization bucket
+                ├── Shared S3 key prefix
+                └── S3 key prefix per Solution
 ```
 
 ## Boundaries and Contracts
@@ -61,7 +60,7 @@ LongLink
 - The API uses the same runtime code in local and hosted deployments. `dev/` owns workstation setup, endpoint connections, split DNS, and mail capture; no development transport belongs in the API.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
 - Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.
-- Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
+- Compute registrations define CNPG storage, RustFS controller credentials, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
 - Organization databases may hibernate when idle; activity wakes them and synchronizes shared users before work begins.
 - Diagnostics use cached data without waking databases, and storage allocation is reported per database instance.
 - Platform users and memberships flow one way into the Organization's shared schema.

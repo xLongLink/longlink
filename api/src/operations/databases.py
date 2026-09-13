@@ -8,6 +8,7 @@ from src.utils import postgres
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from collections.abc import Iterator, AsyncIterator
+from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -32,22 +33,24 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(organization: Organization, cluster: Kubernetes) -> postgres.Postgres:
-    """Build the Organization's private, CA-verified PostgreSQL connection."""
+async def connection(organization: Organization, cluster: Kubernetes) -> tuple[postgres.Postgres, str]:
+    """Build the Organization's private, CA-verified PostgreSQL connection and return its CA."""
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
     port = await cluster.databases.portforward(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    return postgres.Postgres(
+    certificate = await cluster.databases.certificate(organization.id)
+    database = postgres.Postgres(
         host=f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         port=port,
         username="postgres",
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,
-        certificate=await cluster.databases.certificate(organization.id),
+        certificate=certificate,
         hostaddr="127.0.0.1",
     )
+    return database, certificate
 
 
 @dataclass
@@ -191,8 +194,6 @@ async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", 
                 and (transition is None or transition.expires_at <= utcnow())
                 and (
                     organization.database_state in (DatabaseState.failed, DatabaseState.resuming, DatabaseState.hibernating)
-                    or organization.database_state == DatabaseState.hibernated
-                    and organization.database_idle_seconds == 0
                     or organization.database_state == DatabaseState.available
                     and organization.database_sync_pending
                 )
@@ -285,7 +286,7 @@ async def ready(organization_id: UUID) -> None:
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database = await connection(infrastructure.organization, cluster)
+                    database, _ = await connection(infrastructure.organization, cluster)
                     if infrastructure.organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
@@ -330,7 +331,7 @@ async def ready(organization_id: UUID) -> None:
 async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
-    # Recheck both the idle interval and persisted leases under the admission lock.
+    # Recheck the Platform idle interval and persisted leases under the admission lock.
     async with session_scope() as session:
         organization = await lock(session, organization_id)
         if organization is not None and organization.deleted_at is None and organization.database_state == DatabaseState.hibernated:
@@ -339,9 +340,8 @@ async def hibernate(organization_id: UUID) -> bool:
             organization is None
             or organization.deleted_at is not None
             or organization.status != Status.running
-            or organization.database_idle_seconds == 0
             or organization.database_state != DatabaseState.available
-            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -369,7 +369,7 @@ async def hibernate(organization_id: UUID) -> bool:
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(infrastructure.organization, cluster)
+                    database, _ = await connection(infrastructure.organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)
@@ -388,8 +388,7 @@ async def hibernate(organization_id: UUID) -> bool:
                         )
                         if (
                             active is not None
-                            or organization.database_idle_seconds == 0
-                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+                            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
                         ):
                             organization.database_state = DatabaseState.available
                             await session.commit()
@@ -424,9 +423,7 @@ async def hibernate(organization_id: UUID) -> bool:
                                         )
                                         .limit(1)
                                     )
-                                    interrupted = (
-                                        demand is not None or organization.deleted_at is not None or organization.database_idle_seconds == 0
-                                    )
+                                    interrupted = demand is not None or organization.deleted_at is not None
                                 if interrupted:
                                     state = DatabaseState.resuming
                                     break

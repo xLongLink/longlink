@@ -1,5 +1,8 @@
 .PHONY: install check format build test up image down api web sdk sample seed
 
+HELMFILE_IMAGE := ghcr.io/helmfile/helmfile:v1.8.0
+
+
 # Install all development dependencies.
 install: api/.env
 	cd api && uv sync --locked --extra dev
@@ -63,18 +66,19 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 
-	# Generate local TLS; make down removes the whole certificate set.
+	# Generate leaf certificates from a stable local CA; make down removes the certificate set.
 	@set -eu; umask 077; mkdir -p dev/certificates; \
-		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
-			-subj "/CN=LongLink Development CA" \
-			-addext "basicConstraints=critical,CA:TRUE" \
-			-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		if [ ! -s dev/certificates/ca.key ] || [ ! -s dev/certificates/ca.crt ]; then \
+			openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+				-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
+				-subj "/CN=LongLink Development CA" \
+				-addext "basicConstraints=critical,CA:TRUE" \
+				-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		fi; \
 		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/gateway.key -subj "/CN=localhost" | \
 				openssl x509 -req -days 3650 \
 					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
 					-extfile dev/tls.cnf -extensions gateway -out dev/certificates/gateway.crt; \
-		cat dev/certificates/ca.crt >> dev/certificates/gateway.crt; \
 		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
 			--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key --dry-run=client --output=yaml | \
 			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
@@ -82,25 +86,38 @@ up:
 				openssl x509 -req -days 3650 \
 					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
 					-extfile dev/tls.cnf -extensions storage -out dev/certificates/storage.crt; \
-		cat dev/certificates/ca.crt >> dev/certificates/storage.crt; \
-		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rook-ceph create secret tls longlink-storage-tls \
-			--cert=dev/certificates/storage.crt --key=dev/certificates/storage.key --dry-run=client --output=yaml | \
-			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret generic longlink-rustfs \
+			--from-literal=RUSTFS_ACCESS_KEY=rustfsadmin --from-literal=RUSTFS_SECRET_KEY=rustfsadmin --dry-run=client --output=yaml | \
+		kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret generic longlink-storage-tls \
+			--from-file=tls.crt=dev/certificates/storage.crt --from-file=tls.key=dev/certificates/storage.key --dry-run=client --output=yaml | \
+		kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
+	# Kourier's controller loads TLS only at process startup.
+	@if kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
+		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/net-kourier-controller --namespace knative-serving; \
+	fi
 
 	# Install connectivity and shared controllers before publishing the release.
 	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
+	@if command -v helmfile >/dev/null 2>&1; then \
+		KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync; \
+	else \
+		docker run --rm --network host --volume "$(CURDIR):/workspace:ro" --volume "$(abspath dev/kubeconfig.yaml):/kubeconfig:ro" --workdir /workspace --env KUBECONFIG=/kubeconfig --entrypoint helmfile "$(HELMFILE_IMAGE)" --file k8s/setup.yaml.gotmpl --environment development sync; \
+	fi
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/net-kourier-controller --namespace knative-serving --timeout=120s
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/3scale-kourier-gateway --namespace kourier-system --timeout=120s
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443/health/ready
 
 
 # Build and push the local sample, preserving an existing development project.
 image: sample
-	@docker buildx inspect longlink-dev >/dev/null 2>&1 || docker buildx create --name longlink-dev --driver docker-container
-	cd sdk/dev && uv run longlink build --builder longlink-dev --registry localhost:15000 --push --tag dev
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
 # Stop local services and remove generated cluster and API state.

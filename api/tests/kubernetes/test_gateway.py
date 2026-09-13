@@ -75,7 +75,7 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
     await provider.verify("https://gateway.example")
     assert ("longlink-system", "compute-release") in observed_resources
     assert ("cnpg-system", "cnpg-controller-manager") in observed_resources
-    assert ("rook-ceph", "rook-ceph-operator") in observed_resources
+    assert ("rustfs", "rustfs") in observed_resources
 
 
 async def test_gateway_propagates_controller_lookup_errors(

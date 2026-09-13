@@ -9,6 +9,11 @@
         <xsd:documentation>Text color: primary or secondary.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="type" type="TextStyleType" default="body">
+      <xsd:annotation>
+        <xsd:documentation>Text treatment: body, large, label, supporting, or code.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="InlineTextType" mixed="true">

@@ -16,6 +16,16 @@
         <xsd:documentation>Input type: text, password, or email.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="placeholder" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Hint displayed while the field is empty.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="isRequired" type="xsd:boolean" default="false">
+      <xsd:annotation>
+        <xsd:documentation>Marks the field as required.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="TextInput" type="TextInputType">

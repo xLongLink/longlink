@@ -1,94 +1,68 @@
-apiVersion: ceph.rook.io/v1
-kind: CephCluster
+apiVersion: v1
+kind: ConfigMap
 metadata:
-    name: rook-ceph
-    namespace: rook-ceph
-spec:
-    cephVersion:
-        image: quay.io/ceph/ceph:v19.2.6@sha256:ff836bb28e7d0be0ec4dd22e79407174452a96e11ee62e9cdd1fa47f4bcc3bdc
-        allowUnsupported: false
-    dataDirHostPath: /var/lib/rook
-    mon:
-        count: 3
-        allowMultiplePerNode: false
-        volumeClaimTemplate:
-            spec:
-                storageClassName: block-storage
-                resources:
-                    requests:
-                        storage: 10Gi
-    mgr:
-        count: 2
-        allowMultiplePerNode: false
-    dashboard:
-        enabled: false
-    storage:
-        useAllNodes: false
-        useAllDevices: false
-        storageClassDeviceSets:
-            - name: longlink
-              count: 3
-              resources: {}
-              placement:
-                  topologySpreadConstraints:
-                      - maxSkew: 1
-                        topologyKey: kubernetes.io/hostname
-                        whenUnsatisfiable: DoNotSchedule
-                        labelSelector:
-                            matchLabels:
-                                app: rook-ceph-osd
-              volumeClaimTemplates:
-                  - metadata:
-                        name: data
-                    spec:
-                        storageClassName: block-storage
-                        volumeMode: Block
-                        accessModes: [ReadWriteOnce]
-                        resources:
-                            requests:
-                                storage: 100Gi
+    name: longlink-storage-proxy
+    namespace: rustfs
+data:
+    default.conf: |
+        server {
+            listen 443 ssl;
+            ssl_certificate /etc/nginx/tls/tls.crt;
+            ssl_certificate_key /etc/nginx/tls/tls.key;
+            client_max_body_size 0;
+            proxy_request_buffering off;
+            location / {
+                proxy_pass http://rustfs-svc.rustfs.svc.cluster.local:9000;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Forwarded-Proto https;
+            }
+        }
 ---
-apiVersion: ceph.rook.io/v1
-kind: CephObjectStore
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-    name: longlink
-    namespace: rook-ceph
+    name: longlink-storage
+    namespace: rustfs
 spec:
-    metadataPool:
-        failureDomain: host
-        replicated:
-            size: 3
-            requireSafeReplicaSize: true
-    dataPool:
-        failureDomain: host
-        replicated:
-            size: 3
-            requireSafeReplicaSize: true
-    preservePoolsOnDelete: true
-    gateway:
-        instances: 2
-        port: 0
-        securePort: 443
-        sslCertificateRef: longlink-storage-tls
+    replicas: 2
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: longlink-storage
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: longlink-storage
+        spec:
+            containers:
+                - name: nginx
+                  image: nginx:1.29.1-alpine
+                  ports:
+                      - containerPort: 443
+                        name: https
+                  volumeMounts:
+                      - name: configuration
+                        mountPath: /etc/nginx/conf.d
+                        readOnly: true
+                      - name: tls
+                        mountPath: /etc/nginx/tls
+                        readOnly: true
+            volumes:
+                - name: configuration
+                  configMap:
+                      name: longlink-storage-proxy
+                - name: tls
+                  secret:
+                      secretName: longlink-storage-tls
 ---
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
+apiVersion: v1
+kind: Service
 metadata:
-    name: longlink-buckets
-provisioner: rook-ceph.ceph.rook.io/bucket
-reclaimPolicy: Delete
-parameters:
-    objectStoreName: longlink
-    objectStoreNamespace: rook-ceph
----
-apiVersion: ceph.rook.io/v1
-kind: CephObjectStoreUser
-metadata:
-    name: longlink-health
-    namespace: rook-ceph
+    name: longlink-storage
+    namespace: rustfs
 spec:
-    store: longlink
-    quotas:
-        maxBuckets: -1
-    opMask:
-        - read
+    selector:
+        app.kubernetes.io/name: longlink-storage
+    ports:
+        - name: https
+          port: 443
+          targetPort: https

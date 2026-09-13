@@ -61,21 +61,17 @@ export type ComputeRegistryCreate = {
      */
     database_storage_class: string;
     /**
-     * Storage Class
-     */
-    storage_class: string;
-    /**
      * Storage Endpoint
      */
     storage_endpoint: string;
     /**
-     * Storage Size Gib
+     * Storage Access Key
      */
-    storage_size_gib?: number;
+    storage_access_key: string;
     /**
-     * Storage Instances
+     * Storage Secret Key
      */
-    storage_instances?: 1 | 3;
+    storage_secret_key: string;
     /**
      * Storage Certificate
      */
@@ -84,18 +80,6 @@ export type ComputeRegistryCreate = {
      * Bucket Size Bytes
      */
     bucket_size_bytes: number;
-    /**
-     * Bucket Max Objects
-     */
-    bucket_max_objects: number;
-    /**
-     * Storage Reserve Percent
-     */
-    storage_reserve_percent: number;
-    /**
-     * Storage Object Overhead Bytes
-     */
-    storage_object_overhead_bytes: number;
 };
 
 /**
@@ -129,37 +113,13 @@ export type ComputeRegistryResponse = {
      */
     database_storage_class: string;
     /**
-     * Storage Class
-     */
-    storage_class: string;
-    /**
      * Storage Endpoint
      */
     storage_endpoint: string;
     /**
-     * Storage Size Gib
-     */
-    storage_size_gib: number;
-    /**
-     * Storage Instances
-     */
-    storage_instances: number;
-    /**
      * Bucket Size Bytes
      */
     bucket_size_bytes: number;
-    /**
-     * Bucket Max Objects
-     */
-    bucket_max_objects: number;
-    /**
-     * Storage Reserve Percent
-     */
-    storage_reserve_percent: number;
-    /**
-     * Storage Object Overhead Bytes
-     */
-    storage_object_overhead_bytes: number;
     status: Status;
 };
 
@@ -280,22 +240,6 @@ export type OAuthAvailability = {
 export type OperationKind = 'compute.validate' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
- * OperationResource
- *
- * Represent one operation target resource.
- */
-export type OperationResource = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-};
-
-/**
  * OperationResponse
  *
  * Expose administrative asynchronous reconciliation state for one Platform resource target.
@@ -306,11 +250,14 @@ export type OperationResponse = {
      */
     id: string;
     kind: OperationKind;
-    resource: OperationResource | null;
     /**
      * Target Id
      */
     target_id: string;
+    /**
+     * Resource Name
+     */
+    resource_name: string | null;
     status: OperationStatus;
     /**
      * Failed
@@ -483,13 +430,17 @@ export type OrganizationSolutionSummary = {
 /**
  * OrganizationStorageUsageResponse
  *
- * Report current logical object bytes for one organization bucket.
+ * Report current logical object usage and quota for one Organization bucket.
  */
 export type OrganizationStorageUsageResponse = {
     /**
      * Space Used
      */
     space_used: number;
+    /**
+     * Quota Bytes
+     */
+    quota_bytes: number;
 };
 
 /**
@@ -516,10 +467,6 @@ export type OrganizationSummary = {
     avatar: string;
     status: Status;
     database_state: DatabaseState;
-    /**
-     * Database Idle Seconds
-     */
-    database_idle_seconds: number;
 };
 
 /**
@@ -532,10 +479,6 @@ export type OrganizationUpdate = {
      * Avatar
      */
     avatar?: string | '' | null;
-    /**
-     * Database Idle Seconds
-     */
-    database_idle_seconds?: number | null;
 };
 
 /**
@@ -752,32 +695,6 @@ export type SolutionResponse = {
      * Created At
      */
     created_at: string;
-};
-
-/**
- * SolutionUpdate
- *
- * Deploy a submitted image source with an environment patch.
- */
-export type SolutionUpdate = {
-    /**
-     * Envs
-     */
-    envs?: {
-        [key: string]: string | null;
-    };
-    /**
-     * Min Scale
-     */
-    min_scale?: 0 | 1 | null;
-    /**
-     * Expected Revision Id
-     */
-    expected_revision_id?: string | null;
-    /**
-     * Image
-     */
-    image: string;
 };
 
 /**
@@ -1298,74 +1215,6 @@ export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses];
 
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}';
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutData = {
-    body: SolutionUpdate;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}';
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutError = UpdateSolutionApiV1SolutionsSolutionIdPutErrors[keyof UpdateSolutionApiV1SolutionsSolutionIdPutErrors];
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutResponse = UpdateSolutionApiV1SolutionsSolutionIdPutResponses[keyof UpdateSolutionApiV1SolutionsSolutionIdPutResponses];
-
 export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetData = {
     body?: never;
     path: {
@@ -1469,6 +1318,40 @@ export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
 };
 
 export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}';
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;

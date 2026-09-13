@@ -39,6 +39,16 @@
             </xsd:attribute>
           </xsd:complexType>
         </xsd:element>
+        <xsd:element name="Validate">
+          <xsd:complexType>
+            <xsd:attribute name="value" type="xsd:string" use="required">
+              <xsd:annotation><xsd:documentation>Object expression to validate and normalize before a request.</xsd:documentation></xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="rules" type="xsd:string" use="required">
+              <xsd:annotation><xsd:documentation>Declarative field validation rules expression.</xsd:documentation></xsd:annotation>
+            </xsd:attribute>
+          </xsd:complexType>
+        </xsd:element>
       </xsd:choice>
       <xsd:choice>
         <xsd:element ref="Button"/>

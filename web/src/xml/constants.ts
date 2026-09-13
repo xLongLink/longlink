@@ -1,6 +1,7 @@
 /** Enumerated XML values mirrored from sdk/longlink/.static/xsd/types.xsd. */
 export const ACTION_METHODS = ['DELETE', 'GET', 'PATCH', 'POST', 'PUT'] as const;
 export const TEXT_COLORS = ['primary', 'secondary'] as const;
+export const TEXT_TYPES = ['body', 'large', 'label', 'supporting', 'code'] as const;
 export const TEXT_INPUT_TYPES = ['text', 'password', 'email'] as const;
 export const ICON_NAMES = [
     'close',
@@ -34,6 +35,22 @@ export const ICON_NAMES = [
 ] as const;
 export const ORIENTATIONS = ['horizontal', 'vertical'] as const;
 export const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as const;
+export const BADGE_VARIANTS = [
+    'neutral',
+    'info',
+    'success',
+    'warning',
+    'error',
+    'blue',
+    'cyan',
+    'green',
+    'orange',
+    'pink',
+    'purple',
+    'red',
+    'teal',
+    'yellow',
+] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'around', 'evenly'] as const;

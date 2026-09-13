@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="StatusBadgeType">
+    <xsd:attribute name="status" type="xsd:string" use="required">
+      <xsd:annotation><xsd:documentation>Lifecycle status expression.</xsd:documentation></xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="StatusBadge" type="StatusBadgeType"/>
+</xsd:schema>

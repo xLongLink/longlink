@@ -1,13 +1,10 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from datetime import datetime
 from sqlmodel import Field
-from longlink.utils.time import utcnow
-from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable
 
 
-class User(PlatformModel, table=True):
+class User(AuditTable, table=True):
     """Represent a local LongLink user account."""
 
     __tablename__: ClassVar[str] = "users"
@@ -23,10 +20,6 @@ class User(PlatformModel, table=True):
     password: str = Field(max_length=128)
     google_id: str | None = Field(default=None, unique=True, index=True, max_length=255)
     github_id: str | None = Field(default=None, unique=True, index=True, max_length=255)
-
-    # Audit
-    updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
-    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # State
     administrator: bool = Field(default=False)

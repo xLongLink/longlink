@@ -125,6 +125,15 @@
       <xsd:enumeration value="secondary"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="TextStyleType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="body"/>
+      <xsd:enumeration value="large"/>
+      <xsd:enumeration value="label"/>
+      <xsd:enumeration value="supporting"/>
+      <xsd:enumeration value="code"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="TextInputKindType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="text"/>

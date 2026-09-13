@@ -11,6 +11,7 @@ from sqlalchemy.engine import make_url
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from src.database.models.users import User
 from src.database.models.operations import Operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
@@ -30,8 +31,9 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             database_url = make_url(mysql.get_connection_url()).set(drivername="mysql+aiomysql")
         engine = create_async_engine(database_url, isolation_level="READ COMMITTED")
         try:
-            # Create only the queue table and bind the production session service for this test.
+            # Create the queue and its audit-user dependency before binding the production session service.
             async with engine.begin() as connection:
+                await connection.run_sync(User.__table__.create)
                 await connection.run_sync(Operation.__table__.create)
 
             session_factory = async_sessionmaker(engine, expire_on_commit=False)

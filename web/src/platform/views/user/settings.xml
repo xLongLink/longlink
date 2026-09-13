@@ -1,0 +1,96 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Account Settings" icon="settings2">
+    <Query id="user" path="/api/v1/me" />
+    <State id="profile" name="$user.name" />
+    <Query id="memberships" path="/api/v1/me/organizations" />
+    <State id="deletion" item="${null}" open="${false}" />
+    <State id="organizationDraft" name="" />
+
+    <Stack gap="8">
+        <Stack direction="horizontal" gap="3" align="center">
+            <Avatar name="$profile.name" src="$user.avatar" />
+            <Stack>
+                <Heading level="4" accessibilityLevel="1">$profile.name</Heading>
+                <Text type="supporting">Your Account</Text>
+            </Stack>
+        </Stack>
+
+        <Menu>
+            <MenuSection title="Settings" isHeaderHidden="true">
+                <MenuItem label="Account" icon="userRound">
+                    <Stack gap="4">
+                        <Heading level="2">Account</Heading>
+                        <Divider />
+                        <TextInput label="Username" value="$profile.name" isRequired="true" />
+                        <Text><b>Email</b> $user.email</Text>
+                        <Stack direction="horizontal" justify="end">
+                            <Action>
+                                <Validate value="$profile" rules="${{ name: { type: 'string', trim: true, minLength: 1 } }}" />
+                                <Request url="/api/v1/me" method="PATCH" json="${{ name: profile.name }}" />
+                                <Patch state="user" invalidate="true" />
+                                <Button variant="primary" disabled="${!trim(profile.name)}">Save account</Button>
+                            </Action>
+                        </Stack>
+                    </Stack>
+                </MenuItem>
+                <MenuItem label="Organizations" icon="building2">
+                    <Stack gap="4">
+                        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+                            <Heading level="2">Organizations</Heading>
+                            <Dialog title="New organization" triggerLabel="Create Organization" purpose="form">
+                                <Stack gap="3">
+                                    <TextInput
+                                        label="Name"
+                                        value="$organizationDraft.name"
+                                        placeholder="Example LongLink"
+                                        isRequired="true"
+                                    />
+                                    <Action>
+                                        <Request url="/api/v1/organizations" method="POST" closeDialog="true" json="${{ name: trim(organizationDraft.name) }}" />
+                                        <Patch state="memberships" invalidate="true" />
+                                        <Button variant="primary" disabled="${!trim(organizationDraft.name)}">Create organization</Button>
+                                    </Action>
+                                </Stack>
+                            </Dialog>
+                        </Stack>
+                        <Divider />
+                        <Table data="$memberships" idKey="organization.id" hasHover="true">
+                            <TableColumn field="organization.name" header="Name">
+                                <Stack direction="horizontal" gap="3" align="center">
+                                    <Avatar kind="organization" name="$row.organization.name" src="$row.organization.avatar" />
+                                    <Stack align="start">
+                                        <Stack direction="horizontal" gap="1" align="center">
+                                            <Link to="/orgs/${row.organization.slug}">$row.organization.name</Link>
+                                            <Badge>$row.role</Badge>
+                                        </Stack>
+                                        <Text type="supporting">Organization</Text>
+                                    </Stack>
+                                </Stack>
+                            </TableColumn>
+                            <TableColumn field="organization.id" header="Actions">
+                                <Action if="${row.role === 'owner'}">
+                                    <Patch state="deletion" value="${{ item: row, open: true }}" />
+                                    <Button variant="destructive">Delete</Button>
+                                </Action>
+                            </TableColumn>
+                        </Table>
+                    </Stack>
+                </MenuItem>
+            </MenuSection>
+        </Menu>
+    </Stack>
+
+    <Dialog title="Delete organization" isOpen="$deletion.open" purpose="form">
+        <Stack gap="3">
+            <Text color="secondary">Delete $deletion.item.organization.name from your account?</Text>
+            <Stack direction="horizontal" gap="2" justify="end">
+                <Action><Patch state="deletion" value="${{ item: null, open: false }}" /><Button variant="ghost">Cancel</Button></Action>
+                <Action>
+                    <Request url="/api/v1/organizations/${deletion.item.organization.id}" method="DELETE" closeDialog="true" />
+                    <Patch state="memberships" invalidate="true" />
+                    <Button variant="destructive">Delete</Button>
+                </Action>
+            </Stack>
+        </Stack>
+    </Dialog>
+</longlink>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="ProgressBarType">
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Accessible progress label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="value" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Current byte usage expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="max" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Byte quota expression.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="ProgressBar" type="ProgressBarType">
+    <xsd:annotation>
+      <xsd:documentation>Displays byte usage against a fixed allocation or quota.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="progress-bar" category="Data display" lastUpdated="2026-09-14" source="adapters/ProgressBar.xsd"/>
+        <longlink:example>&lt;ProgressBar label="Storage" value="$storage.space_used" max="$storage.quota_bytes" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

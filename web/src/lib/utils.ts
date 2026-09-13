@@ -3,15 +3,6 @@ export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     month: 'numeric',
     year: 'numeric',
 });
-export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    hour: 'numeric',
-    hourCycle: 'h23',
-    minute: 'numeric',
-    month: 'numeric',
-    second: 'numeric',
-    year: 'numeric',
-});
 const numberFormatter = new Intl.NumberFormat();
 
 /** Formats bytes using binary units for admin resource tables. */
@@ -47,16 +38,4 @@ export function decodePathSegment(segment: string): string {
     } catch {
         return segment;
     }
-}
-
-/** Creates an open-change handler that ignores close attempts while a request is pending. */
-export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open: boolean) => void) {
-    return (nextOpen: boolean) => {
-        // Protect an in-flight request from being dismissed.
-        if (!nextOpen && isPending) {
-            return;
-        }
-
-        onOpenChange(nextOpen);
-    };
 }

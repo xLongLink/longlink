@@ -1,19 +1,21 @@
+import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
+import type { Props } from '../types';
+import { useXmlRuntime } from '../core/context';
+import { resolveXmlProps } from '../core/props';
 import { Button } from '@astryxdesign/core/Button';
 import UpdateSolution from '@/components/dialogs/UpdateSolution';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { zSolutionUpdateCheck } from '@/lib/generated/platform-api-v1/zod.gen';
-import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { zOrganizationSolutionSummary, zSolutionUpdateCheck } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Own the on-demand source check and reuse its candidate in the environment dialog. */
-export default function SolutionUpdate({
-    solution,
-    organizationId,
-}: {
-    solution: OrganizationSolutionSummary;
-    organizationId: string;
-}) {
+const solutionUpdatePropsSchema = z.object({ organizationId: z.string().uuid(), solution: z.unknown() });
+
+/** Owns a Solution revision workflow rendered from an XML table row. */
+export function SolutionUpdate({ props }: Props) {
+    const { scope: ctx } = useXmlRuntime();
+    const { organizationId, solution: value } = resolveXmlProps(props, ctx, solutionUpdatePropsSchema, ['solution']);
+    const solution = zOrganizationSolutionSummary.parse(value);
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -39,7 +41,7 @@ export default function SolutionUpdate({
     const candidate = inspection.isSuccess ? inspection.data : undefined;
     const updateAvailable = candidate ? candidate.metadata.image !== candidate.current_image : false;
 
-    /** Discard reviewed metadata after deployment or a stale-source conflict. */
+    /** Discards reviewed metadata after deployment or a stale-source conflict. */
     async function resetReview() {
         setIsOpen(false);
         await queryClient.resetQueries({ queryKey, exact: true });

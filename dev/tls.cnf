@@ -8,4 +8,4 @@ subjectAltName = DNS:localhost,IP:127.0.0.1
 basicConstraints = critical,CA:FALSE
 keyUsage = critical,digitalSignature,keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = DNS:storage.localhost,DNS:rook-ceph-rgw-longlink.rook-ceph.svc,DNS:rook-ceph-rgw-longlink.rook-ceph.svc.cluster.local
+subjectAltName = DNS:storage.localhost,DNS:longlink-storage.rustfs.svc,DNS:longlink-storage.rustfs.svc.cluster.local

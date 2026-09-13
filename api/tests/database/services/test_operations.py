@@ -318,8 +318,8 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     assert failed.failed == ("migration job failed" * 100)[:500]
 
 
-async def test_operations_service_failed_creation_updates_targets_and_resolves_resources() -> None:
-    """Expose failed creation work with its concrete failed resource."""
+async def test_operations_service_failed_creation_updates_targets_and_resolves_resource_names() -> None:
+    """Expose failed creation work with its concrete failed resource names."""
 
     # Arrange
     compute = await create_compute()
@@ -389,17 +389,11 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     compute_item = items_by_kind[OperationKind.compute_validate]
     organization_item = items_by_kind[OperationKind.organization_create]
     solution_item = items_by_kind[OperationKind.solution_deploy]
-    assert compute_item.resource is not None
-    assert compute_item.resource.id == compute.id
-    assert compute_item.resource.name == compute.name
+    assert compute_item.resource_name == compute.name
     assert compute_item.status == OperationStatus.failed
-    assert organization_item.resource is not None
-    assert organization_item.resource.id == organization.id
-    assert organization_item.resource.name == organization.name
+    assert organization_item.resource_name == organization.name
     assert organization_item.status == OperationStatus.failed
-    assert solution_item.resource is not None
-    assert solution_item.resource.id == solution.id
-    assert solution_item.resource.name == solution.name
+    assert solution_item.resource_name == solution.name
     assert solution_item.status == OperationStatus.failed
 
 

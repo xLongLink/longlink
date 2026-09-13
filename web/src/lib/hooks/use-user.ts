@@ -1,20 +1,7 @@
 import { api } from '@/lib/api';
-import type { UserSummary, UserUpdate } from '@/lib/generated/platform-api-v1/types.gen';
-import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { zUserOrganizationMembership, zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-
-/** Updates the current profile and publishes the saved user to the cache. */
-export function useUpdateUser() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async (payload: UserUpdate) =>
-            zUserSummary.parse(await api('/api/v1/me', { json: payload, method: 'PATCH' }).json()),
-        onSuccess: (updatedUser) => {
-            queryClient.setQueryData(['api', '/api/v1/me'], updatedUser);
-        },
-    });
-}
+import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { skipToken, useMutation, useQuery } from '@tanstack/react-query';
+import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
@@ -36,15 +23,6 @@ export function useAuthenticatedUser() {
     }
 
     return user;
-}
-
-/** Reads organization memberships for the authenticated user. */
-export function useUserOrganizations() {
-    return useQuery({
-        queryKey: ['api', '/api/v1/me/organizations'],
-        queryFn: async ({ signal }) =>
-            zUserOrganizationMembership.array().parse(await api('/api/v1/me/organizations', { signal }).json()),
-    });
 }
 
 /** Provides an action that ends the current user session. */

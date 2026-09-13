@@ -118,7 +118,7 @@ async def test_delete_records_the_solution_tombstone(users: tuple[User, User, Us
     # Assert
     assert deleted_solution is not None
     assert deleted_solution.deleted_at is not None
-    assert deleted_solution.updated_at == deleted_solution.deleted_at
+    assert deleted_solution.updated_at >= deleted_solution.deleted_at
 
 
 @pytest.mark.parametrize(

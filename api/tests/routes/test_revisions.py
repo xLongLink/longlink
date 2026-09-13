@@ -4,7 +4,7 @@ from uuid import uuid4
 from httpx2 import AsyncClient
 from sqlmodel import col
 from factories import create_solution, create_organization
-from sqlalchemy import func, text, select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from src.models.types import Image
 from longlink.utils.time import utcnow
@@ -12,47 +12,6 @@ from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
-
-
-async def test_update_creates_immutable_encrypted_snapshot(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Authorize updates while preserving immutable, encrypted release snapshots."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
-
-    resolved: LongLinkMetadata | None = None
-
-    async def metadata(_image: Image) -> LongLinkMetadata | None:
-        """Return registry-pinned image metadata at the external boundary."""
-
-        return resolved
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    url = f"/api/v1/solutions/{solution.id}"
-    payload = {"image": "ghcr.io/longlink/dashboard:latest", "envs": {"KEY": "revision-secret"}}
-
-    # Act and assert
-    assert (await clients[1].put(url, json=payload)).status_code == 403
-    assert (await clients[0].put(url, json={**payload, "envs": {"LONGLINK_ENV": "bad"}})).status_code == 422
-    assert (await clients[0].put(url, json=payload)).status_code == 404
-    resolved = LongLinkMetadata(
-        image=Image("ghcr.io/longlink/dashboard@sha256:resolved"), environments=[EnvironmentMetadata(name="KEY", required=True)]
-    )
-    assert (await clients[0].put(url, json={**payload, "envs": {}})).status_code == 422
-    assert (await clients[0].put(url, json=payload)).status_code == 204
-    async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
-        assert current is not None
-        revision = await session.get(Revision, current.desired_revision_id)
-        assert revision is not None
-        assert revision.image == "ghcr.io/longlink/dashboard@sha256:resolved"
-        assert revision.envs == {"KEY": "revision-secret"}
-        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
-        encrypted = await session.execute(text("SELECT envs FROM revisions"))
-        assert "revision-secret" not in str(encrypted.all())
 
 
 @pytest.mark.parametrize("reference", ["desired_revision_id", "deployed_revision_id"])
@@ -95,26 +54,26 @@ async def test_revision_snapshot_cannot_be_modified(users: tuple[User, User, Use
             await session.commit()
 
 
-async def test_source_update_preserves_patches_and_reresolves(
+async def test_update_preserves_patches_and_reresolves(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Keep source identity, validate final metadata, and expose names rather than secrets."""
 
     organization = await create_organization(users[0])
     solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
-    url = f"/api/v1/solutions/{solution.id}"
-    source = "ghcr.io/longlink/dashboard:latest"
+    url = f"/api/v1/solutions/{solution.id}/update"
+    source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
     inspected: list[str] = []
 
     async def metadata(image: Image) -> LongLinkMetadata:
-        """Resolve the mutable registry tag at the external boundary."""
+        """Resolve metadata for the persisted source at the external boundary."""
 
         inspected.append(image)
         return resolved
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    assert (await clients[0].put(url, json={"image": source})).status_code == 204
+    assert (await clients[0].post(url, json={})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
@@ -126,13 +85,12 @@ async def test_source_update_preserves_patches_and_reresolves(
 
     # Source checks require maintenance and cannot be used as a registry oracle by other users.
     inspected.clear()
-    assert (await clients[1].get(f"{url}/update")).status_code == 403
-    assert (await clients[1].post(f"{url}/update", json={})).status_code == 403
+    assert (await clients[1].get(url)).status_code == 403
+    assert (await clients[1].post(url, json={})).status_code == 403
     assert inspected == []
-    assert (await clients[0].post(f"{url}/update", json={"expected_revision_id": str(uuid4())})).status_code == 409
-    assert (await clients[0].put(url, json={"image": source, "expected_revision_id": str(uuid4())})).status_code == 409
+    assert (await clients[0].post(url, json={"expected_revision_id": str(uuid4())})).status_code == 409
     assert inspected == []
-    check = await clients[0].get(f"{url}/update")
+    check = await clients[0].get(url)
     assert check.status_code == 200
     check_payload = check.json()
     assert check_payload["current_image"] == check_payload["metadata"]["image"] == resolved.image
@@ -140,28 +98,28 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert check_payload["configured_envs"] == ["DROP", "KEEP"]
     assert "private-value" not in check.text
     assert check.json()["min_scale"] == 0
-    assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "private-value"}})).status_code == 409
+    assert (await clients[0].post(url, json={"envs": {"KEEP": "private-value"}})).status_code == 409
     async with session_scope() as session:
         assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
-    assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 204
-    assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 409
-    assert (await clients[0].post(f"{url}/update", json={"min_scale": 2})).status_code == 422
+    assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
+    assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 409
+    assert (await clients[0].post(url, json={"min_scale": 2})).status_code == 422
 
     # A review is advisory: submission re-resolves a moved tag and enforces its new requirements.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
-    check = await clients[0].get(f"{url}/update")
+    check = await clients[0].get(url)
     assert check.json()["current_image"] == "ghcr.io/longlink/dashboard@sha256:first"
     assert check.json()["metadata"]["image"] == resolved.image
     resolved = LongLinkMetadata(
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
     )
-    missing = await clients[0].post(f"{url}/update", json={})
+    missing = await clients[0].post(url, json={})
     assert missing.status_code == 422 and "NEW" in missing.text
-    invalid = await clients[0].post(f"{url}/update", json={"envs": {"LONGLINK_KEY": "private-value"}})
+    invalid = await clients[0].post(url, json={"envs": {"LONGLINK_KEY": "private-value"}})
     assert invalid.status_code == 422 and "private-value" not in invalid.text
-    assert (await clients[0].post(f"{url}/update", json={"envs": {"NEW": "new-value", "KEEP": None}})).status_code == 422
-    assert (await clients[0].post(f"{url}/update", json={"envs": {"NEW": "new-value", "DROP": None}})).status_code == 204
+    assert (await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})).status_code == 422
+    assert (await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
@@ -174,18 +132,8 @@ async def test_source_update_preserves_patches_and_reresolves(
         assert prior is not None and prior.envs == {"KEEP": "private-value", "DROP": "old-value"}
     assert inspected[-1] == source
 
-    # Manual digest sources have no implicit tag channel; explicit null removes, omitted keys remain.
-    digest = str(resolved.image)
-    assert (await clients[0].put(url, json={"image": digest, "envs": {"NEW": "replacement"}})).status_code == 204
-    check = await clients[0].get(f"{url}/update")
-    assert check.json()["current_image"] == check.json()["metadata"]["image"] == digest
-    assert check.json()["min_scale"] == 1
-    assert inspected[-1] == digest
-    assert (await clients[0].post(f"{url}/update", json={"min_scale": 0})).status_code == 204
-    assert (await clients[0].get(f"{url}/update")).json()["min_scale"] == 0
 
-
-@pytest.mark.parametrize("method", ["GET", "POST", "PUT"])
+@pytest.mark.parametrize("method", ["GET", "POST"])
 async def test_release_inspection_revalidates_concurrent_desired_changes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch, method: str
 ) -> None:
@@ -210,8 +158,8 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
         return metadata
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect)
-    url = f"/api/v1/solutions/{solution.id}"
-    response = await clients[0].request(method, url if method == "PUT" else f"{url}/update", json={"image": str(metadata.image)})
+    url = f"/api/v1/solutions/{solution.id}/update"
+    response = await clients[0].request(method, url, json={})
     assert response.status_code == 409
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
@@ -234,9 +182,9 @@ async def test_environment_patch_validates_merged_limits(
         return LongLinkMetadata(image=image)
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    url = f"/api/v1/solutions/{solution.id}"
-    assert (await clients[0].put(url, json={"image": image, "envs": {"NEW": "secret"}})).status_code == 422
-    assert (await clients[0].put(url, json={"image": image, "envs": {"NEW": "", "KEY_0": None}})).status_code == 204
+    url = f"/api/v1/solutions/{solution.id}/update"
+    assert (await clients[0].post(url, json={"envs": {"NEW": "secret"}})).status_code == 422
+    assert (await clients[0].post(url, json={"envs": {"NEW": "", "KEY_0": None}})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None and len(current.desired_revision.envs) == 100
@@ -244,7 +192,7 @@ async def test_environment_patch_validates_merged_limits(
 
     # Individually valid patches must also respect the byte limit after merging retained values.
     large = await create_solution(organization, name="large", secrets={f"KEY_{index}": "x" * 32768 for index in range(15)})
-    response = await clients[0].put(f"/api/v1/solutions/{large.id}", json={"image": image, "envs": {"NEW": "x" * 32768}})
+    response = await clients[0].post(f"/api/v1/solutions/{large.id}/update", json={"envs": {"NEW": "x" * 32768}})
     assert response.status_code == 422 and "too large" in response.text
 
 
@@ -313,14 +261,14 @@ async def test_local_registry_release_roundtrip(
     listing = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
     assert listing.status_code == 200 and listing.json()[0]["deployment_pending"]
     solution_id = listing.json()[0]["id"]
-    url = f"/api/v1/solutions/{solution_id}"
-    check = await clients[0].get(f"{url}/update")
+    url = f"/api/v1/solutions/{solution_id}/update"
+    check = await clients[0].get(url)
     assert check.status_code == 200
     assert check.json()["current_image"] == check.json()["metadata"]["image"] == metadata.image
     assert {"source", "image", "available"}.isdisjoint(check.json())
     assert "integration-value" not in check.text
-    assert (await clients[0].post(f"{url}/update", json={})).status_code == 409
-    assert (await clients[0].put(url, json={"image": source, "envs": {"EXTRA": "replacement"}})).status_code == 204
+    assert (await clients[0].post(url, json={})).status_code == 409
+    assert (await clients[0].post(url, json={"envs": {"EXTRA": "replacement"}})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution_id)
         assert current is not None

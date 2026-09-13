@@ -108,7 +108,6 @@ async def update_organization(
         membership.organization_id,
         str(payload.avatar) if payload.avatar is not None else None,
         user.id,
-        payload.database_idle_seconds,
     )
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -147,7 +146,7 @@ async def get_organization_database_usage(
                 return usage
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
-                database = await databases.connection(organization, cluster)
+                database, _ = await databases.connection(organization, cluster)
                 size_bytes = await database.database_usage(organization.id.hex)
             measured_at = utcnow()
             async with session_scope() as usage_session:
@@ -184,7 +183,7 @@ async def get_organization_storage_usage(
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
             async with contextlib.aclosing(cluster):
-                bucket = await cluster.storage.bucket(membership.organization_id, infrastructure.compute)
+                bucket = cluster.storage.bucket(membership.organization_id, infrastructure.compute)
                 usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
@@ -196,7 +195,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage}
+    return {"space_used": usage, "quota_bytes": infrastructure.compute.bucket_size_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

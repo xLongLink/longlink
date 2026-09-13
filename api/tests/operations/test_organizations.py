@@ -33,11 +33,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def bucket(self, organization: UUID, compute: object):
+        def bucket(self, organization: UUID, compute: object):
             """Record bucket creation."""
 
             calls.append("storage")
-            return await super().bucket(organization, compute)
+            return super().bucket(organization, compute)
 
     class Organizations:
         async def apply(self, namespace: str) -> None:
@@ -319,10 +319,11 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete(self, organization_id: UUID, compute: object) -> None:
+        async def delete(self, organization_id: UUID, solutions: list[UUID], compute: object) -> None:
             """Record Organization bucket and identity deletion."""
 
             assert organization_id == organization.id
+            assert solutions == [solution.id]
             calls.append("bucket")
 
     class Organizations:

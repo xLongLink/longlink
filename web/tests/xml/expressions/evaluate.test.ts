@@ -57,7 +57,13 @@ describe('evaluate', () => {
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
     });
 
-    it.each(['${[value]}', '${value ? 1 : 0}'])('rejects unsupported expression nodes: %s', (value) => {
+    it('evaluates only the selected conditional branch', () => {
+        const ctx: Scope = { bindings: { administrator: true } };
+
+        expect(evaluate(compileAttribute("${administrator ? 'Administrator' : unknown()}"), ctx)).toBe('Administrator');
+    });
+
+    it.each(['${[value]}'])('rejects unsupported expression nodes: %s', (value) => {
         const ctx: Scope = { bindings: { value: 1 } };
 
         expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Unsupported node');

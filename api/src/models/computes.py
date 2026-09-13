@@ -2,11 +2,10 @@ import ssl
 import json
 import yaml
 from uuid import UUID
-from typing import Literal, Annotated, cast
+from typing import Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 from src.models.statuses import Status
 
-# Both backing storage classes use the same Kubernetes DNS-name constraints.
 StorageClassName = Annotated[
     str,
     Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$"),
@@ -102,18 +101,14 @@ class ComputeRegistryCreate(BaseModel):
     database_instances: int = Field(default=1, ge=1, le=3, strict=True)
     database_storage_class: StorageClassName
 
-    # Object storage
-    storage_class: StorageClassName
+    # Object storage controller
     storage_endpoint: str = Field(max_length=512)
-    storage_size_gib: int = Field(default=100, ge=1, le=65536, strict=True)
-    storage_instances: Literal[1, 3] = 3
+    storage_access_key: str = Field(min_length=1, max_length=128)
+    storage_secret_key: str = Field(min_length=8, max_length=1024)
     storage_certificate: str | None = Field(default=None, max_length=65536)
 
-    # Storage admission policy (explicit administrator configuration)
+    # Storage policy
     bucket_size_bytes: int = Field(ge=1024, le=70368744177664, multiple_of=1024, strict=True)
-    bucket_max_objects: int = Field(ge=1, le=2147483647, strict=True)
-    storage_reserve_percent: int = Field(ge=1, le=99, strict=True)
-    storage_object_overhead_bytes: int = Field(ge=4096, le=1073741824, strict=True)
 
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
@@ -149,7 +144,7 @@ class ComputeRegistryCreate(BaseModel):
             raise ValueError("Gateway certificate must be a valid PEM CA certificate bundle") from exc
         return value
 
-    @field_validator("database_storage_class", "storage_class")
+    @field_validator("database_storage_class")
     @classmethod
     def validate_storage_class(cls, value: str) -> str:
         """Require DNS labels within the Kubernetes storage class name."""
@@ -180,16 +175,10 @@ class ComputeRegistryResponse(BaseModel):
     database_storage_class: str
 
     # Object storage
-    storage_class: str
     storage_endpoint: str
-    storage_size_gib: int
-    storage_instances: int
 
-    # Storage admission policy
+    # Storage policy
     bucket_size_bytes: int
-    bucket_max_objects: int
-    storage_reserve_percent: int
-    storage_object_overhead_bytes: int
 
     # State
     status: Status

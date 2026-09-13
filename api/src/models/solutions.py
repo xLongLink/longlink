@@ -74,12 +74,6 @@ class SolutionPatch(BaseModel):
         return envs
 
 
-class SolutionUpdate(SolutionPatch):
-    """Deploy a submitted image source with an environment patch."""
-
-    image: Image
-
-
 class SolutionUpdateCheck(BaseModel):
     """Expose a candidate and configured names, never environment values."""
 

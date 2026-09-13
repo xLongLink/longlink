@@ -14,6 +14,11 @@
         <xsd:documentation>Row field path used as the identifier.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="hasHover" type="xsd:boolean" default="false">
+      <xsd:annotation>
+        <xsd:documentation>Highlights rows on pointer hover.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:complexType name="TableColumnType">

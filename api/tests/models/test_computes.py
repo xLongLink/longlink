@@ -11,27 +11,20 @@ pytestmark = pytest.mark.no_db
         ("bucket_size_bytes", 0),
         ("bucket_size_bytes", 1025),
         ("bucket_size_bytes", None),
-        ("bucket_max_objects", -1),
-        ("bucket_max_objects", True),
-        ("storage_reserve_percent", 0),
-        ("storage_reserve_percent", 100),
-        ("storage_object_overhead_bytes", 0),
     ],
 )
 def test_storage_policy_requires_explicit_positive_limits(field: str, value: object) -> None:
-    """Accept explicit finite quota policy and reject omitted, unlimited, or imprecise limits."""
+    """Require precise finite byte quotas for Organization buckets."""
 
     # Validate a real complete registration before changing just one policy input.
     payload = {
         "name": "quota",
         "gateway_url": "https://gateway.example",
         "database_storage_class": "database",
-        "storage_class": "block",
         "storage_endpoint": "https://storage.example",
+        "storage_access_key": "controller",
+        "storage_secret_key": "controller-secret",
         "bucket_size_bytes": 1073741824,
-        "bucket_max_objects": 10000,
-        "storage_reserve_percent": 30,
-        "storage_object_overhead_bytes": 65536,
         "kubeconfig": {
             "clusters": [{"name": "test", "cluster": {}}],
             "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
@@ -39,7 +32,7 @@ def test_storage_policy_requires_explicit_positive_limits(field: str, value: obj
             "current-context": "test",
         },
     }
-    assert ComputeRegistryCreate.model_validate(payload).bucket_max_objects == 10000
+    assert ComputeRegistryCreate.model_validate(payload).bucket_size_bytes == 1073741824
     if value is None:
         del payload[field]
     else:
@@ -57,11 +50,9 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
         {
             "name": "Compute",
             "bucket_size_bytes": 1073741824,
-            "bucket_max_objects": 10000,
-            "storage_reserve_percent": 30,
-            "storage_object_overhead_bytes": 65536,
-            "storage_class": "block-storage",
             "storage_endpoint": "https://storage.example",
+            "storage_access_key": "controller",
+            "storage_secret_key": "controller-secret",
             "gateway_url": "https://gateway.example",
             "database_storage_class": "local-path",
             "kubeconfig": (
@@ -88,6 +79,9 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
                 "name": "Compute",
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
+                "storage_endpoint": "https://storage.example",
+                "storage_access_key": "controller",
+                "storage_secret_key": "controller-secret",
                 "kubeconfig": {
                     "apiVersion": "v1",
                     "clusters": [{"name": "cluster", "cluster": {}}],
@@ -139,5 +133,8 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
                 "kubeconfig": kubeconfig,
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
+                "storage_endpoint": "https://storage.example",
+                "storage_access_key": "controller",
+                "storage_secret_key": "controller-secret",
             }
         )

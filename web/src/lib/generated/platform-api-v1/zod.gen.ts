@@ -29,15 +29,11 @@ export const zComputeRegistryCreate = z.object({
     database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
     database_instances: z.int().gte(1).lte(3).optional().default(1),
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
-    storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_endpoint: z.string().max(512),
-    storage_size_gib: z.int().gte(1).lte(65536).optional().default(100),
-    storage_instances: z.union([z.literal(1), z.literal(3)]).optional().default(3),
+    storage_access_key: z.string().min(1).max(128),
+    storage_secret_key: z.string().min(8).max(1024),
     storage_certificate: z.string().max(65536).nullish(),
-    bucket_size_bytes: z.int().gte(1024).lte(70368744177664),
-    bucket_max_objects: z.int().gte(1).lte(2147483647),
-    storage_reserve_percent: z.int().gte(1).lte(99),
-    storage_object_overhead_bytes: z.int().gte(4096).lte(1073741824)
+    bucket_size_bytes: z.int().gte(1024).lte(70368744177664)
 });
 
 /**
@@ -128,16 +124,6 @@ export const zOperationKind = z.enum([
 ]);
 
 /**
- * OperationResource
- *
- * Represent one operation target resource.
- */
-export const zOperationResource = z.object({
-    id: z.uuid(),
-    name: z.string()
-});
-
-/**
  * OperationStatus
  *
  * Supported long-running operation lifecycle states.
@@ -157,8 +143,8 @@ export const zOperationStatus = z.enum([
 export const zOperationResponse = z.object({
     id: z.uuid(),
     kind: zOperationKind,
-    resource: zOperationResource.nullable(),
     target_id: z.uuid(),
+    resource_name: z.string().nullable(),
     status: zOperationStatus,
     failed: z.string().nullable(),
     created_at: z.iso.datetime(),
@@ -221,10 +207,11 @@ export const zOrganizationMemberUpdate = z.object({
 /**
  * OrganizationStorageUsageResponse
  *
- * Report current logical object bytes for one organization bucket.
+ * Report current logical object usage and quota for one Organization bucket.
  */
 export const zOrganizationStorageUsageResponse = z.object({
-    space_used: z.int().gte(0)
+    space_used: z.int().gte(0),
+    quota_bytes: z.int().gte(0)
 });
 
 /**
@@ -236,8 +223,7 @@ export const zOrganizationUpdate = z.object({
     avatar: z.union([
         z.url().min(1).max(2083),
         z.literal('')
-    ]).nullish(),
-    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
+    ]).nullish()
 });
 
 /**
@@ -302,18 +288,6 @@ export const zSolutionPatch = z.object({
 });
 
 /**
- * SolutionUpdate
- *
- * Deploy a submitted image source with an environment patch.
- */
-export const zSolutionUpdate = z.object({
-    envs: z.record(z.string(), z.string().nullable()).optional(),
-    min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
-    expected_revision_id: z.uuid().nullish(),
-    image: z.string()
-});
-
-/**
  * SolutionUpdateCheck
  *
  * Expose a candidate and configured names, never environment values.
@@ -349,14 +323,8 @@ export const zComputeRegistryResponse = z.object({
     database_size_gib: z.int(),
     database_instances: z.int(),
     database_storage_class: z.string(),
-    storage_class: z.string(),
     storage_endpoint: z.string(),
-    storage_size_gib: z.int(),
-    storage_instances: z.int(),
     bucket_size_bytes: z.int(),
-    bucket_max_objects: z.int(),
-    storage_reserve_percent: z.int(),
-    storage_object_overhead_bytes: z.int(),
     status: zStatus
 });
 
@@ -399,8 +367,7 @@ export const zOrganizationSummary = z.object({
     slug: z.string(),
     avatar: z.string(),
     status: zStatus,
-    database_state: zDatabaseState,
-    database_idle_seconds: z.int()
+    database_state: zDatabaseState
 });
 
 /**
@@ -616,26 +583,6 @@ export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostPath = 
  */
 export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = z.void();
 
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
-
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutBody = zSolutionUpdate;
-
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutResponse = z.void();
-
 export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetPath = z.object({
     solution_id: z.uuid()
 });
@@ -666,6 +613,15 @@ export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
  * Successful Response
  */
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = z.array(z.string());
+
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
 
 export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),

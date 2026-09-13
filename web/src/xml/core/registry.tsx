@@ -21,13 +21,19 @@ import { Heading } from '../adapters/Heading';
 import { GridSpan } from '../adapters/GridSpan';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
+import { CodeBlock } from '../adapters/CodeBlock';
 import { FileInput } from '../adapters/FileInput';
 import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
 import { NumberInput } from '../adapters/NumberInput';
+import { ProgressBar } from '../adapters/ProgressBar';
+import { StatusBadge } from '../adapters/StatusBadge';
 import { Bold, Italic, Text } from '../adapters/Text';
+import { SolutionLogs } from '../adapters/SolutionLogs';
 import { CheckboxInput } from '../adapters/CheckboxInput';
+import { CreateSolution } from '../adapters/CreateSolution';
+import { SolutionUpdate } from '../adapters/SolutionUpdate';
 
 /** Explicit Astryx XML tag-to-adapter registry. */
 export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
@@ -38,6 +44,8 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Button,
     Card,
     CheckboxInput,
+    CodeBlock,
+    CreateSolution,
     Dialog,
     Divider,
     FileInput,
@@ -50,11 +58,15 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Link,
     Menu,
     NumberInput,
+    ProgressBar,
     RadioList,
     Selector,
+    SolutionLogs,
+    SolutionUpdate,
     Slider,
     Stack,
     StackItem,
+    StatusBadge,
     Switch,
     Tabs,
     Table,

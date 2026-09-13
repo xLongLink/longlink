@@ -33,7 +33,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Assert
     assert organization.compute_id == compute.id
-    assert organization.database_idle_seconds == 0
     assert organization.database_sync_pending is True
     assert organization.status == Status.creating
 

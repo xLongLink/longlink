@@ -2,6 +2,7 @@ import asyncio
 from uuid import UUID
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from sqlmodel import Session as SyncSession
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
@@ -100,7 +101,7 @@ class Database:
 
                     # Initialize the database without publishing partially initialized resources.
                     try:
-                        if engine.url.get_backend_name() == "sqlite":
+                        if self._env.ENV == "testing" and engine.url.get_backend_name() == "sqlite":
                             async with engine.begin() as conn:
                                 await conn.run_sync(database_metadata.create_all)
                         else:
@@ -141,4 +142,6 @@ class Database:
 
 
 # Register shared audit listeners after AuditTable is fully defined.
-from longlink.database import audit  # noqa: F401
+from longlink.database import audit
+
+audit.install_listener(SyncSession, AuditTable)

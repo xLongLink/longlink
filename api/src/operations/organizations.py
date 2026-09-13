@@ -4,11 +4,12 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
-from src.operations import storage, databases
+from src.operations import databases
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
+from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
 
@@ -36,14 +37,12 @@ async def reconcile(organization_id: UUID) -> None:
 
         # Converge the Organization bucket before Solutions receive scoped credentials.
         logger.info("Creating object storage bucket for Organization %s", organization.id)
-        # Apply release changes to the Organization Namespace, quota, and network boundary.
         logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            bucket = await cluster.storage.apply(organization.id, infrastructure.compute)
-            await storage.authorize(bucket.storage, bucket.name, organization.id)
+            await cluster.storage.apply(organization.id, infrastructure.compute)
             await cluster.organizations.apply(f"longlink-compute-{organization.id.hex}")
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
@@ -85,6 +84,9 @@ async def delete(organization_id: UUID) -> str | None:
             return None
         if infrastructure.organization.deleted_at is None:
             return "Active Organizations cannot be deleted by lifecycle cleanup"
+        async with session_scope() as session:
+            result = await session.scalars(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id))
+            solution_ids = result.all()
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
@@ -96,7 +98,7 @@ async def delete(organization_id: UUID) -> str | None:
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(infrastructure.organization.id)
             logger.info("Deleting object storage for Organization %s", infrastructure.organization.id)
-            await cluster.storage.delete(infrastructure.organization.id, infrastructure.compute)
+            await cluster.storage.delete(infrastructure.organization.id, solution_ids, infrastructure.compute)
 
         # Purge the tombstone only after all external resources are absent.
         logger.info("Purging Organization %s", infrastructure.organization.id)

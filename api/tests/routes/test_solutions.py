@@ -128,9 +128,11 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
         assert persisted is not None
         assert persisted.status == Status.creating
         assert persisted.description == "Dashboard app"
+        assert (persisted.created_id, persisted.updated_id) == (user.id, user.id)
         assert persisted.image_desired == "ghcr.io/longlink/dashboard@sha256:test"
         assert persisted.secrets == {}
         assert persisted.desired_revision.envs == {"API_KEY": "secret-value", "PORT": "8080"}
+        assert (persisted.desired_revision.created_id, persisted.desired_revision.updated_id) == (user.id, user.id)
         operation = await session.scalar(
             select(Operation).where(
                 col(Operation.kind) == OperationKind.solution_deploy,
@@ -138,6 +140,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
             )
         )
         assert operation is not None
+        assert (operation.created_id, operation.updated_id) == (user.id, user.id)
 
 
 async def test_create_app_enforces_the_per_organization_beta_limit(
@@ -572,7 +575,9 @@ async def test_delete_solution_soft_deletes_and_queues_reconciliation(
         )
         assert deleted_solution is not None
         assert deleted_solution.deleted_at is not None
+        assert (deleted_solution.deleted_id, deleted_solution.updated_id) == (user.id, user.id)
         assert operation is not None
+        assert (operation.created_id, operation.updated_id) == (user.id, user.id)
 
 
 async def test_delete_solution_rejects_write_member_without_mutating_solution(

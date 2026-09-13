@@ -1,15 +1,12 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import Enum, Column, UniqueConstraint
 from src.models.roles import OrganizationRoles
-from longlink.utils.time import utcnow
-from longlink.database.types import UTCDateTime
-from src.database.models.base import PlatformModel
+from src.database.models.base import AuditTable
 
 
-class OrganizationInvitation(PlatformModel, table=True):
+class OrganizationInvitation(AuditTable, table=True):
     """Represent one active organization email grant."""
 
     __tablename__: ClassVar[str] = "organization_invitations"
@@ -28,6 +25,3 @@ class OrganizationInvitation(PlatformModel, table=True):
     role: OrganizationRoles = Field(
         sa_column=Column(Enum(OrganizationRoles, name="organization_role_enum", native_enum=False), nullable=False)
     )
-
-    # Timing
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)

@@ -6,5 +6,5 @@ import { Divider as AstryxDivider } from '@astryxdesign/core/Divider';
 export function Divider({ nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
 
-    return <AstryxDivider label={renderNode(nodes, ctx)} />;
+    return <AstryxDivider label={nodes.length === 0 ? undefined : renderNode(nodes, ctx)} />;
 }

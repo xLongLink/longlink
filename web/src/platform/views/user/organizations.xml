@@ -1,0 +1,56 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Organizations" icon="building2">
+    <Query id="memberships" path="/api/v1/me/organizations" />
+    <State id="draft" name="" />
+
+    <Stack gap="8">
+        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+            <Stack>
+                <Heading level="1">Organizations</Heading>
+                <Text color="secondary">Manage the workspaces connected to your LongLink account.</Text>
+            </Stack>
+            <Dialog title="New organization" triggerLabel="Create Organization" purpose="form">
+                <Stack gap="3">
+                    <TextInput
+                        label="Name"
+                        value="$draft.name"
+                        placeholder="Example LongLink"
+                        isRequired="true"
+                    />
+                    <Action>
+                        <Request
+                            url="/api/v1/organizations"
+                            method="POST"
+                            closeDialog="true"
+                            json="${{ name: trim(draft.name) }}"
+                        />
+                        <Patch state="memberships" invalidate="true" />
+                        <Button variant="primary" disabled="${!trim(draft.name)}">Create organization</Button>
+                    </Action>
+                </Stack>
+            </Dialog>
+        </Stack>
+
+        <Table data="$memberships" idKey="organization.id" hasHover="true">
+            <TableColumn field="organization.name" header="Name">
+                <Stack direction="horizontal" gap="3" align="center">
+                    <Avatar
+                        kind="organization"
+                        name="$row.organization.name"
+                        src="$row.organization.avatar"
+                    />
+                    <Stack align="start">
+                        <Stack direction="horizontal" gap="1" align="center">
+                            <Link to="/orgs/${row.organization.slug}">$row.organization.name</Link>
+                            <Badge
+                                if="${row.organization.status !== 'running'}"
+                                variant="${({ creating: 'info', failed: 'error' })[row.organization.status]}"
+                            >${({ creating: 'Creating', failed: 'Failed' })[row.organization.status]}</Badge>
+                        </Stack>
+                        <Text type="supporting">Organization</Text>
+                    </Stack>
+                </Stack>
+            </TableColumn>
+        </Table>
+    </Stack>
+</longlink>

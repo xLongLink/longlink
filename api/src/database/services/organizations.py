@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles, postgres
-from sqlalchemy import Select, BigInteger, cast, func, delete, select
+from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -36,20 +36,25 @@ class Infrastructure:
     compute: ComputeRegistry
 
 
-async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
-    """Return one user's active membership for an active Organization."""
+def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
+    """Select one user's active membership with its response-ready Organization."""
 
-    # Load only the requested Organization membership and its response-ready Organization.
-    statement = (
+    return (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
         .options(contains_eager(UserOrganization.organization))
         .where(
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.organization_id) == organization_id,
             col(Organization.deleted_at).is_(None),
         )
     )
+
+
+async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
+    """Return one user's active membership for an active Organization."""
+
+    # Load only the requested Organization membership and its response-ready Organization.
+    statement = _membership_query(user_id).where(col(UserOrganization.organization_id) == organization_id)
     return await session.scalar(statement)
 
 
@@ -57,16 +62,7 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
     """Return one user's active membership for an active Organization slug."""
 
     # Load only the requested Organization membership and its response-ready Organization.
-    statement = (
-        select(UserOrganization)
-        .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(UserOrganization.organization))
-        .where(
-            col(UserOrganization.user_id) == user_id,
-            col(Organization.slug) == organization_slug,
-            col(Organization.deleted_at).is_(None),
-        )
-    )
+    statement = _membership_query(user_id).where(col(Organization.slug) == organization_slug)
     return await session.scalar(statement)
 
 
@@ -121,9 +117,10 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
                 ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_access_key,
+                ComputeRegistry.storage_secret_key,
                 ComputeRegistry.storage_certificate,
                 ComputeRegistry.bucket_size_bytes,
-                ComputeRegistry.bucket_max_objects,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -391,26 +388,13 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if organization_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
-    # Lock the selected Compute until the Organization assignment is committed.
+    # Lock the least-assigned running Compute until the Organization assignment is committed.
     compute_assignments = (
         select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
         select(col(ComputeRegistry.id))
-        .where(
-            col(ComputeRegistry.status) == Status.running,
-            compute_assignments + 1
-            <= (
-                cast(col(ComputeRegistry.storage_size_gib), BigInteger)
-                * 1024**3
-                * (100 - col(ComputeRegistry.storage_reserve_percent))
-                / 100
-            )
-            / (
-                col(ComputeRegistry.bucket_size_bytes)
-                + cast(col(ComputeRegistry.bucket_max_objects), BigInteger) * col(ComputeRegistry.storage_object_overhead_bytes)
-            ),
-        )
+        .where(col(ComputeRegistry.status) == Status.running)
         .order_by(compute_assignments, col(ComputeRegistry.name))
         .limit(1)
         .with_for_update()
@@ -440,16 +424,6 @@ async def create(
     compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
     if compute is None:
         raise UnavailableError("No compute registry available")
-
-    # Recount after acquiring the Compute lock: pre-lock selection may have a stale statement snapshot.
-    count_result = await session.execute(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
-    count = count_result.scalar_one()
-    reservation = compute.bucket_size_bytes + compute.bucket_max_objects * compute.storage_object_overhead_bytes
-
-    # OSD count equals pool replication, so usable capacity is one OSD, not their raw sum.
-    capacity = compute.storage_size_gib * 1024**3 * (100 - compute.storage_reserve_percent) // 100
-    if (count + 1) * reservation > capacity:
-        raise UnavailableError("Compute storage capacity is reserved; wait for cleanup or register more capacity")
 
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(
@@ -481,9 +455,7 @@ async def create(
     return organization
 
 
-async def update(
-    session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID, database_idle_seconds: int | None = None
-) -> Organization | None:
+async def update(session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID) -> Organization | None:
     """Update mutable Organization metadata."""
 
     # Take a portable write lock before refreshing metadata already loaded by authentication.
@@ -498,8 +470,6 @@ async def update(
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
-    if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
-        organization.database_idle_seconds = database_idle_seconds
 
     return organization
 
@@ -566,7 +536,9 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
     if organization.deleted_at is None:
         now = utcnow()
         organization.deleted_at = now
+        organization.deleted_id = user.id
         organization.updated_at = now
+        organization.updated_id = user.id
 
         # Tombstone every active Solution without loading each object.
         await session.execute(
@@ -575,7 +547,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
                 col(Solution.organization_id) == organization_id,
                 col(Solution.deleted_at).is_(None),
             )
-            .values(deleted_at=now, updated_at=now)
+            .values(deleted_at=now, deleted_id=user.id, updated_at=now, updated_id=user.id)
         )
 
         # Organization cleanup supersedes unleased Solution lifecycle work.

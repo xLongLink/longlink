@@ -11,6 +11,7 @@ from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, OAuthAvai
 from src.environments import env
 from src.models.users import UserSummary
 from fastapi.responses import RedirectResponse
+from longlink.database import audit
 from src.database.services import users, invitations
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -85,7 +86,6 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, OAUTH_STATE_COOKIE, credential, OAUTH_STATE_COOKIE_PATH, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
     return response
 
@@ -134,11 +134,13 @@ async def complete_oauth_login(
     # Deleted accounts remain inaccessible even if their provider identity is still valid.
     if user.deleted_at is not None:
         return oauth_failure_response()
-    try:
-        await invitations.accept(session, user)
-        await session.commit()
-    except IntegrityError:
-        return oauth_failure_response()
+    # Attribute profile linking and accepted invitations to the verified external identity.
+    with audit.actor(user.id):
+        try:
+            await invitations.accept(session, user)
+            await session.commit()
+        except IntegrityError:
+            return oauth_failure_response()
 
     # Publish the signed browser credential only after durable projection demand commits.
     response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/user/organizations", status_code=302)
@@ -167,8 +169,9 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
         raise HTTPException(status_code=400, detail="Invalid email or password.")
 
     # Accept email-bound Organization access before issuing its signed browser session.
-    await invitations.accept(session, user)
-    await session.commit()
+    with audit.actor(user.id):
+        await invitations.accept(session, user)
+        await session.commit()
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
@@ -248,8 +251,9 @@ async def reset_password(
     user = await password_reset_user(session, password_reset_token or "")
 
     # Replace the credential so password-bound browser sessions become invalid.
-    user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
-    await session.commit()
+    with audit.actor(user.id):
+        user.password = await asyncio.to_thread(users.PASSWORD_HASH.hash, payload.password)
+        await session.commit()
 
     # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
@@ -309,8 +313,9 @@ async def complete_registration(
     # Persist the user before its FK-dependent token and treat uniqueness races uniformly.
     try:
         user = await users.register(session, payload.name, email, payload.password)
-        await invitations.accept(session, user)
-        await session.commit()
+        with audit.actor(user.id):
+            await invitations.accept(session, user)
+            await session.commit()
     except IntegrityError as exc:
         raise HTTPException(
             status_code=409,

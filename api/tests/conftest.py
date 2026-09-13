@@ -8,7 +8,7 @@ from typing import cast
 from pathlib import Path
 from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
-from collections.abc import Iterator, AsyncIterator
+from collections.abc import Iterator, Sequence, AsyncIterator
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -53,36 +53,28 @@ class StorageKubernetes:
     async def verify(self, compute: object) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
-        """Accept provisioning and return the resulting bucket boundary."""
+    async def apply(self, organization: UUID, compute: object) -> None:
+        """Accept provisioning."""
 
-        return await self.quota(organization, compute)
+        self.bucket(organization, compute)
 
-    async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+    def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
         return SimpleNamespace(name=organization.hex, storage=self)
 
-    async def user(self, solution: UUID, organization: UUID) -> Credentials:
+    async def user(self, solution: UUID, bucket: object) -> Credentials:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
 
-    async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
-        """Accept quota reconciliation and return the resulting bucket boundary."""
-
-        return await self.bucket(organization, compute)
-
-    async def authorize(self, bucket: str, solutions: object) -> None:
-        """Accept the real lifecycle policy snapshot."""
-
-    async def revoke(self, solution: UUID) -> None:
+    async def revoke(self, solution: UUID, bucket: object) -> None:
         """Accept user deletion."""
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         """Accept owner-scoped object cleanup."""
 
-    async def delete(self, organization: UUID, compute: object) -> None:
+    async def delete(self, organization: UUID, solutions: Sequence[UUID], compute: object) -> None:
         """Accept organization storage deletion."""
 
     async def usage(self, bucket: str) -> int:

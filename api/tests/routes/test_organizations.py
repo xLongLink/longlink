@@ -48,7 +48,6 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
         organization = await session.get(Organization, UUID(payload["id"]))
     assert organization is not None
     assert organization.compute_id == compute.id
-    assert organization.database_idle_seconds == 0
     assert organization.status == Status.creating
     operations = await fetch_operations()
     assert len(operations) == 1
@@ -214,37 +213,6 @@ async def test_update_organization_updates_metadata_for_administrator(
         updated = await session.get(Organization, organization.id)
     assert updated is not None
     assert updated.avatar == "https://example.com/acme.png"
-
-
-async def test_update_organization_persists_valid_database_idle_seconds_and_rejects_short_intervals(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Persist valid idle settings without accepting sleep intervals that would thrash databases."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act
-    updated_response = await clients[0].patch(
-        f"/api/v1/organizations/{organization.id}",
-        json={"database_idle_seconds": 300},
-    )
-    invalid_response = await clients[0].patch(
-        f"/api/v1/organizations/{organization.id}",
-        json={"database_idle_seconds": 299},
-    )
-
-    # Assert
-    assert updated_response.status_code == 200
-    assert updated_response.json()["database_idle_seconds"] == 300
-    assert invalid_response.status_code == 422
-    assert invalid_response.json() == {"detail": "Invalid request. Please check your input and try again."}
-    async with session_scope() as session:
-        updated = await session.get(Organization, organization.id)
-    assert updated is not None
-    assert updated.database_idle_seconds == 300
 
 
 async def test_update_organization_returns_not_found_when_active_organization_disappears(
@@ -531,7 +499,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
     if isinstance(usage, NotFoundError):
 
-        async def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
+        def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
             """Report the missing Kubernetes bucket claim at its actual transport boundary."""
 
             assert organization_id == organization.id
@@ -546,7 +514,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = None if expected_usage is None else {"space_used": expected_usage}
+        expected_payload = None if expected_usage is None else {"space_used": expected_usage, "quota_bytes": 1073741824}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -616,7 +584,7 @@ async def test_organization_resource_endpoints_allow_members(
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
         "database": {"size_bytes": 0, "measured_at": "2026-09-09T12:00:00Z", "allocated_bytes": 10 * 1024**3},
-        "storage": {"space_used": 0},
+        "storage": {"space_used": 0, "quota_bytes": 1073741824},
     }
     assert response.json() == expected_payloads[resource]
 
@@ -725,7 +693,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "avatar": "",
                 "status": "creating",
                 "database_state": "available",
-                "database_idle_seconds": 0,
             }
         ],
         "total": 2,
