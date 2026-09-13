@@ -64,37 +64,29 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 
-	# Preserve the CA and reuse valid certificates when reapplying resources.
+	# Generate local TLS; make down removes the whole certificate set.
 	@set -eu; umask 077; mkdir -p dev/certificates; \
-		temporary="$$(mktemp -d dev/certificates/.generate.XXXXXX)"; \
-		trap 'rm -rf "$$temporary"' EXIT; \
-		if [ ! -e dev/certificates/ca.crt ] && [ ! -e dev/certificates/ca.key ]; then \
-			openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-				-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
-				-subj "/CN=LongLink Development CA" \
-				-addext "basicConstraints=critical,CA:TRUE" \
-				-addext "keyUsage=critical,keyCertSign,cRLSign"; \
-		fi; \
-		test -s dev/certificates/ca.key; \
-		openssl verify -CAfile dev/certificates/ca.crt dev/certificates/ca.crt; \
-		for name in gateway storage; do \
-			case "$$name" in gateway) hostname=localhost; namespace=knative-serving ;; storage) hostname=storage.localhost; namespace=rook-ceph ;; esac; \
-			key="dev/certificates/$$name.key"; certificate="dev/certificates/$$name.crt"; \
-			if [ ! -s "$$key" ] || [ ! -s "$$certificate" ] \
-				|| ! openssl x509 -in "$$certificate" -checkend 86400 -noout >/dev/null 2>&1 \
-				|| ! openssl verify -CAfile dev/certificates/ca.crt -verify_hostname "$$hostname" "$$certificate" >/dev/null 2>&1 \
-				|| [ "$$(openssl pkey -in "$$key" -pubout)" != "$$(openssl x509 -in "$$certificate" -pubkey -noout)" ]; then \
-				openssl req -new -newkey rsa:2048 -nodes -keyout "$$temporary/$$name.key" -out "$$temporary/$$name.csr" -subj "/CN=$$hostname"; \
-				openssl x509 -req -days 365 -in "$$temporary/$$name.csr" \
+		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
+			-subj "/CN=LongLink Development CA" \
+			-addext "basicConstraints=critical,CA:TRUE" \
+			-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/gateway.key -subj "/CN=localhost" | \
+				openssl x509 -req -days 3650 \
 					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
-					-extfile dev/tls.cnf -extensions "$$name" -out "$$temporary/$$name.crt"; \
-				cat dev/certificates/ca.crt >> "$$temporary/$$name.crt"; \
-				mv "$$temporary/$$name.key" "$$key"; mv "$$temporary/$$name.crt" "$$certificate"; \
-			fi; \
-			kubectl --kubeconfig dev/kubeconfig.yaml --namespace "$$namespace" create secret tls "longlink-$$name-tls" \
-				--cert="$$certificate" --key="$$key" --dry-run=client --output=yaml > "$$temporary/secret.yaml"; \
-			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename="$$temporary/secret.yaml"; \
-		done
+					-extfile dev/tls.cnf -extensions gateway -out dev/certificates/gateway.crt; \
+		cat dev/certificates/ca.crt >> dev/certificates/gateway.crt; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
+			--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key --dry-run=client --output=yaml | \
+			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
+		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/storage.key -subj "/CN=storage.localhost" | \
+				openssl x509 -req -days 3650 \
+					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
+					-extfile dev/tls.cnf -extensions storage -out dev/certificates/storage.crt; \
+		cat dev/certificates/ca.crt >> dev/certificates/storage.crt; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rook-ceph create secret tls longlink-storage-tls \
+			--cert=dev/certificates/storage.crt --key=dev/certificates/storage.key --dry-run=client --output=yaml | \
+			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
 
 	# Install connectivity and shared controllers before publishing the release.
 	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
