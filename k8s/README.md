@@ -23,7 +23,7 @@ longlink/
 ## Local installation
 
 Requirements: Linux AMD64, Docker, k3d, kubectl **v1.35.4**, Helm **4.3.0**,
-Helmfile **1.8.0**, standalone Kustomize **5.8.1**, OpenSSL, curl, `flock`, uv, and the
+Helmfile **1.8.0**, standalone Kustomize **5.8.1**, OpenSSL, curl, uv, and the
 existing Vite+ development tooling. No Helm plugins are required.
 
 ```bash
@@ -52,10 +52,9 @@ To change or retry local infrastructure:
 4. Restart `make api` to validate the installation.
 5. Run `make seed` if tenant provisioning needs another attempt.
 
-Infrastructure targets take an exclusive `dev/compute.lock`; `make api` holds a
-shared lock through startup and its worker lifetime. Reapplying infrastructure
+Reapplying infrastructure
 preserves tenant namespaces, database PVCs, buckets, and credentials. `make down`
-takes the same exclusive lock before removing the complete local cluster.
+removes the complete local cluster.
 
 ## Configuration
 

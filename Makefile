@@ -1,4 +1,4 @@
-.PHONY: install check format build test up _up image down _down api _api _locked web sdk sample seed
+.PHONY: install check format build test up image down api web sdk sample seed
 
 # Install all development dependencies.
 install: api/.env
@@ -49,25 +49,8 @@ test:
 up api: api/.env
 
 
-# Serialize infrastructure changes, including teardown, against API workers.
-up down:
-	flock --exclusive --nonblock dev/compute.lock $(MAKE) _$@ COMPUTE_LOCKED=1
-
-
-# Hold the shared lock through API preparation and the worker lifetime.
-api:
-	flock --shared --nonblock dev/compute.lock $(MAKE) _api COMPUTE_LOCKED=1
-
-
-# Internal workflows inherit the lock from their public entry point.
-_up _down _api: _locked
-
-_locked:
-	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Use the public make target to acquire the deployment lock.\n"; exit 1; }
-
-
 # Create or reapply local resources in dependency order.
-_up:
+up:
 	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
 		printf '%s\n' "$$addresses" | while read -r address rest; do \
 			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
@@ -131,7 +114,7 @@ image: sample
 
 
 # Stop local services and remove generated cluster and API state.
-_down:
+down:
 	docker compose -f dev/compose.yml stop
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	docker compose -f dev/compose.yml down --volumes --remove-orphans
@@ -140,7 +123,7 @@ _down:
 
 
 # Prepare and run the local LongLink Platform API server.
-_api:
+api:
 	cd api && uv run --locked alembic upgrade head
 	cd api && uv run --locked python -m src.release
 	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload

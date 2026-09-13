@@ -23,7 +23,7 @@ Workstation
 ## Start
 
 Requirements: Linux AMD64, Docker, k3d, kubectl, Helm **4.3.0**, Helmfile **1.8.0**,
-standalone Kustomize **5.8.1**, OpenSSL, curl, `flock`, uv, and the repository's Vite+
+standalone Kustomize **5.8.1**, OpenSSL, curl, uv, and the repository's Vite+
 tooling. Helmfile uses the standalone `kustomize` binary to package the retained
 manifests; chart repositories and pinned GitHub release assets must be reachable.
 No Helm plugins are required. The host must resolve `storage.localhost` to
@@ -160,9 +160,7 @@ make api
 make seed
 ```
 
-`make up` and `make down` take an exclusive
-`dev/compute.lock`; `make api` holds a shared lock through migrations, release
-preparation, and its worker lifetime. Stop independently launched workers too. Application
+Stop independently launched workers too. Application
 restart revalidates infrastructure and reconciles tenant state without installing
 operators. The sample is retained unless a failed deployment needs a retry.
 
