@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { Props } from '../types';
-import { Badge } from '@astryxdesign/core/Badge';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
+import { Badge } from '@astryxdesign/core/Badge';
 
 const statusBadgePropsSchema = z.object({
     status: z.enum(['creating', 'failed', 'running']),

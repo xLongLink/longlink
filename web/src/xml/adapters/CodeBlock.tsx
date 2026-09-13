@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
-import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
 import { resolveXmlProps } from '../core/props';
+import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const codeBlockPropsSchema = z.object({
     value: z.union([z.string(), z.array(z.string())]),
