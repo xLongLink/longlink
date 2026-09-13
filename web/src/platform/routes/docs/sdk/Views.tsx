@@ -13,7 +13,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Table } from '@astryxdesign/core/Table';
 import { Link as RouterLink } from 'react-router';
-import { componentDocumentation } from '@/lib/xsd';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Dialog } from '@astryxdesign/core/Dialog';
@@ -30,6 +29,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { componentDocumentation } from '@/lib/generated/documentation';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 

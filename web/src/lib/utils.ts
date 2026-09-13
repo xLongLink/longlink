@@ -3,15 +3,6 @@ export const dateFormatter = new Intl.DateTimeFormat(undefined, {
     month: 'numeric',
     year: 'numeric',
 });
-export const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    hour: 'numeric',
-    hourCycle: 'h23',
-    minute: 'numeric',
-    month: 'numeric',
-    second: 'numeric',
-    year: 'numeric',
-});
 const numberFormatter = new Intl.NumberFormat();
 
 /** Formats bytes using binary units for admin resource tables. */

@@ -23,7 +23,6 @@ import SolutionUpdate from '@/components/SolutionUpdate';
 import { hasMinimumRole, ROLE_NAMES } from '@/lib/roles';
 import { dateFormatter, formatBytes } from '@/lib/utils';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Timestamp } from '@astryxdesign/core/Timestamp';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AvatarDialog } from '@/components/dialogs/Avatar';
 import NotFoundLayout from '@/components/layouts/NotFound';
@@ -34,7 +33,6 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
-import DatabaseSettings from '@/components/settings/Database';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { invitationSchema } from '@/components/settings/validation';
@@ -306,7 +304,7 @@ export default function OrganizationSettings() {
                                         ? 'Unavailable'
                                         : databaseUsage?.size_bytes == null
                                           ? 'Not measured'
-                                          : `${formatBytes(value)} used`
+                                          : `${formatBytes(value)} used / ${formatBytes(databaseUsage.allocated_bytes)}`
                                 }
                                 hasValueLabel
                                 isDisabled={databaseError !== null}
@@ -325,37 +323,7 @@ export default function OrganizationSettings() {
                                         color={organizationDetails.database_state === 'failed' ? 'red' : 'default'}
                                     />
                                 )}
-                                {databaseUsage && (
-                                    <Text type="supporting">
-                                        {formatBytes(databaseUsage.allocated_bytes)} allocated per database instance
-                                    </Text>
-                                )}
                             </Stack>
-                            <Text type="supporting">
-                                {databaseUsage?.measured_at == null ? (
-                                    'No cached database measurement.'
-                                ) : (
-                                    <>
-                                        Last measured{' '}
-                                        <Timestamp
-                                            value={databaseUsage.measured_at}
-                                            format="date_time"
-                                            isTimezoneShown
-                                        />
-                                        . Cached while the database is asleep.
-                                    </>
-                                )}
-                            </Text>
-                            {organizationDetails && (
-                                <DatabaseSettings
-                                    organization={organizationDetails}
-                                    canManage={canManageOrganization}
-                                    isSaving={updateOrganization.isPending}
-                                    onSave={(databaseIdleSeconds) =>
-                                        updateOrganization.mutateAsync({ database_idle_seconds: databaseIdleSeconds })
-                                    }
-                                />
-                            )}
                             <ProgressBar
                                 formatValueLabel={(value) =>
                                     storageError ? 'Unavailable' : `${formatBytes(value)} used`

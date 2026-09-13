@@ -3,24 +3,11 @@ import pytest_asyncio
 from uuid import UUID
 from typing import ClassVar
 from datetime import UTC, datetime
-from longlink import context as runtime_context
 from sqlmodel import Field, SQLModel
-from contextlib import contextmanager
 from collections.abc import Callable, Iterator, AsyncIterator
 from longlink.database import base as database_base
+from longlink.database import audit
 from longlink.utils.settings import Envs
-
-
-@contextmanager
-def identity_context(user_id: UUID) -> Iterator[None]:
-    """Bind one audit identity for a test operation."""
-
-    # Restore request-local state after each audited operation.
-    token = runtime_context._current_identity.set(user_id)
-    try:
-        yield
-    finally:
-        runtime_context._current_identity.reset(token)
 
 
 @pytest_asyncio.fixture
@@ -78,7 +65,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
     # Insert through AsyncSession so the registered sync before_flush listener runs.
     async with _audit_engine.session() as session:
         item = AuditLifecycleItem(name="draft")
-        with identity_context(creator_id):
+        with audit.actor(creator_id):
             session.add(item)
             await session.commit()
 
@@ -97,7 +84,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
         )
 
         # Update the persisted row with a second audit identity.
-        with identity_context(updater_id):
+        with audit.actor(updater_id):
             item.name = "reviewed"
             await session.commit()
 
@@ -109,7 +96,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
         updated_at = item.updated_at
 
         # Persist a caller-requested soft delete with the acting identity.
-        with identity_context(soft_deleter_id):
+        with audit.actor(soft_deleter_id):
             item.deleted_at = soft_deleted_at
             await session.commit()
 
@@ -125,7 +112,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
         item = await session.get(AuditLifecycleItem, item_id)
         assert item is not None
 
-        with identity_context(deleter_id):
+        with audit.actor(deleter_id):
             await session.delete(item)
             await session.commit()
 

@@ -232,8 +232,7 @@ export const zOrganizationUpdate = z.object({
     avatar: z.union([
         z.url().min(1).max(2083),
         z.literal('')
-    ]).nullish(),
-    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
+    ]).nullish()
 });
 
 /**
@@ -377,8 +376,7 @@ export const zOrganizationSummary = z.object({
     slug: z.string(),
     avatar: z.string(),
     status: zStatus,
-    database_state: zDatabaseState,
-    database_idle_seconds: z.int()
+    database_state: zDatabaseState
 });
 
 /**

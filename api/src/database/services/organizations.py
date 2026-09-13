@@ -459,9 +459,7 @@ async def create(
     return organization
 
 
-async def update(
-    session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID, database_idle_seconds: int | None = None
-) -> Organization | None:
+async def update(session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID) -> Organization | None:
     """Update mutable Organization metadata."""
 
     # Take a portable write lock before refreshing metadata already loaded by authentication.
@@ -476,8 +474,6 @@ async def update(
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
-    if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
-        organization.database_idle_seconds = database_idle_seconds
 
     return organization
 

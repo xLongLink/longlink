@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from collections.abc import Sequence
 
 if TYPE_CHECKING:
-    from src.kubernetes.client import Kubernetes
     from src.database.models.computes import ComputeRegistry
 
 
@@ -20,11 +19,6 @@ class Bucket:
 
 class Storage:
     """Verify RustFS and reconcile Organization buckets with Solution service accounts."""
-
-    def __init__(self, client: "Kubernetes") -> None:
-        """Keep the standard Kubernetes facade construction contract."""
-
-        self._client = client
 
     async def verify(self, compute: "ComputeRegistry") -> None:
         """Verify configured controller credentials can access RustFS without changing it."""

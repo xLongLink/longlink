@@ -23,8 +23,8 @@ class AuditRecord(Protocol):
 
 
 @contextmanager
-def actor(user_id: UUID) -> Iterator[None]:
-    """Bind one authenticated user to the current audit scope."""
+def actor(user_id: UUID | None) -> Iterator[None]:
+    """Bind one authenticated user or anonymous request to the current audit scope."""
 
     token = current_actor.set(user_id)
     try:

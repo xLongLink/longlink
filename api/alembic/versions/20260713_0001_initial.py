@@ -99,7 +99,6 @@ def upgrade() -> None:
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("database_password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("database_idle_seconds", sa.Integer(), nullable=False),
         sa.Column("database_last_active_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column(
             "database_state",

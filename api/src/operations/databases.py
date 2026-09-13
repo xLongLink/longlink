@@ -8,6 +8,7 @@ from src.utils import postgres
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from collections.abc import Iterator, AsyncIterator
+from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -191,8 +192,6 @@ async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", 
                 and (transition is None or transition.expires_at <= utcnow())
                 and (
                     organization.database_state in (DatabaseState.failed, DatabaseState.resuming, DatabaseState.hibernating)
-                    or organization.database_state == DatabaseState.hibernated
-                    and organization.database_idle_seconds == 0
                     or organization.database_state == DatabaseState.available
                     and organization.database_sync_pending
                 )
@@ -330,7 +329,7 @@ async def ready(organization_id: UUID) -> None:
 async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
-    # Recheck both the idle interval and persisted leases under the admission lock.
+    # Recheck the Platform idle interval and persisted leases under the admission lock.
     async with session_scope() as session:
         organization = await lock(session, organization_id)
         if organization is not None and organization.deleted_at is None and organization.database_state == DatabaseState.hibernated:
@@ -339,9 +338,8 @@ async def hibernate(organization_id: UUID) -> bool:
             organization is None
             or organization.deleted_at is not None
             or organization.status != Status.running
-            or organization.database_idle_seconds == 0
             or organization.database_state != DatabaseState.available
-            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -388,8 +386,7 @@ async def hibernate(organization_id: UUID) -> bool:
                         )
                         if (
                             active is not None
-                            or organization.database_idle_seconds == 0
-                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
+                            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
                         ):
                             organization.database_state = DatabaseState.available
                             await session.commit()
@@ -424,9 +421,7 @@ async def hibernate(organization_id: UUID) -> bool:
                                         )
                                         .limit(1)
                                     )
-                                    interrupted = (
-                                        demand is not None or organization.deleted_at is not None or organization.database_idle_seconds == 0
-                                    )
+                                    interrupted = demand is not None or organization.deleted_at is not None
                                 if interrupted:
                                     state = DatabaseState.resuming
                                     break

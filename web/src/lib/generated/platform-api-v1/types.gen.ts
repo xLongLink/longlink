@@ -476,10 +476,6 @@ export type OrganizationSummary = {
     avatar: string;
     status: Status;
     database_state: DatabaseState;
-    /**
-     * Database Idle Seconds
-     */
-    database_idle_seconds: number;
 };
 
 /**
@@ -492,10 +488,6 @@ export type OrganizationUpdate = {
      * Avatar
      */
     avatar?: string | '' | null;
-    /**
-     * Database Idle Seconds
-     */
-    database_idle_seconds?: number | null;
 };
 
 /**

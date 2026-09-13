@@ -3301,10 +3301,6 @@
           },
           "database_state": {
             "$ref": "#/components/schemas/DatabaseState"
-          },
-          "database_idle_seconds": {
-            "type": "integer",
-            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
@@ -3314,8 +3310,7 @@
           "slug",
           "avatar",
           "status",
-          "database_state",
-          "database_idle_seconds"
+          "database_state"
         ],
         "title": "OrganizationSummary",
         "description": "Represent one organization in admin list responses."
@@ -3344,19 +3339,6 @@
               }
             ],
             "title": "Avatar"
-          },
-          "database_idle_seconds": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 604800.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Database Idle Seconds"
           }
         },
         "type": "object",

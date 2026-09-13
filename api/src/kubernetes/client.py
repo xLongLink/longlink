@@ -26,7 +26,7 @@ class Kubernetes:
         self.connections = AsyncExitStack()
 
         self.gateway = Gateway(self)
-        self.storage = Storage(self)
+        self.storage = Storage()
         self.databases = Databases(self)
         self.solutions = Solutions(self)
         self.organizations = Organizations(self)

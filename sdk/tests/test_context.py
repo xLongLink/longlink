@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from longlink.database import audit
 from fastapi.testclient import TestClient
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
@@ -32,7 +33,7 @@ def create_context_application() -> FastAPI:
         """Return the request-local audit identity after yielding control."""
 
         await asyncio.sleep(0)
-        user_id = context._current_identity.get()
+        user_id = audit.current_actor.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
     return app
@@ -185,7 +186,7 @@ def test_context_middleware_treats_invalid_identity_as_anonymous(case: str) -> N
     async def get_identity() -> dict[str, bool]:
         """Expose whether the middleware accepted the supplied identity."""
 
-        return {"authenticated": context._current_identity.get() is not None}
+        return {"authenticated": audit.current_actor.get() is not None}
 
     client = TestClient(app)
 
@@ -237,7 +238,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
             both_requests_arrived.set()
 
         await both_requests_arrived.wait()
-        user_id = context._current_identity.get()
+        user_id = audit.current_actor.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
     # Act

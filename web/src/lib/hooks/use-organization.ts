@@ -68,22 +68,6 @@ function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organiz
     ]);
 }
 
-/** Deletes one organization and refreshes organization access data. */
-export function useDeleteOrganization() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (organizationId: string) => api(`/api/v1/organizations/${organizationId}`, { method: 'DELETE' }),
-        onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
-            ]);
-        },
-    });
-}
-
 /** Provides mutations for organization members and invitations. */
 export function useOrganizationMembers(organizationId: string) {
     const queryClient = useQueryClient();
@@ -107,7 +91,6 @@ export function useOrganizationMembers(organizationId: string) {
             api(`/api/v1/organizations/${organizationId}/members/${memberId}`, { json: { role }, method: 'PATCH' }),
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
             ]),
@@ -162,7 +145,6 @@ export function useUpdateOrganization(organizationId: string) {
                 queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
                 queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/me/organizations'] }),
             ]);
         },
     });

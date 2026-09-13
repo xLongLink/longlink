@@ -34,7 +34,6 @@ class Organization(AuditTable, table=True):
 
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    database_idle_seconds: int = Field(default=0)
     database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     database_state: DatabaseState = Field(
         default=DatabaseState.available,
@@ -55,6 +54,7 @@ class Organization(AuditTable, table=True):
             nullable=False,
         ),
     )
+
 
 class OrganizationActivity(PlatformModel, table=True):
     """Keep an Organization database awake while a bounded activity lease is live."""

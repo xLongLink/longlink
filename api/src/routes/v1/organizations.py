@@ -108,7 +108,6 @@ async def update_organization(
         membership.organization_id,
         str(payload.avatar) if payload.avatar is not None else None,
         user.id,
-        payload.database_idle_seconds,
     )
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
