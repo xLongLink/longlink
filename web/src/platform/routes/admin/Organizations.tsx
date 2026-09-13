@@ -30,13 +30,11 @@ export default function AdminOrganizations() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/organizations', zPageOrganizationSummary);
-    const deleteDialog = useDeleteDialog({
+    const deleteDialog = useDeleteDialog<(typeof organizations)[number]>({
         title: 'Delete organization',
         mutation: deleteOrganization,
-        items: organizations,
         getId: (organization) => organization.id,
         description: (organization) => `Delete organization ${organization.name}?`,
-        fallbackDescription: 'Delete this organization?',
         onSuccess: () => toast({ body: 'Organization deleted' }),
     });
     const pageMetadata = <NoIndex title="Organizations | LongLink" />;

@@ -31,9 +31,9 @@ make format   # Format source and documentation
 make build    # Typecheck and build both web bundles
 make test     # Build required bundles and run all tests
 
-make up       # Initialize local services, cluster, and sample image
+make up       # Initialize local services and cluster
 make down     # Stop local services and cluster; preserve caches and sdk/dev
-make seed     # Seed the Platform test Organization after the API starts
+make seed     # Seed the Platform test Organization after its sample image is pushed
 make api      # Run the Platform API
 make web      # Run the Web development server
 make sdk      # Run the local sample Solution

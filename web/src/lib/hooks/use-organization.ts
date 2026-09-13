@@ -9,7 +9,6 @@ import type {
 } from '@/lib/generated/platform-api-v1/types.gen';
 import {
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
-    zOrganizationDetails,
     zOrganizationSummary,
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -67,28 +66,6 @@ function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organiz
         }),
         queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
     ]);
-}
-
-/** Fetches organization details and people-management data for the current workspace. */
-export function useOrganization(organizationId: string | undefined) {
-    const organizationPath = organizationId ? `/api/v1/organizations/${organizationId}` : null;
-    const organizationQuery = useQuery({
-        queryKey: ['api', organizationPath],
-        queryFn: organizationPath
-            ? async ({ signal }) => zOrganizationDetails.parse(await api(organizationPath, { signal }).json())
-            : skipToken,
-        retry: false,
-    });
-
-    const { organization, members = [], invitations = [] } = organizationQuery.data ?? {};
-
-    return {
-        organization,
-        members,
-        invitations,
-        isLoading: organizationQuery.isLoading,
-        error: organizationQuery.error,
-    };
 }
 
 /** Deletes one organization and refreshes organization access data. */

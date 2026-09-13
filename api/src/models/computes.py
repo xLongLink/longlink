@@ -105,7 +105,7 @@ class ComputeRegistryCreate(BaseModel):
     # Object storage
     storage_class: StorageClassName
     storage_endpoint: str = Field(max_length=512)
-    storage_size_gib: int = Field(default=100, ge=10, le=65536, strict=True)
+    storage_size_gib: int = Field(default=100, ge=1, le=65536, strict=True)
     storage_instances: Literal[1, 3] = 3
     storage_certificate: str | None = Field(default=None, max_length=65536)
 

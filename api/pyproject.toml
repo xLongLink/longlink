@@ -55,6 +55,7 @@ dev = [
 ]
 
 [tool.setuptools_scm]
+git_describe_command = 'git describe --dirty --tags --long --match v[0-9]*'
 version_scheme = 'no-guess-dev'
 local_scheme = 'no-local-version'
 fallback_version = '0.0.0'
@@ -66,8 +67,7 @@ py-modules = ['main']
 include = ['scripts*', 'src*']
 
 [tool.setuptools.package-data]
-"src.development" = ["templates/*.yml"]
-"src.kubernetes.templates" = ["solution/*.yml", "platform/*.yml", "platform/*.yml.gz"]
+"src.kubernetes.templates" = ["solution/*.yml"]
 "src.utils" = ["templates/*.mjml"]
 
 [tool.ruff]
@@ -95,6 +95,7 @@ no-matching-overload = "ignore"
 unresolved-attribute = "ignore"
 
 [tool.pytest.ini_options]
+pythonpath = [".."]
 markers = [
     "integration: marks tests requiring container-backed infrastructure",
     "no_db: skips the API test database fixture for pure unit tests",

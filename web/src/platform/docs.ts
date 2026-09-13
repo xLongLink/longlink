@@ -1,35 +1,14 @@
-export const documentationComponentSlugs = [
-    'action',
-    'avatar',
-    'badge',
-    'bindings',
-    'button',
-    'card',
-    'checkbox-input',
-    'dialog',
-    'divider',
-    'expressions',
-    'file-input',
-    'for',
-    'grid',
-    'heading',
-    'icon',
-    'link',
-    'menu',
-    'number-input',
-    'query',
-    'radio-list',
-    'selector',
-    'slider',
-    'stack',
-    'state',
-    'switch',
-    'tabs',
-    'table',
-    'text',
-    'text-area',
-    'text-input',
-] as const;
+import { componentDocumentationSlugs } from '../lib/generated/documentation';
+
+const viewDocumentationSlugs = componentDocumentationSlugs.flatMap((slug) => {
+    if (slug === 'button') {
+        return ['bindings', slug];
+    }
+    if (slug === 'file-input') {
+        return ['expressions', slug];
+    }
+    return slug;
+});
 
 export const documentationPaths = [
     '/docs',
@@ -42,7 +21,7 @@ export const documentationPaths = [
     '/docs/sdk/storage',
     '/docs/sdk/database',
     '/docs/sdk/views',
-    ...documentationComponentSlugs.map((slug) => `/docs/sdk/views/${slug}`),
+    ...viewDocumentationSlugs.map((slug) => `/docs/sdk/views/${slug}`),
     '/docs/sdk/testing',
     '/docs/sdk/building',
 ];

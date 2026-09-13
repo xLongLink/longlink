@@ -1,14 +1,7 @@
 services:
-    registry:
-        image: registry:3
+    mail:
+        image: axllent/mailpit:v1.29.2@sha256:030f06031ce5c60913ac9363da1ab0d4be6fd2a78147dd0e1ca0fcac665d6b34
         restart: unless-stopped
         ports:
-            - '127.0.0.1:15000:5000'
-            - '${LONGLINK_DEV_GATEWAY:?Run development services through make up}:15000:5000'
-        networks:
-            - longlink
-
-networks:
-    longlink:
-        name: longlink-dev
-        external: true
+            - '127.0.0.1:1025:1025'
+            - '127.0.0.1:8025:8025'

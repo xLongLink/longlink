@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: longlink-gateway
+    namespace: kourier-system
+spec:
+    type: NodePort
+    externalTrafficPolicy: Local
+    selector:
+        app: 3scale-kourier-gateway
+    ports:
+        - name: https
+          port: 443
+          targetPort: 8444
+          nodePort: 30443
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-local-gateway
+    namespace: kourier-system
+spec:
+    podSelector:
+        matchLabels:
+            app: 3scale-kourier-gateway
+    policyTypes: [Ingress]
+    ingress:
+        # Match the fixed k3d subnet, outside the Pod network.
+        - from:
+              - ipBlock:
+                    cidr: 172.30.0.0/24
+          ports:
+              - protocol: TCP
+                port: 8444

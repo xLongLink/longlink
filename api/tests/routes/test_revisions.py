@@ -3,29 +3,25 @@ import asyncio
 from uuid import uuid4
 from httpx2 import AsyncClient
 from sqlmodel import col
-from factories import claim_operation, create_solution, complete_operation, create_organization
-from sqlalchemy import text, select
+from factories import create_solution, create_organization
+from sqlalchemy import func, text, select
 from sqlalchemy.exc import IntegrityError
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import session_scope
-from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
-from src.database.models.operations import Operation
 
 
-async def test_update_history_and_explicit_rollback(
+async def test_update_creates_immutable_encrypted_snapshot(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Authorize revision commands, encrypt snapshots, and retain history across rollback."""
+    """Authorize updates while preserving immutable, encrypted release snapshots."""
 
     # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
-    other = await create_solution(organization, name="other")
-    initial_id = solution.desired_revision_id
 
     resolved: LongLinkMetadata | None = None
 
@@ -47,100 +43,16 @@ async def test_update_history_and_explicit_rollback(
     )
     assert (await clients[0].put(url, json={**payload, "envs": {}})).status_code == 422
     assert (await clients[0].put(url, json=payload)).status_code == 204
-    history = await clients[0].get(f"{url}/revisions")
-    assert history.status_code == 200
-    assert len(history.json()) == 2
-    assert "revision-secret" not in history.text and '"envs"' not in history.text
-    assert history.json()[0]["image"] == "ghcr.io/longlink/dashboard@sha256:resolved"
-    assert (await clients[1].get(f"{url}/revisions")).status_code == 403
-
-    # Arrange: Snapshot desired revisions and queued work before rejected rollbacks.
-    desired_revisions_query = (
-        select(Solution.id, Solution.desired_revision_id).where(col(Solution.organization_id) == organization.id).order_by(Solution.id)
-    )
-    operations_query = select(Operation.__table__).order_by(Operation.id)
     async with session_scope() as session:
-        desired_revisions_result = await session.execute(desired_revisions_query)
-        desired_revisions_before = desired_revisions_result.all()
-        operations_result = await session.execute(operations_query)
-        operations_before = operations_result.all()
-
-    # Act
-    foreign_revision_response = await clients[0].post(f"{url}/revisions/{other.desired_revision_id}/rollback")
-
-    # Assert
-    assert foreign_revision_response.status_code == 404
-    assert foreign_revision_response.json() == {"detail": "Revision not found"}
-    async with session_scope() as session:
-        desired_revisions_result = await session.execute(desired_revisions_query)
-        assert desired_revisions_result.all() == desired_revisions_before
-        operations_result = await session.execute(operations_query)
-        assert operations_result.all() == operations_before
-
-    # Act
-    undeployed_revision_response = await clients[0].post(f"{url}/revisions/{initial_id}/rollback")
-
-    # Assert
-    assert undeployed_revision_response.status_code == 409
-    assert undeployed_revision_response.json() == {"detail": "Revision has never been deployed successfully"}
-    async with session_scope() as session:
-        desired_revisions_result = await session.execute(desired_revisions_query)
-        assert desired_revisions_result.all() == desired_revisions_before
-        operations_result = await session.execute(operations_query)
-        assert operations_result.all() == operations_before
-
-    # Arrange: Mark setup deployments complete so operation completion does not requeue them.
-    async with session_scope() as session:
-        initial = await session.get(Revision, initial_id)
-        assert initial is not None
-        initial.deployed_at = utcnow()
         current = await session.get(Solution, solution.id)
         assert current is not None
-        updated_id = current.desired_revision_id
-        current.deployed_revision_id = updated_id
-        other_current = await session.get(Solution, other.id)
-        assert other_current is not None
-        other_current.deployed_revision_id = other.desired_revision_id
-        await session.commit()
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        assert revision.image == "ghcr.io/longlink/dashboard@sha256:resolved"
+        assert revision.envs == {"KEY": "revision-secret"}
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
         encrypted = await session.execute(text("SELECT envs FROM revisions"))
         assert "revision-secret" not in str(encrypted.all())
-
-    original_operation_id = None
-    for kind, target_id in (
-        (OperationKind.organization_create, organization.id),
-        (OperationKind.solution_deploy, initial_id),
-        (OperationKind.solution_deploy, other.desired_revision_id),
-        (OperationKind.solution_deploy, updated_id),
-    ):
-        setup_operation = await claim_operation()
-        assert setup_operation is not None
-        assert (setup_operation.kind, setup_operation.target_id) == (kind, target_id)
-        if target_id == initial_id:
-            original_operation_id = setup_operation.id
-        assert await complete_operation(setup_operation.id) is not None
-    assert original_operation_id is not None
-
-    # Act
-    response = await clients[0].post(f"{url}/revisions/{initial_id}/rollback")
-
-    # Assert
-    assert response.status_code == 204
-    async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
-        assert current is not None and current.desired_revision_id == initial_id
-        operation = await session.scalar(
-            select(Operation).where(
-                col(Operation.kind) == OperationKind.solution_deploy,
-                col(Operation.target_id) == initial_id,
-                col(Operation.finished_at).is_(None),
-            )
-        )
-        assert operation is not None
-        assert operation.id != original_operation_id
-        assert operation.kind == OperationKind.solution_deploy
-        assert operation.target_id == initial_id
-        assert operation.finished_at is None
-    assert len((await clients[0].get(f"{url}/revisions")).json()) == 2
 
 
 @pytest.mark.parametrize("reference", ["desired_revision_id", "deployed_revision_id"])
@@ -203,11 +115,14 @@ async def test_source_update_preserves_patches_and_reresolves(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
     assert (await clients[0].put(url, json={"image": source})).status_code == 204
-    history = (await clients[0].get(f"{url}/revisions")).json()
-    assert history[0]["source"] == source
-    assert history[0]["configured_envs"] == ["DROP", "KEEP"]
-    assert history[0]["min_scale"] == 0
-    assert "private-value" not in str(history)
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        assert revision.source == source
+        assert revision.configured_envs == ["DROP", "KEEP"]
+        assert revision.min_scale == 0
 
     # Source checks require maintenance and cannot be used as a registry oracle by other users.
     inspected.clear()
@@ -226,7 +141,8 @@ async def test_source_update_preserves_patches_and_reresolves(
     assert "private-value" not in check.text
     assert check.json()["min_scale"] == 0
     assert (await clients[0].post(f"{url}/update", json={"envs": {"KEEP": "private-value"}})).status_code == 409
-    assert len((await clients[0].get(f"{url}/revisions")).json()) == 2
+    async with session_scope() as session:
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
     assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 204
     assert (await clients[0].post(f"{url}/update", json={"min_scale": 1})).status_code == 409
     assert (await clients[0].post(f"{url}/update", json={"min_scale": 2})).status_code == 422
@@ -361,17 +277,13 @@ async def test_simultaneous_source_updates_create_only_one_revision(
     assert sorted(response.status_code for response in responses) == [204, 409]
     winning_patch = {"LEFT": "left"} if responses[0].status_code == 204 else {"RIGHT": "right"}
     expected_envs = {"KEEP": "private-value", **winning_patch}
-    history_response = await clients[0].get(f"/api/v1/solutions/{solution.id}/revisions")
-    assert history_response.status_code == 200
-    history = history_response.json()
-    assert len(history) == 2
-    assert history[0]["configured_envs"] == sorted(expected_envs)
 
     # Verify the successful request's complete snapshot was persisted.
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
         assert current.desired_revision.envs == expected_envs
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
 
 
 @pytest.mark.integration
@@ -409,6 +321,10 @@ async def test_local_registry_release_roundtrip(
     assert "integration-value" not in check.text
     assert (await clients[0].post(f"{url}/update", json={})).status_code == 409
     assert (await clients[0].put(url, json={"image": source, "envs": {"EXTRA": "replacement"}})).status_code == 204
-    history = await clients[0].get(f"{url}/revisions")
-    assert len(history.json()) == 2 and history.json()[0]["source"] == source
-    assert history.json()[0]["configured_envs"] == sorted({*envs, "EXTRA"})
+    async with session_scope() as session:
+        current = await session.get(Solution, solution_id)
+        assert current is not None
+        revision = await session.get(Revision, current.desired_revision_id)
+        assert revision is not None
+        assert revision.source == source
+        assert revision.configured_envs == sorted({*envs, "EXTRA"})

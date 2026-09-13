@@ -1,0 +1,51 @@
+name: Compute package
+
+on:
+    push:
+        tags:
+            - 'compute-v[0-9]+.[0-9]+.[0-9]+'
+
+permissions: {}
+
+concurrency:
+    group: compute-release
+    cancel-in-progress: false
+
+jobs:
+    tests:
+        permissions:
+            contents: read
+        uses: ./.github/workflows/tests.yml
+
+    publish:
+        needs: tests
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        environment: release
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Validate release and build archive
+              env:
+                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+              run: |
+                  set -euo pipefail
+                  git merge-base --is-ancestor "${GITHUB_SHA}^{commit}" "origin/${DEFAULT_BRANCH}"
+                  version="$(awk '$1 == "version:" {print $2}' k8s/release/release.yml)"
+                  test "$GITHUB_REF_NAME" = "compute-v${version}"
+                  archive="${GITHUB_REF_NAME}.tar.gz"
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
+                  sha256sum "$archive" > "${archive}.sha256"
+
+            - name: Publish immutable release assets
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  gh release create "$GITHUB_REF_NAME" "${GITHUB_REF_NAME}.tar.gz" "${GITHUB_REF_NAME}.tar.gz.sha256" \
+                      --verify-tag --title "LongLink Compute ${GITHUB_REF_NAME#compute-v}" \
+                      --notes "Compute package. See the bundled README.md and release/release.yml for prerequisites and compatibility."

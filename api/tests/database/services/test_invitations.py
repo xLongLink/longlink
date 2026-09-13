@@ -245,7 +245,6 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None
         organization_row.deleted_at = datetime.now(UTC)
-        organization_row.deleted_id = owner.id
         await session.commit()
 
     # Act

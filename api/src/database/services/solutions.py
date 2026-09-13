@@ -214,19 +214,6 @@ async def deploy(
     await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
 
 
-async def rollback(session: AsyncSession, solution: Solution, revision_id: UUID) -> None:
-    """Select a previously deployed snapshot without reversing migrations."""
-
-    # Only this Solution's proven releases are safe rollback candidates.
-    revision = await session.get(Revision, revision_id)
-    if revision is None or revision.solution_id != solution.id:
-        raise NotFoundError("Revision not found")
-    if revision.deployed_at is None:
-        raise ConflictError("Revision has never been deployed successfully")
-    solution.desired_revision_id = revision.id
-    await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision.id)
-
-
 async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> None:
     """Authorize, tombstone, and queue cleanup for one LongLink Solution."""
 

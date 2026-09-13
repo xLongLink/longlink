@@ -4,7 +4,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
 from contextlib import ExitStack, asynccontextmanager
-from aiohttp.abc import AbstractResolver
 from dataclasses import field, dataclass
 from collections.abc import Iterable, Sequence, AsyncIterator
 from longlink.storage import tls
@@ -32,8 +31,6 @@ class S3:
         endpoint: str,
         credentials: Credentials,
         certificate: str | None = None,
-        *,
-        resolver: AbstractResolver | None = None,
     ) -> None:
         """Store connection settings without opening a transport."""
 
@@ -41,7 +38,6 @@ class S3:
         self._endpoint = endpoint
         self._credentials = credentials
         self._certificate = certificate
-        self._resolver = resolver
 
     @asynccontextmanager
     async def client(self) -> AsyncIterator["S3Client"]:
@@ -53,12 +49,11 @@ class S3:
             if self._certificate is not None:
                 verify = stack.enter_context(tls.certificate_file(self._certificate))
 
-            # Bound path-style requests and optionally route them through a development tunnel.
+            # Bound path-style requests through the operator-configured endpoint.
             config = AioConfig(
                 s3={"addressing_style": "path"},
                 connect_timeout=10,
                 read_timeout=30,
-                connector_args={"resolver": self._resolver} if self._resolver is not None else {},
                 http_session_cls=tls.Session,
             )
             session = aioboto3.Session()

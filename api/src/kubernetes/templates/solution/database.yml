@@ -47,7 +47,7 @@ spec:
                     matchLabels:
                         longlink.io/component: api
           ports:
-              - {protocol: TCP, port: 5432}
+              - { protocol: TCP, port: 5432 }
         - from:
               - podSelector:
                     matchLabels:
@@ -56,8 +56,8 @@ spec:
                     matchLabels:
                         kubernetes.io/metadata.name: cnpg-system
           ports:
-              - {protocol: TCP, port: 5432}
-              - {protocol: TCP, port: 8000}
+              - { protocol: TCP, port: 5432 }
+              - { protocol: TCP, port: 8000 }
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster

@@ -40,13 +40,11 @@ export default function AdminSolutions() {
         isLoading,
         pagination,
     } = usePaginate('/api/v1/solutions', zPageSolutionResponse, 5000);
-    const deleteDialog = useDeleteDialog({
+    const deleteDialog = useDeleteDialog<(typeof solutions)[number]>({
         title: 'Delete solution',
         mutation: deleteSolution,
-        items: solutions,
         getId: (solution) => solution.id,
         description: (solution) => `Delete solution ${solution.name}?`,
-        fallbackDescription: 'Delete this solution?',
     });
     const pageMetadata = <NoIndex title="Solutions | LongLink" />;
 

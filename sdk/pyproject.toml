@@ -62,6 +62,7 @@ Repository = "https://github.com/xLongLink/longlink.git"
 "Bug Tracker" = "https://github.com/xLongLink/longlink/issues"
 
 [tool.setuptools_scm]
+git_describe_command = "git describe --dirty --tags --long --match v[0-9]*"
 root = ".."
 version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"

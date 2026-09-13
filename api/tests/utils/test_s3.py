@@ -9,7 +9,6 @@ from containers import require_docker_daemon
 from src.utils.s3 import S3, Credentials
 from urllib.parse import urlsplit
 from collections.abc import Iterator
-from src.development import gateway, storage
 from botocore.exceptions import SSLError, ClientError
 from longlink.storage.base import create_fs
 from longlink.utils.settings import Envs
@@ -228,36 +227,36 @@ async def test_ceph_enforces_solution_permissions_and_revocation(ceph: tuple[Doc
         assert (await client.head_object(Bucket=bucket, Key=sibling_key))["ContentLength"] == 7
 
 
-async def test_development_transports_preserve_tls_and_s3_signing(ceph: tuple[DockerContainer, str, str]) -> None:
-    """Verify real loopback routing independently of TLS identity and HTTP/S3 authority."""
+async def test_configured_endpoints_preserve_tls_and_s3_signing(ceph: tuple[DockerContainer, str, str]) -> None:
+    """Verify normal HTTPS clients preserve endpoint identity independently of the routing Host."""
 
-    # The logical endpoint uses port 443; the real server is on an unrelated ephemeral port.
+    # Infrastructure exposes the actual endpoint; API clients require no custom routing adapter.
     _, endpoint, certificate = ceph
     port = urlsplit(endpoint).port
     assert port is not None
-    resolver = storage.Resolver("https://localhost", port)
-    connection = S3("https://localhost", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
+    connection = S3(endpoint, Credentials("owner-key", "owner-secret"), certificate)
     async with connection.client() as client:
         await client.list_buckets()
-    resolver = storage.Resolver("https://wrong-host.example", port)
-    connection = S3("https://wrong-host.example", Credentials("owner-key", "owner-secret"), certificate, resolver=resolver)
+    connection = S3(f"https://127.0.0.2:{port}", Credentials("owner-key", "owner-secret"), certificate)
     async with connection.client() as client:
         with pytest.raises(SSLError):
             await client.list_buckets()
 
     # Knative's routing authority differs from the certificate identity and must not alter SNI.
-    transport = gateway.Transport(port, certificate)
-    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    client = httpx2.AsyncClient(
+        verify=ssl.create_default_context(cadata=certificate), follow_redirects=False, trust_env=False, timeout=300.0
+    )
     async with client:
-        response = await client.get("https://localhost/", headers={"Host": "internalkourier"})
+        response = await client.get(endpoint, headers={"Host": "internalkourier"})
         # RGW interprets this foreign authority as a missing bucket, proving Host survived the tunnel.
         assert response.status_code == 404
         assert "<Code>NoSuchBucket</Code>" in response.text
-    transport = gateway.Transport(port, certificate)
-    client = httpx2.AsyncClient(transport=transport, follow_redirects=False, trust_env=False, timeout=300.0)
+    client = httpx2.AsyncClient(
+        verify=ssl.create_default_context(cadata=certificate), follow_redirects=False, trust_env=False, timeout=300.0
+    )
     async with client:
         with pytest.raises(httpx2.ConnectError):
-            await client.get("https://wrong-host.example/", headers={"Host": "internalkourier"})
+            await client.get(f"https://127.0.0.2:{port}/", headers={"Host": "internalkourier"})
 
 
 @pytest.mark.parametrize("limit", ["bytes", "objects"])

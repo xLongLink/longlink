@@ -198,13 +198,15 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
     await complete_operation(setup.id)
     initial = await claim_operation()
     assert initial is not None
-    metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:second"))
-    latest_id: UUID | None = None
-    return_to_active = False
+    second = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:second"))
+    third = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:third"))
+    second_id: UUID | None = None
+    third_id: UUID | None = None
     applied: list[str] = []
     expected_images = {
         "first": "ghcr.io/longlink/dashboard@sha256:test",
         "second": "ghcr.io/longlink/dashboard@sha256:second",
+        "third": "ghcr.io/longlink/dashboard@sha256:third",
     }
 
     class Kubernetes:
@@ -222,25 +224,23 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         ) -> None:
             """Capture immutable image and environment pairs."""
 
-            nonlocal latest_id
+            nonlocal second_id, third_id
             applied.append(secrets["KEY"])
             assert image == expected_images[secrets["KEY"]]
-            if latest_id is None:
+            if second_id is None:
                 # A newer request during an active rollout must not change its captured target.
                 async with session_scope() as session:
                     current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.deploy(session, current, users[0].id, metadata, {"KEY": "second"})
+                    await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"})
                     await session.commit()
-                    latest_id = current.desired_revision_id
-            elif return_to_active:
-                # A,B,A while A is applying reuses A's active lease and leaves B obsolete.
+                    second_id = current.desired_revision_id
+            elif third_id is None:
+                # The second rollout still uses its snapshot while a third revision becomes desired.
                 async with session_scope() as session:
                     current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.rollback(session, current, latest_id)
-                    await solutions.rollback(session, current, revision_id)
-                    duplicate = await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision_id)
-                    assert duplicate.lease_expires_at is not None
+                    await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"})
                     await session.commit()
+                    third_id = current.desired_revision_id
 
         async def aclose(self) -> None:
             """Close the adapter."""
@@ -251,91 +251,16 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         current = await session.get(Solution, solution.id)
         assert current is not None
         assert current.deployed_revision_id == initial.target_id
-        assert current.desired_revision_id == latest_id
-    latest = await claim_operation()
-    assert latest is not None and latest.target_id == latest_id
-    async with session_scope() as session:
-        await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=initial.target_id)
-        await session.commit()
-    await execute(latest)
-    recovery = await claim_operation()
-    assert recovery is not None and recovery.target_id == initial.target_id
-    await execute(recovery)
-
-    # A recovery queued behind a newer successful deployment cannot replace it.
-    assert applied == ["first", "second"]
-
-    # A superseded rollback is skipped without retargeting its immutable operation.
-    async with session_scope() as session:
-        current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id)
-        await solutions.deploy(session, current, users[0].id, metadata, {"KEY": "second"})
-        await session.commit()
-        newest_id = current.desired_revision_id
-    rollback = await claim_operation()
-    assert rollback is not None and rollback.kind == OperationKind.solution_deploy
-    assert (await execute(rollback)).failed is None
-    async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
-        assert current is not None
-        assert current.desired_revision_id == newest_id
-        assert current.deployed_revision_id == latest_id
-    newest = await claim_operation()
-    assert newest is not None and newest.target_id == newest_id
-    assert (await execute(newest)).failed is None
-    assert applied == ["first", "second", "second"]
-
-    # A,B,A coalesces A and skips B so the final runtime still matches desired A.
-    async with session_scope() as session:
-        current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id)
-        await solutions.deploy(session, current, users[0].id, metadata, {"KEY": "second"})
-        await solutions.rollback(session, current, initial.target_id)
-        await session.commit()
-    for kind in (OperationKind.solution_deploy, OperationKind.solution_deploy):
-        command = await claim_operation()
-        assert command is not None and command.kind == kind
-        assert (await execute(command)).failed is None
-    assert applied == ["first", "second", "second", "first"]
+        assert current.desired_revision_id == second_id
+    second_operation = await claim_operation()
+    assert second_operation is not None and second_operation.target_id == second_id
+    assert (await execute(second_operation)).failed is None
+    third_operation = await claim_operation()
+    assert third_operation is not None and third_operation.target_id == third_id
+    assert (await execute(third_operation)).failed is None
+    assert applied == ["first", "second", "third"]
     assert await claim_operation() is None
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
-        assert current.desired_revision_id == current.deployed_revision_id == initial.target_id
-
-    # Returning to an active target also skips the intervening queued rollback.
-    return_to_active = True
-    async with session_scope() as session:
-        current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, initial.target_id)
-        await session.commit()
-    active = await claim_operation()
-    assert active is not None
-    assert (await execute(active)).failed is None
-    outdated = await claim_operation()
-    assert outdated is not None and outdated.target_id == latest_id
-    assert (await execute(outdated)).failed is None
-    assert applied[-2:] == ["first", "first"]
-    assert await claim_operation() is None
-
-    # A request after the handler skipped A but before completion must not be lost.
-    return_to_active = False
-    async with session_scope() as session:
-        current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, latest_id)
-        await solutions.rollback(session, current, initial.target_id)
-        await session.commit()
-    skipped = await claim_operation()
-    assert skipped is not None and skipped.target_id == latest_id
-    await runtime.deploy(skipped.target_id)
-    async with session_scope() as session:
-        current = await solutions.access(session, solution.id, users[0].id)
-        await solutions.rollback(session, current, latest_id)
-        await session.commit()
-    await complete_operation(skipped.id)
-    while (pending := await claim_operation()) is not None:
-        assert (await execute(pending)).failed is None
-    async with session_scope() as session:
-        current = await session.get(Solution, solution.id)
-        assert current is not None
-        assert current.desired_revision_id == current.deployed_revision_id == latest_id
+        assert current.desired_revision_id == current.deployed_revision_id == third_id

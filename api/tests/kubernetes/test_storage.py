@@ -1,12 +1,13 @@
 import yaml
+import base64
 import pytest
 import asyncio
 import jsonschema
+import subprocess
 from uuid import uuid4
 from aiohttp import web
-from src.utils import templates
+from pathlib import Path
 from aiohttp.test_utils import TestServer
-from importlib.resources import files
 from src.kubernetes.client import Kubernetes
 from src.database.models.computes import ComputeRegistry
 
@@ -17,29 +18,32 @@ pytestmark = pytest.mark.no_db
 def test_storage_topology_matches_pinned_rook_schemas(instances: int) -> None:
     """Validate actual production manifests against their pinned operator contracts."""
 
-    # Read the packaged CRDs, rather than duplicating the Rook field definitions.
-    root = files("src.kubernetes.templates").joinpath("platform")
+    # Render the installed chart's CRDs, rather than duplicating Rook field definitions.
+    root = Path(__file__).resolve().parents[3]
+    operator = subprocess.run(
+        ["helmfile", "--file", str(root / "k8s/setup.yaml.gotmpl"), "--selector", "name=rook-ceph", "template"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     schemas = {
         document["spec"]["names"]["kind"]: next(
             version["schema"]["openAPIV3Schema"] for version in document["spec"]["versions"] if version["storage"]
         )
-        for document in yaml.safe_load_all(root.joinpath("rook-crds-v1.19.11.yml").read_text())
+        for document in yaml.safe_load_all(operator.stdout)
         if document and document["kind"] == "CustomResourceDefinition"
     }
-    documents = templates.readyml_list(
-        root.joinpath("storage.yml"),
-        storage_class='"block-storage"',
-        size_gib=100,
-        instances=instances,
-        managers=min(instances, 2),
-        safe_replica_size="true" if instances > 1 else "false",
-    )
+    directory = root / ("dev/compute/infrastructure" if instances == 1 else "k8s/infrastructure")
+    result = subprocess.run(["kubectl", "kustomize", str(directory)], check=True, capture_output=True, text=True)
+    documents = list(yaml.safe_load_all(result.stdout))
     for document in documents:
         if document["kind"] in schemas:
             jsonschema.validate(document, schemas[document["kind"]])
 
     # Production consumes explicitly assigned PVCs and never discovers arbitrary host disks.
-    cluster, store, storage_class = documents
+    cluster = next(document for document in documents if document["kind"] == "CephCluster")
+    store = next(document for document in documents if document["kind"] == "CephObjectStore")
+    storage_class = next(document for document in documents if document["kind"] == "StorageClass")
     assert cluster["spec"]["storage"]["useAllDevices"] is False
     assert cluster["spec"]["storage"]["storageClassDeviceSets"][0]["volumeClaimTemplates"][0]["spec"]["volumeMode"] == "Block"
     assert store["spec"]["gateway"]["securePort"] == 443
@@ -97,6 +101,25 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mism
                     },
                 }
             )
+        if "secrets" in request.path:
+            return web.json_response(
+                {
+                    "apiVersion": "v1",
+                    "kind": "Secret",
+                    "data": {
+                        "AWS_ACCESS_KEY_ID": base64.b64encode(b"owner").decode(),
+                        "AWS_SECRET_ACCESS_KEY": base64.b64encode(b"owner-secret").decode(),
+                    },
+                }
+            )
+        if "configmaps" in request.path:
+            return web.json_response(
+                {
+                    "apiVersion": "v1",
+                    "kind": "ConfigMap",
+                    "data": {"BUCKET_NAME": "bound-bucket"},
+                }
+            )
         raise web.HTTPNotFound()
 
     # Act: run the production reconciler against a real local HTTP server with its normal polling interval.
@@ -129,7 +152,8 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mism
             acknowledge.set()
 
             # Assert: the corrected bucket response releases the lifecycle gate.
-            assert await asyncio.wait_for(task, timeout=5) is None
+            bucket = await asyncio.wait_for(task, timeout=5)
+            assert bucket.name == "bound-bucket"
         finally:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)

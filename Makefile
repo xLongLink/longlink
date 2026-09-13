@@ -1,12 +1,15 @@
-.PHONY: install check format build test up image down api web sdk seed
-
-DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
+.PHONY: install check format build test up image down api web sdk sample seed
 
 # Install all development dependencies.
-install:
+install: api/.env
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
+
+
+# Initialize local configuration once; existing settings remain operator-owned.
+api/.env:
+	@umask 077; cp -n api/.env.sample api/.env
 
 
 # Run lint, type, and contract checks.
@@ -42,85 +45,78 @@ test:
 	cd web && vp run test
 
 
-# Initialize local infrastructure and build the local sample Solution image.
+# Initialize configuration before starting local infrastructure or the API.
+up api: api/.env
+
+
+# Create or reapply local resources in dependency order.
 up:
-	@docker network inspect longlink-dev >/dev/null 2>&1 || docker network create longlink-dev
-	@if k3d cluster list compute >/dev/null 2>&1; then \
-		network_ip="$$(docker inspect k3d-compute-server-0 --format '{{with index .NetworkSettings.Networks "longlink-dev"}}{{.IPAddress}}{{end}}')"; \
-		if [ -z "$$network_ip" ]; then \
-			printf "Existing k3d cluster is not attached to longlink-dev. Run make down before make up.\n"; \
-			exit 1; \
-		fi; \
-		image="$$(docker inspect k3d-compute-server-0 --format '{{.Config.Image}}')"; \
-		if [ "$$image" != "$(DEV_K3S_IMAGE)" ]; then \
-			printf "Existing k3d cluster uses %s instead of $(DEV_K3S_IMAGE). Run make down before make up.\n" "$$image"; \
-			exit 1; \
-		fi; \
-		mounts="$$(docker inspect k3d-compute-server-0 --format '{{range .Mounts}}{{if or (eq .Destination "/dev") (eq .Destination "/run/udev")}}{{.Destination}} {{end}}{{end}}')"; \
-		case "$$mounts" in *"/dev "*"/run/udev "*|*"/run/udev "*"/dev "*) ;; \
-			*) printf "Existing k3d cluster lacks Ceph development device mounts. Run make down and make up to recreate local state.\n"; exit 1 ;; \
-		esac; \
-	fi
-	@gateway="$$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')"; \
-		if [ -z "$$gateway" ]; then printf "Development Docker network has no gateway.\n"; exit 1; fi; \
-		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait
+	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
+		printf '%s\n' "$$addresses" | while read -r address rest; do \
+			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
+		done
+	docker compose -f dev/compose.yml up --detach --wait mail
 	@if ! k3d cluster list compute >/dev/null 2>&1; then \
-		k3d cluster create compute --image "$(DEV_K3S_IMAGE)" --network longlink-dev --api-port 127.0.0.1:8001 --volume "/dev:/dev@server:0" --volume "/run/udev:/run/udev:ro@server:0" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
+		k3d cluster create --config dev/cluster.yaml; \
 	fi
-	@umask 077; k3d kubeconfig get compute > api/kubeconfig.yaml
-	@mkdir -p dev/certificates
-	@if [ ! -f dev/certificates/ca.crt ] || [ ! -f dev/certificates/gateway.crt ] || [ ! -f dev/certificates/gateway.key ]; then \
+	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
+	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
+
+	# Generate local TLS; make down removes the whole certificate set.
+	@set -eu; umask 077; mkdir -p dev/certificates; \
 		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
 			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
 			-subj "/CN=LongLink Development CA" \
 			-addext "basicConstraints=critical,CA:TRUE" \
-			-addext "keyUsage=critical,keyCertSign,cRLSign" >/dev/null 2>&1; \
-		openssl req -newkey rsa:2048 -nodes \
-			-keyout dev/certificates/gateway.key -out dev/certificates/gateway.csr \
-			-subj "/CN=localhost" \
-			-addext "subjectAltName=DNS:localhost,IP:127.0.0.1" >/dev/null 2>&1; \
-		printf "subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n" > dev/certificates/gateway.ext; \
-		openssl x509 -req -days 3650 \
-			-in dev/certificates/gateway.csr \
-			-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -CAcreateserial \
-			-out dev/certificates/gateway.crt -extfile dev/certificates/gateway.ext >/dev/null 2>&1; \
-		rm -f dev/certificates/gateway.csr dev/certificates/gateway.ext dev/certificates/ca.srl; \
-	fi
-	@kubectl --kubeconfig api/kubeconfig.yaml create namespace knative-serving --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	@kubectl --kubeconfig api/kubeconfig.yaml create namespace kourier-system --dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	@kubectl --kubeconfig api/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
-		--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key \
-		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	cd api && DEVELOPMENT=true uv run --locked python -m src.development.setup
-	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
-	$(MAKE) image
+			-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/gateway.key -subj "/CN=localhost" | \
+				openssl x509 -req -days 3650 \
+					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
+					-extfile dev/tls.cnf -extensions gateway -out dev/certificates/gateway.crt; \
+		cat dev/certificates/ca.crt >> dev/certificates/gateway.crt; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
+			--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key --dry-run=client --output=yaml | \
+			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
+		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/storage.key -subj "/CN=storage.localhost" | \
+				openssl x509 -req -days 3650 \
+					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
+					-extfile dev/tls.cnf -extensions storage -out dev/certificates/storage.crt; \
+		cat dev/certificates/ca.crt >> dev/certificates/storage.crt; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rook-ceph create secret tls longlink-storage-tls \
+			--cert=dev/certificates/storage.crt --key=dev/certificates/storage.key --dry-run=client --output=yaml | \
+			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
+
+	# Install connectivity and shared controllers before publishing the release.
+	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
+	# Verify host TLS connectivity through the k3d port mappings.
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
 
 
 # Build and push the local sample, preserving an existing development project.
-image:
-	cd web && vp run build:sdk:bundle --logLevel warn
+image: sample
 	@docker buildx inspect longlink-dev >/dev/null 2>&1 || docker buildx create --name longlink-dev --driver docker-container
-	@if [ ! -d sdk/dev ]; then \
-		cd sdk && uv run --locked longlink init --folder dev --name sample && \
-		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
-	fi
 	cd sdk/dev && uv run longlink build --builder longlink-dev --registry localhost:15000 --push --tag dev
 
 
 # Stop local services and remove generated cluster and API state.
 down:
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
-	@LONGLINK_DEV_GATEWAY=127.0.0.2 docker compose -f dev/compose.yml down --remove-orphans
-	@if docker network inspect longlink-dev >/dev/null 2>&1; then docker network rm longlink-dev; fi
-	rm -f api/dev.db api/kubeconfig.yaml
+	@k3d registry delete longlink-registry >/dev/null 2>&1 || :
+	docker compose -f dev/compose.yml down --volumes --remove-orphans
+	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates
 
 
 # Prepare and run the local LongLink Platform API server.
 api:
-	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+	cd api && uv run --locked alembic upgrade head
+	cd api && uv run --locked python -m src.release
+	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Run the Vite web app.
@@ -128,16 +124,20 @@ web:
 	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
-# Build the SDK bundle and run the local sample Solution.
-sdk:
+# Prepare the local sample for both host development and image builds.
+sample:
 	cd web && vp run build:sdk:bundle --logLevel warn
 	@if [ ! -d sdk/dev ]; then \
 		cd sdk && uv run --locked longlink init --folder dev --name sample && \
 		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
 	fi
+
+
+# Run the local sample Solution.
+sdk: sample
 	cd sdk/dev && uv run longlink dev
 
 
-# Seed the example Organization and Solution after the Platform API starts.
-seed:
-	cd api && DEVELOPMENT=true GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" uv run --locked python -m scripts.seed
+# Seed the local example Organization and Solution after the Platform API starts.
+seed: api/.env
+	cd api && uv run --locked python ../dev/scripts/seed.py

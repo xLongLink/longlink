@@ -79,13 +79,11 @@ export default function Settings() {
         }
     });
 
-    const deleteDialog = useDeleteDialog({
+    const deleteDialog = useDeleteDialog<(typeof memberships)[number]>({
         title: 'Delete organization',
         mutation: deleteOrganization,
-        items: memberships,
         getId: (membership) => membership.organization.id,
         description: (membership) => `Delete ${membership.organization.name} from your account?`,
-        fallbackDescription: 'Delete this organization?',
     });
 
     // Prepare settings panels while Menu mounts only the selected content.

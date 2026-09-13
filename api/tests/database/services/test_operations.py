@@ -147,7 +147,7 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_create, compute_registry.id),
+        (OperationKind.compute_validate, compute_registry.id),
         (OperationKind.organization_create, organization.id),
         (OperationKind.solution_deploy, revision.id),
         (OperationKind.solution_delete, deleted.id),
@@ -208,13 +208,13 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_create, compute_registry.id),
+        (OperationKind.compute_validate, compute_registry.id),
         (OperationKind.organization_delete, organization.id),
     }
 
 
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
-    """Claim the oldest available compute creation first."""
+    """Claim the oldest available Compute validation first."""
 
     older_operation = await queue(target_id=uuid4())
     await queue(target_id=uuid4())
@@ -351,11 +351,11 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
         solution.desired_revision_id = revision.id
         await session.commit()
 
-    compute_operation = await queue(kind=OperationKind.compute_create, target_id=compute.id)
+    compute_operation = await queue(kind=OperationKind.compute_validate, target_id=compute.id)
     compute_claim = await claim_operation()
     assert compute_claim is not None
     assert compute_claim.id == compute_operation.id
-    assert await fail_operation(compute_operation.id, "compute creation failed") is not None
+    assert await fail_operation(compute_operation.id, "compute validation failed") is not None
 
     organization_operation = await queue(kind=OperationKind.organization_create, target_id=organization.id)
     organization_claim = await claim_operation()
@@ -386,7 +386,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert total == 3
 
     items_by_kind = {item.kind: item for item in items}
-    compute_item = items_by_kind[OperationKind.compute_create]
+    compute_item = items_by_kind[OperationKind.compute_validate]
     organization_item = items_by_kind[OperationKind.organization_create]
     solution_item = items_by_kind[OperationKind.solution_deploy]
     assert compute_item.resource is not None

@@ -72,7 +72,7 @@ async def test_operation_logs_endpoint_returns_persisted_logs(
     async with session_scope() as session:
         persisted = await session.get(Operation, operation.id)
         assert persisted is not None
-        persisted.logs = ["INFO: Creating compute", "INFO: Compute created"]
+        persisted.logs = ["INFO: Validating compute", "INFO: Compute validated"]
         await session.commit()
 
     # Act
@@ -80,7 +80,7 @@ async def test_operation_logs_endpoint_returns_persisted_logs(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == ["INFO: Creating compute", "INFO: Compute created"]
+    assert response.json() == ["INFO: Validating compute", "INFO: Compute validated"]
 
 
 async def test_operation_logs_endpoint_returns_not_found_for_missing_operation(

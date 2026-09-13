@@ -53,10 +53,13 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
                 url = f"/api/v1/solutions/{first.id}/update"
                 responses = await asyncio.gather(client.post(url, json={}), client.post(url, json={}))
                 assert sorted(response.status_code for response in responses) == [204, 409]
-                history = await client.get(f"/api/v1/solutions/{first.id}/revisions")
-                assert history.status_code == 200 and len(history.json()) == 2
-                assert history.json()[0]["configured_envs"] == ["KEEP"]
-                assert "postgres-secret" not in history.text
+                async with session_factory() as session:
+                    current = await session.get(Solution, first.id)
+                    assert current is not None
+                    revision = await session.get(Revision, current.desired_revision_id)
+                    assert revision is not None
+                    assert revision.configured_envs == ["KEEP"]
+                    assert revision.envs == {"KEEP": "postgres-secret"}
 
             # The actual migrated schema independently enforces same-Solution pointers.
             for reference in ("desired_revision_id", "deployed_revision_id"):

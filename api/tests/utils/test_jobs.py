@@ -36,10 +36,10 @@ def test_operation_log_handler_retains_all_output() -> None:
 
 
 def leased_operation() -> Operation:
-    """Build one claimed compute creation Operation."""
+    """Build one claimed Compute validation Operation."""
 
     return Operation(
-        kind=OperationKind.compute_create,
+        kind=OperationKind.compute_validate,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
@@ -242,7 +242,7 @@ async def test_execute_rejects_operation_without_a_worker_lease() -> None:
 
     # Arrange
     operation = Operation(
-        kind=OperationKind.compute_create,
+        kind=OperationKind.compute_validate,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
     )
 

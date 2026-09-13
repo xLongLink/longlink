@@ -15,7 +15,7 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def queue_operation(*, kind: OperationKind = OperationKind.compute_create, target_id: UUID) -> Operation:
+async def queue_operation(*, kind: OperationKind = OperationKind.compute_validate, target_id: UUID) -> Operation:
     """Queue one standalone Operation through an explicit test transaction."""
 
     # Tests without a resource command transaction commit their queued work here.

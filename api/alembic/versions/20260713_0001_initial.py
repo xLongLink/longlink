@@ -30,7 +30,6 @@ def upgrade() -> None:
         sa.Column("password", sa.String(length=128), nullable=False),
         sa.Column("google_id", sa.String(length=255), nullable=True),
         sa.Column("github_id", sa.String(length=255), nullable=True),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("administrator", sa.Boolean(), nullable=False),
@@ -121,14 +120,11 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),
-        sa.ForeignKeyConstraint(["deleted_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("slug"),
     )
@@ -250,7 +246,7 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "compute.create",
+                "compute.validate",
                 "solution.deploy",
                 "solution.delete",
                 "organization.create",

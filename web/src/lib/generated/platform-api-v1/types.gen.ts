@@ -277,7 +277,7 @@ export type OAuthAvailability = {
  *
  * Supported registered operation handlers.
  */
-export type OperationKind = 'compute.create' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
+export type OperationKind = 'compute.validate' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
  * OperationResource
@@ -650,50 +650,6 @@ export type RegistrationComplete = {
      * Password
      */
     password: string;
-};
-
-/**
- * RevisionResponse
- *
- * Expose release history without encrypted environment values.
- */
-export type RevisionResponse = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Image
-     */
-    image: string;
-    /**
-     * Source
-     */
-    source: string;
-    /**
-     * Configured Envs
-     */
-    configured_envs: Array<string>;
-    /**
-     * Min Scale
-     */
-    min_scale: 0 | 1;
-    /**
-     * Failed
-     */
-    failed: boolean;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Created Id
-     */
-    created_id: string | null;
-    /**
-     * Deployed At
-     */
-    deployed_at: string | null;
 };
 
 /**
@@ -1477,80 +1433,6 @@ export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses = {
 };
 
 export type ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses[keyof ApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponses];
-
-export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}/revisions';
-};
-
-export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetError = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetErrors];
-
-export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses = {
-    /**
-     * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
-     *
-     * Successful Response
-     */
-    200: Array<RevisionResponse>;
-};
-
-export type ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses[keyof ListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponses];
-
-export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-        /**
-         * Revision Id
-         */
-        revision_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}/revisions/{revision_id}/rollback';
-};
-
-export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostError = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostErrors];
-
-export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses[keyof RollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponses];
 
 export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetData = {
     body?: never;

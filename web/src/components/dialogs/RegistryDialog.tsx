@@ -17,6 +17,8 @@ type RegistryDialogProps<TValues extends Record<string, unknown>> = {
     additionalInvalidateKeys?: string[][];
     title: string;
     triggerLabel?: string;
+    submitLabel?: string;
+    pendingLabel?: string;
     width: number;
 };
 
@@ -29,6 +31,8 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
     additionalInvalidateKeys = [],
     title,
     triggerLabel = title,
+    submitLabel = 'Create',
+    pendingLabel = 'Creating...',
     width,
 }: RegistryDialogProps<TValues>) {
     // Keep the form and request lifecycle mounted across dialog visibility changes.
@@ -103,7 +107,7 @@ export function RegistryDialog<TValues extends Record<string, unknown>>({
                     <Button
                         form={formId}
                         type="submit"
-                        label={mutation.isPending ? 'Creating...' : 'Create'}
+                        label={mutation.isPending ? pendingLabel : submitLabel}
                         variant="primary"
                         isDisabled={!form.formState.isValid || form.formState.isSubmitting || mutation.isPending}
                         isLoading={mutation.isPending}
