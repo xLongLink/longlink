@@ -146,12 +146,12 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         def __init__(self, *_args: object) -> None:
             """Accept provider configuration."""
 
-        async def revoke(self, solution_id: object) -> None:
+        async def revoke(self, solution: UUID, bucket: object) -> None:
             """Record credential revocation."""
 
-            calls.append(("revoke", solution_id))
+            calls.append(("revoke", solution))
 
-        async def delete_prefix(self, _bucket: str, prefix: str) -> None:
+        async def delete_prefix(self, bucket: str, prefix: str) -> None:
             """Record solution file removal."""
 
             calls.append(("prefix", prefix))
@@ -203,22 +203,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("bucket")
             return await super().bucket(organization, compute)
 
-        async def user(self, solution: UUID, organization: UUID) -> Credentials:
+        async def user(self, solution: UUID, bucket: object) -> Credentials:
             """Record credential creation after quota admission."""
 
             calls.append("credentials")
             return await super().user(solution, organization)
-
-        async def authorize(self, bucket: str, solutions: object) -> None:
-            """Require committed credentials before enabling the storage principal."""
-
-            async with session_scope() as session:
-                persisted = await session.get(Solution, solution.id)
-                assert persisted is not None
-                assert persisted.secrets["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
-                assert persisted.secrets["LONGLINK_IDENTITY_SECRET"]
-                assert persisted.deployed_revision_id != persisted.desired_revision_id
-            calls.append("authorize")
 
     class FakePostgres(DatabasePostgres):
         """Provide generated schema credentials without contacting PostgreSQL."""
@@ -270,7 +259,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
-    assert calls == ["open", "quota", "bucket", "credentials", "schema", "authorize", "workload", "close"]
+    assert calls == ["open", "quota", "bucket", "credentials", "schema", "workload", "close"]
     calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local"
@@ -293,7 +282,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
-    assert calls == ["open", "quota", "bucket", "authorize", "workload", "close"]
+    assert calls == ["open", "quota", "bucket", "workload", "close"]
     assert len(database_passwords) == 1
     assert captured["secrets"] == {"API_KEY": "replacement", **persisted.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
     async with session_scope() as session:
@@ -330,21 +319,13 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FailingPostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
 
-    async def user(self: StorageKubernetes, solution_id: UUID, organization_id: UUID) -> Credentials:
+    async def user(self: StorageKubernetes, solution: UUID, bucket: object) -> Credentials:
         """Record credential creation at the external boundary."""
 
         calls.append("credentials")
         return Credentials("solution", "generated-secret")
 
     monkeypatch.setattr(StorageKubernetes, "user", user)
-
-    async def authorize(self: StorageKubernetes, bucket: str, solutions: object) -> None:
-        """Record and reject authorization after failed SQL provisioning."""
-
-        calls.append("authorize")
-        raise AssertionError("storage authorization ran after SQL provisioning failed")
-
-    monkeypatch.setattr(StorageKubernetes, "authorize", authorize)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="^database unavailable$"):

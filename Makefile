@@ -86,14 +86,16 @@ up:
 				openssl x509 -req -days 3650 \
 					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
 					-extfile dev/tls.cnf -extensions storage -out dev/certificates/storage.crt; \
-		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rook-ceph create secret tls longlink-storage-tls \
-			--cert=dev/certificates/storage.crt --key=dev/certificates/storage.key --dry-run=client --output=yaml | \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret generic longlink-rustfs \
+			--from-literal=RUSTFS_ACCESS_KEY=rustfsadmin --from-literal=RUSTFS_SECRET_KEY=rustfsadmin --dry-run=client --output=yaml | \
+		kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
+		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret generic longlink-storage-tls \
+			--from-file=tls.crt=dev/certificates/storage.crt --from-file=tls.key=dev/certificates/storage.key --dry-run=client --output=yaml | \
 		kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
-	# Kourier's controller and Rook's gateway load TLS only at process startup.
+	# Kourier's controller loads TLS only at process startup.
 	@if kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
 		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/net-kourier-controller --namespace knative-serving; \
 	fi
-	kubectl --kubeconfig dev/kubeconfig.yaml delete pod --namespace rook-ceph --selector=app=rook-ceph-rgw,rook_object_store=longlink --ignore-not-found
 
 	# Install connectivity and shared controllers before publishing the release.
 	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
@@ -106,16 +108,16 @@ up:
 	fi
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/net-kourier-controller --namespace knative-serving --timeout=120s
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/3scale-kourier-gateway --namespace kourier-system --timeout=120s
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/rook-ceph-rgw-longlink-a --namespace rook-ceph --timeout=120s
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443/health/ready
 
 
 # Build and push the local sample, preserving an existing development project.
 image: sample
-	@docker buildx inspect longlink-dev >/dev/null 2>&1 || docker buildx create --name longlink-dev --driver docker-container
-	cd sdk/dev && uv run longlink build --builder longlink-dev --registry localhost:15000 --push --tag dev
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
 # Stop local services and remove generated cluster and API state.

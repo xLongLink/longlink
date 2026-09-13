@@ -69,13 +69,11 @@ async def create_compute() -> ComputeRegistry:
             name="Local compute",
             cluster_uid="local-cluster",
             bucket_size_bytes=1073741824,
-            bucket_max_objects=10000,
-            storage_reserve_percent=30,
-            storage_object_overhead_bytes=65536,
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
-            storage_class="block-storage",
             storage_endpoint="https://storage.example",
+            storage_access_key="controller",
+            storage_secret_key="controller-secret",
             kubeconfig={"apiVersion": "v1", "clusters": []},
         )
         session.add(compute)
@@ -93,14 +91,12 @@ async def create_ready_compute() -> ComputeRegistry:
             name=f"Local testing compute {suffix}",
             cluster_uid=f"local-testing-cluster-{suffix}",
             bucket_size_bytes=1073741824,
-            bucket_max_objects=10000,
-            storage_reserve_percent=30,
-            storage_object_overhead_bytes=65536,
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
-            storage_class="block-storage",
             storage_endpoint="https://storage.example",
+            storage_access_key="controller",
+            storage_secret_key="controller-secret",
             status=Status.running,
         )
         session.add(compute)

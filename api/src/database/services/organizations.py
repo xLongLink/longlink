@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
 from src.utils import names, roles, postgres
-from sqlalchemy import Select, BigInteger, cast, func, delete, select
+from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from dataclasses import dataclass
@@ -121,9 +121,10 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
                 ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
+                ComputeRegistry.storage_access_key,
+                ComputeRegistry.storage_secret_key,
                 ComputeRegistry.storage_certificate,
                 ComputeRegistry.bucket_size_bytes,
-                ComputeRegistry.bucket_max_objects,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -391,26 +392,13 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
     if organization_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
-    # Lock the selected Compute until the Organization assignment is committed.
+    # Lock the least-assigned running Compute until the Organization assignment is committed.
     compute_assignments = (
         select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
         select(col(ComputeRegistry.id))
-        .where(
-            col(ComputeRegistry.status) == Status.running,
-            compute_assignments + 1
-            <= (
-                cast(col(ComputeRegistry.storage_size_gib), BigInteger)
-                * 1024**3
-                * (100 - col(ComputeRegistry.storage_reserve_percent))
-                / 100
-            )
-            / (
-                col(ComputeRegistry.bucket_size_bytes)
-                + cast(col(ComputeRegistry.bucket_max_objects), BigInteger) * col(ComputeRegistry.storage_object_overhead_bytes)
-            ),
-        )
+        .where(col(ComputeRegistry.status) == Status.running)
         .order_by(compute_assignments, col(ComputeRegistry.name))
         .limit(1)
         .with_for_update()
@@ -440,16 +428,6 @@ async def create(
     compute = await session.get(ComputeRegistry, compute_id, populate_existing=True)
     if compute is None:
         raise UnavailableError("No compute registry available")
-
-    # Recount after acquiring the Compute lock: pre-lock selection may have a stale statement snapshot.
-    count_result = await session.execute(select(func.count()).select_from(Organization).where(col(Organization.compute_id) == compute_id))
-    count = count_result.scalar_one()
-    reservation = compute.bucket_size_bytes + compute.bucket_max_objects * compute.storage_object_overhead_bytes
-
-    # OSD count equals pool replication, so usable capacity is one OSD, not their raw sum.
-    capacity = compute.storage_size_gib * 1024**3 * (100 - compute.storage_reserve_percent) // 100
-    if (count + 1) * reservation > capacity:
-        raise UnavailableError("Compute storage capacity is reserved; wait for cleanup or register more capacity")
 
     # Build the Organization with its immutable infrastructure assignments.
     organization = Organization(

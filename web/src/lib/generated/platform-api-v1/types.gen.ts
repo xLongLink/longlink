@@ -61,21 +61,17 @@ export type ComputeRegistryCreate = {
      */
     database_storage_class: string;
     /**
-     * Storage Class
-     */
-    storage_class: string;
-    /**
      * Storage Endpoint
      */
     storage_endpoint: string;
     /**
-     * Storage Size Gib
+     * Storage Access Key
      */
-    storage_size_gib?: number;
+    storage_access_key: string;
     /**
-     * Storage Instances
+     * Storage Secret Key
      */
-    storage_instances?: 1 | 3;
+    storage_secret_key: string;
     /**
      * Storage Certificate
      */
@@ -84,18 +80,6 @@ export type ComputeRegistryCreate = {
      * Bucket Size Bytes
      */
     bucket_size_bytes: number;
-    /**
-     * Bucket Max Objects
-     */
-    bucket_max_objects: number;
-    /**
-     * Storage Reserve Percent
-     */
-    storage_reserve_percent: number;
-    /**
-     * Storage Object Overhead Bytes
-     */
-    storage_object_overhead_bytes: number;
 };
 
 /**
@@ -129,37 +113,13 @@ export type ComputeRegistryResponse = {
      */
     database_storage_class: string;
     /**
-     * Storage Class
-     */
-    storage_class: string;
-    /**
      * Storage Endpoint
      */
     storage_endpoint: string;
     /**
-     * Storage Size Gib
-     */
-    storage_size_gib: number;
-    /**
-     * Storage Instances
-     */
-    storage_instances: number;
-    /**
      * Bucket Size Bytes
      */
     bucket_size_bytes: number;
-    /**
-     * Bucket Max Objects
-     */
-    bucket_max_objects: number;
-    /**
-     * Storage Reserve Percent
-     */
-    storage_reserve_percent: number;
-    /**
-     * Storage Object Overhead Bytes
-     */
-    storage_object_overhead_bytes: number;
     status: Status;
 };
 

@@ -73,12 +73,10 @@ async def test_local_seed_creates_example_through_api(
                 "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
-                "storage_class": "block-storage",
                 "storage_endpoint": "https://storage.example",
+                "storage_access_key": "controller",
+                "storage_secret_key": "controller-secret",
                 "bucket_size_bytes": 134217728,
-                "bucket_max_objects": 1000,
-                "storage_reserve_percent": 30,
-                "storage_object_overhead_bytes": 65536,
             },
         )
         assert compute_response.status_code == 202

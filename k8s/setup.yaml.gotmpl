@@ -11,8 +11,8 @@ environments:
 repositories:
     - name: cnpg
       url: https://cloudnative-pg.github.io/charts
-    - name: rook
-      url: https://charts.rook.io/release
+    - name: rustfs
+      url: https://charts.rustfs.com
 
 helmDefaults:
     wait: true
@@ -78,38 +78,56 @@ releases:
                         done
                     done
 
-    - name: rook-ceph
-      namespace: rook-ceph
-      chart: rook/rook-ceph
-      version: v1.19.11
+    - name: rustfs
+      namespace: rustfs
+      chart: rustfs/rustfs
+      version: 1.0.0-rc.6
       values:
-          - allowLoopDevices: {{ .Values.allowLoopDevices }}
-            obcAllowAdditionalConfigFields: bucketMaxSize,bucketMaxObjects
-            csi:
-                rookUseCsiOperator: false
-                disableCsiDriver: "true"
-                enableRbdDriver: false
-                enableCephfsDriver: false
+          - image:
+                rustfs:
+                    repository: rustfs/rustfs
+                    tag: 1.0.0-rc.6@sha256:97171b3d72cd47dc81000f92ea84de25608bfc35a94c965501afaeb5d99f6035
+            secret:
+                existingSecret: longlink-rustfs
+            service:
+                type: ClusterIP
+            ingress:
+                enabled: false
+            {{- if eq .Environment.Name "development" }}
+            replicaCount: 1
+            mode:
+                standalone:
+                    enabled: true
+                distributed:
+                    enabled: false
+            storageclass:
+                name: longlink-development
+                dataStorageSize: 1Gi
+                logStorageSize: 1Gi
+            {{- else }}
+            replicaCount: 4
+            drivesPerNode: 1
+            storageclass:
+                name: block-storage
+                dataStorageSize: 100Gi
+                logStorageSize: 1Gi
+            {{- end }}
 
     - name: storage
-      namespace: rook-ceph
+      namespace: rustfs
       chart: {{ .Values.infrastructure }}
-      # Ceph uses its own readiness status, checked by the hook below.
-      wait: false
       needs:
-          - rook-ceph/rook-ceph
+          - rustfs/rustfs
       hooks:
           - events: [postsync]
             showlogs: true
             command: kubectl
             args:
                 - wait
-                - --for=jsonpath={.status.phase}=Ready
-                - cephcluster/rook-ceph
-                - cephobjectstore/longlink
-                - cephobjectstoreuser/longlink-health
-                - --namespace=rook-ceph
-                - --timeout=1800s
+                - --for=condition=available
+                - deployment/longlink-storage
+                - --namespace=rustfs
+                - --timeout=900s
 
     # Publish readiness only after every controller and the object store are ready.
     - name: compute-release
@@ -117,4 +135,4 @@ releases:
       needs:
           - kourier
           - cnpg-system/cnpg
-          - rook-ceph/storage
+          - rustfs/storage

@@ -56,7 +56,6 @@ class Gateway:
                     ("knative-serving", "net-kourier-controller"),
                     ("kourier-system", "3scale-kourier-gateway"),
                     ("cnpg-system", "cnpg-controller-manager"),
-                    ("rook-ceph", "rook-ceph-operator"),
                 ):
                     deployment = Deployment(name, namespace=namespace, api=api)
                     while True:
@@ -64,6 +63,14 @@ class Gateway:
                         if deployment_is_ready(deployment):
                             break
                         await asyncio.sleep(5)
+
+                # The standalone RustFS chart runs its storage server as a Deployment.
+                storage = Deployment("rustfs", namespace="rustfs", api=api)
+                while True:
+                    await storage.refresh()
+                    if deployment_is_ready(storage):
+                        break
+                    await asyncio.sleep(5)
 
                 # Preserve TLS SNI while addressing Kourier's internal readiness vhost.
                 client = httpx2.AsyncClient(verify=context, trust_env=False, timeout=10, follow_redirects=False)

@@ -1,11 +1,9 @@
-import json
 import aioboto3
-from uuid import UUID
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
 from contextlib import ExitStack, asynccontextmanager
 from dataclasses import field, dataclass
-from collections.abc import Iterable, Sequence, AsyncIterator
+from collections.abc import Iterable, AsyncIterator
 from longlink.storage import tls
 from aiobotocore.config import AioConfig
 from botocore.exceptions import ClientError
@@ -17,14 +15,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class Credentials:
-    """Describe one RGW identity without exposing its secret in representations."""
+    """Describe one S3 identity without exposing its secret in representations."""
 
     access_key: str
     secret_key: str = field(repr=False)
 
 
 class S3:
-    """Perform bucket-owner operations against a TLS-verified Ceph RGW endpoint."""
+    """Perform bucket-owner operations against a TLS-verified S3 endpoint."""
 
     def __init__(
         self,
@@ -68,79 +66,6 @@ class S3:
             ) as client:
                 yield cast("S3Client", client)
 
-    @staticmethod
-    def policy(bucket: str, solutions: Sequence[UUID], owner: str) -> dict[str, object]:
-        """Grant exact Solution principals shared reads and private prefix writes."""
-
-        # Explicit denials override object-owner ACL privileges, including on previously uploaded objects.
-        arn = f"arn:aws:s3:::{bucket}"
-        owner_arn = f"arn:aws:iam:::user/{owner}"
-        principals = [owner_arn, *(f"arn:aws:iam:::user/solution-{solution.hex}" for solution in solutions)]
-        statements: list[dict[str, object]] = [
-            {"Effect": "Allow", "Principal": {"AWS": owner_arn}, "Action": "s3:*", "Resource": [arn, f"{arn}/*"]},
-            {"Effect": "Deny", "NotPrincipal": {"AWS": principals}, "Action": "s3:*", "Resource": [arn, f"{arn}/*"]},
-        ]
-        reads = ["s3:GetObject", "s3:GetObjectVersion"]
-        writes = ["s3:PutObject", "s3:DeleteObject", "s3:DeleteObjectVersion", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"]
-        lists = ["s3:ListBucket", "s3:ListBucketVersions"]
-        for solution in solutions:
-            principal = {"AWS": f"arn:aws:iam:::user/solution-{solution.hex}"}
-            prefix = f"solutions/{solution.hex}/"
-            readable = [f"{arn}/shared/*", f"{arn}/shared", f"{arn}/{prefix}*", f"{arn}/{prefix.rstrip('/')}"]
-            statements.extend(
-                [
-                    {"Effect": "Allow", "Principal": principal, "Action": reads, "Resource": readable},
-                    {"Effect": "Allow", "Principal": principal, "Action": writes, "Resource": [f"{arn}/{prefix}*"]},
-                    {
-                        "Effect": "Allow",
-                        "Principal": principal,
-                        "Action": lists,
-                        "Resource": [arn],
-                        "Condition": {"StringLike": {"s3:prefix": ["shared/*", f"{prefix}*"]}},
-                    },
-                    {"Effect": "Allow", "Principal": principal, "Action": ["s3:GetBucketLocation"], "Resource": [arn]},
-                    {
-                        "Effect": "Deny",
-                        "Principal": principal,
-                        "NotAction": [*reads, *writes, *lists, "s3:GetBucketLocation"],
-                        "Resource": [arn, f"{arn}/*"],
-                    },
-                    {"Effect": "Deny", "Principal": principal, "Action": "s3:*", "NotResource": [arn, *readable]},
-                    {"Effect": "Deny", "Principal": principal, "Action": writes, "NotResource": [f"{arn}/{prefix}*"]},
-                ]
-            )
-
-            # Upload-time grant headers can otherwise create an ACL without a separate PutObjectAcl call.
-            for header in ("read", "write", "read-acp", "write-acp", "full-control"):
-                statements.append(
-                    {
-                        "Effect": "Deny",
-                        "Principal": principal,
-                        "Action": ["s3:PutObject"],
-                        "Resource": [f"{arn}/*"],
-                        "Condition": {"StringLike": {f"s3:x-amz-grant-{header}": "?*"}},
-                    }
-                )
-        return {"Version": "2012-10-17", "Statement": statements}
-
-    async def authorize(self, bucket: str, solutions: Sequence[UUID]) -> None:
-        """Replace the complete policy under the serialized lifecycle worker."""
-
-        # Keep explicit denials even with no Solutions; bucket policies override uploader ACL ownership.
-        async with self.client() as client:
-            acl = await client.get_bucket_acl(Bucket=bucket)
-            owner = acl["Owner"]["ID"]
-            await client.put_public_access_block(
-                Bucket=bucket,
-                PublicAccessBlockConfiguration={
-                    "BlockPublicAcls": True,
-                    "IgnorePublicAcls": True,
-                    "BlockPublicPolicy": False,
-                    "RestrictPublicBuckets": False,
-                },
-            )
-            await client.put_bucket_policy(Bucket=bucket, Policy=json.dumps(self.policy(bucket, solutions, owner)))
-
     async def usage(self, bucket: str) -> int:
         """Measure current object bytes without including replicas or old versions."""
 
@@ -150,6 +75,17 @@ class S3:
             async for page in client.get_paginator("list_objects_v2").paginate(Bucket=bucket):
                 total += sum(item.get("Size", 0) for item in page.get("Contents", []))
         return total
+
+    async def create_bucket(self, bucket: str) -> None:
+        """Create a deterministic Organization bucket when it does not already exist."""
+
+        # A reconciler retry owns the same bucket name and must not treat that as a failure.
+        async with self.client() as client:
+            try:
+                await client.create_bucket(Bucket=bucket)
+            except ClientError as exc:
+                if exc.response.get("Error", {}).get("Code") not in {"BucketAlreadyOwnedByYou", "BucketAlreadyExists"}:
+                    raise
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         """Remove uploads and all object versions after runtime credentials are revoked."""
@@ -172,6 +108,17 @@ class S3:
                         errors = response.get("Errors", [])
                         if errors:
                             raise RuntimeError(f"S3 failed to delete {len(errors)} objects")
+            except ClientError as exc:
+                if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
+                    raise
+
+    async def delete_bucket(self, bucket: str) -> None:
+        """Delete an empty bucket, treating an absent bucket as already removed."""
+
+        # Organization cleanup empties all object versions before removing its bucket boundary.
+        async with self.client() as client:
+            try:
+                await client.delete_bucket(Bucket=bucket)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise

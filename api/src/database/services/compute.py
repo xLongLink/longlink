@@ -28,14 +28,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 ComputeRegistry.database_size_gib,
                 ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
-                ComputeRegistry.storage_class,
                 ComputeRegistry.storage_endpoint,
-                ComputeRegistry.storage_size_gib,
-                ComputeRegistry.storage_instances,
                 ComputeRegistry.bucket_size_bytes,
-                ComputeRegistry.bucket_max_objects,
-                ComputeRegistry.storage_reserve_percent,
-                ComputeRegistry.storage_object_overhead_bytes,
                 ComputeRegistry.status,
             )
         )

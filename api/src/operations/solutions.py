@@ -5,7 +5,7 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
-from src.operations import storage, databases
+from src.operations import databases
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -49,7 +49,7 @@ async def deploy(revision_id: UUID) -> None:
         organization = infrastructure.organization
         runtime_secrets = solution.secrets
 
-        # Acknowledge quota before credentials, keeping the bucket transport alive through authorization.
+        # Acknowledge quota before credentials so workloads never start over a stale bucket limit.
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
@@ -58,11 +58,11 @@ async def deploy(revision_id: UUID) -> None:
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
-                # Rook preserves generated credentials across retries; owner keys never reach workloads.
+                # RustFS service accounts are scoped to this Solution and owner keys never reach workloads.
                 prefix = f"solutions/{solution.id.hex}/"
                 logger.info("Creating object storage credentials for Solution %s", solution.id)
                 database_password = secrets.token_urlsafe(24)
-                credentials = await cluster.storage.user(solution.id, organization.id)
+                credentials = await cluster.storage.user(solution.id, bucket)
                 database = await databases.connection(organization, cluster)
                 database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
@@ -106,7 +106,6 @@ async def deploy(revision_id: UUID) -> None:
 
             # Apply the captured desired release so reconciliation repairs workload drift.
             logger.info("Applying Kubernetes workload for Solution %s", solution.id)
-            await storage.authorize(bucket.storage, bucket.name, organization.id)
             await cluster.solutions.apply(
                 solution.id,
                 f"longlink-compute-{organization.id.hex}",
@@ -172,10 +171,9 @@ async def delete(solution_id: UUID) -> None:
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)
 
-            # Remove the RGW identity before dropping its policy entries; owner credentials perform cleanup.
+            # Revoke the service account before owner credentials remove its private objects.
             bucket = await cluster.storage.bucket(organization.id, infrastructure.compute)
-            await cluster.storage.revoke(solution.id)
-            await storage.authorize(bucket.storage, bucket.name, organization.id)
+            await cluster.storage.revoke(solution.id, bucket)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 
         # Purge the tombstone only after all external resources are absent.

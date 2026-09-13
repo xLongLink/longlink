@@ -11,7 +11,7 @@
 
 # LongLink Compute package
 
-The package installs Knative, Kourier, CloudNativePG, Rook, and Ceph. The Platform
+The package installs Knative, Kourier, CloudNativePG, and RustFS. The Platform
 validates it and manages tenant resources; it never installs shared infrastructure.
 
 `setup.yaml.gotmpl` defines package releases. `release/release.yml` defines the
@@ -37,7 +37,8 @@ Run `make down` only for disposable local data.
 ## Hosted
 
 The hosting environment owns cluster access, storage, TLS, deployment, and recovery.
-Create the gateway and storage TLS Secrets, stop Platform workers, then apply the
+Create the gateway and storage TLS Secrets plus the `rustfs/longlink-rustfs` Secret
+with `RUSTFS_ACCESS_KEY` and `RUSTFS_SECRET_KEY`, stop Platform workers, then apply the
 boundaries before Helmfile installs shared controllers:
 
 ```bash
@@ -46,7 +47,7 @@ helmfile --file k8s/setup.yaml.gotmpl \
   --state-values-set infrastructure=/absolute/path/to/storage-overlay sync
 ```
 
-Never delete or recreate Ceph or PostgreSQL to transfer ownership. Existing
+Never delete or recreate RustFS or PostgreSQL to transfer ownership. Existing
 kubectl-managed installations require a reviewed migration.
 
 <br />

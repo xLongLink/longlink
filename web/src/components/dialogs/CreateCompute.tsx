@@ -35,15 +35,11 @@ const schema = z.object({
         ),
     database_size_gib: z.number().int().min(1).max(65536),
     database_instances: z.number().int().min(1).max(3),
-    storage_class: z.string().min(1).max(253),
     storage_endpoint: z.url({ protocol: /^https$/ }).max(512),
-    storage_size_gib: z.number().int().min(10).max(65536),
-    storage_instances: z.union([z.literal(1), z.literal(3)]),
+    storage_access_key: z.string().min(1).max(128),
+    storage_secret_key: z.string().min(8).max(1024),
     storage_certificate: z.string().max(65536).nullable(),
     bucket_size_bytes: z.number().int().min(1024).max(70368744177664).multipleOf(1024),
-    bucket_max_objects: z.number().int().min(1).max(2147483647),
-    storage_reserve_percent: z.number().int().min(1).max(99),
-    storage_object_overhead_bytes: z.number().int().min(4096).max(1073741824),
 });
 
 /** Registers one compute target. */
@@ -59,15 +55,11 @@ export default function CreateCompute() {
                 database_storage_class: '',
                 database_size_gib: 10,
                 database_instances: 1,
-                storage_class: '',
-                storage_endpoint: 'https://rook-ceph-rgw-longlink.rook-ceph.svc:443',
-                storage_size_gib: 100,
-                storage_instances: 3,
+                storage_endpoint: 'https://longlink-storage.rustfs.svc:443',
+                storage_access_key: '',
+                storage_secret_key: '',
                 storage_certificate: null,
                 bucket_size_bytes: undefined,
-                bucket_max_objects: undefined,
-                storage_reserve_percent: undefined,
-                storage_object_overhead_bytes: undefined,
             }}
             endpoint="/api/v1/computes"
             schema={schema}
@@ -203,25 +195,6 @@ export default function CreateCompute() {
                     />
                     <Controller
                         control={control}
-                        name="storage_class"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                ref={field.ref}
-                                label="Ceph backing storage class"
-                                description="Existing independent StorageClass supporting Block OSD PVCs and filesystem monitor PVCs."
-                                value={field.value}
-                                htmlName={field.name}
-                                isRequired
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                            />
-                        )}
-                    />
-                    <Controller
-                        control={control}
                         name="storage_endpoint"
                         render={({ field, fieldState }) => (
                             <TextInput
@@ -241,19 +214,15 @@ export default function CreateCompute() {
                     />
                     <Controller
                         control={control}
-                        name="storage_size_gib"
+                        name="storage_access_key"
                         render={({ field, fieldState }) => (
-                            <NumberInput
+                            <TextInput
                                 ref={field.ref}
-                                label="Ceph capacity per OSD"
-                                units="GiB"
-                                min={10}
-                                max={65536}
+                                label="RustFS controller access key"
+                                description="Controller identity used only by Platform workers to manage buckets, quotas, and service accounts."
                                 value={field.value}
                                 htmlName={field.name}
-                                isIntegerOnly
                                 isRequired
-                                isWheelEnabled={false}
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -264,20 +233,15 @@ export default function CreateCompute() {
                     />
                     <Controller
                         control={control}
-                        name="storage_instances"
+                        name="storage_secret_key"
                         render={({ field, fieldState }) => (
-                            <NumberInput
+                            <TextInput
                                 ref={field.ref}
-                                label="Ceph replicas"
-                                description="3 across separate nodes for production; 1 for non-HA development."
-                                min={1}
-                                max={3}
-                                step={2}
+                                label="RustFS controller secret key"
+                                type="password"
                                 value={field.value}
                                 htmlName={field.name}
-                                isIntegerOnly
                                 isRequired
-                                isWheelEnabled={false}
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}
                                 status={
@@ -293,7 +257,7 @@ export default function CreateCompute() {
                             <TextArea
                                 ref={field.ref}
                                 label="Storage CA certificate"
-                                description="PEM CA trust bundle. TLS key and server certificate belong in rook-ceph/longlink-storage-tls."
+                                description="PEM trust bundle for the RustFS HTTPS endpoint. Leave blank to use system trust."
                                 value={field.value ?? ''}
                                 htmlName={field.name}
                                 isOptional
@@ -319,76 +283,6 @@ export default function CreateCompute() {
                                 min={1024}
                                 max={70368744177664}
                                 step={1024}
-                                value={field.value}
-                                htmlName={field.name}
-                                isIntegerOnly
-                                isRequired
-                                isWheelEnabled={false}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                            />
-                        )}
-                    />
-                    <Controller
-                        control={control}
-                        name="bucket_max_objects"
-                        render={({ field, fieldState }) => (
-                            <NumberInput
-                                ref={field.ref}
-                                label="Organization bucket object quota"
-                                min={1}
-                                max={2147483647}
-                                value={field.value}
-                                htmlName={field.name}
-                                isIntegerOnly
-                                isRequired
-                                isWheelEnabled={false}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                            />
-                        )}
-                    />
-                    <Controller
-                        control={control}
-                        name="storage_reserve_percent"
-                        render={({ field, fieldState }) => (
-                            <NumberInput
-                                ref={field.ref}
-                                label="Ceph capacity headroom"
-                                description="Unallocated capacity after replication, for recovery, quota lag, and operational overhead."
-                                units="%"
-                                min={1}
-                                max={99}
-                                value={field.value}
-                                htmlName={field.name}
-                                isIntegerOnly
-                                isRequired
-                                isWheelEnabled={false}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                            />
-                        )}
-                    />
-                    <Controller
-                        control={control}
-                        name="storage_object_overhead_bytes"
-                        render={({ field, fieldState }) => (
-                            <NumberInput
-                                ref={field.ref}
-                                label="Reserved overhead per object"
-                                description="Budget for allocation rounding, bucket indexes, and metadata in addition to the byte quota. Size for your workload."
-                                units="bytes"
-                                min={4096}
-                                max={1073741824}
                                 value={field.value}
                                 htmlName={field.name}
                                 isIntegerOnly

@@ -42,14 +42,10 @@ class ComputeRegistry(AuditTable, table=True):
     database_storage_class: str = Field(max_length=253)
 
     # Object storage
-    storage_class: str = Field(max_length=253)
     storage_endpoint: str = Field(max_length=512)
-    storage_size_gib: int = Field(default=100)
-    storage_instances: int = Field(default=3)
+    storage_access_key: str = Field(max_length=128)
+    storage_secret_key: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     storage_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
 
-    # Storage admission policy
+    # Storage policy
     bucket_size_bytes: int = Field(sa_column=Column(BigInteger, nullable=False))
-    bucket_max_objects: int
-    storage_reserve_percent: int
-    storage_object_overhead_bytes: int

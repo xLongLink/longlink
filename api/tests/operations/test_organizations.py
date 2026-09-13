@@ -319,10 +319,11 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def delete(self, organization_id: UUID, compute: object) -> None:
+        async def delete(self, organization_id: UUID, solutions: list[UUID], compute: object) -> None:
             """Record Organization bucket and identity deletion."""
 
             assert organization_id == organization.id
+            assert solutions == [solution.id]
             calls.append("bucket")
 
     class Organizations:

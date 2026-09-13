@@ -31,7 +31,7 @@ registries:
         mirrors:
             'localhost:15000':
                 endpoint:
-                    - 'http://k3d-longlink-registry:5000'
+                    - 'http://longlink-registry:5000'
 options:
     k3d:
         wait: true

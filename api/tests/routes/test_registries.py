@@ -50,13 +50,11 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     # Arrange
     payload = {
         "bucket_size_bytes": 1073741824,
-        "bucket_max_objects": 10000,
-        "storage_reserve_percent": 30,
-        "storage_object_overhead_bytes": 65536,
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
-        "storage_class": "block-storage",
         "storage_endpoint": "https://storage.example",
+        "storage_access_key": "controller",
+        "storage_secret_key": "controller-secret",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
@@ -66,18 +64,12 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     }
     expected_item = {
         "bucket_size_bytes": 1073741824,
-        "bucket_max_objects": 10000,
-        "storage_reserve_percent": 30,
-        "storage_object_overhead_bytes": 65536,
         "gateway_url": "https://gateway.example",
         "status": "creating",
         "database_storage_class": "local-path",
         "database_size_gib": 10,
         "database_instances": 1,
-        "storage_class": "block-storage",
         "storage_endpoint": "https://storage.example",
-        "storage_size_gib": 100,
-        "storage_instances": 3,
     }
     beta_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Beta Registry"})
     alpha_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Alpha Registry"})
@@ -102,11 +94,9 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     payload = {
         "name": "Ephemeral Compute",
         "bucket_size_bytes": 1073741824,
-        "bucket_max_objects": 10000,
-        "storage_reserve_percent": 30,
-        "storage_object_overhead_bytes": 65536,
-        "storage_class": "block-storage",
         "storage_endpoint": "https://storage.example",
+        "storage_access_key": "controller",
+        "storage_secret_key": "controller-secret",
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "kubeconfig": {

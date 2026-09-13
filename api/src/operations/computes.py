@@ -28,7 +28,7 @@ async def validate(compute_id: UUID) -> str | None:
             raise ValueError("Registered Compute connection points to a different physical cluster")
         logger.info("Validating shared controllers for Compute %s", registry.id)
         await cluster.gateway.verify(registry.gateway_url, registry.gateway_certificate)
-        logger.info("Validating Rook/Ceph object storage for Compute %s", registry.id)
+        logger.info("Validating RustFS object storage for Compute %s", registry.id)
         await cluster.storage.verify(registry)
 
     # Preserve operator connection input and avoid overwriting a concurrent lifecycle change.

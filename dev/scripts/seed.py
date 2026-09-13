@@ -74,7 +74,12 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
 
     compute = await development_compute(client)
     if compute is not None:
-        return compute
+        if compute.status != "failed":
+            return compute
+
+        # Re-register the local Compute after a completed validation failure.
+        response = await client.delete(f"/api/v1/computes/{compute.id}")
+        response.raise_for_status()
 
     # Register the fixed local infrastructure through the same API contract as an administrator.
     certificate = LOCAL_CERTIFICATE.read_text(encoding="utf-8")
@@ -88,15 +93,11 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
             "database_size_gib": 10,
             "database_instances": 1,
             "database_storage_class": "local-path",
-            "storage_class": "longlink-development",
             "storage_endpoint": "https://storage.localhost:9443",
-            "storage_size_gib": 1,
-            "storage_instances": 1,
+            "storage_access_key": "rustfsadmin",
+            "storage_secret_key": "rustfsadmin",
             "storage_certificate": certificate,
             "bucket_size_bytes": 134217728,
-            "bucket_max_objects": 1000,
-            "storage_reserve_percent": 30,
-            "storage_object_overhead_bytes": 65536,
         },
     )
     if response.status_code != 409:
@@ -156,6 +157,27 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     return organization
 
 
+async def wait_for_organization(client: httpx2.AsyncClient, organization: Resource, settings: SeedSettings) -> Resource:
+    """Wait until the local Organization accepts Solution provisioning."""
+
+    # Wait for the asynchronous storage and Kubernetes boundary provisioning.
+    try:
+        async with asyncio.timeout(settings.COMPUTE_TIMEOUT_SECONDS):
+            while organization.status == "creating":
+                await asyncio.sleep(1)
+                current = await development_organization(client)
+                if current is None:
+                    raise RuntimeError("Local Organization was removed")
+                organization = current
+
+            if organization.status == "failed":
+                raise RuntimeError("Local Organization provisioning failed")
+    except TimeoutError as exc:
+        raise RuntimeError("Local Organization provisioning timed out") from exc
+
+    return organization
+
+
 async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
     """Create or retry the local sample Solution."""
 
@@ -202,6 +224,7 @@ async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
     await wait_for_compute(client, compute, settings)
 
     organization = await create_organization(client)
+    organization = await wait_for_organization(client, organization, settings)
     await create_sample(client, settings, organization)
 
 
