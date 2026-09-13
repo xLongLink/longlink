@@ -8,52 +8,31 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
 SEED_ENVIRONMENT = Path(__file__).resolve().parents[1] / ".env.seed"
+LOCAL_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "ca.crt"
 DEVELOPMENT_COMPUTE = "development compute"
 DEVELOPMENT_ORGANIZATION = "development"
 SAMPLE_SOLUTION = "sample"
 
 
-class Page[T](BaseModel):
+class Resource(BaseModel):
+    """Describe the resource fields used by local provisioning."""
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str | None = None
+    slug: str | None = None
+
+    # State
+    status: Literal["creating", "failed", "running"]
+
+
+class Page(BaseModel):
     """Describe one paginated API response."""
 
     # Results
-    items: list[T]
-
-
-class Compute(BaseModel):
-    """Describe the Compute state used by local provisioning."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-
-    # State
-    status: Literal["creating", "failed", "running"]
-
-
-class Organization(BaseModel):
-    """Describe the Organization state used by local provisioning."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    slug: str
-
-
-class Solution(BaseModel):
-    """Describe the Solution state used by local provisioning."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    slug: str
-
-    # State
-    status: Literal["creating", "failed", "running"]
+    items: list[Resource]
 
 
 class SeedSettings(BaseSettings):
@@ -70,25 +49,9 @@ class SeedSettings(BaseSettings):
 
     # Compute registry
     KUBECONFIG: Path = Path(__file__).resolve().parents[1] / "kubeconfig.yaml"
-    GATEWAY_URL: str = "https://localhost:8443"
-    GATEWAY_CERTIFICATE: str | None = None
-    DATABASE_SIZE_GIB: int = 10
-    DATABASE_INSTANCES: int = 1
-    DATABASE_STORAGE_CLASS: str = "local-path"
 
     # Sample release configuration
     SAMPLE_ENVS: dict[str, str] = Field(default_factory=lambda: {"REQUIRED": "development"})
-
-    # Shared Ceph storage; backing class must support raw Block PVCs and filesystem monitor PVCs.
-    STORAGE_CLASS: str = "longlink-development"
-    STORAGE_ENDPOINT: str = "https://storage.localhost:9443"
-    STORAGE_SIZE_GIB: int = 1
-    STORAGE_INSTANCES: int = 1
-    STORAGE_CERTIFICATE: str | None = None
-    BUCKET_SIZE_BYTES: int = 134217728
-    BUCKET_MAX_OBJECTS: int = 1000
-    STORAGE_RESERVE_PERCENT: int = 30
-    STORAGE_OBJECT_OVERHEAD_BYTES: int = 65536
 
     model_config = SettingsConfigDict(
         env_file=(API_ENVIRONMENT, SEED_ENVIRONMENT),
@@ -97,52 +60,48 @@ class SeedSettings(BaseSettings):
     )
 
 
-async def list_computes(client: httpx2.AsyncClient) -> list[Compute]:
-    """Return every local Compute visible to the administrator."""
+async def development_compute(client: httpx2.AsyncClient) -> Resource | None:
+    """Return the local development Compute when registered."""
 
     response = await client.get("/api/v1/computes", params={"page_size": 100})
     response.raise_for_status()
-    return Page[Compute].model_validate(response.json()).items
-
-
-async def development_compute(client: httpx2.AsyncClient) -> Compute | None:
-    """Return the local development Compute when registered."""
-
-    computes = await list_computes(client)
+    computes = Page.model_validate(response.json()).items
     return next((compute for compute in computes if compute.name == DEVELOPMENT_COMPUTE), None)
 
 
-async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -> Compute:
+async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -> Resource:
     """Create the local Compute when absent and return its current state."""
 
     compute = await development_compute(client)
     if compute is not None:
         return compute
 
-    # Register the local infrastructure through the same API contract as an administrator.
+    # Register the fixed local infrastructure through the same API contract as an administrator.
+    certificate = LOCAL_CERTIFICATE.read_text(encoding="utf-8")
     response = await client.post(
         "/api/v1/computes",
         json={
             "name": DEVELOPMENT_COMPUTE,
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
-            "gateway_url": settings.GATEWAY_URL,
-            "gateway_certificate": settings.GATEWAY_CERTIFICATE,
-            "database_storage_class": settings.DATABASE_STORAGE_CLASS,
-            "database_size_gib": settings.DATABASE_SIZE_GIB,
-            "database_instances": settings.DATABASE_INSTANCES,
-            "storage_class": settings.STORAGE_CLASS,
-            "storage_endpoint": settings.STORAGE_ENDPOINT,
-            "storage_size_gib": settings.STORAGE_SIZE_GIB,
-            "storage_instances": settings.STORAGE_INSTANCES,
-            "storage_certificate": settings.STORAGE_CERTIFICATE,
-            "bucket_size_bytes": settings.BUCKET_SIZE_BYTES,
-            "bucket_max_objects": settings.BUCKET_MAX_OBJECTS,
-            "storage_reserve_percent": settings.STORAGE_RESERVE_PERCENT,
-            "storage_object_overhead_bytes": settings.STORAGE_OBJECT_OVERHEAD_BYTES,
+            "gateway_url": "https://localhost:8443",
+            "gateway_certificate": certificate,
+            "database_size_gib": 10,
+            "database_instances": 1,
+            "database_storage_class": "local-path",
+            "storage_class": "longlink-development",
+            "storage_endpoint": "https://storage.localhost:9443",
+            "storage_size_gib": 1,
+            "storage_instances": 1,
+            "storage_certificate": certificate,
+            "bucket_size_bytes": 134217728,
+            "bucket_max_objects": 1000,
+            "storage_reserve_percent": 30,
+            "storage_object_overhead_bytes": 65536,
         },
     )
     if response.status_code != 409:
         response.raise_for_status()
+        return Resource.model_validate(response.json())
 
     compute = await development_compute(client)
     if compute is None:
@@ -150,7 +109,7 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
     return compute
 
 
-async def wait_for_compute(client: httpx2.AsyncClient, compute: Compute, settings: SeedSettings) -> None:
+async def wait_for_compute(client: httpx2.AsyncClient, compute: Resource, settings: SeedSettings) -> None:
     """Wait until the local Compute is ready for Organization assignment."""
 
     # The Organization API assigns only validated Compute registrations.
@@ -169,16 +128,16 @@ async def wait_for_compute(client: httpx2.AsyncClient, compute: Compute, setting
         raise RuntimeError("Local Compute validation timed out") from exc
 
 
-async def development_organization(client: httpx2.AsyncClient) -> Organization | None:
+async def development_organization(client: httpx2.AsyncClient) -> Resource | None:
     """Return the local development Organization when present."""
 
     response = await client.get("/api/v1/organizations", params={"page_size": 100})
     response.raise_for_status()
-    organizations = Page[Organization].model_validate(response.json()).items
+    organizations = Page.model_validate(response.json()).items
     return next((organization for organization in organizations if organization.slug == DEVELOPMENT_ORGANIZATION), None)
 
 
-async def create_organization(client: httpx2.AsyncClient) -> Organization:
+async def create_organization(client: httpx2.AsyncClient) -> Resource:
     """Create the local development Organization when absent."""
 
     organization = await development_organization(client)
@@ -189,6 +148,7 @@ async def create_organization(client: httpx2.AsyncClient) -> Organization:
     response = await client.post("/api/v1/organizations", json={"name": "Development"})
     if response.status_code != 409:
         response.raise_for_status()
+        return Resource.model_validate(response.json())
 
     organization = await development_organization(client)
     if organization is None:
@@ -196,19 +156,15 @@ async def create_organization(client: httpx2.AsyncClient) -> Organization:
     return organization
 
 
-async def sample_solution(client: httpx2.AsyncClient, organization: Organization) -> Solution | None:
-    """Return the local sample Solution when present."""
+async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
+    """Create or retry the local sample Solution."""
 
     response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
     response.raise_for_status()
-    solutions = [Solution.model_validate(payload) for payload in response.json()]
-    return next((solution for solution in solutions if solution.slug == SAMPLE_SOLUTION), None)
-
-
-async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Organization) -> None:
-    """Create or retry the local sample Solution."""
-
-    solution = await sample_solution(client, organization)
+    solution = next(
+        (solution for solution in (Resource.model_validate(payload) for payload in response.json()) if solution.slug == SAMPLE_SOLUTION),
+        None,
+    )
     if solution is None:
         # The API resolves and validates the immutable image metadata before recording the Solution.
         response = await client.post(

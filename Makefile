@@ -148,4 +148,4 @@ sdk: sample
 
 # Seed the local example Organization and Solution after the Platform API starts.
 seed: api/.env
-	cd api && GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_ENDPOINT=https://storage.localhost:9443 uv run --locked python ../dev/scripts/seed.py
+	cd api && uv run --locked python ../dev/scripts/seed.py

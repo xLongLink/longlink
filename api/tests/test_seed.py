@@ -30,14 +30,6 @@ def settings(tmp_path: Path, administrator_email: str) -> SeedSettings:
     )
     return SeedSettings(
         KUBECONFIG=kubeconfig,
-        GATEWAY_URL="https://gateway.example",
-        DATABASE_STORAGE_CLASS="local-path",
-        STORAGE_CLASS="block-storage",
-        STORAGE_ENDPOINT="https://storage.example",
-        BUCKET_SIZE_BYTES=134217728,
-        BUCKET_MAX_OBJECTS=1000,
-        STORAGE_RESERVE_PERCENT=30,
-        STORAGE_OBJECT_OVERHEAD_BYTES=65536,
         ADMIN_EMAIL=administrator_email,
         ADMIN_PASSWORD=TEST_PASSWORD,
         PUBLIC_URL=env.PUBLIC_URL,
@@ -79,14 +71,14 @@ async def test_local_seed_creates_example_through_api(
             json={
                 "name": "development compute",
                 "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
-                "gateway_url": local_settings.GATEWAY_URL,
-                "database_storage_class": local_settings.DATABASE_STORAGE_CLASS,
-                "storage_class": local_settings.STORAGE_CLASS,
-                "storage_endpoint": local_settings.STORAGE_ENDPOINT,
-                "bucket_size_bytes": local_settings.BUCKET_SIZE_BYTES,
-                "bucket_max_objects": local_settings.BUCKET_MAX_OBJECTS,
-                "storage_reserve_percent": local_settings.STORAGE_RESERVE_PERCENT,
-                "storage_object_overhead_bytes": local_settings.STORAGE_OBJECT_OVERHEAD_BYTES,
+                "gateway_url": "https://gateway.example",
+                "database_storage_class": "local-path",
+                "storage_class": "block-storage",
+                "storage_endpoint": "https://storage.example",
+                "bucket_size_bytes": 134217728,
+                "bucket_max_objects": 1000,
+                "storage_reserve_percent": 30,
+                "storage_object_overhead_bytes": 65536,
             },
         )
         assert compute_response.status_code == 202
