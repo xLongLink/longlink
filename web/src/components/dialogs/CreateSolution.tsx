@@ -141,7 +141,6 @@ export default function CreateSolution({ organizationId }: { organizationId: str
     }
 
     const handleOpenChange = createGuardedOpenChange(pending, (nextOpen) => {
-        if (submitting.current) return;
         setOpen(nextOpen);
 
         // Reset the wizard once the dialog is fully closed.

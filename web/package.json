@@ -58,13 +58,13 @@
         "happy-dom": "^20.14.0",
         "topojson-client": "^3.1.0",
         "typescript": "5.9.3",
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
         "vite-plus": "0.3.1",
-        "vitest": "4.1.10",
+        "vitest": "4.1.11",
         "world-atlas": "^2.0.2"
     },
     "overrides": {
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9"
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
     },
     "devEngines": {
         "packageManager": {

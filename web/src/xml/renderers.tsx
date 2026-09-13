@@ -6,7 +6,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { getSetupNodes, setupContext, XmlContext } from './core/context';
-import { Component, type ReactNode, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
+import { Component, type ReactNode, useEffect, useEffectEvent, useMemo, useState } from 'react';
 
 /** Keeps XML rendering failures scoped to the XML surface. */
 class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, { error: Error | null }> {
@@ -35,6 +35,23 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
     }
 }
 
+/** Resets the mutable state owned by an XML runtime before its setup declarations run. */
+function resetRuntime(runtime: XmlRuntime, invalidate: (id: string) => Promise<void>) {
+    runtime.services.setups = {};
+    runtime.scope.bindings = { params: runtime.scope.bindings.params };
+    runtime.services.invalidate = invalidate;
+}
+
+/** Clears and returns one setup declaration so it can repopulate its runtime binding. */
+function takeRuntimeSetup(runtime: XmlRuntime, id: string) {
+    if (!Object.hasOwn(runtime.services.setups, id)) return undefined;
+
+    const setup = runtime.services.setups[id];
+    delete runtime.scope.bindings[id];
+
+    return setup;
+}
+
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
@@ -49,7 +66,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             return { error: error instanceof Error ? error : new Error('XML setup validation failed'), nodes: [] };
         }
     }, [ast]);
-    const initializedAst = useRef<ASTNode | null>(null);
+    const [initializedAst, setInitializedAst] = useState<ASTNode | null>(null);
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; error: unknown } | null>(null);
     const [, setRenderVersion] = useState(0);
     const setupError = setupFailure?.ast === ast ? setupFailure.error : null;
@@ -93,18 +110,14 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             }
         }
 
-        ctx.services.setups = {};
-        ctx.scope.bindings = { params: ctx.scope.bindings.params };
-
         /* Attach the renderer-owned invalidation hook before async setup runs. */
-        ctx.services.invalidate = async (id) => {
+        resetRuntime(ctx, async (id) => {
             // Ignore invalidations after this renderer releases ownership.
             if (!mounted) return;
 
             // Skip unknown invalidation targets.
-            const setup = ctx.services.setups[id];
+            const setup = takeRuntimeSetup(ctx, id);
             if (setup) {
-                delete ctx.scope.bindings[id];
                 await setup();
             }
 
@@ -113,7 +126,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
             subscribeToStateValues();
             setRenderVersion((current) => current + 1);
-        };
+        });
 
         void setupContext(setup.nodes, ctx, controller.signal)
             .then(() => {
@@ -121,7 +134,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
                 if (!mounted) return;
 
                 subscribeToStateValues();
-                initializedAst.current = ast;
+                setInitializedAst(ast);
                 setRenderVersion((current) => current + 1);
             })
             .catch((error: unknown) => {
@@ -147,7 +160,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     }
 
     // Wait for setup before rendering dependent nodes.
-    if (setup.nodes.length && initializedAst.current !== ast) return null;
+    if (setup.nodes.length && initializedAst !== ast) return null;
 
     return (
         <XmlErrorBoundary ast={ast}>

@@ -27,15 +27,15 @@ function IntegrationScale() {
         // Observe the number so the count remains at zero until users can see it.
         const target = countRef.current;
         if (!target) return;
+        let frame: number | undefined;
 
         // Show the final value without movement when reduced motion is requested.
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            setCount(integrationContextCount);
+            frame = requestAnimationFrame(() => setCount(integrationContextCount));
             return;
         }
 
         // Count up once using the design system's slow motion duration.
-        let frame: number | undefined;
         const duration =
             Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-slow-max')) * 2;
         const observer = new IntersectionObserver(
