@@ -1,20 +1,30 @@
 import { z } from 'zod';
 import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
-import { readSafeProperty } from '../expressions/resolve';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useXmlRuntime, XmlContext } from '../core/context';
+import { isSafePropertyName, readSafeProperty } from '../expressions/resolve';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 
-const tablePropsSchema = z.object({ data: z.array(z.record(z.string(), z.unknown())), idKey: z.string().optional() });
+const tablePropsSchema = z.object({
+    data: z.array(z.record(z.string(), z.unknown())),
+    hasHover: z.boolean().default(false),
+    idKey: z.string().optional(),
+});
 const tableColumnPropsSchema = z.object({ header: z.string().optional() });
 
 export function Table({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 
-    const { data, idKey } = resolveXmlProps(props, ctx, tablePropsSchema, ['data']);
+    const { data, hasHover, idKey } = resolveXmlProps(props, ctx, tablePropsSchema, ['data']);
     const columnNodes = nodes.filter((node) => node.name === 'TableColumn' && isVisibleXmlNode(node, ctx));
+    const idKeyParts = idKey?.split('.');
+
+    // Keep identifier paths constrained to safe static object keys.
+    if (idKeyParts?.some((part) => !part || /\s/.test(part) || !isSafePropertyName(part))) {
+        throw new Error('Table idKey requires a usable field path');
+    }
 
     // Index rows only when visible rich cells need their original positions.
     const rowIndexes = new Map<Record<string, unknown>, number>();
@@ -80,7 +90,20 @@ export function Table({ props, nodes }: Props) {
             data={data}
             density="compact"
             emptyState={<EmptyState title="Nothing to show here" isCompact />}
-            idKey={idKey}
+            hasHover={hasHover}
+            idKey={
+                idKeyParts
+                    ? (row) => {
+                          const value = idKeyParts.reduce(readSafeProperty, row);
+
+                          if (typeof value !== 'string' && typeof value !== 'number') {
+                              throw new Error('Table idKey must resolve to a string or number');
+                          }
+
+                          return value;
+                      }
+                    : undefined
+            }
         />
     );
 }

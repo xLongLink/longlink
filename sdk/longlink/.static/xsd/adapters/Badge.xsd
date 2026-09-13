@@ -4,6 +4,11 @@
     <xsd:sequence>
       <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
     </xsd:sequence>
+    <xsd:attribute name="variant" type="xsd:string" default="neutral">
+      <xsd:annotation>
+        <xsd:documentation>Visual status or category treatment.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Badge" type="BadgeType">

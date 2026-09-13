@@ -13,8 +13,9 @@
 
 The API runs on the host. `dev/` owns local infrastructure.
 
-Requirements: Linux AMD64, Docker, k3d, kubectl, Helm, Helmfile, Kustomize,
-OpenSSL, curl, uv, Vite+, and `storage.localhost` resolving to loopback.
+Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, uv, Vite+, and
+`storage.localhost` resolving to loopback. `make up` uses the pinned Helmfile
+container when Helmfile is not installed locally.
 
 ## Start
 

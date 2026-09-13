@@ -755,32 +755,6 @@ export type SolutionResponse = {
 };
 
 /**
- * SolutionUpdate
- *
- * Deploy a submitted image source with an environment patch.
- */
-export type SolutionUpdate = {
-    /**
-     * Envs
-     */
-    envs?: {
-        [key: string]: string | null;
-    };
-    /**
-     * Min Scale
-     */
-    min_scale?: 0 | 1 | null;
-    /**
-     * Expected Revision Id
-     */
-    expected_revision_id?: string | null;
-    /**
-     * Image
-     */
-    image: string;
-};
-
-/**
  * SolutionUpdateCheck
  *
  * Expose a candidate and configured names, never environment values.
@@ -1298,74 +1272,6 @@ export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses
 
 export type CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses[keyof CreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponses];
 
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
-    body?: never;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}';
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutData = {
-    body: SolutionUpdate;
-    path: {
-        /**
-         * Solution Id
-         */
-        solution_id: string;
-    };
-    query?: never;
-    url: '/api/v1/solutions/{solution_id}';
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutError = UpdateSolutionApiV1SolutionsSolutionIdPutErrors[keyof UpdateSolutionApiV1SolutionsSolutionIdPutErrors];
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutResponses = {
-    /**
-     * Successful Response
-     */
-    204: void;
-};
-
-export type UpdateSolutionApiV1SolutionsSolutionIdPutResponse = UpdateSolutionApiV1SolutionsSolutionIdPutResponses[keyof UpdateSolutionApiV1SolutionsSolutionIdPutResponses];
-
 export type CheckUpdateApiV1SolutionsSolutionIdUpdateGetData = {
     body?: never;
     path: {
@@ -1469,6 +1375,40 @@ export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses = {
 };
 
 export type GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses[keyof GetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponses];
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Solution Id
+         */
+        solution_id: string;
+    };
+    query?: never;
+    url: '/api/v1/solutions/{solution_id}';
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors = {
+    /**
+     * Unprocessable Entity
+     */
+    422: ErrorResponse;
+    /**
+     * Default Response
+     */
+    default: ErrorResponse;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteError = DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteErrors];
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses[keyof DeleteSolutionApiV1SolutionsSolutionIdDeleteResponses];
 
 export type ListComputeRegistriesApiV1ComputesGetData = {
     body?: never;

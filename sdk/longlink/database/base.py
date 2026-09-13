@@ -100,7 +100,7 @@ class Database:
 
                     # Initialize the database without publishing partially initialized resources.
                     try:
-                        if engine.url.get_backend_name() == "sqlite":
+                        if self._env.ENV == "testing" and engine.url.get_backend_name() == "sqlite":
                             async with engine.begin() as conn:
                                 await conn.run_sync(database_metadata.create_all)
                         else:

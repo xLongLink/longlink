@@ -419,7 +419,6 @@ def build_command(
         typer.Option(help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development."),
     ] = None,
     push: Annotated[bool, typer.Option(help="Push the built image tag after building.")] = False,
-    builder: Annotated[str | None, typer.Option(help="Buildx builder to use for an isolated Docker build cache.")] = None,
 ) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
@@ -439,14 +438,10 @@ def build_command(
 
         # Run the Docker build and optional push.
         try:
-            # Build from a context that includes local path dependencies referenced by uv.
-            if builder is not None:
-                docker_arguments = [docker_command, "buildx", "build", "--builder", builder, "--load"]
-            else:
-                docker_arguments = [docker_command, "build"]
             subprocess.run(
                 [
-                    *docker_arguments,
+                    docker_command,
+                    "build",
                     "--platform",
                     "linux/amd64",
                     "-f",

@@ -302,18 +302,6 @@ export const zSolutionPatch = z.object({
 });
 
 /**
- * SolutionUpdate
- *
- * Deploy a submitted image source with an environment patch.
- */
-export const zSolutionUpdate = z.object({
-    envs: z.record(z.string(), z.string().nullable()).optional(),
-    min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
-    expected_revision_id: z.uuid().nullish(),
-    image: z.string()
-});
-
-/**
  * SolutionUpdateCheck
  *
  * Expose a candidate and configured names, never environment values.
@@ -616,26 +604,6 @@ export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostPath = 
  */
 export const zCreateSolutionApiV1OrganizationsOrganizationIdSolutionsPostResponse = z.void();
 
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
-
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutBody = zSolutionUpdate;
-
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateSolutionApiV1SolutionsSolutionIdPutResponse = z.void();
-
 export const zCheckUpdateApiV1SolutionsSolutionIdUpdateGetPath = z.object({
     solution_id: z.uuid()
 });
@@ -666,6 +634,15 @@ export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
  * Successful Response
  */
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse = z.array(z.string());
+
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeletePath = z.object({
+    solution_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeleteSolutionApiV1SolutionsSolutionIdDeleteResponse = z.void();
 
 export const zListComputeRegistriesApiV1ComputesGetQuery = z.object({
     page: z.int().gte(1).optional().default(1),

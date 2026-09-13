@@ -180,10 +180,10 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         return
 
     if solution.status == "failed":
-        # Retry failed sample provisioning through a fresh immutable revision.
-        response = await client.put(
-            f"/api/v1/solutions/{solution.id}",
-            json={"image": "localhost:15000/sample:dev", "envs": settings.SAMPLE_ENVS},
+        # Retry failed sample provisioning through a fresh revision of its persisted source.
+        response = await client.post(
+            f"/api/v1/solutions/{solution.id}/update",
+            json={"envs": settings.SAMPLE_ENVS},
         )
         response.raise_for_status()
 

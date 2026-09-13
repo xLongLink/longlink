@@ -7,7 +7,7 @@ from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionPatch, SolutionCreate, SolutionUpdate, SolutionResponse, SolutionUpdateCheck
+from src.models.solutions import SolutionPatch, SolutionCreate, SolutionResponse, SolutionUpdateCheck
 from src.database.services import solutions, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
@@ -66,26 +66,6 @@ async def create_solution(
         metadata=metadata,
         user_id=user.id,
     )
-    await session.commit()
-
-
-@router.put("/solutions/{solution_id}", status_code=204)
-async def update_solution(
-    solution_id: UUID, payload: SolutionUpdate, user: User = Depends(authuser), session: AsyncSession = Depends(get_session)
-):
-    """Append and deploy an immutable image and environment snapshot."""
-
-    # Validate access and image requirements before recording a replacement release.
-    solution = await solutions.access(session, solution_id, user.id, lock=False)
-    expected_revision = solution.desired_revision_id
-    if payload.expected_revision_id is not None and payload.expected_revision_id != expected_revision:
-        raise HTTPException(status_code=409, detail="Desired revision changed since review. Review the release again.")
-    await session.commit()
-    metadata = await image_metadata(payload.image)
-    solution = await solutions.access(session, solution_id, user.id)
-    if solution.desired_revision_id != expected_revision:
-        raise HTTPException(status_code=409, detail="Desired revision changed during inspection. Review the release again.")
-    await solutions.deploy(session, solution, user.id, metadata, payload.envs, source=payload.image, min_scale=payload.min_scale)
     await session.commit()
 
 

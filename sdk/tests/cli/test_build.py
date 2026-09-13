@@ -519,13 +519,6 @@ def test_resolve_image_tag_rejects_invalid_image_references(
             id="push",
         ),
         pytest.param([], ["/usr/bin/docker", "build"], [], False, id="local-only"),
-        pytest.param(
-            ["--builder", "longlink-dev"],
-            ["/usr/bin/docker", "buildx", "build", "--builder", "longlink-dev", "--load"],
-            [],
-            False,
-            id="isolated-builder",
-        ),
     ],
 )
 def test_build_command_reports_built_image(

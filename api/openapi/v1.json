@@ -754,134 +754,6 @@
         }
       }
     },
-    "/api/v1/solutions/{solution_id}": {
-      "put": {
-        "summary": "Update Solution",
-        "description": "Append and deploy an immutable image and environment snapshot.",
-        "operationId": "update_solution_api_v1_solutions__solution_id__put",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SolutionUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete Solution",
-        "description": "Mark one Solution absent and queue explicit lifecycle cleanup.",
-        "operationId": "delete_solution_api_v1_solutions__solution_id__delete",
-        "parameters": [
-          {
-            "name": "solution_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Solution Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
     "/api/v1/solutions/{solution_id}/update": {
       "get": {
         "summary": "Check Update",
@@ -1064,6 +936,66 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/solutions/{solution_id}": {
+      "delete": {
+        "summary": "Delete Solution",
+        "description": "Mark one Solution absent and queue explicit lifecycle cleanup.",
+        "operationId": "delete_solution_api_v1_solutions__solution_id__delete",
+        "parameters": [
+          {
+            "name": "solution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Solution Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -3856,61 +3788,6 @@
         ],
         "title": "SolutionResponse",
         "description": "Represent one solution in API responses."
-      },
-      "SolutionUpdate": {
-        "properties": {
-          "envs": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "type": "object",
-            "title": "Envs"
-          },
-          "min_scale": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "enum": [
-                  0,
-                  1
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Min Scale"
-          },
-          "expected_revision_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected Revision Id"
-          },
-          "image": {
-            "type": "string",
-            "title": "Image"
-          }
-        },
-        "type": "object",
-        "required": [
-          "image"
-        ],
-        "title": "SolutionUpdate",
-        "description": "Deploy a submitted image source with an environment patch."
       },
       "SolutionUpdateCheck": {
         "properties": {

@@ -10,6 +10,7 @@ import { resolveNavigationUrl } from '../core/url';
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
 
 const buttonPropsSchema = z.object({
+    disabled: z.boolean().default(false),
     to: z.string().optional(),
     variant: z.enum(BUTTON_VARIANTS).optional(),
 });
@@ -21,7 +22,7 @@ export function Button({ props, nodes }: Props) {
         throw new Error('Button requires child content');
     }
 
-    const { to, variant } = resolveXmlProps(props, ctx, buttonPropsSchema);
+    const { disabled, to, variant } = resolveXmlProps(props, ctx, buttonPropsSchema);
     const actionHandler = useContext(ActionHandlerContext);
     const navigationUrl = resolveNavigationUrl(services.navigationBaseUrl, to ?? '');
 
@@ -29,6 +30,7 @@ export function Button({ props, nodes }: Props) {
         <AstryxButton
             label=""
             variant={variant}
+            isDisabled={disabled}
             clickAction={actionHandler ?? (navigationUrl ? () => services.navigate(navigationUrl) : undefined)}
         >
             {renderNode(nodes, ctx)}

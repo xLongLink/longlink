@@ -8,6 +8,7 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
     String,
+    trim: (value) => String(value ?? '').trim(),
 };
 
 /** Evaluates a supported AST node against the current scope. */
