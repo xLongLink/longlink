@@ -27,7 +27,9 @@ export function usePaginate<T extends Record<string, unknown>>(
     useEffect(() => {
         // Clamp only after the requested page returns its own total.
         if (query.data !== undefined && page > lastPage) {
-            setPage(lastPage);
+            const timeout = window.setTimeout(() => setPage(lastPage));
+
+            return () => window.clearTimeout(timeout);
         }
     }, [query.data, lastPage, page]);
 

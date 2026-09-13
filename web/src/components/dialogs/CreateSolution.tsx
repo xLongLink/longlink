@@ -161,7 +161,6 @@ function CreateSolutionAttempt({
     }
 
     const handleOpenChange = createGuardedOpenChange(pending, (nextOpen) => {
-        if (submitting.current) return;
         onOpenChange(nextOpen);
     });
 

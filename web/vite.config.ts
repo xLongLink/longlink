@@ -1,6 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
+import { defineConfig, loadEnv } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
-import { defineConfig, lazyPlugins, loadEnv } from 'vite-plus';
 
 const ignoredPaths = ['.react-router/**', 'build/**', 'src/lib/generated/**'];
 
@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
     const devServerPort = env.VITE_DEV_PORT ? Number.parseInt(env.VITE_DEV_PORT, 10) : 5173;
 
     return {
-        plugins: lazyPlugins(() => [...tailwindcss(), ...(mode === 'test' ? [] : reactRouter())]),
+        plugins: [...tailwindcss(), ...(mode === 'test' ? [] : reactRouter())],
 
         fmt: {
             arrowParens: 'always',
