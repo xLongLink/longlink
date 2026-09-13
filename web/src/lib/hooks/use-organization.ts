@@ -7,7 +7,7 @@ import {
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Fetches membership and solutions for one organization route. */
-export function useOrganizationRoute(organizationSlug: string, solutionsEnabled = true) {
+export function useOrganizationRoute(organizationSlug: string) {
     const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
     const membershipQuery = useQuery({
         queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
@@ -18,11 +18,9 @@ export function useOrganizationRoute(organizationSlug: string, solutionsEnabled 
         retry: false,
     });
     const membership = membershipQuery.data;
-    const organization = membership?.organization;
-    const organizationId = organization?.id;
+    const organizationId = membership?.organization.id;
     const role = membership?.role ?? null;
-    const solutionsPath =
-        solutionsEnabled && organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
+    const solutionsPath = organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null;
     const solutionsQuery = useQuery({
         queryKey: ['api', solutionsPath],
         queryFn: solutionsPath
@@ -40,7 +38,6 @@ export function useOrganizationRoute(organizationSlug: string, solutionsEnabled 
     });
 
     return {
-        organization,
         organizationId,
         role,
         solutions: solutionsQuery.data ?? [],

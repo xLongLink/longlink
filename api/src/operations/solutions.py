@@ -48,6 +48,7 @@ async def deploy(revision_id: UUID) -> None:
             await session.commit()
         organization = infrastructure.organization
         runtime_secrets = solution.secrets
+        database_certificate: str | None = None
 
         # Organization reconciliation owns bucket provisioning and quota admission.
         cluster = Kubernetes(
@@ -63,7 +64,7 @@ async def deploy(revision_id: UUID) -> None:
                 logger.info("Creating object storage credentials for Solution %s", solution.id)
                 database_password = secrets.token_urlsafe(24)
                 credentials = await cluster.storage.user(solution.id, bucket)
-                database = await databases.connection(organization, cluster)
+                database, database_certificate = await databases.connection(organization, cluster)
                 database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
                 # Build and commit the complete runtime contract before creating the workload.
@@ -104,6 +105,10 @@ async def deploy(revision_id: UUID) -> None:
 
                     await session.commit()
 
+            # Reuse the CA fetched for initial schema provisioning; retries fetch the current CA.
+            if database_certificate is None:
+                database_certificate = await cluster.databases.certificate(organization.id)
+
             # Apply the captured desired release so reconciliation repairs workload drift.
             logger.info("Applying Kubernetes workload for Solution %s", solution.id)
             await cluster.solutions.apply(
@@ -113,7 +118,7 @@ async def deploy(revision_id: UUID) -> None:
                 {
                     **revision.envs,
                     **runtime_secrets,
-                    "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
+                    "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
                     **(
                         {"LONGLINK_STORAGE_CERTIFICATE": infrastructure.compute.storage_certificate}
                         if infrastructure.compute.storage_certificate
@@ -167,7 +172,7 @@ async def delete(solution_id: UUID) -> None:
         )
         async with contextlib.aclosing(cluster):
             await cluster.solutions.delete(solution.id, f"longlink-compute-{organization.id.hex}")
-            db = await databases.connection(organization, cluster)
+            db, _ = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)
 

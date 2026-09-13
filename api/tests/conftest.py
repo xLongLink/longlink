@@ -56,6 +56,8 @@ class StorageKubernetes:
     async def apply(self, organization: UUID, compute: object) -> None:
         """Accept provisioning."""
 
+        self.bucket(organization, compute)
+
     def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 

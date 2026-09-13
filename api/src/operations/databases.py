@@ -33,22 +33,24 @@ async def lock(session: AsyncSession, organization_id: UUID) -> Organization | N
     return await session.get(Organization, organization_id, populate_existing=True)
 
 
-async def connection(organization: Organization, cluster: Kubernetes) -> postgres.Postgres:
-    """Build the Organization's private, CA-verified PostgreSQL connection."""
+async def connection(organization: Organization, cluster: Kubernetes) -> tuple[postgres.Postgres, str]:
+    """Build the Organization's private, CA-verified PostgreSQL connection and return its CA."""
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
     port = await cluster.databases.portforward(organization.id)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
-    return postgres.Postgres(
+    certificate = await cluster.databases.certificate(organization.id)
+    database = postgres.Postgres(
         host=f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
         port=port,
         username="postgres",
         password=organization.database_password,
         sslmode=DatabaseSSLMode.require,
-        certificate=await cluster.databases.certificate(organization.id),
+        certificate=certificate,
         hostaddr="127.0.0.1",
     )
+    return database, certificate
 
 
 @dataclass
@@ -284,7 +286,7 @@ async def ready(organization_id: UUID) -> None:
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database = await connection(infrastructure.organization, cluster)
+                    database, _ = await connection(infrastructure.organization, cluster)
                     if infrastructure.organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
@@ -367,7 +369,7 @@ async def hibernate(organization_id: UUID) -> bool:
             async with contextlib.aclosing(cluster):
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(infrastructure.organization, cluster)
+                    database, _ = await connection(infrastructure.organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)
