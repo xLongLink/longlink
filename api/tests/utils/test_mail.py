@@ -65,29 +65,6 @@ def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: py
     assert 'href="https://example.test/invite?name=&quot;quoted&quot;&amp;next=&lt;unsafe&gt;"' in source
 
 
-async def test_development_mail_logging_excludes_message_body(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Log development mail metadata without exposing bearer credentials."""
-
-    # Arrange
-    token = "sensitive-reset-token"
-    logged: list[tuple[str, tuple[object, ...]]] = []
-
-    def capture(message: str, *args: object) -> None:
-        """Capture the development-only mail log record."""
-
-        logged.append((message, args))
-
-    monkeypatch.setattr(env, "DEVELOPMENT", True)
-    monkeypatch.setattr(env, "SMTP_HOST", None)
-    monkeypatch.setattr(mail.logger, "warning", capture)
-
-    # Act
-    await mail.send_mail("user@example.com", "Reset your password", f"https://example.test/reset#{token}", "<p>message</p>")
-
-    # Assert
-    assert logged == [("Development email to %s: %s", ("user@example.com", "Reset your password"))]
-
-
 async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
     """Deliver HTML mail through the configured SMTP transport."""
 
@@ -102,6 +79,7 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeyp
     monkeypatch.setattr(env, "SMTP_HOST", "smtp.example.com")
     monkeypatch.setattr(env, "SMTP_PORT", 465)
     monkeypatch.setattr(env, "SMTP_USERNAME", "mailer@example.com")
+    monkeypatch.setattr(env, "SMTP_FROM", "mailer@example.com")
     monkeypatch.setattr(env, "SMTP_PASSWORD", "smtp-password")
     monkeypatch.setattr(env, "SMTP_USE_TLS", True)
     monkeypatch.setattr(env, "SMTP_START_TLS", False)
@@ -133,11 +111,10 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeyp
     }
 
 
-async def test_send_mail_requires_smtp_outside_development(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject delivery when SMTP is absent outside local development."""
+async def test_send_mail_requires_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject delivery when SMTP is absent."""
 
     # Arrange
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
     monkeypatch.setattr(env, "SMTP_HOST", None)
 
     # Act and assert

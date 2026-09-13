@@ -1,4 +1,3 @@
-import logging
 import aiosmtplib
 from html import escape
 from mjml import mjml_to_html
@@ -8,8 +7,6 @@ from email.message import EmailMessage
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from importlib.resources import files
-
-logger = logging.getLogger("longlink.mail")
 
 
 def render_mjml_template(template_name: str, **context: object) -> str:
@@ -29,18 +26,15 @@ def render_mjml_template(template_name: str, **context: object) -> str:
 
 
 async def send_mail(recipient: str, subject: str, text: str, html: str) -> None:
-    """Deliver one email or log it during local development."""
+    """Deliver one multipart email through the configured SMTP server."""
 
-    # Keep local development self-contained when no SMTP server is configured.
+    # Never silently discard authentication mail when delivery is unavailable.
     if env.SMTP_HOST is None:
-        if env.DEVELOPMENT:
-            logger.warning("Development email to %s: %s", recipient, subject)
-            return
         raise RuntimeError("SMTP_HOST is not configured")
 
     # Build a multipart email with an HTML body and plain-text fallback.
     message = EmailMessage()
-    message["From"] = f"LongLink <{env.SMTP_USERNAME}>"
+    message["From"] = f"LongLink <{env.SMTP_FROM}>"
     message["To"] = recipient
     message["Subject"] = subject
     message.set_content(text)

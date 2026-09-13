@@ -58,6 +58,7 @@ LongLink
 - Platform metadata is separate from Solution business data.
 - Shared Compute infrastructure is installed externally from `k8s/compute`; API reconciliation validates it without installing operators.
 - Local development installs infrastructure before starting API workers. Stop workers before `make compute`; local apply and `make api` coordinate through `dev/compute.lock`.
+- The API uses the same runtime code in local and hosted deployments. `dev/` owns workstation setup, endpoint connections, split DNS, and mail capture; no development transport belongs in the API.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
 - Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.
 - Compute registrations define CNPG storage, Rook/Ceph backing storage, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.

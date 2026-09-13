@@ -1,4 +1,4 @@
-.PHONY: install check format build test up compute _compute image down api web sdk seed
+.PHONY: install check format build test up _up compute _compute connect configure image down api web sdk seed
 
 DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
 
@@ -7,12 +7,20 @@ install:
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
+	$(MAKE) configure
+
+
+# Prepare local configuration without importing the API.
+configure:
+	uv run --script dev/setup.py configure
 
 
 # Run lint, type, and contract checks.
 check:
 	cd api && uv run --locked ruff check .
+	cd api && uv run --locked ruff check ../dev/setup.py
 	cd api && uv run --locked --extra dev ty check
+	cd api && uv run --locked --extra dev ty check ../dev/setup.py
 	cd sdk && uv run --locked ruff check .
 	cd sdk && uv run --locked --group dev ty check
 	cd web && vp run check
@@ -43,7 +51,13 @@ test:
 
 
 # Initialize local infrastructure and build the local sample Solution image.
-up:
+up: configure
+	flock --exclusive --nonblock dev/compute.lock $(MAKE) _up COMPUTE_LOCKED=1
+
+
+# Hold the deployment lock through backing storage, certificates, operators, and endpoint setup.
+_up:
+	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make up to acquire the deployment lock.\n"; exit 1; }
 	@docker network inspect longlink-dev >/dev/null 2>&1 || docker network create longlink-dev
 	@if k3d cluster list compute >/dev/null 2>&1; then \
 		network_ip="$$(docker inspect k3d-compute-server-0 --format '{{with index .NetworkSettings.Networks "longlink-dev"}}{{.IPAddress}}{{end}}')"; \
@@ -63,7 +77,7 @@ up:
 	fi
 	@gateway="$$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')"; \
 		if [ -z "$$gateway" ]; then printf "Development Docker network has no gateway.\n"; exit 1; fi; \
-		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait registry mail
 	@if ! k3d cluster list compute >/dev/null 2>&1; then \
 		k3d cluster create compute --image "$(DEV_K3S_IMAGE)" --network longlink-dev --api-port 127.0.0.1:8001 --volume "/dev:/dev@server:0" --volume "/run/udev:/run/udev:ro@server:0" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
 	fi
@@ -91,8 +105,7 @@ up:
 	@kubectl --kubeconfig api/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
 		--cert=dev/certificates/gateway.crt --key=dev/certificates/gateway.key \
 		--dry-run=client --output=yaml | kubectl --kubeconfig api/kubeconfig.yaml apply --filename=- >/dev/null
-	cd api && DEVELOPMENT=true uv run --locked python -m src.development.setup
-	$(MAKE) compute
+	$(MAKE) _compute COMPUTE_LOCKED=1
 	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
 	$(MAKE) image
 
@@ -106,26 +119,40 @@ compute:
 _compute:
 	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make compute to acquire the deployment lock.\n"; exit 1; }
 	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/boundaries
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/serving-crds
+	uv run --script dev/setup.py prepare
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/boundaries
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/serving-crds
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/serving
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace knative-serving --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/serving
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' validatingwebhookconfiguration/config.webhook.serving.knative.dev mutatingwebhookconfiguration/webhook.serving.knative.dev validatingwebhookconfiguration/validation.webhook.serving.knative.dev --timeout=180s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/kourier
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace knative-serving --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace kourier-system --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/cnpg
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/kourier
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace knative-serving --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace kourier-system --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/cnpg
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace cnpg-system --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.webhooks[*].clientConfig.caBundle}' mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration --timeout=180s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/operators/rook-crds
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace cnpg-system --timeout=900s
+	@set -eu; for configuration in mutatingwebhookconfiguration/cnpg-mutating-webhook-configuration validatingwebhookconfiguration/cnpg-validating-webhook-configuration; do \
+		hooks="$$(kubectl --kubeconfig api/kubeconfig.yaml get "$$configuration" -o jsonpath='{.webhooks[*].name}')"; \
+		test -n "$$hooks"; \
+		for hook in $$hooks; do \
+			kubectl --kubeconfig api/kubeconfig.yaml wait --for="jsonpath={.webhooks[?(@.name=='$$hook')].clientConfig.caBundle}" "$$configuration" --timeout=180s; \
+		done; \
+	done
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/operators/rook-crds
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=condition=Established --all customresourcedefinitions --timeout=120s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/operators/rook
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --all --namespace rook-ceph --timeout=900s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/infrastructure
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/operators/rook
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment --namespace rook-ceph --timeout=900s
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/infrastructure
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.status.phase}'=Ready cephcluster/rook-ceph cephobjectstore/longlink cephobjectstoreuser/longlink-health --namespace rook-ceph --timeout=1800s
-	kubectl --kubeconfig api/kubeconfig.yaml apply -k k8s/compute/release
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/compute/release
+	$(MAKE) connect
+
+
+# Keep endpoint connectivity outside the host-run API's process lifetime.
+connect:
+	@gateway="$$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')"; \
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait gateway storage
 
 
 # Build and push the local sample, preserving an existing development project.
@@ -141,18 +168,18 @@ image:
 
 # Stop local services and remove generated cluster and API state.
 down:
-	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	@LONGLINK_DEV_GATEWAY=127.0.0.2 docker compose -f dev/compose.yml down --remove-orphans
+	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	@if docker network inspect longlink-dev >/dev/null 2>&1; then docker network rm longlink-dev; fi
 	rm -f api/dev.db api/kubeconfig.yaml
 	rm -rf dev/certificates
 
 
 # Prepare and run the local LongLink Platform API server.
-api:
-	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked python -m src.release
-	cd api && DEVELOPMENT=true flock --shared --nonblock ../dev/compute.lock uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+api: configure
+	cd api && uv run --locked alembic upgrade head
+	cd api && uv run --locked python -m src.release
+	cd api && flock --shared --nonblock ../dev/compute.lock uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Run the Vite web app.
@@ -171,5 +198,5 @@ sdk:
 
 
 # Seed the example Organization and Solution after the Platform API starts.
-seed:
-	cd api && DEVELOPMENT=true GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" uv run --locked python -m scripts.seed
+seed: configure
+	cd api && GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_ENDPOINT=https://storage.localhost:9443 uv run --locked python -m scripts.seed

@@ -36,7 +36,7 @@ class SeedSettings(BaseSettings):
 
     # Shared Ceph storage; backing class must support raw Block PVCs and filesystem monitor PVCs.
     STORAGE_CLASS: str = "longlink-development"
-    STORAGE_ENDPOINT: str = "https://rook-ceph-rgw-longlink.rook-ceph.svc:443"
+    STORAGE_ENDPOINT: str = "https://storage.localhost:9443"
     STORAGE_SIZE_GIB: int = 20
     STORAGE_INSTANCES: int = 1
     STORAGE_CERTIFICATE: str | None = None
@@ -97,10 +97,6 @@ async def seed_infrastructure(settings: SeedSettings, *, compute_name: str) -> C
 
 async def seed_local_development(settings: SeedSettings) -> None:
     """Register local infrastructure and create the local example Organization and Solution."""
-
-    # Local infrastructure is installed by make up; seeding only reads its public trust.
-    if settings.STORAGE_CLASS == "longlink-development" and settings.STORAGE_CERTIFICATE is None:
-        settings.STORAGE_CERTIFICATE = (Path(__file__).resolve().parents[2] / "dev/certificates/ca.crt").read_text()
 
     compute_registry = await seed_infrastructure(
         settings,

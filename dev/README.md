@@ -1,154 +1,146 @@
-<div align="center">
+# Local development
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
+The Platform API runs directly on the host with reload, using the same code and
+network clients as hosted deployments. `dev/` owns the local infrastructure and
+connectivity; the API never imports development tooling.
 
-Development tools
-</div>
+```text
+Workstation
+├── Host processes
+│   ├── make api → normal API runtime + local reload
+│   └── make web → Vite frontend
+├── dev/compose.yml
+│   ├── Registry → localhost:15000
+│   ├── Mailpit → SMTP localhost:1025, inbox localhost:8025
+│   ├── Gateway connection → localhost:8443 → Kourier TLS
+│   └── Storage connection → storage.localhost:9443 → RGW TLS
+└── k3d Compute cluster
+    ├── dev/setup.py → backing provisioner and storage certificate
+    ├── dev/compute/connectivity → S3 Service and split DNS
+    ├── k8s/compute + dev overlays → Knative, CNPG, Rook, and Ceph
+    └── Organizations and Solutions → provisioned by the Platform
+```
 
-<br />
+## Start
 
-## k3d local cluster
-
-Solution runtimes and migration Jobs require Linux AMD64 nodes. An ARM-only k3d cluster cannot schedule them, even when Docker can build AMD64 images through emulation.
-
-`make up` creates the private `longlink-dev` Docker network, starts the OCI registry, creates the k3d cluster,
-installs the shared Compute package, and builds the local sample Solution image. The Platform API defaults to SQLite in `api/dev.db`.
-Organization and Solution data live in Kubernetes-managed CloudNativePG databases. k3d reaches the registry
-through the private bridge gateway; its host-facing port binds only to loopback.
+Requirements: Linux AMD64, Docker, k3d, kubectl with Kustomize, OpenSSL, `flock`, uv,
+and the repository's Vite+ tooling. The host must resolve `storage.localhost` to
+loopback. systemd-resolved supplies this on the supported workstation; if your
+resolver does not, configure `127.0.0.1 storage.localhost` in your host resolver.
+The setup checks resolution and never edits system DNS configuration.
 
 ```bash
+make install
 make up
 ```
 
-If a `compute` cluster predates the isolated network, run `make down` before `make up` so k3d can recreate it safely.
+`make configure` fills missing settings in the ignored `api/.env` from
+`api/.env.sample`, preserving existing values and credentials. It runs as part of
+installation and API startup. The API itself always reads ordinary environment
+variables and `.env`; no development mode is required.
 
-The package lives in [`k8s/compute`](../k8s/compute/README.md); local configuration lives in
-`dev/compute/`. `make up` installs Knative, Kourier, CNPG, Rook, and Ceph before the API starts.
-The API only validates that installation and provisions tenants.
+`make up` creates the private Docker network, registry, mail capture service,
+cluster, backing storage, TLS certificates, and shared Compute infrastructure.
+It then starts endpoint connections and builds/pushes the local sample image.
+Generated private material lives under ignored `dev/certificates/`.
 
-The local setup generates a development CA and a certificate for `localhost`, creates the Kourier TLS Secret,
-and registers `https://localhost:8443`. Access uses authenticated Kubernetes tunnels, without a permissive
-gateway ingress policy. Generated private material stays under the ignored `dev/certificates` directory
-and is removed by `make down`.
-Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
-
-Export the kubeconfig afterward:
-
-```bash
-umask 077
-k3d kubeconfig get compute > api/kubeconfig.yaml
-```
-
-## Seed setup
-
-Create the ignored seed configuration from the tracked sample:
-
-```bash
-cp api/.env.seed.sample api/.env.seed
-```
-
-The seed describes the already-installed Kubernetes object-storage backend:
-
-```bash
-STORAGE_CLASS=longlink-development
-STORAGE_ENDPOINT=https://rook-ceph-rgw-longlink.rook-ceph.svc:443
-STORAGE_SIZE_GIB=20
-STORAGE_INSTANCES=1
-```
-
-Local development defaults to `https://localhost:8443`, the k3d `local-path`
-StorageClass, a 10 GiB volume, and one PostgreSQL instance. Override them in the
-same ignored file when your cluster differs:
-
-```bash
-GATEWAY_URL=https://localhost:8443
-DATABASE_STORAGE_CLASS=local-path
-DATABASE_SIZE_GIB=10
-DATABASE_INSTANCES=1
-```
-
-These storage settings must match `dev/compute/infrastructure/kustomization.yaml`;
-they no longer install or resize storage. No `STORAGE_CLASS` entry is required for
-default local seeding. `make up` prepares the pinned CSI
-hostpath driver, the `longlink-development` StorageClass, and storage TLS using
-the local CA. The class supports filesystem monitor PVCs and loop-backed Block
-OSD PVCs. k3d nodes mount `/dev` and `/run/udev` for those development devices.
-An older cluster without these mounts needs a one-time `make down` / `make up`,
-which resets local Platform/sample data. Production still requires an explicitly
-chosen durable backing class; the development CSI driver is never installed by
-production reconciliation.
-
-For a non-default private gateway CA, set `GATEWAY_CERTIFICATE` to its PEM trust bundle, quoted with multiline dotenv syntax.
-Do not supply a private key. Omit it for system-trusted certificates. `make seed` automatically supplies the generated
-local CA. The gateway origin must be reachable from the API. A local cluster needs a working `local-path`
-StorageClass; production clusters should use durable provisioned storage. Seed accepts no external tenant database URL.
-
-`make seed` selects its compute from `KUBECONFIG`. Without it, seed uses `api/kubeconfig.yaml` created by `make up`.
-To test against a remote Kubernetes cluster, set the path in `api/.env.seed`:
-
-```bash
-KUBECONFIG=../kubeconfig.yml
-```
-
-Start the Platform API first so it prepares the database and creates the configured administrator. In a separate terminal,
-seed local or remote compute data:
+Run in separate terminals:
 
 ```bash
 make api
+make web
 ```
+
+After the API is ready:
 
 ```bash
 make seed
 ```
 
-The host-run API uses authenticated Kubernetes port-forwarding for PostgreSQL,
-Kourier, and S3. Tunnels bind to loopback on automatically assigned ports and
-close with their operation or streamed response. TLS still verifies the original
-hostname and CA; Kourier retains the Knative routing Host header, and S3 retains
-its signed endpoint authority. No permissive development gateway NetworkPolicy,
-public database/storage port, host DNS changes, or VPN is required.
-The transport overrides live under `api/src/development/` and are selected only
-when `DEVELOPMENT=true`. Solutions and migration Jobs connect directly to their
-in-cluster services.
+Open the configured `PUBLIC_URL`, normally **http://localhost:5173**. Authentication
+trusts that exact origin; change the setting if you prefer `127.0.0.1`.
+Open **http://localhost:8025** to inspect actual verification/reset emails captured
+by Mailpit. Local delivery follows the same SMTP code as production.
 
-`make seed` queues provisioning; watch Operations until compute creation, organization
-creation, and sample deployment finish. Storage is provisioned in the registered
-compute; no external object-storage account or provider API keys are required.
-After an infrastructure setup failure, stop API workers and run `make compute` to retry
-the external installation. Restart `make api` to revalidate it and run `make seed` again
-to retry a failed sample with a new revision. Successful samples are preserved.
-`make api` and `make compute` use a local shared/exclusive file lock to prevent concurrent
-infrastructure mutation. Hosted deployment coordination belongs to the hosting repository.
-Stop independently launched workers too.
+## Connectivity
+
+Compose owns two long-lived `kubectl port-forward` processes. They bind only to
+host loopback, use the generated kubeconfig read-only, restart when the selected
+Pod disappears, and expose health checks. `make connect` starts or repairs them;
+`make down` stops them before deleting the cluster.
+
+The gateway origin is `https://localhost:8443`. The API uses an ordinary HTTPS
+client; Kourier retains its restricted ingress policies. There is no permissive
+development gateway NetworkPolicy or custom API transport.
+
+The S3 origin is **`https://storage.localhost:9443`** for both the API and Solutions:
+
+- On the host, the name resolves to loopback and reaches the dev-owned connection.
+- In Kubernetes, CoreDNS rewrites the name to the local RGW Service, whose port
+  9443 forwards to RGW's TLS port 443.
+- The certificate covers `storage.localhost` and Rook's internal RGW service names.
+- Normal clients preserve the same TLS identity and signed S3 authority in both
+  locations. Solution traffic reaches RGW directly inside Kubernetes.
+
+PostgreSQL retains its existing operation-scoped Kubernetes port-forwarding, which
+is already identical in hosted and local deployments.
+
+## Settings and registration
+
+`api/.env` owns API runtime settings. Local defaults explicitly configure:
+
+- Loopback `PUBLIC_URL`; cookie security follows its HTTP/HTTPS scheme.
+- Mailpit SMTP host/port, STARTTLS disabled, and an explicit sender address.
+- `IMAGE_REGISTRIES`, permitting public GHCR and the local registry. The production
+  default permits only GHCR. Only administrator-configured origins can be queried.
+- SQLite at `api/dev.db`; Organization data remains in CNPG PostgreSQL.
+
+Existing SMTP settings are preserved. To select Mailpit, set `SMTP_HOST=127.0.0.1`,
+`SMTP_PORT=1025`, `SMTP_USE_TLS=false`, and `SMTP_START_TLS=false`. Set optional
+`SMTP_USERNAME` and `SMTP_PASSWORD` to `null` to clear previously configured
+credentials. Hosted deployments use their own SMTP settings through the same code.
+
+Optional `api/.env.seed` settings customize sample configuration. The default
+storage topology is one 20 GiB OSD on `longlink-development`; database defaults are
+one 10 GiB instance on `local-path`. These must match `dev/compute` overlays.
+`make seed` supplies both public CA bundles and the local S3 origin explicitly.
+For remote registration, use the normal cloud seed command with remote connection
+configuration, rather than this local Make target.
+
+Seeding an existing named Compute preserves its registration. Changing environment
+variables does not rewrite its stored connection. Replacing a cluster requires a
+new registration or an explicit local reset.
+
+## Change or recover infrastructure
+
+Stop API workers, update the package or local overlays, and run:
+
+```bash
+make compute
+make api
+make seed
+```
+
+`make compute` takes an exclusive `dev/compute.lock`; `make api` holds a shared lock
+for its worker lifetime. Stop independently launched workers too. Application
+restart revalidates infrastructure and reconciles tenant state without installing
+operators. The sample is retained unless a failed deployment needs a retry.
+
+An existing pre-change Compute registration still contains its old S3 endpoint.
+It must be updated with workers stopped before using the new connection; seeding
+does not overwrite it. For disposable local data, `make down`, `make up`, `make api`,
+and `make seed` recreate the environment with the new defaults. `make down` deletes
+local tenant data, so it is not an in-place migration procedure.
 
 ## Cleanup
 
-Clean the compute, database, and storage resources configured in `api/.env.seed`:
+With API workers stopped, delete registered tenant resources before discarding
+Platform metadata:
 
 ```bash
-DEVELOPMENT=true uv --directory api run --locked python -m scripts.cleanup
+uv --directory api run --locked python -m scripts.cleanup
 ```
 
-LongLink resolves the pulled tag through the registry and deploys its immutable digest.
-LongLink creates organization bucket claims and scoped Ceph Solution identities. Stop API workers and run the cleanup command to remove those
-resources before local Platform state is deleted. Cleanup deletes Organization namespaces, including CNPG clusters,
-Secrets and PVCs, and verifies namespace termination before clearing Platform records. Shared Knative, Kourier and
-CNPG controllers remain installed. StorageClasses with a `Retain` reclaim policy can leave persistent volumes behind;
-review those volumes separately before removing the cluster.
-
-`make down` then removes the local cluster, certificates, kubeconfig, and Platform database. It preserves Compose volumes,
-the Buildx cache, and `sdk/dev` so subsequent development starts faster and local sample edits are not discarded.
-
-<br/>
-<br/>
-
----
-
-<div align="center">
-LongLink 2026
-
-[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
-
-</div>
-
----
+Shared operators remain installed. `make down` removes the local cluster,
+connections, certificates, kubeconfig, and Platform database. It preserves
+`api/.env`, the Buildx cache, and `sdk/dev`, including local sample edits.

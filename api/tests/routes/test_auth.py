@@ -400,7 +400,7 @@ async def test_registration_verification_is_stateless(
     email = "registered@example.com"
 
     # Render the browser credential with its production security policy.
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
 
     # Request a stateless email link without creating a pending user.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
@@ -703,7 +703,7 @@ async def test_password_reset_verify_sets_secure_browser_only_cookie_in_producti
     user = users[0]
     forgot_response = await client.post("/api/v1/auth/forgot-password", json={"email": user.email})
     reset_token = password_reset_token(captured_mail)
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
 
     # Act
     response = await client.post("/api/v1/auth/reset-password/verify", json={"token": reset_token})
@@ -862,7 +862,7 @@ async def test_authenticated_logout_rejects_alternate_local_origin_in_production
     """Reject local development origins when production permits only its public origin."""
 
     # Arrange
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
     monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
     client = clients[0]
 
@@ -879,12 +879,13 @@ async def test_authenticated_logout_rejects_alternate_local_origin_in_production
 
 @pytest.mark.parametrize("headers", [{"origin": "http://localhost:5173"}, {"origin": "http://127.0.0.1:5173"}])
 async def test_authenticated_logout_clears_browser_session_for_trusted_origins(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str]
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], headers: dict[str, str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Clear browser sessions requested without or from trusted local origins."""
+    """Clear browser sessions requested from the explicitly configured frontend origin."""
 
     # Arrange
     client = clients[0]
+    monkeypatch.setattr(env, "PUBLIC_URL", headers["origin"])
 
     # Act
     response = await client.post("/api/v1/auth/logout", headers=headers)
@@ -907,7 +908,6 @@ async def test_authenticated_logout_uses_secure_cookie_policy_in_production(
     """Clear the browser session with the production cookie security attributes."""
 
     # Arrange
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
     monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
 
     # Act
@@ -932,7 +932,7 @@ async def test_password_login_sets_production_session_security_and_cache_attribu
     """Issue a production browser session only as a secure, private credential."""
 
     # Make the route render production cookie attributes.
-    monkeypatch.setattr(env, "DEVELOPMENT", False)
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
     user = users[0]
 
     # Authenticate with the production cookie policy.

@@ -5,7 +5,6 @@ import subprocess
 from pathlib import Path
 from conftest import FakeKubernetes
 from src.kubernetes import gateway
-from src.development.gateway import Transport
 
 pytestmark = pytest.mark.no_db
 
@@ -42,12 +41,9 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
 
             assert kwargs["trust_env"] is False
             assert kwargs["follow_redirects"] is False
-            if "transport" in kwargs:
-                assert isinstance(kwargs["transport"], Transport)
-            else:
-                context = kwargs["verify"]
-                assert isinstance(context, ssl.SSLContext)
-                assert context.verify_mode == ssl.CERT_REQUIRED
+            context = kwargs["verify"]
+            assert isinstance(context, ssl.SSLContext)
+            assert context.verify_mode == ssl.CERT_REQUIRED
 
         async def __aenter__(self) -> "Client":
             """Enter the HTTP lifetime."""

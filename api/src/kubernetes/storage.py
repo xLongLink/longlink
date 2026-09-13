@@ -5,7 +5,6 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3
 from dataclasses import dataclass
-from src.environments import env
 from kr8s.asyncio.objects import Secret, APIObject, ConfigMap, Namespace, new_class
 from src.kubernetes.utils import apply
 
@@ -18,7 +17,6 @@ Store = new_class("CephObjectStore", "ceph.rook.io/v1", asyncio=True, plural="ce
 Cluster = new_class("CephCluster", "ceph.rook.io/v1", asyncio=True, plural="cephclusters")
 BucketClaim = new_class("ObjectBucketClaim", "objectbucket.io/v1alpha1", asyncio=True, plural="objectbucketclaims")
 ObjectBucket = new_class("ObjectBucket", "objectbucket.io/v1alpha1", asyncio=True, namespaced=False, plural="objectbuckets")
-StorageClass = new_class("StorageClass", "storage.k8s.io/v1", asyncio=True, namespaced=False, plural="storageclasses")
 
 
 @dataclass(frozen=True)
@@ -82,7 +80,11 @@ class Storage:
             # The deployment package owns this bucketless read-only probe identity.
             probe = User("longlink-health", namespace="rook-ceph", api=api)
             credentials = await self._credentials(probe)
-            storage = await self.connection(compute, credentials)
+            storage = s3.S3(
+                compute.storage_endpoint,
+                credentials,
+                compute.storage_certificate,
+            )
             async with storage.client() as client:
                 await client.list_buckets()
 
@@ -158,20 +160,12 @@ class Storage:
             base64.b64decode(secret.raw["data"]["AWS_ACCESS_KEY_ID"], validate=True).decode(),
             base64.b64decode(secret.raw["data"]["AWS_SECRET_ACCESS_KEY"], validate=True).decode(),
         )
-        storage = await self.connection(compute, credentials)
+        storage = s3.S3(
+            compute.storage_endpoint,
+            credentials,
+            compute.storage_certificate,
+        )
         return Bucket(config.raw["data"]["BUCKET_NAME"], storage)
-
-    async def connection(self, compute: "ComputeRegistry", credentials: s3.Credentials) -> s3.S3:
-        """Resolve the S3 transport while retaining the registered TLS and signing identity."""
-
-        # Only development changes the transport destination; TLS and signing retain the endpoint.
-        resolver = None
-        if env.DEVELOPMENT:
-            from src.development import storage
-
-            port = await self._client.portforward("rook-ceph-rgw-longlink", "rook-ceph", 443)
-            resolver = storage.Resolver(compute.storage_endpoint, port)
-        return s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate, resolver=resolver)
 
     async def user(self, solution: UUID, organization: UUID) -> s3.Credentials:
         """Converge a stable unprivileged RGW user that cannot create buckets."""

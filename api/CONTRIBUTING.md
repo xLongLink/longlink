@@ -2,14 +2,15 @@
 
 This folder contains the LongLink Platform API. It is responsible for authentication, permissions, governance, and orchestration.
 
-Run from `api/`:
+Run `make up` from the repository root first; it owns local Kubernetes, endpoint
+connectivity, configuration, and SMTP capture. Then run from `api/`:
 
 ```bash
 uv sync --extra dev                # Create the development environment
 uv run alembic upgrade head        # Apply database migrations
 uv run python -m src.release       # Schedule deployment reconciliation once
-uv run python -m scripts.seed      # Register local infrastructure and example data
-DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+make -C .. seed                    # Register local endpoints with their public CA bundles
+uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run ruff check --fix .           # Format imports and apply safe lint fixes
 uv run pytest --cov=main --cov=src --cov-report=term-missing  # Run tests with branch coverage
 ```

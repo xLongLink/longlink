@@ -13,7 +13,7 @@ The Platform API supports PostgreSQL, MySQL, and SQLite as its production metada
 
 Published Platform and SDK-built Solution images target `linux/amd64`. Compute clusters must provide Linux AMD64 nodes for Solution runtimes and migration Jobs. Hosted Solution images currently must be publicly accessible on GHCR; private registry support is tracked separately.
 
-Registry inspection uses anonymous GHCR tokens over HTTPS. Only config blobs may redirect once to the exact HTTPS host `pkg-containers.githubusercontent.com`, without credentials. No arbitrary registry hosts, authentication realms, or redirect destinations are accepted. In `DEVELOPMENT` only, `localhost:15000` is additionally allowed over HTTP without authentication. Metadata responses are limited to 1 MiB, requests to 5 seconds, and the whole inspection to 20 seconds. OCI indexes and Docker manifest lists select the `linux/amd64` child and pin that child's digest.
+Registry inspection uses administrator-configured `IMAGE_REGISTRIES` origins, defaulting to public GHCR over HTTPS. GHCR uses anonymous tokens; only its config blobs may redirect once to the exact HTTPS host `pkg-containers.githubusercontent.com`, without credentials. Requests cannot choose arbitrary registry URLs, authentication realms, or redirect destinations. Local configuration explicitly permits `localhost:15000` over HTTP. Metadata responses are limited to 1 MiB, requests to 5 seconds, and the whole inspection to 20 seconds. OCI indexes and Docker manifest lists select the `linux/amd64` child and pin that child's digest.
 
 Managed resources are connected to the platform:
 
@@ -102,6 +102,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
 <br />
 
 ```
+make up     # Prepare infrastructure and dev-owned endpoint connections
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 ```
@@ -112,12 +113,19 @@ Run from `api/`:
 uv sync --extra dev
 uv run alembic upgrade head
 uv run python -m src.release             # Schedule deployment reconciliation once
-DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 # In another terminal:
-DEVELOPMENT=true uv run python -m scripts.seed  # Local infrastructure and example data
+make -C .. seed  # Supply local endpoints and public CA bundles
 ```
 
 The local seed inspects `localhost:15000/sample:dev` through the same metadata resolver as the API. If your sample image declares required variables, set `SAMPLE_ENVS` to a JSON string dictionary in `.env.seed`; missing requirements fail rather than silently bypassing release validation.
+
+The API always reads `.env` and process environment variables. `make configure`
+prepares local defaults without replacing existing values. SMTP is required in all
+environments; local setup supplies Mailpit. `SMTP_FROM` sets the sender address
+independently of authentication credentials. `PUBLIC_URL` controls trusted origin
+and secure cookies; HTTP is accepted only for loopback hosts. There is no runtime
+development mode or development-specific gateway/S3 adapter.
 
 <br />
 <br />

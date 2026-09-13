@@ -440,10 +440,10 @@ def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
 
 
 @pytest.mark.parametrize("registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO", "localhost:15000"])
-async def test_registry_allowlist_is_exact_and_local_is_development_only(monkeypatch: pytest.MonkeyPatch, registry: str) -> None:
-    """Reject alternate spellings and development registry access in production before networking."""
+async def test_registry_allowlist_is_exact(monkeypatch: pytest.MonkeyPatch, registry: str) -> None:
+    """Reject alternate spellings and unconfigured registries before networking."""
 
-    monkeypatch.setattr(images.env, "DEVELOPMENT", False)
+    monkeypatch.setattr(images.env, "IMAGE_REGISTRIES", {"ghcr.io": "https://ghcr.io"})
     with pytest.raises(ForbiddenError, match="not allowed"):
         await images.metadata(Image(f"{registry}/sample:dev"))
 

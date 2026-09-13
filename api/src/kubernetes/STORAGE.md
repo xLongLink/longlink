@@ -31,9 +31,10 @@ provides S3, and consumes an independently installed backing PVC provisioner.
 - In production the HTTPS `storage_endpoint` must be reachable by both Platform workers and
   Solution Pods. External workers require private routing/DNS or an explicitly
   configured HTTPS service. No public or insecure storage endpoint is created.
-  Host-run development workers instead use authenticated Kubernetes port-forwarding
-  with a client-scoped resolver. The endpoint hostname remains the TLS identity
-  and SigV4 signing authority; in-cluster workloads use the service directly.
+  Local dev tooling exposes a loopback HTTPS connection and configures split DNS
+  for `storage.localhost:9443`. The host API and in-cluster workloads use normal
+  clients with the same TLS identity and SigV4 signing authority. No API-specific
+  resolver or storage tunnel is used.
 - Install the Compute package before registering it. Deployment readiness and
   retry belong to the hosting workflow, not API operation timeouts. Stop local API
   workers and run `make compute` to retry local installation.

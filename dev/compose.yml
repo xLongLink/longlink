@@ -8,6 +8,57 @@ services:
         networks:
             - longlink
 
+    mail:
+        image: axllent/mailpit:v1.29.2@sha256:030f06031ce5c60913ac9363da1ab0d4be6fd2a78147dd0e1ca0fcac665d6b34
+        restart: unless-stopped
+        ports:
+            - '127.0.0.1:1025:1025'
+            - '127.0.0.1:8025:8025'
+
+    gateway:
+        image: alpine/kubectl:1.35.4@sha256:9ccd823647622b620dce092d0f1406b8b41d152ce08ac963e3d4683770b14dfd
+        restart: unless-stopped
+        network_mode: host
+        volumes:
+            - ../api/kubeconfig.yaml:/kubeconfig:ro
+        command:
+            [
+                '--kubeconfig=/kubeconfig',
+                '-n',
+                'kourier-system',
+                'port-forward',
+                '--address=127.0.0.1',
+                'service/kourier',
+                '8443:443',
+            ]
+        healthcheck:
+            test: ['CMD', 'nc', '-z', '127.0.0.1', '8443']
+            interval: 2s
+            timeout: 2s
+            retries: 30
+
+    storage:
+        image: alpine/kubectl:1.35.4@sha256:9ccd823647622b620dce092d0f1406b8b41d152ce08ac963e3d4683770b14dfd
+        restart: unless-stopped
+        network_mode: host
+        volumes:
+            - ../api/kubeconfig.yaml:/kubeconfig:ro
+        command:
+            [
+                '--kubeconfig=/kubeconfig',
+                '-n',
+                'rook-ceph',
+                'port-forward',
+                '--address=127.0.0.1',
+                'service/longlink-storage',
+                '9443:9443',
+            ]
+        healthcheck:
+            test: ['CMD', 'nc', '-z', '127.0.0.1', '9443']
+            interval: 2s
+            timeout: 2s
+            retries: 30
+
 networks:
     longlink:
         name: longlink-dev

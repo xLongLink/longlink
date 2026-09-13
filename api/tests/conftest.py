@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
-os.environ["DEVELOPMENT"] = "true"
+os.environ["SMTP_HOST"] = "smtp.example.com"
+os.environ["IMAGE_REGISTRIES"] = '{"ghcr.io":"https://ghcr.io","localhost:15000":"http://localhost:15000"}'
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
@@ -30,7 +31,6 @@ os.environ["SMTP_USE_TLS"] = "false"
 os.environ["SMTP_START_TLS"] = "true"
 
 # Prevent optional workstation credentials from changing test capabilities.
-os.environ.pop("SMTP_HOST", None)
 os.environ.pop("SMTP_PASSWORD", None)
 os.environ.pop("SMTP_USERNAME", None)
 os.environ.pop("GITHUB_OAUTH_CLIENT_ID", None)

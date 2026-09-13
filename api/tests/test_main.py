@@ -33,9 +33,8 @@ def test_main_skips_static_routes_when_web_bundle_is_absent(monkeypatch: pytest.
     assert all(getattr(route, "path", None) != "/" for route in app.routes)
 
 
-@pytest.mark.parametrize("development", [False, True])
-def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(monkeypatch: pytest.MonkeyPatch, development: bool) -> None:
-    """Run the local entrypoint with development-only CORS configuration."""
+def test_main_entrypoint_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run the same application through the direct Uvicorn entrypoint."""
 
     # Arrange
     runs: list[tuple[object, str, int]] = []
@@ -45,7 +44,6 @@ def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(monkeypatch: pyt
 
         runs.append((app, host, port))
 
-    monkeypatch.setattr(main.env, "DEVELOPMENT", development)
     monkeypatch.setattr(uvicorn, "run", run)
 
     # Act
@@ -54,7 +52,6 @@ def test_main_entrypoint_runs_uvicorn_and_adds_development_cors(monkeypatch: pyt
     # Assert
     app = module["app"]
     assert runs == [(app, "127.0.0.1", 8000)]
-    assert any(middleware.cls is main.CORSMiddleware for middleware in app.user_middleware) is development
 
 
 async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monkeypatch: pytest.MonkeyPatch) -> None:

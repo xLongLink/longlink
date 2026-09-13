@@ -45,7 +45,7 @@ jobs:
 
             - name: Lint API
               working-directory: api
-              run: uv run --locked ruff check .
+              run: uv run --locked ruff check . ../dev/setup.py
 
             - name: Render Compute package
               run: |
@@ -73,7 +73,9 @@ jobs:
 
             - name: Run type checks
               working-directory: api
-              run: uv run --locked --extra dev ty check
+              run: |
+                  uv run --locked --extra dev ty check
+                  uv run --locked --extra dev ty check ../dev/setup.py
 
     # The SDK requires Python 3.12 or newer.
     sdk-tests:
@@ -164,7 +166,7 @@ jobs:
                   trap 'docker logs longlink-api-smoke || true; docker rm --force longlink-api-smoke >/dev/null 2>&1 || true' EXIT
 
                   docker run --detach --name "$container" --publish 127.0.0.1:18000:8000 \
-                      --env DEVELOPMENT=true \
+                      --env SMTP_HOST=smtp.example.com \
                       --env SESSION_KEY=ci-session-key-with-at-least-32-characters \
                       --env ADMIN_NAME=Administrator \
                       --env ADMIN_EMAIL=administrator@example.com \

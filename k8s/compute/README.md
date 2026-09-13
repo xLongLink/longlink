@@ -12,7 +12,10 @@ longlink/
 │   ├── operators/ → vendored upstream manifests and Kustomize customizations
 │   ├── infrastructure/ → shared Ceph resources and health identity
 │   └── release/ → package version and Platform compatibility contract
-└── dev/compute/ → local storage overlays
+└── dev/ → local setup and connectivity outside the API
+    ├── setup.py → configuration, backing driver, and S3 certificate
+    ├── compose.yml → registry, SMTP capture, and loopback endpoint connections
+    └── compute/ → backing manifests, split DNS, Service, and storage overlays
 ```
 
 ## Local installation
@@ -33,7 +36,10 @@ make seed
 `make up` creates the local cluster, registry, CSI hostpath backing provisioner,
 and TLS Secrets, then runs `make compute`. The target applies the Kustomize stages
 in dependency order, waits for local controllers and storage, and applies
-`release/release.yml` last.
+`release/release.yml` last. `make connect` then starts dev-owned gateway/S3
+connections. The API runs directly on the host with ordinary HTTPS clients; local
+CoreDNS makes the same S3 origin reachable by Solution Pods. See
+[`dev/README.md`](../../dev/README.md) for the complete connectivity contract.
 
 To change or retry local infrastructure:
 
@@ -96,6 +102,10 @@ rollouts, admission webhook CA bundles, and Ceph readiness before applying the
 release contract. The Platform independently checks the live cluster UID, contract,
 controllers, Ceph topology, and authenticated HTTPS/S3 endpoints before publishing
 Compute readiness.
+
+Use server-side apply for the package; some CRDs exceed the client-side annotation
+size limit. Review field ownership when adopting resources managed by older tooling
+rather than automatically forcing conflicts.
 
 The package does not provide a second deployment state machine. Use the hosting
 repository's established Flux, Argo CD, or `kubectl` workflow to serialize
