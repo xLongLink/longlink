@@ -1,8 +1,11 @@
 import pytest
+import asyncio
+import contextlib
 from uuid import UUID
 from pathlib import Path
-from conftest import TEST_PASSWORD, create_client
+from conftest import TEST_PASSWORD, DatabasePostgres, DatabaseKubernetes, create_client
 from sqlmodel import col
+from src.utils import jobs
 from sqlalchemy import func, select
 from dev.scripts.seed import SeedSettings, seed
 from src.environments import env
@@ -48,6 +51,7 @@ async def test_local_seed_creates_example_through_api(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     users: tuple[User, User, User],
+    database_runtime: None,
 ) -> None:
     """Keep local seed resources stable across repeated initialization."""
 
@@ -64,30 +68,84 @@ async def test_local_seed_creates_example_through_api(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
-    # Act
-    async with create_client(administrator) as client:
-        compute_response = await client.post(
-            "/api/v1/computes",
-            json={
-                "name": "development compute",
-                "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
-                "gateway_url": "https://gateway.example",
-                "database_storage_class": "local-path",
-                "storage_endpoint": "https://storage.example",
-                "storage_access_key": "controller",
-                "storage_secret_key": "controller-secret",
-                "bucket_size_bytes": 134217728,
-            },
-        )
-        assert compute_response.status_code == 202
-        async with session_scope() as session:
-            compute = await session.get(ComputeRegistry, UUID(compute_response.json()["id"]))
-            assert compute is not None
-            compute.status = Status.running
-            await session.commit()
+    class Gateway:
+        """Accept Compute gateway verification."""
 
-        await seed(local_settings, client)
-        await seed(local_settings, client)
+        async def verify(self, _url: str, _certificate: str | None) -> None:
+            """Accept the configured gateway connection."""
+
+    class Organizations:
+        """Accept Organization namespace provisioning."""
+
+        async def apply(self, _namespace: str) -> None:
+            """Accept the requested namespace."""
+
+    class Solutions:
+        """Accept Solution workload provisioning."""
+
+        async def apply(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the requested workload."""
+
+    class Kubernetes(DatabaseKubernetes):
+        """Expose every lifecycle provider boundary without external I/O."""
+
+        def __init__(self, *_args: object) -> None:
+            """Initialize the test provider facades."""
+
+            super().__init__()
+            self.gateway = Gateway()
+            self.organizations = Organizations()
+            self.solutions = Solutions()
+
+        async def cluster_uid(self) -> str:
+            """Return the identity submitted by the test Compute."""
+
+            return "https://kubernetes.example"
+
+    class Postgres(DatabasePostgres):
+        """Provide the Solution schema operation used during deployment."""
+
+        async def solution_schema(self, _organization_id: UUID, solution_id: UUID, _password: str) -> str:
+            """Return the scoped database username for the Solution."""
+
+            return solution_id.hex
+
+    monkeypatch.setattr("src.operations.computes.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.databases.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.organizations.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.solutions.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.databases.postgres.Postgres", Postgres)
+
+    # Act
+    scheduler = asyncio.create_task(jobs.run_operation_scheduler())
+    try:
+        async with create_client(administrator) as client:
+            compute_response = await client.post(
+                "/api/v1/computes",
+                json={
+                    "name": "development compute",
+                    "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
+                    "gateway_url": "https://gateway.example",
+                    "database_storage_class": "local-path",
+                    "storage_endpoint": "https://storage.example",
+                    "storage_access_key": "controller",
+                    "storage_secret_key": "controller-secret",
+                    "bucket_size_bytes": 134217728,
+                },
+            )
+            assert compute_response.status_code == 202
+            async with session_scope() as session:
+                compute = await session.get(ComputeRegistry, UUID(compute_response.json()["id"]))
+                assert compute is not None
+                compute.status = Status.running
+                await session.commit()
+
+            await seed(local_settings, client)
+            await seed(local_settings, client)
+    finally:
+        scheduler.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await scheduler
 
     # Assert
     assert await count(ComputeRegistry) == 1

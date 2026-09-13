@@ -5,7 +5,6 @@ import { useId, useRef, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
-import { createGuardedOpenChange } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -160,9 +159,14 @@ function CreateSolutionAttempt({
         }
     }
 
-    const handleOpenChange = createGuardedOpenChange(pending, (nextOpen) => {
+    // Prevent dismissal while the creation request remains in flight.
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen && pending) {
+            return;
+        }
+
         onOpenChange(nextOpen);
-    });
+    };
 
     return (
         <Dialog

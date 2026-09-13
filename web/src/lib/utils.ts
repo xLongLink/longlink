@@ -39,15 +39,3 @@ export function decodePathSegment(segment: string): string {
         return segment;
     }
 }
-
-/** Creates an open-change handler that ignores close attempts while a request is pending. */
-export function createGuardedOpenChange(isPending: boolean, onOpenChange: (open: boolean) => void) {
-    return (nextOpen: boolean) => {
-        // Protect an in-flight request from being dismissed.
-        if (!nextOpen && isPending) {
-            return;
-        }
-
-        onOpenChange(nextOpen);
-    };
-}
