@@ -1,17 +1,21 @@
 import os
 import re
-import ast
+import sys
 import json
-import click
+import typer
 import shutil
 import tomllib
 import tempfile
+import importlib
 import subprocess
+from typing import Annotated
 from fnmatch import fnmatch
 from pathlib import Path
+from pydantic import BaseModel
 from collections.abc import Mapping
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
+from longlink.cli.errors import CliError
 
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
@@ -111,68 +115,50 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
     environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
     if not isinstance(environment_import, str):
-        raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
+        raise CliError("[tool.longlink].environment must be a module:Class import string")
 
     # Parse the configured module and class names without importing Solution code.
     module_name, separator, class_name = environment_import.strip().partition(":")
     module_parts = module_name.split(".")
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
-        raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
+        raise CliError("[tool.longlink].environment must be a module:Class import string")
 
-    # Resolve the configured environment module.
+    # Resolve the configured environment module before importing Solution code.
     envs_path = root.joinpath(*module_parts).with_suffix(".py")
     if not envs_path.is_file():
-        raise click.ClickException(f"Environment model not found: {envs_path}")
+        raise CliError(f"Environment model not found: {envs_path}")
 
-    # Locate the configured settings class without executing Solution code.
-    module = ast.parse(envs_path.read_text(encoding="utf-8"))
-    class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
-    if class_node is None:
-        raise click.ClickException(f"Environment model must define {class_name}: {envs_path}")
+    # Import the configured model from the Solution root.
+    sys.path.insert(0, str(root))
+    try:
+        importlib.invalidate_caches()
+        module = importlib.import_module(module_name)
+    except Exception as error:
+        raise CliError(f"Unable to import environment model {environment_import}: {error}") from error
+    finally:
+        sys.path.pop(0)
+        sys.modules.pop(module_name, None)
+
+    environment_model = getattr(module, class_name, None)
+    if environment_model is None:
+        raise CliError(f"Environment model must define {class_name}: {envs_path}")
+    if not isinstance(environment_model, type) or not issubclass(environment_model, BaseModel):
+        raise CliError(f"Environment model must be a Pydantic model: {environment_import}")
 
     environments: list[dict[str, object]] = []
 
-    # Read annotated settings fields from the configured class.
-    for statement in class_node.body:
-        # Ignore statements that do not declare a named annotated field.
-        if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
-            continue
-
-        field_name = statement.target.id
+    # Read validated field metadata directly from Pydantic.
+    for field_name, field in environment_model.model_fields.items():
         env_entry: dict[str, object] = {
             "name": field_name,
-            "required": statement.value is None,
+            "required": field.is_required(),
         }
 
-        # Inspect pydantic Field calls for metadata.
-        if isinstance(statement.value, ast.Call) and isinstance(statement.value.func, ast.Name) and statement.value.func.id == "Field":
-            env_entry["required"] = True
-
-            # Positional Field defaults use ellipsis for required values and any other value as optional.
-            if statement.value.args:
-                first_argument = statement.value.args[0]
-                env_entry["required"] = isinstance(first_argument, ast.Constant) and first_argument.value is Ellipsis
-
-            # Inspect Field keyword arguments.
-            for keyword in statement.value.keywords:
-                # Read static string aliases and descriptions.
-                if keyword.arg in ("validation_alias", "description"):
-                    # Safely evaluate static metadata expressions.
-                    try:
-                        value = ast.literal_eval(keyword.value)
-                    except ValueError:
-                        value = None
-
-                    # Store strings while preserving the empty-alias fallback.
-                    if isinstance(value, str):
-                        if keyword.arg == "validation_alias":
-                            env_entry["name"] = value or field_name
-                        else:
-                            env_entry["description"] = value
-
-                # Defaults and factories make the field optional.
-                elif keyword.arg in ("default", "default_factory"):
-                    env_entry["required"] = False
+        # Expose string validation aliases and authored descriptions in image metadata.
+        if isinstance(field.validation_alias, str) and field.validation_alias:
+            env_entry["name"] = field.validation_alias
+        if field.description is not None:
+            env_entry["description"] = field.description
 
         environments.append(env_entry)
 
@@ -185,13 +171,13 @@ def read_pyproject(root: Path) -> dict[str, object]:
     # Resolve and require the project file before parsing metadata.
     pyproject = root / "pyproject.toml"
     if not pyproject.is_file():
-        raise click.ClickException(f"Project file not found: {pyproject}")
+        raise CliError(f"Project file not found: {pyproject}")
 
     # Parse TOML into project metadata.
     try:
         return tomllib.loads(pyproject.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
-        raise click.ClickException(f"Invalid project file {pyproject}: {error}") from error
+        raise CliError(f"Invalid project file {pyproject}: {error}") from error
 
 
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
@@ -264,7 +250,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
 
             # Reject dependencies outside the permitted workspace boundary.
             if not resolved_source_path.is_relative_to(workspace_root) and not root.is_relative_to(resolved_source_path):
-                raise click.ClickException(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
+                raise CliError(f"Local dependency must be inside the UV workspace: {resolved_source_path}")
             pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
@@ -288,16 +274,16 @@ def build_solution(build_context: Path) -> tuple[str, str]:
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
     project_data = pyproject_data.get("project")
     if not isinstance(project_data, dict):
-        raise click.ClickException("[project] metadata is required")
+        raise CliError("[project] metadata is required")
     project_name = project_data.get("name")
     project_version = project_data.get("version")
     project_description = project_data.get("description")
     if not isinstance(project_name, str) or not project_name.strip():
-        raise click.ClickException("[project].name is required")
+        raise CliError("[project].name is required")
     if not isinstance(project_version, str) or not project_version.strip():
-        raise click.ClickException("[project].version is required")
+        raise CliError("[project].version is required")
     if project_description is not None and not isinstance(project_description, str):
-        raise click.ClickException("[project].description must be a string")
+        raise CliError("[project].description must be a string")
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -401,11 +387,11 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
 
     # Reject generated names Docker cannot accept.
     if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
-        raise click.ClickException(f"Invalid Docker image name '{image_name}' generated from project name '{solution_name}'")
+        raise CliError(f"Invalid Docker image name '{image_name}' generated from project name '{solution_name}'")
 
     # Reject invalid Docker tags.
     if not DOCKER_TAG_PATTERN.fullmatch(version):
-        raise click.ClickException(f"Invalid Docker image tag '{version}'")
+        raise CliError(f"Invalid Docker image tag '{version}'")
 
     # Add a registry prefix when requested.
     if registry_prefix:
@@ -414,40 +400,27 @@ def resolve_image_tag(solution_name: str, version: str, registry: str | None = N
         registry_host = registry_parts[0]
         host, separator, port = registry_host.partition(":")
         if separator and (not port.isdecimal() or not 1 <= int(port) <= 65535):
-            raise click.ClickException("Docker registry port is invalid")
+            raise CliError("Docker registry port is invalid")
         if host != "localhost" and (host != "ghcr.io" or separator or len(registry_parts) != 2):
-            raise click.ClickException("Docker registry must be ghcr.io/<owner> or localhost")
+            raise CliError("Docker registry must be ghcr.io/<owner> or localhost")
 
         # Validate registry namespace components.
         if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in registry_parts[1:]):
-            raise click.ClickException(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
+            raise CliError(f"Invalid Docker image path '{registry_prefix}/{image_name}'")
         return f"{registry_prefix}/{image_name}:{version}"
 
     return f"{image_name}:{version}"
 
 
-@click.command(name="build")
-@click.option(
-    "--tag",
-    default=None,
-    help="Version tag to use instead of a timestamp, for example dev.",
-)
-@click.option(
-    "--registry",
-    default=None,
-    help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development.",
-)
-@click.option(
-    "--push",
-    is_flag=True,
-    help="Push the built image tag after building.",
-)
-@click.option(
-    "--builder",
-    default=None,
-    help="Buildx builder to use for an isolated Docker build cache.",
-)
-def build_command(tag: str | None, registry: str | None, push: bool, builder: str | None) -> None:
+def build_command(
+    tag: Annotated[str | None, typer.Option(help="Version tag to use instead of a timestamp, for example dev.")] = None,
+    registry: Annotated[
+        str | None,
+        typer.Option(help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development."),
+    ] = None,
+    push: Annotated[bool, typer.Option(help="Push the built image tag after building.")] = False,
+    builder: Annotated[str | None, typer.Option(help="Buildx builder to use for an isolated Docker build cache.")] = None,
+) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
     # Build inside a temporary context.
@@ -462,7 +435,7 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
         # Require a Docker client on PATH.
         docker_command = shutil.which("docker")
         if docker_command is None:
-            raise click.ClickException("Docker is required to build images")
+            raise CliError("Docker is required to build images")
 
         # Run the Docker build and optional push.
         try:
@@ -489,10 +462,10 @@ def build_command(tag: str | None, registry: str | None, push: bool, builder: st
             if push:
                 subprocess.run([docker_command, "push", image_tag], check=True)
         except subprocess.CalledProcessError as error:
-            raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
+            raise CliError(f"Docker command failed with exit code {error.returncode}") from error
 
-    click.echo(f"- Built image: {image_tag}")
+    typer.echo(f"- Built image: {image_tag}")
 
     # Report pushed images only when requested.
     if push:
-        click.echo(f"- Pushed image: {image_tag}")
+        typer.echo(f"- Pushed image: {image_tag}")

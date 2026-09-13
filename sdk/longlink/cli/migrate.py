@@ -1,8 +1,7 @@
-import click
+import typer
 from longlink.database.migrations import make_migrations, apply_migrations
 
 
-@click.command(name="migrate")
 def migrate_command() -> None:
     """Generate and apply database migrations for the current Solution."""
 
@@ -12,7 +11,7 @@ def migrate_command() -> None:
     # Apply the generated migration only when Alembic detected schema changes.
     if make_migrations():
         apply_migrations()
-        click.echo("Migrations generated and applied successfully.")
+        typer.echo("Migrations generated and applied successfully.")
         return
 
-    click.echo("No migrations were created because no schema changes were detected.")
+    typer.echo("No migrations were created because no schema changes were detected.")

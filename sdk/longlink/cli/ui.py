@@ -1,11 +1,12 @@
 import re
-import click
+import typer
 from lxml import etree
 from typing import cast
 from functools import cache
 from collections import deque
 from collections.abc import Iterator
 from longlink.constants import ROOT
+from longlink.cli.errors import CliError
 
 XSD = "{http://www.w3.org/2001/XMLSchema}"
 DOCS = "{urn:longlink:xsd-docs}"
@@ -122,9 +123,7 @@ def _helpers(
     return list(helpers.values())
 
 
-@click.command(name="ui")
-@click.argument("component", required=False)
-def ui_command(component: str | None) -> None:
+def ui_command(component: str | None = None) -> None:
     """List XML components or show documentation for one component."""
 
     # Build the catalog from top-level elements carrying docs metadata.
@@ -148,7 +147,7 @@ def ui_command(component: str | None) -> None:
                 lines.append(f"- {element.get('name')} - {description}")
         lines.append("")
         lines.append("Run `longlink ui <component>` for attributes and examples.")
-        click.echo("\n".join(lines))
+        typer.echo("\n".join(lines))
         return
 
     # Resolve either the XML element name or documentation slug.
@@ -162,7 +161,7 @@ def ui_command(component: str | None) -> None:
         None,
     )
     if match is None:
-        raise click.ClickException(f"Unknown component: {component}. Run `longlink ui` to list available components.")
+        raise CliError(f"Unknown component: {component}. Run `longlink ui` to list available components.")
 
     # Render the component, its helper elements, and its authored example.
     element, metadata = match
@@ -177,4 +176,4 @@ def ui_command(component: str | None) -> None:
     lines.append("")
     lines.append("Example")
     lines.append(example or "- none")
-    click.echo("\n".join(lines))
+    typer.echo("\n".join(lines))

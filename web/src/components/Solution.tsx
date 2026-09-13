@@ -41,25 +41,25 @@ function SolutionXmlRuntime({
 }) {
     const navigate = useNavigate();
     const [runtime] = useState(() => {
-        // Normalize route params only when creating this keyed XML runtime.
-        const context = createXmlContext(
-            Object.fromEntries(Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null))
-        );
+        return createXmlContext({
+            // Keep XML-triggered solution navigation within the client router.
+            navigate: (url) => {
+                const destination = new URL(url, window.location.origin);
 
-        // Keep XML-triggered solution navigation within the client router.
-        context.services.navigate = (url) => {
-            const destination = new URL(url, window.location.origin);
+                if (destination.origin === window.location.origin) {
+                    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+                    return;
+                }
 
-            if (destination.origin === window.location.origin) {
-                navigate(`${destination.pathname}${destination.search}${destination.hash}`);
-                return;
-            }
-
-            window.location.assign(url);
-        };
-        context.services.navigationBaseUrl = navigationBaseUrl;
-        context.services.requestBaseUrl = requestBaseUrl;
-        return context;
+                window.location.assign(url);
+            },
+            navigationBaseUrl,
+            // Normalize route params only when creating this keyed XML runtime.
+            params: Object.fromEntries(
+                Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null)
+            ),
+            requestBaseUrl,
+        });
     });
 
     return <RenderXML ast={ast} ctx={runtime} />;

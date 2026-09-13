@@ -1,21 +1,20 @@
 import re
-import click
+import typer
 import shutil
+from typing import Literal, Annotated
 from pathlib import Path
 from longlink.constants import ROOT
+from longlink.cli.errors import CliError
 
 
-@click.command(name="init")
-@click.option("--folder", prompt="Enter folder name", help="Folder to initialize")
-@click.option("--name", "project_name", default=None, help="Project name. Defaults to the folder name")
-@click.option(
-    "--ci",
-    "ci_provider",
-    type=click.Choice(["github"], case_sensitive=False),
-    default=None,
-    help="Add CI/CD provider files. Currently supported: github.",
-)
-def init_command(folder: str, project_name: str | None, ci_provider: str | None) -> None:
+def init_command(
+    folder: Annotated[str, typer.Option(prompt="Enter folder name", help="Folder to initialize")],
+    project_name: Annotated[str | None, typer.Option("--name", help="Project name. Defaults to the folder name")] = None,
+    ci_provider: Annotated[
+        Literal["github"] | None,
+        typer.Option("--ci", case_sensitive=False, help="Add CI/CD provider files. Currently supported: github."),
+    ] = None,
+) -> None:
     """Initialize a new longlink project."""
 
     # Resolve the requested target directory.
@@ -24,11 +23,11 @@ def init_command(folder: str, project_name: str | None, ci_provider: str | None)
 
     # Keep generated package metadata compatible with Python package conventions.
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", project_name):
-        raise click.ClickException(f"Invalid project name: {project_name}")
+        raise CliError(f"Invalid project name: {project_name}")
 
     # Scaffold generation never merges into an existing target.
     if target.exists():
-        raise click.ClickException(f"Target already exists: {target}")
+        raise CliError(f"Target already exists: {target}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
     shutil.copytree(

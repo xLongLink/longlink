@@ -1,11 +1,11 @@
 import os
-import click
 import pytest
 import subprocess
 from pathlib import Path
 from contextlib import chdir
 from longlink.cli import build
-from click.testing import CliRunner
+from typer.testing import CliRunner
+from longlink.cli.main import main
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def build_project(tmp_path: Path) -> Path:
     )
     envs_path = root / "src" / "envs.py"
     envs_path.parent.mkdir()
-    envs_path.write_text("class Env:\n    pass\n", encoding="utf-8")
+    envs_path.write_text("from pydantic import BaseModel\n\nclass Env(BaseModel):\n    pass\n", encoding="utf-8")
     return root
 
 
@@ -44,7 +44,7 @@ def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> Non
 
     with chdir(tmp_path):
         # Act
-        result = runner.invoke(build.build_command)
+        result = runner.invoke(main, ["build"])
 
         # Assert
         assert result.exit_code == 1
@@ -62,7 +62,7 @@ def test_build_reports_missing_docker_after_preparing_project(build_project: Pat
     monkeypatch.setattr(build.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("Docker must not run when unavailable"))
 
     # Act
-    result = runner.invoke(build.build_command)
+    result = runner.invoke(main, ["build"])
 
     # Assert
     assert result.exit_code == 1
@@ -76,7 +76,7 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
     tmp_path.joinpath("pyproject.toml").write_text("[project\nname = 'demo'", encoding="utf-8")
 
     # Act and assert
-    with pytest.raises(click.ClickException, match="Invalid project file"):
+    with pytest.raises(build.CliError, match="Invalid project file"):
         build.read_pyproject(tmp_path)
 
 
@@ -135,14 +135,13 @@ def test_read_env_spec_emits_supported_environment_metadata(
     assert env_spec == expected_spec
 
 
-def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
-    """Ignore dynamic aliases and descriptions without executing Solution code."""
+def test_read_env_spec_uses_resolved_field_metadata(tmp_path: Path) -> None:
+    """Read aliases and descriptions resolved by the configured Pydantic model."""
 
     # Arrange
     envs_path = tmp_path / "src" / "envs.py"
     envs_path.parent.mkdir()
     envs_path.write_text(
-        "raise AssertionError('Solution module must not execute')\n"
         "from pydantic import BaseModel, Field\n"
         "\n"
         "ALIAS = 'DYNAMIC_TOKEN'\n"
@@ -161,7 +160,7 @@ def test_read_env_spec_ignores_dynamic_field_metadata(tmp_path: Path) -> None:
     env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
     # Assert
-    assert env_spec == [{"name": "TOKEN", "required": True}]
+    assert env_spec == [{"name": "DYNAMIC_TOKEN", "required": True, "description": "Dynamic description"}]
 
 
 @pytest.mark.parametrize(
@@ -202,7 +201,7 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
         path.write_text(module_source, encoding="utf-8")
 
     # Act and assert
-    with pytest.raises(click.ClickException, match=message):
+    with pytest.raises(build.CliError, match=message):
         build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
 
@@ -214,7 +213,10 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(build_p
         '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
         encoding="utf-8",
     )
-    build_project.joinpath("src", "envs.py").write_text("class Env:\n    API_KEY: str\n", encoding="utf-8")
+    build_project.joinpath("src", "envs.py").write_text(
+        "from pydantic import BaseModel\n\nclass Env(BaseModel):\n    API_KEY: str\n",
+        encoding="utf-8",
+    )
     build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
     build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
     build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
@@ -271,7 +273,7 @@ def test_build_solution_rejects_invalid_project_metadata_before_generating_artif
     monkeypatch.chdir(build_project)
 
     # Act and assert
-    with pytest.raises(click.ClickException) as error:
+    with pytest.raises(build.CliError) as error:
         build.build_solution(build_context)
     assert str(error.value) == message
     assert not build_context.exists()
@@ -387,7 +389,7 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build
     )
 
     # Act and assert
-    with pytest.raises(click.ClickException, match="Local dependency must be inside the UV workspace"):
+    with pytest.raises(build.CliError, match="Local dependency must be inside the UV workspace"):
         build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
 
@@ -502,7 +504,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
 ) -> None:
     """Reject image reference values outside the supported Docker boundary."""
 
-    with pytest.raises(click.ClickException, match=message):
+    with pytest.raises(build.CliError, match=message):
         build.resolve_image_tag(solution_name, version, registry)
 
 
@@ -552,7 +554,7 @@ def test_build_command_reports_built_image(
     monkeypatch.setattr(build.subprocess, "run", run_docker)
 
     # Act
-    result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", *arguments])
+    result = runner.invoke(main, ["build", "--tag", "dev", "--registry", "localhost:15000", *arguments])
 
     # Assert
     assert result.exit_code == 0
@@ -592,7 +594,7 @@ def test_build_command_reports_docker_build_failure_without_pushing(docker_build
     monkeypatch.setattr(build.subprocess, "run", fail_build)
 
     # Act
-    result = runner.invoke(build.build_command, ["--push"])
+    result = runner.invoke(main, ["build", "--push"])
 
     # Assert
     assert result.exit_code == 1
@@ -620,7 +622,7 @@ def test_build_command_reports_docker_push_failure(docker_build: list[list[str]]
     monkeypatch.setattr(build.subprocess, "run", fail_push)
 
     # Act
-    result = runner.invoke(build.build_command, ["--push"])
+    result = runner.invoke(main, ["build", "--push"])
 
     # Assert
     assert result.exit_code == 1

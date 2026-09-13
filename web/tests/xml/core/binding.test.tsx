@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { createContext } from '@/xml/core/context';
 import userEvent from '@testing-library/user-event';
+import { createContext, RenderXML } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('useBindableValue', () => {

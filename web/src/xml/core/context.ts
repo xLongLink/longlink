@@ -4,23 +4,30 @@ import { api } from '@/lib/api';
 import { resolveRequestUrl } from './url';
 import { evaluate } from '../expressions/evaluate';
 import { isSafePropertyName } from '../expressions/resolve';
-import type { ASTAttribute, ASTNode, ASTProps, XmlRuntime } from '../types';
+import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlRuntime } from '../types';
 
 type SetupDeclaration =
     | { name: 'State'; id: string; params: ASTProps }
     | { name: 'Query'; id: string; path: ASTAttribute };
 
+export type CreateContextOptions = {
+    navigate: RuntimeServices['navigate'];
+    navigationBaseUrl: string;
+    params: Record<string, string>;
+    requestBaseUrl: string;
+};
+
 export const XmlContext = React.createContext<XmlRuntime | null>(null);
 
-/** Creates a blank XML runtime context. */
-export function createContext(params: Record<string, string> = {}): XmlRuntime {
+/** Creates an XML runtime with all host-owned services initialized. */
+export function createContext(options: CreateContextOptions): XmlRuntime {
     return {
-        scope: { bindings: { params } },
+        scope: { bindings: { params: options.params } },
         services: {
             invalidate: async () => {},
-            navigate: () => {},
-            navigationBaseUrl: '',
-            requestBaseUrl: '',
+            navigate: options.navigate,
+            navigationBaseUrl: options.navigationBaseUrl,
+            requestBaseUrl: options.requestBaseUrl,
             setups: {},
         },
     };

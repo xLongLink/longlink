@@ -2,10 +2,9 @@
 import { act } from 'react';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { createContext } from '@/xml/core/context';
 import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
 
 const toast = vi.fn();
 
@@ -39,8 +38,8 @@ describe('Action', () => {
     });
 
     it('sends the configured request method and JSON payload before navigating', async () => {
-        const ctx = createContext();
         const events: string[] = [];
+        const ctx = createContext({ navigate: vi.fn(() => events.push('navigate')) });
         let requestBody = '';
         let requestMethod = '';
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
@@ -51,7 +50,6 @@ describe('Action', () => {
 
             return new Response('{}', { status: 201 });
         });
-        ctx.services.navigate = vi.fn(() => events.push('navigate'));
         vi.stubGlobal('fetch', fetchRequest);
 
         const button = await renderAction(
@@ -72,7 +70,7 @@ describe('Action', () => {
 
     it('prevents default Link navigation until Action effects complete', async () => {
         // Arrange
-        const ctx = createContext();
+        const ctx = createContext({ navigate: vi.fn() });
         let completeRequest: (() => void) | undefined;
         const fetchRequest = vi.fn(
             () =>
@@ -81,7 +79,6 @@ describe('Action', () => {
                 )
         );
         const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-        ctx.services.navigate = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
         const link = await renderAction(
             '<Action><Request url="/orders" method="POST" /><Link to="/orders">Save</Link></Action>',
@@ -170,9 +167,8 @@ describe('Action', () => {
         },
     ])('does not patch state, navigate, or close when a request fails: $error', async ({ error, fetch }) => {
         // Arrange
-        const ctx = createContext();
+        const ctx = createContext({ navigate: vi.fn() });
         const closeDialog = vi.fn();
-        ctx.services.navigate = vi.fn();
         vi.stubGlobal('fetch', fetch);
 
         const button = await renderAction(
@@ -219,10 +215,8 @@ describe('Action', () => {
 
     it('navigates instead of closing or toasting after a successful Action Link request', async () => {
         // Arrange
-        const ctx = createContext();
+        const ctx = createContext({ navigate: vi.fn(), requestBaseUrl: '/proxy/' });
         const closeDialog = vi.fn();
-        ctx.services.navigate = vi.fn();
-        ctx.services.requestBaseUrl = '/proxy/';
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
         const link = await renderAction(
             '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link href="/orders">Save</Link></Action>',
@@ -255,10 +249,9 @@ describe('Action', () => {
             request: 'method="POST" form="invalid"',
         },
     ])('does not execute invalid request payloads: $error', async ({ request }) => {
-        const ctx = createContext();
+        const ctx = createContext({ navigate: vi.fn() });
         const closeDialog = vi.fn();
         const fetchRequest = vi.fn();
-        ctx.services.navigate = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
 
         const button = await renderAction(
@@ -281,8 +274,7 @@ describe('Action', () => {
     });
 
     it('invalidates declared State through Patch', async () => {
-        const ctx = createContext();
-        ctx.services.navigate = vi.fn();
+        const ctx = createContext({ navigate: vi.fn() });
         const button = await renderAction(
             '<State id="form" value="draft" /><Action><Patch state="form" invalidate="true" /><Button>Reset</Button></Action>',
             ctx

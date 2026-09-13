@@ -1,9 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { RenderXML } from '../helpers';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { createContext } from '@/xml/core/context';
+import { createContext, RenderXML } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('Button', () => {
@@ -19,9 +18,10 @@ describe('Button', () => {
     });
 
     it('navigates to its destination resolved against the navigation base URL', async () => {
-        const ctx = createContext();
-        ctx.services.navigate = vi.fn();
-        ctx.services.navigationBaseUrl = '/orgs/acme/solutions/tracker';
+        const ctx = createContext({
+            navigate: vi.fn(),
+            navigationBaseUrl: '/orgs/acme/solutions/tracker',
+        });
         const container = document.createElement('div');
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
