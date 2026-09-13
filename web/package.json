@@ -56,12 +56,12 @@
         "eslint-plugin-perfectionist": "^5.10.1",
         "happy-dom": "^20.14.0",
         "typescript": "5.9.3",
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9",
-        "vite-plus": "0.2.9",
-        "vitest": "4.1.10"
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
+        "vite-plus": "0.3.1",
+        "vitest": "4.1.11"
     },
     "overrides": {
-        "vite": "npm:@voidzero-dev/vite-plus-core@0.2.9"
+        "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
     },
     "devEngines": {
         "packageManager": {

@@ -165,7 +165,7 @@ export default function VerifyEmail() {
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             {pageMetadata}
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={form.handleSubmit(handleComplete)}>
+                <AuthForm gap={3} onSubmit={(event) => form.handleSubmit(handleComplete)(event)}>
                     <Controller
                         control={form.control}
                         name="name"
