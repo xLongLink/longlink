@@ -30,20 +30,20 @@ Prefer a change that eliminates a concept, state owner, contract, workflow step,
 
 These are investigation prompts, not automatic reasons to remove code:
 
-| Pattern | Structural opportunity |
-| --- | --- |
-| Adapters that only translate APIs | Remove JSX marker parsing or forwarding classes when callers can use the established library's typed API directly. Retain meaningful validation and domain behavior. |
-| Paired APIs without independent consumers | Consolidate a hook/controller and companion component when every caller immediately reconnects the same pair. Give the workflow one owner. |
-| Duplicated resource ownership | Let one scope own HTTP clients, SQL connections, transactions, tunnels, and cleanup; let collaborators operate on those resources. |
-| Manually coordinated resets | Give attempt-local state a clear component or operation lifetime instead of resetting multiple owners on every completion path. Preserve retry drafts and closing effects. |
-| Duplicated creation contracts | Pass an existing validated model through a service instead of unpacking it into a mirrored parameter list and reconstructing it without transformation. Keep server-owned fields excluded. |
-| Write-only persisted state | Trace fields that are stored, serialized, protected, and tested but never read for an application decision. Remove supporting schema and fixture code only with the retention implications understood. |
-| Derivable contract fields | Investigate values always computed from another authoritative field. Check independent external producers before removing the transmitted field or its validation. |
-| Repeated mandatory follow-up work | Move a transactional obligation into the operation that requires it when all callers perform the same follow-up. Preserve lock order and commit ownership. |
-| Overlapping query ownership | Resolve route or tenant identity once, then give dependent queries explicit inputs. Preserve parallel fetching, cancellation, polling, and loading/error semantics. |
-| Interacting flags | Replace boolean combinations with explicit business modes when the caller set proves that the flags encode mutually exclusive policies. |
-| Single-caller workflow bodies | Inline forwarding boundaries when doing so exposes the lifetime and ordering of the operation more clearly. Do not trade useful separation for excessive nesting. |
-| Competing production entry points | Consolidate parsers or facades with different contracts when only one is needed in production; keep fixture conveniences in test helpers. |
+| Pattern                                   | Structural opportunity                                                                                                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Adapters that only translate APIs         | Remove JSX marker parsing or forwarding classes when callers can use the established library's typed API directly. Retain meaningful validation and domain behavior.                                   |
+| Paired APIs without independent consumers | Consolidate a hook/controller and companion component when every caller immediately reconnects the same pair. Give the workflow one owner.                                                             |
+| Duplicated resource ownership             | Let one scope own HTTP clients, SQL connections, transactions, tunnels, and cleanup; let collaborators operate on those resources.                                                                     |
+| Manually coordinated resets               | Give attempt-local state a clear component or operation lifetime instead of resetting multiple owners on every completion path. Preserve retry drafts and closing effects.                             |
+| Duplicated creation contracts             | Pass an existing validated model through a service instead of unpacking it into a mirrored parameter list and reconstructing it without transformation. Keep server-owned fields excluded.             |
+| Write-only persisted state                | Trace fields that are stored, serialized, protected, and tested but never read for an application decision. Remove supporting schema and fixture code only with the retention implications understood. |
+| Derivable contract fields                 | Investigate values always computed from another authoritative field. Check independent external producers before removing the transmitted field or its validation.                                     |
+| Repeated mandatory follow-up work         | Move a transactional obligation into the operation that requires it when all callers perform the same follow-up. Preserve lock order and commit ownership.                                             |
+| Overlapping query ownership               | Resolve route or tenant identity once, then give dependent queries explicit inputs. Preserve parallel fetching, cancellation, polling, and loading/error semantics.                                    |
+| Interacting flags                         | Replace boolean combinations with explicit business modes when the caller set proves that the flags encode mutually exclusive policies.                                                                |
+| Single-caller workflow bodies             | Inline forwarding boundaries when doing so exposes the lifetime and ordering of the operation more clearly. Do not trade useful separation for excessive nesting.                                      |
+| Competing production entry points         | Consolidate parsers or facades with different contracts when only one is needed in production; keep fixture conveniences in test helpers.                                                              |
 
 ### Evidence required
 

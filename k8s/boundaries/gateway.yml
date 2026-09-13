@@ -16,9 +16,9 @@ spec:
                     matchLabels:
                         app: net-kourier-controller
           ports:
-              - {protocol: TCP, port: 8081}
-              - {protocol: TCP, port: 8090}
-              - {protocol: TCP, port: 9443}
+              - { protocol: TCP, port: 8081 }
+              - { protocol: TCP, port: 8090 }
+              - { protocol: TCP, port: 9443 }
         # Only operator-labelled Platform Pods may enter from inside the cluster.
         - from:
               - namespaceSelector:
@@ -28,7 +28,7 @@ spec:
                     matchLabels:
                         longlink.io/component: api
           ports:
-              - {protocol: TCP, port: 8444}
+              - { protocol: TCP, port: 8444 }
         # External Platform sources require a separate operator-owned IP allowlist policy.
 ---
 apiVersion: networking.k8s.io/v1
@@ -53,6 +53,6 @@ spec:
                     matchLabels:
                         kubernetes.io/metadata.name: knative-serving
           ports:
-              - {protocol: TCP, port: 8012}
-              - {protocol: TCP, port: 8013}
-              - {protocol: TCP, port: 9090}
+              - { protocol: TCP, port: 8012 }
+              - { protocol: TCP, port: 8013 }
+              - { protocol: TCP, port: 9090 }

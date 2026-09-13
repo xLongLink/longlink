@@ -1,7 +1,7 @@
 import path from 'node:path';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const adaptersDirectory = path.resolve(root, '../sdk/longlink/.static/xsd/adapters');
