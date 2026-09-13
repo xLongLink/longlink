@@ -93,32 +93,39 @@ class S3:
         # Owner credentials retain cleanup access even when a Solution identity has disappeared.
         async with self.client() as client:
             try:
-                async for page in client.get_paginator("list_multipart_uploads").paginate(Bucket=bucket, Prefix=prefix):
-                    for upload in page.get("Uploads", []):
-                        await client.abort_multipart_upload(Bucket=bucket, Key=upload["Key"], UploadId=upload["UploadId"])
-                async for page in client.get_paginator("list_object_versions").paginate(Bucket=bucket, Prefix=prefix):
-                    versions: Iterable[ObjectIdentifierTypeDef] = (
-                        {"Key": item["Key"], "VersionId": item["VersionId"]}
-                        for item in chain(page.get("Versions", []), page.get("DeleteMarkers", []))
-                    )
-
-                    # S3 accepts at most 1,000 identifiers and can report partial failures in successful responses.
-                    for batch in batched(versions, 1000):
-                        response = await client.delete_objects(Bucket=bucket, Delete={"Objects": list(batch), "Quiet": True})
-                        errors = response.get("Errors", [])
-                        if errors:
-                            raise RuntimeError(f"S3 failed to delete {len(errors)} objects")
+                await self._delete_prefix(client, bucket, prefix)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
 
-    async def delete_bucket(self, bucket: str) -> None:
-        """Delete an empty bucket, treating an absent bucket as already removed."""
+    async def delete(self, bucket: str) -> None:
+        """Remove every object and delete one bucket through a single client session."""
 
-        # Organization cleanup empties all object versions before removing its bucket boundary.
+        # Keep complete Organization cleanup in one transport lifetime after every account is revoked.
         async with self.client() as client:
             try:
+                await self._delete_prefix(client, bucket, "")
                 await client.delete_bucket(Bucket=bucket)
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") != "NoSuchBucket":
                     raise
+
+    async def _delete_prefix(self, client: "S3Client", bucket: str, prefix: str) -> None:
+        """Remove uploads and all object versions through an existing owner client."""
+
+        # Abort incomplete uploads before deleting object versions under the requested prefix.
+        async for page in client.get_paginator("list_multipart_uploads").paginate(Bucket=bucket, Prefix=prefix):
+            for upload in page.get("Uploads", []):
+                await client.abort_multipart_upload(Bucket=bucket, Key=upload["Key"], UploadId=upload["UploadId"])
+        async for page in client.get_paginator("list_object_versions").paginate(Bucket=bucket, Prefix=prefix):
+            versions: Iterable[ObjectIdentifierTypeDef] = (
+                {"Key": item["Key"], "VersionId": item["VersionId"]}
+                for item in chain(page.get("Versions", []), page.get("DeleteMarkers", []))
+            )
+
+            # S3 accepts at most 1,000 identifiers and can report partial failures in successful responses.
+            for batch in batched(versions, 1000):
+                response = await client.delete_objects(Bucket=bucket, Delete={"Objects": list(batch), "Quiet": True})
+                errors = response.get("Errors", [])
+                if errors:
+                    raise RuntimeError(f"S3 failed to delete {len(errors)} objects")

@@ -5,7 +5,10 @@ import { resolveXmlProps } from '../core/props';
 import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const codeBlockPropsSchema = z.object({
-    value: z.union([z.string(), z.array(z.string())]),
+    value: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .default(''),
 });
 
 /** Renders text or JSON log lines in a readable code block. */

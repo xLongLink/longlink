@@ -36,20 +36,25 @@ class Infrastructure:
     compute: ComputeRegistry
 
 
-async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
-    """Return one user's active membership for an active Organization."""
+def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
+    """Select one user's active membership with its response-ready Organization."""
 
-    # Load only the requested Organization membership and its response-ready Organization.
-    statement = (
+    return (
         select(UserOrganization)
         .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
         .options(contains_eager(UserOrganization.organization))
         .where(
             col(UserOrganization.user_id) == user_id,
-            col(UserOrganization.organization_id) == organization_id,
             col(Organization.deleted_at).is_(None),
         )
     )
+
+
+async def membership(session: AsyncSession, user_id: UUID, organization_id: UUID) -> UserOrganization | None:
+    """Return one user's active membership for an active Organization."""
+
+    # Load only the requested Organization membership and its response-ready Organization.
+    statement = _membership_query(user_id).where(col(UserOrganization.organization_id) == organization_id)
     return await session.scalar(statement)
 
 
@@ -57,16 +62,7 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
     """Return one user's active membership for an active Organization slug."""
 
     # Load only the requested Organization membership and its response-ready Organization.
-    statement = (
-        select(UserOrganization)
-        .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(UserOrganization.organization))
-        .where(
-            col(UserOrganization.user_id) == user_id,
-            col(Organization.slug) == organization_slug,
-            col(Organization.deleted_at).is_(None),
-        )
-    )
+    statement = _membership_query(user_id).where(col(Organization.slug) == organization_slug)
     return await session.scalar(statement)
 
 

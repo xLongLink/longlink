@@ -76,8 +76,7 @@ class Storage:
         bucket = self._bucket(organization, compute)
         for solution in solutions:
             await bucket.admin.revoke(solution)
-        await bucket.storage.delete_prefix(bucket.name, "")
-        await bucket.storage.delete_bucket(bucket.name)
+        await bucket.storage.delete(bucket.name)
 
     @staticmethod
     def _bucket(organization: UUID, compute: "ComputeRegistry") -> Bucket:

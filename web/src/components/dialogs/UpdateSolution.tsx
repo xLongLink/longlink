@@ -21,6 +21,8 @@ const environmentChangeSchema = z.discriminatedUnion('action', [
     z.object({ action: z.literal('replace'), value: z.string() }),
 ]);
 
+const imageDigestPattern = /^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/;
+
 type EnvironmentChange = z.infer<typeof environmentChangeSchema>;
 
 /** Omitted configured values are preserved; null and blank replacements are missing. */
@@ -52,8 +54,8 @@ export default function UpdateSolution({
     const configured = new Set(candidate.configured_envs);
 
     // Mutable source tags stay the same across updates; compare immutable image identities instead.
-    const currentLabel = candidate.current_image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
-    const candidateLabel = candidate.metadata.image.replace(/^.+@(sha256:[a-f0-9]{12})[a-f0-9]*$/, '$1');
+    const currentLabel = candidate.current_image.replace(imageDigestPattern, '$1');
+    const candidateLabel = candidate.metadata.image.replace(imageDigestPattern, '$1');
     const schema = z
         .object({ alwaysOn: z.boolean(), envs: z.record(z.string(), environmentChangeSchema) })
         .superRefine((value, ctx) => {

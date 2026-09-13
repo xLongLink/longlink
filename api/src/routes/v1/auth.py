@@ -86,7 +86,6 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    response.headers["Cache-Control"] = "no-store"
     cookies.set_browser_cookie(response, OAUTH_STATE_COOKIE, credential, OAUTH_STATE_COOKIE_PATH, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
     return response
 
