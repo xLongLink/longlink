@@ -1,0 +1,31 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+    name: compute
+servers: 1
+image: rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
+network: longlink-dev
+kubeAPI:
+    hostIP: 127.0.0.1
+    hostPort: '8001'
+volumes:
+    - volume: /dev:/dev
+      nodeFilters:
+          - server:0
+    - volume: /run/udev:/run/udev:ro
+      nodeFilters:
+          - server:0
+registries:
+    config: |
+        mirrors:
+            'localhost:15000':
+                endpoint:
+                    - 'http://registry:5000'
+options:
+    k3d:
+        wait: true
+    k3s:
+        extraArgs:
+            - arg: --disable=traefik
+              nodeFilters:
+                  - server:0

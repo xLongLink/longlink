@@ -103,6 +103,7 @@ Work that is too long for an API request is queued as a durable, typed Operation
 
 ```
 make up     # Prepare infrastructure and dev-owned endpoint connections
+make image  # Build and push the sample Solution
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 ```
@@ -120,7 +121,7 @@ make -C .. seed  # Supply local endpoints and public CA bundles
 
 The local seed inspects `localhost:15000/sample:dev` through the same metadata resolver as the API. If your sample image declares required variables, set `SAMPLE_ENVS` to a JSON string dictionary in `.env.seed`; missing requirements fail rather than silently bypassing release validation.
 
-The API always reads `.env` and process environment variables. `make configure`
+The API always reads `.env` and process environment variables. Make
 copies local defaults only when `.env` is absent; existing files are not merged or
 overwritten. SMTP is required in all
 environments; local setup supplies Mailpit. `SMTP_FROM` sets the sender address

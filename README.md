@@ -68,6 +68,9 @@ LongLink aims to bring software-development principles to the way organisations 
 Work on the LongLink Platform:
 
 ```bash
+make install
+make up     # Create local infrastructure
+make image  # Build and push the sample Solution
 make api    # In one terminal
 make seed   # In another terminal after the API starts
 make web    # In another terminal

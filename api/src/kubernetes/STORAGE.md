@@ -37,7 +37,7 @@ provides S3, and consumes an independently installed backing PVC provisioner.
   resolver or storage tunnel is used.
 - Install the Compute package before registering it. Deployment readiness and
   retry belong to the hosting workflow, not API operation timeouts. Stop local API
-  workers and run `make compute` to retry local installation.
+  workers and run `make up` to retry local installation.
 
 ## Quotas and capacity admission
 

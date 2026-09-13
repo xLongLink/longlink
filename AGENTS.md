@@ -19,7 +19,7 @@
 LongLink
 ├── Deployment configuration
 │   ├── k8s → versioned shared infrastructure package
-│   ├── dev/compute → local Kustomize overlays, installed by make up / make compute
+│   ├── dev/compute → local Kustomize overlays, installed by make up
 │   └── Hosting repository → cloud topology, release selection, and deployment workflows
 ├── Control plane
 │   ├── API replicas
@@ -57,7 +57,7 @@ LongLink
 
 - Platform metadata is separate from Solution business data.
 - Shared Compute infrastructure is installed externally from `k8s`; API reconciliation validates it without installing operators.
-- Local development installs infrastructure before starting API workers. Stop workers before `make compute`; local apply and `make api` coordinate through `dev/compute.lock`.
+- Local development installs infrastructure before starting API workers. Stop workers before `make up` or `make down`; local setup and `make api` coordinate through `dev/compute.lock`.
 - The API uses the same runtime code in local and hosted deployments. `dev/` owns workstation setup, endpoint connections, split DNS, and mail capture; no development transport belongs in the API.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
 - Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.

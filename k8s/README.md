@@ -14,6 +14,7 @@ longlink/
 │   └── release/ → package version and Platform compatibility contract
 └── dev/ → local setup and connectivity outside the API
     ├── tls.cnf → local gateway and S3 certificate extensions for OpenSSL
+    ├── cluster.yaml → k3d cluster settings and registry mirror
     ├── compose.yml → registry, SMTP capture, and loopback endpoint connections
     └── compute/ → backing Kustomization, split DNS, Service, and storage overlays
 ```
@@ -26,6 +27,7 @@ OpenSSL, `flock`, uv, and the existing Vite+ development tooling.
 ```bash
 make install
 make up
+make image
 # Separate terminals:
 make api
 make web
@@ -34,9 +36,9 @@ make seed
 ```
 
 `make up` creates the local cluster, registry, CSI hostpath backing provisioner,
-and TLS Secrets, then runs `make compute`. The target applies the Kustomize stages
+and TLS Secrets. It applies the Kustomize stages
 in dependency order, waits for local controllers and storage, and applies
-`release/release.yml` last. `make connect` then starts dev-owned gateway/S3
+`release/release.yml` last, then starts dev-owned gateway/S3
 connections. The API runs directly on the host with ordinary HTTPS clients; local
 CoreDNS makes the same S3 origin reachable by Solution Pods. See
 [`dev/README.md`](../dev/README.md) for the complete connectivity contract.
@@ -45,14 +47,14 @@ To change or retry local infrastructure:
 
 1. Stop `make api` and any independently started Platform workers.
 2. Edit the package or `dev/compute/` overlays.
-3. Run `make compute`.
+3. Run `make up`.
 4. Restart `make api` to validate the installation.
 5. Run `make seed` if tenant provisioning needs another attempt.
 
-`make compute` takes an exclusive `dev/compute.lock`; `make api` holds a shared
-lock for its worker lifetime. The local workflow never deletes tenant namespaces,
-database PVCs, buckets, or credentials. `make down` removes the complete local
-cluster.
+Infrastructure targets take an exclusive `dev/compute.lock`; `make api` holds a
+shared lock through startup and its worker lifetime. Reapplying infrastructure
+preserves tenant namespaces, database PVCs, buckets, and credentials. `make down`
+takes the same exclusive lock before removing the complete local cluster.
 
 ## Configuration
 

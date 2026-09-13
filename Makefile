@@ -1,18 +1,15 @@
-.PHONY: install check format build test up _up compute _compute certificates _certificates connect configure image down api web sdk seed
-
-DEV_K3S_IMAGE := rancher/k3s:v1.34.3-k3s1@sha256:c63773f3549c09ac5f79f57ae3b057118e7de394b3ae84cd9faf68a1be872ae5
+.PHONY: install check format build test up _up image down _down api _api _locked web sdk sample seed
 
 # Install all development dependencies.
-install:
+install: api/.env
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
-	$(MAKE) configure
 
 
 # Initialize local configuration once; existing settings remain operator-owned.
-configure:
-	@umask 077; test -e api/.env || cp -n api/.env.sample api/.env
+api/.env:
+	@umask 077; cp -n api/.env.sample api/.env
 
 
 # Run lint, type, and contract checks.
@@ -48,51 +45,43 @@ test:
 	cd web && vp run test
 
 
-# Initialize local infrastructure and build the local sample Solution image.
-up: configure
-	flock --exclusive --nonblock dev/compute.lock $(MAKE) _up COMPUTE_LOCKED=1
+# Initialize configuration before starting local infrastructure or the API.
+up api: api/.env
 
 
-# Hold the deployment lock through backing storage, certificates, operators, and endpoint setup.
+# Serialize infrastructure changes, including teardown, against API workers.
+up down:
+	flock --exclusive --nonblock dev/compute.lock $(MAKE) _$@ COMPUTE_LOCKED=1
+
+
+# Hold the shared lock through API preparation and the worker lifetime.
+api:
+	flock --shared --nonblock dev/compute.lock $(MAKE) _api COMPUTE_LOCKED=1
+
+
+# Internal workflows inherit the lock from their public entry point.
+_up _down _api: _locked
+
+_locked:
+	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Use the public make target to acquire the deployment lock.\n"; exit 1; }
+
+
+# Create or reapply local resources in dependency order.
 _up:
-	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make up to acquire the deployment lock.\n"; exit 1; }
-	@docker network inspect longlink-dev >/dev/null 2>&1 || docker network create longlink-dev
-	@if k3d cluster list compute >/dev/null 2>&1; then \
-		network_ip="$$(docker inspect k3d-compute-server-0 --format '{{with index .NetworkSettings.Networks "longlink-dev"}}{{.IPAddress}}{{end}}')"; \
-		if [ -z "$$network_ip" ]; then \
-			printf "Existing k3d cluster is not attached to longlink-dev. Run make down before make up.\n"; \
-			exit 1; \
-		fi; \
-		image="$$(docker inspect k3d-compute-server-0 --format '{{.Config.Image}}')"; \
-		if [ "$$image" != "$(DEV_K3S_IMAGE)" ]; then \
-			printf "Existing k3d cluster uses %s instead of $(DEV_K3S_IMAGE). Run make down before make up.\n" "$$image"; \
-			exit 1; \
-		fi; \
-		mounts="$$(docker inspect k3d-compute-server-0 --format '{{range .Mounts}}{{if or (eq .Destination "/dev") (eq .Destination "/run/udev")}}{{.Destination}} {{end}}{{end}}')"; \
-		case "$$mounts" in *"/dev "*"/run/udev "*|*"/run/udev "*"/dev "*) ;; \
-			*) printf "Existing k3d cluster lacks Ceph development device mounts. Run make down and make up to recreate local state.\n"; exit 1 ;; \
-		esac; \
-	fi
-	@gateway="$$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')"; \
-		if [ -z "$$gateway" ]; then printf "Development Docker network has no gateway.\n"; exit 1; fi; \
-		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait registry mail
+	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
+		printf '%s\n' "$$addresses" | while read -r address rest; do \
+			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
+		done
+	docker compose -f dev/compose.yml up --detach --wait registry mail
 	@if ! k3d cluster list compute >/dev/null 2>&1; then \
-		k3d cluster create compute --image "$(DEV_K3S_IMAGE)" --network longlink-dev --api-port 127.0.0.1:8001 --volume "/dev:/dev@server:0" --volume "/run/udev:/run/udev:ro@server:0" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
+		k3d cluster create --config dev/cluster.yaml; \
 	fi
 	@umask 077; k3d kubeconfig get compute > api/kubeconfig.yaml
-	$(MAKE) _compute COMPUTE_LOCKED=1
-	@curl --fail --silent --show-error --output /dev/null --retry 59 --retry-delay 1 --retry-connrefused http://localhost:15000/v2/
-	$(MAKE) image
+	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
+	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/backing
+	kubectl --kubeconfig api/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
 
-
-# Issue local certificates without racing Platform workers.
-certificates:
-	flock --exclusive --nonblock dev/compute.lock $(MAKE) _certificates COMPUTE_LOCKED=1
-
-
-# Preserve the CA and reusable certificates; generate keys only inside ignored private storage.
-_certificates:
-	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make certificates to acquire the deployment lock.\n"; exit 1; }
+	# Preserve the CA and reuse valid certificates when reapplying resources.
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -f dev/compute/namespaces.yaml
 	@set -eu; umask 077; mkdir -p dev/certificates; \
 		temporary="$$(mktemp -d dev/certificates/.generate.XXXXXX)"; \
@@ -125,23 +114,7 @@ _certificates:
 			kubectl --kubeconfig api/kubeconfig.yaml apply --filename="$$temporary/secret.yaml"; \
 		done
 
-
-# Apply the local Compute package while Platform workers are stopped.
-compute:
-	flock --exclusive --nonblock dev/compute.lock $(MAKE) _compute COMPUTE_LOCKED=1
-
-
-# Apply dependency-ordered Kustomize stages and publish the contract last.
-_compute:
-	@test "$(COMPUTE_LOCKED)" = 1 || { printf "Run make compute to acquire the deployment lock.\n"; exit 1; }
-	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
-		printf '%s\n' "$$addresses" | while read -r address rest; do \
-			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
-		done
-	kubectl --kubeconfig api/kubeconfig.yaml delete configmap compute-release --namespace longlink-system --ignore-not-found
-	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/backing
-	kubectl --kubeconfig api/kubeconfig.yaml rollout status statefulset/csi-hostpathplugin --namespace longlink-development --timeout=300s
-	$(MAKE) _certificates COMPUTE_LOCKED=1
+	# Install connectivity and shared controllers before publishing the release.
 	kubectl --kubeconfig api/kubeconfig.yaml apply -k dev/compute/connectivity
 	kubectl --kubeconfig api/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig api/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
@@ -171,40 +144,29 @@ _compute:
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k dev/compute/infrastructure
 	kubectl --kubeconfig api/kubeconfig.yaml wait --for=jsonpath='{.status.phase}'=Ready cephcluster/rook-ceph cephobjectstore/longlink cephobjectstoreuser/longlink-health --namespace rook-ceph --timeout=1800s
 	kubectl --kubeconfig api/kubeconfig.yaml apply --server-side --field-manager=longlink-compute -k k8s/release
-	$(MAKE) connect
-
-
-# Keep endpoint connectivity outside the host-run API's process lifetime.
-connect:
-	@gateway="$$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')"; \
-		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait gateway storage
+	docker compose -f dev/compose.yml up --detach --wait gateway storage
 
 
 # Build and push the local sample, preserving an existing development project.
-image:
-	cd web && vp run build:sdk:bundle --logLevel warn
+image: sample
 	@docker buildx inspect longlink-dev >/dev/null 2>&1 || docker buildx create --name longlink-dev --driver docker-container
-	@if [ ! -d sdk/dev ]; then \
-		cd sdk && uv run --locked longlink init --folder dev --name sample && \
-		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
-	fi
 	cd sdk/dev && uv run longlink build --builder longlink-dev --registry localhost:15000 --push --tag dev
 
 
 # Stop local services and remove generated cluster and API state.
-down:
-	@LONGLINK_DEV_GATEWAY=127.0.0.2 docker compose -f dev/compose.yml down --remove-orphans
+_down:
+	docker compose -f dev/compose.yml stop
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
-	@if docker network inspect longlink-dev >/dev/null 2>&1; then docker network rm longlink-dev; fi
+	docker compose -f dev/compose.yml down --volumes --remove-orphans
 	rm -f api/dev.db api/kubeconfig.yaml
 	rm -rf dev/certificates
 
 
 # Prepare and run the local LongLink Platform API server.
-api: configure
+_api:
 	cd api && uv run --locked alembic upgrade head
 	cd api && uv run --locked python -m src.release
-	cd api && flock --shared --nonblock ../dev/compute.lock uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Run the Vite web app.
@@ -212,16 +174,20 @@ web:
 	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
-# Build the SDK bundle and run the local sample Solution.
-sdk:
+# Prepare the local sample for both host development and image builds.
+sample:
 	cd web && vp run build:sdk:bundle --logLevel warn
 	@if [ ! -d sdk/dev ]; then \
 		cd sdk && uv run --locked longlink init --folder dev --name sample && \
 		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
 	fi
+
+
+# Run the local sample Solution.
+sdk: sample
 	cd sdk/dev && uv run longlink dev
 
 
 # Seed the example Organization and Solution after the Platform API starts.
-seed: configure
+seed: api/.env
 	cd api && GATEWAY_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_CERTIFICATE="$$(cat ../dev/certificates/ca.crt)" STORAGE_ENDPOINT=https://storage.localhost:9443 uv run --locked python -m scripts.seed

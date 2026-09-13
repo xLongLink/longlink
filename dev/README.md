@@ -34,7 +34,7 @@ make install
 make up
 ```
 
-`make configure` copies `api/.env.sample` to the ignored `api/.env` only when that
+Make copies `api/.env.sample` to the ignored `api/.env` only when that
 file is absent, with owner-only permissions. Existing files are preserved exactly;
 add newly required settings explicitly. Configuration initialization runs as part
 of installation and API startup. The API itself always reads ordinary environment
@@ -42,21 +42,23 @@ variables and `.env`; no development mode is required.
 
 `make up` creates the private Docker network, registry, mail capture service,
 cluster, backing storage, TLS certificates, and shared Compute infrastructure.
-It then starts endpoint connections and builds/pushes the local sample image.
+It then starts the gateway and storage connections. Run it again to reapply
+resources or retry an interrupted setup. `make down` removes those resources.
+Cluster settings are declared in `dev/cluster.yaml`.
 Generated private material lives under ignored `dev/certificates/`.
+
+`make image` and `make sdk` share `make sample`, which builds the SDK web bundle
+and initializes `sdk/dev` only when absent. Existing sample edits are preserved.
 
 Backing storage is declared in `dev/compute/backing/kustomization.yaml`. It selects
 the CSI attacher/provisioner components and sets their namespaces and RBAC subjects.
 Render it with `kubectl kustomize dev/compute/backing`.
 
-`make certificates` uses OpenSSL and `dev/tls.cnf` to generate gateway and storage
+Setup uses OpenSSL and `dev/tls.cnf` to generate gateway and storage
 certificates and apply their TLS Secrets. It reuses the local CA and valid matching
 certificates, renewing leaves that expire within a day. The CA is generated only
 when both CA files are absent; partial or expired CA state requires explicit
-repair. Stop API workers before certificate changes; this target uses the same
-deployment lock as `make compute`. `make up` and `make compute` invoke it as part
-of their locked workflow. No Python setup script or setup-specific dependencies
-are needed.
+repair. Stop API workers before running `make up` or `make down`.
 
 Run in separate terminals:
 
@@ -65,9 +67,10 @@ make api
 make web
 ```
 
-After the API is ready:
+To build and provision the sample after the API is ready:
 
 ```bash
+make image
 make seed
 ```
 
@@ -78,9 +81,17 @@ by Mailpit. Local delivery follows the same SMTP code as production.
 
 ## Connectivity
 
+The registry publishes `localhost:15000` for host image builds and API inspection.
+The k3d container runtime uses the mirror in `dev/cluster.yaml` to reach that same registry
+directly at `registry:5000` on the private `longlink-dev` Docker network. No Docker
+gateway address or extra host port binding is needed.
+Compose owns this network and waits for the registry health check before cluster
+setup. Teardown stops connections, deletes the cluster, then removes Compose
+services and their networks.
+
 Compose owns two long-lived `kubectl port-forward` processes. They bind only to
 host loopback, use the generated kubeconfig read-only, restart when the selected
-Pod disappears, and expose health checks. `make connect` starts or repairs them;
+Pod disappears, and expose health checks. `make up` starts or repairs them;
 `make down` stops them before deleting the cluster.
 
 The gateway origin is `https://localhost:8443`. The API uses an ordinary HTTPS
@@ -130,21 +141,24 @@ new registration or an explicit local reset.
 Stop API workers, update the package or local overlays, and run:
 
 ```bash
-make compute
+make up
 make api
 make seed
 ```
 
-`make compute` takes an exclusive `dev/compute.lock`; `make api` holds a shared lock
-for its worker lifetime. Stop independently launched workers too. Application
+`make up` and `make down` take an exclusive
+`dev/compute.lock`; `make api` holds a shared lock through migrations, release
+preparation, and its worker lifetime. Stop independently launched workers too. Application
 restart revalidates infrastructure and reconciles tenant state without installing
 operators. The sample is retained unless a failed deployment needs a retry.
 
-An existing pre-change Compute registration still contains its old S3 endpoint.
-It must be updated with workers stopped before using the new connection; seeding
-does not overwrite it. For disposable local data, `make down`, `make up`, `make api`,
-and `make seed` recreate the environment with the new defaults. `make down` deletes
-local tenant data, so it is not an in-place migration procedure.
+Settings in `dev/cluster.yaml`, including registry mirrors, are applied by k3d only
+when creating the cluster. After changing them, stop workers and run `make down`,
+`make up`, `make image`, `make api`, and `make seed` to recreate disposable local state. This
+includes clusters using the former `host.k3d.internal:15000` registry mirror and
+manually created Docker network. For that older setup, also remove the old network
+with `docker network rm longlink-dev` after `make down` and before `make up`.
+`make down` deletes local tenant data; it is not an in-place migration procedure.
 
 ## Cleanup
 

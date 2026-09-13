@@ -74,3 +74,4 @@ TEMP
 /web/.vscode/*
 !/web/.vscode/extensions.json
 dev/compute.lock
+/dev/certificates/
