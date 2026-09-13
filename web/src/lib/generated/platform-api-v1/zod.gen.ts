@@ -124,16 +124,6 @@ export const zOperationKind = z.enum([
 ]);
 
 /**
- * OperationResource
- *
- * Represent one operation target resource.
- */
-export const zOperationResource = z.object({
-    id: z.uuid(),
-    name: z.string()
-});
-
-/**
  * OperationStatus
  *
  * Supported long-running operation lifecycle states.
@@ -153,8 +143,8 @@ export const zOperationStatus = z.enum([
 export const zOperationResponse = z.object({
     id: z.uuid(),
     kind: zOperationKind,
-    resource: zOperationResource.nullable(),
     target_id: z.uuid(),
+    resource_name: z.string().nullable(),
     status: zOperationStatus,
     failed: z.string().nullable(),
     created_at: z.iso.datetime(),

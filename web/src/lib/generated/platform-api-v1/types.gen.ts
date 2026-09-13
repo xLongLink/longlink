@@ -240,22 +240,6 @@ export type OAuthAvailability = {
 export type OperationKind = 'compute.validate' | 'solution.deploy' | 'solution.delete' | 'organization.create' | 'organization.delete';
 
 /**
- * OperationResource
- *
- * Represent one operation target resource.
- */
-export type OperationResource = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-};
-
-/**
  * OperationResponse
  *
  * Expose administrative asynchronous reconciliation state for one Platform resource target.
@@ -266,11 +250,14 @@ export type OperationResponse = {
      */
     id: string;
     kind: OperationKind;
-    resource: OperationResource | null;
     /**
      * Target Id
      */
     target_id: string;
+    /**
+     * Resource Name
+     */
+    resource_name: string | null;
     status: OperationStatus;
     /**
      * Failed

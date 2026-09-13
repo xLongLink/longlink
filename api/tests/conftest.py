@@ -56,8 +56,6 @@ class StorageKubernetes:
     async def apply(self, organization: UUID, compute: object) -> None:
         """Accept provisioning."""
 
-        await self.quota(organization, compute)
-
     def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
@@ -67,11 +65,6 @@ class StorageKubernetes:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
-
-    async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
-        """Accept quota reconciliation and return the resulting bucket boundary."""
-
-        return self.bucket(organization, compute)
 
     async def revoke(self, solution: UUID, bucket: object) -> None:
         """Accept user deletion."""

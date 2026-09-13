@@ -1,13 +1,16 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { ApiProvider } from '@/providers';
+import type { ASTProps } from '@/xml/types';
 import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
-import SolutionUpdate from '@/components/SolutionUpdate';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SolutionUpdate } from '@/xml/adapters/SolutionUpdate';
+import { createContext, XmlContext } from '@/xml/core/context';
 
 const revisionId = '00000000-0000-4000-8000-000000000001';
+const organizationId = '00000000-0000-4000-8000-000000000003';
 const solution = {
     id: '00000000-0000-4000-8000-000000000002',
     name: 'Sample',
@@ -30,6 +33,10 @@ const candidate = {
         ],
     },
 };
+const solutionUpdateProps: ASTProps = {
+    organizationId: { kind: 'text', value: organizationId },
+    solution: { kind: 'path', parts: ['solution'], isBinding: true },
+};
 
 describe('Solution source update dialog', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -41,17 +48,26 @@ describe('Solution source update dialog', () => {
         vi.unstubAllGlobals();
     });
 
-    /** Mount the real update button and dialog with their query and layer providers. */
+    /** Mount the XML update adapter with its runtime, query, and layer providers. */
     async function render() {
         container = document.createElement('section');
         document.body.append(container);
         root = createRoot(container);
+        const runtime = createContext({
+            navigate: () => {},
+            navigationBaseUrl: 'http://localhost',
+            params: {},
+            requestBaseUrl: 'http://localhost',
+        });
+        runtime.scope.bindings.solution = solution;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
             root?.render(
                 <LayerProvider>
                     <ApiProvider>
-                        <SolutionUpdate solution={solution} organizationId="org" />
+                        <XmlContext.Provider value={runtime}>
+                            <SolutionUpdate props={solutionUpdateProps} nodes={[]} />
+                        </XmlContext.Provider>
                     </ApiProvider>
                 </LayerProvider>
             )

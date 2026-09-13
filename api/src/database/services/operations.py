@@ -6,7 +6,7 @@ from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.models.operations import OperationKind, OperationResource, OperationResponse
+from src.models.operations import OperationKind, OperationResponse
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
@@ -51,45 +51,44 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     solution_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_delete}
 
     # Load compact resource details for each target type.
-    resources: dict[tuple[OperationKind, UUID], OperationResource] = {}
+    resource_names: dict[tuple[OperationKind, UUID], str] = {}
     if compute_target_ids:
         result = await session.execute(
             select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
         )
         for resource_id, name in result:
-            resources[(OperationKind.compute_validate, resource_id)] = OperationResource(id=resource_id, name=name)
+            resource_names[(OperationKind.compute_validate, resource_id)] = name
 
     if organization_target_ids:
         result = await session.execute(
             select(col(Organization.id), col(Organization.name)).where(col(Organization.id).in_(organization_target_ids))
         )
         for resource_id, name in result:
-            resource = OperationResource(id=resource_id, name=name)
-            resources[(OperationKind.organization_create, resource_id)] = resource
-            resources[(OperationKind.organization_delete, resource_id)] = resource
+            resource_names[(OperationKind.organization_create, resource_id)] = name
+            resource_names[(OperationKind.organization_delete, resource_id)] = name
 
     if solution_target_ids:
         result = await session.execute(select(col(Solution.id), col(Solution.name)).where(col(Solution.id).in_(solution_target_ids)))
         for resource_id, name in result:
-            resources[(OperationKind.solution_delete, resource_id)] = OperationResource(id=resource_id, name=name)
+            resource_names[(OperationKind.solution_delete, resource_id)] = name
 
     revision_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.solution_deploy}
     if revision_ids:
         result = await session.execute(
-            select(col(Revision.id), col(Solution.id), col(Solution.name))
+            select(col(Revision.id), col(Solution.name))
             .join(Solution, col(Solution.id) == col(Revision.solution_id))
             .where(col(Revision.id).in_(revision_ids))
         )
-        for revision_id, solution_id, name in result:
-            resources[(OperationKind.solution_deploy, revision_id)] = OperationResource(id=solution_id, name=name)
+        for revision_id, name in result:
+            resource_names[(OperationKind.solution_deploy, revision_id)] = name
 
-    # Assemble response models with their resolved target resource.
+    # Assemble response models with their resolved target resource name.
     items = [
         OperationResponse(
             id=operation.id,
             kind=operation.kind,
-            resource=resources.get((operation.kind, operation.target_id)),
             target_id=operation.target_id,
+            resource_name=resource_names.get((operation.kind, operation.target_id)),
             status=operation.status,
             failed=operation.failed,
             created_at=operation.created_at,
@@ -126,9 +125,17 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     organization_result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )
-    solution_result = await session.scalars(
-        select(Solution)
+    # Load only fields that decide each Solution's reconciliation target.
+    solution_result = await session.execute(
+        select(
+            col(Solution.id),
+            col(Solution.deleted_at).is_not(None),
+            col(Solution.desired_revision_id),
+            col(Solution.deployed_revision_id),
+            col(Revision.failed),
+        )
         .join(Organization, col(Organization.id) == col(Solution.organization_id))
+        .outerjoin(Revision, col(Revision.id) == col(Solution.desired_revision_id))
         .where(col(Organization.deleted_at).is_(None))
         .order_by(col(Organization.compute_id), col(Solution.id))
     )
@@ -142,11 +149,15 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
             kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
             target_id=organization_id,
         )
-    for solution in solution_result:
-        if solution.deleted_at is not None:
-            await enqueue(session, kind=OperationKind.solution_delete, target_id=solution.id)
+    for solution_id, deleted, desired_revision_id, deployed_revision_id, desired_revision_failed in solution_result:
+        if deleted:
+            await enqueue(session, kind=OperationKind.solution_delete, target_id=solution_id)
         else:
-            target_id = solution.effective_revision_id
+            if desired_revision_id is not None and desired_revision_failed is False:
+                target_id = desired_revision_id
+            else:
+                target_id = deployed_revision_id
+
             if target_id is not None:
                 await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
 

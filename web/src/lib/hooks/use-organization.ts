@@ -1,15 +1,8 @@
 import { api } from '@/lib/api';
+import type { SolutionCreate } from '@/lib/generated/platform-api-v1/types.gen';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-    SolutionCreate,
-    OrganizationDetails,
-    OrganizationInvitationCreate,
-    OrganizationMemberUpdate,
-    OrganizationUpdate,
-} from '@/lib/generated/platform-api-v1/types.gen';
 import {
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
-    zOrganizationSummary,
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -68,37 +61,6 @@ function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organiz
     ]);
 }
 
-/** Provides mutations for organization members and invitations. */
-export function useOrganizationMembers(organizationId: string) {
-    const queryClient = useQueryClient();
-
-    const inviteMember = useMutation({
-        mutationFn: (payload: OrganizationInvitationCreate) =>
-            api(`/api/v1/organizations/${organizationId}/invitations`, { json: payload, method: 'POST' }),
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-    });
-
-    const revokeInvitation = useMutation({
-        mutationFn: (invitationId: string) =>
-            api(`/api/v1/organizations/${organizationId}/invitations/${invitationId}`, { method: 'DELETE' }),
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-    });
-
-    const changeMemberRole = useMutation({
-        mutationFn: ({ memberId, role }: OrganizationMemberUpdate & { memberId: string }) =>
-            api(`/api/v1/organizations/${organizationId}/members/${memberId}`, { json: { role }, method: 'PATCH' }),
-        onSuccess: () =>
-            Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations/slug'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-            ]),
-    });
-
-    return { inviteMember, revokeInvitation, changeMemberRole };
-}
-
 /** Creates one solution and refreshes organization solution data. */
 export function useCreateOrganizationSolution(organizationId: string) {
     const queryClient = useQueryClient();
@@ -107,45 +69,5 @@ export function useCreateOrganizationSolution(organizationId: string) {
         mutationFn: (payload: SolutionCreate) =>
             api(`/api/v1/organizations/${organizationId}/solutions`, { json: payload, method: 'POST' }),
         onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
-    });
-}
-
-/** Deletes one solution and refreshes organization solution data. */
-export function useDeleteOrganizationSolution(organizationId: string) {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (solutionId: string) => api(`/api/v1/solutions/${solutionId}`, { method: 'DELETE' }),
-        onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
-    });
-}
-
-/** Updates mutable organization settings and refreshes organization caches. */
-export function useUpdateOrganization(organizationId: string) {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async (payload: OrganizationUpdate) => {
-            return zOrganizationSummary.parse(
-                await api(`/api/v1/organizations/${organizationId}`, {
-                    json: payload,
-                    method: 'PATCH',
-                }).json()
-            );
-        },
-        onSuccess: (updatedOrganization) => {
-            // Publish the saved Organization before background refreshes run.
-            queryClient.setQueryData<OrganizationDetails>(
-                ['api', `/api/v1/organizations/${organizationId}`],
-                (current) => (current ? { ...current, organization: updatedOrganization } : current)
-            );
-
-            // Refresh every response that embeds Organization metadata.
-            return Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['api', `/api/v1/organizations/${organizationId}`] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
-                queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/organizations'] }),
-            ]);
-        },
     });
 }

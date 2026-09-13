@@ -23,16 +23,6 @@ class OperationKind(StrEnum):
     organization_delete = "organization.delete"
 
 
-class OperationResource(BaseModel):
-    """Represent one operation target resource."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-
-
 class OperationResponse(BaseModel):
     """Expose administrative asynchronous reconciliation state for one Platform resource target."""
 
@@ -41,8 +31,8 @@ class OperationResponse(BaseModel):
 
     # Reference
     kind: OperationKind
-    resource: OperationResource | None
     target_id: UUID
+    resource_name: str | None
 
     # State
     status: OperationStatus

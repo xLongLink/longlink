@@ -43,16 +43,8 @@ class Storage:
                     "BlockPublicPolicy": True,
                     "RestrictPublicBuckets": True,
                 },
-        )
+            )
         await bucket.admin.quota(bucket.name, compute.bucket_size_bytes)
-
-    async def quota(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
-        """Reapply an existing Organization bucket's RustFS quota without recreating it."""
-
-        # Deployment may converge a bucket after a quota update but must not recreate deleted boundaries.
-        bucket = self._bucket(organization, compute)
-        await bucket.admin.quota(bucket.name, compute.bucket_size_bytes)
-        return bucket
 
     def bucket(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
         """Resolve an Organization bucket connection without provisioning it."""

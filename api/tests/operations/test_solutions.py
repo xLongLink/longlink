@@ -189,13 +189,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     calls: list[str] = []
 
     class Storage(StorageKubernetes):
-        """Observe quota admission and authorization around persisted credentials."""
-
-        async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
-            """Record acknowledged quota admission and return the bucket boundary."""
-
-            calls.append("quota")
-            return await super().quota(organization, compute)
+        """Observe bucket resolution and authorization around persisted credentials."""
 
         def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
             """Record the owner connection resolution."""
@@ -259,7 +253,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
-    assert calls == ["open", "quota", "bucket", "credentials", "schema", "workload", "close"]
+    assert calls == ["open", "bucket", "credentials", "schema", "workload", "close"]
     calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local"
@@ -282,7 +276,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
-    assert calls == ["open", "quota", "bucket", "workload", "close"]
+    assert calls == ["open", "bucket", "workload", "close"]
     assert len(database_passwords) == 1
     assert captured["secrets"] == {"API_KEY": "replacement", **persisted.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
     async with session_scope() as session:

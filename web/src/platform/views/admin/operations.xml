@@ -12,8 +12,8 @@
             <TableColumn field="kind" header="Operation">
                 <Stack align="start"><Text>${({ 'compute.validate': 'Compute validation', 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}</Text><Text type="supporting">${row.finished_at ? ({ scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' })[row.status] + ' - ' + row.finished_at : 'Started - ' + row.created_at}</Text></Stack>
             </TableColumn>
-            <TableColumn field="resource.name" header="Resource">
-                <Stack align="start"><Text>${row.resource?.name ?? 'Resource unavailable'}</Text><Text type="supporting">${({ 'compute.validate': 'Compute', 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}</Text></Stack>
+            <TableColumn field="resource_name" header="Resource">
+                <Stack align="start"><Text>${row.resource_name ?? 'Resource unavailable'}</Text><Text type="supporting">${({ 'compute.validate': 'Compute', 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}</Text></Stack>
             </TableColumn>
             <TableColumn field="id" header="Actions">
                 <Stack direction="horizontal" gap="1"><Action><Patch state="metadata" value="${{ item: row, open: true }}" /><Button variant="ghost">Metadata</Button></Action><Action><Patch state="log" value="${{ idValue: row.id, open: true }}" /><Patch state="logs" invalidate="true" /><Button variant="ghost" disabled="${row.finished_at === null}">Logs</Button></Action></Stack>

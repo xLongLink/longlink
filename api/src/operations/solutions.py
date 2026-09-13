@@ -49,12 +49,12 @@ async def deploy(revision_id: UUID) -> None:
         organization = infrastructure.organization
         runtime_secrets = solution.secrets
 
-        # Acknowledge quota before credentials so workloads never start over a stale bucket limit.
+        # Organization reconciliation owns bucket provisioning and quota admission.
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            bucket = await cluster.storage.quota(organization.id, infrastructure.compute)
+            bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
