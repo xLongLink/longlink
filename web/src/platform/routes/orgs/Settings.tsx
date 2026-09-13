@@ -117,13 +117,11 @@ export default function OrganizationSettings() {
     const deleteSolution = useDeleteOrganizationSolution(organizationId);
     const { inviteMember, revokeInvitation, changeMemberRole } = useOrganizationMembers(organizationId);
     const updateOrganization = useUpdateOrganization(organizationId);
-    const deleteDialog = useDeleteDialog({
+    const deleteDialog = useDeleteDialog<(typeof solutions)[number]>({
         title: 'Delete solution',
         mutation: deleteSolution,
-        items: solutions,
         getId: (solution) => solution.id,
         description: (solution) => `Delete ${solution.name} from this organization?`,
-        fallbackDescription: 'Delete this solution?',
     });
     const isOrganizationSectionActive = hash === '' || hash === '#organization';
     const logsTarget = solutions.find((solution) => solution.id === logsTargetId) ?? null;
@@ -350,7 +348,6 @@ export default function OrganizationSettings() {
                             </Text>
                             {organizationDetails && (
                                 <DatabaseSettings
-                                    key={organizationId}
                                     organization={organizationDetails}
                                     canManage={canManageOrganization}
                                     isSaving={updateOrganization.isPending}
@@ -474,7 +471,6 @@ export default function OrganizationSettings() {
             <NoIndex title="Organization Settings | LongLink" />
             <Stack paddingBlockStart={1} direction="horizontal" gap={3} align="center">
                 <AvatarDialog
-                    key={organizationId}
                     avatar={organizationAvatar}
                     formId="organization-avatar-form"
                     isSaving={updateOrganization.isPending}

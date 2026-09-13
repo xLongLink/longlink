@@ -57,7 +57,6 @@ class Organization(PlatformModel, table=True):
     )
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)

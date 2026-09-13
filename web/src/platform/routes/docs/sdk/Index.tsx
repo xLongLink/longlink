@@ -83,7 +83,7 @@ export default function DocsArticleRoute() {
                 <Text as="p">The command creates a project scaffold with everything needed to get started.</Text>
                 <CodeBlock
                     code={
-                        '├── src/                  # Project source code\n│   ├── models/           # SQLModel database tables\n│   ├── views/            # View definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   ├── services/         # Service modules\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic migrations\n├── tests/                # Project tests\n├── main.py               # Service entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Project agent guide\n└── README.md'
+                        '├── src/                  # Project source code\n│   ├── models/           # SQLModel database tables\n│   ├── views/            # View definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic migrations\n├── tests/                # Project tests\n├── main.py               # Service entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Project agent guide\n└── README.md'
                     }
                     language="plaintext"
                 />

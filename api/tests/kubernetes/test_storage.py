@@ -1,4 +1,5 @@
 import yaml
+import base64
 import pytest
 import asyncio
 import jsonschema
@@ -100,6 +101,25 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mism
                     },
                 }
             )
+        if "secrets" in request.path:
+            return web.json_response(
+                {
+                    "apiVersion": "v1",
+                    "kind": "Secret",
+                    "data": {
+                        "AWS_ACCESS_KEY_ID": base64.b64encode(b"owner").decode(),
+                        "AWS_SECRET_ACCESS_KEY": base64.b64encode(b"owner-secret").decode(),
+                    },
+                }
+            )
+        if "configmaps" in request.path:
+            return web.json_response(
+                {
+                    "apiVersion": "v1",
+                    "kind": "ConfigMap",
+                    "data": {"BUCKET_NAME": "bound-bucket"},
+                }
+            )
         raise web.HTTPNotFound()
 
     # Act: run the production reconciler against a real local HTTP server with its normal polling interval.
@@ -132,7 +152,8 @@ async def test_quota_waits_for_rook_acknowledgement_of_existing_bound_claim(mism
             acknowledge.set()
 
             # Assert: the corrected bucket response releases the lifecycle gate.
-            assert await asyncio.wait_for(task, timeout=5) is None
+            bucket = await asyncio.wait_for(task, timeout=5)
+            assert bucket.name == "bound-bucket"
         finally:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)

@@ -90,21 +90,6 @@ class SolutionUpdateCheck(BaseModel):
     metadata: LongLinkMetadata
 
 
-class RevisionResponse(BaseModel):
-    """Expose release history without encrypted environment values."""
-
-    model_config = ConfigDict(from_attributes=True)
-    id: UUID
-    image: str
-    source: str
-    configured_envs: list[str]
-    min_scale: Literal[0, 1]
-    failed: bool
-    created_at: datetime
-    created_id: UUID | None
-    deployed_at: datetime | None
-
-
 class SolutionResponse(BaseModel):
     """Represent one solution in API responses."""
 

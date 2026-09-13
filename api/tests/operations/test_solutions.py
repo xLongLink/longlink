@@ -191,10 +191,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     class Storage(StorageKubernetes):
         """Observe quota admission and authorization around persisted credentials."""
 
-        async def quota(self, organization: UUID, compute: object) -> None:
-            """Record acknowledged quota admission."""
+        async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
+            """Record acknowledged quota admission and return the bucket boundary."""
 
             calls.append("quota")
+            return await super().quota(organization, compute)
 
         async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
             """Record the owner connection resolution."""

@@ -14,7 +14,6 @@ You are working on a LongLink Solution project:
 │   ├── views/        # View files
 │   ├── routes/       # API routes
 │   ├── schemas/      # Pydantic schemas
-│   ├── services/     # Service modules
 │   └── envs.py       # Environments
 ├── tests/            # Project tests
 ├── .env.sample       # Environment template

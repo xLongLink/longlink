@@ -5,6 +5,7 @@ from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3
 from dataclasses import dataclass
+from kr8s.asyncio import Api
 from kr8s.asyncio.objects import Secret, APIObject, ConfigMap, Namespace, new_class
 from src.kubernetes.utils import apply
 
@@ -130,11 +131,10 @@ class Storage:
             api=api,
         )
         await apply(claim)
-        await self.quota(organization, compute)
-        return await self.bucket(organization, compute)
+        return await self.quota(organization, compute)
 
-    async def quota(self, organization: UUID, compute: "ComputeRegistry") -> None:
-        """Reconcile an existing claim and wait for Rook to acknowledge the requested bucket quotas."""
+    async def quota(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
+        """Reconcile an existing claim and return its bucket after Rook acknowledges the requested quotas."""
 
         # Patch only an existing boundary; deployment must never recreate deleted organization storage.
         api = await self._client.api()
@@ -155,7 +155,7 @@ class Storage:
                     if spec.get("claimRef", {}).get("uid") == claim.metadata.get("uid") and all(
                         configured.get(key) == value for key, value in desired.items()
                     ):
-                        return
+                        return await self._bucket(api, claim.namespace, compute)
                 await asyncio.sleep(2)
 
     async def bucket(self, organization: UUID, compute: "ComputeRegistry") -> Bucket:
@@ -171,6 +171,13 @@ class Storage:
                 if claim.raw.get("status", {}).get("phase") == "Bound":
                     break
                 await asyncio.sleep(2)
+
+        return await self._bucket(api, namespace, compute)
+
+    async def _bucket(self, api: Api, namespace: str, compute: "ComputeRegistry") -> Bucket:
+        """Resolve a bound claim's owner credentials and bucket connection."""
+
+        # Owner credentials and the bucket name are published into the claim namespace.
         secret = Secret("storage", namespace=namespace, api=api)
         config = ConfigMap("storage", namespace=namespace, api=api)
         await secret.refresh()

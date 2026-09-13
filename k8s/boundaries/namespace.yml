@@ -1,6 +1,16 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+    name: knative-serving
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: kourier-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
     name: longlink-system
 ---
 apiVersion: v1

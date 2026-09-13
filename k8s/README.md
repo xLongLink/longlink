@@ -36,7 +36,7 @@ Run `make down` only for disposable local data.
 
 ## Hosted
 
-The hosting environment owns cluster access, storage, TLS, deployment, and rollback.
+The hosting environment owns cluster access, storage, TLS, deployment, and recovery.
 Create the gateway and storage TLS Secrets, stop Platform workers, then apply the
 boundaries before Helmfile installs shared controllers:
 

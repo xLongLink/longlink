@@ -278,23 +278,6 @@ export const zRegistrationComplete = z.object({
 });
 
 /**
- * RevisionResponse
- *
- * Expose release history without encrypted environment values.
- */
-export const zRevisionResponse = z.object({
-    id: z.uuid(),
-    image: z.string(),
-    source: z.string(),
-    configured_envs: z.array(z.string()),
-    min_scale: z.union([z.literal(0), z.literal(1)]),
-    failed: z.boolean(),
-    created_at: z.iso.datetime(),
-    created_id: z.uuid().nullable(),
-    deployed_at: z.iso.datetime().nullable()
-});
-
-/**
  * SolutionCreate
  *
  * Validate solution creation metadata and release configuration.
@@ -672,27 +655,6 @@ export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostPath = z.object({
  * Successful Response
  */
 export const zApplyUpdateApiV1SolutionsSolutionIdUpdatePostResponse = z.void();
-
-export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetPath = z.object({
-    solution_id: z.uuid()
-});
-
-/**
- * Response List Revisions Api V1 Solutions  Solution Id  Revisions Get
- *
- * Successful Response
- */
-export const zListRevisionsApiV1SolutionsSolutionIdRevisionsGetResponse = z.array(zRevisionResponse);
-
-export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostPath = z.object({
-    solution_id: z.uuid(),
-    revision_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zRollbackSolutionApiV1SolutionsSolutionIdRevisionsRevisionIdRollbackPostResponse = z.void();
 
 export const zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetPath = z.object({
     solution_id: z.uuid()

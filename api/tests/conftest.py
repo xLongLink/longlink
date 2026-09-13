@@ -56,7 +56,7 @@ class StorageKubernetes:
     async def apply(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Accept provisioning and return the resulting bucket boundary."""
 
-        return await self.bucket(organization, compute)
+        return await self.quota(organization, compute)
 
     async def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
@@ -68,8 +68,10 @@ class StorageKubernetes:
 
         return Credentials("solution", "generated-secret")
 
-    async def quota(self, organization: UUID, compute: object) -> None:
-        """Accept quota reconciliation at the external storage boundary."""
+    async def quota(self, organization: UUID, compute: object) -> SimpleNamespace:
+        """Accept quota reconciliation and return the resulting bucket boundary."""
+
+        return await self.bucket(organization, compute)
 
     async def authorize(self, bucket: str, solutions: object) -> None:
         """Accept the real lifecycle policy snapshot."""

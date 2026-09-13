@@ -55,7 +55,7 @@ up:
 		printf '%s\n' "$$addresses" | while read -r address rest; do \
 			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
 		done
-	docker compose -f dev/compose.yml up --detach --wait registry mail
+	docker compose -f dev/compose.yml up --detach --wait mail
 	@if ! k3d cluster list compute >/dev/null 2>&1; then \
 		k3d cluster create --config dev/cluster.yaml; \
 	fi
@@ -115,6 +115,7 @@ image: sample
 # Stop local services and remove generated cluster and API state.
 down:
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
+	@k3d registry delete longlink-registry >/dev/null 2>&1 || :
 	docker compose -f dev/compose.yml down --volumes --remove-orphans
 	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates

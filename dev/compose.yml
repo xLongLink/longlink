@@ -1,28 +1,7 @@
 services:
-    registry:
-        image: registry:3
-        restart: unless-stopped
-        ports:
-            - '127.0.0.1:15000:5000'
-        networks:
-            - longlink
-        healthcheck:
-            test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1:5000/v2/']
-            interval: 2s
-            timeout: 2s
-            retries: 30
-
     mail:
         image: axllent/mailpit:v1.29.2@sha256:030f06031ce5c60913ac9363da1ab0d4be6fd2a78147dd0e1ca0fcac665d6b34
         restart: unless-stopped
         ports:
             - '127.0.0.1:1025:1025'
             - '127.0.0.1:8025:8025'
-
-networks:
-    longlink:
-        name: longlink-dev
-        # The local gateway policy admits this workstation-owned network only.
-        ipam:
-            config:
-                - subnet: 172.30.0.0/24
