@@ -77,9 +77,6 @@ up:
 		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
 			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
 			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
-		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret generic longlink-rustfs \
-			--from-literal=RUSTFS_ACCESS_KEY=rustfsadmin --from-literal=RUSTFS_SECRET_KEY=rustfsadmin --dry-run=client --output=yaml | \
-			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
 		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret tls longlink-storage-tls \
 			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
 			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
@@ -92,7 +89,7 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" "$(HOME)/.local/bin/helmfile" --file k8s/setup.yaml.gotmpl --environment development sync
+	PATH="$(HOME)/.local/bin:$$PATH" KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 	# Verify host TLS connectivity through the k3d port mappings.
@@ -109,7 +106,7 @@ image: sample
 down:
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	@k3d registry delete longlink-registry >/dev/null 2>&1 || :
-	docker compose -f dev/compose.yml down --volumes --remove-orphans
+	docker compose -f dev/compose.yml down --remove-orphans
 	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates
 

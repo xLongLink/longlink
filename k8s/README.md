@@ -19,8 +19,8 @@ Platform compatibility contract.
 
 ## Local
 
-Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, uv, and Vite+.
-`make up` uses the pinned Helmfile container when Helmfile is not installed locally.
+Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, Helmfile v1.8.0,
+uv, and Vite+.
 
 ```bash
 make install
