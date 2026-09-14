@@ -18,13 +18,10 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
     registry = await create_compute()
     connections: list[tuple[str, str | None]] = []
 
-    class Gateway:
-        """Capture shared-controller reconciliation."""
+    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> None:
+        """Record the configured gateway connection."""
 
-        async def verify(self, url: str, certificate: str | None) -> None:
-            """Record the configured gateway connection."""
-
-            connections.append((url, certificate))
+        connections.append((url, certificate))
 
     class Kubernetes(AsyncKubernetes):
         """Expose the shared-controller boundary."""
@@ -33,15 +30,14 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
             """Validate the selected Compute."""
 
             assert kubeconfig == registry.kubeconfig
-            self.gateway = Gateway()
-            self.storage = StorageKubernetes()
-
         async def cluster_uid(self) -> str:
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
+    monkeypatch.setattr(compute_operations, "Storage", StorageKubernetes)
     await queue_operation(target_id=registry.id)
     claimed = await claim_operation()
     assert claimed is not None
@@ -71,13 +67,10 @@ async def test_execute_compute_validate_operation_fails_provider_error(monkeypat
     # Arrange
     registry = await create_compute()
 
-    class Gateway:
-        """Fail shared-controller reconciliation."""
+    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None) -> None:
+        """Report the provider failure."""
 
-        async def verify(self, url: str, certificate: str | None) -> None:
-            """Report the provider failure."""
-
-            raise RuntimeError("gateway unavailable")
+        raise RuntimeError("gateway unavailable")
 
     class Kubernetes(AsyncKubernetes):
         """Expose the failing provider."""
@@ -85,15 +78,13 @@ async def test_execute_compute_validate_operation_fails_provider_error(monkeypat
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Initialize the provider boundary."""
 
-            self.gateway = Gateway()
-            self.storage = StorageKubernetes()
-
         async def cluster_uid(self) -> str:
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
     await queue_operation(target_id=registry.id)
     claimed = await claim_operation()
     assert claimed is not None
@@ -143,17 +134,14 @@ async def test_validate_rejects_stale_compute_publication(monkeypatch: pytest.Mo
     # Arrange
     registry = await create_compute()
 
-    class Gateway:
-        """Change the Compute lifecycle during reconciliation."""
+    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None) -> None:
+        """Record the concurrent lifecycle change."""
 
-        async def verify(self, url: str, certificate: str | None) -> None:
-            """Record the concurrent lifecycle change."""
-
-            async with session_scope() as session:
-                persisted = await session.get(ComputeRegistry, registry.id)
-                assert persisted is not None
-                persisted.status = Status.failed
-                await session.commit()
+        async with session_scope() as session:
+            persisted = await session.get(ComputeRegistry, registry.id)
+            assert persisted is not None
+            persisted.status = Status.failed
+            await session.commit()
 
     class Kubernetes(AsyncKubernetes):
         """Expose the lifecycle-changing provider."""
@@ -161,15 +149,14 @@ async def test_validate_rejects_stale_compute_publication(monkeypatch: pytest.Mo
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Initialize the provider boundary."""
 
-            self.gateway = Gateway()
-            self.storage = StorageKubernetes()
-
         async def cluster_uid(self) -> str:
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
+    monkeypatch.setattr(compute_operations, "Storage", StorageKubernetes)
 
     # Act
     reason = await compute_operations.validate(registry.id)

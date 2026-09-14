@@ -39,19 +39,15 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             return super().bucket(organization, compute)
 
-    class Organizations:
-        async def apply(self, organization_id: UUID) -> None:
-            """Record namespace reconciliation."""
+    async def apply_namespace(_cluster: object, organization_id: UUID) -> None:
+        """Record namespace reconciliation."""
 
-            assert organization_id == organization.id
-            calls.append("namespace")
+        assert organization_id == organization.id
+        calls.append("namespace")
 
     class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
-
-            self.organizations = Organizations()
-            self.storage = Storage()
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Record user projection after publication."""
@@ -60,6 +56,8 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
 
     monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    monkeypatch.setattr(organization_operations.kubernetes_organizations, "apply", apply_namespace)
     monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Reconcile and inspect the published state.
@@ -91,19 +89,9 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             assert organization_id == organization.id
             calls.append("database")
 
-    class Organizations:
-        async def apply(self, organization_id: UUID) -> None:
-            """Record namespace reconciliation."""
-
-            assert organization_id == organization.id
-            calls.append("namespace")
-
     class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
-
-            self.organizations = Organizations()
-            self.storage = StorageKubernetes()
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Fail the user projection after every external boundary is ready."""
@@ -258,21 +246,19 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
             calls.append("bucket")
 
-    class Organizations:
-        async def delete(self, organization_id: UUID) -> None:
-            """Fail namespace deletion."""
+    async def delete_namespace(_cluster: object, _organization_id: UUID) -> None:
+        """Fail namespace deletion."""
 
-            raise RuntimeError("namespace deletion failed")
+        raise RuntimeError("namespace deletion failed")
 
     class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose the failing Organization Kubernetes operations."""
 
-            self.organizations = Organizations()
             self.databases = Database()
-            self.storage = Storage()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations.kubernetes_organizations, "delete", delete_namespace)
 
     # Namespace failure must prevent destructive provider cleanup.
     with pytest.raises(RuntimeError, match="namespace deletion failed"):
@@ -317,22 +303,21 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert solutions == [solution.id]
             calls.append("bucket")
 
-    class Organizations:
-        async def delete(self, organization_id: UUID) -> None:
-            """Record namespace deletion."""
+    async def delete_namespace(_cluster: object, organization_id: UUID) -> None:
+        """Record namespace deletion."""
 
-            assert organization_id == organization.id
-            calls.append("namespace")
+        assert organization_id == organization.id
+        calls.append("namespace")
 
     class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
 
-            self.organizations = Organizations()
             self.databases = Database()
-            self.storage = Storage()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    monkeypatch.setattr(organization_operations.kubernetes_organizations, "delete", delete_namespace)
 
     # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None

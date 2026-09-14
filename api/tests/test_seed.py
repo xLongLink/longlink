@@ -3,7 +3,7 @@ import asyncio
 import contextlib
 from uuid import UUID
 from pathlib import Path
-from conftest import TEST_PASSWORD, DatabasePostgres, DatabaseKubernetes, create_client
+from conftest import TEST_PASSWORD, DatabasePostgres, StorageKubernetes, DatabaseKubernetes, create_client
 from sqlmodel import col
 from src.utils import jobs
 from sqlalchemy import func, select
@@ -68,17 +68,11 @@ async def test_local_seed_creates_example_through_api(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
-    class Gateway:
-        """Accept Compute gateway verification."""
+    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None) -> None:
+        """Accept the configured gateway connection."""
 
-        async def verify(self, _url: str, _certificate: str | None) -> None:
-            """Accept the configured gateway connection."""
-
-    class Organizations:
-        """Accept Organization namespace provisioning."""
-
-        async def apply(self, _organization_id: UUID) -> None:
-            """Accept the requested Organization boundary."""
+    async def apply_organization(_cluster: object, _organization_id: UUID) -> None:
+        """Accept the requested Organization boundary."""
 
     class Solutions:
         """Accept Solution workload provisioning."""
@@ -93,8 +87,6 @@ async def test_local_seed_creates_example_through_api(
             """Initialize the test provider facades."""
 
             super().__init__()
-            self.gateway = Gateway()
-            self.organizations = Organizations()
             self.solutions = Solutions()
 
         async def cluster_uid(self) -> str:
@@ -111,9 +103,14 @@ async def test_local_seed_creates_example_through_api(
             return solution_id.hex
 
     monkeypatch.setattr("src.operations.computes.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.computes.gateway.verify", verify_gateway)
+    monkeypatch.setattr("src.operations.computes.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.databases.Kubernetes", Kubernetes)
     monkeypatch.setattr("src.operations.organizations.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.organizations.kubernetes_organizations.apply", apply_organization)
+    monkeypatch.setattr("src.operations.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.solutions.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.operations.solutions.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.databases.postgres.Postgres", Postgres)
 
     # Act

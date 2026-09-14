@@ -71,8 +71,7 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
     """Observe installed controllers and verify HTTPS without any Kubernetes writes."""
 
     # Exercise the actual verifier against boundaries that expose no mutation methods.
-    provider = gateway.Gateway(FakeKubernetes())
-    await provider.verify("https://gateway.example")
+    await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
     assert ("longlink-system", "compute-release") in observed_resources
     assert ("cnpg-system", "cnpg-controller-manager") in observed_resources
 
@@ -89,9 +88,8 @@ async def test_gateway_propagates_controller_lookup_errors(
         raise LookupError("controller unavailable")
 
     monkeypatch.setattr(gateway, "Deployment", deployment)
-    provider = gateway.Gateway(FakeKubernetes())
     with pytest.raises(LookupError, match="controller unavailable"):
-        await provider.verify("https://gateway.example")
+        await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
 
 
 async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
@@ -104,9 +102,8 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
         raise TimeoutError
 
     monkeypatch.setattr(gateway, "Deployment", deployment)
-    provider = gateway.Gateway(FakeKubernetes())
     with pytest.raises(RuntimeError, match="Shared controllers or verified Kourier endpoint did not become ready"):
-        await provider.verify("https://gateway.example")
+        await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
 
 
 def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:

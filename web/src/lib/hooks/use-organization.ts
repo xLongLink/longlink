@@ -1,9 +1,7 @@
-import type { z } from 'zod';
 import { api } from '@/lib/api';
-import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, type QueryClient, useQuery } from '@tanstack/react-query';
 import {
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
-    zSolutionCreate,
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -52,16 +50,5 @@ export function useOrganizationRoute(organizationSlug: string) {
 export function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organizationId: string) {
     return queryClient.invalidateQueries({
         queryKey: ['api', `/api/v1/organizations/${organizationId}/solutions`],
-    });
-}
-
-/** Creates one solution and refreshes organization solution data. */
-export function useCreateOrganizationSolution(organizationId: string) {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (payload: z.input<typeof zSolutionCreate>) =>
-            api(`/api/v1/organizations/${organizationId}/solutions`, { json: payload, method: 'POST' }),
-        onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
     });
 }

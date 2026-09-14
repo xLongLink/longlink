@@ -3,11 +3,13 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
+from src.kubernetes import organizations as kubernetes_organizations
 from src.operations import databases
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
+from src.kubernetes.storage import Storage
 from src.database.models.solutions import Solution
 from src.database.models.organizations import Organization
 
@@ -41,8 +43,9 @@ async def reconcile(organization_id: UUID) -> None:
             infrastructure.compute.kubeconfig,
         )
         async with cluster:
-            await cluster.storage.apply(organization.id, infrastructure.compute)
-            await cluster.organizations.apply(organization.id)
+            storage = Storage()
+            await storage.apply(organization.id, infrastructure.compute)
+            await kubernetes_organizations.apply(cluster, organization.id)
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
         logger.info("Publishing Organization %s", organization.id)
@@ -93,11 +96,12 @@ async def delete(organization_id: UUID) -> str | None:
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
         logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
         async with cluster:
-            await cluster.organizations.delete(infrastructure.organization.id)
+            await kubernetes_organizations.delete(cluster, infrastructure.organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(infrastructure.organization.id)
             logger.info("Deleting object storage for Organization %s", infrastructure.organization.id)
-            await cluster.storage.delete(infrastructure.organization.id, solution_ids, infrastructure.compute)
+            storage = Storage()
+            await storage.delete(infrastructure.organization.id, solution_ids, infrastructure.compute)
 
         # Purge the tombstone only after all external resources are absent.
         logger.info("Purging Organization %s", infrastructure.organization.id)

@@ -72,7 +72,6 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
-            self.storage = self.databases.storage
 
         async def delete(self, *_args: object) -> None:
             """Raise the Kubernetes deletion failure under test."""
@@ -119,7 +118,6 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
-            self.storage = FakeStorage()
 
         async def delete(self, _organization_id: object, solution_id: object) -> None:
             """Record workload removal."""
@@ -159,6 +157,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
             calls.append(("prefix", prefix))
 
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", FakeStorage)
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
 
     # Act
@@ -223,7 +222,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
-            self.storage = Storage()
             calls.append("open")
 
         async def apply(
@@ -258,6 +256,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FakePostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", Storage)
 
     # Run the actual lifecycle handler with fake external providers.
     await solution_operations.deploy(solution.desired_revision_id)
@@ -321,6 +320,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FailingPostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
     async def service_account(self: StorageKubernetes, bucket: str, solution: UUID) -> Credentials:
         """Record credential creation at the external boundary."""
@@ -401,7 +401,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
             self.solutions = self
             self.databases = DatabaseKubernetes()
-            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -424,6 +423,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     monkeypatch.setattr(DatabasePostgres, "solution_schema", unexpected_provider, raising=False)
     monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
     # Act
     await solution_operations.deploy(solution.desired_revision_id)
@@ -517,6 +517,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
 
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", Postgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
     # Act
     result = await solution_operations.deploy(solution.desired_revision_id)

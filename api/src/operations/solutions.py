@@ -11,6 +11,7 @@ from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
+from src.kubernetes.storage import Storage
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.organizations import Organization
@@ -56,7 +57,8 @@ async def deploy(revision_id: UUID) -> None:
             infrastructure.compute.kubeconfig,
         )
         async with cluster:
-            bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
+            storage = Storage()
+            bucket = storage.bucket(organization.id, infrastructure.compute)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
@@ -180,7 +182,8 @@ async def delete(solution_id: UUID) -> None:
             await db.delete_solution_schema(organization.id, solution.id)
 
             # Revoke the service account before owner credentials remove its private objects.
-            bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
+            storage = Storage()
+            bucket = storage.bucket(organization.id, infrastructure.compute)
             await bucket.admin.revoke(solution.id)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 
