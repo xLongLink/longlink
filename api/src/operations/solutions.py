@@ -63,7 +63,7 @@ async def deploy(revision_id: UUID) -> None:
                 prefix = f"solutions/{solution.id.hex}/"
                 logger.info("Creating object storage credentials for Solution %s", solution.id)
                 database_password = secrets.token_urlsafe(24)
-                credentials = await cluster.storage.user(solution.id, bucket)
+                credentials = await bucket.admin.service_account(bucket.name, solution.id)
                 database, database_certificate = await databases.connection(organization, cluster)
                 database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
@@ -178,7 +178,7 @@ async def delete(solution_id: UUID) -> None:
 
             # Revoke the service account before owner credentials remove its private objects.
             bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
-            await cluster.storage.revoke(solution.id, bucket)
+            await bucket.admin.revoke(solution.id)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 
         # Purge the tombstone only after all external resources are absent.

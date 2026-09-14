@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import String, or_, case, cast, func, select, update
+from sqlalchemy import or_, case, func, select, update
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
@@ -13,8 +13,6 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
-
-OPERATION_LOG_RETENTION = timedelta(days=30)
 
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[OperationResponse], int]:
@@ -100,21 +98,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     # Count all operation history rows.
     count_result = await session.execute(select(func.count()).select_from(Operation))
     return items, count_result.scalar_one()
-
-
-async def clear_expired_logs(session: AsyncSession) -> int:
-    """Clear logs from Operations that finished outside the retention window."""
-
-    # Clear non-empty expired payloads without loading retained Operation history.
-    result = await session.execute(
-        update(Operation)
-        .where(
-            col(Operation.finished_at) <= utcnow() - OPERATION_LOG_RETENTION,
-            cast(col(Operation.logs), String) != "[]",
-        )
-        .values(logs=[])
-    )
-    return result.rowcount
 
 
 async def schedule_reconciliation(session: AsyncSession) -> None:
@@ -230,7 +213,7 @@ async def claim(session: AsyncSession) -> Operation | None:
     return operation
 
 
-async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | None = None) -> Operation | None:
+async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
@@ -242,7 +225,7 @@ async def complete(session: AsyncSession, operation_id: UUID, logs: list[str] | 
             col(Operation.lease_expires_at) > now,
             col(Operation.finished_at).is_(None),
         )
-        .values(finished_at=now, lease_expires_at=None, logs=[] if logs is None else logs)
+        .values(finished_at=now, lease_expires_at=None)
         .execution_options(synchronize_session=False)
     )
     if result.rowcount != 1:
@@ -289,7 +272,7 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
     return await session.get_one(Operation, operation_id, populate_existing=True)
 
 
-async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation | None:
+async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operation | None:
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
@@ -305,7 +288,6 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str, logs: lis
             failed=(reason.strip() or "Operation failed")[:500],
             finished_at=now,
             lease_expires_at=None,
-            logs=[] if logs is None else logs,
         )
         .execution_options(synchronize_session=False)
     )

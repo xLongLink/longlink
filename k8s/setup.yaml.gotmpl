@@ -2,9 +2,14 @@ environments:
     default:
         values:
             - infrastructure: ./infrastructure
+            - storageClass: block-storage
     development:
         values:
             - infrastructure: ./infrastructure
+    single-node:
+        values:
+            - infrastructure: ./infrastructure
+            - storageClass: block-storage
 ---
 repositories:
     - name: cnpg
@@ -99,14 +104,25 @@ releases:
                 distributed:
                     enabled: false
             storageclass:
-                name: longlink-development
+                name: local-path
                 dataStorageSize: 1Gi
+                logStorageSize: 1Gi
+            {{- else if eq .Environment.Name "single-node" }}
+            replicaCount: 1
+            mode:
+                standalone:
+                    enabled: true
+                distributed:
+                    enabled: false
+            storageclass:
+                name: {{ .Values.storageClass }}
+                dataStorageSize: 100Gi
                 logStorageSize: 1Gi
             {{- else }}
             replicaCount: 4
             drivesPerNode: 1
             storageclass:
-                name: block-storage
+                name: {{ .Values.storageClass }}
                 dataStorageSize: 100Gi
                 logStorageSize: 1Gi
             {{- end }}

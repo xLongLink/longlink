@@ -61,14 +61,14 @@ class StorageKubernetes:
     def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
-        return SimpleNamespace(name=organization.hex, storage=self)
+        return SimpleNamespace(name=organization.hex, storage=self, admin=self)
 
-    async def user(self, solution: UUID, bucket: object) -> Credentials:
+    async def service_account(self, bucket: str, solution: UUID) -> Credentials:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
 
-    async def revoke(self, solution: UUID, bucket: object) -> None:
+    async def revoke(self, solution: UUID) -> None:
         """Accept user deletion."""
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:

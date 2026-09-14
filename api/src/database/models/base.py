@@ -2,7 +2,6 @@ from uuid import UUID
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import MetaData
-from sqlalchemy.orm import relationship, declared_attr
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 
@@ -16,20 +15,13 @@ class PlatformModel(SQLModel):
 class AuditTable(PlatformModel):
     """Base SQLModel for durable Platform records that track their acting user."""
 
-    model_config = SQLModel.model_config.copy()
-    model_config["ignored_types"] = (declared_attr,)
-
     # Audit timestamps
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # Audit user identifiers
+    # Keep durable attribution without loading User relationships on every Platform model.
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
-
-    # Audit user relationships
-    created_by = declared_attr(lambda cls: relationship("User", foreign_keys=[cls.created_id], lazy="selectin"))
-    updated_by = declared_attr(lambda cls: relationship("User", foreign_keys=[cls.updated_id], lazy="selectin"))
-    deleted_by = declared_attr(lambda cls: relationship("User", foreign_keys=[cls.deleted_id], lazy="selectin"))
