@@ -27,8 +27,7 @@ os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough
 os.environ["OPERATION_TIMEOUT_SECONDS"] = "600"
 os.environ["AUTH_SESSION_LIFETIME_SECONDS"] = "2592000"
 os.environ["SMTP_PORT"] = "587"
-os.environ["SMTP_USE_TLS"] = "false"
-os.environ["SMTP_START_TLS"] = "true"
+os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
 os.environ.pop("SMTP_PASSWORD", None)

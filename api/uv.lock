@@ -1189,7 +1189,6 @@ source = { editable = "." }
 dependencies = [
     { name = "aioboto3" },
     { name = "aiobotocore" },
-    { name = "aiohttp" },
     { name = "aiomysql" },
     { name = "aiosmtplib" },
     { name = "aiosqlite" },
@@ -1233,7 +1232,6 @@ dev = [
 requires-dist = [
     { name = "aioboto3", specifier = ">=15.5.0" },
     { name = "aiobotocore", specifier = ">=2.25.1" },
-    { name = "aiohttp", specifier = ">=3.14.3" },
     { name = "aiomysql", specifier = ">=0.3.2" },
     { name = "aiosmtplib", specifier = ">=5.1.2" },
     { name = "aiosqlite", specifier = ">=0.22.1" },

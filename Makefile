@@ -57,9 +57,7 @@ up:
 			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
 		done
 	docker compose -f dev/compose.yml up --detach --wait mail
-	@if ! k3d cluster list compute >/dev/null 2>&1; then \
-		k3d cluster create --config dev/cluster.yaml; \
-	fi
+	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
 

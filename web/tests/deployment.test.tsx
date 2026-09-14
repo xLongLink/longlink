@@ -6,8 +6,8 @@ import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SolutionUpdate } from '@/xml/adapters/SolutionUpdate';
 import { createContext, XmlContext } from '@/xml/core/context';
+import { SolutionUpdate } from '@/platform/xml/adapters/SolutionUpdate';
 
 const revisionId = '00000000-0000-4000-8000-000000000001';
 const organizationId = '00000000-0000-4000-8000-000000000003';

@@ -1,10 +1,24 @@
 import type { ReactNode } from 'react';
 import type { ASTNode, Scope } from '../types';
-import { xmlComponentRegistry } from './registry';
+import { sdkXmlComponentRegistry } from './registry';
 import { isVisibleXmlNode, resolveXmlValue } from './props';
+
+/** Finds the closest registry supplied by the XML host. */
+function registryFor(ctx: Scope) {
+    let scope: Scope | undefined = ctx;
+
+    while (scope) {
+        if (scope.registry) return scope.registry;
+        scope = scope.parent;
+    }
+
+    return sdkXmlComponentRegistry;
+}
 
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
+    const registry = registryFor(ctx);
+
     return nodes.map((node, index) => {
         // Render parser-generated text directly rather than through a public XML component.
         if (node.name === '$text') {
@@ -21,7 +35,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
         // Handle conditional rendering with "if" parameter.
         if (!isVisibleXmlNode(node, ctx)) return null;
 
-        const RegisteredComponent = xmlComponentRegistry[node.name];
+        const RegisteredComponent = registry[node.name];
 
         // Render registered XML components directly.
         if (RegisteredComponent) {

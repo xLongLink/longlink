@@ -47,8 +47,8 @@ async def send_mail(recipient: str, subject: str, text: str, html: str) -> None:
         port=env.SMTP_PORT,
         username=env.SMTP_USERNAME,
         password=env.SMTP_PASSWORD,
-        use_tls=env.SMTP_USE_TLS,
-        start_tls=env.SMTP_START_TLS,
+        use_tls=env.SMTP_TRANSPORT == "tls",
+        start_tls=env.SMTP_TRANSPORT == "starttls",
         timeout=15,
     )
 

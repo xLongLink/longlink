@@ -65,7 +65,17 @@ def test_render_mjml_template_escapes_context_before_compilation(monkeypatch: py
     assert 'href="https://example.test/invite?name=&quot;quoted&quot;&amp;next=&lt;unsafe&gt;"' in source
 
 
-async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    ("transport", "use_tls", "start_tls"),
+    [
+        pytest.param("plain", False, False, id="plain"),
+        pytest.param("starttls", False, True, id="starttls"),
+        pytest.param("tls", True, False, id="tls"),
+    ],
+)
+async def test_send_mail_delivers_multipart_message_with_configured_smtp(
+    monkeypatch: pytest.MonkeyPatch, transport: str, use_tls: bool, start_tls: bool
+) -> None:
     """Deliver HTML mail through the configured SMTP transport."""
 
     # Arrange
@@ -81,8 +91,7 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeyp
     monkeypatch.setattr(env, "SMTP_USERNAME", "mailer@example.com")
     monkeypatch.setattr(env, "SMTP_FROM", "mailer@example.com")
     monkeypatch.setattr(env, "SMTP_PASSWORD", "smtp-password")
-    monkeypatch.setattr(env, "SMTP_USE_TLS", True)
-    monkeypatch.setattr(env, "SMTP_START_TLS", False)
+    monkeypatch.setattr(env, "SMTP_TRANSPORT", transport)
     monkeypatch.setattr(mail.aiosmtplib, "send", capture)
 
     # Act
@@ -105,8 +114,8 @@ async def test_send_mail_delivers_multipart_message_with_configured_smtp(monkeyp
         "port": 465,
         "username": "mailer@example.com",
         "password": "smtp-password",
-        "use_tls": True,
-        "start_tls": False,
+        "use_tls": use_tls,
+        "start_tls": start_tls,
         "timeout": 15,
     }
 

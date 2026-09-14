@@ -1,5 +1,4 @@
 import { For } from './for';
-import type { Props } from '../types';
 import { Card } from '../adapters/Card';
 import { Grid } from '../adapters/Grid';
 import { Icon } from '../adapters/Icon';
@@ -9,7 +8,6 @@ import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
 import { Tabs } from '../adapters/TabList';
-import type { ComponentType } from 'react';
 import { Action } from '../adapters/Action';
 import { Avatar } from '../adapters/Avatar';
 import { Button } from '../adapters/Button';
@@ -27,17 +25,15 @@ import { FileInput } from '../adapters/FileInput';
 import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
+import type { XmlComponentRegistry } from '../types';
 import { NumberInput } from '../adapters/NumberInput';
 import { ProgressBar } from '../adapters/ProgressBar';
 import { StatusBadge } from '../adapters/StatusBadge';
 import { Bold, Italic, Text } from '../adapters/Text';
-import { SolutionLogs } from '../adapters/SolutionLogs';
 import { CheckboxInput } from '../adapters/CheckboxInput';
-import { CreateSolution } from '../adapters/CreateSolution';
-import { SolutionUpdate } from '../adapters/SolutionUpdate';
 
-/** Explicit Astryx XML tag-to-adapter registry. */
-export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
+/** XML tag-to-adapter registry bundled with Solutions. */
+export const sdkXmlComponentRegistry: XmlComponentRegistry = {
     Action,
     Avatar,
     Badge,
@@ -46,7 +42,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     Card,
     CheckboxInput,
     CodeBlock,
-    CreateSolution,
     Dialog,
     Divider,
     FileInput,
@@ -63,8 +58,6 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     ProgressBar,
     RadioList,
     Selector,
-    SolutionLogs,
-    SolutionUpdate,
     Slider,
     Stack,
     StackItem,

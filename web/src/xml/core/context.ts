@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { resolveRequestUrl } from './url';
 import { evaluate } from '../expressions/evaluate';
 import { isSafePropertyName } from '../expressions/resolve';
-import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlRuntime } from '../types';
+import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlComponentRegistry, XmlRuntime } from '../types';
 
 type SetupDeclaration =
     | { name: 'State'; id: string; params: ASTProps }
@@ -14,6 +14,7 @@ export type CreateContextOptions = {
     navigate: RuntimeServices['navigate'];
     navigationBaseUrl: string;
     params: Record<string, string>;
+    registry?: XmlComponentRegistry;
     requestCompleted?: RuntimeServices['requestCompleted'];
     requestBaseUrl: string;
 };
@@ -23,7 +24,7 @@ export const XmlContext = React.createContext<XmlRuntime | null>(null);
 /** Creates an XML runtime with all host-owned services initialized. */
 export function createContext(options: CreateContextOptions): XmlRuntime {
     return {
-        scope: { bindings: { params: options.params } },
+        scope: { bindings: { params: options.params }, registry: options.registry },
         services: {
             invalidate: async () => {},
             navigate: options.navigate,

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import type { ASTNode, RuntimeServices } from '@/xml/types';
 import { createContext as createXmlContext, RenderXML } from '@/xml';
+import type { ASTNode, RuntimeServices, XmlComponentRegistry } from '@/xml/types';
 
 type RouterXmlRuntimeProps = {
     ast: ASTNode;
     navigationBaseUrl: string;
     params: Record<string, string>;
+    registry?: XmlComponentRegistry;
     requestBaseUrl: string;
     requestCompleted?: RuntimeServices['requestCompleted'];
 };
@@ -16,6 +17,7 @@ export function RouterXmlRuntime({
     ast,
     navigationBaseUrl,
     params,
+    registry,
     requestBaseUrl,
     requestCompleted,
 }: RouterXmlRuntimeProps) {
@@ -34,6 +36,7 @@ export function RouterXmlRuntime({
             },
             navigationBaseUrl,
             params,
+            registry,
             requestBaseUrl,
             requestCompleted,
         });

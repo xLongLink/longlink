@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Self, Literal
 from pydantic import Field, HttpUrl, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from longlink.shared.models import Email
@@ -29,10 +29,9 @@ class Env(BaseSettings):
     SMTP_FROM: Email = "no-reply@longlink.dev"
     SMTP_HOST: str | None = None
     SMTP_PORT: int = Field(default=587, ge=1, le=65535)
-    SMTP_USE_TLS: bool = False
+    SMTP_TRANSPORT: Literal["plain", "starttls", "tls"] = "starttls"
     SMTP_PASSWORD: str | None = None
     SMTP_USERNAME: str | None = None
-    SMTP_START_TLS: bool = True
 
     # Encryption for infrastructure credentials persisted by the Platform
     ENCRYPTION_KEY: str = Field(min_length=32)
@@ -65,10 +64,6 @@ class Env(BaseSettings):
         # All authentication workflows use a real SMTP server, including local mail capture.
         if self.SMTP_HOST is None or not self.SMTP_HOST.strip():
             raise ValueError("SMTP_HOST is required")
-
-        # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
-        if self.SMTP_USE_TLS and self.SMTP_START_TLS:
-            raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
 
         # Authenticated SMTP requires a complete credential pair and a delivery host.
         if (self.SMTP_USERNAME is None) != (self.SMTP_PASSWORD is None):
