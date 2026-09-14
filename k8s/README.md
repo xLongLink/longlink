@@ -17,6 +17,11 @@ validates it and manages tenant resources; it never installs shared infrastructu
 `setup.yaml.gotmpl` defines package releases. `release/release.yml` defines the
 Platform compatibility contract.
 
+Tagged Platform releases publish this package with the matching API image. The
+nightly workflow publishes an immutable prerelease containing a Compute archive,
+checksum, and API image digest from one commit. Hosting environments use that
+metadata to apply matching nightly Platform and Compute builds.
+
 ## Kubernetes setup and updates
 
 The hosting environment owns cluster access, storage, TLS, deployment, and recovery.
