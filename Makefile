@@ -1,8 +1,5 @@
 .PHONY: install check format build test up image down api web sdk sample seed
 
-HELMFILE_IMAGE := ghcr.io/helmfile/helmfile:v1.8.0
-
-
 # Install all development dependencies.
 install: api/.env
 	cd api && uv sync --locked --extra dev
@@ -66,24 +63,17 @@ up:
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
 
-	# Generate one stable local server certificate; make down removes the certificate set.
-	@set -eu; umask 077; mkdir -p dev/certificates; rm -f dev/certificates/gateway.key dev/certificates/gateway.crt dev/certificates/storage.key dev/certificates/storage.crt; \
-		if [ ! -s dev/certificates/ca.key ] || [ ! -s dev/certificates/ca.crt ]; then \
-			rm -f dev/certificates/server.key dev/certificates/server.crt; \
-			openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-				-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
-				-subj "/CN=LongLink Development CA" \
-				-addext "basicConstraints=critical,CA:TRUE" \
-				-addext "keyUsage=critical,keyCertSign,cRLSign"; \
-			touch dev/certificates/tls-changed; \
-		fi; \
-		if [ ! -s dev/certificates/server.key ] || [ ! -s dev/certificates/server.crt ]; then \
-			openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/server.key -subj "/CN=localhost" | \
-				openssl x509 -req -days 3650 \
-					-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
-					-extfile dev/tls.cnf -extensions server -out dev/certificates/server.crt; \
-			touch dev/certificates/tls-changed; \
-		fi; \
+	# Generate local server certificates.
+	@set -eu; umask 077; mkdir -p dev/certificates; \
+		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
+			-subj "/CN=LongLink Development CA" \
+			-addext "basicConstraints=critical,CA:TRUE" \
+			-addext "keyUsage=critical,keyCertSign,cRLSign"; \
+		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/server.key -subj "/CN=localhost" | \
+			openssl x509 -req -days 3650 \
+				-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
+				-extfile dev/tls.cnf -extensions server -out dev/certificates/server.crt; \
 		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
 			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
 			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
@@ -94,7 +84,7 @@ up:
 			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
 			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
 	# Kourier's controller loads a replaced certificate only at process startup.
-	@set -e; if [ -f dev/certificates/tls-changed ] && kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
+	@if kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
 		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/net-kourier-controller --namespace knative-serving; \
 	fi
 
@@ -102,16 +92,9 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	@if command -v helmfile >/dev/null 2>&1; then \
-		KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync; \
-	else \
-		docker run --rm --network host --volume "$(CURDIR):/workspace:ro" --volume "$(abspath dev/kubeconfig.yaml):/kubeconfig:ro" --workdir /workspace --env KUBECONFIG=/kubeconfig --entrypoint helmfile "$(HELMFILE_IMAGE)" --file k8s/setup.yaml.gotmpl --environment development sync; \
-	fi
-	@set -e; if [ -f dev/certificates/tls-changed ]; then \
-		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs; \
-		kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s; \
-		rm -f dev/certificates/tls-changed; \
-	fi
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" "$(HOME)/.local/bin/helmfile" --file k8s/setup.yaml.gotmpl --environment development sync
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443/health/ready

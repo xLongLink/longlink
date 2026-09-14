@@ -24,11 +24,11 @@ vp env setup
 
 ```bash
 sudo snap install helm --classic
-sudo curl -L \
-  https://github.com/helmfile/helmfile/releases/latest/download/helmfile_$(uname -s)_$(uname -m) \
-  -o /usr/local/bin/helmfile
-
-sudo chmod +x /usr/local/bin/helmfile
+mkdir -p "$HOME/.local/bin"
+curl -fsSL \
+  https://github.com/helmfile/helmfile/releases/download/v1.8.0/helmfile_1.8.0_linux_amd64.tar.gz \
+  | tar -xzO helmfile > "$HOME/.local/bin/helmfile"
+chmod +x "$HOME/.local/bin/helmfile"
 ```
 
 
