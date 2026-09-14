@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { proxy } from 'valtio';
 import { api } from '@/lib/api';
+import { proxy, ref } from 'valtio';
 import { resolveRequestUrl } from './url';
 import { evaluate } from '../expressions/evaluate';
 import { isSafePropertyName } from '../expressions/resolve';
@@ -24,7 +24,7 @@ export const XmlContext = React.createContext<XmlRuntime | null>(null);
 /** Creates an XML runtime with all host-owned services initialized. */
 export function createContext(options: CreateContextOptions): XmlRuntime {
     return {
-        scope: { bindings: { params: options.params }, registry: options.registry },
+        scope: { bindings: proxy({ params: ref(options.params) }), registry: options.registry },
         services: {
             invalidate: async () => {},
             navigate: options.navigate,

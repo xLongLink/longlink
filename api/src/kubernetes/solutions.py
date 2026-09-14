@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal, cast
 from src.utils import templates
 from src.logger import logger
 from kr8s.asyncio import Api
+from src.kubernetes import namespace
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
 from src.kubernetes.utils import apply
@@ -181,8 +182,8 @@ class Solutions:
 
     async def apply(
         self,
+        organization_id: UUID,
         solution_id: UUID,
-        namespace: str,
         image: str,
         secrets: dict[str, str],
         *,
@@ -193,13 +194,14 @@ class Solutions:
         """Deploy one Solution and wait for its rollout."""
 
         # Render workload resources before the first cluster mutation.
+        compute_namespace = namespace.compute(organization_id)
         migration_id = f"migration-{revision_id}"
         secret_id = f"revision-{revision_id}"
         migration, service = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "solution.yml"),
             solution_id=str(solution_id),
             image=json.dumps(image),
-            namespace=namespace,
+            namespace=compute_namespace,
             runtime_revision=revision_id.hex,
             migration_id=migration_id,
             secret_id=secret_id,
@@ -209,14 +211,14 @@ class Solutions:
         api = await self._client.api()
 
         # Stop interrupted migrations before another release or fallback can use the schema.
-        await _stop_migrations(api, namespace, solution_id, resume_job=migration_id if migrate else None)
+        await _stop_migrations(api, compute_namespace, solution_id, resume_job=migration_id if migrate else None)
 
         # Keep each revision's environment isolated from the currently running Pods.
         solution_secret = Secret(
             {
                 "metadata": {
                     "name": secret_id,
-                    "namespace": namespace,
+                    "namespace": compute_namespace,
                     "labels": {SOLUTION_ID_LABEL: str(solution_id)},
                 },
                 "stringData": secrets,
@@ -228,11 +230,15 @@ class Solutions:
         # Apply migrations once without restarting a failed migration container.
         if migrate:
             logger.info(
-                "Starting migration Job %s for Solution %s in namespace %s from image %s", migration_id, solution_id, namespace, image
+                "Starting migration Job %s for Solution %s in namespace %s from image %s",
+                migration_id,
+                solution_id,
+                compute_namespace,
+                image,
             )
             migration_job = Job(migration, api=api)
             await _run_migration(migration_job)
-            logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, namespace)
+            logger.info("Migration Job %s completed for Solution %s in namespace %s", migration_id, solution_id, compute_namespace)
         else:
             logger.info("Restoring Solution %s revision %s without running migrations", solution_id, revision_id)
 
@@ -241,17 +247,18 @@ class Solutions:
         await apply(deployed)
         await _wait_for_rollout(deployed)
 
-    async def delete(self, solution_id: UUID, namespace: str) -> None:
+    async def delete(self, organization_id: UUID, solution_id: UUID) -> None:
         """Delete one Solution and wait until its Pods have terminated."""
 
         # Recheck only Kubernetes state while resources and Pods terminate.
+        compute_namespace = namespace.compute(organization_id)
         api = await self._client.api()
-        namespace_resource = Namespace(namespace, api=api)
+        namespace_resource = Namespace(compute_namespace, api=api)
         while await namespace_resource.exists():
             remaining = False
             async for resource in KnativeServiceResource.list(
                 api=api,
-                namespace=namespace,
+                namespace=compute_namespace,
                 field_selector={"metadata.name": f"solution-{solution_id}"},
             ):
                 remaining = True
@@ -259,32 +266,33 @@ class Solutions:
                     await resource.delete()
 
             # Delete retained migration Jobs only when their Solution is being removed.
-            async for candidate in Job.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+            async for candidate in Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 job = cast(Job, candidate)
                 remaining = True
                 if job.metadata.get("deletionTimestamp") is None:
                     await job.delete()
 
             # Retain revision secrets until the Solution itself is deleted.
-            async for candidate in Secret.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+            async for candidate in Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 secret = cast(Secret, candidate)
                 remaining = True
                 if secret.metadata.get("deletionTimestamp") is None:
                     await secret.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
-            if not remaining and not await _has_active_pods(api, namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
+            if not remaining and not await _has_active_pods(api, compute_namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
                 return
             await asyncio.sleep(5)
 
-    async def logs(self, solution_id: UUID, namespace: str) -> list[str]:
+    async def logs(self, organization_id: UUID, solution_id: UUID) -> list[str]:
         """Return recent logs for one managed Solution Pod."""
 
         # Scope the Solution Pod lookup to its Organization Namespace.
         try:
+            compute_namespace = namespace.compute(organization_id)
             api = await self._client.api()
             migration_pod: Pod | None = None
-            async for candidate in Pod.list(api=api, namespace=namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
+            async for candidate in Pod.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
                 pod = cast(Pod, candidate)
                 phase = pod.raw.get("status", {}).get("phase")
                 component = pod.metadata.get("labels", {}).get("longlink.io/component")

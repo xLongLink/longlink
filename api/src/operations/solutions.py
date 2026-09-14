@@ -49,7 +49,7 @@ async def deploy(revision_id: UUID) -> None:
             await session.commit()
         organization = infrastructure.organization
         runtime_secrets = dict(solution.secrets)
-        secrets_changed = runtime_secrets.pop("LONGLINK_DATABASE_SSLMODE", None) is not None
+        secrets_changed = False
         database_certificate: str | None = None
 
         # Organization reconciliation owns bucket provisioning and quota admission.
@@ -116,8 +116,8 @@ async def deploy(revision_id: UUID) -> None:
             # Apply the captured desired release so reconciliation repairs workload drift.
             logger.info("Applying Kubernetes workload for Solution %s", solution.id)
             await cluster.solutions.apply(
+                organization.id,
                 solution.id,
-                namespace.compute(organization.id),
                 revision.image,
                 {
                     **revision.envs,
@@ -175,7 +175,7 @@ async def delete(solution_id: UUID) -> None:
             infrastructure.compute.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            await cluster.solutions.delete(solution.id, namespace.compute(organization.id))
+            await cluster.solutions.delete(organization.id, solution.id)
             db, _ = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)

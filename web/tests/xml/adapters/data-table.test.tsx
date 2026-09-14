@@ -49,7 +49,7 @@ describe('Table', () => {
 
     it('keeps parent bindings available inside a table cell loop', () => {
         const ctx = createContext();
-        ctx.scope.bindings = { params: {}, prefix: 'Included', items: [{ tags: [{ name: 'Alpha' }] }] };
+        Object.assign(ctx.scope.bindings, { prefix: 'Included', items: [{ tags: [{ name: 'Alpha' }] }] });
 
         const output = renderXmlToMarkup(
             parseFragment(

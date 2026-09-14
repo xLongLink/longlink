@@ -232,16 +232,6 @@ class Databases:
                 return False
         return True
 
-    async def portforward(self, organization_id: UUID) -> int:
-        """Forward private SQL to loopback until the owning Kubernetes client closes."""
-
-        # Share Service selection and tunnel cleanup with the owning Kubernetes client.
-        return await self._client.portforward(
-            "database-rw",
-            namespace.database(organization_id),
-            5432,
-        )
-
     async def certificate(self, organization_id: UUID) -> str:
         """Read the CNPG-generated server CA as PEM text, not a filesystem path."""
 

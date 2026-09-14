@@ -97,9 +97,12 @@ class DatabaseKubernetes:
     async def resume(self, organization: UUID) -> None:
         """Accept database resumption."""
 
-    async def portforward(self, organization: UUID) -> int:
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
 
+        assert name == "database-rw"
+        assert namespace.startswith("longlink-database-")
+        assert port == 5432
         return 15432
 
     async def certificate(self, organization: UUID) -> str:

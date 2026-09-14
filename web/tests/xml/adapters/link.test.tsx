@@ -18,7 +18,7 @@ describe('Link', () => {
             navigationBaseUrl: '/orgs/acme/solutions/tracker',
             requestBaseUrl: '/api/v1/solutions/tracker/proxy',
         });
-        context.scope.bindings = { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' };
+        Object.assign(context.scope.bindings, { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' });
 
         // Act
         const output = renderXmlToMarkup(

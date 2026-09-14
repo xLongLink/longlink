@@ -6,10 +6,6 @@ environments:
     development:
         values:
             - infrastructure: ./infrastructure
-    single-node:
-        values:
-            - infrastructure: ./infrastructure
-            - storageClass: block-storage
 ---
 repositories:
     - name: cnpg
@@ -106,17 +102,6 @@ releases:
             storageclass:
                 name: local-path
                 dataStorageSize: 1Gi
-                logStorageSize: 1Gi
-            {{- else if eq .Environment.Name "single-node" }}
-            replicaCount: 1
-            mode:
-                standalone:
-                    enabled: true
-                distributed:
-                    enabled: false
-            storageclass:
-                name: {{ .Values.storageClass }}
-                dataStorageSize: 100Gi
                 logStorageSize: 1Gi
             {{- else }}
             replicaCount: 4

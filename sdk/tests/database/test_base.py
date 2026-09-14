@@ -90,6 +90,7 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
         "DATABASE_NAME": "longlink",
         "DATABASE_PORT": 5432,
         "DATABASE_SCHEMA": database_schema,
+        "DATABASE_CERTIFICATE": "database-ca-pem",
         "DATABASE_PASSWORD": "secret",
         "DATABASE_USERNAME": "solution",
         "STORAGE_BUCKET": "organization",
@@ -139,12 +140,11 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
 
 
 @pytest.mark.parametrize(
-    ("database_url", "schema", "ssl", "expected"),
+    ("database_url", "schema", "expected"),
     [
-        pytest.param("sqlite+aiosqlite:///:memory:", None, None, {}, id="sqlite"),
+        pytest.param("sqlite+aiosqlite:///:memory:", None, {}, id="sqlite"),
         pytest.param(
             "postgresql+asyncpg://solution:secret@db/longlink",
-            None,
             None,
             {"server_settings": {"timezone": "UTC"}},
             id="postgresql-defaults",
@@ -152,26 +152,23 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         pytest.param(
             "postgresql+asyncpg://solution:secret@db/longlink",
             "solution",
-            "disable",
-            {"server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}, "ssl": "disable"},
-            id="postgresql-schema-and-ssl",
+            {"server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
+            id="postgresql-schema",
         ),
     ],
 )
-def test_connect_args_returns_driver_specific_settings(
-    database_url: str, schema: str | None, ssl: str | None, expected: dict[str, object]
-) -> None:
+def test_connect_args_returns_driver_specific_settings(database_url: str, schema: str | None, expected: dict[str, object]) -> None:
     """Return only the connection settings supported by each database driver."""
 
     # Act
-    result = database_urls.connect_args(database_url, schema=schema, sslmode=ssl)
+    result = database_urls.connect_args(database_url, schema=schema)
 
     # Assert
     assert result == expected
 
 
-def test_connect_args_prioritizes_ca_certificate_over_sslmode(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Use a verified CA context instead of an sslmode when both are configured."""
+def test_connect_args_uses_ca_certificate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use a verified CA context for PostgreSQL connections."""
 
     # Arrange
     certificate_context = object()
@@ -189,7 +186,6 @@ def test_connect_args_prioritizes_ca_certificate_over_sslmode(monkeypatch: pytes
     result = database_urls.connect_args(
         "postgresql+asyncpg://solution:secret@db/longlink",
         schema="solution",
-        sslmode="disable",
         certificate="database-ca-pem",
     )
 
@@ -224,7 +220,7 @@ def test_connect_args_prioritizes_ca_certificate_over_sslmode(monkeypatch: pytes
                 DATABASE_NAME="longlink",
                 DATABASE_PORT=5432,
                 DATABASE_SCHEMA="solution",
-                DATABASE_SSLMODE="require",
+                DATABASE_CERTIFICATE="database-ca-pem",
                 DATABASE_PASSWORD="secret",
                 DATABASE_USERNAME="solution",
                 STORAGE_BUCKET="organization",
@@ -246,7 +242,7 @@ def test_connect_args_prioritizes_ca_certificate_over_sslmode(monkeypatch: pytes
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"ssl": "require", "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
+                "connect_args": {"ssl": "certificate-context", "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'}},
             },
             id="production",
         ),
@@ -271,6 +267,7 @@ def test_create_engine_selects_database_url_and_options(
         return object()
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr(database_base.urls.ssl, "create_default_context", lambda *, cadata: "certificate-context")
 
     # Create the environment-specific engine.
     database_base.create_engine(env)

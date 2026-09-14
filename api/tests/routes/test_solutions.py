@@ -26,11 +26,11 @@ class FakeCompute:
         self.outcome = outcome
         self.captured = captured
 
-    async def logs(self, solution_id: UUID, namespace: str) -> list[str]:
+    async def logs(self, organization_id: UUID, solution_id: UUID) -> list[str]:
         """Record a request and return or raise the configured outcome."""
 
         self.captured["logs"] = solution_id
-        self.captured["namespace"] = namespace
+        self.captured["organization"] = organization_id
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
         return self.outcome
@@ -457,7 +457,7 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.status_code == 200
     assert response.json() == ["line 1", "line 2"]
     assert captured["logs"] == app.id
-    assert captured["namespace"] == f"longlink-compute-{organization.id.hex}"
+    assert captured["organization"] == organization.id
 
 
 @pytest.mark.parametrize(

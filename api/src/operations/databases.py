@@ -38,7 +38,7 @@ async def connection(organization: Organization, cluster: Kubernetes) -> tuple[p
     """Build the Organization's private, CA-verified PostgreSQL connection and return its CA."""
 
     # Platform workers can run outside the compute cluster and its private DNS/network.
-    port = await cluster.databases.portforward(organization.id)
+    port = await cluster.portforward("database-rw", namespace.database(organization.id), 5432)
 
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     certificate = await cluster.databases.certificate(organization.id)

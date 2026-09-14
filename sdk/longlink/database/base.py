@@ -69,11 +69,10 @@ def create_engine(env: Envs) -> AsyncEngine:
         engine_kwargs["pool_recycle"] = 20
         engine_kwargs["pool_use_lifo"] = True
 
-        # Verify the Platform CA when supplied and configure UTC PostgreSQL sessions.
+        # Verify the Platform CA and configure UTC PostgreSQL sessions.
         engine_kwargs["connect_args"] = urls.connect_args(
             dburl,
             schema=env.DATABASE_SCHEMA,
-            sslmode=env.DATABASE_SSLMODE,
             certificate=env.DATABASE_CERTIFICATE,
         )
 

@@ -1,7 +1,6 @@
-import { subscribe } from 'valtio';
+import { useSnapshot } from 'valtio';
 import { renderNode } from './core/node';
 import { useApiError } from '@/lib/errors';
-import { isValtioProxy } from './core/state';
 import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -38,7 +37,9 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
 /** Resets the mutable state owned by an XML runtime before its setup declarations run. */
 function resetRuntime(runtime: XmlRuntime, invalidate: (id: string) => Promise<void>) {
     runtime.services.setups = {};
-    runtime.scope.bindings = { params: runtime.scope.bindings.params };
+    for (const id of Object.keys(runtime.scope.bindings)) {
+        if (id !== 'params') delete runtime.scope.bindings[id];
+    }
     runtime.services.invalidate = invalidate;
 }
 
@@ -68,8 +69,8 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     }, [ast]);
     const [initializedAst, setInitializedAst] = useState<ASTNode | null>(null);
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; error: unknown } | null>(null);
-    const [, setRenderVersion] = useState(0);
     const setupError = setupFailure?.ast === ast ? setupFailure.error : null;
+    useSnapshot(ctx.scope.bindings);
 
     useEffect(() => {
         // Do not initialize an invalid document.
@@ -79,36 +80,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
         }
 
         let mounted = true;
-        let unsubscribers: Array<() => void> = [];
         const controller = new AbortController();
-
-        /** Removes every Valtio subscription owned by this renderer. */
-        function unsubscribeAll() {
-            for (const unsubscribe of unsubscribers) {
-                unsubscribe();
-            }
-
-            unsubscribers = [];
-        }
-
-        /** Subscribes the renderer to every Valtio-backed state in the current View context. */
-        function subscribeToStateValues() {
-            // Remove previous subscriptions before rebuilding them.
-            unsubscribeAll();
-
-            // Subscribe to reactive state values in the context.
-            for (const value of Object.values(ctx.scope.bindings)) {
-                // Skip non-reactive context values.
-                if (!isValtioProxy(value)) continue;
-
-                unsubscribers.push(
-                    subscribe(value, () => {
-                        // Refresh only while this renderer is mounted.
-                        if (mounted) setRenderVersion((current) => current + 1);
-                    })
-                );
-            }
-        }
 
         /* Attach the renderer-owned invalidation hook before async setup runs. */
         resetRuntime(ctx, async (id) => {
@@ -121,11 +93,8 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
                 await setup();
             }
 
-            // Do not subscribe or render when cleanup occurred during setup.
+            // Do not publish changes when cleanup occurred during setup.
             if (!mounted) return;
-
-            subscribeToStateValues();
-            setRenderVersion((current) => current + 1);
         });
 
         void setupContext(setup.nodes, ctx, controller.signal)
@@ -133,9 +102,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
                 // Do not publish setup completion after cleanup.
                 if (!mounted) return;
 
-                subscribeToStateValues();
                 setInitializedAst(ast);
-                setRenderVersion((current) => current + 1);
             })
             .catch((error: unknown) => {
                 // Report setup failures only while mounted.
@@ -148,9 +115,6 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
         return () => {
             mounted = false;
             controller.abort();
-
-            // Remove state subscriptions on unmount.
-            unsubscribeAll();
         };
     }, [ast, ctx, setup]);
 

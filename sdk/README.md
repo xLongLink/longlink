@@ -52,9 +52,7 @@ uv run pytest --cov --cov-report=term-missing
 
 ## Database TLS
 
-Production PostgreSQL connections accept `LONGLINK_DATABASE_CERTIFICATE` containing a PEM CA certificate. When supplied, the SDK verifies both the server certificate chain and hostname, regardless of `LONGLINK_DATABASE_SSLMODE`.
-
-Without a certificate, `LONGLINK_DATABASE_SSLMODE` defaults to `require` (encryption without server authentication). Standalone runtimes can select `verify-full` to use asyncpg's root-certificate configuration or `disable` for local PostgreSQL. Development and testing continue to use SQLite and ignore PostgreSQL settings.
+Production PostgreSQL connections require `LONGLINK_DATABASE_CERTIFICATE` containing a PEM CA certificate. The SDK verifies both the server certificate chain and hostname. Development and testing continue to use SQLite and ignore PostgreSQL settings.
 
 <br/>
 <br/>

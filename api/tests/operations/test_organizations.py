@@ -40,10 +40,10 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             return super().bucket(organization, compute)
 
     class Organizations:
-        async def apply(self, namespace: str) -> None:
+        async def apply(self, organization_id: UUID) -> None:
             """Record namespace reconciliation."""
 
-            assert namespace == f"longlink-compute-{organization.id.hex}"
+            assert organization_id == organization.id
             calls.append("namespace")
 
     class Kubernetes:
@@ -95,10 +95,10 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             calls.append("database")
 
     class Organizations:
-        async def apply(self, namespace: str) -> None:
+        async def apply(self, organization_id: UUID) -> None:
             """Record namespace reconciliation."""
 
-            assert namespace == f"longlink-compute-{organization.id.hex}"
+            assert organization_id == organization.id
             calls.append("namespace")
 
     class Kubernetes:
@@ -265,7 +265,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
             calls.append("bucket")
 
     class Organizations:
-        async def delete(self, namespace: str) -> None:
+        async def delete(self, organization_id: UUID) -> None:
             """Fail namespace deletion."""
 
             raise RuntimeError("namespace deletion failed")
@@ -327,10 +327,10 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             calls.append("bucket")
 
     class Organizations:
-        async def delete(self, namespace: str) -> None:
+        async def delete(self, organization_id: UUID) -> None:
             """Record namespace deletion."""
 
-            assert namespace == f"longlink-compute-{organization.id.hex}"
+            assert organization_id == organization.id
             calls.append("namespace")
 
     class Kubernetes:
