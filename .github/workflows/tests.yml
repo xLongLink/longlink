@@ -147,7 +147,7 @@ jobs:
                   set -euo pipefail
                   kubectl apply --filename k8s/chart/tests/knative-service.yaml
                   kubectl wait --namespace default --for=condition=Ready --timeout=5m service.serving.knative.dev/compute-smoke
-                  kubectl run compute-smoke-probe --namespace knative-serving --image=busybox:1.37.0 --restart=Never --rm --attach --command -- wget --quiet --output-document=- --timeout=30 http://compute-smoke.default.svc.cluster.local
+                  curl --fail --silent --show-error --cacert "$RUNNER_TEMP/gateway.crt" --header 'Host: compute-smoke.default.svc.cluster.local' https://127.0.0.1:8443/
 
             - name: Collect Compute diagnostics
               if: failure()

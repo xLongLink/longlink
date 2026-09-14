@@ -11,3 +11,5 @@ spec:
                   image: registry.k8s.io/e2e-test-images/agnhost:2.53
                   command: [/agnhost]
                   args: [netexec, --http-port=8080]
+                  securityContext:
+                      runAsUser: 65532
