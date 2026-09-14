@@ -9,6 +9,7 @@ from src.auth import authuser, get_session
 from src.utils import roles
 from contextlib import AsyncExitStack
 from src.logger import logger
+from src.kubernetes import namespace
 from src.operations import databases
 from collections.abc import AsyncIterator
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
@@ -122,7 +123,7 @@ async def proxy_solution_request(
 
                 # Sign platform identity while keeping Knative's Host independent of the verified TLS hostname.
                 headers = {
-                    "host": f"solution-{solution.id}.longlink-compute-{solution.organization_id.hex}.svc.cluster.local",
+                    "host": namespace.solution_hostname(solution.organization_id, solution.id),
                     "x-longlink-identity": identity.create_identity_token(user.id, identity_secret),
                 }
                 content_type = request.headers.get("content-type")

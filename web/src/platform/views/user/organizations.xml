@@ -4,12 +4,23 @@
     <State id="draft" name="" />
 
     <Stack gap="8">
-        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+        <Stack
+            direction="horizontal"
+            justify="between"
+            align="center"
+            wrap="wrap"
+        >
             <Stack>
                 <Heading level="1">Organizations</Heading>
-                <Text color="secondary">Manage the workspaces connected to your LongLink account.</Text>
+                <Text color="secondary">
+                    Manage the workspaces connected to your LongLink account.
+                </Text>
             </Stack>
-            <Dialog title="New organization" triggerLabel="Create Organization" purpose="form">
+            <Dialog
+                title="New organization"
+                triggerLabel="Create Organization"
+                purpose="form"
+            >
                 <Stack gap="3">
                     <TextInput
                         label="Name"
@@ -25,7 +36,12 @@
                             json="${{ name: trim(draft.name) }}"
                         />
                         <Patch state="memberships" invalidate="true" />
-                        <Button variant="primary" disabled="${!trim(draft.name)}">Create organization</Button>
+                        <Button
+                            variant="primary"
+                            disabled="${!trim(draft.name)}"
+                        >
+                            Create organization
+                        </Button>
                     </Action>
                 </Stack>
             </Dialog>
@@ -41,11 +57,15 @@
                     />
                     <Stack align="start">
                         <Stack direction="horizontal" gap="1" align="center">
-                            <Link to="/orgs/${row.organization.slug}">$row.organization.name</Link>
+                            <Link to="/orgs/${row.organization.slug}">
+                                $row.organization.name
+                            </Link>
                             <Badge
                                 if="${row.organization.status !== 'running'}"
                                 variant="${({ creating: 'info', failed: 'error' })[row.organization.status]}"
-                            >${({ creating: 'Creating', failed: 'Failed' })[row.organization.status]}</Badge>
+                            >
+                                ${({ creating: 'Creating', failed: 'Failed' })[row.organization.status]}
+                            </Badge>
                         </Stack>
                         <Text type="supporting">Organization</Text>
                     </Stack>

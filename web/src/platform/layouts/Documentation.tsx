@@ -2,6 +2,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
 import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
+import { documentationSections, type DocumentationIcon } from '@/platform/docs';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import {
     AppWindow,
@@ -16,7 +17,23 @@ import {
     Rocket,
     ShieldCheck,
     Waypoints,
+    type LucideIcon,
 } from 'lucide-react';
+
+const icons: Record<DocumentationIcon, LucideIcon> = {
+    appWindow: AppWindow,
+    bookOpen: BookOpen,
+    building: Building2,
+    database: Database,
+    fileCode: FileCode2,
+    flask: FlaskConical,
+    globe: Globe,
+    hardDrive: HardDrive,
+    package: Package,
+    rocket: Rocket,
+    shield: ShieldCheck,
+    waypoints: Waypoints,
+};
 
 /** Renders documentation content with the fixed documentation navigation. */
 export default function Documentation() {
@@ -28,84 +45,23 @@ export default function Documentation() {
             sideNav={
                 <SideNav header={<SideNavHeader />}>
                     <Stack paddingInline={2}>
-                        <SideNavSection title="Overview">
-                            <SideNavItem
-                                href="/docs"
-                                icon={<BookOpen aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs'}
-                                label="Introduction"
-                            />
-                        </SideNavSection>
-                        <SideNavSection title="Platform">
-                            <SideNavItem
-                                href="/docs/api"
-                                icon={<ShieldCheck aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/api'}
-                                label="Overview"
-                            />
-                            <SideNavItem
-                                href="/docs/api/organizations"
-                                icon={<Building2 aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/api/organizations'}
-                                label="Organizations"
-                            />
-                            <SideNavItem
-                                href="/docs/api/solutions"
-                                icon={<AppWindow aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/api/solutions'}
-                                label="Solutions"
-                            />
-                        </SideNavSection>
-                        <SideNavSection title="Solutions">
-                            <SideNavItem
-                                href="/docs/sdk"
-                                icon={<Package aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk'}
-                                label="Overview"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/environments"
-                                icon={<Globe aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/environments'}
-                                label="Environments"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/routes"
-                                icon={<Waypoints aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/routes'}
-                                label="Routes"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/storage"
-                                icon={<HardDrive aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/storage'}
-                                label="Storage"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/database"
-                                icon={<Database aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/database'}
-                                label="Database"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/views"
-                                icon={<FileCode2 aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/views'}
-                                label="Views"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/testing"
-                                icon={<FlaskConical aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/testing'}
-                                label="Testing"
-                            />
-                            <SideNavItem
-                                href="/docs/sdk/building"
-                                icon={<Rocket aria-hidden size={16} />}
-                                isSelected={pagePath === '/docs/sdk/building'}
-                                label="Building"
-                            />
-                        </SideNavSection>
+                        {documentationSections.map((section) => (
+                            <SideNavSection key={section.title} title={section.title}>
+                                {section.pages.map((page) => {
+                                    const Icon = icons[page.icon];
+
+                                    return (
+                                        <SideNavItem
+                                            key={page.path}
+                                            href={page.path}
+                                            icon={<Icon aria-hidden size={16} />}
+                                            isSelected={pagePath === page.path}
+                                            label={page.label}
+                                        />
+                                    );
+                                })}
+                            </SideNavSection>
+                        ))}
                     </Stack>
                 </SideNav>
             }

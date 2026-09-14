@@ -5,6 +5,7 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
+from src.kubernetes import namespace
 from src.operations import databases
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -72,7 +73,7 @@ async def deploy(revision_id: UUID) -> None:
                 runtime_secrets = {
                     **runtime_secrets,
                     "LONGLINK_ENV": "production",
-                    "LONGLINK_DATABASE_HOST": f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
+                    "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
                     "LONGLINK_DATABASE_NAME": organization.id.hex,
                     "LONGLINK_DATABASE_PASSWORD": database_password,
                     "LONGLINK_DATABASE_PORT": "5432",
@@ -116,7 +117,7 @@ async def deploy(revision_id: UUID) -> None:
             logger.info("Applying Kubernetes workload for Solution %s", solution.id)
             await cluster.solutions.apply(
                 solution.id,
-                f"longlink-compute-{organization.id.hex}",
+                namespace.compute(organization.id),
                 revision.image,
                 {
                     **revision.envs,
@@ -174,7 +175,7 @@ async def delete(solution_id: UUID) -> None:
             infrastructure.compute.kubeconfig,
         )
         async with contextlib.aclosing(cluster):
-            await cluster.solutions.delete(solution.id, f"longlink-compute-{organization.id.hex}")
+            await cluster.solutions.delete(solution.id, namespace.compute(organization.id))
             db, _ = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)

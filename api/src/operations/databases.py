@@ -7,6 +7,7 @@ from sqlmodel import col
 from src.utils import postgres
 from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
+from src.kubernetes import namespace
 from collections.abc import Iterator, AsyncIterator
 from src.environments import env
 from src.models.types import DatabaseSSLMode
@@ -42,7 +43,7 @@ async def connection(organization: Organization, cluster: Kubernetes) -> tuple[p
     # Preserve the cluster DNS hostname for certificate verification even through a local tunnel.
     certificate = await cluster.databases.certificate(organization.id)
     database = postgres.Postgres(
-        host=f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local",
+        host=namespace.database_hostname(organization.id),
         port=port,
         username="postgres",
         password=organization.database_password,
