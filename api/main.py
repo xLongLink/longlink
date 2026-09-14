@@ -3,6 +3,7 @@ import contextlib
 from src import errors
 from fastapi import FastAPI, Request, Response
 from pathlib import Path
+from longlink import errors as solution_errors
 from src.utils import jobs
 from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
@@ -82,8 +83,8 @@ async def prevent_cross_origin_authenticated_writes(
 
 # Apply the same public contract to domain, HTTP, validation, and unexpected failures.
 app.exception_handler(errors.ServiceError)(errors.service_error_response)
-app.exception_handler(HTTPException)(errors.http_error_response)
-app.exception_handler(RequestValidationError)(errors.validation_error_response)
+app.exception_handler(HTTPException)(solution_errors.http_error_response)
+app.exception_handler(RequestValidationError)(solution_errors.validation_error_response)
 app.add_exception_handler(Exception, errors.unexpected_error_response)
 
 
@@ -118,9 +119,3 @@ if static_dir.exists():
         return FileResponse(static_dir / "__root.html")
 
     app.frontend("/", directory=static_dir)
-
-# Local development entrypoint. Production imports the app with Uvicorn, so this block is not executed.
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="127.0.0.1", port=8000)

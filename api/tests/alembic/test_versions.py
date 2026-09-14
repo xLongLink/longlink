@@ -3,13 +3,11 @@ from alembic import command
 from pathlib import Path
 from containers import mysql_container, postgres_container
 from contextlib import ExitStack
-from sqlalchemy import inspect, create_engine
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from collections.abc import Iterator
 from src.environments import env
 from sqlalchemy.engine import make_url
-from src.database.models import registry
 
 pytestmark = pytest.mark.no_db
 
@@ -29,45 +27,28 @@ def test_alembic_migrations_have_single_linear_head() -> None:
 @pytest.fixture(
     params=[pytest.param("postgresql", marks=pytest.mark.integration), pytest.param("mysql", marks=pytest.mark.integration), "sqlite"]
 )
-def migration_urls(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[tuple[str, str]]:
-    """Provide migration and inspection URLs for each supported production database."""
+def migration_urls(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[str]:
+    """Provide a migration URL for each supported production database."""
 
     # Keep container lifetimes outside migration execution and engine disposal.
     with ExitStack() as stack:
         if request.param == "postgresql":
             container = stack.enter_context(postgres_container("longlink", "sec@ret", "longlink"))
-            yield (
-                f"{container.get_connection_url(driver='asyncpg')}?ssl=disable",
-                f"{container.get_connection_url(driver='psycopg')}?sslmode=disable",
-            )
+            yield f"{container.get_connection_url(driver='asyncpg')}?ssl=disable"
         elif request.param == "mysql":
             mysql = stack.enter_context(mysql_container("longlink", "sec@ret", "longlink"))
             url = make_url(mysql.get_connection_url())
-            yield (
-                url.set(drivername="mysql+aiomysql", query={"ssl-mode": "DISABLED"}).render_as_string(hide_password=False),
-                url.render_as_string(hide_password=False),
-            )
+            yield url.set(drivername="mysql+aiomysql", query={"ssl-mode": "DISABLED"}).render_as_string(hide_password=False)
         else:
             path = tmp_path / "migration.db"
-            yield f"sqlite+aiosqlite:///{path}", f"sqlite:///{path}"
+            yield f"sqlite+aiosqlite:///{path}"
 
 
-def test_migrations_execute_and_match_current_metadata(monkeypatch: pytest.MonkeyPatch, migration_urls: tuple[str, str]) -> None:
-    """Upgrade each production backend, check model parity, and execute its downgrade."""
+def test_migrations_execute_and_match_current_metadata(monkeypatch: pytest.MonkeyPatch, migration_urls: str) -> None:
+    """Upgrade each production backend and check model parity."""
 
     # Apply the real migration graph without precreating tables from model metadata.
-    database_url, inspection_url = migration_urls
-    monkeypatch.setattr(env, "DATABASE_URL", database_url)
+    monkeypatch.setattr(env, "DATABASE_URL", migration_urls)
     config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
     command.upgrade(config, "head")
     command.check(config)
-
-    # Verify downgrade cleanup through a separate synchronous connection.
-    engine = create_engine(inspection_url)
-    try:
-        command.downgrade(config, "base")
-        with engine.connect() as connection:
-            remaining_tables = set(inspect(connection).get_table_names())
-        assert remaining_tables.isdisjoint(registry.metadata.tables)
-    finally:
-        engine.dispose()

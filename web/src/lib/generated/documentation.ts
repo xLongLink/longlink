@@ -1092,5 +1092,3 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "source": "adapters/TextInput.xsd"
     }
 ];
-
-export const componentDocumentationSlugs = componentDocumentation.map((component) => component.slug);
