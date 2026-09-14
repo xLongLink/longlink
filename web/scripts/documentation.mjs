@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { readFile, writeFile } from 'node:fs/promises';
+import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = path.resolve(root, 'src/lib/generated/documentation.ts');

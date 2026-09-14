@@ -13,7 +13,7 @@
 
 The API runs on the host. `dev/` owns local infrastructure.
 
-Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, Helmfile v1.8.0,
+Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, Helm,
 uv, Vite+, and `storage.localhost` resolving to loopback.
 
 ## Start

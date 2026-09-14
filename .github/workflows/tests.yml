@@ -60,7 +60,7 @@ jobs:
                   set -euo pipefail
                   helm lint k8s/chart --values k8s/chart/values-development.yaml
                   helm template longlink-compute k8s/chart --namespace rustfs --values k8s/chart/values-development.yaml > /tmp/longlink-compute.yaml
-                  kubectl apply --dry-run=client --validate=false --filename /tmp/longlink-compute.yaml
+                  kubectl apply --dry-run=client --validate=true --filename /tmp/longlink-compute.yaml
 
             - name: Verify Docker daemon
               run: docker info

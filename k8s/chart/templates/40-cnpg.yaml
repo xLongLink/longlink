@@ -1,1 +1,1 @@
-{{ .Files.Get "files/cnpg.yaml" }}
+{ { .Files.Get "files/cnpg.yaml" } }

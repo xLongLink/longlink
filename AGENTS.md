@@ -18,8 +18,8 @@
 ```text
 LongLink
 ├── Deployment configuration
-│   ├── k8s → versioned Helmfile setup, upstream charts, and Kustomize resources
-│   ├── dev/compute → local Kustomize overlays, installed by make up
+│   ├── k8s → versioned Helm chart, vendored upstream charts, and manifests
+│   ├── dev/compute → local connectivity manifests, installed by make up
 │   └── Hosting repository → cloud topology, release selection, and deployment workflows
 ├── Control plane
 │   ├── API replicas

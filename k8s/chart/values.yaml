@@ -1,17 +1,19 @@
+development: false
+
 gateway:
-    address: ""
+    address: ''
     service:
         annotations: {}
-        loadBalancerClass: ""
+        loadBalancerClass: ''
         type: LoadBalancer
 
-runtimeEgressCidr: ""
+runtimeEgressCidr: ''
 
 storage:
-    address: ""
+    address: ''
     service:
         annotations: {}
-        loadBalancerClass: ""
+        loadBalancerClass: ''
         nodePort: null
         type: LoadBalancer
 

@@ -4,10 +4,10 @@ description: RustFS helm chart to deploy RustFS on kubernetes cluster.
 home: https://rustfs.com
 icon: https://media.sys.truenas.net/apps/rustfs/icons/icon.svg
 maintainers:
-- name: RustFS, Inc.
-  url: https://github.com/rustfs/rustfs/tree/main/helm/rustfs
+    - name: RustFS, Inc.
+      url: https://github.com/rustfs/rustfs/tree/main/helm/rustfs
 name: rustfs
 sources:
-- https://github.com/rustfs/rustfs
+    - https://github.com/rustfs/rustfs
 type: application
 version: 1.0.0-rc.6

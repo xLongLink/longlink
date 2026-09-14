@@ -3,7 +3,7 @@ name: longlink-compute
 description: Shared LongLink Compute infrastructure.
 type: application
 version: 0.1.0
-appVersion: "1"
+appVersion: '1'
 dependencies:
     - name: rustfs
       version: 1.0.0-rc.6
