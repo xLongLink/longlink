@@ -64,7 +64,7 @@ jobs:
               run: |
                   set -euo pipefail
                   helmfile --file k8s/setup.yaml.gotmpl --environment development template > /dev/null
-                  kubectl kustomize dev/compute/bootstrap > /dev/null
+                  kubectl kustomize k8s/boundaries > /dev/null
                   kubectl kustomize dev/compute/connectivity > /dev/null
 
             - name: Verify Docker daemon

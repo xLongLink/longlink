@@ -32,6 +32,7 @@ format:
 	cd sdk && uv run --locked ruff check --select I --fix .
 	cd web && vp check --fix --no-fmt
 	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
+	cd web && bunx prettier --plugin=@prettier/plugin-xml --xml-whitespace-sensitivity ignore --tab-width 4 --write 'src/platform/views/**/*.xml'
 
 
 # Typecheck and build both web bundle modes.
@@ -63,7 +64,7 @@ up:
 		k3d cluster create --config dev/cluster.yaml; \
 	fi
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
+	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
 
 	# Generate leaf certificates from a stable local CA; make down removes the certificate set.
 	@set -eu; umask 077; mkdir -p dev/certificates; \
@@ -105,8 +106,6 @@ up:
 	else \
 		docker run --rm --network host --volume "$(CURDIR):/workspace:ro" --volume "$(abspath dev/kubeconfig.yaml):/kubeconfig:ro" --workdir /workspace --env KUBECONFIG=/kubeconfig --entrypoint helmfile "$(HELMFILE_IMAGE)" --file k8s/setup.yaml.gotmpl --environment development sync; \
 	fi
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/net-kourier-controller --namespace knative-serving --timeout=120s
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/3scale-kourier-gateway --namespace kourier-system --timeout=120s
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 	# Verify host TLS connectivity through the k3d port mappings.

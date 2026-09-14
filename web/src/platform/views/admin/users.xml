@@ -2,12 +2,17 @@
 <longlink name="Users" icon="users">
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
-    <Query id="users" path="/api/v1/users?page=${pages.value}&amp;page_size=25" />
+    <Query
+        id="users"
+        path="/api/v1/users?page=${pages.value}&amp;page_size=25"
+    />
 
     <Stack gap="8">
         <Stack>
             <Heading level="1">Users</Heading>
-            <Text color="secondary">Review account access, elevated users, and admin onboarding.</Text>
+            <Text color="secondary">
+                Review account access, elevated users, and admin onboarding.
+            </Text>
         </Stack>
         <Table data="$users.items" idKey="id" hasHover="true">
             <TableColumn field="name" header="User">
@@ -16,30 +21,54 @@
                     <Stack align="start">
                         <Stack direction="horizontal" gap="1" align="center">
                             <Text>$row.name</Text>
-                            <Badge>${row.administrator ? 'Administrator' : 'User'}</Badge>
+                            <Badge>
+                                ${row.administrator ? 'Administrator' : 'User'}
+                            </Badge>
                         </Stack>
                         <Text type="supporting">$row.email</Text>
                     </Stack>
                 </Stack>
             </TableColumn>
             <TableColumn field="id" header="Actions">
-                <Action>
-                    <Patch state="metadata" value="${{ item: row, open: true }}" />
-                    <Button variant="ghost">Metadata</Button>
-                </Action>
+                <MoreMenu value="$metadata">
+                    <Option
+                        value="${{ item: row, open: true }}"
+                        label="Metadata"
+                        icon="info"
+                    />
+                </MoreMenu>
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
-            <Action><Patch state="pages" value="${{ value: pages.value - 1 }}" /><Patch state="users" invalidate="true" /><Button disabled="${pages.value === 1}">Previous</Button></Action>
-            <Action><Patch state="pages" value="${{ value: pages.value + 1 }}" /><Patch state="users" invalidate="true" /><Button disabled="${users.total &lt;= pages.value * 25}">Next</Button></Action>
+            <Action>
+                <Patch state="pages" value="${{ value: pages.value - 1 }}" />
+                <Patch state="users" invalidate="true" />
+                <Button disabled="${pages.value === 1}">Previous</Button>
+            </Action>
+            <Action>
+                <Patch state="pages" value="${{ value: pages.value + 1 }}" />
+                <Patch state="users" invalidate="true" />
+                <Button disabled="${users.total &lt;= pages.value * 25}">
+                    Next
+                </Button>
+            </Action>
         </Stack>
     </Stack>
 
     <Dialog title="User metadata" isOpen="$metadata.open">
         <Stack gap="2">
-            <Text><b>Email</b> $metadata.item.email</Text>
-            <Text><b>Access</b> ${metadata.item.administrator ? 'Administrator' : 'User'}</Text>
-            <Text><b>ID</b> $metadata.item.id</Text>
+            <Text>
+                <b>Email</b>
+                $metadata.item.email
+            </Text>
+            <Text>
+                <b>Access</b>
+                ${metadata.item.administrator ? 'Administrator' : 'User'}
+            </Text>
+            <Text>
+                <b>ID</b>
+                $metadata.item.id
+            </Text>
         </Stack>
     </Dialog>
 </longlink>

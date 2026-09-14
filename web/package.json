@@ -48,6 +48,7 @@
     "devDependencies": {
         "@astryxdesign/cli": "0.6.1",
         "@hey-api/openapi-ts": "0.99.0",
+        "@prettier/plugin-xml": "^3.4.2",
         "@react-router/dev": "8.3.1",
         "@testing-library/user-event": "14.6.7",
         "@types/node": "^26.4.1",
@@ -55,6 +56,7 @@
         "@types/react-dom": "^19.2.5",
         "eslint-plugin-perfectionist": "^5.10.1",
         "happy-dom": "^20.14.0",
+        "prettier": "^3.9.6",
         "typescript": "5.9.3",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
         "vite-plus": "0.3.1",

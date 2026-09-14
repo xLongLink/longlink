@@ -11,13 +11,18 @@
         <xsd:documentation>Visible and accessible label. Defaults to the value.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="icon" type="IconNameType">
+      <xsd:annotation>
+        <xsd:documentation>Optional icon shown with the option in components that support it.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Option" type="OptionType">
     <xsd:annotation>
-      <xsd:documentation>A selectable option in a Selector or RadioList.</xsd:documentation>
+      <xsd:documentation>A selectable option in a Selector, RadioList, or MoreMenu.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Option value="open" label="Open" /&gt;</ns2:example>
+        <ns2:example xmlns:ns2="urn:longlink:xsd-docs">&lt;Option value="open" label="Open" icon="info" /&gt;</ns2:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

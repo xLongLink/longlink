@@ -548,6 +548,49 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
+                "description": "State binding that receives the selected option value.",
+                "name": "value"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "An overflow menu for secondary actions.",
+        "example": "<MoreMenu value=\"$metadata\">\n  <Option value=\"${{ item: row, open: true }}\" label=\"Metadata\" icon=\"info\" />\n</MoreMenu>",
+        "name": "MoreMenu",
+        "lastUpdated": "2026-09-14",
+        "nested": [
+            {
+                "attributes": [
+                    {
+                        "description": "Current value or binding expression.",
+                        "name": "value"
+                    },
+                    {
+                        "description": "Visible and accessible label. Defaults to the value.",
+                        "name": "label"
+                    },
+                    {
+                        "description": "Optional icon shown with the option in components that support it.",
+                        "name": "icon"
+                    },
+                    {
+                        "description": "Conditional rendering expression.",
+                        "name": "if"
+                    }
+                ],
+                "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
+                "example": "",
+                "name": "Option"
+            }
+        ],
+        "slug": "more-menu",
+        "source": "adapters/MoreMenu.xsd"
+    },
+    {
+        "attributes": [
+            {
                 "description": "Visible field label.",
                 "name": "label"
             },
@@ -665,11 +708,15 @@ export const componentDocumentation: ComponentDocumentation[] = [
                         "name": "label"
                     },
                     {
+                        "description": "Optional icon shown with the option in components that support it.",
+                        "name": "icon"
+                    },
+                    {
                         "description": "Conditional rendering expression.",
                         "name": "if"
                     }
                 ],
-                "description": "A selectable option in a Selector or RadioList.",
+                "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
                 "example": "",
                 "name": "Option"
             }
@@ -708,11 +755,15 @@ export const componentDocumentation: ComponentDocumentation[] = [
                         "name": "label"
                     },
                     {
+                        "description": "Optional icon shown with the option in components that support it.",
+                        "name": "icon"
+                    },
+                    {
                         "description": "Conditional rendering expression.",
                         "name": "if"
                     }
                 ],
-                "description": "A selectable option in a Selector or RadioList.",
+                "description": "A selectable option in a Selector, RadioList, or MoreMenu.",
                 "example": "",
                 "name": "Option"
             }

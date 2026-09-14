@@ -2,13 +2,14 @@ import asyncio
 from uuid import UUID
 from pwdlib import PasswordHash
 from sqlmodel import col
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import load_only, contains_eager
+from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
 from src.models.users import UserUpdate
+from src.database.services import projections
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -90,23 +91,6 @@ async def register(session: AsyncSession, name: str, email: str, password: str, 
     return user
 
 
-async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:
-    """Return one user's active memberships with their active Organizations."""
-
-    # Load membership response data without relying on async ORM lazy loading.
-    statement = (
-        select(UserOrganization)
-        .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .options(contains_eager(UserOrganization.organization))
-        .where(
-            col(UserOrganization.user_id) == user_id,
-            col(Organization.deleted_at).is_(None),
-        )
-    )
-    result = await session.scalars(statement)
-    return result.all()
-
-
 async def update_profile(session: AsyncSession, user: User, payload: UserUpdate) -> bool:
     """Update a user profile and request every affected Organization projection."""
 
@@ -126,8 +110,7 @@ async def update_profile(session: AsyncSession, user: User, payload: UserUpdate)
     result = await session.scalars(statement)
 
     # Lock Organizations in stable order before changing the user, matching membership mutation lock order.
-    for organization_id in sorted(result.all()):
-        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+    await projections.request_user_sync(session, result.all())
 
     # Keep profile changes and projection demand in the caller's transaction.
     if payload.name is not None:

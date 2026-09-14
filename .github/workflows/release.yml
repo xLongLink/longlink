@@ -156,19 +156,17 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  package="$RUNNER_TEMP/compute"
                   archive="longlink-compute-${GITHUB_REF_NAME}.tar.gz"
 
-                  cp -R k8s "$package"
-                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C "$package" .
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
                   sha256sum "$archive" > "${archive}.sha256"
 
             - name: Create GitHub release
               uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
               with:
-                tag_name: ${{ github.ref_name }}
-                name: ${{ github.ref_name }}
-                generate_release_notes: true
-                files: |
-                    longlink-compute-${{ github.ref_name }}.tar.gz
-                    longlink-compute-${{ github.ref_name }}.tar.gz.sha256
+                  tag_name: ${{ github.ref_name }}
+                  name: ${{ github.ref_name }}
+                  generate_release_notes: true
+                  files: |
+                      longlink-compute-${{ github.ref_name }}.tar.gz
+                      longlink-compute-${{ github.ref_name }}.tar.gz.sha256

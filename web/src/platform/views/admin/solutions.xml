@@ -3,32 +3,147 @@
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <State id="deletion" item="${null}" open="${false}" />
-    <Query id="solutions" path="/api/v1/solutions?page=${pages.value}&amp;page_size=25" pollInterval="5000" />
+    <Query
+        id="solutions"
+        path="/api/v1/solutions?page=${pages.value}&amp;page_size=25"
+        pollInterval="5000"
+    />
 
     <Stack gap="8">
-        <Stack><Heading level="1">Solutions</Heading><Text color="secondary">Review all solutions across organizations and deployment states.</Text></Stack>
+        <Stack>
+            <Heading level="1">Solutions</Heading>
+            <Text color="secondary">
+                Review all solutions across organizations and deployment states.
+            </Text>
+        </Stack>
         <Table data="$solutions.items" idKey="id" hasHover="true">
             <TableColumn field="name" header="Solution">
-                <Stack align="start"><Stack direction="horizontal" gap="1" align="center"><Link to="/orgs/${row.organization.slug}/solutions/${row.slug}">$row.name</Link><StatusBadge status="$row.status" /></Stack><Text if="$row.description" type="supporting">$row.description</Text></Stack>
+                <Stack align="start">
+                    <Stack direction="horizontal" gap="1" align="center">
+                        <Link
+                            to="/orgs/${row.organization.slug}/solutions/${row.slug}"
+                        >
+                            $row.name
+                        </Link>
+                        <StatusBadge status="$row.status" />
+                    </Stack>
+                    <Text if="$row.description" type="supporting">
+                        $row.description
+                    </Text>
+                </Stack>
             </TableColumn>
             <TableColumn field="organization.name" header="Organization">
-                <Stack direction="horizontal" gap="3" align="center"><Avatar kind="organization" name="$row.organization.name" src="$row.organization.avatar" /><Link to="/orgs/${row.organization.slug}">$row.organization.name</Link></Stack>
+                <Stack direction="horizontal" gap="3" align="center">
+                    <Avatar
+                        kind="organization"
+                        name="$row.organization.name"
+                        src="$row.organization.avatar"
+                    />
+                    <Link to="/orgs/${row.organization.slug}">
+                        $row.organization.name
+                    </Link>
+                </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions"><Action><Patch state="metadata" value="${{ item: row, open: true }}" /><Button variant="ghost">Metadata</Button></Action></TableColumn>
+            <TableColumn field="id" header="Actions">
+                <MoreMenu value="$metadata">
+                    <Option
+                        value="${{ item: row, open: true }}"
+                        label="Metadata"
+                        icon="info"
+                    />
+                </MoreMenu>
+            </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
-            <Action><Patch state="pages" value="${{ value: pages.value - 1 }}" /><Patch state="solutions" invalidate="true" /><Button disabled="${pages.value === 1}">Previous</Button></Action>
-            <Action><Patch state="pages" value="${{ value: pages.value + 1 }}" /><Patch state="solutions" invalidate="true" /><Button disabled="${solutions.total &lt;= pages.value * 25}">Next</Button></Action>
+            <Action>
+                <Patch state="pages" value="${{ value: pages.value - 1 }}" />
+                <Patch state="solutions" invalidate="true" />
+                <Button disabled="${pages.value === 1}">Previous</Button>
+            </Action>
+            <Action>
+                <Patch state="pages" value="${{ value: pages.value + 1 }}" />
+                <Patch state="solutions" invalidate="true" />
+                <Button disabled="${solutions.total &lt;= pages.value * 25}">
+                    Next
+                </Button>
+            </Action>
         </Stack>
     </Stack>
 
     <Dialog title="Solution metadata" isOpen="$metadata.open">
         <Stack gap="2">
-            <Text><b>Status</b> $metadata.item.status</Text><Text><b>Organization</b> $metadata.item.organization.name</Text><Text><b>Desired image</b> $metadata.item.image_desired</Text><Text><b>Desired revision</b> ${metadata.item.desired_revision_id ?? 'Not selected'}</Text><Text><b>Last deployed revision</b> ${metadata.item.deployed_revision_id ?? 'Never deployed'}</Text><Text><b>ID</b> $metadata.item.id</Text><Text><b>Slug</b> $metadata.item.slug</Text><Text if="$metadata.item.description"><b>Description</b> $metadata.item.description</Text><Text><b>Created</b> $metadata.item.created_at</Text>
-            <Stack direction="horizontal" gap="2" justify="end"><Action><Patch state="metadata" value="${{ item: metadata.item, open: false }}" /><Patch state="deletion" value="${{ item: metadata.item, open: true }}" /><Button variant="destructive">Delete</Button></Action></Stack>
+            <Text>
+                <b>Status</b>
+                $metadata.item.status
+            </Text>
+            <Text>
+                <b>Organization</b>
+                $metadata.item.organization.name
+            </Text>
+            <Text>
+                <b>Desired image</b>
+                $metadata.item.image_desired
+            </Text>
+            <Text>
+                <b>Desired revision</b>
+                ${metadata.item.desired_revision_id ?? 'Not selected'}
+            </Text>
+            <Text>
+                <b>Last deployed revision</b>
+                ${metadata.item.deployed_revision_id ?? 'Never deployed'}
+            </Text>
+            <Text>
+                <b>ID</b>
+                $metadata.item.id
+            </Text>
+            <Text>
+                <b>Slug</b>
+                $metadata.item.slug
+            </Text>
+            <Text if="$metadata.item.description">
+                <b>Description</b>
+                $metadata.item.description
+            </Text>
+            <Text>
+                <b>Created</b>
+                $metadata.item.created_at
+            </Text>
+            <Stack direction="horizontal" gap="2" justify="end">
+                <Action>
+                    <Patch
+                        state="metadata"
+                        value="${{ item: metadata.item, open: false }}"
+                    />
+                    <Patch
+                        state="deletion"
+                        value="${{ item: metadata.item, open: true }}"
+                    />
+                    <Button variant="destructive">Delete</Button>
+                </Action>
+            </Stack>
         </Stack>
     </Dialog>
     <Dialog title="Delete solution" isOpen="$deletion.open" purpose="form">
-        <Stack gap="3"><Text color="secondary">Delete solution $deletion.item.name?</Text><Stack direction="horizontal" gap="2" justify="end"><Action><Patch state="deletion" value="${{ item: deletion.item, open: false }}" /><Button variant="ghost">Cancel</Button></Action><Action><Request url="/api/v1/solutions/${deletion.item.id}" method="DELETE" closeDialog="true" /><Patch state="solutions" invalidate="true" /><Button variant="destructive">Delete</Button></Action></Stack></Stack>
+        <Stack gap="3">
+            <Text color="secondary">Delete solution $deletion.item.name?</Text>
+            <Stack direction="horizontal" gap="2" justify="end">
+                <Action>
+                    <Patch
+                        state="deletion"
+                        value="${{ item: deletion.item, open: false }}"
+                    />
+                    <Button variant="ghost">Cancel</Button>
+                </Action>
+                <Action>
+                    <Request
+                        url="/api/v1/solutions/${deletion.item.id}"
+                        method="DELETE"
+                        closeDialog="true"
+                    />
+                    <Patch state="solutions" invalidate="true" />
+                    <Button variant="destructive">Delete</Button>
+                </Action>
+            </Stack>
+        </Stack>
     </Dialog>
 </longlink>

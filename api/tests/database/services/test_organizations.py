@@ -11,7 +11,7 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
-from src.database.services import solutions, invitations, organizations
+from src.database.services import solutions, invitations, projections, organizations
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.database.models.users import User
@@ -185,7 +185,7 @@ async def test_sync_users_skips_creating_and_deleted_organizations(
         if deleted:
             await organizations.soft_delete(session, organization.id, users[0])
             await session.commit()
-        await organizations.sync_users(session, organization.id)
+        await projections.request_user_sync(session, (organization.id,))
 
     # Assert
     assert synchronized == []

@@ -13,7 +13,7 @@ from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.database.services import operations
+from src.database.services import operations, projections
 from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -64,6 +64,14 @@ async def membership_by_slug(session: AsyncSession, user_id: UUID, organization_
     # Load only the requested Organization membership and its response-ready Organization.
     statement = _membership_query(user_id).where(col(Organization.slug) == organization_slug)
     return await session.scalar(statement)
+
+
+async def memberships(session: AsyncSession, user_id: UUID) -> Sequence[UserOrganization]:
+    """Return one user's active memberships with response-ready Organizations."""
+
+    # Reuse the active membership query shared by identifier and slug access.
+    result = await session.scalars(_membership_query(user_id))
+    return result.all()
 
 
 async def solution_runtime_access(
@@ -237,13 +245,6 @@ async def members(session: AsyncSession, organization_id: UUID) -> Sequence[User
     return result.all()
 
 
-async def sync_users(session: AsyncSession, organization_id: UUID) -> None:
-    """Durably request shared-user projection in the caller's transaction."""
-
-    # Never wake a sleeping database for a membership mutation.
-    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
-
-
 async def project_users(session: AsyncSession, organization_id: UUID, db: postgres.Postgres) -> None:
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
@@ -362,7 +363,7 @@ async def update_member_role(
 
     # Persist the role change.
     membership.role = role
-    await sync_users(session, organization_id)
+    await projections.request_user_sync(session, (organization_id,))
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:

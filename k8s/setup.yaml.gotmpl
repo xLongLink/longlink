@@ -132,16 +132,6 @@ releases:
       chart: {{ .Values.infrastructure }}
       needs:
           - rustfs/rustfs
-      hooks:
-          - events: [postsync]
-            showlogs: true
-            command: kubectl
-            args:
-                - wait
-                - --for=condition=available
-                - deployment/longlink-storage
-                - --namespace=rustfs
-                - --timeout=900s
 
     # Publish readiness only after every controller and the object store are ready.
     - name: compute-release

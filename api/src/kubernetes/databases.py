@@ -6,6 +6,7 @@ from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
+from src.kubernetes import namespace
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Secret, Namespace, new_class, object_from_spec
 from src.kubernetes.utils import apply
@@ -46,11 +47,11 @@ class Databases:
     async def apply(self, organization_id: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
         """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
-        namespace = f"longlink-database-{organization_id.hex}"
+        database_namespace = namespace.database(organization_id)
         documents = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "database.yml"),
-            namespace=namespace,
-            compute_namespace=f"longlink-compute-{organization_id.hex}",
+            namespace=database_namespace,
+            compute_namespace=namespace.compute(organization_id),
             storage_class=json.dumps(storage_class),
             size_gib=size_gib,
             instances=instances,
@@ -66,7 +67,7 @@ class Databases:
             await apply(resource)
         secret = Secret(
             {
-                "metadata": {"name": "database-superuser", "namespace": namespace},
+                "metadata": {"name": "database-superuser", "namespace": database_namespace},
                 "type": "kubernetes.io/basic-auth",
                 "stringData": {"username": "postgres", "password": password},
             },
@@ -88,7 +89,7 @@ class Databases:
             raise RuntimeError("Organization still has live Pods or pending compute/database work")
         cluster = ClusterResource(
             "database",
-            namespace=f"longlink-database-{organization_id.hex}",
+            namespace=namespace.database(organization_id),
             api=await self._client.api(),
         )
         await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "on"}}})
@@ -101,10 +102,10 @@ class Databases:
 
         # Clearing hibernation is idempotent; confirmed readiness is required before using SQL.
         api = await self._client.api()
-        namespace = f"longlink-database-{organization_id.hex}"
+        database_namespace = namespace.database(organization_id)
         cluster = ClusterResource(
             "database",
-            namespace=namespace,
+            namespace=database_namespace,
             api=api,
         )
         await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "off"}}})
@@ -123,7 +124,9 @@ class Databases:
                     # False hibernation conditions still mean shutdown; after removal, verify live Pod state too.
                     ready_pods = 0
                     async for pod in Pod.list(
-                        api=api, namespace=namespace, label_selector={"cnpg.io/cluster": "database", "cnpg.io/podRole": "instance"}
+                        api=api,
+                        namespace=database_namespace,
+                        label_selector={"cnpg.io/cluster": "database", "cnpg.io/podRole": "instance"},
                     ):
                         pod_status = pod.raw.get("status", {})
                         if (
@@ -146,10 +149,10 @@ class Databases:
 
         # CNPG acknowledges successful shutdown through its documented condition.
         api = await self._client.api()
-        namespace = f"longlink-database-{organization_id.hex}"
+        database_namespace = namespace.database(organization_id)
         cluster = ClusterResource(
             "database",
-            namespace=namespace,
+            namespace=database_namespace,
             api=api,
         )
         await cluster.refresh()
@@ -158,7 +161,7 @@ class Databases:
             for condition in cluster.raw.get("status", {}).get("conditions", [])
         ):
             return False
-        async for pod in Pod.list(api=api, namespace=namespace):
+        async for pod in Pod.list(api=api, namespace=database_namespace):
             if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
                 return False
         return True
@@ -168,12 +171,13 @@ class Databases:
 
         # Check all Pods rather than trusting labels; completed migration Jobs do not keep SQL awake.
         api = await self._client.api()
-        async for pod in Pod.list(api=api, namespace=f"longlink-compute-{organization_id.hex}"):
+        compute_namespace = namespace.compute(organization_id)
+        async for pod in Pod.list(api=api, namespace=compute_namespace):
             if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
                 return False
 
         # An unsuspended migration can still start after a lost lease, even before its first Pod exists.
-        async for job in Job.list(api=api, namespace=f"longlink-compute-{organization_id.hex}"):
+        async for job in Job.list(api=api, namespace=compute_namespace):
             if job.spec.get("suspend") is not True and not any(
                 condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
                 for condition in job.raw.get("status", {}).get("conditions", [])
@@ -181,13 +185,13 @@ class Databases:
                 return False
 
         # Plugin and snapshot backups can execute inside PostgreSQL without creating a separate Pod.
-        namespace = f"longlink-database-{organization_id.hex}"
-        async for backup in BackupResource.list(api=api, namespace=namespace):
+        database_namespace = namespace.database(organization_id)
+        async for backup in BackupResource.list(api=api, namespace=database_namespace):
             if backup.raw.get("status", {}).get("phase") not in {"completed", "failed"}:
                 return False
 
         # Pending Jobs also block sleep before their Pods exist; retained terminal Jobs do not.
-        async for job in Job.list(api=api, namespace=namespace):
+        async for job in Job.list(api=api, namespace=database_namespace):
             if not any(
                 condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
                 for condition in job.raw.get("status", {}).get("conditions", [])
@@ -195,7 +199,7 @@ class Databases:
                 return False
 
         # Account for lingering Job Pods and standalone maintenance Pods, but not the database instances themselves.
-        async for pod in Pod.list(api=api, namespace=namespace, label_selector="cnpg.io/podRole!=instance"):
+        async for pod in Pod.list(api=api, namespace=database_namespace, label_selector="cnpg.io/podRole!=instance"):
             if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
                 return False
         return True
@@ -207,11 +211,11 @@ class Databases:
         if not await self.idle(organization_id):
             return False
         api = await self._client.api()
-        namespace = f"longlink-database-{organization_id.hex}"
+        database_namespace = namespace.database(organization_id)
         cluster = ClusterResource(
             "database",
             api=api,
-            namespace=namespace,
+            namespace=database_namespace,
         )
         await cluster.refresh()
         status = cluster.raw.get("status", {})
@@ -223,7 +227,7 @@ class Databases:
             raise RuntimeError("Database is reconciling and cannot hibernate")
 
         # Enabled schedules can start unleased database work after the current idle check.
-        async for schedule in ScheduledBackupResource.list(api=api, namespace=namespace):
+        async for schedule in ScheduledBackupResource.list(api=api, namespace=database_namespace):
             if schedule.spec.get("suspend") is not True:
                 return False
         return True
@@ -234,7 +238,7 @@ class Databases:
         # Share Service selection and tunnel cleanup with the owning Kubernetes client.
         return await self._client.portforward(
             "database-rw",
-            f"longlink-database-{organization_id.hex}",
+            namespace.database(organization_id),
             5432,
         )
 
@@ -244,7 +248,7 @@ class Databases:
         # CNPG's default server CA Secret is named after its Cluster and survives hibernation.
         secret = Secret(
             "database-ca",
-            namespace=f"longlink-database-{organization_id.hex}",
+            namespace=namespace.database(organization_id),
             api=await self._client.api(),
         )
         await secret.refresh()
@@ -257,7 +261,7 @@ class Databases:
 
         # Namespace termination is the completion boundary for destructive database cleanup.
         resource = Namespace(
-            f"longlink-database-{organization_id.hex}",
+            namespace.database(organization_id),
             api=await self._client.api(),
         )
         try:

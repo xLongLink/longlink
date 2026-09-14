@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="MoreMenuType">
+    <xsd:sequence>
+      <xsd:element ref="Option" minOccurs="1" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:attribute name="value" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>State binding that receives the selected option value.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="MoreMenu" type="MoreMenuType">
+    <xsd:annotation>
+      <xsd:documentation>An overflow menu for secondary actions.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="more-menu" category="Action" lastUpdated="2026-09-14" source="adapters/MoreMenu.xsd"/>
+        <longlink:example>&lt;MoreMenu value="$metadata"&gt;
+  &lt;Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /&gt;
+&lt;/MoreMenu&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

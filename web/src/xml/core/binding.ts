@@ -40,6 +40,12 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
             // Write named properties or the direct binding value.
             if (target.key || 'value' in target.state) {
                 target.state[target.key ?? 'value'] = nextValue;
+                return;
+            }
+
+            // Direct object bindings receive the selected option fields.
+            if (nextValue != null && typeof nextValue === 'object' && !Array.isArray(nextValue)) {
+                Object.assign(target.state, nextValue);
             }
         },
     };
