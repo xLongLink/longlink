@@ -4,19 +4,16 @@ from typing import Self, cast
 from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
 from kr8s.asyncio.objects import Service, Namespace
-from src.kubernetes.gateway import Gateway
-from src.kubernetes.storage import Storage
 from src.kubernetes.databases import Databases
 from src.kubernetes.solutions import Solutions
-from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
-    """Own one Compute API connection and expose its resource lifecycle boundaries.
+    """Own one Compute API connection and its Kubernetes resource lifetimes.
 
-    Storage and database resources have dedicated Organization namespaces;
-    Solutions run in the Organization compute namespace. All child facades share
-    this client's lazy kr8s connection and its port-forward lifetime.
+    Database resources have dedicated Organization namespaces; Solutions run in
+    the Organization compute namespace. Kubernetes resource facades share this
+    client's lazy kr8s connection and its port-forward lifetime.
     """
 
     def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -26,11 +23,8 @@ class Kubernetes:
         self._api_client: Api | None = None
         self.connections = AsyncExitStack()
 
-        self.gateway = Gateway(self)
-        self.storage = Storage()
         self.databases = Databases(self)
         self.solutions = Solutions(self)
-        self.organizations = Organizations(self)
 
     async def __aenter__(self) -> Self:
         """Return this Kubernetes client for an async resource scope."""

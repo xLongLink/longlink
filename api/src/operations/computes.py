@@ -2,9 +2,11 @@ from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import update
 from src.logger import logger
+from src.kubernetes import gateway
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.kubernetes.client import Kubernetes
+from src.kubernetes.storage import Storage
 from src.database.models.computes import ComputeRegistry
 
 
@@ -26,9 +28,10 @@ async def validate(compute_id: UUID) -> str | None:
         if await cluster.cluster_uid() != registry.cluster_uid:
             raise ValueError("Registered Compute connection points to a different physical cluster")
         logger.info("Validating shared controllers for Compute %s", registry.id)
-        await cluster.gateway.verify(registry.gateway_url, registry.gateway_certificate)
+        await gateway.verify(cluster, registry.gateway_url, registry.gateway_certificate)
         logger.info("Validating RustFS object storage for Compute %s", registry.id)
-        await cluster.storage.verify(registry)
+        storage = Storage()
+        await storage.verify(registry)
 
     # Preserve operator connection input and avoid overwriting a concurrent lifecycle change.
     async with session_scope() as session:

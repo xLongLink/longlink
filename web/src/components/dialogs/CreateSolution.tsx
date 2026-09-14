@@ -4,13 +4,13 @@ import { Dialog } from '@/components/ui/Dialog';
 import { useId, useRef, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { zLongLinkMetadata } from '@/lib/generated/platform-api-v1/zod.gen';
-import { useCreateOrganizationSolution } from '@/lib/hooks/use-organization';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { invalidateOrganizationSolutionQueries } from '@/lib/hooks/use-organization';
+import { zLongLinkMetadata, zSolutionCreate } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const createSolutionFormSchema = z.object({
     image: z.string().trim(),
@@ -59,7 +59,7 @@ function CreateSolutionAttempt({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const createSolution = useCreateOrganizationSolution(organizationId);
+    const queryClient = useQueryClient();
     const formId = useId();
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const submitting = useRef(false);
@@ -105,6 +105,11 @@ function CreateSolutionAttempt({
             });
             setStep('metadata');
         },
+    });
+    const createSolution = useMutation({
+        mutationFn: (payload: z.input<typeof zSolutionCreate>) =>
+            api(`/api/v1/organizations/${organizationId}/solutions`, { json: payload, method: 'POST' }),
+        onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
     });
     const declaredEnvironments = inspectImage.data?.environments ?? [];
     const [image, name, envs] = useWatch({ control: form.control, name: ['image', 'name', 'envs'] });
