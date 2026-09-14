@@ -54,15 +54,15 @@ jobs:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   RELEASE: ${{ steps.platform.outputs.release }}
               run: |
-                set -euo pipefail
+                  set -euo pipefail
 
-                publish=true
-                if gh release view "$RELEASE" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-                    publish=false
-                    printf 'Nightly release %s already exists.\n' "$RELEASE"
-                fi
+                  publish=true
+                  if gh release view "$RELEASE" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                      publish=false
+                      printf 'Nightly release %s already exists.\n' "$RELEASE"
+                  fi
 
-                printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
+                  printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
 
             - name: Setup Docker Buildx
               if: steps.release.outputs.publish == 'true'

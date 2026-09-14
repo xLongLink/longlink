@@ -31,7 +31,6 @@ curl -fsSL \
 chmod +x "$HOME/.local/bin/helmfile"
 ```
 
-
 ```bash
 make install  # Install development dependencies
 make check    # Run lint, type, and contract checks
