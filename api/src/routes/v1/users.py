@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authadmin, get_session
 from src.models.users import UserUpdate, UserSummary, UserOrganizationMembership
-from src.database.services import users
+from src.database.services import users, organizations
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -20,8 +20,8 @@ async def get_me(user: User = Depends(authuser)):
 async def get_my_organizations(user: User = Depends(authuser), session: AsyncSession = Depends(get_session)):
     """Return the authenticated user's organization memberships."""
 
-    # Return active membership response data through the user persistence service.
-    return await users.memberships(session, user.id)
+    # Return active membership response data through the Organization persistence service.
+    return await organizations.memberships(session, user.id)
 
 
 @router.get("/users", response_model=Page[UserSummary])

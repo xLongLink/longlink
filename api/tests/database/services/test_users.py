@@ -8,6 +8,7 @@ from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import users as user_service
+from src.database.services import organizations as organization_service
 from src.models.pagination import Pagination
 from src.database.models.users import User
 from src.database.models.organizations import Organization
@@ -200,7 +201,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
     assert total == 3
 
 
-async def test_user_service_registers_user_and_returns_active_organization_memberships(
+async def test_organization_service_returns_active_user_memberships(
     users: tuple[User, User, User],
 ) -> None:
     """Persist registrations and exclude deleted organizations from memberships."""
@@ -220,7 +221,7 @@ async def test_user_service_registers_user_and_returns_active_organization_membe
     # Act
     async with session_scope() as session:
         persisted_user = await session.get(User, registered.id)
-        memberships = await user_service.memberships(session, member.id)
+        memberships = await organization_service.memberships(session, member.id)
 
     # Assert
     assert registered.id is not None

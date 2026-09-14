@@ -156,11 +156,9 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  package="$RUNNER_TEMP/compute"
                   archive="longlink-compute-${GITHUB_REF_NAME}.tar.gz"
 
-                  cp -R k8s "$package"
-                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C "$package" .
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
                   sha256sum "$archive" > "${archive}.sha256"
 
             - name: Create GitHub release

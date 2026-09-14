@@ -24,8 +24,9 @@ class Storage:
         """Verify configured controller credentials can access RustFS without changing it."""
 
         # The controller identity must own bucket lifecycle and service-account administration.
-        bucket = self.bucket(UUID(int=0), compute)
-        async with bucket.storage.client() as client:
+        credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
+        storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
+        async with storage.client() as client:
             await client.list_buckets()
 
     async def apply(self, organization: UUID, compute: "ComputeRegistry") -> None:

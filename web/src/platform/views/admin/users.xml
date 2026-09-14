@@ -23,10 +23,7 @@
                 </Stack>
             </TableColumn>
             <TableColumn field="id" header="Actions">
-                <Action>
-                    <Patch state="metadata" value="${{ item: row, open: true }}" />
-                    <Button variant="ghost">Metadata</Button>
-                </Action>
+                <MoreMenu value="$metadata"><Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /></MoreMenu>
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">

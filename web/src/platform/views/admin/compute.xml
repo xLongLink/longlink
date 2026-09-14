@@ -11,7 +11,7 @@
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap"><Stack><Heading level="1">Compute</Heading><Text color="secondary">Manage Kubernetes connections, Kourier gateways, and database provisioning settings.</Text></Stack><Action><Patch state="registration" value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', database_size_gib: 10, database_instances: 1, storage_endpoint: 'https://longlink-storage.rustfs.svc:443', storage_access_key: '', storage_secret_key: '', storage_certificate: '', bucket_size_bytes: 1024 }}" /><Patch state="registrationDialog" value="${{ open: true }}" /><Button>Register Compute</Button></Action></Stack>
         <Table data="$computes.items" idKey="id" hasHover="true">
             <TableColumn field="name" header="Compute"><Stack align="start"><Stack direction="horizontal" gap="1" align="center"><Text>$row.name</Text><StatusBadge status="$row.status" /></Stack><Text type="supporting">$row.gateway_url</Text></Stack></TableColumn>
-            <TableColumn field="id" header="Actions"><Action><Patch state="metadata" value="${{ item: row, open: true }}" /><Button variant="ghost">Metadata</Button></Action></TableColumn>
+            <TableColumn field="id" header="Actions"><MoreMenu value="$metadata"><Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /></MoreMenu></TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
             <Action><Patch state="pages" value="${{ value: pages.value - 1 }}" /><Patch state="computes" invalidate="true" /><Button disabled="${pages.value === 1}">Previous</Button></Action>

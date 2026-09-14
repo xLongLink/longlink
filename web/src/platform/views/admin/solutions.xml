@@ -14,7 +14,7 @@
             <TableColumn field="organization.name" header="Organization">
                 <Stack direction="horizontal" gap="3" align="center"><Avatar kind="organization" name="$row.organization.name" src="$row.organization.avatar" /><Link to="/orgs/${row.organization.slug}">$row.organization.name</Link></Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions"><Action><Patch state="metadata" value="${{ item: row, open: true }}" /><Button variant="ghost">Metadata</Button></Action></TableColumn>
+            <TableColumn field="id" header="Actions"><MoreMenu value="$metadata"><Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /></MoreMenu></TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
             <Action><Patch state="pages" value="${{ value: pages.value - 1 }}" /><Patch state="solutions" invalidate="true" /><Button disabled="${pages.value === 1}">Previous</Button></Action>

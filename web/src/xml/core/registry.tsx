@@ -19,6 +19,7 @@ import { Switch } from '../adapters/Switch';
 import { Divider } from '../adapters/Divider';
 import { Heading } from '../adapters/Heading';
 import { GridSpan } from '../adapters/GridSpan';
+import { MoreMenu } from '../adapters/MoreMenu';
 import { Selector } from '../adapters/Selector';
 import { TextArea } from '../adapters/TextArea';
 import { CodeBlock } from '../adapters/CodeBlock';
@@ -57,6 +58,7 @@ export const xmlComponentRegistry: Record<string, ComponentType<Props>> = {
     i: Italic,
     Link,
     Menu,
+    MoreMenu,
     NumberInput,
     ProgressBar,
     RadioList,

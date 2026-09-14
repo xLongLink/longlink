@@ -13,7 +13,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, organizations
+from src.database.services import invitations, projections, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -1028,12 +1028,12 @@ async def test_update_organization_member_returns_not_found_for_non_member(
     # Arrange
     organization = await create_organization(users[0])
 
-    async def unexpected_sync(_session: object, _organization_id: UUID) -> None:
+    async def unexpected_sync(_session: object, _organization_ids: object) -> None:
         """Fail if a rejected membership update reaches runtime synchronization."""
 
         raise AssertionError("missing members must not synchronize users")
 
-    monkeypatch.setattr(organizations, "sync_users", unexpected_sync)
+    monkeypatch.setattr(projections, "request_user_sync", unexpected_sync)
 
     # Act
     response = await clients[0].patch(

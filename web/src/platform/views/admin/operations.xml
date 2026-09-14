@@ -14,7 +14,7 @@
                 <Stack align="start"><Text>${row.resource_name ?? 'Resource unavailable'}</Text><Text type="supporting">${({ 'compute.validate': 'Compute', 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}</Text></Stack>
             </TableColumn>
             <TableColumn field="id" header="Actions">
-                <Action><Patch state="metadata" value="${{ item: row, open: true }}" /><Button variant="ghost">Metadata</Button></Action>
+                <MoreMenu value="$metadata"><Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /></MoreMenu>
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">

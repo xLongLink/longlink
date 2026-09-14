@@ -63,7 +63,7 @@ up:
 		k3d cluster create --config dev/cluster.yaml; \
 	fi
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k dev/compute/bootstrap
+	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
 
 	# Generate leaf certificates from a stable local CA; make down removes the certificate set.
 	@set -eu; umask 077; mkdir -p dev/certificates; \
