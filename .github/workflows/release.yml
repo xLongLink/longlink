@@ -156,12 +156,10 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  version="${GITHUB_REF_NAME#v}"
                   package="$RUNNER_TEMP/compute"
                   archive="longlink-compute-${GITHUB_REF_NAME}.tar.gz"
 
                   cp -R k8s "$package"
-                  VERSION="$version" perl -0pi -e 's/^(\s*version:\s*)\S+/${1}$ENV{VERSION}/m' "$package/release/release.yml"
                   tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C "$package" .
                   sha256sum "$archive" > "${archive}.sha256"
 

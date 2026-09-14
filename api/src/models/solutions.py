@@ -101,7 +101,6 @@ class SolutionResponse(BaseModel):
     description: str | None
 
     # Desired release
-    min_scale: Literal[0, 1]
     image_desired: str
     desired_revision_id: UUID | None
     deployed_revision_id: UUID | None

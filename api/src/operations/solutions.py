@@ -47,7 +47,8 @@ async def deploy(revision_id: UUID) -> None:
             await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(status=Status.creating))
             await session.commit()
         organization = infrastructure.organization
-        runtime_secrets = solution.secrets
+        runtime_secrets = dict(solution.secrets)
+        secrets_changed = runtime_secrets.pop("LONGLINK_DATABASE_SSLMODE", None) is not None
         database_certificate: str | None = None
 
         # Organization reconciliation owns bucket provisioning and quota admission.
@@ -76,7 +77,6 @@ async def deploy(revision_id: UUID) -> None:
                     "LONGLINK_DATABASE_PASSWORD": database_password,
                     "LONGLINK_DATABASE_PORT": "5432",
                     "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-                    "LONGLINK_DATABASE_SSLMODE": "require",
                     "LONGLINK_DATABASE_USERNAME": database_username,
                     "LONGLINK_STORAGE_BUCKET": bucket.name,
                     "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.compute.storage_endpoint,
@@ -90,6 +90,9 @@ async def deploy(revision_id: UUID) -> None:
             if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
                 logger.info("Persisting runtime credentials for Solution %s", solution.id)
                 runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
+                secrets_changed = True
+
+            if secrets_changed:
                 async with session_scope() as session:
                     # Persist credentials only while the Solution remains active.
                     result = await session.execute(

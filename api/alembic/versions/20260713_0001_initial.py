@@ -117,7 +117,6 @@ def upgrade() -> None:
         ),
         sa.Column("database_sync_pending", sa.Boolean(), nullable=False),
         sa.Column("database_usage_bytes", sa.BigInteger(), nullable=True),
-        sa.Column("database_usage_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column(
             "status",
             sa.Enum(

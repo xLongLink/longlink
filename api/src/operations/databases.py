@@ -376,7 +376,6 @@ async def hibernate(organization_id: UUID) -> bool:
                         if organization is None or organization.deleted_at is not None or not await lease.owned(session):
                             return False
                         organization.database_usage_bytes = usage
-                        organization.database_usage_at = utcnow()
                         active = await session.scalar(
                             select(col(OrganizationActivity.id))
                             .where(

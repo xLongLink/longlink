@@ -402,8 +402,6 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
 
     monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
-    monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
-
     # Usage reads observe an already-running database without provisioning or waking it.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
@@ -423,20 +421,18 @@ async def test_organization_database_usage_returns_usage_or_backend_failure(
     if expected_status == 200:
         response_payload = {
             "size_bytes": expected_payload,
-            "measured_at": "2026-09-09T12:00:00Z",
             "allocated_bytes": 10 * 1024**3,
         }
     else:
         response_payload = {"detail": "Database resources unavailable"}
     assert response.json() == response_payload
 
-    # Cached diagnostics preserve their timestamp and per-instance allocation without waking SQL.
+    # Cached diagnostics preserve usage and per-instance allocation without waking SQL.
     if expected_status == 200:
         async with session_scope() as session:
             persisted = await session.get(Organization, organization.id)
             assert persisted is not None
             assert persisted.database_usage_bytes == expected_payload
-            assert persisted.database_usage_at == datetime(2026, 9, 9, 12, tzinfo=UTC)
             persisted.database_state = DatabaseState.hibernated
             await session.commit()
 
@@ -566,8 +562,6 @@ async def test_organization_resource_endpoints_allow_members(
     from conftest import StorageKubernetes
 
     monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
-    monkeypatch.setattr("src.routes.v1.organizations.utcnow", lambda: datetime(2026, 9, 9, 12, tzinfo=UTC))
-
     # Resource inspection starts from a ready Organization, not its queued creation state.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
@@ -583,7 +577,7 @@ async def test_organization_resource_endpoints_allow_members(
     # Assert
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
-        "database": {"size_bytes": 0, "measured_at": "2026-09-09T12:00:00Z", "allocated_bytes": 10 * 1024**3},
+        "database": {"size_bytes": 0, "allocated_bytes": 10 * 1024**3},
         "storage": {"space_used": 0, "quota_bytes": 1073741824},
     }
     assert response.json() == expected_payloads[resource]
@@ -692,7 +686,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "slug": "globex",
                 "avatar": "",
                 "status": "creating",
-                "database_state": "available",
             }
         ],
         "total": 2,

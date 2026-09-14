@@ -44,7 +44,6 @@ class Organization(AuditTable, table=True):
     )
     database_sync_pending: bool = Field(default=True)
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
-    database_usage_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # State
     status: Status = Field(

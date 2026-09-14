@@ -4,6 +4,4 @@ metadata:
     name: compute-release
     namespace: longlink-system
 data:
-    # The release workflow stamps the published archive with its vX.Y.Z tag.
-    version: 0.0.0
     contract: '1'

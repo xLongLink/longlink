@@ -260,13 +260,14 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     assert captured["secrets"]["LONGLINK_DATABASE_NAME"] == organization.id.hex
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
     assert captured["secrets"]["LONGLINK_DATABASE_PORT"] == "5432"
-    assert captured["secrets"]["LONGLINK_DATABASE_SSLMODE"] == "require"
+    assert "LONGLINK_DATABASE_SSLMODE" not in captured["secrets"]
     assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "solution"
     assert captured["secrets"]["LONGLINK_DATABASE_CERTIFICATE"] == "test-database-ca"
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
+    assert "LONGLINK_DATABASE_SSLMODE" not in persisted.secrets
 
     # A subsequent revision reuses all generated credentials and stable data identities.
     async with session_scope() as session:
@@ -377,6 +378,9 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         persisted.secrets = dict(initial_secrets)
         persisted.status = Status.creating if identity is None else Status.running
         await session.commit()
+
+    # Preserve the expected legacy cleanup while retaining the persisted retry fixture above.
+    del initial_secrets["LONGLINK_DATABASE_SSLMODE"]
     captured: list[dict[str, str]] = []
 
     def unexpected_provider(*_args: object) -> object:

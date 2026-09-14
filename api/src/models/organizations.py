@@ -27,11 +27,10 @@ class OrganizationCreate(BaseModel):
 
 
 class DatabaseUsage(BaseModel):
-    """Report timestamped database usage and configured storage per CNPG instance."""
+    """Report database usage and configured storage per CNPG instance."""
 
     # Measurement
     size_bytes: int | None
-    measured_at: datetime | None
 
     # Capacity
     allocated_bytes: int = Field(description="Configured storage bytes per database instance, not summed across replicas")
@@ -79,13 +78,6 @@ class OrganizationInvitationResponse(BaseModel):
     created_at: datetime
 
 
-class OrganizationSummary(OrganizationIdentity):
-    """Represent one organization in admin list responses."""
-
-    # State
-    database_state: DatabaseState
-
-
 class OrganizationMemberAccessResponse(BaseModel):
     """Represent one Organization member and their access role."""
 
@@ -102,7 +94,7 @@ class OrganizationDetails(BaseModel):
     """Represent an Organization with its member access."""
 
     # Organization
-    organization: OrganizationSummary
+    organization: OrganizationIdentity
 
     # Relationships
     members: list[OrganizationMemberAccessResponse]

@@ -1,33 +1,22 @@
+import { parseXML } from '@/xml';
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
+import { RouterXmlRuntime } from '@/components/RouterXmlRuntime';
 
 /** Renders a bundled XML View with platform-root navigation and API requests. */
 export function PlatformView({ source, params = {} }: { source: string; params?: Record<string, string> }) {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [ast] = useState(() => parseXML(source));
-    const [runtime] = useState(() => {
-        return createXmlContext({
-            navigate: (url) => {
-                const destination = new URL(url, window.location.origin);
 
-                if (destination.origin === window.location.origin) {
-                    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
-                    return;
-                }
-
-                window.location.assign(url);
-            },
-            navigationBaseUrl: '/',
-            params,
-            requestCompleted: async (url) => {
+    return (
+        <RouterXmlRuntime
+            ast={ast}
+            navigationBaseUrl="/"
+            params={params}
+            requestBaseUrl="/"
+            requestCompleted={async (url) => {
                 await queryClient.invalidateQueries({ queryKey: ['api', url], exact: true });
-            },
-            requestBaseUrl: '/',
-        });
-    });
-
-    return <RenderXML ast={ast} ctx={runtime} />;
+            }}
+        />
+    );
 }

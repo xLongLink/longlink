@@ -11,10 +11,9 @@ from src.operations import databases
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
-from longlink.utils.time import utcnow
 from src.models.storages import OrganizationStorageUsageResponse
 from src.database.session import session_scope
-from src.models.resources import OrganizationSolutionSummary
+from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
@@ -25,7 +24,6 @@ from src.models.organizations import (
     OrganizationCreate,
     OrganizationUpdate,
     OrganizationDetails,
-    OrganizationSummary,
     OrganizationMemberUpdate,
     OrganizationInvitationCreate,
 )
@@ -36,7 +34,7 @@ router = APIRouter()
 STORAGE_USAGE_TIMEOUT_SECONDS = 15
 
 
-@router.get("/organizations", response_model=Page[OrganizationSummary])
+@router.get("/organizations", response_model=Page[OrganizationIdentity])
 async def list_organizations(
     _user: User = Depends(authadmin),
     pagination: Pagination = Depends(),
@@ -93,7 +91,7 @@ async def get_organization_solutions(
     return await organizations.solutions(session, membership.organization_id)
 
 
-@router.patch("/organizations/{organization_id}", response_model=OrganizationSummary)
+@router.patch("/organizations/{organization_id}", response_model=OrganizationIdentity)
 async def update_organization(
     payload: OrganizationUpdate,
     user: User = Depends(authuser),
@@ -132,7 +130,6 @@ async def get_organization_database_usage(
         raise HTTPException(status_code=404, detail="Organization not found")
     usage = {
         "size_bytes": organization.database_usage_bytes,
-        "measured_at": organization.database_usage_at,
         "allocated_bytes": infrastructure.compute.database_size_gib * 1024**3,
     }
     await session.commit()
@@ -148,14 +145,12 @@ async def get_organization_database_usage(
             async with contextlib.aclosing(cluster):
                 database, _ = await databases.connection(organization, cluster)
                 size_bytes = await database.database_usage(organization.id.hex)
-            measured_at = utcnow()
             async with session_scope() as usage_session:
                 current = await databases.lock(usage_session, organization.id)
                 if current is not None:
                     current.database_usage_bytes = size_bytes
-                    current.database_usage_at = measured_at
                 await usage_session.commit()
-            return {"size_bytes": size_bytes, "measured_at": measured_at, "allocated_bytes": usage["allocated_bytes"]}
+            return {"size_bytes": size_bytes, "allocated_bytes": usage["allocated_bytes"]}
     except (OperationalError, TimeoutError, RuntimeError) as exc:
         logger.warning("Database resources unavailable for organization '%s'", organization.slug)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
@@ -258,7 +253,7 @@ async def update_organization_member(
     await session.commit()
 
 
-@router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationSummary)
+@router.delete("/organizations/{organization_id}", status_code=202, response_model=OrganizationIdentity)
 async def delete_organization(
     organization_id: UUID,
     user: User = Depends(authuser),
@@ -275,7 +270,7 @@ async def delete_organization(
     return result
 
 
-@router.post("/organizations", response_model=OrganizationSummary, status_code=202)
+@router.post("/organizations", response_model=OrganizationIdentity, status_code=202)
 async def create_organization(
     payload: OrganizationCreate,
     user: User = Depends(authuser),

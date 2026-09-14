@@ -124,26 +124,15 @@ export type ComputeRegistryResponse = {
 };
 
 /**
- * DatabaseState
- *
- * Describe the availability of an Organization's CNPG database.
- */
-export type DatabaseState = 'available' | 'hibernating' | 'hibernated' | 'resuming' | 'failed';
-
-/**
  * DatabaseUsage
  *
- * Report timestamped database usage and configured storage per CNPG instance.
+ * Report database usage and configured storage per CNPG instance.
  */
 export type DatabaseUsage = {
     /**
      * Size Bytes
      */
     size_bytes: number | null;
-    /**
-     * Measured At
-     */
-    measured_at: string | null;
     /**
      * Allocated Bytes
      *
@@ -298,7 +287,7 @@ export type OrganizationCreate = {
  * Represent an Organization with its member access.
  */
 export type OrganizationDetails = {
-    organization: OrganizationSummary;
+    organization: OrganizationIdentity;
     /**
      * Members
      */
@@ -444,32 +433,6 @@ export type OrganizationStorageUsageResponse = {
 };
 
 /**
- * OrganizationSummary
- *
- * Represent one organization in admin list responses.
- */
-export type OrganizationSummary = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Slug
-     */
-    slug: string;
-    /**
-     * Avatar
-     */
-    avatar: string;
-    status: Status;
-    database_state: DatabaseState;
-};
-
-/**
  * OrganizationUpdate
  *
  * Validate mutable organization settings.
@@ -510,13 +473,13 @@ export type PageOperationResponse = {
 };
 
 /**
- * Page[OrganizationSummary]
+ * Page[OrganizationIdentity]
  */
-export type PageOrganizationSummary = {
+export type PageOrganizationIdentity = {
     /**
      * Items
      */
-    items: Array<OrganizationSummary>;
+    items: Array<OrganizationIdentity>;
     /**
      * Total
      */
@@ -670,10 +633,6 @@ export type SolutionResponse = {
      * Description
      */
     description: string | null;
-    /**
-     * Min Scale
-     */
-    min_scale: 0 | 1;
     /**
      * Image Desired
      */
@@ -1625,7 +1584,7 @@ export type ListOrganizationsApiV1OrganizationsGetResponses = {
     /**
      * Successful Response
      */
-    200: PageOrganizationSummary;
+    200: PageOrganizationIdentity;
 };
 
 export type ListOrganizationsApiV1OrganizationsGetResponse = ListOrganizationsApiV1OrganizationsGetResponses[keyof ListOrganizationsApiV1OrganizationsGetResponses];
@@ -1654,7 +1613,7 @@ export type CreateOrganizationApiV1OrganizationsPostResponses = {
     /**
      * Successful Response
      */
-    202: OrganizationSummary;
+    202: OrganizationIdentity;
 };
 
 export type CreateOrganizationApiV1OrganizationsPostResponse = CreateOrganizationApiV1OrganizationsPostResponses[keyof CreateOrganizationApiV1OrganizationsPostResponses];
@@ -1722,7 +1681,7 @@ export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponses = 
     /**
      * Successful Response
      */
-    202: OrganizationSummary;
+    202: OrganizationIdentity;
 };
 
 export type DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponse = DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponses[keyof DeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponses];
@@ -1790,7 +1749,7 @@ export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses = {
     /**
      * Successful Response
      */
-    200: OrganizationSummary;
+    200: OrganizationIdentity;
 };
 
 export type UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses[keyof UpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponses];
