@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -6,22 +5,19 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const article = {
+    description: 'Use expressions in LongLink Views to render dynamic interfaces.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views/Expressions.tsx',
+    title: 'Expressions | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Use expressions in LongLink Views to render dynamic interfaces."
-                hasBreadcrumbs
-                title="Expressions | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     Expressions

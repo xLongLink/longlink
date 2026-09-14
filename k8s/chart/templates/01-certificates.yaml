@@ -1,0 +1,35 @@
+{{- $gatewaySecret := lookup "v1" "Secret" "knative-serving" "longlink-gateway-tls" }}
+{{- if not $gatewaySecret }}
+{{- $gatewayCertificate := genSelfSignedCert "longlink-gateway" (list .Values.gateway.address) (list) 3650 }}
+apiVersion: v1
+kind: Secret
+metadata:
+    name: longlink-gateway-tls
+    namespace: knative-serving
+    annotations:
+        helm.sh/resource-policy: keep
+type: kubernetes.io/tls
+data:
+    tls.crt: {{ $gatewayCertificate.Cert | b64enc }}
+    tls.key: {{ $gatewayCertificate.Key | b64enc }}
+---
+{{- end }}
+{{- $storageSecret := lookup "v1" "Secret" "rustfs" "longlink-storage-tls" }}
+{{- if not $storageSecret }}
+{{- $storageDnsNames := list }}
+{{- if .Values.development }}
+{{- $storageDnsNames = list "storage.localhost" "longlink-storage.rustfs.svc" "longlink-storage.rustfs.svc.cluster.local" }}
+{{- end }}
+{{- $storageCertificate := genSelfSignedCert "longlink-storage" (list .Values.storage.address) $storageDnsNames 3650 }}
+apiVersion: v1
+kind: Secret
+metadata:
+    name: longlink-storage-tls
+    namespace: rustfs
+    annotations:
+        helm.sh/resource-policy: keep
+type: kubernetes.io/tls
+data:
+    tls.crt: {{ $storageCertificate.Cert | b64enc }}
+    tls.key: {{ $storageCertificate.Key | b64enc }}
+{{- end }}

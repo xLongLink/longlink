@@ -1,14 +1,13 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Account Settings" icon="settings2">
-    <Query id="user" path="/api/v1/me" />
-    <State id="profile" name="$user.name" />
+    <State id="profile" name="$params.userName" />
     <Query id="memberships" path="/api/v1/me/organizations" />
     <State id="deletion" item="${null}" open="${false}" />
     <State id="organizationDraft" name="" />
 
     <Stack gap="8">
         <Stack direction="horizontal" gap="3" align="center">
-            <Avatar name="$profile.name" src="$user.avatar" />
+            <Avatar name="$profile.name" src="$params.userAvatar" />
             <Stack>
                 <Heading level="4" accessibilityLevel="1">
                     $profile.name
@@ -30,7 +29,7 @@
                         />
                         <Text>
                             <b>Email</b>
-                            $user.email
+                            $params.userEmail
                         </Text>
                         <Stack direction="horizontal" justify="end">
                             <Action>
@@ -43,7 +42,6 @@
                                     method="PATCH"
                                     json="${{ name: profile.name }}"
                                 />
-                                <Patch state="user" invalidate="true" />
                                 <Button
                                     variant="primary"
                                     disabled="${!trim(profile.name)}"

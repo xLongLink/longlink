@@ -1,5 +1,4 @@
 import secrets
-import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
@@ -56,7 +55,7 @@ async def deploy(revision_id: UUID) -> None:
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
-        async with contextlib.aclosing(cluster):
+        async with cluster:
             bucket = cluster.storage.bucket(organization.id, infrastructure.compute)
 
             # Reuse generated credentials after an interrupted creation attempt.
@@ -174,7 +173,7 @@ async def delete(solution_id: UUID) -> None:
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
-        async with contextlib.aclosing(cluster):
+        async with cluster:
             await cluster.solutions.delete(organization.id, solution.id)
             db, _ = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)

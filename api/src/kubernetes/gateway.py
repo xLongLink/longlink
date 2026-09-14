@@ -56,7 +56,6 @@ class Gateway:
                     ("knative-serving", "net-kourier-controller"),
                     ("kourier-system", "3scale-kourier-gateway"),
                     ("cnpg-system", "cnpg-controller-manager"),
-                    ("rustfs", "rustfs"),
                 ):
                     deployment = Deployment(name, namespace=namespace, api=api)
                     while True:

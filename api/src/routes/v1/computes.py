@@ -1,4 +1,3 @@
-import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session
@@ -19,7 +18,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
 
     # Resolve the physical cluster before transactionally registering its stable identity.
     cluster = Kubernetes(payload.kubeconfig)
-    async with contextlib.aclosing(cluster):
+    async with cluster:
         cluster_uid = await cluster.cluster_uid()
 
     # Persist the connection and queue full Compute validation.

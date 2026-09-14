@@ -29,7 +29,6 @@ def render_view(content: str) -> Response:
 class RuntimeState:
     """Hold mutable SDK state for one FastAPI application."""
 
-    views: list[ViewDefinition]
     storage: AbstractFileSystem
     database: Database
 
@@ -76,12 +75,12 @@ class LongLink:
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        app.include_router(router)
+        app.include_router(router([definition for definition, _ in discovered_views]))
 
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
 
-        app.state.longlink = RuntimeState(views=[definition for definition, _ in discovered_views], storage=storage, database=database)
+        app.state.longlink = RuntimeState(storage=storage, database=database)
         app.router.add_event_handler("shutdown", database.dispose)
 
         # Views are registered once before the frontend mount is installed.

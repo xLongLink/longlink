@@ -1,5 +1,4 @@
 import asyncio
-import contextlib
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
@@ -12,9 +11,9 @@ from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
 from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 from src.database.services import organizations
-from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.kubernetes.storage import Storage
 from src.models.organizations import (
     DatabaseUsage,
     OrganizationCreate,
@@ -152,10 +151,8 @@ async def get_organization_storage_usage(
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            cluster = Kubernetes(infrastructure.compute.kubeconfig)
-            async with contextlib.aclosing(cluster):
-                bucket = cluster.storage.bucket(membership.organization_id, infrastructure.compute)
-                usage = await bucket.storage.usage(bucket.name)
+            bucket = Storage().bucket(membership.organization_id, infrastructure.compute)
+            usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
     except (TimeoutError, BotoCoreError, ClientError, ServerError) as exc:

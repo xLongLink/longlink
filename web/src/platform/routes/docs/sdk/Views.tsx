@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Info } from 'lucide-react';
-import { Seo } from '@/components/Seo';
 import { Icon } from '@/components/ui/Icon';
 import { Menu } from '@/components/ui/Menu';
 import { Card } from '@astryxdesign/core/Card';
@@ -75,6 +74,7 @@ function SummaryCard({
 }
 
 const article = {
+    description: 'Build interfaces with LongLink Views and components.',
     toc: [
         { id: 'views', label: 'Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
@@ -85,6 +85,7 @@ const article = {
     ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Views.tsx',
+    title: 'Views | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
@@ -92,11 +93,6 @@ export default function DocsArticleRoute() {
 
     return (
         <Article page={article}>
-            <Seo
-                description="Build interfaces with LongLink Views and components."
-                hasBreadcrumbs
-                title="Views | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="views" level={1}>
                     Views

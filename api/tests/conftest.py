@@ -2,9 +2,10 @@ import os
 import pytest
 import pytest_asyncio
 from uuid import UUID, uuid4
+from types import TracebackType
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
-from typing import cast
+from typing import Self, cast
 from pathlib import Path
 from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
@@ -46,6 +47,28 @@ from src.database.models import registry
 from src.database.models.users import User
 
 
+class AsyncKubernetes:
+    """Provide Kubernetes resource-scope cleanup for test doubles."""
+
+    async def __aenter__(self) -> Self:
+        """Return this test double for an async resource scope."""
+
+        return self
+
+    async def __aexit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
+        _traceback: TracebackType | None,
+    ) -> None:
+        """Close this test double when its async resource scope ends."""
+
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        """Close this test double without external resources."""
+
+
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
@@ -82,7 +105,7 @@ class StorageKubernetes:
         return 128
 
 
-class DatabaseKubernetes:
+class DatabaseKubernetes(AsyncKubernetes):
     """Provide the CNPG provider boundary without opening Kubernetes connections."""
 
     def __init__(self, *_args: object) -> None:
@@ -109,9 +132,6 @@ class DatabaseKubernetes:
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"
-
-    async def aclose(self) -> None:
-        """Close the provider boundary."""
 
 
 class DatabasePostgres:
@@ -183,7 +203,7 @@ class FakeKubernetes:
         return 18444
 
 
-class RegistryKubernetes:
+class RegistryKubernetes(AsyncKubernetes):
     """Resolve deterministic cluster identities without external Kubernetes I/O."""
 
     def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -200,9 +220,6 @@ class RegistryKubernetes:
             if isinstance(cluster, dict) and isinstance(cluster.get("server"), str):
                 return cluster["server"]
         return str(uuid4())
-
-    async def aclose(self) -> None:
-        """Close the synthetic cluster client."""
 
 
 @pytest.fixture

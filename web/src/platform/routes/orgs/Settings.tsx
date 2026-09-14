@@ -11,7 +11,7 @@ export default function OrganizationSettings() {
     return (
         <PageContainer gap={8} padding={2}>
             <NoIndex title="Organization Settings | LongLink" />
-            <PlatformView key={organization} source={source} params={{ organization }} />
+            <PlatformView source={source} params={{ organization }} />
         </PageContainer>
     );
 }

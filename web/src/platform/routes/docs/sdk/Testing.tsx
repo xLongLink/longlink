@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -7,22 +6,19 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const article = {
+    description: 'Test LongLink projects and their Views.',
     toc: [
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Testing.tsx',
+    title: 'Testing | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Test LongLink projects and their Views."
-                hasBreadcrumbs
-                title="Testing | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="testing" level={1}>
                     Testing

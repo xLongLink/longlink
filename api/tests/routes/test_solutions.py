@@ -1,6 +1,7 @@
 import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
+from conftest import AsyncKubernetes
 from sqlmodel import col
 from factories import create_solution, fetch_operations, create_organization
 from sqlalchemy import select
@@ -16,7 +17,7 @@ from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 
 
-class FakeCompute:
+class FakeCompute(AsyncKubernetes):
     """Fake Kubernetes log client with a configured result."""
 
     def __init__(self, outcome: list[str] | RuntimeError, captured: dict[str, UUID | str]) -> None:
@@ -34,9 +35,6 @@ class FakeCompute:
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
         return self.outcome
-
-    async def aclose(self) -> None:
-        """Provide the Kubernetes client cleanup contract."""
 
 
 async def test_list_apps_returns_requested_page_for_admin(

@@ -17,12 +17,8 @@ import { useOrganizationRoute } from '@/lib/hooks/use-organization';
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const { solutions, isMembershipLoading, isSolutionsLoading, membershipError, solutionsError } =
-        useOrganizationRoute(organization);
+    const { solutions, isLoading, error } = useOrganizationRoute(organization);
 
-    // Preserve the page's loading state and solutions-first error precedence.
-    const isLoading = isMembershipLoading || isSolutionsLoading;
-    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const solutionAccess = solutions.find((item) => item.slug === solution);
     const pageMetadata = <NoIndex title="Solution | LongLink" />;
 

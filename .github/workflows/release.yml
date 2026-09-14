@@ -153,13 +153,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Package Compute
-              run: |
-                  set -euo pipefail
-
-                  archive="longlink-compute-${GITHUB_REF_NAME}.tar.gz"
-
-                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
-                  sha256sum "$archive" > "${archive}.sha256"
+              run: make package-compute COMPUTE_VERSION="${GITHUB_REF_NAME}" ARCHIVE="longlink-compute-${GITHUB_REF_NAME}.tgz"
 
             - name: Create GitHub release
               uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
@@ -168,5 +162,5 @@ jobs:
                   name: ${{ github.ref_name }}
                   generate_release_notes: true
                   files: |
-                      longlink-compute-${{ github.ref_name }}.tar.gz
-                      longlink-compute-${{ github.ref_name }}.tar.gz.sha256
+                      longlink-compute-${{ github.ref_name }}.tgz
+                      longlink-compute-${{ github.ref_name }}.tgz.sha256

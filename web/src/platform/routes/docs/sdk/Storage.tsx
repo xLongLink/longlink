@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,6 +9,7 @@ import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const article = {
+    description: 'Store and manage files in a LongLink project.',
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
@@ -17,16 +17,12 @@ const article = {
     ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
+    title: 'Storage | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Store and manage files in a LongLink project."
-                hasBreadcrumbs
-                title="Storage | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="storage" level={1}>
                     Storage

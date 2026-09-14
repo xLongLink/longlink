@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,22 +7,19 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const article = {
+    description: 'Define API routes in a LongLink project.',
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
     lastUpdated: '2026-08-05',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Routes.tsx',
+    title: 'Routes | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Define API routes in a LongLink project."
-                hasBreadcrumbs
-                title="Routes | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="routes" level={1}>
                     Routes

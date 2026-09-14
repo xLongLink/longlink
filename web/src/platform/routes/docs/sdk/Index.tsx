@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Card } from '@astryxdesign/core/Card';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -9,6 +8,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 
 const article = {
+    description: 'Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK.',
     toc: [
         { id: 'solution-sdk', label: 'Solutions', level: 1 },
         { id: 'create-a-project', label: 'Create a Project', level: 2 },
@@ -16,16 +16,12 @@ const article = {
     ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Index.tsx',
+    title: 'Solution SDK Documentation | LongLink',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Build LongLink Solutions as standard Python and FastAPI services with the Solution SDK."
-                hasBreadcrumbs
-                title="Solution SDK Documentation | LongLink"
-            />
             <Stack gap={5}>
                 <Heading id="solution-sdk" level={1}>
                     Solutions

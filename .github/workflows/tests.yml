@@ -47,25 +47,19 @@ jobs:
               working-directory: api
               run: uv run --locked ruff check .
 
-            - name: Setup Kustomize for Helmfile
-              uses: imranismail/setup-kustomize@ab2f6c276a92396da9967066f67ef300563038cf
-              with:
-                  kustomize-version: 5.8.1
-
-            - name: Setup Helm and Helmfile
-              uses: helmfile/helmfile-action@b56e977d7c89d1cb0e8728cb70b92b576822ac16
-              with:
-                  helm-version: v4.3.0
-                  helmfile-version: v1.8.0
-                  helm-plugins: ''
-                  helmfile-args: --file k8s/setup.yaml.gotmpl template --output-dir /tmp/longlink-compute
+            - name: Setup Helm
+              run: |
+                  set -euo pipefail
+                  curl --fail --location --output "$RUNNER_TEMP/helm.tar.gz" https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz
+                  mkdir "$RUNNER_TEMP/helm"
+                  tar --extract --gzip --file "$RUNNER_TEMP/helm.tar.gz" --strip-components=1 --directory "$RUNNER_TEMP/helm" linux-amd64/helm
+                  printf '%s\n' "$RUNNER_TEMP/helm" >> "$GITHUB_PATH"
 
             - name: Render Compute package
               run: |
                   set -euo pipefail
-                  helmfile --file k8s/setup.yaml.gotmpl --environment development template > /dev/null
-                  kubectl kustomize k8s/boundaries > /dev/null
-                  kubectl kustomize dev/compute/connectivity > /dev/null
+                  helm lint k8s/chart --values k8s/chart/values-development.yaml
+                  helm template longlink-compute k8s/chart --namespace rustfs --values k8s/chart/values-development.yaml > /dev/null
 
             - name: Verify Docker daemon
               run: docker info
@@ -85,6 +79,88 @@ jobs:
             - name: Run type checks
               working-directory: api
               run: uv run --locked --extra dev ty check
+
+    # Exercise the Compute package against the same disposable K3s topology used locally.
+    compute-e2e:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 35
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup kubectl
+              uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
+              with:
+                  version: v1.34.3
+
+            - name: Setup Helm
+              run: |
+                  set -euo pipefail
+                  curl --fail --location --output "$RUNNER_TEMP/helm.tar.gz" https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz
+                  mkdir "$RUNNER_TEMP/helm"
+                  tar --extract --gzip --file "$RUNNER_TEMP/helm.tar.gz" --strip-components=1 --directory "$RUNNER_TEMP/helm" linux-amd64/helm
+                  printf '%s\n' "$RUNNER_TEMP/helm" >> "$GITHUB_PATH"
+
+            - name: Setup k3d
+              run: |
+                  set -euo pipefail
+                  curl --fail --location --output "$RUNNER_TEMP/k3d" https://github.com/k3d-io/k3d/releases/download/v5.8.3/k3d-linux-amd64
+                  mkdir "$RUNNER_TEMP/k3d-bin"
+                  install --mode=755 "$RUNNER_TEMP/k3d" "$RUNNER_TEMP/k3d-bin/k3d"
+                  printf '%s\n' "$RUNNER_TEMP/k3d-bin" >> "$GITHUB_PATH"
+
+            - name: Create Compute cluster
+              run: |
+                  set -euo pipefail
+                  k3d cluster create --config dev/cluster.yaml
+                  k3d kubeconfig get compute > "$RUNNER_TEMP/compute-kubeconfig"
+                  chmod 600 "$RUNNER_TEMP/compute-kubeconfig"
+                  printf 'KUBECONFIG=%s\n' "$RUNNER_TEMP/compute-kubeconfig" >> "$GITHUB_ENV"
+
+            - name: Install Compute package
+              run: |
+                  set -euo pipefail
+                  helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --wait-for-jobs --timeout 15m
+
+            - name: Verify Compute controllers
+              run: |
+                  set -euo pipefail
+                  kubectl wait --for=condition=Established --timeout=5m customresourcedefinition/services.serving.knative.dev
+                  kubectl wait --for=condition=Established --timeout=5m customresourcedefinition/clusters.postgresql.cnpg.io
+                  kubectl wait --namespace knative-serving --for=condition=Available --timeout=5m deployment/controller deployment/webhook deployment/net-kourier-controller
+                  kubectl wait --namespace kourier-system --for=condition=Available --timeout=5m deployment/3scale-kourier-gateway
+                  kubectl wait --namespace cnpg-system --for=condition=Available --timeout=5m deployment/cnpg-controller-manager
+                  kubectl wait --namespace rustfs --for=condition=Available --timeout=5m deployment/rustfs deployment/longlink-storage
+                  test "$(kubectl get configmap compute-release --namespace longlink-system --output jsonpath='{.data.contract}')" = 1
+
+            - name: Verify Compute HTTPS endpoints
+              run: |
+                  set -euo pipefail
+                  kubectl get secret longlink-gateway-tls --namespace knative-serving --output jsonpath='{.data.tls\.crt}' | base64 --decode > "$RUNNER_TEMP/gateway.crt"
+                  kubectl get secret longlink-storage-tls --namespace rustfs --output jsonpath='{.data.tls\.crt}' | base64 --decode > "$RUNNER_TEMP/storage.crt"
+                  curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert "$RUNNER_TEMP/gateway.crt" --header 'Host: internalkourier' https://127.0.0.1:8443/ready
+                  curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert "$RUNNER_TEMP/storage.crt" --resolve storage.localhost:9443:127.0.0.1 --output /dev/null https://storage.localhost:9443/health/ready
+
+            - name: Verify Knative Service
+              run: |
+                  set -euo pipefail
+                  kubectl apply --filename k8s/chart/tests/knative-service.yaml
+                  kubectl wait --namespace default --for=condition=Ready --timeout=5m service.serving.knative.dev/compute-smoke
+                  curl --fail --silent --show-error --cacert "$RUNNER_TEMP/gateway.crt" --header 'Host: compute-smoke.default.svc.cluster.local' https://127.0.0.1:8443/
+
+            - name: Collect Compute diagnostics
+              if: failure()
+              run: |
+                  kubectl get all --all-namespaces --output wide || true
+                  kubectl get events --all-namespaces --sort-by=.lastTimestamp || true
+                  kubectl describe deployment --namespace knative-serving controller webhook net-kourier-controller || true
+                  kubectl describe deployment --namespace kourier-system 3scale-kourier-gateway || true
+                  kubectl describe deployment --namespace cnpg-system cnpg-controller-manager || true
+
+            - name: Delete Compute cluster
+              if: always()
+              run: k3d cluster delete compute
 
     # The SDK requires Python 3.12 or newer.
     sdk-tests:

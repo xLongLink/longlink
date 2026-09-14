@@ -1,0 +1,33 @@
+development: true
+
+bootstrap:
+    gatewayIngressCidr: 172.30.0.0/24
+
+gateway:
+    address: 127.0.0.1
+    service:
+        nodePort: 30443
+        type: NodePort
+
+runtimeEgressCidr: 127.0.0.1/32
+
+storage:
+    address: 127.0.0.1
+    service:
+        nodePort: 30943
+        type: NodePort
+
+rustfs:
+    secret:
+        allowInsecureDefaults: true
+        existingSecret: ''
+    replicaCount: 1
+    mode:
+        standalone:
+            enabled: true
+        distributed:
+            enabled: false
+    storageclass:
+        name: local-path
+        dataStorageSize: 1Gi
+        logStorageSize: 1Gi

@@ -7,7 +7,8 @@ from pydantic import Field, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
-LOCAL_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "ca.crt"
+LOCAL_GATEWAY_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "gateway.crt"
+LOCAL_STORAGE_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "storage.crt"
 DEVELOPMENT_COMPUTE = "development compute"
 DEVELOPMENT_ORGANIZATION = "development"
 SAMPLE_SOLUTION = "sample"
@@ -81,21 +82,22 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
         response.raise_for_status()
 
     # Register the fixed local infrastructure through the same API contract as an administrator.
-    certificate = LOCAL_CERTIFICATE.read_text(encoding="utf-8")
+    gateway_certificate = LOCAL_GATEWAY_CERTIFICATE.read_text(encoding="utf-8")
+    storage_certificate = LOCAL_STORAGE_CERTIFICATE.read_text(encoding="utf-8")
     response = await client.post(
         "/api/v1/computes",
         json={
             "name": DEVELOPMENT_COMPUTE,
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": "https://localhost:8443",
-            "gateway_certificate": certificate,
+            "gateway_certificate": gateway_certificate,
             "database_size_gib": 10,
             "database_instances": 1,
             "database_storage_class": "local-path",
             "storage_endpoint": "https://storage.localhost:9443",
             "storage_access_key": "rustfsadmin",
             "storage_secret_key": "rustfsadmin",
-            "storage_certificate": certificate,
+            "storage_certificate": storage_certificate,
             "bucket_size_bytes": 134217728,
         },
     )

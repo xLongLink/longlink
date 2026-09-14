@@ -1,5 +1,6 @@
 import kr8s
-from typing import cast
+from types import TracebackType
+from typing import Self, cast
 from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
 from kr8s.asyncio.objects import Service, Namespace
@@ -30,6 +31,21 @@ class Kubernetes:
         self.databases = Databases(self)
         self.solutions = Solutions(self)
         self.organizations = Organizations(self)
+
+    async def __aenter__(self) -> Self:
+        """Return this Kubernetes client for an async resource scope."""
+
+        return self
+
+    async def __aexit__(
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
+        _traceback: TracebackType | None,
+    ) -> None:
+        """Close this Kubernetes client when its async resource scope ends."""
+
+        await self.aclose()
 
     async def api(self) -> Api:
         """Return the cached kr8s client for the configured cluster."""

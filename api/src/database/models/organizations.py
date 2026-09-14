@@ -65,4 +65,4 @@ class OrganizationActivity(PlatformModel, table=True):
 
     # Lease
     organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE", index=True)
-    expires_at: datetime = Field(sa_type=UTCDateTime, index=True)
+    expires_at: datetime = Field(sa_type=UTCDateTime)

@@ -6,5 +6,5 @@ export default defineConfig({
         indexFile: false,
         path: 'src/lib/generated/platform-api-v1',
     },
-    plugins: ['@hey-api/typescript', { name: 'zod', compatibilityVersion: 4 }],
+    plugins: [{ name: 'zod', compatibilityVersion: 4 }],
 });

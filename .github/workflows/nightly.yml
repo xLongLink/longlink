@@ -104,9 +104,8 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  archive="longlink-compute-${RELEASE}.tar.gz"
-                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
-                  sha256sum "$archive" > "${archive}.sha256"
+                   archive="longlink-compute-${RELEASE}.tgz"
+                   make package-compute COMPUTE_VERSION="$RELEASE" ARCHIVE="$archive"
 
                   checksum="$(cut -d ' ' -f 1 "${archive}.sha256")"
                   jq --null-input \
@@ -126,7 +125,7 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  archive="longlink-compute-${RELEASE}.tar.gz"
+                   archive="longlink-compute-${RELEASE}.tgz"
                   gh release create "$RELEASE" \
                     --repo "$GITHUB_REPOSITORY" \
                     --target "$GITHUB_SHA" \

@@ -25,10 +25,9 @@ vp env setup
 ```bash
 sudo snap install helm --classic
 mkdir -p "$HOME/.local/bin"
-curl -fsSL \
-  https://github.com/helmfile/helmfile/releases/download/v1.8.0/helmfile_1.8.0_linux_amd64.tar.gz \
-  | tar -xzO helmfile > "$HOME/.local/bin/helmfile"
-chmod +x "$HOME/.local/bin/helmfile"
+curl -fsSL https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz \
+  | tar -xzO linux-amd64/helm > "$HOME/.local/bin/helm"
+chmod +x "$HOME/.local/bin/helm"
 ```
 
 ```bash

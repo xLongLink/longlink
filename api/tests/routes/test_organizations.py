@@ -2,7 +2,6 @@ import pytest
 from kr8s import NotFoundError
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
-from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
 from sqlmodel import select
 from factories import create_solution, fetch_operations, create_organization, create_ready_compute
@@ -12,7 +11,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, projections, organizations
+from src.database.services import invitations, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -395,12 +394,12 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
         persisted.database_usage_bytes = usage
         await session.commit()
 
-    def unexpected_cluster(*args: object) -> None:
+    def unexpected_storage(*args: object) -> None:
         """Reject provider access for cached database diagnostics."""
 
-        raise AssertionError("Diagnostics must not access Kubernetes")
+        raise AssertionError("Diagnostics must not access storage")
 
-    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_cluster)
+    monkeypatch.setattr("src.routes.v1.organizations.Storage", unexpected_storage)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/database")
@@ -455,7 +454,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
     from conftest import StorageKubernetes
 
-    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
+    monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
 
     # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
@@ -514,9 +513,9 @@ async def test_organization_resource_endpoints_allow_members(
             assert bucket_name == organization.id.hex
             return 0
 
-    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
     from conftest import StorageKubernetes
 
+    monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
     # Resource inspection starts from a ready Organization, not its queued creation state.
     async with session_scope() as session:
@@ -557,7 +556,7 @@ async def test_organization_resource_endpoints_reject_non_members(
 
         raise AssertionError("cross-tenant resource access reached a provider")
 
-    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_provider)
+    monkeypatch.setattr("src.routes.v1.organizations.Storage", unexpected_provider)
 
     # Act
     response = await clients[1].get(f"/api/v1/organizations/{organization.id}/{resource}")
@@ -977,19 +976,11 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
 async def test_update_organization_member_returns_not_found_for_non_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return the public missing-member error without synchronizing users."""
 
     # Arrange
     organization = await create_organization(users[0])
-
-    async def unexpected_sync(_session: object, _organization_ids: object) -> None:
-        """Fail if a rejected membership update reaches runtime synchronization."""
-
-        raise AssertionError("missing members must not synchronize users")
-
-    monkeypatch.setattr(projections, "request_user_sync", unexpected_sync)
 
     # Act
     response = await clients[0].patch(

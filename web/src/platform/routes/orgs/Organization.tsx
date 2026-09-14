@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { hasMinimumRole } from '@/lib/roles';
@@ -13,24 +14,13 @@ import { PageError, PageLoading } from '@/components/Utils';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { useOrganizationRoute } from '@/lib/hooks/use-organization';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const {
-        organizationId,
-        role,
-        solutions,
-        isMembershipLoading,
-        isSolutionsLoading,
-        membershipError,
-        solutionsError,
-    } = useOrganizationRoute(organization);
+    const { organizationId, role, solutions, isLoading, error } = useOrganizationRoute(organization);
 
-    // Preserve the page's loading state and solutions-first error precedence.
-    const isLoading = isMembershipLoading || isSolutionsLoading;
-    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const canManageSolutions = hasMinimumRole(role, 'maintain');
     const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 
@@ -102,7 +92,7 @@ export default function Organization() {
                                 </Stack>
                             ),
                         },
-                    ] satisfies TableColumn<OrganizationSolutionSummary>[]
+                    ] satisfies TableColumn<z.output<typeof zOrganizationSolutionSummary>>[]
                 }
             />
         </PageContainer>

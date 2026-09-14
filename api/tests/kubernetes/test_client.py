@@ -69,7 +69,8 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
     kubernetes.connections.push_async_callback(close_tunnel)
 
     # Act
-    await kubernetes.aclose()
+    async with kubernetes:
+        pass
 
     # Assert
     assert closed == ["tunnel", "http"]

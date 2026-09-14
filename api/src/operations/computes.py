@@ -1,4 +1,3 @@
-import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import update
@@ -23,7 +22,7 @@ async def validate(compute_id: UUID) -> str | None:
     )
 
     # Readiness includes Serving, Kourier, CNPG, and the verified HTTPS endpoint.
-    async with contextlib.aclosing(cluster):
+    async with cluster:
         if await cluster.cluster_uid() != registry.cluster_uid:
             raise ValueError("Registered Compute connection points to a different physical cluster")
         logger.info("Validating shared controllers for Compute %s", registry.id)
