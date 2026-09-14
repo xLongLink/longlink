@@ -17,6 +17,7 @@ PRODUCTION_SETTINGS = {
     "LONGLINK_DATABASE_SCHEMA": "solution",
     "LONGLINK_DATABASE_PASSWORD": "secret",
     "LONGLINK_DATABASE_USERNAME": "solution",
+    "LONGLINK_DATABASE_CERTIFICATE": "database-ca-pem",
     "LONGLINK_STORAGE_ENDPOINT_URL": "http://storage.runtime.longlink.internal:19000",
     "LONGLINK_STORAGE_PASSWORD": "secret@key",
     "LONGLINK_STORAGE_REGION": "ch-gva-2",
