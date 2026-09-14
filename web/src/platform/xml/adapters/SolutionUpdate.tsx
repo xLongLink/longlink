@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import type { Props } from '../types';
-import { useXmlRuntime } from '../core/context';
-import { resolveXmlProps } from '../core/props';
+import type { Props } from '@/xml/types';
+import { useXmlRuntime } from '@/xml/core/context';
+import { resolveXmlProps } from '@/xml/core/props';
 import { Button } from '@astryxdesign/core/Button';
 import UpdateSolution from '@/components/dialogs/UpdateSolution';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

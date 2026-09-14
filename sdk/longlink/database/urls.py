@@ -2,9 +2,7 @@ import ssl
 from sqlalchemy.engine import URL, make_url
 
 
-def connect_args(
-    database_url: str | URL, schema: str | None = None, sslmode: str | None = None, certificate: str | None = None
-) -> dict[str, object]:
+def connect_args(database_url: str | URL, schema: str | None = None, certificate: str | None = None) -> dict[str, object]:
     """Return LongLink database driver connection arguments for one database URL."""
 
     # Other drivers require no LongLink-specific arguments.
@@ -18,10 +16,8 @@ def connect_args(
 
     connect_args: dict[str, object] = {"server_settings": server_settings}
 
-    # A supplied CA always requires certificate and hostname verification, irrespective of the selected mode.
+    # Production runtimes always receive a Platform CA for certificate and hostname verification.
     if certificate is not None:
         connect_args["ssl"] = ssl.create_default_context(cadata=certificate)
-    elif sslmode is not None:
-        connect_args["ssl"] = sslmode
 
     return connect_args

@@ -77,8 +77,8 @@ async def test_local_seed_creates_example_through_api(
     class Organizations:
         """Accept Organization namespace provisioning."""
 
-        async def apply(self, _namespace: str) -> None:
-            """Accept the requested namespace."""
+        async def apply(self, _organization_id: UUID) -> None:
+            """Accept the requested Organization boundary."""
 
     class Solutions:
         """Accept Solution workload provisioning."""

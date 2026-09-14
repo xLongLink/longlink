@@ -49,7 +49,15 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             self.storage = self.databases.storage
 
         async def apply(
-            self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool
+            self,
+            _organization_id: UUID,
+            _id: UUID,
+            image: str,
+            secrets: dict[str, str],
+            *,
+            revision_id: UUID,
+            min_scale: int,
+            migrate: bool,
         ) -> None:
             """Capture the exact snapshot and simulate rollout outcomes."""
 
@@ -220,7 +228,15 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             self.storage = self.databases.storage
 
         async def apply(
-            self, _id: UUID, _namespace: str, image: str, secrets: dict[str, str], *, revision_id: UUID, min_scale: int, migrate: bool
+            self,
+            _organization_id: UUID,
+            _id: UUID,
+            image: str,
+            secrets: dict[str, str],
+            *,
+            revision_id: UUID,
+            min_scale: int,
+            migrate: bool,
         ) -> None:
             """Capture immutable image and environment pairs."""
 

@@ -4,7 +4,6 @@ from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
-from src.kubernetes import namespace
 from src.operations import databases
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -44,7 +43,7 @@ async def reconcile(organization_id: UUID) -> None:
         )
         async with contextlib.aclosing(cluster):
             await cluster.storage.apply(organization.id, infrastructure.compute)
-            await cluster.organizations.apply(namespace.compute(organization.id))
+            await cluster.organizations.apply(organization.id)
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
         logger.info("Publishing Organization %s", organization.id)
@@ -95,7 +94,7 @@ async def delete(organization_id: UUID) -> str | None:
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
         logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
         async with contextlib.aclosing(cluster):
-            await cluster.organizations.delete(namespace.compute(infrastructure.organization.id))
+            await cluster.organizations.delete(infrastructure.organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(infrastructure.organization.id)
             logger.info("Deleting object storage for Organization %s", infrastructure.organization.id)

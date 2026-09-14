@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import type { Props } from '../types';
-import { useXmlRuntime } from '../core/context';
-import { resolveXmlProps } from '../core/props';
+import type { Props } from '@/xml/types';
+import { useXmlRuntime } from '@/xml/core/context';
+import { resolveXmlProps } from '@/xml/core/props';
 import CreateSolutionDialog from '@/components/dialogs/CreateSolution';
 
 const createSolutionPropsSchema = z.object({ organizationId: z.string().uuid() });

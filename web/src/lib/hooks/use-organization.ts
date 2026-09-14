@@ -50,12 +50,9 @@ export function useOrganizationRoute(organizationSlug: string) {
 
 /** Invalidates cached organization solution collections. */
 export function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organizationId: string) {
-    return Promise.all([
-        queryClient.invalidateQueries({
-            queryKey: ['api', `/api/v1/organizations/${organizationId}/solutions`],
-        }),
-        queryClient.invalidateQueries({ queryKey: ['api', '/api/v1/solutions'] }),
-    ]);
+    return queryClient.invalidateQueries({
+        queryKey: ['api', `/api/v1/organizations/${organizationId}/solutions`],
+    });
 }
 
 /** Creates one solution and refreshes organization solution data. */

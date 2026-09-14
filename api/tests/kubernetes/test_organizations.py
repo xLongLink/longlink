@@ -1,4 +1,5 @@
 import pytest
+from uuid import UUID
 from conftest import FakeKubernetes
 from src.utils import templates
 from src.kubernetes import organizations
@@ -46,18 +47,18 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     monkeypatch.setattr(organizations, "apply", apply)
 
     # Act
-    await organizations.Organizations(FakeKubernetes()).apply("acme")  # type: ignore[arg-type]
+    await organizations.Organizations(FakeKubernetes()).apply(UUID("00000000-0000-4000-8000-000000000001"))  # type: ignore[arg-type]
 
     # Assert
     assert [resource["kind"] for resource in applied] == ["Namespace", "ResourceQuota", "NetworkPolicy"]
     assert applied[0]["metadata"] == {
-        "name": "acme",
+        "name": "longlink-compute-00000000000040008000000000000001",
         "labels": {"longlink.io/namespace": "compute", "pod-security.kubernetes.io/enforce": "restricted"},
     }
     for resource in applied[1:]:
         metadata = resource["metadata"]
         assert isinstance(metadata, dict)
-        assert metadata["namespace"] == "acme"
+        assert metadata["namespace"] == "longlink-compute-00000000000040008000000000000001"
 
 
 async def test_organization_delete_waits_for_namespace_termination(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -73,7 +74,7 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
         def __init__(self, name: str, **_kwargs: object) -> None:
             """Validate the Namespace."""
 
-            assert name == "acme"
+            assert name == "longlink-compute-00000000000040008000000000000001"
 
         async def delete(self) -> None:
             """Record the single deletion request."""
@@ -88,7 +89,7 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
     monkeypatch.setattr(organizations, "Namespace", Namespace)
 
     # Act
-    await organizations.Organizations(FakeKubernetes()).delete("acme")  # type: ignore[arg-type]
+    await organizations.Organizations(FakeKubernetes()).delete(UUID("00000000-0000-4000-8000-000000000001"))  # type: ignore[arg-type]
 
     # Assert
     assert deleted == [True]

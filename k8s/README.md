@@ -17,29 +17,22 @@ validates it and manages tenant resources; it never installs shared infrastructu
 `setup.yaml.gotmpl` defines package releases. `release/release.yml` defines the
 Platform compatibility contract.
 
-## Local
+Tagged Platform releases publish this package with the matching API image. The
+nightly workflow publishes an immutable prerelease containing a Compute archive,
+checksum, and API image digest from one commit. Hosting environments use that
+metadata to apply matching nightly Platform and Compute builds.
 
-Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, uv, and Vite+.
-`make up` uses the pinned Helmfile container when Helmfile is not installed locally.
-
-```bash
-make install
-make up
-make api
-make web
-make image
-make seed
-```
-
-Stop Platform workers before changing infrastructure. Run `make up` to reapply it.
-Run `make down` only for disposable local data.
-
-## Hosted
+## Kubernetes setup and updates
 
 The hosting environment owns cluster access, storage, TLS, deployment, and recovery.
+Install this package before registering the Compute with the Platform API. The API
+validates the shared infrastructure and creates Organization resources only in a
+registered Compute.
+
 Create the gateway and storage TLS Secrets plus the `rustfs/longlink-rustfs` Secret
-with `RUSTFS_ACCESS_KEY` and `RUSTFS_SECRET_KEY`, stop Platform workers, then apply the
-boundaries before Helmfile installs shared controllers:
+with `RUSTFS_ACCESS_KEY` and `RUSTFS_SECRET_KEY`. Stop Platform workers before a
+package installation or update, then apply the boundaries before Helmfile installs
+or reconciles shared controllers:
 
 ```bash
 kubectl apply --server-side --field-manager=longlink-compute -k k8s/boundaries
@@ -49,6 +42,9 @@ helmfile --file k8s/setup.yaml.gotmpl \
 
 Never delete or recreate RustFS or PostgreSQL to transfer ownership. Existing
 kubectl-managed installations require a reviewed migration.
+
+For workstation-only infrastructure and development commands, see
+[`dev/README.md`](../dev/README.md).
 
 <br />
 <br />

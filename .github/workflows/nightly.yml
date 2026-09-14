@@ -1,4 +1,4 @@
-name: Nightly Image
+name: Publish Nightly
 
 on:
     schedule:
@@ -27,13 +27,10 @@ jobs:
 
         outputs:
             platform_version: ${{ steps.platform.outputs.version }}
-            publish: ${{ steps.nightly.outputs.publish }}
-
-        env:
-            IMAGE: ghcr.io/xlonglink/longlink-nightly:nightly
+            publish: ${{ steps.release.outputs.publish }}
 
         permissions:
-            contents: read
+            contents: write
             packages: write
 
         steps:
@@ -46,39 +43,42 @@ jobs:
                   set -euo pipefail
 
                   version="v$(date -u +'%Y.%-m.%-d')"
+                  release="n$(date -u +'%Y.%m.%d')-${GITHUB_SHA::12}"
+
                   printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+                  printf 'release=%s\n' "$release" >> "$GITHUB_OUTPUT"
+
+            - name: Check nightly release
+              id: release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RELEASE: ${{ steps.platform.outputs.release }}
+              run: |
+                  set -euo pipefail
+
+                  publish=true
+                  if gh release view "$RELEASE" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+                      publish=false
+                      printf 'Nightly release %s already exists.\n' "$RELEASE"
+                  fi
+
+                  printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
 
             - name: Setup Docker Buildx
+              if: steps.release.outputs.publish == 'true'
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
             - name: Log in to GHCR
+              if: steps.release.outputs.publish == 'true'
               uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Check current nightly image
-              id: nightly
-              env:
-                  PLATFORM_VERSION: ${{ steps.platform.outputs.version }}
-              run: |
-                  set -euo pipefail
-                  # shellcheck disable=SC2153
-
-                  image="$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Image}}' 2>/dev/null || true)"
-                  revision="$(jq -r '.config.Labels["org.opencontainers.image.revision"] // empty' <<< "$image")"
-                  version="$(jq -r '[.config.Env[]? | select(startswith("VERSION=")) | ltrimstr("VERSION=")][0] // empty' <<< "$image")"
-                  publish=true
-                  if [ "$revision" = "$GITHUB_SHA" ] && [ "$version" = "$PLATFORM_VERSION" ]; then
-                      publish=false
-                      printf 'The nightly image already contains commit %s with Platform version %s.\n' "$GITHUB_SHA" "$PLATFORM_VERSION"
-                  fi
-
-                  printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
-
             - name: Build and push nightly API image
-              if: steps.nightly.outputs.publish == 'true'
+              id: image
+              if: steps.release.outputs.publish == 'true'
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
                   context: .
@@ -92,17 +92,74 @@ jobs:
                       org.opencontainers.image.version=${{ steps.platform.outputs.version }}
                   annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
-                  tags: ${{ env.IMAGE }}
+                  tags: ghcr.io/xlonglink/longlink-nightly:${{ steps.platform.outputs.release }}
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
+            - name: Package nightly Compute
+              if: steps.release.outputs.publish == 'true'
+              env:
+                  IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+                  RELEASE: ${{ steps.platform.outputs.release }}
+              run: |
+                  set -euo pipefail
+
+                  archive="longlink-compute-${RELEASE}.tar.gz"
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C k8s .
+                  sha256sum "$archive" > "${archive}.sha256"
+
+                  checksum="$(cut -d ' ' -f 1 "${archive}.sha256")"
+                  jq --null-input \
+                    --arg archive "$archive" \
+                    --arg checksum "$checksum" \
+                    --arg compute "$RELEASE" \
+                    --arg image "ghcr.io/xlonglink/longlink-nightly@${IMAGE_DIGEST}" \
+                    --arg release "$RELEASE" \
+                    '{release: $release, image: $image, compute: {version: $compute, archive: $archive, sha256: $checksum}}' \
+                    > "longlink-nightly-${RELEASE}.json"
+
+            - name: Publish nightly release
+              if: steps.release.outputs.publish == 'true'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RELEASE: ${{ steps.platform.outputs.release }}
+              run: |
+                  set -euo pipefail
+
+                  archive="longlink-compute-${RELEASE}.tar.gz"
+                  gh release create "$RELEASE" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --target "$GITHUB_SHA" \
+                    --title "$RELEASE" \
+                    --notes "Immutable nightly Platform and Compute build for ${GITHUB_SHA}." \
+                    --prerelease \
+                    "$archive" \
+                    "${archive}.sha256" \
+                    "longlink-nightly-${RELEASE}.json"
+
             - name: Remove old nightly API image versions
+              if: steps.release.outputs.publish == 'true'
               uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
               with:
                   package-name: longlink-nightly
                   package-type: container
                   min-versions-to-keep: 3
-                  delete-only-untagged-versions: true
+                  delete-only-untagged-versions: false
+
+            - name: Remove old nightly releases
+              if: steps.release.outputs.publish == 'true'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+
+                  gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+                    --jq '[.[] | select(.prerelease and (.tag_name | test("^n[0-9]{4}\\.[0-9]{2}\\.[0-9]{2}-[0-9a-f]{12}$")))] | sort_by(.published_at) | reverse | .[3:][] | .tag_name' \
+                    > "$RUNNER_TEMP/old-nightly-releases"
+
+                  while IFS= read -r release; do
+                      gh release delete "$release" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+                  done < "$RUNNER_TEMP/old-nightly-releases"
 
     sync-sample:
         needs: publish-api-image

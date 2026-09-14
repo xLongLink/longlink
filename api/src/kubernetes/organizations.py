@@ -1,6 +1,8 @@
 from kr8s import NotFoundError
+from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
+from src.kubernetes import namespace
 from importlib.resources import files
 from kr8s.asyncio.objects import Namespace, NetworkPolicy, ResourceQuota
 from src.kubernetes.utils import apply
@@ -17,13 +19,14 @@ class Organizations:
 
         self._client = client
 
-    async def apply(self, namespace: str) -> None:
+    async def apply(self, organization_id: UUID) -> None:
         """Create one Organization Namespace boundary for its explicit lifecycle."""
 
         # Render and apply only the requested Organization boundary.
+        compute_namespace = namespace.compute(organization_id)
         namespace_manifest, resource_quota, network_policy = templates.readyml_list(
             files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
-            namespace=namespace,
+            namespace=compute_namespace,
         )
 
         api = await self._client.api()
@@ -31,11 +34,11 @@ class Organizations:
         await apply(ResourceQuota(resource_quota, api=api))
         await apply(NetworkPolicy(network_policy, api=api))
 
-    async def delete(self, namespace: str) -> None:
+    async def delete(self, organization_id: UUID) -> None:
         """Delete one Organization Namespace and wait for completion."""
 
         # Issue deletion once and wait for Kubernetes to report terminal absence.
-        resource = Namespace(namespace, api=await self._client.api())
+        resource = Namespace(namespace.compute(organization_id), api=await self._client.api())
         try:
             await resource.delete()
         except NotFoundError:

@@ -7,7 +7,6 @@ from pydantic import Field, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
-SEED_ENVIRONMENT = Path(__file__).resolve().parents[1] / ".env.seed"
 LOCAL_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "ca.crt"
 DEVELOPMENT_COMPUTE = "development compute"
 DEVELOPMENT_ORGANIZATION = "development"
@@ -54,7 +53,7 @@ class SeedSettings(BaseSettings):
     SAMPLE_ENVS: dict[str, str] = Field(default_factory=lambda: {"REQUIRED": "development"})
 
     model_config = SettingsConfigDict(
-        env_file=(API_ENVIRONMENT, SEED_ENVIRONMENT),
+        env_file=API_ENVIRONMENT,
         env_file_encoding="utf-8",
         extra="ignore",
     )

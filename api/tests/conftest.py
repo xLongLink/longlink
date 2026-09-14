@@ -27,8 +27,7 @@ os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough
 os.environ["OPERATION_TIMEOUT_SECONDS"] = "600"
 os.environ["AUTH_SESSION_LIFETIME_SECONDS"] = "2592000"
 os.environ["SMTP_PORT"] = "587"
-os.environ["SMTP_USE_TLS"] = "false"
-os.environ["SMTP_START_TLS"] = "true"
+os.environ["SMTP_TRANSPORT"] = "starttls"
 
 # Prevent optional workstation credentials from changing test capabilities.
 os.environ.pop("SMTP_PASSWORD", None)
@@ -98,9 +97,12 @@ class DatabaseKubernetes:
     async def resume(self, organization: UUID) -> None:
         """Accept database resumption."""
 
-    async def portforward(self, organization: UUID) -> int:
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
 
+        assert name == "database-rw"
+        assert namespace.startswith("longlink-database-")
+        assert port == 5432
         return 15432
 
     async def certificate(self, organization: UUID) -> str:

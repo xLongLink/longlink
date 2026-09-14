@@ -316,21 +316,3 @@ def upgrade() -> None:
         "operations",
         ["kind", "target_id", "finished_at", "lease_expires_at"],
     )
-
-
-def downgrade() -> None:
-    """Drop the initial platform schema."""
-
-    # Drop tables and indexes in reverse dependency order.
-    op.drop_table("operations")
-    op.drop_table("user_organizations")
-    op.drop_table("organization_invitations")
-    with op.batch_alter_table("solutions") as batch:
-        batch.drop_constraint("solution_desired_revision", type_="foreignkey")
-        batch.drop_constraint("solution_deployed_revision", type_="foreignkey")
-    op.drop_table("revisions")
-    op.drop_table("solutions")
-    op.drop_table("organization_activities")
-    op.drop_table("organizations")
-    op.drop_table("compute_registries")
-    op.drop_table("users")

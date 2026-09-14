@@ -1,4 +1,5 @@
 import type { Expression } from 'acorn';
+import type { ComponentType } from 'react';
 
 export type ASTAttribute =
     | { kind: 'text'; value: string }
@@ -25,10 +26,14 @@ export interface Props {
     nodes: ASTNode[];
 }
 
+/** XML element adapters available to one runtime. */
+export type XmlComponentRegistry = Record<string, ComponentType<Props>>;
+
 /** XML lexical scope with local bindings and parent lookup. */
 export type Scope = {
     parent?: Scope;
     bindings: Record<string, unknown>;
+    registry?: XmlComponentRegistry;
 };
 
 /** Renderer and host services available to the XML runtime. */

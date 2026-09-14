@@ -9,6 +9,8 @@ from collections.abc import AsyncIterator
 from importlib.resources import files
 
 pytestmark = pytest.mark.no_db
+ORGANIZATION_ID = UUID("00000000-0000-4000-8000-000000000002")
+COMPUTE_NAMESPACE = "longlink-compute-00000000000040008000000000000002"
 
 
 class AppliedResource(Protocol):
@@ -132,7 +134,7 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
         async def list(cls, **kwargs: object) -> AsyncIterator["MigrationPod"]:
             """Yield the failed migration Pod selected by its Job label."""
 
-            assert kwargs["namespace"] == "acme"
+            assert kwargs["namespace"] == COMPUTE_NAMESPACE
             assert kwargs["label_selector"] == {"job-name": f"migration-{UUID(int=1)}"}
             yield cls()
 
@@ -171,8 +173,8 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
     # Act and assert
     with pytest.raises(RuntimeError, match=r"Solution migration Job .* failed"):
         await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
+            ORGANIZATION_ID,
             UUID("00000000-0000-4000-8000-000000000001"),
-            "acme",
             "ghcr.io/longlink/dashboard:latest",
             {},
             revision_id=UUID(int=1),
@@ -260,8 +262,8 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
 
     # Act
     await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
         "ghcr.io/longlink/dashboard:latest",
         {},
         revision_id=UUID(int=1),
@@ -318,8 +320,8 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
     with pytest.raises(RuntimeError, match="capacity exhausted"):
         async with asyncio.timeout(1):
             await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
+                ORGANIZATION_ID,
                 UUID("00000000-0000-4000-8000-000000000001"),
-                "acme",
                 "ghcr.io/longlink/dashboard:latest",
                 {},
                 revision_id=UUID(int=1),
@@ -361,7 +363,7 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
     # Act and assert
     with pytest.raises(RuntimeError, match="Knative Solution Service disappeared during rollout"):
         await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
+            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"), "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
         )
 
 
@@ -432,7 +434,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
 
     # Act
     await solutions.Solutions(FakeKubernetes()).apply(  # type: ignore[arg-type]
-        UUID("00000000-0000-4000-8000-000000000001"), "acme", "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
+        ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"), "ghcr.io/longlink/dashboard:latest", {}, revision_id=UUID(int=1)
     )
 
     # Assert
@@ -465,8 +467,8 @@ async def test_solution_logs_returns_failed_migration_logs(monkeypatch: pytest.M
 
     # Act
     logs = await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
     )
 
     # Assert
@@ -500,8 +502,8 @@ async def test_solution_logs_returns_running_solution_pod_logs(monkeypatch: pyte
 
     # Act
     logs = await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
     )
 
     # Assert
@@ -530,8 +532,8 @@ async def test_solution_logs_reports_completed_migration_when_solution_pod_is_un
 
     # Act
     logs = await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
     )
 
     # Assert
@@ -557,7 +559,7 @@ async def test_solution_logs_reports_unavailable_when_no_pod_exists(monkeypatch:
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable"):
         await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
         )
 
 
@@ -582,7 +584,7 @@ async def test_solution_logs_ignores_terminal_solution_pods(monkeypatch: pytest.
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable"):
         await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
         )
 
 
@@ -609,7 +611,7 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable") as error:
         await solutions.Solutions(FakeKubernetes()).logs(  # type: ignore[arg-type]
-            UUID("00000000-0000-4000-8000-000000000001"), "acme"
+            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
         )
     assert isinstance(error.value.__cause__, KubernetesError)
 
@@ -648,7 +650,7 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
         async def list(cls, *, api: object, namespace: str, field_selector: dict[str, str]):
             """Return the named Service only before its deletion request."""
 
-            assert namespace == "acme"
+            assert namespace == COMPUTE_NAMESPACE
             assert field_selector == {"metadata.name": "solution-00000000-0000-4000-8000-000000000001"}
             nonlocal resource_checks
             resource_checks += 1
@@ -715,8 +717,8 @@ async def test_solution_delete_removes_resources_before_waiting_for_pods(monkeyp
 
     # Act
     await solutions.Solutions(FakeKubernetes()).delete(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
     )
 
     # Assert
@@ -754,8 +756,8 @@ async def test_solution_delete_skips_cleanup_when_namespace_is_absent(monkeypatc
 
     # Act
     await solutions.Solutions(FakeKubernetes()).delete(  # type: ignore[arg-type]
+        ORGANIZATION_ID,
         UUID("00000000-0000-4000-8000-000000000001"),
-        "acme",
     )
 
 
@@ -809,7 +811,7 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
 
     # Act
     await solutions.Solutions(FakeKubernetes()).delete(  # type: ignore[arg-type]
-        UUID("00000000-0000-4000-8000-000000000001"), "acme"
+        ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
     )
 
     # Assert

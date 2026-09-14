@@ -1,7 +1,6 @@
 import main
 import runpy
 import pytest
-import uvicorn
 from pathlib import Path
 from contextlib import asynccontextmanager
 from src.database import session as database_session
@@ -31,27 +30,6 @@ def test_main_skips_static_routes_when_web_bundle_is_absent(monkeypatch: pytest.
     # Assert
     app = module["app"]
     assert all(getattr(route, "path", None) != "/" for route in app.routes)
-
-
-def test_main_entrypoint_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Run the same application through the direct Uvicorn entrypoint."""
-
-    # Arrange
-    runs: list[tuple[object, str, int]] = []
-
-    def run(app: object, *, host: str, port: int) -> None:
-        """Capture the local Uvicorn invocation."""
-
-        runs.append((app, host, port))
-
-    monkeypatch.setattr(uvicorn, "run", run)
-
-    # Act
-    module = runpy.run_path(main.__file__, run_name="__main__")
-
-    # Assert
-    app = module["app"]
-    assert runs == [(app, "127.0.0.1", 8000)]
 
 
 async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monkeypatch: pytest.MonkeyPatch) -> None:

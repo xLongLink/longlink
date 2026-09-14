@@ -124,10 +124,18 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
             self.databases = DatabaseKubernetes()
             self.storage = FakeStorage()
 
-        async def delete(self, solution_id: object, _organization_id: object) -> None:
+        async def delete(self, _organization_id: object, solution_id: object) -> None:
             """Record workload removal."""
 
             calls.append(("workload", solution_id))
+
+        async def portforward(self, name: str, namespace: str, port: int) -> int:
+            """Provide the database tunnel used for schema cleanup."""
+
+            assert name == "database-rw"
+            assert namespace.startswith("longlink-database-")
+            assert port == 5432
+            return 15432
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -226,8 +234,8 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
         async def apply(
             self,
+            organization_id: object,
             _solution_id: object,
-            _namespace: object,
             _image: object,
             secrets: dict[str, str],
             *,
@@ -237,9 +245,17 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         ) -> None:
             """Capture the generated runtime environment."""
 
-            assert _namespace == f"longlink-compute-{organization.id.hex}"
+            assert organization_id == organization.id
             captured["secrets"] = secrets
             calls.append("workload")
+
+        async def portforward(self, name: str, namespace: str, port: int) -> int:
+            """Provide the database tunnel used for initial schema setup."""
+
+            assert name == "database-rw"
+            assert namespace.startswith("longlink-database-")
+            assert port == 5432
+            return 15432
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -260,14 +276,12 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     assert captured["secrets"]["LONGLINK_DATABASE_NAME"] == organization.id.hex
     assert captured["secrets"]["LONGLINK_DATABASE_PASSWORD"] == database_passwords[0]
     assert captured["secrets"]["LONGLINK_DATABASE_PORT"] == "5432"
-    assert "LONGLINK_DATABASE_SSLMODE" not in captured["secrets"]
     assert captured["secrets"]["LONGLINK_DATABASE_USERNAME"] == "solution"
     assert captured["secrets"]["LONGLINK_DATABASE_CERTIFICATE"] == "test-database-ca"
     async with session_scope() as session:
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.status == Status.running
-    assert "LONGLINK_DATABASE_SSLMODE" not in persisted.secrets
 
     # A subsequent revision reuses all generated credentials and stable data identities.
     async with session_scope() as session:
@@ -361,7 +375,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_DATABASE_PASSWORD": "persisted-database-password",
         "LONGLINK_DATABASE_PORT": "5432",
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-        "LONGLINK_DATABASE_SSLMODE": "require",
         "LONGLINK_DATABASE_USERNAME": "persisted-database-user",
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
         "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
@@ -379,8 +392,6 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         persisted.status = Status.creating if identity is None else Status.running
         await session.commit()
 
-    # Preserve the expected legacy cleanup while retaining the persisted retry fixture above.
-    del initial_secrets["LONGLINK_DATABASE_SSLMODE"]
     captured: list[dict[str, str]] = []
 
     def unexpected_provider(*_args: object) -> object:
@@ -400,8 +411,8 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
         async def apply(
             self,
+            _organization_id: object,
             _solution_id: object,
-            _namespace: object,
             _image: object,
             secrets: dict[str, str],
             *,

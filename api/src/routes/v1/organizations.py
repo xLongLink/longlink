@@ -6,20 +6,16 @@ from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
 from src.logger import logger
-from sqlalchemy.exc import OperationalError
-from src.operations import databases
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.storages import OrganizationStorageUsageResponse
-from src.database.session import session_scope
 from src.models.resources import OrganizationIdentity, OrganizationSolutionSummary
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import (
-    DatabaseState,
     DatabaseUsage,
     OrganizationCreate,
     OrganizationUpdate,
@@ -121,7 +117,7 @@ async def get_organization_database_usage(
     membership: UserOrganization = Depends(organization_access),
     session: AsyncSession = Depends(get_session),
 ):
-    """Return cached usage while asleep without waking the Organization for telemetry."""
+    """Return cached database usage without waking the Organization for telemetry."""
 
     # Allocation is Platform metadata, so even sleeping databases need no Kubernetes or SQL request.
     organization = membership.organization
@@ -133,27 +129,7 @@ async def get_organization_database_usage(
         "allocated_bytes": infrastructure.compute.database_size_gib * 1024**3,
     }
     await session.commit()
-    if organization.database_state != DatabaseState.available:
-        return usage
-
-    # Inspect the exact Organization database while distinguishing absence from backend failures.
-    try:
-        async with asyncio.timeout(20), databases.activity(organization.id, mode="observe") as admitted:
-            if not admitted:
-                return usage
-            cluster = Kubernetes(infrastructure.compute.kubeconfig)
-            async with contextlib.aclosing(cluster):
-                database, _ = await databases.connection(organization, cluster)
-                size_bytes = await database.database_usage(organization.id.hex)
-            async with session_scope() as usage_session:
-                current = await databases.lock(usage_session, organization.id)
-                if current is not None:
-                    current.database_usage_bytes = size_bytes
-                await usage_session.commit()
-            return {"size_bytes": size_bytes, "allocated_bytes": usage["allocated_bytes"]}
-    except (OperationalError, TimeoutError, RuntimeError) as exc:
-        logger.warning("Database resources unavailable for organization '%s'", organization.slug)
-        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
+    return usage
 
 
 @router.get(

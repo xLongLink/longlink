@@ -25,7 +25,6 @@ ENVIRONMENT_SETTINGS = {
 @pytest.mark.parametrize(
     ("settings", "message"),
     [
-        pytest.param({"SMTP_USE_TLS": True}, "SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled", id="tls-and-starttls"),
         pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
         pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
         pytest.param(
@@ -36,7 +35,7 @@ ENVIRONMENT_SETTINGS = {
     ],
 )
 def test_env_rejects_invalid_smtp_authentication_settings(settings: dict[str, object], message: str) -> None:
-    """Reject ambiguous SMTP transport and incomplete authentication settings."""
+    """Reject incomplete SMTP authentication settings."""
 
     # Act and assert
     with pytest.raises(ValidationError, match=message):
@@ -73,6 +72,17 @@ def test_env_accepts_complete_smtp_authentication_settings() -> None:
     # Assert
     settings = ENVIRONMENT_SETTINGS | {"SMTP_HOST": "smtp.example.com", "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
     assert Env.model_validate(settings).SMTP_HOST == "smtp.example.com"
+
+
+@pytest.mark.parametrize("transport", ["plain", "starttls", "tls"])
+def test_env_accepts_smtp_transports(transport: str) -> None:
+    """Accept each supported SMTP transport."""
+
+    # Act
+    environment = Env.model_validate(ENVIRONMENT_SETTINGS | {"SMTP_TRANSPORT": transport})
+
+    # Assert
+    assert environment.SMTP_TRANSPORT == transport
 
 
 def test_env_accepts_loopback_with_smtp_delivery() -> None:

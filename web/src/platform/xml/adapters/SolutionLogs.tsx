@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { useState } from 'react';
-import type { Props } from '../types';
-import { useXmlRuntime } from '../core/context';
-import { resolveXmlProps } from '../core/props';
+import type { Props } from '@/xml/types';
 import { Dialog } from '@/components/ui/Dialog';
 import { Stack } from '@astryxdesign/core/Stack';
 import { useQuery } from '@tanstack/react-query';
+import { useXmlRuntime } from '@/xml/core/context';
+import { resolveXmlProps } from '@/xml/core/props';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Spinner } from '@astryxdesign/core/Spinner';

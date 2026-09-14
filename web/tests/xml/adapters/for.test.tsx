@@ -21,11 +21,11 @@ describe('For', () => {
     it('preserves parent bindings while nested aliases and indexes shadow', () => {
         // Arrange
         const ctx = createContext();
-        ctx.scope.bindings = {
+        Object.assign(ctx.scope.bindings, {
             groups: [{ items: [{ name: 'Alpha' }, { name: 'Beta' }] }],
             params: { issue: '123' },
             title: 'Issue',
-        };
+        });
 
         // Act
         const output = renderXmlToMarkup(

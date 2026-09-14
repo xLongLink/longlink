@@ -2,10 +2,7 @@ import logging
 import traceback
 from fastapi import Request
 from pydantic import BaseModel
-from fastapi.utils import is_body_allowed_for_status_code
-from fastapi.responses import Response, JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException
+from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -14,23 +11,6 @@ class ErrorResponse(BaseModel):
     """Describe the public error contract without internal diagnostics."""
 
     detail: str
-
-
-async def http_error_response(_request: Request, error: HTTPException) -> Response:
-    """Keep HTTP status and headers while returning a readable error detail."""
-
-    # Preserve responses whose status prohibits a body.
-    if not is_body_allowed_for_status_code(error.status_code):
-        return Response(status_code=error.status_code, headers=error.headers)
-
-    detail = error.detail if isinstance(error.detail, str) and error.detail.strip() else "The request could not be completed."
-    return JSONResponse(status_code=error.status_code, content={"detail": detail}, headers=error.headers)
-
-
-async def validation_error_response(_request: Request, _error: RequestValidationError) -> JSONResponse:
-    """Reject invalid input without exposing submitted values or validator diagnostics."""
-
-    return JSONResponse(status_code=422, content={"detail": "Invalid request. Please check your input and try again."})
 
 
 async def unexpected_error_response(_request: Request, error: Exception) -> JSONResponse:
