@@ -1,4 +1,3 @@
-import contextlib
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
@@ -41,7 +40,7 @@ async def reconcile(organization_id: UUID) -> None:
         cluster = Kubernetes(
             infrastructure.compute.kubeconfig,
         )
-        async with contextlib.aclosing(cluster):
+        async with cluster:
             await cluster.storage.apply(organization.id, infrastructure.compute)
             await cluster.organizations.apply(organization.id)
 
@@ -93,7 +92,7 @@ async def delete(organization_id: UUID) -> str | None:
 
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
         logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
-        async with contextlib.aclosing(cluster):
+        async with cluster:
             await cluster.organizations.delete(infrastructure.organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(infrastructure.organization.id)

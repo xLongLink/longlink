@@ -1,5 +1,5 @@
 import pytest
-from conftest import StorageKubernetes
+from conftest import AsyncKubernetes, StorageKubernetes
 from factories import create_compute, claim_operation, queue_operation
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
@@ -26,7 +26,7 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
 
             connections.append((url, certificate))
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Expose the shared-controller boundary."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -40,9 +40,6 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
-
-        async def aclose(self) -> None:
-            """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
     await queue_operation(target_id=registry.id)
@@ -82,7 +79,7 @@ async def test_execute_compute_validate_operation_fails_provider_error(monkeypat
 
             raise RuntimeError("gateway unavailable")
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Expose the failing provider."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -95,9 +92,6 @@ async def test_execute_compute_validate_operation_fails_provider_error(monkeypat
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
-
-        async def aclose(self) -> None:
-            """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
     await queue_operation(target_id=registry.id)
@@ -126,7 +120,7 @@ async def test_validate_missing_compute_skips_gateway_reconciliation(monkeypatch
         await session.delete(persisted)
         await session.commit()
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Reject provider construction for a removed Compute."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -161,7 +155,7 @@ async def test_validate_rejects_stale_compute_publication(monkeypatch: pytest.Mo
                 persisted.status = Status.failed
                 await session.commit()
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Expose the lifecycle-changing provider."""
 
         def __init__(self, kubeconfig: dict[str, object]) -> None:
@@ -174,9 +168,6 @@ async def test_validate_rejects_stale_compute_publication(monkeypatch: pytest.Mo
             """Return the registered physical cluster identity."""
 
             return registry.cluster_uid
-
-        async def aclose(self) -> None:
-            """Close the provider client."""
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
 

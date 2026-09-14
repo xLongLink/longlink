@@ -18,19 +18,8 @@ import type { OrganizationSolutionSummary } from '@/lib/generated/platform-api-v
 /** Renders the organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const {
-        organizationId,
-        role,
-        solutions,
-        isMembershipLoading,
-        isSolutionsLoading,
-        membershipError,
-        solutionsError,
-    } = useOrganizationRoute(organization);
+    const { organizationId, role, solutions, isLoading, error } = useOrganizationRoute(organization);
 
-    // Preserve the page's loading state and solutions-first error precedence.
-    const isLoading = isMembershipLoading || isSolutionsLoading;
-    const error: (Error & { status?: number }) | null = solutionsError ?? membershipError;
     const canManageSolutions = hasMinimumRole(role, 'maintain');
     const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 

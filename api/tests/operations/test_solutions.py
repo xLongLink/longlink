@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes
+from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes, DatabaseKubernetes
 from factories import (
     claim_operation,
     create_solution,
@@ -64,7 +64,7 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert claimed is not None
     assert claimed.target_id == solution.id
 
-    class FailingKubernetes:
+    class FailingKubernetes(AsyncKubernetes):
         """Expose the failing Solution workload client."""
 
         def __init__(self, _kubeconfig: str) -> None:
@@ -78,9 +78,6 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
             """Raise the Kubernetes deletion failure under test."""
 
             raise RuntimeError("Kubernetes workload deletion failed")
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     def unexpected_provider(*args: object) -> object:
         """Record and reject provider construction before Kubernetes deletion completes."""
@@ -114,7 +111,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     _, solution = await create_deleted_solution(users[0])
     calls: list[tuple[str, object]] = []
 
-    class FakeKubernetes:
+    class FakeKubernetes(AsyncKubernetes):
         """Record workload deletion."""
 
         def __init__(self, _kubeconfig: str) -> None:
@@ -136,9 +133,6 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
             assert namespace.startswith("longlink-database-")
             assert port == 5432
             return 15432
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     class FakePostgres(DatabasePostgres):
         """Record schema deletion."""
@@ -221,7 +215,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("schema")
             return "solution"
 
-    class FakeKubernetes:
+    class FakeKubernetes(AsyncKubernetes):
         """Capture the Kubernetes Secret submitted during deployment."""
 
         def __init__(self, *_args: object) -> None:
@@ -399,7 +393,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
         raise AssertionError("retry regenerated provider credentials")
 
-    class FakeKubernetes:
+    class FakeKubernetes(AsyncKubernetes):
         """Capture the retry workload environment."""
 
         def __init__(self, *_args: object) -> None:

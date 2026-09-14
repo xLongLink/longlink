@@ -1,4 +1,3 @@
-import contextlib
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authadmin, get_session, organization_access
@@ -140,7 +139,7 @@ async def get_solution_logs(
         cluster = Kubernetes(
             registry.kubeconfig,
         )
-        async with contextlib.aclosing(cluster):
+        async with cluster:
             return await cluster.solutions.logs(solution.organization_id, solution.id)
     except RuntimeError as exc:
         logger.warning("Solution logs unavailable for '%s': %s", solution.id, exc)

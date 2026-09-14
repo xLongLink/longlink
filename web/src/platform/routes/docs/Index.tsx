@@ -1,23 +1,19 @@
-import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
 const article = {
+    description: 'Learn how to build, deploy, and operate business software with LongLink.',
     toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',
+    title: 'Documentation | LongLink',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Learn how to build, deploy, and operate business software with LongLink."
-                hasBreadcrumbs
-                title="Documentation | LongLink"
-            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     Introduction

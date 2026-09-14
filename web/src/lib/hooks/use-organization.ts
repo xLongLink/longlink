@@ -36,15 +36,14 @@ export function useOrganizationRoute(organizationSlug: string) {
         meta: { polling: true },
         retry: false,
     });
+    const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipQuery.error;
 
     return {
         organizationId,
         role,
         solutions: solutionsQuery.data ?? [],
-        isMembershipLoading: membershipQuery.isLoading,
-        isSolutionsLoading: solutionsQuery.isLoading,
-        membershipError: membershipQuery.error,
-        solutionsError: solutionsQuery.error,
+        isLoading: membershipQuery.isLoading || solutionsQuery.isLoading,
+        error,
     };
 }
 

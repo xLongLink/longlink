@@ -1,5 +1,4 @@
 import asyncio
-import contextlib
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
@@ -153,7 +152,7 @@ async def get_organization_storage_usage(
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
-            async with contextlib.aclosing(cluster):
+            async with cluster:
                 bucket = cluster.storage.bucket(membership.organization_id, infrastructure.compute)
                 usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:

@@ -1,7 +1,7 @@
 from uuid import UUID
-from datetime import timedelta
+from datetime import datetime, timedelta
 from sqlmodel import col
-from sqlalchemy import or_, case, func, select, update
+from sqlalchemy import Update, or_, case, func, select, update
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from longlink.utils.time import utcnow
@@ -213,21 +213,26 @@ async def claim(session: AsyncSession) -> Operation | None:
     return operation
 
 
-async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
-    """Complete one operation while the caller owns its unexpired lease."""
+def _leased_operation_update(operation_id: UUID, now: datetime) -> Update:
+    """Return the guarded update used only while the current worker owns a lease."""
 
-    # Complete only the currently leased operation.
-    now = utcnow()
-    result = await session.execute(
+    return (
         update(Operation)
         .where(
             col(Operation.id) == operation_id,
             col(Operation.lease_expires_at) > now,
             col(Operation.finished_at).is_(None),
         )
-        .values(finished_at=now, lease_expires_at=None)
         .execution_options(synchronize_session=False)
     )
+
+
+async def complete(session: AsyncSession, operation_id: UUID) -> Operation | None:
+    """Complete one operation while the caller owns its unexpired lease."""
+
+    # Complete only the currently leased operation.
+    now = utcnow()
+    result = await session.execute(_leased_operation_update(operation_id, now).values(finished_at=now, lease_expires_at=None))
     if result.rowcount != 1:
         return None
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
@@ -257,16 +262,7 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
 
     # Release only work still owned by this worker.
     now = utcnow()
-    result = await session.execute(
-        update(Operation)
-        .where(
-            col(Operation.id) == operation_id,
-            col(Operation.lease_expires_at) > now,
-            col(Operation.finished_at).is_(None),
-        )
-        .values(lease_expires_at=None)
-        .execution_options(synchronize_session=False)
-    )
+    result = await session.execute(_leased_operation_update(operation_id, now).values(lease_expires_at=None))
     if result.rowcount != 1:
         return None
     return await session.get_one(Operation, operation_id, populate_existing=True)
@@ -278,18 +274,11 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
     # Mark only an unfinished Operation that remains leased terminal.
     now = utcnow()
     result = await session.execute(
-        update(Operation)
-        .where(
-            col(Operation.id) == operation_id,
-            col(Operation.lease_expires_at) > now,
-            col(Operation.finished_at).is_(None),
-        )
-        .values(
+        _leased_operation_update(operation_id, now).values(
             failed=(reason.strip() or "Operation failed")[:500],
             finished_at=now,
             lease_expires_at=None,
         )
-        .execution_options(synchronize_session=False)
     )
     if result.rowcount != 1:
         return None

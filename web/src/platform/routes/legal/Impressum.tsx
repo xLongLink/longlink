@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -6,6 +5,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
 const article = {
+    description: 'Read the LongLink legal notice and company information.',
     toc: [
         { id: 'impressum', label: 'Impressum', level: 1 },
         { id: 'company', label: 'Company', level: 2 },
@@ -13,17 +13,13 @@ const article = {
     ],
     lastUpdated: '2026-07-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Impressum.tsx',
+    title: 'Impressum | LongLink',
 };
 
 /** Renders the legal notice and company information. */
 export default function Impressum() {
     return (
         <Article page={article}>
-            <Seo
-                description="Read the LongLink legal notice and company information."
-                hasBreadcrumbs
-                title="Impressum | LongLink"
-            />
             <ImpressumContent />
         </Article>
     );

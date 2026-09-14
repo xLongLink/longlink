@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -6,22 +5,19 @@ import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const article = {
+    description: 'Bind LongLink View components to runtime data and state.',
     toc: [
         { id: 'introduction', label: 'Introduction', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
     lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/views/Bindings.tsx',
+    title: 'Bindings | LongLink Documentation',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Bind LongLink View components to runtime data and state."
-                hasBreadcrumbs
-                title="Bindings | LongLink Documentation"
-            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     Bindings

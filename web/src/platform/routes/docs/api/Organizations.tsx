@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -31,22 +30,19 @@ const organizationRoles = [
 ];
 
 const article = {
+    description: 'Learn how organizations structure access to Solutions on the LongLink Platform.',
     toc: [
         { id: 'organizations', label: 'Organizations', level: 1 },
         { id: 'users', label: 'Users', level: 2 },
     ],
     lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Organizations.tsx',
+    title: 'Organizations | Platform Documentation | LongLink',
 };
 
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
-            <Seo
-                description="Learn how organizations structure access to Solutions on the LongLink Platform."
-                hasBreadcrumbs
-                title="Organizations | Platform Documentation | LongLink"
-            />
             <Stack gap={5}>
                 <Heading id="organizations" level={1}>
                     Organizations

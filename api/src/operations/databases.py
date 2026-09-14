@@ -267,7 +267,7 @@ async def ready(organization_id: UUID) -> None:
                 if infrastructure is None:
                     raise RuntimeError("Organization is unavailable")
                 cluster = Kubernetes(infrastructure.compute.kubeconfig)
-                async with contextlib.aclosing(cluster):
+                async with cluster:
                     await lease.check()
                     if infrastructure.organization.status != Status.running:
                         await cluster.databases.apply(
@@ -360,7 +360,7 @@ async def hibernate(organization_id: UUID) -> bool:
             if infrastructure is None:
                 return False
             cluster = Kubernetes(infrastructure.compute.kubeconfig)
-            async with contextlib.aclosing(cluster):
+            async with cluster:
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
                     database, _ = await connection(infrastructure.organization, cluster)

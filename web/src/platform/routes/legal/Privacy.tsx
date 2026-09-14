@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -8,6 +7,7 @@ import { Article } from '@/components/layouts/Article';
 import { List, ListItem } from '@astryxdesign/core/List';
 
 const article = {
+    description: 'Read the LongLink privacy policy.',
     toc: [
         { id: 'privacy-policy', label: 'Privacy Policy', level: 1 },
         { id: 'scope-and-controller', label: '1. Scope and controller', level: 2 },
@@ -59,13 +59,13 @@ const article = {
     ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Privacy.tsx',
+    title: 'Privacy Policy | LongLink',
 };
 
 /** Renders the privacy policy. */
 export default function Privacy() {
     return (
         <Article page={article}>
-            <Seo description="Read the LongLink privacy policy." hasBreadcrumbs title="Privacy Policy | LongLink" />
             <PrivacyContent />
         </Article>
     );

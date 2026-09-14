@@ -7,6 +7,7 @@ from src.utils import templates
 from src.logger import logger
 from kr8s.asyncio import Api
 from src.kubernetes import namespace
+from collections.abc import AsyncIterator
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
 from src.kubernetes.utils import apply
@@ -27,6 +28,17 @@ async def _has_active_pods(api: Api, namespace: str, selector: dict[str, str]) -
         if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
             return True
     return False
+
+
+async def _delete_resources(resources: AsyncIterator[APIObject]) -> bool:
+    """Delete listed resources that Kubernetes is not already terminating."""
+
+    remaining = False
+    async for resource in resources:
+        remaining = True
+        if resource.metadata.get("deletionTimestamp") is None:
+            await resource.delete()
+    return remaining
 
 
 async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_job: str | None) -> None:
@@ -256,28 +268,27 @@ class Solutions:
         namespace_resource = Namespace(compute_namespace, api=api)
         while await namespace_resource.exists():
             remaining = False
-            async for resource in KnativeServiceResource.list(
-                api=api,
-                namespace=compute_namespace,
-                field_selector={"metadata.name": f"solution-{solution_id}"},
+
+            if await _delete_resources(
+                KnativeServiceResource.list(
+                    api=api,
+                    namespace=compute_namespace,
+                    field_selector={"metadata.name": f"solution-{solution_id}"},
+                )
             ):
                 remaining = True
-                if resource.metadata.get("deletionTimestamp") is None:
-                    await resource.delete()
 
             # Delete retained migration Jobs only when their Solution is being removed.
-            async for candidate in Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
-                job = cast(Job, candidate)
+            if await _delete_resources(
+                Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)})
+            ):
                 remaining = True
-                if job.metadata.get("deletionTimestamp") is None:
-                    await job.delete()
 
             # Retain revision secrets until the Solution itself is deleted.
-            async for candidate in Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}):
-                secret = cast(Secret, candidate)
+            if await _delete_resources(
+                Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)})
+            ):
                 remaining = True
-                if secret.metadata.get("deletionTimestamp") is None:
-                    await secret.delete()
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining and not await _has_active_pods(api, compute_namespace, {SOLUTION_ID_LABEL: str(solution_id)}):

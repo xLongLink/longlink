@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { useParams } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -32,6 +31,7 @@ export default function DocsArticleRoute() {
     }
 
     const article = {
+        description: `Reference documentation for the ${component.name} XML component in LongLink Views.`,
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
@@ -39,15 +39,11 @@ export default function DocsArticleRoute() {
             ...component.nested.map((nested) => ({ id: nested.name.toLowerCase(), label: nested.name, level: 2 })),
         ],
         editUrl: `https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/${component.source}`,
+        title: `${component.name} XML Component | LongLink Documentation`,
     };
 
     return (
         <Article page={article}>
-            <Seo
-                description={`Reference documentation for the ${component.name} XML component in LongLink Views.`}
-                hasBreadcrumbs
-                title={`${component.name} XML Component | LongLink Documentation`}
-            />
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
                     {component.name}

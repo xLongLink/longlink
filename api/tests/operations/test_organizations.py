@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from conftest import DatabasePostgres, StorageKubernetes
+from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_compute
 from src.operations import organizations as organization_operations
@@ -46,15 +46,12 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             assert organization_id == organization.id
             calls.append("namespace")
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
             self.storage = Storage()
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Record user projection after publication."""
@@ -101,15 +98,12 @@ async def test_reconcile_rolls_back_publication_when_user_projection_fails(
             assert organization_id == organization.id
             calls.append("namespace")
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
             self.storage = StorageKubernetes()
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Fail the user projection after every external boundary is ready."""
@@ -270,16 +264,13 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
             raise RuntimeError("namespace deletion failed")
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose the failing Organization Kubernetes operations."""
 
             self.organizations = Organizations()
             self.databases = Database()
             self.storage = Storage()
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
 
@@ -333,16 +324,13 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert organization_id == organization.id
             calls.append("namespace")
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         def __init__(self, kubeconfig: dict[str, object]) -> None:
             """Expose Organization Kubernetes operations."""
 
             self.organizations = Organizations()
             self.databases = Database()
             self.storage = Storage()
-
-        async def aclose(self) -> None:
-            """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
 

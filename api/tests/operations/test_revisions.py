@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from uuid import UUID
-from conftest import DatabaseKubernetes
+from conftest import AsyncKubernetes, DatabaseKubernetes
 from factories import claim_operation, create_solution, complete_operation, create_organization
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
@@ -38,7 +38,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     rollout_finalized = asyncio.Event()
     failing = failure == "initial"
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Control rollout readiness at the external-system boundary."""
 
         def __init__(self, *_args: object) -> None:
@@ -217,7 +217,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         "third": "ghcr.io/longlink/dashboard@sha256:third",
     }
 
-    class Kubernetes:
+    class Kubernetes(AsyncKubernetes):
         """Capture which queued snapshot reaches the runtime."""
 
         def __init__(self, *_args: object) -> None:
