@@ -23,12 +23,12 @@ check:
 	cd web && vp run typecheck
 
 
-# Format Python imports, web code, and repository documentation.
+# Format Python imports, web code, repository documentation, and plain YAML.
 format:
 	cd api && uv run --locked ruff check --select I --fix .
 	cd sdk && uv run --locked ruff check --select I --fix .
 	cd web && vp check --fix --no-fmt
-	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
+	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' ':!k8s/chart/templates/**' ':!k8s/chart/charts/**/templates/**' | sed "s#^#$$(cd .. && pwd)/#")
 	cd web && bunx prettier --plugin=@prettier/plugin-xml --xml-whitespace-sensitivity ignore --tab-width 4 --write 'src/platform/views/**/*.xml'
 
 

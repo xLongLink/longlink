@@ -1,1 +1,1 @@
-{{ .Files.Get "files/serving.yaml" }}
+{ { .Files.Get "files/serving.yaml" } }
