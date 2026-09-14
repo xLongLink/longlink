@@ -12,12 +12,12 @@ spec:
     externalTrafficPolicy: Local
 {{- if eq .Values.gateway.service.type "LoadBalancer" }}
     loadBalancerIP: {{ .Values.gateway.address }}
-{{- end }}
 {{- with .Values.gateway.service.loadBalancerClass }}
     loadBalancerClass: {{ . }}
 {{- end }}
     loadBalancerSourceRanges:
         - {{ .Values.runtimeEgressCidr }}
+{{- end }}
     ports:
         - name: https
           port: 443

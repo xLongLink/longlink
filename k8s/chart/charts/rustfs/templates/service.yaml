@@ -20,8 +20,6 @@ spec:
   ports:
     - name: endpoint
       port: {{ .Values.service.endpoint.port }}
-    - name: console
-      port: {{ .Values.service.console.port }}
   selector:
     {{- include "rustfs.selectorLabels" . | nindent 4 }}
 {{- end }}
@@ -74,12 +72,6 @@ spec:
       targetPort: {{ .Values.service.endpoint.port }}
       {{- if eq $serviceType "NodePort" }}
       nodePort: {{ .Values.service.endpoint.nodePort }}
-      {{- end }}
-    - name: console
-      port: {{ .Values.service.console.port }}
-      targetPort: {{ .Values.service.console.port }}
-      {{- if eq $serviceType "NodePort" }}
-      nodePort: {{ .Values.service.console.nodePort }}
       {{- end }}
   selector:
     {{- include "rustfs.selectorLabels" . | nindent 4 }}

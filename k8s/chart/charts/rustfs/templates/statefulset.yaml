@@ -78,7 +78,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      serviceAccountName: {{ include "rustfs.serviceAccountName" $ }}
+      automountServiceAccountToken: false
       enableServiceLinks: {{ $.Values.enableServiceLinks }}
       {{- with include "chart.imagePullSecrets" $ }}
       imagePullSecrets:
@@ -188,8 +188,6 @@ spec:
           ports:
             - name: endpoint
               containerPort: {{ $.Values.service.endpoint.port }}
-            - name: console
-              containerPort: {{ $.Values.service.console.port }}
           {{- if or $injectLocalEndpointHost (not (empty $.Values.extraEnv)) }}
           env:
             {{- if $injectLocalEndpointHost }}

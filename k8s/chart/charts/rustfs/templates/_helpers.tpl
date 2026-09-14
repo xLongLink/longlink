@@ -64,17 +64,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
-*/}}
-{{- define "rustfs.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "rustfs.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
-
-{{/*
 Return the secret name
 */}}
 {{- define "rustfs.secretName" -}}
@@ -135,27 +124,10 @@ Render imagePullSecrets for workloads - appends registry secret
 
 {{/*
 Render annotations for the main Service resource.
-Merges (in order of increasing precedence):
-  - service.traefikAnnotations  (when ingress.className=traefik)
-  - ingress.traefikAnnotations  (when ingress.className=traefik, backwards-compat alias)
-  - service.annotations
 */}}
 {{- define "rustfs.serviceAnnotations" -}}
-{{- $annotations := dict }}
-{{- if and .Values.mode.distributed.enabled (eq .Values.ingress.className "traefik") }}
-{{- $annotations = merge $annotations (default (dict) .Values.service.traefikAnnotations) }}
-{{- $annotations = merge $annotations (default (dict) .Values.ingress.traefikAnnotations) }}
-{{- end }}
-{{- $annotations = merge $annotations (default (dict) .Values.service.annotations) }}
-{{- if and .Values.mode.distributed.enabled .Values.mtls.enabled (eq .Values.ingress.className "traefik") }}
-{{- $mtls := dict
-  "traefik.ingress.kubernetes.io/service.serversscheme" "https"
-  "traefik.ingress.kubernetes.io/service.serverstransport" (printf "%s-%s-transport@kubernetescrd" .Release.Namespace (include "rustfs.fullname" .))
-}}
-{{- $annotations = merge $annotations $mtls }}
-{{- end }}
-{{- if $annotations }}
-{{- toYaml $annotations }}
+{{- with .Values.service.annotations }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
@@ -166,28 +138,6 @@ Merges:
 */}}
 {{- define "rustfs.headlessServiceAnnotations" -}}
 {{- $annotations := default (dict) .Values.service.headlessAnnotations }}
-{{- if $annotations }}
-{{- toYaml $annotations }}
-{{- end }}
-{{- end }}
-
-{{/*
-Render annotations for the Ingress resource.
-Merges (in order of increasing precedence):
-  - ingress.nginxAnnotations    (when ingress.className=nginx)
-  - ingress.traefikAnnotations  (when ingress.className=traefik)
-  - ingress.customAnnotations   (backwards-compat)
-  - ingress.annotations
-*/}}
-{{- define "rustfs.ingressAnnotations" -}}
-{{- $annotations := dict }}
-{{- if eq .Values.ingress.className "nginx" }}
-{{- $annotations = merge $annotations (default (dict) .Values.ingress.nginxAnnotations) }}
-{{- else if eq .Values.ingress.className "traefik" }}
-{{- $annotations = merge $annotations (default (dict) .Values.ingress.traefikAnnotations) }}
-{{- end }}
-{{- $annotations = merge $annotations (default (dict) .Values.ingress.customAnnotations) }}
-{{- $annotations = merge $annotations (default (dict) .Values.ingress.annotations) }}
 {{- if $annotations }}
 {{- toYaml $annotations }}
 {{- end }}
@@ -329,7 +279,6 @@ Render RUSTFS_SERVER_DOMAINS
 {{- $root := .root -}}
 {{- $endpointPath := .endpointPath -}}
 {{- $endpoint_port := $root.Values.service.endpoint.port | default 9000 -}}
-{{- $console_port := $root.Values.service.console.port | default 9001 -}}
 {{- $args := "-skf" -}}
 
 {{- if and $root.Values.mtls.enabled -}}
@@ -338,8 +287,7 @@ Render RUSTFS_SERVER_DOMAINS
 - /bin/sh
 - -c
 - |
-  curl {{ $args }} https://127.0.0.1:{{ $endpoint_port }}{{ $endpointPath }} && \
-  curl {{ $args }} https://127.0.0.1:{{ $console_port }}/rustfs/console/health
+  curl {{ $args }} https://127.0.0.1:{{ $endpoint_port }}{{ $endpointPath }}
 {{- end -}}
 
 {{/*

@@ -38,7 +38,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      serviceAccountName: {{ include "rustfs.serviceAccountName" . }}
+      automountServiceAccountToken: false
       {{- with include "chart.imagePullSecrets" . }}
       imagePullSecrets:
         {{- . | nindent 8 }}
@@ -104,8 +104,6 @@ spec:
           ports:
             - name: endpoint
               containerPort: {{ .Values.service.endpoint.port }}
-            - name: console
-              containerPort: {{ .Values.service.console.port }}
           {{- with .Values.extraEnv }}
           env:
             {{- toYaml . | nindent 12 }}

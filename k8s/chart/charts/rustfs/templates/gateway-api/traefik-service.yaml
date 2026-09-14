@@ -9,12 +9,12 @@ spec:
     services:
       - name: {{ include "rustfs.fullname" . }}-svc
         namespace: {{ .Release.Namespace }}
-        port: {{ .Values.service.console.port }}
+        port: {{ .Values.service.endpoint.port }}
         weight: 1
         sticky:
           cookie:
             name: rustfs
             httpOnly: true
-            secure: {{ .Values.ingress.tls.enabled | default false }}
-            sameSite: {{ if .Values.ingress.tls.enabled }}none{{ else }}lax{{ end }}
+            secure: true
+            sameSite: none
 {{- end }}

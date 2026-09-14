@@ -8,8 +8,6 @@ metadata:
 data:
   {{- with .Values.config.rustfs }}
   RUSTFS_ADDRESS: {{ .address | quote }}
-  RUSTFS_CONSOLE_ADDRESS: {{ .console_address | quote }}
-  RUSTFS_CONSOLE_ENABLE: {{ .console_enable | quote }}
   RUSTFS_OBS_LOG_DIRECTORY: {{ .obs_log_directory | quote }}
   RUSTFS_OBS_LOGGER_LEVEL: {{ .log_level | quote }}
   RUSTFS_OBS_ENVIRONMENT: {{ .obs_environment | quote }}
