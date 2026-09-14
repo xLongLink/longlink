@@ -37,26 +37,12 @@ export const zComputeRegistryCreate = z.object({
 });
 
 /**
- * DatabaseState
- *
- * Describe the availability of an Organization's CNPG database.
- */
-export const zDatabaseState = z.enum([
-    'available',
-    'hibernating',
-    'hibernated',
-    'resuming',
-    'failed'
-]);
-
-/**
  * DatabaseUsage
  *
- * Report timestamped database usage and configured storage per CNPG instance.
+ * Report database usage and configured storage per CNPG instance.
  */
 export const zDatabaseUsage = z.object({
     size_bytes: z.int().nullable(),
-    measured_at: z.iso.datetime().nullable(),
     allocated_bytes: z.int()
 });
 
@@ -357,20 +343,6 @@ export const zOrganizationSolutionSummary = z.object({
 });
 
 /**
- * OrganizationSummary
- *
- * Represent one organization in admin list responses.
- */
-export const zOrganizationSummary = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    slug: z.string(),
-    avatar: z.string(),
-    status: zStatus,
-    database_state: zDatabaseState
-});
-
-/**
  * Page[ComputeRegistryResponse]
  */
 export const zPageComputeRegistryResponse = z.object({
@@ -379,10 +351,10 @@ export const zPageComputeRegistryResponse = z.object({
 });
 
 /**
- * Page[OrganizationSummary]
+ * Page[OrganizationIdentity]
  */
-export const zPageOrganizationSummary = z.object({
-    items: z.array(zOrganizationSummary),
+export const zPageOrganizationIdentity = z.object({
+    items: z.array(zOrganizationIdentity),
     total: z.int().gte(0)
 });
 
@@ -397,7 +369,6 @@ export const zSolutionResponse = z.object({
     name: z.string(),
     slug: z.string(),
     description: z.string().nullable(),
-    min_scale: z.union([z.literal(0), z.literal(1)]),
     image_desired: z.string(),
     desired_revision_id: z.uuid().nullable(),
     deployed_revision_id: z.uuid().nullable(),
@@ -451,7 +422,7 @@ export const zOrganizationMemberAccessResponse = z.object({
  * Represent an Organization with its member access.
  */
 export const zOrganizationDetails = z.object({
-    organization: zOrganizationSummary,
+    organization: zOrganizationIdentity,
     members: z.array(zOrganizationMemberAccessResponse),
     invitations: z.array(zOrganizationInvitationResponse)
 });
@@ -690,14 +661,14 @@ export const zListOrganizationsApiV1OrganizationsGetQuery = z.object({
 /**
  * Successful Response
  */
-export const zListOrganizationsApiV1OrganizationsGetResponse = zPageOrganizationSummary;
+export const zListOrganizationsApiV1OrganizationsGetResponse = zPageOrganizationIdentity;
 
 export const zCreateOrganizationApiV1OrganizationsPostBody = zOrganizationCreate;
 
 /**
  * Successful Response
  */
-export const zCreateOrganizationApiV1OrganizationsPostResponse = zOrganizationSummary;
+export const zCreateOrganizationApiV1OrganizationsPostResponse = zOrganizationIdentity;
 
 export const zGetOrganizationBySlugApiV1OrganizationsSlugOrganizationSlugGetPath = z.object({
     organization_slug: z.string()
@@ -715,7 +686,7 @@ export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeletePath = z.o
 /**
  * Successful Response
  */
-export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponse = zOrganizationSummary;
+export const zDeleteOrganizationApiV1OrganizationsOrganizationIdDeleteResponse = zOrganizationIdentity;
 
 export const zGetOrganizationApiV1OrganizationsOrganizationIdGetPath = z.object({
     organization_id: z.uuid()
@@ -735,7 +706,7 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
 /**
  * Successful Response
  */
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationSummary;
+export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
 
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()

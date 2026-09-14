@@ -77,12 +77,6 @@ class Solution(AuditTable, table=True):
         return self.desired_revision.image
 
     @property
-    def min_scale(self) -> Literal[0, 1]:
-        """Expose the desired snapshot's minimum running instance count."""
-
-        return self.desired_revision.min_scale
-
-    @property
     def effective_revision_id(self) -> UUID | None:
         """Select desired state, falling back to the last deployed release after failure."""
 

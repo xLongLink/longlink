@@ -1509,7 +1509,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_OrganizationSummary_"
+                  "$ref": "#/components/schemas/Page_OrganizationIdentity_"
                 }
               }
             }
@@ -1574,7 +1574,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationSummary"
+                  "$ref": "#/components/schemas/OrganizationIdentity"
                 }
               }
             }
@@ -1782,7 +1782,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationSummary"
+                  "$ref": "#/components/schemas/OrganizationIdentity"
                 }
               }
             }
@@ -1847,7 +1847,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OrganizationSummary"
+                  "$ref": "#/components/schemas/OrganizationIdentity"
                 }
               }
             }
@@ -2687,18 +2687,6 @@
         "title": "ComputeRegistryResponse",
         "description": "Describe one compute backend without exposing its private connection state or secrets."
       },
-      "DatabaseState": {
-        "type": "string",
-        "enum": [
-          "available",
-          "hibernating",
-          "hibernated",
-          "resuming",
-          "failed"
-        ],
-        "title": "DatabaseState",
-        "description": "Describe the availability of an Organization's CNPG database."
-      },
       "DatabaseUsage": {
         "properties": {
           "size_bytes": {
@@ -2712,18 +2700,6 @@
             ],
             "title": "Size Bytes"
           },
-          "measured_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Measured At"
-          },
           "allocated_bytes": {
             "type": "integer",
             "title": "Allocated Bytes",
@@ -2733,11 +2709,10 @@
         "type": "object",
         "required": [
           "size_bytes",
-          "measured_at",
           "allocated_bytes"
         ],
         "title": "DatabaseUsage",
-        "description": "Report timestamped database usage and configured storage per CNPG instance."
+        "description": "Report database usage and configured storage per CNPG instance."
       },
       "EmailPayload": {
         "properties": {
@@ -2963,7 +2938,7 @@
       "OrganizationDetails": {
         "properties": {
           "organization": {
-            "$ref": "#/components/schemas/OrganizationSummary"
+            "$ref": "#/components/schemas/OrganizationIdentity"
           },
           "members": {
             "items": {
@@ -3193,44 +3168,6 @@
         "title": "OrganizationStorageUsageResponse",
         "description": "Report current logical object usage and quota for one Organization bucket."
       },
-      "OrganizationSummary": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "slug": {
-            "type": "string",
-            "title": "Slug"
-          },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
-          },
-          "database_state": {
-            "$ref": "#/components/schemas/DatabaseState"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "name",
-          "slug",
-          "avatar",
-          "status",
-          "database_state"
-        ],
-        "title": "OrganizationSummary",
-        "description": "Represent one organization in admin list responses."
-      },
       "OrganizationUpdate": {
         "properties": {
           "avatar": {
@@ -3305,11 +3242,11 @@
         ],
         "title": "Page[OperationResponse]"
       },
-      "Page_OrganizationSummary_": {
+      "Page_OrganizationIdentity_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/OrganizationSummary"
+              "$ref": "#/components/schemas/OrganizationIdentity"
             },
             "type": "array",
             "title": "Items"
@@ -3325,7 +3262,7 @@
           "items",
           "total"
         ],
-        "title": "Page[OrganizationSummary]"
+        "title": "Page[OrganizationIdentity]"
       },
       "Page_SolutionResponse_": {
         "properties": {
@@ -3559,14 +3496,6 @@
             ],
             "title": "Description"
           },
-          "min_scale": {
-            "type": "integer",
-            "enum": [
-              0,
-              1
-            ],
-            "title": "Min Scale"
-          },
           "image_desired": {
             "type": "string",
             "title": "Image Desired"
@@ -3615,7 +3544,6 @@
           "name",
           "slug",
           "description",
-          "min_scale",
           "image_desired",
           "desired_revision_id",
           "deployed_revision_id",

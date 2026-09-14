@@ -13,7 +13,11 @@ class PlatformModel(SQLModel):
 
 
 class AuditTable(PlatformModel):
-    """Base SQLModel for durable Platform records that track their acting user."""
+    """Base SQLModel for durable Platform records that retain their full audit history.
+
+    Audit columns are required persisted metadata even when application code does not
+    currently read them; do not remove them through unused-field cleanup.
+    """
 
     # Audit timestamps
     created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)

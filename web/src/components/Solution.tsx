@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
+import { parseXML } from '@/xml';
+import type { ReactNode } from 'react';
 import { startCase } from '@/lib/utils';
 import { viewsSchema } from '@/xml/views';
-import type { ASTNode } from '@/xml/types';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { iconComponents } from '@/components/ui/Icon';
+import { matchRoutes, Navigate, useParams } from 'react-router';
+import { RouterXmlRuntime } from '@/components/RouterXmlRuntime';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
-import { matchRoutes, Navigate, useNavigate, useParams } from 'react-router';
-import { createContext as createXmlContext, parseXML, RenderXML } from '@/xml';
 
 type SolutionRuntimeProps = {
     children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
@@ -25,44 +25,6 @@ const EMPTY_VIEWS = [] as const;
 function routeLabel(route: string): string {
     // Remove the leading slash and truncate at the first nested dynamic segment.
     return startCase(route.slice(1).split('/:', 1)[0] || 'index');
-}
-
-/** Owns one XML runtime for the lifetime selected by its React key. */
-function SolutionXmlRuntime({
-    ast,
-    navigationBaseUrl,
-    params,
-    requestBaseUrl,
-}: {
-    ast: ASTNode;
-    navigationBaseUrl: string;
-    params: Record<string, string | undefined>;
-    requestBaseUrl: string;
-}) {
-    const navigate = useNavigate();
-    const [runtime] = useState(() => {
-        return createXmlContext({
-            // Keep XML-triggered solution navigation within the client router.
-            navigate: (url) => {
-                const destination = new URL(url, window.location.origin);
-
-                if (destination.origin === window.location.origin) {
-                    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
-                    return;
-                }
-
-                window.location.assign(url);
-            },
-            navigationBaseUrl,
-            // Normalize route params only when creating this keyed XML runtime.
-            params: Object.fromEntries(
-                Object.entries(params).filter((entry): entry is [string, string] => entry[1] != null)
-            ),
-            requestBaseUrl,
-        });
-    });
-
-    return <RenderXML ast={ast} ctx={runtime} />;
 }
 
 /** Resolves and renders the current manifest-defined View. */
@@ -133,11 +95,13 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         );
     } else if (activeViewAst && activeView && match) {
         content = (
-            <SolutionXmlRuntime
+            <RouterXmlRuntime
                 ast={activeViewAst}
                 key={JSON.stringify([viewsUrl, navigationBaseUrl, activeView.route, activeView.path, routePath])}
                 navigationBaseUrl={navigationBaseUrl}
-                params={match.params}
+                params={Object.fromEntries(
+                    Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
+                )}
                 requestBaseUrl={requestBaseUrl}
             />
         );

@@ -15,7 +15,7 @@ The package installs Knative, Kourier, CloudNativePG, and RustFS. The Platform
 validates it and manages tenant resources; it never installs shared infrastructure.
 
 `setup.yaml.gotmpl` defines package releases. `release/release.yml` defines the
-package version and Platform compatibility contract.
+Platform compatibility contract.
 
 ## Local
 

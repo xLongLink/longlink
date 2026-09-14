@@ -59,11 +59,11 @@ export default [
         ]),
         ...prefix('admin', [
             layout('./layouts/Admin.tsx', [
-                route('users', './routes/admin/Users.tsx'),
-                route('solutions', './routes/admin/Solutions.tsx'),
-                route('organizations', './routes/admin/Organizations.tsx'),
-                route('compute', './routes/admin/Compute.tsx'),
-                route('operations', './routes/admin/Operations.tsx'),
+                route('users', './routes/admin/Page.tsx', { id: 'admin-users' }),
+                route('solutions', './routes/admin/Page.tsx', { id: 'admin-solutions' }),
+                route('organizations', './routes/admin/Page.tsx', { id: 'admin-organizations' }),
+                route('compute', './routes/admin/Page.tsx', { id: 'admin-compute' }),
+                route('operations', './routes/admin/Page.tsx', { id: 'admin-operations' }),
             ]),
         ]),
         ...prefix('orgs/:organization', [
