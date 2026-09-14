@@ -1,1 +1,1 @@
-{ { .Files.Get "files/serving-crds.yaml" } }
+{{ .Files.Get "files/serving-crds.yaml" }}
