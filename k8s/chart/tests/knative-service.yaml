@@ -1,0 +1,13 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+    name: compute-smoke
+    namespace: default
+spec:
+    template:
+        spec:
+            containers:
+                - name: application
+                  image: registry.k8s.io/e2e-test-images/agnhost:2.53
+                  command: [/agnhost]
+                  args: [netexec, --http-port=8080]

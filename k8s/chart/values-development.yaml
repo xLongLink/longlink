@@ -1,8 +1,13 @@
 development: true
 
+bootstrap:
+    enabled: true
+    gatewayIngressCidr: 172.30.0.0/24
+
 gateway:
     address: 127.0.0.1
     service:
+        nodePort: 30443
         type: NodePort
 
 runtimeEgressCidr: 127.0.0.1/32

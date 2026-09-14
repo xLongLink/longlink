@@ -4,6 +4,13 @@
   "required": ["gateway", "storage", "runtimeEgressCidr"],
   "properties": {
     "development": { "type": "boolean" },
+    "bootstrap": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "gatewayIngressCidr": { "type": "string" }
+      }
+    },
     "gateway": {
       "type": "object",
       "required": ["address"],

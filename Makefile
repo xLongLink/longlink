@@ -71,12 +71,8 @@ up:
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	# Configure local DNS before installing shared controllers.
-	kubectl --kubeconfig dev/kubeconfig.yaml apply -f dev/compute/connectivity/dns.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
-	kubectl --kubeconfig dev/kubeconfig.yaml apply -f dev/compute/connectivity/gateway.yaml
+	# The development values install the local DNS and gateway connectivity bootstrap.
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --wait-for-jobs --timeout 15m
 	install -d -m 700 dev/certificates
 	kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving get secret longlink-gateway-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/gateway.crt
 	kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs get secret longlink-storage-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/storage.crt

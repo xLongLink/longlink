@@ -1,0 +1,85 @@
+{{- if .Values.bootstrap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: coredns-custom
+    namespace: kube-system
+data:
+    storage.override: |
+        rewrite stop {
+            name exact storage.localhost longlink-storage.rustfs.svc.cluster.local
+            answer auto
+        }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: longlink-local-gateway
+    namespace: kourier-system
+spec:
+    podSelector:
+        matchLabels:
+            app: 3scale-kourier-gateway
+    policyTypes: [Ingress]
+    ingress:
+        - from:
+              - ipBlock:
+                    cidr: {{ .Values.bootstrap.gatewayIngressCidr }}
+          ports:
+              - protocol: TCP
+                port: 8444
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+    name: longlink-bootstrap
+    namespace: rustfs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: longlink-bootstrap
+    namespace: kube-system
+rules:
+    - apiGroups: [apps]
+      resources: [deployments]
+      resourceNames: [coredns]
+      verbs: [get, patch, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+    name: longlink-bootstrap
+    namespace: kube-system
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: longlink-bootstrap
+subjects:
+    - kind: ServiceAccount
+      name: longlink-bootstrap
+      namespace: rustfs
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: longlink-bootstrap
+    namespace: rustfs
+    annotations:
+        helm.sh/hook: post-install,post-upgrade
+        helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+    backoffLimit: 3
+    template:
+        spec:
+            restartPolicy: OnFailure
+            serviceAccountName: longlink-bootstrap
+            initContainers:
+                - name: restart-coredns
+                  image: registry.k8s.io/kubectl:v1.34.3
+                  args: [--namespace, kube-system, rollout, restart, deployment/coredns]
+            containers:
+                - name: wait-for-coredns
+                  image: registry.k8s.io/kubectl:v1.34.3
+                  args: [--namespace, kube-system, rollout, status, deployment/coredns, --timeout=120s]
+{{- end }}

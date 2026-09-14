@@ -30,11 +30,6 @@ drivesPerNode: null
 # Provide the DNS root only, without a `svc.` prefix or leading/trailing dots.
 clusterDomain: cluster.local
 
-# Deprecated and ignored. Retained so existing values files continue to
-# render after peer startup coordination moved into RustFS.
-# RUSTFS_COMPAT_TODO(rustfs-5416): Keep the removed init-gate setting visible to existing values files. Remove after the minimum supported direct-upgrade chart includes localEndpointHost.autoInject and no longer renders peer gates.
-startupWaitTimeoutSeconds: 300
-
 # Inject a pod-specific endpoint identity for chart-generated distributed
 # topologies. The default enables injection unless secret.existingSecret is
 # set, because the chart cannot inspect runtime overrides hidden in that
@@ -404,10 +399,6 @@ resources: {}
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
     enabled: true # omitted
-    httpGet:
-        path: /health
-        port: 9000
-        scheme: HTTP
     initialDelaySeconds: 30
     periodSeconds: 5
     timeoutSeconds: 3
@@ -416,10 +407,6 @@ livenessProbe:
 
 readinessProbe:
     enabled: true # omitted
-    httpGet:
-        path: /health/ready
-        port: endpoint
-        scheme: HTTP
     initialDelaySeconds: 10
     periodSeconds: 5
     timeoutSeconds: 3
