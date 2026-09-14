@@ -6,6 +6,6 @@ metadata:
 data:
     storage.override: |
         rewrite stop {
-           name exact storage.localhost longlink-storage-local.rustfs.svc.cluster.local
+           name exact storage.localhost longlink-storage.rustfs.svc.cluster.local
           answer auto
         }

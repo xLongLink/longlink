@@ -4,4 +4,3 @@ resources:
     - credentials.yaml
     - dns.yaml
     - gateway.yaml
-    - storage.yaml

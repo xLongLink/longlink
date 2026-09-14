@@ -77,6 +77,10 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
 	PATH="$(HOME)/.local/bin:$$PATH" KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
+
+	# Expose canonical Services only after Helmfile has reconciled their shared configuration.
+	kubectl --kubeconfig dev/kubeconfig.yaml patch service kourier --namespace kourier-system --type merge --patch-file dev/compute/connectivity/gateway.patch.yaml
+	kubectl --kubeconfig dev/kubeconfig.yaml patch service longlink-storage --namespace rustfs --type merge --patch-file dev/compute/connectivity/storage.patch.yaml
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
 

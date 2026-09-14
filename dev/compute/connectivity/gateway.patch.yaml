@@ -1,0 +1,9 @@
+spec:
+    type: NodePort
+    externalTrafficPolicy: Local
+    ports:
+        - name: https
+          port: 443
+          targetPort: 8444
+          nodePort: 30443
+          protocol: TCP
