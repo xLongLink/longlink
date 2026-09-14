@@ -64,22 +64,11 @@ up:
 	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
 
 	# Generate local server certificates.
-	@set -eu; umask 077; mkdir -p dev/certificates; \
-		openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
-			-keyout dev/certificates/ca.key -out dev/certificates/ca.crt \
-			-subj "/CN=LongLink Development CA" \
-			-addext "basicConstraints=critical,CA:TRUE" \
-			-addext "keyUsage=critical,keyCertSign,cRLSign"; \
-		openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/server.key -subj "/CN=localhost" | \
-			openssl x509 -req -days 3650 \
-				-CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" \
-				-extfile dev/tls.cnf -extensions server -out dev/certificates/server.crt; \
-		kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving create secret tls longlink-gateway-tls \
-			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
-			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; \
-		kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs create secret tls longlink-storage-tls \
-			--cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | \
-			kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-
+	install -d -m 700 dev/certificates
+	@umask 077; openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -keyout dev/certificates/ca.key -out dev/certificates/ca.crt -subj "/CN=LongLink Development CA" -addext "basicConstraints=critical,CA:TRUE" -addext "keyUsage=critical,keyCertSign"
+	@umask 077; openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/server.key -subj "/CN=localhost" | openssl x509 -req -days 3650 -CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" -extfile dev/tls.cnf -extensions server -out dev/certificates/server.crt
+	@for target in knative-serving/longlink-gateway-tls rustfs/longlink-storage-tls; do namespace="$${target%/*}"; secret="$${target#*/}"; kubectl --kubeconfig dev/kubeconfig.yaml --namespace "$$namespace" create secret tls "$$secret" --cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; done
+	
 	# Kourier's controller loads a replaced certificate only at process startup.
 	@if kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
 		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/net-kourier-controller --namespace knative-serving; \
@@ -92,6 +81,7 @@ up:
 	PATH="$(HOME)/.local/bin:$$PATH" KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
+
 	# Verify host TLS connectivity through the k3d port mappings.
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
 	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443/health/ready
