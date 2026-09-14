@@ -89,16 +89,6 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
             events.append("scheduler cancel")
             raise
 
-    async def log_cleanup() -> None:
-        """Record log cleanup startup and cancellation from lifespan shutdown."""
-
-        events.append("cleanup start")
-        try:
-            await main.asyncio.Event().wait()
-        except main.asyncio.CancelledError:
-            events.append("cleanup cancel")
-            raise
-
     async def database_scheduler() -> None:
         """Record database scheduling startup and cancellation from lifespan shutdown."""
 
@@ -112,7 +102,6 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", scheduler)
-    monkeypatch.setattr(main.jobs, "run_operation_log_cleanup", log_cleanup)
     monkeypatch.setattr(main.jobs, "run_database_scheduler", database_scheduler)
 
     # Act
@@ -125,11 +114,9 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
         "administrator",
         "commit",
         "scheduler start",
-        "cleanup start",
         "database start",
         "serving",
         "scheduler cancel",
-        "cleanup cancel",
         "database cancel",
     ]
 

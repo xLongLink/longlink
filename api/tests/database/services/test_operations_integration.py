@@ -70,9 +70,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             resumed = await claim_operation()
             assert resumed is not None and resumed.id == claimed[0].id
             async with session_factory() as session:
-                completed = await operations.complete(session, resumed.id, logs=["completed attempt"])
+                completed = await operations.complete(session, resumed.id)
                 assert completed is not None and completed.status == OperationStatus.completed
-                assert completed.logs == ["completed attempt"]
                 assert completed.lease_expires_at is None
                 assert completed.finished_at is not None
                 await session.commit()
@@ -82,10 +81,9 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             assert remaining is not None
             assert {completed.id, remaining.id} == {first.id, duplicate.id}
             async with session_factory() as session:
-                failed = await operations.fail(session, remaining.id, "worker failed", logs=["failed attempt"])
+                failed = await operations.fail(session, remaining.id, "worker failed")
                 assert failed is not None and failed.status == OperationStatus.failed
                 assert failed.failed == "worker failed"
-                assert failed.logs == ["failed attempt"]
                 assert failed.lease_expires_at is None
                 assert failed.finished_at is not None
                 await session.commit()

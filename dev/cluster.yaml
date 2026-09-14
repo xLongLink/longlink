@@ -15,13 +15,6 @@ ports:
     - port: 127.0.0.1:9443:30943
       nodeFilters:
           - server:0
-volumes:
-    - volume: /dev:/dev
-      nodeFilters:
-          - server:0
-    - volume: /run/udev:/run/udev:ro
-      nodeFilters:
-          - server:0
 registries:
     create:
         name: longlink-registry

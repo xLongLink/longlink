@@ -24,10 +24,9 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         await user_service.ensure_administrator(session)
         await session.commit()
 
-    # Start this replica's scheduler and retained-log cleanup.
+    # Start this replica's schedulers.
     tasks = (
         asyncio.create_task(jobs.run_operation_scheduler()),
-        asyncio.create_task(jobs.run_operation_log_cleanup()),
         asyncio.create_task(jobs.run_database_scheduler()),
     )
 

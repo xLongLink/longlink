@@ -1592,42 +1592,6 @@ export type ListOperationsApiV1OperationsGetResponses = {
 
 export type ListOperationsApiV1OperationsGetResponse = ListOperationsApiV1OperationsGetResponses[keyof ListOperationsApiV1OperationsGetResponses];
 
-export type GetOperationLogsApiV1OperationsOperationIdLogsGetData = {
-    body?: never;
-    path: {
-        /**
-         * Operation Id
-         */
-        operation_id: string;
-    };
-    query?: never;
-    url: '/api/v1/operations/{operation_id}/logs';
-};
-
-export type GetOperationLogsApiV1OperationsOperationIdLogsGetErrors = {
-    /**
-     * Unprocessable Entity
-     */
-    422: ErrorResponse;
-    /**
-     * Default Response
-     */
-    default: ErrorResponse;
-};
-
-export type GetOperationLogsApiV1OperationsOperationIdLogsGetError = GetOperationLogsApiV1OperationsOperationIdLogsGetErrors[keyof GetOperationLogsApiV1OperationsOperationIdLogsGetErrors];
-
-export type GetOperationLogsApiV1OperationsOperationIdLogsGetResponses = {
-    /**
-     * Response Get Operation Logs Api V1 Operations  Operation Id  Logs Get
-     *
-     * Successful Response
-     */
-    200: Array<string>;
-};
-
-export type GetOperationLogsApiV1OperationsOperationIdLogsGetResponse = GetOperationLogsApiV1OperationsOperationIdLogsGetResponses[keyof GetOperationLogsApiV1OperationsOperationIdLogsGetResponses];
-
 export type ListOrganizationsApiV1OrganizationsGetData = {
     body?: never;
     path?: never;

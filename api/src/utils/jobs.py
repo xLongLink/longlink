@@ -1,12 +1,9 @@
 import asyncio
-import logging
 from uuid import UUID
-from typing import override
 from sqlmodel import col
 from functools import partial
 from sqlalchemy import delete, select
 from src.logger import logger
-from contextvars import ContextVar
 from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
 from src.environments import env
@@ -16,30 +13,6 @@ from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization, OrganizationActivity
-
-operation_id: ContextVar[UUID | None] = ContextVar("operation_id", default=None)
-OPERATION_LOG_CLEANUP_SECONDS = 86400
-
-
-class OperationLogHandler(logging.Handler):
-    """Collect log records emitted while one Operation is executing."""
-
-    def __init__(self, expected_operation_id: UUID) -> None:
-        """Initialize an empty log collector for one Operation."""
-
-        super().__init__()
-        self.logs: list[str] = []
-        self.expected_operation_id = expected_operation_id
-
-    @override
-    def emit(self, record: logging.LogRecord) -> None:
-        """Store records produced by this handler's active Operation."""
-
-        # Ignore concurrent request and scheduler log records.
-        if operation_id.get() != self.expected_operation_id:
-            return
-
-        self.logs.append(self.format(record))
 
 
 async def _finish_transition(
@@ -84,53 +57,43 @@ async def execute(operation: Operation) -> Operation:
     if operation.lease_expires_at is None or operation.lease_expires_at <= utcnow():
         raise ValueError("Operation must be claimed before execution")
 
-    # Capture the operation's existing structured log output until its terminal state is persisted.
-    log_handler = OperationLogHandler(operation.id)
-    log_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
-    token = operation_id.set(operation.id)
-    logger.addHandler(log_handler)
+    # Emit stable identifiers so Grafana can follow a complete operation attempt.
+    logger.info("Operation started id=%s kind=%s target_id=%s", operation.id, operation.kind, operation.target_id)
 
+    # Bound one complete handler execution under its worker lease.
     try:
-        # Record the target before dispatch so registration and handler failures share one diagnostic path.
-        logger.info("Running %s operation %s", operation.kind, operation.id)
-
-        # Bound one complete handler execution under its worker lease.
+        async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
+            handler = handlers[operation.kind]
+            reason = await handler(operation.target_id)
+    except asyncio.CancelledError:
+        # Graceful shutdown leaves interrupted work available for the next scheduler.
         try:
-            async with asyncio.timeout(env.OPERATION_TIMEOUT_SECONDS):
-                handler = handlers[operation.kind]
-                reason = await handler(operation.target_id)
-        except asyncio.CancelledError:
-            # Graceful shutdown leaves interrupted work available for the next scheduler.
-            try:
-                await _finish_transition(operations.release, operation.id)
-            except Exception:
-                logger.exception("Could not release cancelled Operation %s", operation.id)
-            raise
-        except TimeoutError:
-            reason = f"Operation timed out after {env.OPERATION_TIMEOUT_SECONDS} seconds"
-        except Exception as exc:
-            logger.exception("Operation %s failed", operation.id)
-            reason = f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__
+            await _finish_transition(operations.release, operation.id)
+        except Exception:
+            logger.exception("Operation release failed id=%s kind=%s target_id=%s", operation.id, operation.kind, operation.target_id)
+        logger.info("Operation cancelled id=%s kind=%s target_id=%s", operation.id, operation.kind, operation.target_id)
+        raise
+    except TimeoutError:
+        reason = f"Operation timed out after {env.OPERATION_TIMEOUT_SECONDS} seconds"
+    except Exception as exc:
+        logger.exception("Operation exception id=%s kind=%s target_id=%s", operation.id, operation.kind, operation.target_id)
+        reason = f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__
 
-        # Persist exactly one transition that releases the claimed operation.
-        if reason is None:
-            logger.info("Operation %s completed", operation.id)
-            transition = partial(operations.complete, logs=log_handler.logs)
-        else:
-            logger.error("Operation %s failed: %s", operation.id, reason)
-            transition = partial(operations.fail, reason=reason, logs=log_handler.logs)
+    # Persist exactly one transition that releases the claimed operation.
+    if reason is None:
+        logger.info("Operation completed id=%s kind=%s target_id=%s", operation.id, operation.kind, operation.target_id)
+        transition = operations.complete
+    else:
+        logger.error("Operation failed id=%s kind=%s target_id=%s reason=%s", operation.id, operation.kind, operation.target_id, reason)
+        transition = partial(operations.fail, reason=reason)
 
-        # Finish the terminal database transition even when shutdown cancels this worker.
-        updated = await _finish_transition(transition, operation.id)
+    # Finish the terminal database transition even when shutdown cancels this worker.
+    updated = await _finish_transition(transition, operation.id)
 
-        # Never return a stale in-memory row when the worker could not finish its leased Operation.
-        if updated is None:
-            raise RuntimeError(f"Operation '{operation.id}' lock was lost")
-
-        return updated
-    finally:
-        logger.removeHandler(log_handler)
-        operation_id.reset(token)
+    # Never return a stale in-memory row when the worker could not finish its leased Operation.
+    if updated is None:
+        raise RuntimeError(f"Operation '{operation.id}' lock was lost")
+    return updated
 
 
 async def run_operation_scheduler() -> None:
@@ -156,23 +119,6 @@ async def run_operation_scheduler() -> None:
             await execute(operation)
         except Exception:
             logger.exception("Operation scheduler failed for %s", operation.id)
-
-
-async def run_operation_log_cleanup() -> None:
-    """Clear logs retained beyond the Operation diagnostic window."""
-
-    while True:
-        # Clear expired payloads without removing their Operation history.
-        try:
-            async with session_scope() as session:
-                cleared = await operations.clear_expired_logs(session)
-                await session.commit()
-            if cleared > 0:
-                logger.info("Cleared logs for %s expired Operations", cleared)
-        except Exception:
-            logger.exception("Operation log cleanup failed")
-
-        await asyncio.sleep(OPERATION_LOG_CLEANUP_SECONDS)
 
 
 async def run_database_scheduler() -> None:

@@ -1,4 +1,3 @@
-import sqlalchemy
 from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
@@ -43,7 +42,6 @@ class Operation(AuditTable, table=True):
 
     # State
     failed: str | None = Field(default=None, min_length=1, max_length=500)
-    logs: list[str] = Field(default_factory=list, sa_column=Column(sqlalchemy.JSON, nullable=False))
 
     # Lock
     lease_expires_at: datetime | None = Field(default=None, sa_type=UTCDateTime)

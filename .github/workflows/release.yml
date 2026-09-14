@@ -149,9 +149,28 @@ jobs:
             contents: write
 
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Package Compute
+              run: |
+                  set -euo pipefail
+
+                  version="${GITHUB_REF_NAME#v}"
+                  package="$RUNNER_TEMP/compute"
+                  archive="longlink-compute-${GITHUB_REF_NAME}.tar.gz"
+
+                  cp -R k8s "$package"
+                  VERSION="$version" perl -0pi -e 's/^(\s*version:\s*)\S+/${1}$ENV{VERSION}/m' "$package/release/release.yml"
+                  tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner -czf "$archive" -C "$package" .
+                  sha256sum "$archive" > "${archive}.sha256"
+
             - name: Create GitHub release
               uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
               with:
-                  tag_name: ${{ github.ref_name }}
-                  name: ${{ github.ref_name }}
-                  generate_release_notes: true
+                tag_name: ${{ github.ref_name }}
+                name: ${{ github.ref_name }}
+                generate_release_notes: true
+                files: |
+                    longlink-compute-${{ github.ref_name }}.tar.gz
+                    longlink-compute-${{ github.ref_name }}.tar.gz.sha256

@@ -22,7 +22,7 @@ from src.database.models.organizations import Organization
 
 
 async def test_operations_service_fetch_page_returns_total_history() -> None:
-    """Retain complete Operation history after expired logs are cleared."""
+    """Return complete Operation history without loading unrelated state."""
 
     # Arrange
     first_operation = await queue(target_id=uuid4())
@@ -33,29 +33,16 @@ async def test_operations_service_fetch_page_returns_total_history() -> None:
         assert first_row is not None
         assert second_row is not None
         first_row.created_at = second_row.created_at - timedelta(days=1)
-        first_row.finished_at = utcnow() - timedelta(days=31)
-        first_row.logs = ["expired"]
-        second_row.finished_at = utcnow() - timedelta(days=29)
-        second_row.logs = ["retained"]
         await session.commit()
 
     # Act
     async with session_scope() as session:
-        cleared = await operations.clear_expired_logs(session)
-        await session.commit()
-        first_row = await session.get(Operation, first_operation.id)
-        second_row = await session.get(Operation, second_operation.id)
         page, total = await operations.fetch_page(session, Pagination(page_size=1))
 
     # Assert
-    assert cleared == 1
     assert len(page) == 1
     assert page[0].id == second_operation.id
     assert total == 2
-    assert first_row is not None
-    assert first_row.logs == []
-    assert second_row is not None
-    assert second_row.logs == ["retained"]
 
 
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:

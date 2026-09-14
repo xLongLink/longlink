@@ -1,6 +1,5 @@
 import pytest
 import asyncio
-import logging
 from uuid import UUID
 from datetime import timedelta
 from functools import partial
@@ -14,27 +13,6 @@ from src.database.models.operations import Operation
 pytestmark = pytest.mark.no_db
 
 
-def test_operation_log_handler_retains_all_output() -> None:
-    """Retain complete operation diagnostics without a size limit."""
-
-    # Arrange
-    expected_operation_id = UUID("11111111-1111-1111-1111-111111111111")
-    handler = operation_worker.OperationLogHandler(expected_operation_id)
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    token = operation_worker.operation_id.set(expected_operation_id)
-
-    # Act
-    try:
-        large_message = "x" * 65536
-        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, large_message, (), None))
-        handler.emit(logging.LogRecord("test", logging.INFO, "", 0, "overflow", (), None))
-    finally:
-        operation_worker.operation_id.reset(token)
-
-    # Assert
-    assert handler.logs == [large_message, "overflow"]
-
-
 def leased_operation() -> Operation:
     """Build one claimed Compute validation Operation."""
 
@@ -45,15 +23,14 @@ def leased_operation() -> Operation:
     )
 
 
-def failed_transition(operation: Operation) -> Callable[[object, UUID, str, list[str]], Awaitable[Operation]]:
+def failed_transition(operation: Operation) -> Callable[[object, UUID, str], Awaitable[Operation]]:
     """Build a failure transition for one claimed Operation."""
 
-    async def fail(_session: object, operation_id: UUID, reason: str, logs: list[str]) -> Operation:
+    async def fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Mark the expected Operation as failed."""
 
         assert operation_id == operation.id
         operation.failed = reason
-        operation.logs = logs
         operation.finished_at = utcnow()
         return operation
 
@@ -90,7 +67,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)
 
-    async def fake_complete(session, operation_id: UUID, logs: list[str]) -> Operation:
+    async def fake_complete(session: object, operation_id: UUID) -> Operation:
         """Delay the terminal transition until after worker cancellation."""
 
         assert operation_id == operation.id
@@ -123,7 +100,7 @@ async def test_finish_transition_preserves_cancellation_when_terminal_persistenc
     started = asyncio.Event()
     release = asyncio.Event()
 
-    async def fail(_session: object, _operation_id: UUID, reason: str, logs: list[str] | None = None) -> Operation:
+    async def fail(_session: object, _operation_id: UUID, reason: str) -> Operation:
         """Fail only after cancellation reaches the protected transition."""
 
         assert reason == "Operation cancelled"
@@ -152,7 +129,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
 
     # Arrange
     operation = leased_operation()
-    transitions: list[tuple[UUID, str, list[str]]] = []
+    transitions: list[tuple[UUID, str]] = []
 
     async def failing_handler(target_id: UUID) -> str | None:
         """Return one explicit terminal failure."""
@@ -161,10 +138,10 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         operation_worker.logger.info("Compute reconciliation failed")
         return "workload deployment failed"
 
-    async def fake_fail(_session: object, operation_id: UUID, reason: str, logs: list[str]) -> Operation:
+    async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Record the terminal failure transition."""
 
-        transitions.append((operation_id, reason, logs))
+        transitions.append((operation_id, reason))
         operation.failed = reason
         operation.finished_at = utcnow()
         return operation
@@ -178,8 +155,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
 
     # Assert
     assert result.status == OperationStatus.failed
-    assert [(operation_id, reason) for operation_id, reason, _logs in transitions] == [(operation.id, "workload deployment failed")]
-    assert "INFO: Compute reconciliation failed" in transitions[0][2]
+    assert transitions == [(operation.id, "workload deployment failed")]
 
 
 async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -202,7 +178,6 @@ async def test_execute_persists_unexpected_handler_error_as_terminal_failure(mon
     # Assert
     assert result.status == OperationStatus.failed
     assert result.failed == "RuntimeError: provider unavailable"
-    assert any("RuntimeError: provider unavailable" in line for line in result.logs)
 
 
 async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -268,17 +243,17 @@ async def test_execute_completes_successful_operation(monkeypatch: pytest.Monkey
 
     # Arrange
     operation = leased_operation()
-    transitions: list[tuple[UUID, list[str]]] = []
+    transitions: list[UUID] = []
 
     async def complete_handler(target_id: UUID) -> None:
         """Finish the expected target successfully."""
 
         assert target_id == operation.target_id
 
-    async def complete(_session: object, operation_id: UUID, logs: list[str]) -> Operation:
+    async def complete(_session: object, operation_id: UUID) -> Operation:
         """Record the terminal success transition."""
 
-        transitions.append((operation_id, logs))
+        transitions.append(operation_id)
         operation.finished_at = utcnow()
         return operation
 
@@ -291,15 +266,7 @@ async def test_execute_completes_successful_operation(monkeypatch: pytest.Monkey
     # Assert
     assert result is operation
     assert result.status == OperationStatus.completed
-    assert transitions == [
-        (
-            operation.id,
-            [
-                f"INFO: Running {operation.kind} operation {operation.id}",
-                f"INFO: Operation {operation.id} completed",
-            ],
-        )
-    ]
+    assert transitions == [operation.id]
 
 
 async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -379,54 +346,3 @@ async def test_scheduler_recovers_from_worker_failures(
     # Assert
     assert executed == [operation]
     assert sleeps == expected_sleep_count
-
-
-async def test_operation_log_cleanup_recovers_and_commits_later_success(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Continue cleanup after failure and commit only successful work."""
-
-    # Arrange
-    class CleanupSession:
-        """Represent one isolated cleanup transaction."""
-
-        async def commit(self) -> None:
-            """Record a successful cleanup commit."""
-
-            committed.append(self)
-
-    attempts: list[CleanupSession] = []
-    committed: list[CleanupSession] = []
-    sleeps: list[float] = []
-
-    @asynccontextmanager
-    async def cleanup_session_scope() -> AsyncIterator[CleanupSession]:
-        """Yield a fresh cleanup transaction for each attempt."""
-
-        session = CleanupSession()
-        attempts.append(session)
-        yield session
-
-    async def clear_expired_logs(session: CleanupSession) -> int:
-        """Fail the first cleanup attempt and complete the second."""
-
-        if session is attempts[0]:
-            raise RuntimeError("database unavailable")
-        return 2
-
-    async def sleep(delay: float) -> None:
-        """Stop after proving cleanup continued to a second iteration."""
-
-        sleeps.append(delay)
-        if len(sleeps) == 2:
-            raise asyncio.CancelledError
-
-    monkeypatch.setattr(operation_worker, "session_scope", cleanup_session_scope)
-    monkeypatch.setattr(operation_worker.operations, "clear_expired_logs", clear_expired_logs)
-    monkeypatch.setattr(operation_worker.asyncio, "sleep", sleep)
-
-    # Act and assert
-    with pytest.raises(asyncio.CancelledError):
-        await operation_worker.run_operation_log_cleanup()
-
-    assert len(attempts) == 2
-    assert committed == [attempts[1]]
-    assert sleeps == [operation_worker.OPERATION_LOG_CLEANUP_SECONDS, operation_worker.OPERATION_LOG_CLEANUP_SECONDS]

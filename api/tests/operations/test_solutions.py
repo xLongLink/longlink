@@ -146,7 +146,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
         def __init__(self, *_args: object) -> None:
             """Accept provider configuration."""
 
-        async def revoke(self, solution: UUID, bucket: object) -> None:
+        async def revoke(self, solution: UUID) -> None:
             """Record credential revocation."""
 
             calls.append(("revoke", solution))
@@ -197,11 +197,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("bucket")
             return super().bucket(organization, compute)
 
-        async def user(self, solution: UUID, bucket: object) -> Credentials:
+        async def service_account(self, bucket: str, solution: UUID) -> Credentials:
             """Record credential creation after quota admission."""
 
             calls.append("credentials")
-            return await super().user(solution, organization)
+            return await super().service_account(bucket, solution)
 
     class FakePostgres(DatabasePostgres):
         """Provide generated schema credentials without contacting PostgreSQL."""
@@ -313,13 +313,13 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
     monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", FailingPostgres)
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
 
-    async def user(self: StorageKubernetes, solution: UUID, bucket: object) -> Credentials:
+    async def service_account(self: StorageKubernetes, bucket: str, solution: UUID) -> Credentials:
         """Record credential creation at the external boundary."""
 
         calls.append("credentials")
         return Credentials("solution", "generated-secret")
 
-    monkeypatch.setattr(StorageKubernetes, "user", user)
+    monkeypatch.setattr(StorageKubernetes, "service_account", service_account)
 
     # Act and assert
     with pytest.raises(RuntimeError, match="^database unavailable$"):
@@ -413,7 +413,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             """Provide the Kubernetes client cleanup contract."""
 
     monkeypatch.setattr(DatabasePostgres, "solution_schema", unexpected_provider, raising=False)
-    monkeypatch.setattr(StorageKubernetes, "user", unexpected_provider)
+    monkeypatch.setattr(StorageKubernetes, "service_account", unexpected_provider)
     monkeypatch.setattr(solution_operations, "Kubernetes", FakeKubernetes)
 
     # Act
