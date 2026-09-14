@@ -2,13 +2,12 @@ import pytest
 from kr8s import NotFoundError
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
-from conftest import DatabasePostgres, DatabaseKubernetes
+from conftest import DatabaseKubernetes
 from datetime import UTC, datetime
 from sqlmodel import select
 from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import func
 from urllib.parse import urlencode
-from sqlalchemy.exc import OperationalError
 from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError
 from src.models.statuses import Status
@@ -17,7 +16,6 @@ from src.database.services import invitations, projections, organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -367,84 +365,52 @@ async def test_other_organization_user_cannot_delete_solution(
 
 
 @pytest.mark.parametrize(
-    ("usage", "expected_status", "expected_payload"),
+    ("database_state", "usage"),
     [
-        pytest.param(3584, 200, 3584, id="available"),
-        pytest.param(None, 200, None, id="not-provisioned"),
-        pytest.param(OperationalError("SELECT", {}, ConnectionError("database unavailable")), 503, None, id="backend-unavailable"),
+        pytest.param(DatabaseState.available, 3584, id="available"),
+        pytest.param(DatabaseState.hibernated, None, id="hibernated"),
     ],
 )
-async def test_organization_database_usage_returns_usage_or_backend_failure(
+async def test_organization_database_usage_returns_cached_usage_without_provider_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
-    usage: int | None | Exception,
-    expected_status: int,
-    expected_payload: int | None,
+    database_state: DatabaseState,
+    usage: int | None,
 ) -> None:
-    """Return database usage or translate a backend failure."""
+    """Return cached database usage without reaching Kubernetes or PostgreSQL."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
     organization = await create_organization(owner, compute=await create_ready_compute())
 
-    class FakePostgres(DatabasePostgres):
-        """Provide database usage responses for the Organization resource endpoint."""
-
-        async def database_usage(self, database_name: str) -> int | None:
-            """Return usage or raise the configured database backend failure."""
-
-            assert database_name == organization.id.hex
-            if isinstance(usage, Exception):
-                raise usage
-            return usage
-
-    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
-    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
-    # Usage reads observe an already-running database without provisioning or waking it.
+    # Persist cached telemetry for an active or hibernated Organization.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.status = Status.running
+        persisted.database_state = database_state
         persisted.database_sync_pending = False
-        compute = await session.get(ComputeRegistry, persisted.compute_id)
-        assert compute is not None
-        compute.database_instances = 3
+        persisted.database_usage_bytes = usage
         await session.commit()
+
+    def unexpected_cluster(*args: object) -> None:
+        """Reject provider access for cached database diagnostics."""
+
+        raise AssertionError("Diagnostics must not access Kubernetes")
+
+    monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_cluster)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/database")
 
     # Assert
-    assert response.status_code == expected_status
-    if expected_status == 200:
-        response_payload = {
-            "size_bytes": expected_payload,
-            "allocated_bytes": 10 * 1024**3,
-        }
-    else:
-        response_payload = {"detail": "Database resources unavailable"}
-    assert response.json() == response_payload
-
-    # Cached diagnostics preserve usage and per-instance allocation without waking SQL.
-    if expected_status == 200:
-        async with session_scope() as session:
-            persisted = await session.get(Organization, organization.id)
-            assert persisted is not None
-            assert persisted.database_usage_bytes == expected_payload
-            persisted.database_state = DatabaseState.hibernated
-            await session.commit()
-
-        def unexpected_cluster(*args: object) -> None:
-            """Reject provider access for a sleeping database's cached diagnostics."""
-
-            raise AssertionError("Diagnostics must not wake a sleeping database")
-
-        monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_cluster)
-        cached = await client.get(f"/api/v1/organizations/{organization.id}/database")
-        assert cached.status_code == 200
-        assert cached.json() == response_payload
+    assert response.status_code == 200
+    assert response.json() == {
+        "size_bytes": usage,
+        "allocated_bytes": 10 * 1024**3,
+    }
 
 
 @pytest.mark.parametrize(
@@ -539,15 +505,6 @@ async def test_organization_resource_endpoints_allow_members(
         )
         await session.commit()
 
-    class FakePostgres(DatabasePostgres):
-        """Provide an inspectable Organization database."""
-
-        async def database_usage(self, database_name: str) -> int:
-            """Return the database's live usage."""
-
-            assert database_name == organization.id.hex
-            return 0
-
     class FakeStorage:
         """Provide an inspectable Organization storage bucket."""
 
@@ -557,7 +514,6 @@ async def test_organization_resource_endpoints_allow_members(
             assert bucket_name == organization.id.hex
             return 0
 
-    monkeypatch.setattr("src.operations.databases.postgres.Postgres", FakePostgres)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", DatabaseKubernetes)
     from conftest import StorageKubernetes
 
@@ -568,6 +524,7 @@ async def test_organization_resource_endpoints_allow_members(
         assert persisted is not None
         persisted.status = Status.running
         persisted.database_sync_pending = False
+        persisted.database_usage_bytes = 0
         await session.commit()
     client = clients[1]
 
@@ -600,7 +557,6 @@ async def test_organization_resource_endpoints_reject_non_members(
 
         raise AssertionError("cross-tenant resource access reached a provider")
 
-    monkeypatch.setattr("src.operations.databases.postgres.Postgres", unexpected_provider)
     monkeypatch.setattr("src.routes.v1.organizations.Kubernetes", unexpected_provider)
 
     # Act

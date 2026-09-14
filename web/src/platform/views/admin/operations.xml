@@ -19,14 +19,9 @@
         <Table data="$operations.items" idKey="id" hasHover="true">
             <TableColumn field="kind" header="Operation">
                 <Stack align="start">
-                    <Text>
-                        ${({ 'compute.validate': 'Compute
-                        validation', 'solution.deploy': 'Solution
-                        deployment', 'solution.delete': 'Solution
-                        deletion', 'organization.create': 'Organization
-                        creation', 'organization.delete': 'Organization
-                        deletion' })[row.kind]}
-                    </Text>
+                    <Text
+                        value="${({ 'compute.validate': 'Compute validation', 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}"
+                    />
                     <Text type="supporting">
                         ${row.finished_at ? ({ scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' })[row.status] + ' - ' + row.finished_at : 'Started - ' + row.created_at}
                     </Text>

@@ -6,15 +6,19 @@ import { resolveXmlProps } from '../core/props';
 import * as AstryxText from '@astryxdesign/core/Text';
 import { TEXT_COLORS, TEXT_TYPES } from '../constants';
 
-const textPropsSchema = z.object({ color: z.enum(TEXT_COLORS).optional(), type: z.enum(TEXT_TYPES).optional() });
+const textPropsSchema = z.object({
+    color: z.enum(TEXT_COLORS).optional(),
+    type: z.enum(TEXT_TYPES).optional(),
+    value: z.string().optional(),
+});
 
 export function Text({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { color, type } = resolveXmlProps(props, ctx, textPropsSchema);
+    const { color, type, value } = resolveXmlProps(props, ctx, textPropsSchema);
 
     return (
         <AstryxText.Text color={color} type={type}>
-            {renderNode(nodes, ctx)}
+            {value ?? renderNode(nodes, ctx)}
         </AstryxText.Text>
     );
 }

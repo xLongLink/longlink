@@ -1,6 +1,5 @@
 spec:
     type: NodePort
-    externalTrafficPolicy: Local
     ports:
         - name: https
           port: 443

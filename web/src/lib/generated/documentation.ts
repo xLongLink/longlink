@@ -1008,6 +1008,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "type"
             },
             {
+                "description": "Text expression displayed instead of child content.",
+                "name": "value"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
