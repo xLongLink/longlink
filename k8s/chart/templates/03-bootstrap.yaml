@@ -73,13 +73,9 @@ spec:
     template:
         spec:
             restartPolicy: OnFailure
-            serviceAccountName: longlink-bootstrap
-            initContainers:
+            containers:
                 - name: restart-coredns
                   image: registry.k8s.io/kubectl:v1.34.3
                   args: [--namespace, kube-system, rollout, restart, deployment/coredns]
-            containers:
-                - name: wait-for-coredns
-                  image: registry.k8s.io/kubectl:v1.34.3
-                  args: [--namespace, kube-system, rollout, status, deployment/coredns, --timeout=120s]
+            serviceAccountName: longlink-bootstrap
 {{- end }}

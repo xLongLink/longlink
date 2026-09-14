@@ -374,6 +374,7 @@ spec:
     selector:
         app: net-kourier-controller
     type: ClusterIP
+---
 apiVersion: v1
 kind: Service
 metadata:
