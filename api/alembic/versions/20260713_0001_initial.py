@@ -155,7 +155,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_organization_activities_organization_id", "organization_activities", ["organization_id"])
-    op.create_index("ix_organization_activities_expires_at", "organization_activities", ["expires_at"])
 
     # Create solutions after organizations.
     op.create_table(

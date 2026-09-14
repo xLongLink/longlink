@@ -1,7 +1,6 @@
 development: true
 
 bootstrap:
-    enabled: true
     gatewayIngressCidr: 172.30.0.0/24
 
 gateway:

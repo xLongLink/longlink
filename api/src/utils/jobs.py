@@ -2,7 +2,7 @@ import asyncio
 from uuid import UUID
 from sqlmodel import col
 from functools import partial
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from src.logger import logger
 from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
@@ -14,7 +14,7 @@ from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.organizations import DatabaseState
 from src.database.models.operations import Operation
-from src.database.models.organizations import Organization, OrganizationActivity
+from src.database.models.organizations import Organization
 
 
 async def _finish_transition(
@@ -143,7 +143,6 @@ async def run_database_scheduler() -> None:
         while True:
             try:
                 async with session_scope() as session:
-                    await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.expires_at) <= utcnow()))
                     result = await session.scalars(
                         select(col(Organization.id)).where(
                             col(Organization.deleted_at).is_(None),

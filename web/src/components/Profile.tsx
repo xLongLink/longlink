@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useState } from 'react';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
@@ -9,7 +10,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import type { UserSummary } from '@/lib/generated/platform-api-v1/types.gen';
+import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 import {
     AppWindow,
     ArrowUpDown,
@@ -23,7 +24,7 @@ import {
 } from 'lucide-react';
 
 /** Renders a user profile popover with authentication and navigation actions. */
-export function ProfileMenu({ user }: { user: UserSummary }) {
+export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
     const signOut = useSignOut();
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);

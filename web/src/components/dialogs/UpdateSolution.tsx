@@ -13,7 +13,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import type { OrganizationSolutionSummary, SolutionUpdateCheck } from '@/lib/generated/platform-api-v1/types.gen';
+import { zOrganizationSolutionSummary, zSolutionUpdateCheck } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const environmentChangeSchema = z.discriminatedUnion('action', [
     z.object({ action: z.literal('untouched') }),
@@ -40,8 +40,8 @@ export default function UpdateSolution({
     onClose,
     onInvalidate,
 }: {
-    solution: OrganizationSolutionSummary;
-    candidate: SolutionUpdateCheck;
+    solution: z.output<typeof zOrganizationSolutionSummary>;
+    candidate: z.output<typeof zSolutionUpdateCheck>;
     onClose: () => void;
     onInvalidate: () => Promise<void>;
 }) {

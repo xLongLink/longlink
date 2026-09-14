@@ -7,7 +7,6 @@
     "bootstrap": {
       "type": "object",
       "properties": {
-        "enabled": { "type": "boolean" },
         "gatewayIngressCidr": { "type": "string" }
       }
     },

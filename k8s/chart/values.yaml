@@ -1,7 +1,6 @@
 development: false
 
 bootstrap:
-    enabled: false
     gatewayIngressCidr: ''
 
 gateway:

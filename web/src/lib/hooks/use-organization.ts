@@ -1,8 +1,9 @@
+import type { z } from 'zod';
 import { api } from '@/lib/api';
-import type { SolutionCreate } from '@/lib/generated/platform-api-v1/types.gen';
 import { skipToken, type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
+    zSolutionCreate,
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
@@ -59,7 +60,7 @@ export function useCreateOrganizationSolution(organizationId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: SolutionCreate) =>
+        mutationFn: (payload: z.input<typeof zSolutionCreate>) =>
             api(`/api/v1/organizations/${organizationId}/solutions`, { json: payload, method: 'POST' }),
         onSuccess: () => invalidateOrganizationSolutionQueries(queryClient, organizationId),
     });

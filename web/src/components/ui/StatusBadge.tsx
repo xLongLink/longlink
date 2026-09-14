@@ -1,6 +1,9 @@
+import type { z } from 'zod';
 import type { ComponentProps } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
-import type { Status } from '@/lib/generated/platform-api-v1/types.gen';
+import { zStatus } from '@/lib/generated/platform-api-v1/zod.gen';
+
+type Status = z.output<typeof zStatus>;
 
 const statusPresentation = {
     creating: { label: 'Creating', variant: 'info' },
