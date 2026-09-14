@@ -1,3 +1,5 @@
+import { componentDocumentation } from '../lib/generated/documentation';
+
 export type DocumentationIcon =
     | 'appWindow'
     | 'bookOpen'
@@ -49,39 +51,10 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
 // Keep static tutorials and generated component references in their published reading order.
 const viewDocumentationPaths = [
     '/docs/sdk/views',
-    '/docs/sdk/views/action',
-    '/docs/sdk/views/avatar',
-    '/docs/sdk/views/badge',
-    '/docs/sdk/views/button',
     '/docs/sdk/views/bindings',
-    '/docs/sdk/views/card',
-    '/docs/sdk/views/checkbox-input',
-    '/docs/sdk/views/dialog',
-    '/docs/sdk/views/divider',
-    '/docs/sdk/views/file-input',
     '/docs/sdk/views/expressions',
-    '/docs/sdk/views/for',
-    '/docs/sdk/views/grid',
-    '/docs/sdk/views/heading',
-    '/docs/sdk/views/icon',
-    '/docs/sdk/views/link',
-    '/docs/sdk/views/menu',
-    '/docs/sdk/views/more-menu',
-    '/docs/sdk/views/number-input',
-    '/docs/sdk/views/progress-bar',
-    '/docs/sdk/views/query',
-    '/docs/sdk/views/radio-list',
-    '/docs/sdk/views/selector',
-    '/docs/sdk/views/slider',
-    '/docs/sdk/views/stack',
-    '/docs/sdk/views/state',
-    '/docs/sdk/views/switch',
-    '/docs/sdk/views/tabs',
-    '/docs/sdk/views/table',
-    '/docs/sdk/views/text',
-    '/docs/sdk/views/text-area',
-    '/docs/sdk/views/text-input',
-];
+    ...componentDocumentation.map(({ slug }) => `/docs/sdk/views/${slug}`),
+].sort();
 
 export const documentationPaths = documentationSections.flatMap(({ pages }) =>
     pages.flatMap(({ path }) => (path === '/docs/sdk/views' ? viewDocumentationPaths : path))

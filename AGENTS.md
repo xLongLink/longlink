@@ -55,7 +55,7 @@ LongLink
 ## Boundaries and Contracts
 
 - Platform metadata is separate from Solution business data.
-- Shared Compute infrastructure is installed externally through `k8s/setup.yaml.gotmpl`; API reconciliation validates it without installing operators.
+- Shared Compute infrastructure is installed externally through `k8s/chart`; API reconciliation validates it without installing operators.
 - Local development installs infrastructure before starting API workers. Stop workers before `make up` or `make down`.
 - The API uses the same runtime code in local and hosted deployments. `dev/` owns workstation setup, endpoint connections, split DNS, and mail capture; no development transport belongs in the API.
 - Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.

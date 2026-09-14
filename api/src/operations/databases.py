@@ -168,7 +168,7 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
 
 
 @contextlib.asynccontextmanager
-async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", "recover"] = "demand") -> AsyncIterator[Lease | None]:
+async def activity(organization_id: UUID, *, mode: Literal["demand", "recover"] = "demand") -> AsyncIterator[Lease | None]:
     """Keep SQL awake for requests, migrations, deployment, and schema cleanup."""
 
     # Persist demand before waking; a concurrent hibernation must finish before admission.
@@ -182,12 +182,6 @@ async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", 
         # Select admission from fresh state under the same lock used to claim activity.
         if mode == "demand":
             admit = True
-        elif mode == "observe":
-            admit = (
-                organization.status == Status.running
-                and organization.database_state == DatabaseState.available
-                and (transition is None or transition.expires_at <= utcnow())
-            )
         else:
             # Recovery admits only interrupted transitions or pending synchronization, not runtime demand.
             admit = (
@@ -209,8 +203,7 @@ async def activity(organization_id: UUID, *, mode: Literal["demand", "observe", 
         yield None
         return
     async with lease.maintain():
-        if mode != "observe":
-            await ready(organization_id)
+        await ready(organization_id)
         yield lease
 
 

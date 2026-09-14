@@ -113,12 +113,30 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
 def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
     """Validate the actual external package's network boundary and TLS-only listener."""
 
-    # Render the production Kustomize bases rather than reproducing their patches in tests.
-    root = Path(__file__).resolve().parents[3] / "k8s"
-    policies = subprocess.run(["kubectl", "kustomize", str(root / "boundaries")], check=True, capture_output=True, text=True)
-    gateway_release = subprocess.run(["kubectl", "kustomize", str(root / "operators/kourier")], check=True, capture_output=True, text=True)
-    assert any(document["kind"] == "NetworkPolicy" for document in yaml.safe_load_all(policies.stdout))
-    documents = list(yaml.safe_load_all(gateway_release.stdout))
+    # Render the production chart rather than reproducing its fixed-IP resources.
+    chart = Path(__file__).resolve().parents[3] / "k8s/chart"
+    release = subprocess.run(
+        [
+            "helm",
+            "template",
+            "longlink-compute",
+            str(chart),
+            "--namespace",
+            "rustfs",
+            "--set",
+            "gateway.address=203.0.113.10",
+            "--set",
+            "storage.address=203.0.113.11",
+            "--set",
+            "runtimeEgressCidr=203.0.113.0/24",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    documents = list(yaml.safe_load_all(release.stdout))
+    assert any(document["kind"] == "NetworkPolicy" for document in documents)
     service = next(document for document in documents if document["kind"] == "Service" and document["metadata"]["name"] == "kourier")
     assert service["spec"]["ports"] == [{"name": "https", "port": 443, "targetPort": 8444, "protocol": "TCP"}]
-    assert not any(document["kind"] == "Secret" and document["metadata"]["name"] == "longlink-gateway-tls" for document in documents)
+    assert service["spec"]["loadBalancerIP"] == "203.0.113.10"
+    assert any(document["kind"] == "Secret" and document["metadata"]["name"] == "longlink-gateway-tls" for document in documents)

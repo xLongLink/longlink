@@ -1,11 +1,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const adaptersDirectory = path.resolve(root, '../sdk/longlink/.static/xsd/adapters');
 const outputPath = path.resolve(root, 'src/lib/generated/documentation.ts');
+const schemaPath = path.resolve(root, '../sdk/longlink/.static/xsd/schema.xsd');
 const typesPath = path.resolve(root, '../sdk/longlink/.static/xsd/types.xsd');
 const parser = new XMLParser({
     attributeNamePrefix: '',
@@ -166,14 +166,17 @@ async function componentDocumentation() {
         (group) => attribute(group, 'name') === 'XmlRuntimeAttributes'
     );
     const runtimeAttributes = attributes(runtimeGroup, []);
-    const filenames = await readdir(adaptersDirectory);
+    const schemaSource = await readFile(schemaPath, 'utf8');
+    const schemaDocument = parseDocument(schemaSource, 'sdk/longlink/.static/xsd/schema.xsd');
+    const filenames = nodes(schemaDocument, 'xsd:include')
+        .map((include) => attribute(include, 'schemaLocation'))
+        .filter((location) => location.startsWith('adapters/') && location.endsWith('.xsd'))
+        .sort();
     const documents = [];
 
-    for (const filename of filenames.sort()) {
-        if (filename.endsWith('.xsd')) {
-            const source = await readFile(path.join(adaptersDirectory, filename), 'utf8');
-            documents.push(parseDocument(source, filename));
-        }
+    for (const filename of filenames) {
+        const source = await readFile(path.join(path.dirname(schemaPath), filename), 'utf8');
+        documents.push(parseDocument(source, filename));
     }
 
     const elements = new Map();

@@ -1,12 +1,11 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
-from src.database.services import projections
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -117,4 +116,5 @@ async def accept(session: AsyncSession, user: User) -> None:
     await session.execute(delete_pending_invitations)
 
     # Durably request projection only for changed memberships, in a stable lock order.
-    await projections.request_user_sync(session, tuple(changed_organization_ids))
+    for organization_id in sorted(changed_organization_ids):
+        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))

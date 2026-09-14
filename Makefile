@@ -1,4 +1,4 @@
-.PHONY: install check format build test up image down api web sdk sample seed
+.PHONY: install check format build test package-compute up image down api web sdk sample seed
 
 # Install all development dependencies.
 install: api/.env
@@ -46,6 +46,18 @@ test:
 	cd web && vp run test
 
 
+# Package the Compute chart into a deterministic archive named by ARCHIVE.
+package-compute:
+	test -n "$(ARCHIVE)"
+	test -n "$(COMPUTE_VERSION)"
+	@archive="$(ARCHIVE)"; version="$(COMPUTE_VERSION)"; \
+	case "$$version" in n*) date="$${version#n}"; date="$${date%-*}"; date="$$(printf '%s' "$$date" | tr -d .)"; chart_version="0.0.0-nightly-$${date}-$${version##*-}" ;; *) chart_version="$${version#v}" ;; esac; \
+	helm package k8s/chart --version "$$chart_version" --app-version "$$version" --destination "$$(dirname "$$archive")"; \
+	packaged="$$(dirname "$$archive")/longlink-compute-$$chart_version.tgz"; \
+	if [ "$$packaged" != "$$archive" ]; then mv "$$packaged" "$$archive"; fi
+	sha256sum "$(ARCHIVE)" > "$(ARCHIVE).sha256"
+
+
 # Initialize configuration before starting local infrastructure or the API.
 up api: api/.env
 
@@ -59,34 +71,19 @@ up:
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml apply --server-side --field-manager=longlink-development -k k8s/boundaries
-
-	# Generate local server certificates.
-	install -d -m 700 dev/certificates
-	@umask 077; openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -keyout dev/certificates/ca.key -out dev/certificates/ca.crt -subj "/CN=LongLink Development CA" -addext "basicConstraints=critical,CA:TRUE" -addext "keyUsage=critical,keyCertSign"
-	@umask 077; openssl req -new -newkey rsa:2048 -nodes -keyout dev/certificates/server.key -subj "/CN=localhost" | openssl x509 -req -days 3650 -CA dev/certificates/ca.crt -CAkey dev/certificates/ca.key -set_serial "0x$$(openssl rand -hex 16)" -extfile dev/tls.cnf -extensions server -out dev/certificates/server.crt
-	@for target in knative-serving/longlink-gateway-tls rustfs/longlink-storage-tls; do namespace="$${target%/*}"; secret="$${target#*/}"; kubectl --kubeconfig dev/kubeconfig.yaml --namespace "$$namespace" create secret tls "$$secret" --cert=dev/certificates/server.crt --key=dev/certificates/server.key --dry-run=client --output=yaml | kubectl --kubeconfig dev/kubeconfig.yaml apply --filename=-; done
-	
-	# Kourier's controller loads a replaced certificate only at process startup.
-	@if kubectl --kubeconfig dev/kubeconfig.yaml get deployment/net-kourier-controller --namespace knative-serving >/dev/null 2>&1; then \
-		kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/net-kourier-controller --namespace knative-serving; \
-	fi
-
-	# Install connectivity and shared controllers before publishing the release.
-	kubectl --kubeconfig dev/kubeconfig.yaml apply -k dev/compute/connectivity
+	# Configure local DNS before installing shared controllers.
+	kubectl --kubeconfig dev/kubeconfig.yaml apply -f dev/compute/connectivity/dns.yaml
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/coredns --namespace kube-system
 	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/coredns --namespace kube-system --timeout=120s
-	PATH="$(HOME)/.local/bin:$$PATH" KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helmfile --file k8s/setup.yaml.gotmpl --environment development sync
-
-	# Expose canonical Services only after Helmfile has reconciled their shared configuration.
-	kubectl --kubeconfig dev/kubeconfig.yaml patch service kourier --namespace kourier-system --type merge --patch-file dev/compute/connectivity/gateway.patch.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml patch service longlink-storage --namespace rustfs --type merge --patch-file dev/compute/connectivity/storage.patch.yaml
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout restart deployment/longlink-storage --namespace rustfs
-	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=120s
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
+	kubectl --kubeconfig dev/kubeconfig.yaml apply -f dev/compute/connectivity/gateway.yaml
+	install -d -m 700 dev/certificates
+	kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving get secret longlink-gateway-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/gateway.crt
+	kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs get secret longlink-storage-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/storage.crt
 
 	# Verify host TLS connectivity through the k3d port mappings.
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --header 'Host: internalkourier' https://localhost:8443/ready
-	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/ca.crt --output /dev/null https://storage.localhost:9443/health/ready
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/gateway.crt --header 'Host: internalkourier' https://localhost:8443/ready
+	curl --fail --silent --show-error --retry 30 --retry-all-errors --retry-delay 2 --max-time 5 --cacert dev/certificates/storage.crt --output /dev/null https://storage.localhost:9443/health/ready
 
 
 # Build and push the local sample, preserving an existing development project.

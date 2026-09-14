@@ -13,7 +13,7 @@ from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
-from src.database.services import operations, projections
+from src.database.services import operations
 from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -361,9 +361,9 @@ async def update_member_role(
         if other_owner_id is None:
             raise ConflictError("Organization must have at least one owner")
 
-    # Persist the role change.
+    # Persist the role change and request its shared-user projection.
     membership.role = role
-    await projections.request_user_sync(session, (organization_id,))
+    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:

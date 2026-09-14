@@ -1,5 +1,0 @@
-[server]
-basicConstraints = critical,CA:FALSE
-keyUsage = critical,digitalSignature,keyEncipherment
-extendedKeyUsage = serverAuth
-subjectAltName = DNS:localhost,IP:127.0.0.1,DNS:storage.localhost,DNS:longlink-storage.rustfs.svc,DNS:longlink-storage.rustfs.svc.cluster.local

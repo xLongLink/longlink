@@ -11,7 +11,7 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
-from src.database.services import solutions, invitations, projections, organizations
+from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.database.models.users import User
@@ -159,36 +159,6 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
     assert total == 1
-
-
-@pytest.mark.parametrize("deleted", [False, True])
-async def test_sync_users_skips_creating_and_deleted_organizations(
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-    deleted: bool,
-) -> None:
-    """Avoid connecting to Organization databases before activation or after deletion."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    synchronized: list[tuple[DatabasePostgres, object]] = []
-
-    async def capture_sync(conn: DatabasePostgres, rows: object) -> None:
-        """Record unexpected shared-database synchronization attempts."""
-
-        synchronized.append((conn, rows))
-
-    monkeypatch.setattr(organizations.shared_audit, "sync", capture_sync)
-
-    # Act
-    async with session_scope() as session:
-        if deleted:
-            await organizations.soft_delete(session, organization.id, users[0])
-            await session.commit()
-        await projections.request_user_sync(session, (organization.id,))
-
-    # Assert
-    assert synchronized == []
 
 
 async def test_sync_users_projects_active_organization_members(

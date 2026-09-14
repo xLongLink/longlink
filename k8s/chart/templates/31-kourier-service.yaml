@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: kourier
+    namespace: kourier-system
+{{- with .Values.gateway.service.annotations }}
+    annotations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+spec:
+    type: {{ .Values.gateway.service.type }}
+    externalTrafficPolicy: Local
+{{- if eq .Values.gateway.service.type "LoadBalancer" }}
+    loadBalancerIP: {{ .Values.gateway.address }}
+{{- end }}
+{{- with .Values.gateway.service.loadBalancerClass }}
+    loadBalancerClass: {{ . }}
+{{- end }}
+    loadBalancerSourceRanges:
+        - {{ .Values.runtimeEgressCidr }}
+    ports:
+        - name: https
+          port: 443
+          protocol: TCP
+          targetPort: 8444
+{{- with .Values.gateway.service.nodePort }}
+          nodePort: {{ . }}
+{{- end }}
+    selector:
+        app: 3scale-kourier-gateway

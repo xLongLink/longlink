@@ -8,9 +8,11 @@ from src.operations import handlers, databases
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from longlink.utils.time import utcnow
+from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import DatabaseState
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization, OrganizationActivity
 
@@ -142,7 +144,13 @@ async def run_database_scheduler() -> None:
             try:
                 async with session_scope() as session:
                     await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.expires_at) <= utcnow()))
-                    result = await session.scalars(select(col(Organization.id)).where(col(Organization.deleted_at).is_(None)))
+                    result = await session.scalars(
+                        select(col(Organization.id)).where(
+                            col(Organization.deleted_at).is_(None),
+                            col(Organization.status) == Status.running,
+                            col(Organization.database_state) != DatabaseState.hibernated,
+                        )
+                    )
                     await session.commit()
                 running = {organization_id: task for organization_id, task in running.items() if not task.done()}
             except Exception:
