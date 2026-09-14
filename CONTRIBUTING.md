@@ -16,13 +16,21 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [Vite+
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Restart your shell after installing `uv`, then install Vite+:
-
 ```bash
 curl -fsSL https://vite.plus | bash
 . "$HOME/.vite-plus/env"
 vp env setup
 ```
+
+```bash
+sudo snap install helm --classic
+sudo curl -L \
+  https://github.com/helmfile/helmfile/releases/latest/download/helmfile_$(uname -s)_$(uname -m) \
+  -o /usr/local/bin/helmfile
+
+sudo chmod +x /usr/local/bin/helmfile
+```
+
 
 ```bash
 make install  # Install development dependencies
