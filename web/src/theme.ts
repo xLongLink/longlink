@@ -224,7 +224,7 @@ export const stoneTheme = defineTheme({
             },
         },
 
-        codeblock: {
+        'code-block': {
             base: {
                 width: '100%',
             },
