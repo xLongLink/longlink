@@ -132,9 +132,6 @@
                 }
             }
         },
-        "nameOverride": {
-            "type": "string"
-        },
         "nodeSelector": {
             "type": "object"
         },

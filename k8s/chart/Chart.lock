@@ -1,9 +1,0 @@
-dependencies:
-- name: cloudnative-pg
-  repository: file://charts/cloudnative-pg
-  version: 0.28.1
-- name: rustfs
-  repository: file://charts/rustfs
-  version: 1.0.0
-digest: sha256:e360158e2423127ee089577f6a20dfd5bb64dcd9fe13b2e4cca2aaf88b00247a
-generated: "2026-09-14T23:01:59.449876513+02:00"

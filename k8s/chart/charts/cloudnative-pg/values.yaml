@@ -29,7 +29,6 @@ image:
   tag: ""
 
 imagePullSecrets: []
-nameOverride: ""
 
 hostNetwork: false
 dnsPolicy: ""

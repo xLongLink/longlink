@@ -1,8 +1,6 @@
 gateway:
     address: ''
     service:
-        annotations: {}
-        loadBalancerClass: ''
         type: LoadBalancer
 
 gatewayAllowedSourceCidr: ''
@@ -11,9 +9,6 @@ storage:
     address: ''
     dnsNames: []
     service:
-        annotations: {}
-        loadBalancerClass: ''
-        nodePort: null
         type: LoadBalancer
 
 rustfs:

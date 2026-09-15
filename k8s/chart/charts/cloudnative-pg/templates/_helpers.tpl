@@ -4,10 +4,10 @@ cnpg-system
 {{- end -}}
 
 {{/*
-Expand the name of the chart.
+Shared LongLink Compute label name.
 */}}
 {{- define "cloudnative-pg.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+cloudnative-pg
 {{- end }}
 
 {{/*
