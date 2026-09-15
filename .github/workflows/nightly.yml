@@ -17,13 +17,8 @@ jobs:
             contents: read
         uses: ./.github/workflows/tests.yml
 
-    compute-setup:
-        permissions:
-            contents: read
-        uses: ./.github/workflows/compute-setup.yml
-
     publish-api-image:
-        needs: [tests, compute-setup]
+        needs: tests
         runs-on: ubuntu-24.04
         timeout-minutes: 30
 
