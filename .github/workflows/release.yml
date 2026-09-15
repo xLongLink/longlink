@@ -84,6 +84,21 @@ jobs:
               working-directory: sdk
               run: uv publish --trusted-publishing automatic
 
+            - name: Wait for SDK on PyPI
+              run: |
+                  set -euo pipefail
+
+                  version="${GITHUB_REF_NAME#v}"
+                  for attempt in $(seq 1 30); do
+                      if curl --fail --silent --show-error "https://pypi.org/pypi/longlink/${version}/json" >/dev/null; then
+                          exit 0
+                      fi
+                      sleep 10
+                  done
+
+                  printf 'longlink %s was not available on PyPI within five minutes.\n' "$version" >&2
+                  exit 1
+
     # The API is packaged into a container, so we will publish the image to GHCR on each release.
     publish-api-image:
         needs: [tests, publish-compute-chart]
