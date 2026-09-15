@@ -89,7 +89,7 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
         json={
             "name": DEVELOPMENT_COMPUTE,
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
-            "gateway_url": "https://localhost:8443",
+            "gateway_url": "https://127.0.0.1:8443",
             "gateway_certificate": gateway_certificate,
             "database_size_gib": 10,
             "database_instances": 1,

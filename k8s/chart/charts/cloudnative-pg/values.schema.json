@@ -17,9 +17,6 @@
         "config": {
             "type": "object",
             "properties": {
-                "clusterWide": {
-                    "type": "boolean"
-                },
                 "create": {
                     "type": "boolean"
                 },
@@ -104,23 +101,6 @@
         "imagePullSecrets": {
             "type": "array"
         },
-        "monitoring": {
-            "type": "object",
-            "properties": {
-                "podMonitorAdditionalLabels": {
-                    "type": "object"
-                },
-                "podMonitorEnabled": {
-                    "type": "boolean"
-                },
-                "podMonitorMetricRelabelings": {
-                    "type": "array"
-                },
-                "podMonitorRelabelings": {
-                    "type": "array"
-                }
-            }
-        },
         "monitoringQueriesConfigMap": {
             "type": "object",
             "properties": {
@@ -163,9 +143,6 @@
         "rbac": {
             "type": "object",
             "properties": {
-                "aggregateClusterRoles": {
-                    "type": "boolean"
-                },
                 "create": {
                     "type": "boolean"
                 }

@@ -1,15 +1,3 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-    name: coredns-custom
-    namespace: kube-system
-data:
-    storage.override: |
-        rewrite stop {
-            name exact storage.localhost longlink-storage.rustfs.svc.cluster.local
-            answer auto
-        }
----
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -27,50 +15,3 @@ spec:
           ports:
               - protocol: TCP
                 port: 8444
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-    name: longlink-bootstrap
-    namespace: rustfs
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-    name: longlink-bootstrap
-    namespace: kube-system
-rules:
-    - apiGroups: [apps]
-      resources: [deployments]
-      resourceNames: [coredns]
-      verbs: [get, patch, watch]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-    name: longlink-bootstrap
-    namespace: kube-system
-roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: Role
-    name: longlink-bootstrap
-subjects:
-    - kind: ServiceAccount
-      name: longlink-bootstrap
-      namespace: rustfs
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-    name: longlink-bootstrap
-    namespace: rustfs
-spec:
-    backoffLimit: 3
-    template:
-        spec:
-            restartPolicy: OnFailure
-            serviceAccountName: longlink-bootstrap
-            containers:
-                - name: restart-coredns
-                  image: registry.k8s.io/kubectl:v1.34.3
-                  args: [--namespace, kube-system, rollout, restart, deployment/coredns]

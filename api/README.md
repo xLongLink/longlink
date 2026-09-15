@@ -21,7 +21,7 @@ Registry.
 | Name    | Image                                | Tag                              | Published                            |
 | ------- | ------------------------------------ | -------------------------------- | ------------------------------------ |
 | Stable  | `ghcr.io/xlonglink/longlink`         | `v<major>.<minor>.<patch>`       | When the matching Git tag is pushed. |
-| Nightly | `ghcr.io/xlonglink/longlink-nightly` | `n<year>.<month>.<day>-<commit>` | Daily from the default branch.       |
+| Nightly | `ghcr.io/xlonglink/longlink`         | `nightly`                        | Daily from the default branch.       |
 
 <br />
 

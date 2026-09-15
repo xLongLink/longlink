@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: rustfs
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: rustfs-secret
+    namespace: rustfs
+stringData:
+    RUSTFS_ACCESS_KEY: rustfsadmin
+    RUSTFS_SECRET_KEY: rustfsadmin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: coredns-custom
+    namespace: kube-system
+data:
+    storage.override: |
+        rewrite stop {
+            name exact storage.localhost longlink-storage.rustfs.svc.cluster.local
+            answer auto
+        }
