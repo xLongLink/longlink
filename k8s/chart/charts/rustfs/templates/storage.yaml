@@ -1,0 +1,266 @@
+{{- if and (not .Values.secret.createInsecure) (not .Values.secret.existingSecret) }}
+{{- fail "rustfs.secret.existingSecret is required unless rustfs.secret.createInsecure is enabled for local development" }}
+{{- end }}
+{{- if .Values.secret.createInsecure }}
+apiVersion: v1
+kind: Secret
+metadata:
+    name: rustfs-secret
+    namespace: {{ .Release.Namespace }}
+type: Opaque
+data:
+    RUSTFS_ACCESS_KEY: cnVzdGZzYWRtaW4=
+    RUSTFS_SECRET_KEY: cnVzdGZzYWRtaW4=
+---
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: rustfs-config
+    namespace: {{ .Release.Namespace }}
+data:
+    RUSTFS_ADDRESS: ":9000"
+    RUSTFS_OBS_LOG_DIRECTORY: "/logs"
+    RUSTFS_OBS_LOGGER_LEVEL: "info"
+    RUSTFS_OBS_ENVIRONMENT: "development"
+{{- if eq .Values.mode "distributed" }}
+    RUSTFS_VOLUMES: "http://rustfs-{0...3}.rustfs-headless.{{ .Release.Namespace }}.svc.cluster.local:9000/data"
+{{- else }}
+    RUSTFS_VOLUMES: "/data"
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: rustfs-svc
+    namespace: {{ .Release.Namespace }}
+spec:
+    ports:
+        - name: endpoint
+          port: 9000
+          targetPort: endpoint
+    selector:
+        app.kubernetes.io/name: rustfs
+        app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if eq .Values.mode "distributed" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: rustfs-headless
+    namespace: {{ .Release.Namespace }}
+spec:
+    clusterIP: None
+    publishNotReadyAddresses: true
+    ports:
+        - name: endpoint
+          port: 9000
+    selector:
+        app.kubernetes.io/name: rustfs
+        app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+---
+{{- if eq .Values.mode "standalone" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: rustfs-data
+    namespace: {{ .Release.Namespace }}
+    annotations:
+        helm.sh/resource-policy: keep
+spec:
+    accessModes: [ReadWriteOnce]
+    storageClassName: {{ .Values.storage.name }}
+    resources:
+        requests:
+            storage: {{ .Values.storage.dataStorageSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: rustfs-logs
+    namespace: {{ .Release.Namespace }}
+    annotations:
+        helm.sh/resource-policy: keep
+spec:
+    accessModes: [ReadWriteOnce]
+    storageClassName: {{ .Values.storage.name }}
+    resources:
+        requests:
+            storage: {{ .Values.storage.logStorageSize }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: rustfs
+    namespace: {{ .Release.Namespace }}
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 0
+            maxUnavailable: 1
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: rustfs
+            app.kubernetes.io/instance: {{ .Release.Name }}
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: rustfs
+                app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+            automountServiceAccountToken: false
+            enableServiceLinks: false
+            securityContext:
+                fsGroup: 10001
+                runAsGroup: 10001
+                runAsUser: 10001
+            initContainers:
+                - name: init-step
+                  image: busybox:stable
+                  imagePullPolicy: IfNotPresent
+                  command: [sh, -c, "mkdir -p /data /mnt/rustfs/logs && chmod 755 /mnt/rustfs/logs"]
+                  securityContext: &containerSecurityContext
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop: [ALL]
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                  volumeMounts:
+                      - {name: data, mountPath: /data}
+                      - {name: logs, mountPath: /mnt/rustfs}
+            containers:
+                - name: rustfs
+                  image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+                  imagePullPolicy: IfNotPresent
+                  command: ["/usr/bin/rustfs"]
+                  securityContext: *containerSecurityContext
+                  ports:
+                      - {name: endpoint, containerPort: 9000}
+                  envFrom:
+                      - configMapRef: {name: rustfs-config}
+                      - secretRef:
+                            name: {{ if .Values.secret.createInsecure }}rustfs-secret{{ else }}{{ .Values.secret.existingSecret }}{{ end }}
+                  livenessProbe:
+                      httpGet: {path: /health, port: 9000}
+                      initialDelaySeconds: 30
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      successThreshold: 1
+                      failureThreshold: 3
+                  readinessProbe:
+                      httpGet: {path: /health/ready, port: 9000}
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      successThreshold: 1
+                      failureThreshold: 3
+                  volumeMounts:
+                      - {name: data, mountPath: /data}
+                      - {name: logs, mountPath: /logs, subPath: logs}
+            volumes:
+                - name: data
+                  persistentVolumeClaim: {claimName: rustfs-data}
+                - name: logs
+                  persistentVolumeClaim: {claimName: rustfs-logs}
+{{- else }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+    name: rustfs
+    namespace: {{ .Release.Namespace }}
+spec:
+    serviceName: rustfs-headless
+    replicas: 4
+    podManagementPolicy: Parallel
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: rustfs
+            app.kubernetes.io/instance: {{ .Release.Name }}
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: rustfs
+                app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+            automountServiceAccountToken: false
+            enableServiceLinks: false
+            securityContext:
+                fsGroup: 10001
+                runAsGroup: 10001
+                runAsUser: 10001
+            affinity:
+                podAntiAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                        - labelSelector:
+                              matchExpressions:
+                                  - key: app.kubernetes.io/name
+                                    operator: In
+                                    values: [rustfs]
+                          topologyKey: kubernetes.io/hostname
+            initContainers:
+                - name: init-step
+                  image: busybox:stable
+                  imagePullPolicy: IfNotPresent
+                  command: [sh, -c, "mkdir -p /data /mnt/rustfs/logs && chmod 755 /mnt/rustfs/logs"]
+                  securityContext: &containerSecurityContext
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                          drop: [ALL]
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                  volumeMounts:
+                      - {name: data, mountPath: /data}
+                      - {name: logs, mountPath: /mnt/rustfs}
+            containers:
+                - name: rustfs
+                  image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+                  imagePullPolicy: IfNotPresent
+                  command: ["/usr/bin/rustfs"]
+                  securityContext: *containerSecurityContext
+                  ports:
+                      - {name: endpoint, containerPort: 9000}
+                  env:
+                      - name: RUSTFS_CHART_POD_NAME
+                        valueFrom: {fieldRef: {fieldPath: metadata.name}}
+                      - name: RUSTFS_LOCAL_ENDPOINT_HOST
+                        value: "$(RUSTFS_CHART_POD_NAME).rustfs-headless.{{ .Release.Namespace }}.svc.cluster.local"
+                  envFrom:
+                      - configMapRef: {name: rustfs-config}
+                      - secretRef:
+                            name: {{ .Values.secret.existingSecret }}
+                  livenessProbe:
+                      httpGet: {path: /health, port: 9000}
+                      initialDelaySeconds: 30
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      successThreshold: 1
+                      failureThreshold: 3
+                  readinessProbe:
+                      httpGet: {path: /health/ready, port: 9000}
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                      timeoutSeconds: 3
+                      successThreshold: 1
+                      failureThreshold: 3
+                  volumeMounts:
+                      - {name: data, mountPath: /data}
+                      - {name: logs, mountPath: /logs, subPath: logs}
+    volumeClaimTemplates:
+        - metadata: {name: logs}
+          spec:
+              accessModes: [ReadWriteOnce]
+              storageClassName: {{ .Values.storage.name }}
+              resources:
+                  requests:
+                      storage: {{ .Values.storage.logStorageSize }}
+        - metadata: {name: data}
+          spec:
+              accessModes: [ReadWriteOnce]
+              storageClassName: {{ .Values.storage.name }}
+              resources:
+                  requests:
+                      storage: {{ .Values.storage.dataStorageSize }}
+{{- end }}

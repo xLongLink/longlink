@@ -11,7 +11,8 @@
 
 # Local development
 
-The API runs on the host. `dev/` owns local infrastructure.
+The API runs on the host. `dev/` owns local infrastructure, including the
+workstation-only Compute DNS bootstrap.
 
 Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, Helm,
 uv, Vite+, and `storage.localhost` resolving to loopback.

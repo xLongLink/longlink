@@ -1,4 +1,3 @@
-{{- if .Values.development }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -24,7 +23,7 @@ spec:
     ingress:
         - from:
               - ipBlock:
-                    cidr: {{ .Values.bootstrap.gatewayIngressCidr }}
+                    cidr: 172.30.0.0/24
           ports:
               - protocol: TCP
                 port: 8444
@@ -65,17 +64,13 @@ kind: Job
 metadata:
     name: longlink-bootstrap
     namespace: rustfs
-    annotations:
-        helm.sh/hook: post-install,post-upgrade
-        helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
     backoffLimit: 3
     template:
         spec:
             restartPolicy: OnFailure
+            serviceAccountName: longlink-bootstrap
             containers:
                 - name: restart-coredns
                   image: registry.k8s.io/kubectl:v1.34.3
                   args: [--namespace, kube-system, rollout, restart, deployment/coredns]
-            serviceAccountName: longlink-bootstrap
-{{- end }}

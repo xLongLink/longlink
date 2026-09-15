@@ -1,8 +1,3 @@
-development: true
-
-bootstrap:
-    gatewayIngressCidr: 172.30.0.0/24
-
 gateway:
     address: 127.0.0.1
     service:
@@ -13,21 +8,20 @@ runtimeEgressCidr: 127.0.0.1/32
 
 storage:
     address: 127.0.0.1
+    dnsNames:
+        - storage.localhost
+        - longlink-storage.rustfs.svc
+        - longlink-storage.rustfs.svc.cluster.local
     service:
         nodePort: 30943
         type: NodePort
 
 rustfs:
     secret:
-        allowInsecureDefaults: true
         existingSecret: ''
-    replicaCount: 1
-    mode:
-        standalone:
-            enabled: true
-        distributed:
-            enabled: false
-    storageclass:
+        createInsecure: true
+    mode: standalone
+    storage:
         name: local-path
         dataStorageSize: 1Gi
         logStorageSize: 1Gi

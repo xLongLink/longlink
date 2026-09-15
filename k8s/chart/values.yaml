@@ -1,8 +1,3 @@
-development: false
-
-bootstrap:
-    gatewayIngressCidr: ''
-
 gateway:
     address: ''
     service:
@@ -12,8 +7,13 @@ gateway:
 
 runtimeEgressCidr: ''
 
+cloudnative-pg:
+    fullnameOverride: cnpg-controller-manager
+    namespaceOverride: cnpg-system
+
 storage:
     address: ''
+    dnsNames: []
     service:
         annotations: {}
         loadBalancerClass: ''
@@ -21,16 +21,14 @@ storage:
         type: LoadBalancer
 
 rustfs:
-    fullnameOverride: rustfs
     image:
-        rustfs:
-            repository: rustfs/rustfs
-            tag: 1.0.0-rc.6@sha256:97171b3d72cd47dc81000f92ea84de25608bfc35a94c965501afaeb5d99f6035
+        repository: rustfs/rustfs
+        tag: 1.0.0-rc.6@sha256:97171b3d72cd47dc81000f92ea84de25608bfc35a94c965501afaeb5d99f6035
+    mode: distributed
     secret:
         existingSecret: longlink-rustfs
-    replicaCount: 4
-    drivesPerNode: 1
-    storageclass:
+        createInsecure: false
+    storage:
         name: block-storage
         dataStorageSize: 100Gi
         logStorageSize: 1Gi
