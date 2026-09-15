@@ -50,9 +50,10 @@ test:
 package-compute:
 	test -n "$(ARCHIVE)"
 	test -n "$(COMPUTE_VERSION)"
+	test -n "$(PLATFORM_VERSION)"
 	@archive="$(ARCHIVE)"; version="$(COMPUTE_VERSION)"; \
 	case "$$version" in n*) date="$${version#n}"; date="$${date%-*}"; date="$$(printf '%s' "$$date" | tr -d .)"; chart_version="0.0.0-nightly-$${date}-$${version##*-}" ;; *) chart_version="$${version#v}" ;; esac; \
-	helm package k8s/chart --version "$$chart_version" --app-version "$$version" --destination "$$(dirname "$$archive")"; \
+	helm package k8s/chart --version "$$chart_version" --app-version "$(PLATFORM_VERSION)" --destination "$$(dirname "$$archive")"; \
 	packaged="$$(dirname "$$archive")/longlink-compute-$$chart_version.tgz"; \
 	if [ "$$packaged" != "$$archive" ]; then mv "$$packaged" "$$archive"; fi
 	sha256sum "$(ARCHIVE)" > "$(ARCHIVE).sha256"

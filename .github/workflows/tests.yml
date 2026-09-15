@@ -236,8 +236,10 @@ jobs:
             - name: Install Compute package
               run: |
                   set -euo pipefail
-                  helm lint k8s/chart --values dev/values.yaml
-                  helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
+                  archive="$RUNNER_TEMP/longlink-compute-v0.0.0.tgz"
+                  make package-compute COMPUTE_VERSION=v0.0.0 PLATFORM_VERSION=v0.0.0 ARCHIVE="$archive"
+                  helm lint "$archive" --values dev/values.yaml
+                  helm upgrade --install longlink-compute "$archive" --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
                   kubectl apply --filename dev/compute.yaml
 
             - name: Verify Compute controllers
@@ -250,6 +252,7 @@ jobs:
                   kubectl wait --namespace cnpg-system --for=condition=Available --timeout=5m deployment/cnpg-controller-manager
                   kubectl wait --namespace rustfs --for=condition=Available --timeout=5m deployment/rustfs deployment/longlink-storage
                   test "$(kubectl get configmap compute-release --namespace longlink-system --output jsonpath='{.data.contract}')" = 1
+                  test "$(kubectl get configmap compute-release --namespace longlink-system --output jsonpath='{.data.platform_version}')" = v0.0.0
 
             - name: Verify Compute HTTPS endpoints
               run: |

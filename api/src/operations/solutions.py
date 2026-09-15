@@ -80,7 +80,6 @@ async def deploy(revision_id: UUID) -> None:
                     "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
                     "LONGLINK_DATABASE_USERNAME": database_username,
                     "LONGLINK_STORAGE_BUCKET": bucket.name,
-                    "LONGLINK_STORAGE_ENDPOINT_URL": compute.storage_endpoint,
                     "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
                     "LONGLINK_STORAGE_PREFIX": prefix,
                     "LONGLINK_STORAGE_REGION": "us-east-1",
@@ -122,6 +121,7 @@ async def deploy(revision_id: UUID) -> None:
                 {
                     **revision.envs,
                     **runtime_secrets,
+                    "LONGLINK_STORAGE_ENDPOINT_URL": compute.storage_endpoint,
                     "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
                     **(
                         {"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate}

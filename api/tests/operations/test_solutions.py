@@ -286,7 +286,12 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(revision_id)
     assert calls == ["open", "bucket", "workload", "close"]
     assert len(database_passwords) == 1
-    assert captured["secrets"] == {"API_KEY": "replacement", **persisted.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
+    assert captured["secrets"] == {
+        "API_KEY": "replacement",
+        **persisted.secrets,
+        "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+    }
     async with session_scope() as session:
         updated = await session.get(Solution, solution.id)
         assert updated is not None

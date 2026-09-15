@@ -1,3 +1,5 @@
+import pytest
+from src import auth
 from uuid import uuid4
 from httpx2 import AsyncClient
 from factories import (
@@ -97,3 +99,33 @@ async def test_compute_registry_deletion_rejects_unknown_registry(
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Compute registry not found"}
+
+
+async def test_deployment_token_rotates_compute_endpoints(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Rotate one registered Compute without using an administrator browser session."""
+
+    # Arrange
+    compute = await create_compute()
+    token = "deployment-token-that-is-long-enough"
+    monkeypatch.setattr(auth.env, "DEPLOYMENT_TOKEN", token)
+
+    # Act
+    response = await client.put(
+        "/api/v1/deployment/computes/endpoints",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "cluster_uid": compute.cluster_uid,
+            "gateway_url": "https://new-gateway.example",
+            "storage_endpoint": "https://new-storage.example",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 202
+    assert response.json()["status"] == "creating"
+    operations = await fetch_operations()
+    assert len(operations) == 1
+    assert operations[0].kind == OperationKind.compute_validate
+    assert operations[0].target_id == compute.id

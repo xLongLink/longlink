@@ -5,11 +5,14 @@ from src.errors import ConflictError, NotFoundError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
-from src.models.computes import ComputeRegistryCreate
+from src.models.computes import ComputeRegistryCreate, ComputeRegistryEndpointUpdate
+from src.models.statuses import Status
+from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
+from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
@@ -61,6 +64,62 @@ async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_
     except IntegrityError as exc:
         raise ConflictError("Compute registry already exists") from exc
 
+    return registry
+
+
+async def rotate_endpoints(session: AsyncSession, payload: ComputeRegistryEndpointUpdate) -> ComputeRegistry:
+    """Replace one Compute's reachable endpoints and queue dependent reconciliation."""
+
+    # Lock the physical Compute identity so concurrent rotations cannot overwrite endpoint trust.
+    registry = await session.scalar(
+        select(ComputeRegistry).where(col(ComputeRegistry.cluster_uid) == payload.cluster_uid).with_for_update()
+    )
+    if registry is None:
+        raise NotFoundError("Compute registry not found")
+
+    # Never supersede validation after it has begun because it may have observed the prior endpoints.
+    active_validation = await session.scalar(
+        select(Operation.id)
+        .where(
+            col(Operation.kind) == OperationKind.compute_validate,
+            col(Operation.target_id) == registry.id,
+            col(Operation.finished_at).is_(None),
+        )
+        .limit(1)
+    )
+    if active_validation is not None:
+        raise ConflictError("Compute validation is in progress")
+
+    registry.gateway_url = payload.gateway_url
+    registry.gateway_certificate = payload.gateway_certificate
+    registry.storage_endpoint = payload.storage_endpoint
+    registry.storage_certificate = payload.storage_certificate
+    registry.status = Status.creating
+    await operations.enqueue(session, kind=OperationKind.compute_validate, target_id=registry.id)
+
+    # Reapply existing workloads because their injected storage endpoint follows the Compute registry.
+    statement = (
+        select(Solution.desired_revision_id, Solution.deployed_revision_id, Revision.failed)
+        .join(Organization, col(Organization.id) == col(Solution.organization_id))
+        .outerjoin(Revision, col(Revision.id) == col(Solution.desired_revision_id))
+        .where(col(Organization.compute_id) == registry.id, col(Organization.deleted_at).is_(None), col(Solution.deleted_at).is_(None))
+    )
+    result = await session.execute(statement)
+    for desired_revision_id, deployed_revision_id, desired_revision_failed in result.tuples():
+        revision_id = desired_revision_id if desired_revision_id is not None and desired_revision_failed is False else deployed_revision_id
+        if revision_id is not None:
+            await operations.enqueue(session, kind=OperationKind.solution_deploy, target_id=revision_id)
+
+    return registry
+
+
+async def by_cluster_uid(session: AsyncSession, cluster_uid: str) -> ComputeRegistry:
+    """Return one registered Compute by its immutable Kubernetes identity."""
+
+    # The deployment controller uses the same physical identity established at registration.
+    registry = await session.scalar(select(ComputeRegistry).where(col(ComputeRegistry.cluster_uid) == cluster_uid))
+    if registry is None:
+        raise NotFoundError("Compute registry not found")
     return registry
 
 
