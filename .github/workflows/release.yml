@@ -86,7 +86,7 @@ jobs:
 
     # The API is packaged into a container, so we will publish the image to GHCR on each release.
     publish-api-image:
-        needs: tests
+        needs: [tests, publish-compute-chart]
         runs-on: ubuntu-24.04
         timeout-minutes: 30
 
@@ -118,17 +118,25 @@ jobs:
               id: image
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
-                  context: .
-                  file: api/Dockerfile
-                  platforms: linux/amd64
-                  push: true
-                  build-args: |
+                    context: .
+                    file: api/Dockerfile
+                    platforms: linux/amd64
+                    push: true
+                    build-args: |
                       VERSION=${{ github.ref_name }}
-                  annotations: |
+                    annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
-                  tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
-                  cache-from: type=gha,scope=api
-                  cache-to: type=gha,mode=max,scope=api
+                    labels: |
+                      org.opencontainers.image.revision=${{ github.sha }}
+                      org.opencontainers.image.version=${{ github.ref_name }}
+                      longlink.dev/release-version=${{ github.ref_name }}
+                      longlink.dev/release-compute-chart=${{ needs.publish-compute-chart.outputs.chart }}
+                      longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
+                      longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
+                      longlink.dev/release-sdk-version=${{ github.ref_name }}
+                    tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                    cache-from: type=gha,scope=api
+                    cache-to: type=gha,mode=max,scope=api
 
     publish-compute-chart:
         needs: tests
@@ -190,52 +198,8 @@ jobs:
         secrets:
             SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
 
-    publish-release-manifest:
-        needs: [publish-sdk, publish-api-image, publish-compute-chart, sync-sample]
-        runs-on: ubuntu-24.04
-        timeout-minutes: 15
-
-        environment:
-            name: release
-
-        permissions:
-            contents: read
-            packages: write
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Setup Docker Buildx
-              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-            - name: Log in to GHCR
-              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-              with:
-                  registry: ghcr.io
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-
-            - name: Publish release manifest
-              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-              with:
-                  context: .
-                  file: .github/release/Dockerfile
-                  platforms: linux/amd64
-                  push: true
-                  labels: |
-                      org.opencontainers.image.description=LongLink release manifest
-                      org.opencontainers.image.revision=${{ github.sha }}
-                      longlink.dev/release-version=${{ github.ref_name }}
-                      longlink.dev/release-api-image=${{ needs.publish-api-image.outputs.image }}
-                      longlink.dev/release-compute-chart=${{ needs.publish-compute-chart.outputs.chart }}
-                      longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
-                      longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
-                      longlink.dev/release-sdk-version=${{ github.ref_name }}
-                  tags: ghcr.io/xlonglink/longlink-release:${{ github.ref_name }}
-
     publish-github-release:
-        needs: publish-release-manifest
+        needs: [publish-sdk, publish-api-image, publish-compute-chart, sync-sample]
         runs-on: ubuntu-24.04
         timeout-minutes: 10
 

@@ -93,40 +93,25 @@ jobs:
               id: api
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
-                  context: .
-                  file: api/Dockerfile
-                  platforms: linux/amd64
-                  push: true
-                  build-args: |
+                    context: .
+                    file: api/Dockerfile
+                    platforms: linux/amd64
+                    push: true
+                    build-args: |
                       VERSION=${{ steps.platform.outputs.version }}
-                  labels: |
+                    labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ steps.platform.outputs.version }}
-                  annotations: |
-                      index:org.opencontainers.image.description=LongLink backend API
-                  tags: ghcr.io/xlonglink/longlink:nightly
-                  cache-from: type=gha,scope=api
-                  cache-to: type=gha,mode=max,scope=api
-
-            - name: Publish nightly release manifest
-              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-              with:
-                  context: .
-                  file: .github/release/Dockerfile
-                  platforms: linux/amd64
-                  push: true
-                  labels: |
-                      org.opencontainers.image.description=LongLink release manifest
-                      org.opencontainers.image.revision=${{ github.sha }}
                       longlink.dev/release-version=${{ steps.compute.outputs.chart_version }}
-                      longlink.dev/release-api-image=ghcr.io/xlonglink/longlink@${{ steps.api.outputs.digest }}
                       longlink.dev/release-compute-chart=${{ steps.compute.outputs.chart }}
                       longlink.dev/release-compute-version=${{ steps.compute.outputs.chart_version }}
                       longlink.dev/release-compute-sha256=${{ steps.compute.outputs.chart_sha256 }}
                       longlink.dev/release-sdk-version=${{ steps.platform.outputs.version }}
-                  tags: |
-                      ghcr.io/xlonglink/longlink-release:${{ steps.compute.outputs.chart_version }}
-                      ghcr.io/xlonglink/longlink-release:nightly
+                    annotations: |
+                      index:org.opencontainers.image.description=LongLink backend API
+                    tags: ghcr.io/xlonglink/longlink:nightly
+                    cache-from: type=gha,scope=api
+                    cache-to: type=gha,mode=max,scope=api
 
             - name: Remove old nightly API image versions
               uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
@@ -136,27 +121,26 @@ jobs:
                   min-versions-to-keep: 3
                   delete-only-untagged-versions: true
 
-            - name: Remove old nightly package versions
+            - name: Remove old nightly Compute chart versions
               env:
                   GH_TOKEN: ${{ github.token }}
               run: |
                   set -euo pipefail
 
-                  for package in charts%2Flonglink-compute longlink-release; do
-                      # A first publication has no package version history to prune.
-                      if ! versions="$(gh api --paginate --slurp "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${package}/versions?per_page=100" 2>&1)"; then
-                          case "$versions" in
-                              *'HTTP 404'*) continue ;;
-                              *) printf '%s\n' "$versions" >&2; exit 1 ;;
-                          esac
-                      fi
+                  package=charts%2Flonglink-compute
+                  # A first publication has no package version history to prune.
+                  if ! versions="$(gh api --paginate --slurp "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${package}/versions?per_page=100" 2>&1)"; then
+                      case "$versions" in
+                          *'HTTP 404'*) exit 0 ;;
+                          *) printf '%s\n' "$versions" >&2; exit 1 ;;
+                      esac
+                  fi
 
-                      printf '%s\n' "$versions" \
-                        | jq -r '[.[][] | select((.metadata.container.tags // []) | any(.[]; test("^0\\.0\\.0-nightly-[0-9]{8}-[0-9a-f]{40}$")))] | sort_by(.created_at) | reverse | .[3:][] | .id' \
-                        | while IFS= read -r version_id; do
-                            gh api --method DELETE "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${package}/versions/$version_id"
-                        done
-                  done
+                  printf '%s\n' "$versions" \
+                    | jq -r '[.[][] | select((.metadata.container.tags // []) | any(.[]; test("^0\\.0\\.0-nightly-[0-9]{8}-[0-9a-f]{40}$")))] | sort_by(.created_at) | reverse | .[3:][] | .id' \
+                    | while IFS= read -r version_id; do
+                        gh api --method DELETE "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${package}/versions/$version_id"
+                    done
 
     sync-sample:
         needs: publish-api-image
