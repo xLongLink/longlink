@@ -154,12 +154,9 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Set up Helm
-              run: |
-                  set -euo pipefail
-                  curl --fail --location --output "$RUNNER_TEMP/helm.tar.gz" https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz
-                  mkdir "$RUNNER_TEMP/helm"
-                  tar --extract --gzip --file "$RUNNER_TEMP/helm.tar.gz" --strip-components=1 --directory "$RUNNER_TEMP/helm" linux-amd64/helm
-                  printf '%s\n' "$RUNNER_TEMP/helm" >> "$GITHUB_PATH"
+              uses: azure/setup-helm@v5
+              with:
+                  version: v4.3.0
 
             - name: Package Compute
               id: compute

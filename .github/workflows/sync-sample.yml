@@ -90,11 +90,10 @@ jobs:
 
             - name: Replace sample history
               env:
-                  SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
                   GH_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
               run: |
                   set -euo pipefail
-                  : "${SAMPLE_REPOSITORY_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
+                  : "${GH_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
 
                   case "$SYNC_CHANNEL" in
                       main|nightly) sample_branch="$SYNC_CHANNEL" ;;
