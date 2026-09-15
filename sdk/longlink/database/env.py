@@ -1,7 +1,8 @@
 import asyncio
 from alembic import context
+from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
-from longlink.database.base import create_engine, database_metadata
+from longlink.database.base import create_engine
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
@@ -23,7 +24,7 @@ def _configure_migrations(
         connection=connection,
         url=url,
         literal_binds=literal_binds,
-        target_metadata=database_metadata,
+        target_metadata=SQLModel.metadata,
         include_object=include_object,
         compare_type=True,
         render_as_batch=True,

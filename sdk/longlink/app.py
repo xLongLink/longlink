@@ -1,7 +1,6 @@
 import logging
 from fastapi import FastAPI
 from pathlib import Path
-from functools import partial
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.views import ViewDefinition, view_stem_route
@@ -17,12 +16,6 @@ from longlink.middleware import FrontendMiddleware
 from longlink.storage.base import create_fs
 from longlink.database.base import Database
 from longlink.utils.settings import Envs
-
-
-def render_view(content: str) -> Response:
-    """Return one static XML view."""
-
-    return Response(content, media_type="application/xml")
 
 
 @dataclass(slots=True)
@@ -86,9 +79,15 @@ class LongLink:
 
         # Views are registered once before the frontend mount is installed.
         for definition, content in discovered_views:
+
+            def _view(content: str = content) -> Response:
+                """Return one static XML view."""
+
+                return Response(content, media_type="application/xml")
+
             app.add_api_route(
                 f"/{definition.path}",
-                partial(render_view, content),
+                _view,
                 methods=["GET"],
                 include_in_schema=False,
             )

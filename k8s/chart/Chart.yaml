@@ -1,5 +1,5 @@
 apiVersion: v2
-name: longlink-compute
+name: longlink
 description: Shared LongLink Compute infrastructure.
 type: application
 version: 0.1.0
