@@ -104,11 +104,10 @@ jobs:
                   esac
 
                   gh auth setup-git
-                  git clone https://github.com/xlongLink/sample.git sample
+                  git clone --depth 1 https://github.com/xlongLink/sample.git sample
                   cd sample
                   git switch --orphan scaffold
                   git rm -rf --ignore-unmatch .
-                  git clean -ffdx
                   cp -a "$RUNNER_TEMP/sample/." .
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
