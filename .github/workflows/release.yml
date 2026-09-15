@@ -90,6 +90,9 @@ jobs:
         runs-on: ubuntu-24.04
         timeout-minutes: 30
 
+        outputs:
+            image: ghcr.io/xlonglink/longlink@${{ steps.image.outputs.digest }}
+
         environment:
             name: release
 
@@ -112,6 +115,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build and push API image
+              id: image
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
                   context: .
@@ -126,27 +130,21 @@ jobs:
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
-    sync-sample:
-        needs: [publish-sdk, publish-api-image]
-        permissions:
-            contents: read
-        uses: ./.github/workflows/sync-sample.yml
-        with:
-            channel: main
-            version: ${{ github.ref_name }}
-        secrets:
-            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
-
-    publish-github-release:
-        needs: [publish-sdk, publish-api-image, sync-sample]
+    publish-compute-chart:
+        needs: tests
         runs-on: ubuntu-24.04
-        timeout-minutes: 10
+        timeout-minutes: 20
+
+        outputs:
+            chart: ${{ steps.compute.outputs.chart }}
+            version: ${{ steps.compute.outputs.version }}
+            sha256: ${{ steps.compute.outputs.sha256 }}
 
         environment:
             name: release
 
         permissions:
-            contents: write
+            contents: read
             packages: write
 
         steps:
@@ -162,11 +160,16 @@ jobs:
               id: compute
               run: |
                   set -euo pipefail
-                  chart_version="${GITHUB_REF_NAME#v}"
-                  archive="longlink-compute-${chart_version}.tgz"
-                  make package-compute COMPUTE_VERSION="${GITHUB_REF_NAME}" ARCHIVE="$archive"
-                  printf 'archive=%s\n' "$archive" >> "$GITHUB_OUTPUT"
-                  printf 'checksum=%s.sha256\n' "$archive" >> "$GITHUB_OUTPUT"
+
+                  version="${GITHUB_REF_NAME#v}"
+                  archive="longlink-compute-${version}.tgz"
+                  make package-compute COMPUTE_VERSION="${GITHUB_REF_NAME}" PLATFORM_VERSION="${GITHUB_REF_NAME}" ARCHIVE="$archive"
+
+                  {
+                      echo "chart=oci://ghcr.io/xlonglink/charts/longlink-compute"
+                      echo "version=$version"
+                      echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
+                  } >> "$GITHUB_OUTPUT"
 
             - name: Publish Compute chart
               env:
@@ -174,7 +177,77 @@ jobs:
               run: |
                   set -euo pipefail
                   printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-                  helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink/charts
+                  helm push "longlink-compute-${{ steps.compute.outputs.version }}.tgz" oci://ghcr.io/xlonglink/charts
+
+    sync-sample:
+        needs: [publish-sdk, publish-api-image]
+        permissions:
+            contents: read
+        uses: ./.github/workflows/sync-sample.yml
+        with:
+            channel: main
+            version: ${{ github.ref_name }}
+        secrets:
+            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
+
+    publish-release-manifest:
+        needs: [publish-sdk, publish-api-image, publish-compute-chart, sync-sample]
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+
+        environment:
+            name: release
+
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+            - name: Log in to GHCR
+              uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Publish release manifest
+              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+              with:
+                  context: .
+                  file: .github/release/Dockerfile
+                  platforms: linux/amd64
+                  push: true
+                  labels: |
+                      org.opencontainers.image.description=LongLink release manifest
+                      org.opencontainers.image.revision=${{ github.sha }}
+                      longlink.dev/release-version=${{ github.ref_name }}
+                      longlink.dev/release-api-image=${{ needs.publish-api-image.outputs.image }}
+                      longlink.dev/release-compute-chart=${{ needs.publish-compute-chart.outputs.chart }}
+                      longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
+                      longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
+                      longlink.dev/release-sdk-version=${{ github.ref_name }}
+                  tags: ghcr.io/xlonglink/longlink-release:${{ github.ref_name }}
+
+    publish-github-release:
+        needs: publish-release-manifest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+
+        environment:
+            name: release
+
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Create GitHub release
               uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
@@ -182,4 +255,3 @@ jobs:
                   tag_name: ${{ github.ref_name }}
                   name: ${{ github.ref_name }}
                   generate_release_notes: true
-                  files: ${{ steps.compute.outputs.checksum }}

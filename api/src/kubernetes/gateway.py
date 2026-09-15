@@ -3,6 +3,7 @@ import httpx2
 import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
+from src.environments import env
 from kr8s.asyncio.objects import Secret, ConfigMap, Deployment
 from src.kubernetes.utils import deployment_is_ready
 
@@ -32,7 +33,7 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
     release = ConfigMap("compute-release", namespace="longlink-system", api=api)
     await release.refresh()
     data = release.raw.get("data", {})
-    if data.get("contract") != "1":
+    if data.get("contract") != "1" or data.get("platform_version") != env.VERSION:
         raise ValueError("Compute package is incompatible; deploy a supported Compute package")
     secret = Secret("longlink-gateway-tls", namespace="knative-serving", api=api)
     await secret.refresh()

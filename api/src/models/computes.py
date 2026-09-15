@@ -83,32 +83,16 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     return value
 
 
-class ComputeRegistryCreate(BaseModel):
-    """Validate one compute registry creation payload."""
-
-    # Metadata
-    name: str = Field(min_length=1, max_length=128)
-
-    # Connection
-    kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
+class ComputeRegistryEndpoints(BaseModel):
+    """Validate the externally reachable endpoints of one registered Compute."""
 
     # Gateway
     gateway_url: str = Field(max_length=512)
     gateway_certificate: str | None = Field(default=None, max_length=65536)
 
-    # Database
-    database_size_gib: int = Field(default=10, ge=1, le=65536, strict=True)
-    database_instances: int = Field(default=1, ge=1, le=3, strict=True)
-    database_storage_class: StorageClassName
-
     # Object storage controller
     storage_endpoint: str = Field(max_length=512)
-    storage_access_key: str = Field(min_length=1, max_length=128)
-    storage_secret_key: str = Field(min_length=8, max_length=1024)
     storage_certificate: str | None = Field(default=None, max_length=65536)
-
-    # Storage policy
-    bucket_size_bytes: int = Field(ge=1024, le=70368744177664, multiple_of=1024, strict=True)
 
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
@@ -144,6 +128,28 @@ class ComputeRegistryCreate(BaseModel):
             raise ValueError("Gateway certificate must be a valid PEM CA certificate bundle") from exc
         return value
 
+
+class ComputeRegistryCreate(ComputeRegistryEndpoints):
+    """Validate one compute registry creation payload."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=128)
+
+    # Connection
+    kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
+
+    # Database
+    database_size_gib: int = Field(default=10, ge=1, le=65536, strict=True)
+    database_instances: int = Field(default=1, ge=1, le=3, strict=True)
+    database_storage_class: StorageClassName
+
+    # Object storage controller
+    storage_access_key: str = Field(min_length=1, max_length=128)
+    storage_secret_key: str = Field(min_length=8, max_length=1024)
+
+    # Storage policy
+    bucket_size_bytes: int = Field(ge=1024, le=70368744177664, multiple_of=1024, strict=True)
+
     @field_validator("database_storage_class")
     @classmethod
     def validate_storage_class(cls, value: str) -> str:
@@ -153,6 +159,12 @@ class ComputeRegistryCreate(BaseModel):
         if any(len(label) > 63 for label in value.split(".")):
             raise ValueError("Storage class DNS labels must not exceed 63 characters")
         return value
+
+
+class ComputeRegistryEndpointUpdate(ComputeRegistryEndpoints):
+    """Validate one deployment-controller endpoint rotation request."""
+
+    cluster_uid: str = Field(min_length=1, max_length=128)
 
 
 class ComputeRegistryResponse(BaseModel):

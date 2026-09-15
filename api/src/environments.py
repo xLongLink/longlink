@@ -10,11 +10,13 @@ class Env(BaseSettings):
     # Runtime scheduling
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
     DATABASE_IDLE_SECONDS: int = Field(default=300, ge=300, le=604800)
+    VERSION: str = Field(default="v0.0.0", pattern=r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-.+)?$")
 
     # Authentication
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
     SESSION_KEY: str = Field(min_length=32)
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
+    DEPLOYMENT_TOKEN: str | None = Field(default=None, min_length=32)
     GITHUB_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
     GOOGLE_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
     GITHUB_OAUTH_CLIENT_SECRET: str | None = Field(default=None, min_length=1)

@@ -9,7 +9,8 @@
 ## LongLink Compute package
 
 The chart installs Knative, Kourier, CloudNativePG, and RustFS. The Platform
-validates it and manages tenant resources; it never installs shared infrastructure.
+validates its matching release version and manages tenant resources; it never installs
+shared infrastructure.
 
 <br />
 

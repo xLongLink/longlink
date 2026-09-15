@@ -181,7 +181,12 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert good is not None and not good.failed
         assert current.status == (Status.failed if failure == "restoration" else Status.running)
         assert current.secrets == solution.secrets
-    assert calls[-1][1] == {"KEY": "old", **solution.secrets, "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca"}
+    assert calls[-1][1] == {
+        "KEY": "old",
+        **solution.secrets,
+        "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+    }
     assert calls[-1][2] is False
     assert await claim_operation() is None
 

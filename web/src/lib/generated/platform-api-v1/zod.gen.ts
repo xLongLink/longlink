@@ -22,18 +22,31 @@ export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
  * Validate one compute registry creation payload.
  */
 export const zComputeRegistryCreate = z.object({
-    name: z.string().min(1).max(128),
-    kubeconfig: z.record(z.string(), z.unknown()),
     gateway_url: z.string().max(512),
     gateway_certificate: z.string().max(65536).nullish(),
+    storage_endpoint: z.string().max(512),
+    storage_certificate: z.string().max(65536).nullish(),
+    name: z.string().min(1).max(128),
+    kubeconfig: z.record(z.string(), z.unknown()),
     database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
     database_instances: z.int().gte(1).lte(3).optional().default(1),
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
-    storage_endpoint: z.string().max(512),
     storage_access_key: z.string().min(1).max(128),
     storage_secret_key: z.string().min(8).max(1024),
-    storage_certificate: z.string().max(65536).nullish(),
     bucket_size_bytes: z.int().gte(1024).lte(70368744177664)
+});
+
+/**
+ * ComputeRegistryEndpointUpdate
+ *
+ * Validate one deployment-controller endpoint rotation request.
+ */
+export const zComputeRegistryEndpointUpdate = z.object({
+    gateway_url: z.string().max(512),
+    gateway_certificate: z.string().max(65536).nullish(),
+    storage_endpoint: z.string().max(512),
+    storage_certificate: z.string().max(65536).nullish(),
+    cluster_uid: z.string().min(1).max(128)
 });
 
 /**
@@ -619,6 +632,30 @@ export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeletePath = z.object(
  * Successful Response
  */
 export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = z.void();
+
+export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutBody = zComputeRegistryEndpointUpdate;
+
+export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutHeaders = z.object({
+    authorization: z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutResponse = zComputeRegistryResponse;
+
+export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetHeaders = z.object({
+    authorization: z.string().nullish()
+});
+
+export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetPath = z.object({
+    cluster_uid: z.string()
+});
+
+/**
+ * Successful Response
+ */
+export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetResponse = zComputeRegistryResponse;
 
 /**
  * Response Healthz Api V1 Healthz Get
