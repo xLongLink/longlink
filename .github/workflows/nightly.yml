@@ -56,17 +56,17 @@ jobs:
                   set -euo pipefail
 
                   build="n$(date -u +'%Y.%m.%d')-${GITHUB_SHA}"
-                   archive="longlink-${build}.tgz"
-                  make package-compute COMPUTE_VERSION="$build" PLATFORM_VERSION="${{ steps.platform.outputs.version }}" ARCHIVE="$archive"
-
                   build_date="${build#n}"
                   build_date="${build_date%-*}"
                   chart_version="0.0.0-nightly-${build_date//./}-${build##*-}"
+                  archive="longlink-${chart_version}.tgz"
+                  helm package k8s/chart --version "$chart_version" --app-version "${{ steps.platform.outputs.version }}" --destination .
+                  sha256sum "$archive" > "${archive}.sha256"
                   checksum="$(cut -d ' ' -f 1 "${archive}.sha256")"
 
                   {
                       echo "archive=$archive"
-                       echo "chart=oci://ghcr.io/xlonglink/longlink"
+                      echo "chart=oci://ghcr.io/xlonglink/longlink"
                       echo "chart_version=$chart_version"
                       echo "chart_sha256=$checksum"
                   } >> "$GITHUB_OUTPUT"

@@ -1,4 +1,4 @@
-.PHONY: install check format build test package-compute up image down api web sdk sample seed
+.PHONY: install check format build test up image down api web sdk sample seed
 
 # Install all development dependencies.
 install: api/.env
@@ -44,23 +44,6 @@ test:
 	cd web && vp run build:sdk:bundle --logLevel warn
 	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
 	cd web && vp run test
-
-
-# Package the Compute chart into a deterministic archive named by ARCHIVE.
-package-compute:
-	test -n "$(ARCHIVE)"
-	test -n "$(COMPUTE_VERSION)"
-	test -n "$(PLATFORM_VERSION)"
-	@archive="$(ARCHIVE)"; version="$(COMPUTE_VERSION)"; \
-	case "$$version" in n*) date="$${version#n}"; date="$${date%-*}"; date="$$(printf '%s' "$$date" | tr -d .)"; chart_version="0.0.0-nightly-$${date}-$${version##*-}" ;; *) chart_version="$${version#v}" ;; esac; \
-	helm package k8s/chart --version "$$chart_version" --app-version "$(PLATFORM_VERSION)" --destination "$$(dirname "$$archive")"; \
-	packaged="$$(dirname "$$archive")/longlink-$$chart_version.tgz"; \
-	if [ "$$packaged" != "$$archive" ]; then mv "$$packaged" "$$archive"; fi
-	sha256sum "$(ARCHIVE)" > "$(ARCHIVE).sha256"
-
-
-# Initialize configuration before starting local infrastructure or the API.
-up api: api/.env
 
 
 # Create or reapply local resources in dependency order.

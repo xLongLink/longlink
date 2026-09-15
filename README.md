@@ -85,7 +85,7 @@ make sdk
 To test a local Solution update, edit the generated project under `sdk/dev`, then run:
 
 ```bash
-make image  # Build and push localhost:15000/sample:dev, preserving your edits
+make image  # Build and push localhost:15000/sample:dev
 ```
 
 Cleanup
