@@ -43,7 +43,7 @@ jobs:
               run: uv run --locked ruff check .
 
             - name: Set up Helm
-              uses: azure/setup-helm@v5
+              uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
               with:
                   version: v4.3.0
 
@@ -213,14 +213,17 @@ jobs:
                   version: v1.34.3
 
             - name: Set up Helm
-              uses: azure/setup-helm@v5
+              uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
               with:
                   version: v4.3.0
 
             - name: Setup k3d
               run: |
                   set -euo pipefail
+
+                  k3d_sha256=dbaa79a76ace7f4ca230a1ff41dc7d8a5036a8ad0309e9c54f9bf3836dbe853e
                   curl --fail --location --output "$RUNNER_TEMP/k3d" https://github.com/k3d-io/k3d/releases/download/v5.8.3/k3d-linux-amd64
+                  printf '%s  %s\n' "$k3d_sha256" "$RUNNER_TEMP/k3d" | sha256sum --check --status
                   mkdir "$RUNNER_TEMP/k3d-bin"
                   install --mode=755 "$RUNNER_TEMP/k3d" "$RUNNER_TEMP/k3d-bin/k3d"
                   printf '%s\n' "$RUNNER_TEMP/k3d-bin" >> "$GITHUB_PATH"
