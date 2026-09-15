@@ -30,7 +30,7 @@ def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
     table_names: list[str] = []
     yield table_names.append
 
-    metadata = database_base.database_metadata
+    metadata = SQLModel.metadata
     for table_name in table_names:
         metadata.remove(metadata.tables[table_name])
 

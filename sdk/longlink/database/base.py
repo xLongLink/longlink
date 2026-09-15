@@ -14,8 +14,6 @@ from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-database_metadata = SQLModel.metadata
-
 
 class AuditTable(SQLModel):
     """Base SQLModel for Solution tables that track Platform users."""
@@ -102,7 +100,7 @@ class Database:
                     try:
                         if self._env.ENV == "testing" and engine.url.get_backend_name() == "sqlite":
                             async with engine.begin() as conn:
-                                await conn.run_sync(database_metadata.create_all)
+                                await conn.run_sync(SQLModel.metadata.create_all)
                         else:
                             async with engine.connect():
                                 pass

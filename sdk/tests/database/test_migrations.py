@@ -5,12 +5,12 @@ import sqlite3
 import importlib.util
 from types import ModuleType, SimpleNamespace
 from pathlib import Path
+from sqlmodel import SQLModel
 from contextlib import closing, nullcontext
 from alembic.config import Config
 from collections.abc import Callable, Generator
 from longlink.database import migrations as database_migrations
 from alembic.operations.ops import UpgradeOps, DowngradeOps, CreateTableOp, MigrationScript
-from longlink.database.base import database_metadata
 
 
 @pytest.fixture
@@ -35,9 +35,9 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
 
     # Remove temporary metadata and module state even if model discovery fails.
     if tracked_table_name is not None:
-        table = database_metadata.tables.get(tracked_table_name)
+        table = SQLModel.metadata.tables.get(tracked_table_name)
         if table is not None:
-            database_metadata.remove(table)
+            SQLModel.metadata.remove(table)
     sys.modules.pop("src.models.catalog.inventory", None)
 
 
@@ -62,7 +62,7 @@ def test_migration_loader_discovers_nested_solution_models(isolated_model: Calla
     database_migrations.load_solution_models()
 
     # Assert
-    assert table_name in database_metadata.tables
+    assert table_name in SQLModel.metadata.tables
 
 
 def test_migration_loader_skips_already_imported_models(
@@ -241,7 +241,7 @@ def test_migration_environment_configures_offline_execution(monkeypatch: pytest.
                 "connection": None,
                 "url": str(module.engine.url),
                 "literal_binds": True,
-                "target_metadata": database_metadata,
+                "target_metadata": SQLModel.metadata,
                 "include_object": database_migrations.include_object,
                 "compare_type": True,
                 "render_as_batch": True,

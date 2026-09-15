@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from typing import ClassVar
-from sqlmodel import Field
+from sqlmodel import Field, SQLModel
 from contextlib import nullcontext
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
@@ -121,7 +121,7 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         name: str
 
     # Inspect the inherited columns and their foreign-key targets.
-    table = database_base.database_metadata.tables[FeatureAuditItem.__tablename__]
+    table = SQLModel.metadata.tables[FeatureAuditItem.__tablename__]
     try:
         # Verify audit fields and user relationships are available to Solutions.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
@@ -136,7 +136,7 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
         assert all(hasattr(FeatureAuditItem, relationship) for relationship in ("created_by", "updated_by", "deleted_by"))
     finally:
         # Remove the temporary table from shared metadata.
-        database_base.database_metadata.remove(table)
+        SQLModel.metadata.remove(table)
 
 
 @pytest.mark.parametrize(
