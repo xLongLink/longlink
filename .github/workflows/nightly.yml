@@ -125,7 +125,7 @@ jobs:
                   set -euo pipefail
 
                   gh api --paginate --slurp "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/charts%2Flonglink-compute/versions?per_page=100" \
-                    --jq '[.[][] | select((.metadata.container.tags // []) | any(.[]; test("^0\\.0\\.0-nightly-[0-9]{8}-[0-9a-f]{40}$")))] | sort_by(.created_at) | reverse | .[3:][] | .id' \
+                    | jq -r '[.[][] | select((.metadata.container.tags // []) | any(.[]; test("^0\\.0\\.0-nightly-[0-9]{8}-[0-9a-f]{40}$")))] | sort_by(.created_at) | reverse | .[3:][] | .id' \
                     > "$RUNNER_TEMP/old-nightly-chart-versions"
 
                   while IFS= read -r version_id; do

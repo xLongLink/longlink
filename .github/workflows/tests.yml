@@ -237,7 +237,7 @@ jobs:
               run: |
                   set -euo pipefail
                   helm lint k8s/chart --values dev/values.yaml
-                  helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait --timeout 15m
+                  helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
                   kubectl apply --filename dev/compute.yaml
 
             - name: Verify Compute controllers
