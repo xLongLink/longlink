@@ -7,7 +7,6 @@ gatewayAllowedSourceCidr: ''
 
 storage:
     address: ''
-    dnsNames: []
     service:
         type: LoadBalancer
 
@@ -18,7 +17,6 @@ rustfs:
     mode: distributed
     secret:
         existingSecret: longlink-rustfs
-        createInsecure: false
     storage:
         name: block-storage
         dataStorageSize: 100Gi

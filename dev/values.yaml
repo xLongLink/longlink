@@ -11,15 +11,13 @@ storage:
     dnsNames:
         - storage.localhost
         - longlink-storage.rustfs.svc
-        - longlink-storage.rustfs.svc.cluster.local
     service:
         nodePort: 30943
         type: NodePort
 
 rustfs:
     secret:
-        existingSecret: ''
-        createInsecure: true
+        existingSecret: rustfs-secret
     mode: standalone
     storage:
         name: local-path

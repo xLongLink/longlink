@@ -89,10 +89,6 @@ spec:
               fieldPath: metadata.namespace
         - name: MONITORING_QUERIES_CONFIGMAP
           value: "{{ .Values.monitoringQueriesConfigMap.name }}"
-        {{- if not .Values.config.clusterWide }}
-        - name: WATCH_NAMESPACE
-          value: "{{ include "cloudnative-pg.namespace" . }}"
-        {{- end }}
         {{- if .Values.additionalEnv }}
         {{- tpl (.Values.additionalEnv | toYaml) . | nindent 8 }}
         {{- end }}
