@@ -87,14 +87,27 @@ class Databases:
         # Never intentionally shut down SQL beneath live compute, backup, or database maintenance work.
         if not await self.idle(organization_id):
             raise RuntimeError("Organization still has live Pods or pending compute/database work")
+        api = await self._client.api()
+        database_namespace = namespace.database(organization_id)
         cluster = ClusterResource(
             "database",
-            namespace=namespace.database(organization_id),
-            api=await self._client.api(),
+            namespace=database_namespace,
+            api=api,
         )
         await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "on"}}})
         async with asyncio.timeout(10 * 60):
-            while not await self.is_hibernated(organization_id):
+            while True:
+                # CNPG acknowledges successful shutdown through its documented condition.
+                await cluster.refresh()
+                if any(
+                    condition.get("type") == "cnpg.io/hibernation" and condition.get("status") == "True"
+                    for condition in cluster.raw.get("status", {}).get("conditions", [])
+                ):
+                    async for pod in Pod.list(api=api, namespace=database_namespace):
+                        if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
+                            break
+                    else:
+                        return
                 await asyncio.sleep(5)
 
     async def resume(self, organization_id: UUID) -> None:
@@ -143,28 +156,6 @@ class Databases:
                         if ready_pods == cluster.spec["instances"]:
                             return
                 await asyncio.sleep(5)
-
-    async def is_hibernated(self, organization_id: UUID) -> bool:
-        """Return confirmed hibernation, not merely the requested annotation."""
-
-        # CNPG acknowledges successful shutdown through its documented condition.
-        api = await self._client.api()
-        database_namespace = namespace.database(organization_id)
-        cluster = ClusterResource(
-            "database",
-            namespace=database_namespace,
-            api=api,
-        )
-        await cluster.refresh()
-        if not any(
-            condition.get("type") == "cnpg.io/hibernation" and condition.get("status") == "True"
-            for condition in cluster.raw.get("status", {}).get("conditions", [])
-        ):
-            return False
-        async for pod in Pod.list(api=api, namespace=database_namespace):
-            if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
-                return False
-        return True
 
     async def idle(self, organization_id: UUID) -> bool:
         """Return whether live compute, runnable Jobs, and database backup/maintenance work are absent."""

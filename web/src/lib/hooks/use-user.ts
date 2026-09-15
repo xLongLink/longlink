@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { api } from '@/lib/api';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { zUserSummary } from '@/lib/generated/platform-api-v1/zod.gen';
-import { skipToken, useMutation, useQuery } from '@tanstack/react-query';
 
 /** Reads the current authenticated user without loading organization memberships. */
 export function useCurrentUser() {
@@ -26,15 +26,4 @@ export function useAuthenticatedUser() {
     }
 
     return user;
-}
-
-/** Provides an action that ends the current user session. */
-export function useSignOut() {
-    return useMutation({
-        mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
-        onSuccess: () => {
-            // A full navigation disposes the query cache without exposing a transient unauthenticated render.
-            window.location.assign('/user/organizations');
-        },
-    });
 }

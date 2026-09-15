@@ -1,7 +1,6 @@
 import type { z } from 'zod';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
-import { hasMinimumRole } from '@/lib/roles';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -14,14 +13,15 @@ import { PageError, PageLoading } from '@/components/Utils';
 import CreateSolution from '@/components/dialogs/CreateSolution';
 import { useOrganizationRoute } from '@/lib/hooks/use-organization';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import { zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import { zOrganizationRoles, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders the organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
     const { organizationId, role, solutions, isLoading, error } = useOrganizationRoute(organization);
 
-    const canManageSolutions = hasMinimumRole(role, 'maintain');
+    const canManageSolutions =
+        role !== null && zOrganizationRoles.options.indexOf(role) >= zOrganizationRoles.options.indexOf('maintain');
     const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
 
     // Hide missing or inaccessible orgs behind the shared 404 page.

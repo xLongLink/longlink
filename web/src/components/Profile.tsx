@@ -1,11 +1,12 @@
 import type { z } from 'zod';
+import { api } from '@/lib/api';
 import { useState } from 'react';
 import { Item } from '@astryxdesign/core/Item';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Stack } from '@astryxdesign/core/Stack';
-import { useSignOut } from '@/lib/hooks/use-user';
 import { Button } from '@astryxdesign/core/Button';
+import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -25,7 +26,13 @@ import {
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function ProfileMenu({ user }: { user: z.output<typeof zUserSummary> }) {
-    const signOut = useSignOut();
+    const signOut = useMutation({
+        mutationFn: () => api('/api/v1/auth/logout', { method: 'POST' }),
+        onSuccess: () => {
+            // A full navigation disposes the query cache without exposing a transient unauthenticated render.
+            window.location.assign('/user/organizations');
+        },
+    });
     const [isOpen, setIsOpen] = useState(false);
     const closeMenu = () => setIsOpen(false);
     return (
