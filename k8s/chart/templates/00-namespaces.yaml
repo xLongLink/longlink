@@ -13,7 +13,3 @@ kind: Namespace
 metadata:
     name: kourier-system
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-    name: rustfs

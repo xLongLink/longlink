@@ -18,32 +18,40 @@ validates it and manages tenant resources; it never installs shared infrastructu
 Scope: Operator installs and operates shared Compute infrastructure.
 
 ```text
-Operator
-└── Compute cluster
-    ├── cnpg-system
-    │   └── CloudNativePG controller
-    ├── knative-serving
-    │   ├── Knative Serving controller, webhook, and activator
-    │   └── Kourier network controller
+Compute cluster
+├── cnpg-system
+│   └── CloudNativePG controller
+├── knative-serving
+│   ├── Knative Serving controller, webhook, and activator
+│   └── Kourier network controller
     ├── kourier-system
     │   └── Kourier gateway
     ├── longlink-system
+    │   ├── Helm release: longlink-compute
     │   └── Compute release contract
-    └── rustfs
-        ├── RustFS
-        └── TLS storage proxy
+└── rustfs
+    ├── RustFS
+    └── TLS storage proxy
 ```
 
 <br />
 
 ## Requirements
 
-- Helm and cluster administrator access.
-- One fixed LoadBalancer address for the gateway and one for storage.
-- The `rustfs/longlink-rustfs` Secret with `RUSTFS_ACCESS_KEY` and
-  `RUSTFS_SECRET_KEY`. The chart references this Secret without storing
-  credentials in Helm release state.
+Create the RustFS namespace:
 
+```bash
+kubectl create namespace rustfs
+```
+
+Create the RustFS administrator Secret:
+
+```bash
+kubectl create secret generic longlink-rustfs \
+  --namespace rustfs \
+  --from-literal=RUSTFS_ACCESS_KEY=<access-key> \
+  --from-literal=RUSTFS_SECRET_KEY=<secret-key>
+```
 
 <br />
 
@@ -52,7 +60,7 @@ Operator
 Install the shared Compute infrastructure:
 
 ```bash
-helm upgrade --install <release-name> <chart-path> \
+helm upgrade --install longlink-compute k8s/chart \
   --namespace <release-namespace> \
   --create-namespace \
   --set gateway.address=<gateway-address> \
@@ -67,7 +75,7 @@ helm upgrade --install <release-name> <chart-path> \
 Update the gateway source allowlist while preserving the installed values:
 
 ```bash
-helm upgrade <release-name> <chart-path> \
+helm upgrade longlink-compute k8s/chart \
   --namespace <release-namespace> \
   --reuse-values \
   --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
@@ -80,7 +88,7 @@ helm upgrade <release-name> <chart-path> \
 Remove the Compute Helm release:
 
 ```bash
-helm uninstall <release-name> --namespace <release-namespace>
+helm uninstall longlink-compute --namespace <release-namespace>
 ```
 
 <br />

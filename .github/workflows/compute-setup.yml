@@ -67,6 +67,7 @@ jobs:
               run: |
                   set -euo pipefail
                   helm lint k8s/chart --values k8s/chart/values-development.yaml
+                  kubectl create namespace rustfs --dry-run=client --output yaml | kubectl apply --filename -
                   helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
                   kubectl delete --namespace rustfs job/longlink-bootstrap --ignore-not-found --wait=true
                   kubectl apply --filename dev/compute.yaml

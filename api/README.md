@@ -7,47 +7,21 @@
 
 ## LongLink Platform API
 
-The LongLink Platform API manages authentication, organizations, infrastructure,
-and Solution deployments.
-
-<br />
-
-## Architecture
-
-Scope: Platform API validates Compute and manages Organization resources.
-
-```text
-Platform API
-└── Registered Compute
-    └── Organization
-        ├── Compute namespace
-        │   └── Solution
-        │       ├── Knative Service and migration Jobs
-        │       └── Solution Secrets
-        ├── Database namespace
-        │   └── CloudNativePG cluster
-        │       └── Shared identity schema and Solution schemas
-        └── RustFS bucket
-            ├── Shared storage prefix
-            └── Solution storage prefixes
-```
-
-<br />
-
-## Requirements
-
-- PostgreSQL, MySQL, or SQLite for Platform metadata. Organization and Solution data requires PostgreSQL.
-- A Kubernetes Compute with Linux AMD64 nodes for Solution runtimes and migration Jobs.
-- Publicly accessible `linux/amd64` Solution images on GHCR.
-
-See the [Compute package guide](../k8s/README.md) for Compute installation.
-
+LongLink provides the shared foundation for running Solutions. 
+The Platform API manages organizations, users, access,
+deployments, and supporting infrastructure.
 
 <br />
 
 ## Release
 
-TODO
+The API is published as a Linux AMD64 container image on GitHub Container
+Registry.
+
+| Name    | Image                                | Tag                              | Published                            |
+| ------- | ------------------------------------ | -------------------------------- | ------------------------------------ |
+| Stable  | `ghcr.io/xlonglink/longlink`         | `v<major>.<minor>.<patch>`       | When the matching Git tag is pushed. |
+| Nightly | `ghcr.io/xlonglink/longlink-nightly` | `n<year>.<month>.<day>-<commit>` | Daily from the default branch.       |
 
 <br />
 
