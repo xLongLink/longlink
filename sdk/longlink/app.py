@@ -54,6 +54,7 @@ class LongLink:
 
         # Validate the complete catalog before installing runtime services.
         discovered_views = self._discover_views(views_directory, app.routes)
+        view_definitions = [definition for definition, _ in discovered_views]
 
         # Initialize Solution storage and database connections.
         storage = create_fs(settings)
@@ -75,7 +76,7 @@ class LongLink:
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        app.include_router(router([definition for definition, _ in discovered_views]))
+        app.include_router(router(view_definitions))
 
         # Bind Platform request identity across downstream request handling.
         install_context_middleware(app, settings.IDENTITY_SECRET or "")
@@ -93,10 +94,7 @@ class LongLink:
             )
 
         # Make the browser root URL resolve to the first navigable View.
-        first_tab_view = next(
-            (definition for definition, _ in discovered_views if definition.route != "/" and ":" not in definition.route),
-            None,
-        )
+        first_tab_view = next((definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None)
         if first_tab_view is not None:
 
             @app.get("/", include_in_schema=False)

@@ -65,14 +65,9 @@ Platform API
 
 <br />
 
-## Kubernetes setup and updates
+## Setup
 
-
-Reserve one address for the gateway and one for storage before installation. Create
-the `rustfs/longlink-rustfs` Secret with `RUSTFS_ACCESS_KEY` and
-`RUSTFS_SECRET_KEY`; the chart references it without storing credentials in Helm
-release state. The chart creates and preserves self-signed IP-SAN TLS Secrets for
-the two fixed addresses:
+Install the shared Compute infrastructure:
 
 ```bash
 helm upgrade --install longlink-compute k8s/chart \
@@ -83,6 +78,22 @@ helm upgrade --install longlink-compute k8s/chart \
   --set runtimeEgressCidr=203.0.113.0/24 \
   --wait \
   --timeout 15m
+```
+
+## Update
+
+Update the installed shared Compute infrastructure:
+
+```bash
+helm upgrade longlink-compute k8s/chart --namespace rustfs --wait --timeout 15m
+```
+
+## Cleanup
+
+Remove the Compute Helm release:
+
+```bash
+helm uninstall longlink-compute --namespace rustfs
 ```
 
 <br />

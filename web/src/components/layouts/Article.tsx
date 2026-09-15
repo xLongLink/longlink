@@ -11,9 +11,9 @@ import { Outline } from '@astryxdesign/core/Outline';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
-import { LegalBreadcrumb } from '@/components/breadcrumb/Legal';
+import { PathBreadcrumb } from '@/components/breadcrumb/Path';
+import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
-import { DocumentationBreadcrumb } from '@/components/breadcrumb/Documentation';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
 type ArticlePage = {
@@ -24,12 +24,19 @@ type ArticlePage = {
     title: string;
 };
 
+const documentationRouteLabels: Record<string, string> = {
+    docs: 'Documentation',
+    api: 'Platform',
+    sdk: 'Solutions',
+    views: 'Views',
+};
+
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {
     const { pathname } = useLocation();
     const navigate = useNavigate();
     const pagePath = pathname.replace(/\/+$/, '') || '/';
-    const Breadcrumb = pagePath.startsWith('/docs') ? DocumentationBreadcrumb : LegalBreadcrumb;
+    const isDocumentation = pagePath.startsWith('/docs');
     const currentPage = documentationPaths.indexOf(pagePath);
     const previousPage = documentationPaths[currentPage - 1];
     const nextPage = documentationPaths[currentPage + 1];
@@ -85,7 +92,13 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                         <Stack>
                             <Stack className="relative" height={64} width="100%">
                                 <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                                    <Breadcrumb className="min-w-0 overflow-hidden" />
+                                    <PathBreadcrumb
+                                        className="min-w-0 overflow-hidden"
+                                        labels={isDocumentation ? documentationRouteLabels : undefined}
+                                        root={
+                                            isDocumentation ? undefined : <BreadcrumbItem href="/">Home</BreadcrumbItem>
+                                        }
+                                    />
                                 </PageContainer>
                                 <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
                                     <Button
