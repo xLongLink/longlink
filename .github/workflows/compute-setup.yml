@@ -66,7 +66,7 @@ jobs:
             - name: Install Compute package
               run: |
                   set -euo pipefail
-                  helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
+                  helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
                   kubectl delete --namespace rustfs job/longlink-bootstrap --ignore-not-found --wait=true
                   kubectl apply --filename dev/compute.yaml
                   kubectl wait --namespace rustfs --for=condition=complete --timeout=5m job/longlink-bootstrap

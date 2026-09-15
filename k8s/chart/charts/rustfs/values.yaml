@@ -2,6 +2,8 @@ image:
     repository: rustfs/rustfs
     tag: 1.0.0-rc.6
 
+namespace: rustfs
+
 mode: distributed
 
 secret:

@@ -71,7 +71,7 @@ Install the shared Compute infrastructure:
 
 ```bash
 helm upgrade --install longlink-compute k8s/chart \
-  --namespace rustfs \
+  --namespace longlink-system \
   --create-namespace \
   --set gateway.address=203.0.113.10 \
   --set storage.address=203.0.113.11 \
@@ -85,7 +85,7 @@ helm upgrade --install longlink-compute k8s/chart \
 Update the installed shared Compute infrastructure:
 
 ```bash
-helm upgrade longlink-compute k8s/chart --namespace rustfs --wait --timeout 15m
+helm upgrade longlink-compute k8s/chart --namespace longlink-system --wait --timeout 15m
 ```
 
 ## Cleanup
@@ -93,7 +93,7 @@ helm upgrade longlink-compute k8s/chart --namespace rustfs --wait --timeout 15m
 Remove the Compute Helm release:
 
 ```bash
-helm uninstall longlink-compute --namespace rustfs
+helm uninstall longlink-compute --namespace longlink-system
 ```
 
 <br />

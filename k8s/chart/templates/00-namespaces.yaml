@@ -16,4 +16,4 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-    name: longlink-system
+    name: rustfs

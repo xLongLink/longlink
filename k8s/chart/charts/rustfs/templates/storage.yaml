@@ -6,7 +6,7 @@ apiVersion: v1
 kind: Secret
 metadata:
     name: rustfs-secret
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 type: Opaque
 data:
     RUSTFS_ACCESS_KEY: cnVzdGZzYWRtaW4=
@@ -17,14 +17,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
     name: rustfs-config
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 data:
     RUSTFS_ADDRESS: ":9000"
     RUSTFS_OBS_LOG_DIRECTORY: "/logs"
     RUSTFS_OBS_LOGGER_LEVEL: "info"
     RUSTFS_OBS_ENVIRONMENT: "development"
 {{- if eq .Values.mode "distributed" }}
-    RUSTFS_VOLUMES: "http://rustfs-{0...3}.rustfs-headless.{{ .Release.Namespace }}.svc.cluster.local:9000/data"
+    RUSTFS_VOLUMES: "http://rustfs-{0...3}.rustfs-headless.{{ .Values.namespace }}.svc.cluster.local:9000/data"
 {{- else }}
     RUSTFS_VOLUMES: "/data"
 {{- end }}
@@ -33,7 +33,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: rustfs-svc
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 spec:
     ports:
         - name: endpoint
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: rustfs-headless
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 spec:
     clusterIP: None
     publishNotReadyAddresses: true
@@ -65,7 +65,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
     name: rustfs-data
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
     annotations:
         helm.sh/resource-policy: keep
 spec:
@@ -79,7 +79,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
     name: rustfs-logs
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
     annotations:
         helm.sh/resource-policy: keep
 spec:
@@ -93,7 +93,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: rustfs
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 spec:
     replicas: 1
     strategy:
@@ -170,7 +170,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
     name: rustfs
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ .Values.namespace }}
 spec:
     serviceName: rustfs-headless
     replicas: 4
@@ -226,7 +226,7 @@ spec:
                       - name: RUSTFS_CHART_POD_NAME
                         valueFrom: {fieldRef: {fieldPath: metadata.name}}
                       - name: RUSTFS_LOCAL_ENDPOINT_HOST
-                        value: "$(RUSTFS_CHART_POD_NAME).rustfs-headless.{{ .Release.Namespace }}.svc.cluster.local"
+                        value: "$(RUSTFS_CHART_POD_NAME).rustfs-headless.{{ .Values.namespace }}.svc.cluster.local"
                   envFrom:
                       - configMapRef: {name: rustfs-config}
                       - secretRef:

@@ -59,7 +59,7 @@ jobs:
               run: |
                   set -euo pipefail
                   helm lint k8s/chart --values k8s/chart/values-development.yaml
-                  helm template longlink-compute k8s/chart --namespace rustfs --values k8s/chart/values-development.yaml > /dev/null
+                  helm template longlink-compute k8s/chart --namespace longlink-system --values k8s/chart/values-development.yaml > /dev/null
 
             - name: Verify Docker daemon
               run: docker info

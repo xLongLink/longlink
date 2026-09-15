@@ -71,7 +71,7 @@ up:
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace rustfs --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
+	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values k8s/chart/values-development.yaml --wait --timeout 15m
 	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" kubectl delete --namespace rustfs job/longlink-bootstrap --ignore-not-found --wait=true
 	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" kubectl apply --filename dev/compute.yaml
 	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" kubectl wait --namespace rustfs --for=condition=complete --timeout=5m job/longlink-bootstrap
