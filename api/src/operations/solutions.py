@@ -40,25 +40,24 @@ async def deploy(revision_id: UUID) -> None:
             if target is None:
                 logger.info("Solution %s no longer exists; skipping reconciliation", solution_id)
                 return
-            solution, infrastructure = target
+            solution, organization, compute = target
             if revision.id != solution.effective_revision_id:
                 return
             if solution.deleted_at is not None:
                 return
             await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(status=Status.creating))
             await session.commit()
-        organization = infrastructure.organization
         runtime_secrets = dict(solution.secrets)
         secrets_changed = False
         database_certificate: str | None = None
 
         # Organization reconciliation owns bucket provisioning and quota admission.
         cluster = Kubernetes(
-            infrastructure.compute.kubeconfig,
+            compute.kubeconfig,
         )
         async with cluster:
             storage = Storage()
-            bucket = storage.bucket(organization.id, infrastructure.compute)
+            bucket = storage.bucket(organization.id, compute)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
@@ -81,7 +80,7 @@ async def deploy(revision_id: UUID) -> None:
                     "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
                     "LONGLINK_DATABASE_USERNAME": database_username,
                     "LONGLINK_STORAGE_BUCKET": bucket.name,
-                    "LONGLINK_STORAGE_ENDPOINT_URL": infrastructure.compute.storage_endpoint,
+                    "LONGLINK_STORAGE_ENDPOINT_URL": compute.storage_endpoint,
                     "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
                     "LONGLINK_STORAGE_PREFIX": prefix,
                     "LONGLINK_STORAGE_REGION": "us-east-1",
@@ -125,8 +124,8 @@ async def deploy(revision_id: UUID) -> None:
                     **runtime_secrets,
                     "LONGLINK_DATABASE_CERTIFICATE": database_certificate,
                     **(
-                        {"LONGLINK_STORAGE_CERTIFICATE": infrastructure.compute.storage_certificate}
-                        if infrastructure.compute.storage_certificate
+                        {"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate}
+                        if compute.storage_certificate
                         else {}
                     ),
                 },
@@ -167,13 +166,12 @@ async def delete(solution_id: UUID) -> None:
             if target is None:
                 logger.info("Solution %s no longer exists; skipping deletion", solution_id)
                 return
-            solution, infrastructure = target
-        organization = infrastructure.organization
+            solution, organization, compute = target
 
         # Remove Solution Kubernetes resources before revoking provider credentials.
         logger.info("Deleting Kubernetes workload for Solution %s", solution.id)
         cluster = Kubernetes(
-            infrastructure.compute.kubeconfig,
+            compute.kubeconfig,
         )
         async with cluster:
             await cluster.solutions.delete(organization.id, solution.id)
@@ -183,7 +181,7 @@ async def delete(solution_id: UUID) -> None:
 
             # Revoke the service account before owner credentials remove its private objects.
             storage = Storage()
-            bucket = storage.bucket(organization.id, infrastructure.compute)
+            bucket = storage.bucket(organization.id, compute)
             await bucket.admin.revoke(solution.id)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 

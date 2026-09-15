@@ -4,7 +4,7 @@ gateway:
         nodePort: 30443
         type: NodePort
 
-runtimeEgressCidr: 127.0.0.1/32
+gatewayAllowedSourceCidr: 127.0.0.1/32
 
 storage:
     address: 127.0.0.1

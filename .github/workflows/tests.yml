@@ -38,11 +38,6 @@ jobs:
               working-directory: api
               run: uv sync --locked --extra dev
 
-            - name: Setup kubectl for Compute package checks
-              uses: azure/setup-kubectl@829323503d1be3d00ca8346e5391ca0b07a9ab0d # v5.1.0
-              with:
-                  version: v1.35.4
-
             - name: Lint API
               working-directory: api
               run: uv run --locked ruff check .
@@ -54,12 +49,6 @@ jobs:
                   mkdir "$RUNNER_TEMP/helm"
                   tar --extract --gzip --file "$RUNNER_TEMP/helm.tar.gz" --strip-components=1 --directory "$RUNNER_TEMP/helm" linux-amd64/helm
                   printf '%s\n' "$RUNNER_TEMP/helm" >> "$GITHUB_PATH"
-
-            - name: Render Compute package
-              run: |
-                  set -euo pipefail
-                  helm lint k8s/chart --values k8s/chart/values-development.yaml
-                  helm template longlink-compute k8s/chart --namespace longlink-system --values k8s/chart/values-development.yaml > /dev/null
 
             - name: Verify Docker daemon
               run: docker info

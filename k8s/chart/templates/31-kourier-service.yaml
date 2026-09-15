@@ -16,7 +16,7 @@ spec:
     loadBalancerClass: {{ . }}
 {{- end }}
     loadBalancerSourceRanges:
-        - {{ .Values.runtimeEgressCidr }}
+        - {{ .Values.gatewayAllowedSourceCidr }}
 {{- end }}
     ports:
         - name: https

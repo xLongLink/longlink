@@ -34,24 +34,6 @@ Operator
         └── TLS storage proxy
 ```
 
-Scope: Platform API validates Compute and manages Organization resources.
-
-```text
-Platform API
-└── Registered Compute
-    └── Organization
-        ├── Compute namespace
-        │   └── Solution
-        │       ├── Knative Service and migration Jobs
-        │       └── Solution Secrets
-        ├── Database namespace
-        │   └── CloudNativePG cluster
-        │       └── Shared identity schema and Solution schemas
-        └── RustFS bucket
-            ├── Shared storage prefix
-            └── Solution storage prefixes
-```
-
 <br />
 
 ## Requirements
@@ -70,30 +52,35 @@ Platform API
 Install the shared Compute infrastructure:
 
 ```bash
-helm upgrade --install longlink-compute k8s/chart \
-  --namespace longlink-system \
+helm upgrade --install <release-name> <chart-path> \
+  --namespace <release-namespace> \
   --create-namespace \
-  --set gateway.address=203.0.113.10 \
-  --set storage.address=203.0.113.11 \
-  --set runtimeEgressCidr=203.0.113.0/24 \
-  --wait \
-  --timeout 15m
+  --set gateway.address=<gateway-address> \
+  --set storage.address=<storage-address> \
+  --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
+
+<br />
 
 ## Update
 
-Update the installed shared Compute infrastructure:
+Update the gateway source allowlist while preserving the installed values:
 
 ```bash
-helm upgrade longlink-compute k8s/chart --namespace longlink-system --wait --timeout 15m
+helm upgrade <release-name> <chart-path> \
+  --namespace <release-namespace> \
+  --reuse-values \
+  --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
+
+<br />
 
 ## Cleanup
 
 Remove the Compute Helm release:
 
 ```bash
-helm uninstall longlink-compute --namespace longlink-system
+helm uninstall <release-name> --namespace <release-namespace>
 ```
 
 <br />

@@ -119,8 +119,9 @@ async def test_infrastructure_returns_all_organization_registry_assignments(user
 
     # Assert
     assert resolved is not None
-    assert resolved.organization.id == organization.id
-    assert resolved.compute.id == organization.compute_id
+    resolved_organization, compute = resolved
+    assert resolved_organization.id == organization.id
+    assert compute.id == organization.compute_id
 
 
 async def test_solution_infrastructure_returns_solution_registry_assignments(users: tuple[User, User, User]) -> None:
@@ -136,10 +137,10 @@ async def test_solution_infrastructure_returns_solution_registry_assignments(use
 
     # Assert
     assert resolved is not None
-    resolved_solution, infrastructure = resolved
+    resolved_solution, resolved_organization, compute = resolved
     assert resolved_solution.id == solution.id
-    assert infrastructure.organization.id == organization.id
-    assert infrastructure.compute.id == organization.compute_id
+    assert resolved_organization.id == organization.id
+    assert compute.id == organization.compute_id
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:

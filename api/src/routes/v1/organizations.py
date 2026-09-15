@@ -145,16 +145,17 @@ async def get_organization_storage_usage(
     """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
-    infrastructure = await organizations.infrastructure(session, membership.organization_id)
-    if infrastructure is None:
+    target = await organizations.infrastructure(session, membership.organization_id)
+    if target is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+    _, compute = target
     await session.commit()
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            bucket = Storage().bucket(membership.organization_id, infrastructure.compute)
+            bucket = Storage().bucket(membership.organization_id, compute)
             usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
@@ -162,11 +163,11 @@ async def get_organization_storage_usage(
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,
-            infrastructure.compute.id,
+            compute.id,
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage, "quota_bytes": infrastructure.compute.bucket_size_bytes}
+    return {"space_used": usage, "quota_bytes": compute.bucket_size_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

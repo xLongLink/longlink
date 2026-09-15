@@ -2,8 +2,37 @@
 
 <img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-The LongLink Platform API manages authentication, organizations, infrastructure, and Solution deployments.
+[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 </div>
+
+## LongLink Platform API
+
+The LongLink Platform API manages authentication, organizations, infrastructure,
+and Solution deployments.
+
+<br />
+
+## Architecture
+
+Scope: Platform API validates Compute and manages Organization resources.
+
+```text
+Platform API
+└── Registered Compute
+    └── Organization
+        ├── Compute namespace
+        │   └── Solution
+        │       ├── Knative Service and migration Jobs
+        │       └── Solution Secrets
+        ├── Database namespace
+        │   └── CloudNativePG cluster
+        │       └── Shared identity schema and Solution schemas
+        └── RustFS bucket
+            ├── Shared storage prefix
+            └── Solution storage prefixes
+```
+
+<br />
 
 ## Requirements
 
@@ -13,27 +42,22 @@ The LongLink Platform API manages authentication, organizations, infrastructure,
 
 See the [Compute package guide](../k8s/README.md) for Compute installation.
 
-## Development
 
-Prepare local infrastructure from the repository root:
+<br />
 
-```bash
-make up
-```
+## Release
 
-Run the API from `api/`:
+TODO
 
-```bash
-uv sync --extra dev
-uv run alembic upgrade head
-uv run python -m src.release
-uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
+<br />
 
-See [`dev/README.md`](../dev/README.md) for local infrastructure and sample provisioning.
+---
 
-The API reads configuration from `.env` and process environment variables. SMTP is required; local setup supplies Mailpit.
+<div align="center">
+LongLink 2026
 
-## Links
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 
-[License](../LICENSE) · [Code of Conduct](../CODE_OF_CONDUCT.md) · [Contact](mailto:info@longlink.dev)
+</div>
+
+---

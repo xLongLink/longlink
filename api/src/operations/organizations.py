@@ -30,21 +30,24 @@ async def reconcile(organization_id: UUID) -> None:
     async with databases.activity(organization_id):
         # Skip removed Organizations.
         async with session_scope() as session:
-            infrastructure = await organizations.infrastructure(session, organization_id)
-        if infrastructure is None or infrastructure.organization.deleted_at is not None:
+            target = await organizations.infrastructure(session, organization_id)
+        if target is None:
             logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
             return
-        organization = infrastructure.organization
+        organization, compute = target
+        if organization.deleted_at is not None:
+            logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
+            return
 
         # Converge the Organization bucket before Solutions receive scoped credentials.
         logger.info("Creating object storage bucket for Organization %s", organization.id)
         logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
         cluster = Kubernetes(
-            infrastructure.compute.kubeconfig,
+            compute.kubeconfig,
         )
         async with cluster:
             storage = Storage()
-            await storage.apply(organization.id, infrastructure.compute)
+            await storage.apply(organization.id, compute)
             await kubernetes_organizations.apply(cluster, organization.id)
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
@@ -80,31 +83,32 @@ async def delete(organization_id: UUID) -> str | None:
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
-            infrastructure = await organizations.infrastructure(session, organization_id)
-        if infrastructure is None:
+            target = await organizations.infrastructure(session, organization_id)
+        if target is None:
             logger.info("Organization %s no longer exists; skipping deletion", organization_id)
             return None
-        if infrastructure.organization.deleted_at is None:
+        organization, compute = target
+        if organization.deleted_at is None:
             return "Active Organizations cannot be deleted by lifecycle cleanup"
         async with session_scope() as session:
             result = await session.scalars(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id))
             solution_ids = result.all()
         cluster = Kubernetes(
-            infrastructure.compute.kubeconfig,
+            compute.kubeconfig,
         )
 
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
-        logger.info("Deleting Kubernetes boundary for Organization %s", infrastructure.organization.id)
+        logger.info("Deleting Kubernetes boundary for Organization %s", organization.id)
         async with cluster:
-            await kubernetes_organizations.delete(cluster, infrastructure.organization.id)
+            await kubernetes_organizations.delete(cluster, organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
-            await cluster.databases.delete(infrastructure.organization.id)
-            logger.info("Deleting object storage for Organization %s", infrastructure.organization.id)
+            await cluster.databases.delete(organization.id)
+            logger.info("Deleting object storage for Organization %s", organization.id)
             storage = Storage()
-            await storage.delete(infrastructure.organization.id, solution_ids, infrastructure.compute)
+            await storage.delete(organization.id, solution_ids, compute)
 
         # Purge the tombstone only after all external resources are absent.
-        logger.info("Purging Organization %s", infrastructure.organization.id)
+        logger.info("Purging Organization %s", organization.id)
         async with session_scope() as session:
-            await session.execute(sql_delete(Organization).where(col(Organization.id) == infrastructure.organization.id))
+            await session.execute(sql_delete(Organization).where(col(Organization.id) == organization.id))
             await session.commit()

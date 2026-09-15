@@ -5,7 +5,6 @@ from src.utils import names, roles, postgres
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
-from dataclasses import dataclass
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
@@ -26,14 +25,6 @@ from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
-
-
-@dataclass(frozen=True, slots=True)
-class Infrastructure:
-    """Hold one Organization and its assigned infrastructure registries."""
-
-    organization: Organization
-    compute: ComputeRegistry
 
 
 def _membership_query(user_id: UUID) -> Select[tuple[UserOrganization]]:
@@ -135,7 +126,7 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
     )
 
 
-async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infrastructure | None:
+async def infrastructure(session: AsyncSession, organization_id: UUID) -> tuple[Organization, ComputeRegistry] | None:
     """Return one Organization and a consistent snapshot of its infrastructure assignments."""
 
     # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
@@ -144,11 +135,10 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> Infras
     row = result.tuples().one_or_none()
     if row is None:
         return None
-    organization, compute = row
-    return Infrastructure(organization=organization, compute=compute)
+    return row
 
 
-async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Infrastructure] | None:
+async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Organization, ComputeRegistry] | None:
     """Return one Solution and its assigned infrastructure."""
 
     # Load the Solution and its infrastructure in one lifecycle query.
@@ -173,7 +163,7 @@ async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> t
     if row is None:
         return None
     organization, compute, solution = row
-    return solution, Infrastructure(organization=organization, compute=compute)
+    return solution, organization, compute
 
 
 async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[Organization], int]:
