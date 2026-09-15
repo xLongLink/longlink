@@ -2,8 +2,10 @@ import asyncio
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
+from sqlmodel import col
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
+from sqlalchemy import select
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
@@ -23,6 +25,7 @@ from src.models.organizations import (
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
 
 router = APIRouter()
@@ -120,15 +123,15 @@ async def get_organization_database_usage(
 
     # Allocation is Platform metadata, so even sleeping databases need no Kubernetes or SQL request.
     organization = membership.organization
-    infrastructure = await organizations.infrastructure(session, organization.id)
-    if infrastructure is None:
+    database_size_gib = await session.scalar(
+        select(col(ComputeRegistry.database_size_gib)).where(col(ComputeRegistry.id) == organization.compute_id)
+    )
+    if database_size_gib is None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    usage = {
+    return {
         "size_bytes": organization.database_usage_bytes,
-        "allocated_bytes": infrastructure.compute.database_size_gib * 1024**3,
+        "allocated_bytes": database_size_gib * 1024**3,
     }
-    await session.commit()
-    return usage
 
 
 @router.get(
@@ -142,16 +145,17 @@ async def get_organization_storage_usage(
     """Return live usage for the Organization bucket."""
 
     # Load the Organization's immutable storage assignment.
-    infrastructure = await organizations.infrastructure(session, membership.organization_id)
-    if infrastructure is None:
+    target = await organizations.infrastructure(session, membership.organization_id)
+    if target is None:
         raise HTTPException(status_code=404, detail="Organization not found")
+    _, compute = target
     await session.commit()
 
     # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            bucket = Storage().bucket(membership.organization_id, infrastructure.compute)
+            bucket = Storage().bucket(membership.organization_id, compute)
             usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
@@ -159,11 +163,11 @@ async def get_organization_storage_usage(
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,
-            infrastructure.compute.id,
+            compute.id,
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage, "quota_bytes": infrastructure.compute.bucket_size_bytes}
+    return {"space_used": usage, "quota_bytes": compute.bucket_size_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

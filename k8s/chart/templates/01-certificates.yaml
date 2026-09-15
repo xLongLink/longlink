@@ -16,11 +16,7 @@ data:
 {{- end }}
 {{- $storageSecret := lookup "v1" "Secret" "rustfs" "longlink-storage-tls" }}
 {{- if not $storageSecret }}
-{{- $storageDnsNames := list }}
-{{- if .Values.development }}
-{{- $storageDnsNames = list "storage.localhost" "longlink-storage.rustfs.svc" "longlink-storage.rustfs.svc.cluster.local" }}
-{{- end }}
-{{- $storageCertificate := genSelfSignedCert "longlink-storage" (list .Values.storage.address) $storageDnsNames 3650 }}
+{{- $storageCertificate := genSelfSignedCert "longlink-storage" (list .Values.storage.address) (.Values.storage.dnsNames | default (list)) 3650 }}
 apiVersion: v1
 kind: Secret
 metadata:

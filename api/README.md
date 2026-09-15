@@ -2,38 +2,36 @@
 
 <img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-The LongLink Platform API manages authentication, organizations, infrastructure, and Solution deployments.
+[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 </div>
 
-## Requirements
+## LongLink Platform API
 
-- PostgreSQL, MySQL, or SQLite for Platform metadata. Organization and Solution data requires PostgreSQL.
-- A Kubernetes Compute with Linux AMD64 nodes for Solution runtimes and migration Jobs.
-- Publicly accessible `linux/amd64` Solution images on GHCR.
+LongLink provides the shared foundation for running Solutions. 
+The Platform API manages organizations, users, access,
+deployments, and supporting infrastructure.
 
-See the [Compute package guide](../k8s/README.md) for Compute installation.
+<br />
 
-## Development
+## Release
 
-Prepare local infrastructure from the repository root:
+The API is published as a Linux AMD64 container image on GitHub Container
+Registry.
 
-```bash
-make up
-```
+| Name    | Image                                | Tag                              | Published                            |
+| ------- | ------------------------------------ | -------------------------------- | ------------------------------------ |
+| Stable  | `ghcr.io/xlonglink/longlink`         | `v<major>.<minor>.<patch>`       | When the matching Git tag is pushed. |
+| Nightly | `ghcr.io/xlonglink/longlink-nightly` | `n<year>.<month>.<day>-<commit>` | Daily from the default branch.       |
 
-Run the API from `api/`:
+<br />
 
-```bash
-uv sync --extra dev
-uv run alembic upgrade head
-uv run python -m src.release
-uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
+---
 
-See [`dev/README.md`](../dev/README.md) for local infrastructure and sample provisioning.
+<div align="center">
+LongLink 2026
 
-The API reads configuration from `.env` and process environment variables. SMTP is required; local setup supplies Mailpit.
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 
-## Links
+</div>
 
-[License](../LICENSE) · [Code of Conduct](../CODE_OF_CONDUCT.md) · [Contact](mailto:info@longlink.dev)
+---

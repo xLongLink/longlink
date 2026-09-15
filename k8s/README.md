@@ -6,60 +6,91 @@
 
 </div>
 
-<br />
-<br />
-
-# LongLink Compute package
+## LongLink Compute package
 
 The chart installs Knative, Kourier, CloudNativePG, and RustFS. The Platform
 validates it and manages tenant resources; it never installs shared infrastructure.
 
-`chart/` packages every shared controller manifest. `templates/90-release.yaml`
-defines the Platform compatibility contract.
+<br />
 
-Tagged Platform releases publish this package with the matching API image. The
-nightly workflow publishes an immutable prerelease containing a Compute archive,
-checksum, and API image digest from one commit. Hosting environments use that
-metadata to apply matching nightly Platform and Compute builds.
+## Architecture
 
-## Kubernetes setup and updates
+Scope: Operator installs and operates shared Compute infrastructure.
 
-The hosting environment owns cluster access, storage, fixed LoadBalancer addresses,
-deployment, and recovery. Install this chart before registering the Compute with the
-Platform API. The API validates the shared infrastructure and creates Organization
-resources only in a registered Compute.
+```text
+Compute cluster
+├── cnpg-system
+│   └── CloudNativePG controller
+├── knative-serving
+│   ├── Knative Serving controller, webhook, and activator
+│   └── Kourier network controller
+    ├── kourier-system
+    │   └── Kourier gateway
+    ├── longlink-system
+    │   ├── Helm release: longlink-compute
+    │   └── Compute release contract
+└── rustfs
+    ├── RustFS
+    └── TLS storage proxy
+```
 
-Reserve one address for the gateway and one for storage before installation. Create
-the `rustfs/longlink-rustfs` Secret with `RUSTFS_ACCESS_KEY` and
-`RUSTFS_SECRET_KEY`; the chart references it without storing credentials in Helm
-release state. The chart creates and preserves self-signed IP-SAN TLS Secrets for
-the two fixed addresses:
+<br />
+
+## Requirements
+
+Create the RustFS namespace:
+
+```bash
+kubectl create namespace rustfs
+```
+
+Create the RustFS administrator Secret:
+
+```bash
+kubectl create secret generic longlink-rustfs \
+  --namespace rustfs \
+  --from-literal=RUSTFS_ACCESS_KEY=<access-key> \
+  --from-literal=RUSTFS_SECRET_KEY=<secret-key>
+```
+
+<br />
+
+## Setup
+
+Install the shared Compute infrastructure:
 
 ```bash
 helm upgrade --install longlink-compute k8s/chart \
-  --namespace rustfs \
+  --namespace <release-namespace> \
   --create-namespace \
-  --set gateway.address=203.0.113.10 \
-  --set storage.address=203.0.113.11 \
-  --set runtimeEgressCidr=203.0.113.0/24 \
-  --wait \
-  --timeout 15m
+  --set gateway.address=<gateway-address> \
+  --set storage.address=<storage-address> \
+  --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
 
-Register `https://<gateway-ip>` and `https://<storage-ip>` with their corresponding
-`tls.crt` values. Never delete or recreate RustFS or PostgreSQL to transfer
-ownership. Existing Helmfile-managed installations require a reviewed ownership
-migration; the chart never adopts existing resources automatically. Stop Platform
-workers, back up the shared resources, and run the first chart upgrade manually
-with Helm's `--take-ownership` only after reviewing the affected resources. Existing
-Compute registrations must be recreated with the fixed URLs and certificates before
-they have Organizations; the current API intentionally has no in-place endpoint
-mutation contract.
+<br />
 
-For workstation-only infrastructure and development commands, see
-[`dev/README.md`](../dev/README.md).
+## Update
+
+Update the gateway source allowlist while preserving the installed values:
+
+```bash
+helm upgrade longlink-compute k8s/chart \
+  --namespace <release-namespace> \
+  --reuse-values \
+  --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
+```
 
 <br />
+
+## Cleanup
+
+Remove the Compute Helm release:
+
+```bash
+helm uninstall longlink-compute --namespace <release-namespace>
+```
+
 <br />
 
 ---

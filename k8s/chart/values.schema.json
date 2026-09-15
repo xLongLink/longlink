@@ -1,15 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["gateway", "storage", "runtimeEgressCidr"],
-  "properties": {
-    "development": { "type": "boolean" },
-    "bootstrap": {
-      "type": "object",
-      "properties": {
-        "gatewayIngressCidr": { "type": "string" }
-      }
-    },
+  "required": ["gateway", "storage", "gatewayAllowedSourceCidr"],
+    "properties": {
     "gateway": {
       "type": "object",
       "required": ["address"],
@@ -24,6 +17,6 @@
         "address": { "type": "string", "format": "ipv4", "minLength": 1 }
       }
     },
-    "runtimeEgressCidr": { "type": "string", "minLength": 1 }
+    "gatewayAllowedSourceCidr": { "type": "string", "minLength": 1 }
   }
 }

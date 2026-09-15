@@ -263,25 +263,26 @@ async def ready(organization_id: UUID) -> None:
         async with lease.maintain():
             try:
                 async with session_scope() as session:
-                    infrastructure = await organizations.infrastructure(session, organization_id)
-                if infrastructure is None:
+                    target = await organizations.infrastructure(session, organization_id)
+                if target is None:
                     raise RuntimeError("Organization is unavailable")
-                cluster = Kubernetes(infrastructure.compute.kubeconfig)
+                organization, compute = target
+                cluster = Kubernetes(compute.kubeconfig)
                 async with cluster:
                     await lease.check()
-                    if infrastructure.organization.status != Status.running:
+                    if organization.status != Status.running:
                         await cluster.databases.apply(
                             organization_id,
-                            infrastructure.organization.database_password,
-                            infrastructure.compute.database_storage_class,
-                            infrastructure.compute.database_size_gib,
-                            infrastructure.compute.database_instances,
+                            organization.database_password,
+                            compute.database_storage_class,
+                            compute.database_size_gib,
+                            compute.database_instances,
                         )
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
                         await cluster.databases.resume(organization_id)
-                    database, _ = await connection(infrastructure.organization, cluster)
-                    if infrastructure.organization.status != Status.running:
+                    database, _ = await connection(organization, cluster)
+                    if organization.status != Status.running:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
 
@@ -356,14 +357,15 @@ async def hibernate(organization_id: UUID) -> bool:
     async with lease.maintain():
         try:
             async with session_scope() as session:
-                infrastructure = await organizations.infrastructure(session, organization_id)
-            if infrastructure is None:
+                target = await organizations.infrastructure(session, organization_id)
+            if target is None:
                 return False
-            cluster = Kubernetes(infrastructure.compute.kubeconfig)
+            organization, compute = target
+            cluster = Kubernetes(compute.kubeconfig)
             async with cluster:
                 state = DatabaseState.available
                 if await cluster.databases.can_hibernate(organization_id):
-                    database, _ = await connection(infrastructure.organization, cluster)
+                    database, _ = await connection(organization, cluster)
                     usage = await database.database_usage(organization_id.hex)
                     async with session_scope() as session:
                         organization = await lock(session, organization_id)

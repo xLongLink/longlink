@@ -1,13 +1,6 @@
 apiVersion: v2
-appVersion: 1.0.0-rc.6
-description: RustFS helm chart to deploy RustFS on kubernetes cluster.
-home: https://rustfs.com
-icon: https://media.sys.truenas.net/apps/rustfs/icons/icon.svg
-maintainers:
-    - name: RustFS, Inc.
-      url: https://github.com/rustfs/rustfs/tree/main/helm/rustfs
 name: rustfs
-sources:
-    - https://github.com/rustfs/rustfs
+description: LongLink's fixed RustFS workload.
 type: application
-version: 1.0.0-rc.6
+version: 1.0.0
+appVersion: 1.0.0-rc.6

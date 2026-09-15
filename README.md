@@ -7,13 +7,11 @@
 </div>
 
 <br />
-<br />
 
 > [!WARNING]
 > LongLink is currently in development. \
 > APIs, features, license and documentation may change as the project evolves.
 
-<br />
 
 ## Introduction
 
@@ -96,7 +94,6 @@ Cleanup
 make down  # Stop local services and the cluster
 ```
 
-<br />
 <br />
 
 ---
