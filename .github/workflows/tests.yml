@@ -239,7 +239,7 @@ jobs:
             - name: Install Compute package
               run: |
                   set -euo pipefail
-                  archive="$RUNNER_TEMP/longlink-compute-v0.0.0.tgz"
+                   archive="$RUNNER_TEMP/longlink-v0.0.0.tgz"
                   make package-compute COMPUTE_VERSION=v0.0.0 PLATFORM_VERSION=v0.0.0 ARCHIVE="$archive"
                   helm lint "$archive" --values dev/values.yaml
                   helm upgrade --install longlink-compute "$archive" --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m

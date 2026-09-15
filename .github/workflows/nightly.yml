@@ -56,7 +56,7 @@ jobs:
                   set -euo pipefail
 
                   build="n$(date -u +'%Y.%m.%d')-${GITHUB_SHA}"
-                  archive="longlink-compute-${build}.tgz"
+                   archive="longlink-${build}.tgz"
                   make package-compute COMPUTE_VERSION="$build" PLATFORM_VERSION="${{ steps.platform.outputs.version }}" ARCHIVE="$archive"
 
                   build_date="${build#n}"
@@ -66,7 +66,7 @@ jobs:
 
                   {
                       echo "archive=$archive"
-                      echo "chart=oci://ghcr.io/xlonglink/charts/longlink-compute"
+                       echo "chart=oci://ghcr.io/xlonglink/longlink"
                       echo "chart_version=$chart_version"
                       echo "chart_sha256=$checksum"
                   } >> "$GITHUB_OUTPUT"
@@ -77,7 +77,7 @@ jobs:
               run: |
                   set -euo pipefail
                   printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-                  helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink/charts
+                   helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink
 
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -127,7 +127,7 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  package=charts%2Flonglink-compute
+                  package=longlink
                   # A first publication has no package version history to prune.
                   if ! versions="$(gh api --paginate --slurp "orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${package}/versions?per_page=100" 2>&1)"; then
                       case "$versions" in

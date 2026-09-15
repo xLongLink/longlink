@@ -170,11 +170,11 @@ jobs:
                   set -euo pipefail
 
                   version="${GITHUB_REF_NAME#v}"
-                  archive="longlink-compute-${version}.tgz"
+                   archive="longlink-${version}.tgz"
                   make package-compute COMPUTE_VERSION="${GITHUB_REF_NAME}" PLATFORM_VERSION="${GITHUB_REF_NAME}" ARCHIVE="$archive"
 
                   {
-                      echo "chart=oci://ghcr.io/xlonglink/charts/longlink-compute"
+                       echo "chart=oci://ghcr.io/xlonglink/longlink"
                       echo "version=$version"
                       echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
                   } >> "$GITHUB_OUTPUT"
@@ -185,7 +185,7 @@ jobs:
               run: |
                   set -euo pipefail
                   printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-                  helm push "longlink-compute-${{ steps.compute.outputs.version }}.tgz" oci://ghcr.io/xlonglink/charts
+                   helm push "longlink-${{ steps.compute.outputs.version }}.tgz" oci://ghcr.io/xlonglink
 
     sync-sample:
         needs: [publish-sdk, publish-api-image]
