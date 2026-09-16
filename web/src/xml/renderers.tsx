@@ -87,10 +87,20 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             // Ignore invalidations after this renderer releases ownership.
             if (!mounted) return;
 
+            // Keep stale data when a refresh fails instead of leaving the binding deleted.
+            const previous = ctx.scope.bindings[id];
+
             // Skip unknown invalidation targets.
             const setup = takeRuntimeSetup(ctx, id);
             if (setup) {
-                await setup();
+                try {
+                    await setup();
+                } catch (error: unknown) {
+                    if (!mounted) return;
+                    ctx.scope.bindings[id] = previous;
+                    reportSetupError(error instanceof Error ? error : new Error('XML refresh failed'));
+                    return;
+                }
             }
 
             // Do not publish changes when cleanup occurred during setup.

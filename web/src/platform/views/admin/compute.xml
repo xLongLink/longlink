@@ -22,7 +22,6 @@
     <Query
         id="computes"
         path="/api/v1/computes?page=${pages.value}&amp;page_size=25"
-        pollInterval="5000"
     />
 
     <Stack gap="8">

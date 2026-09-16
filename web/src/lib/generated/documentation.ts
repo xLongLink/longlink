@@ -661,10 +661,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "path"
             },
             {
-                "description": "Milliseconds between automatic refreshes.",
-                "name": "pollInterval"
-            },
-            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }

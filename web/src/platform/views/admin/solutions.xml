@@ -6,7 +6,6 @@
     <Query
         id="solutions"
         path="/api/v1/solutions?page=${pages.value}&amp;page_size=25"
-        pollInterval="5000"
     />
 
     <Stack gap="8">

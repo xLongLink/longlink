@@ -44,10 +44,10 @@ test:
 
 # Create or reapply local resources in dependency order.
 up:
-	@set -eu; addresses="$$(getent ahosts storage.localhost)"; test -n "$$addresses"; \
-		printf '%s\n' "$$addresses" | while read -r address rest; do \
-			case "$$address" in 127.*|::1) ;; *) printf "storage.localhost must resolve to loopback.\n" >&2; exit 1 ;; esac; \
-		done
+	# Fail fast when storage.localhost does not resolve to loopback for the k3d port mapping.
+	@getent ahosts storage.localhost | awk '$$1 !~ /^(127\..*|::1)$$/ {print "storage.localhost must resolve to loopback." > "/dev/stderr"; exit 1} END {if (NR == 0) {print "storage.localhost does not resolve." > "/dev/stderr"; exit 1}}'
+
+	# Start supporting services and install the shared compute infrastructure.
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
