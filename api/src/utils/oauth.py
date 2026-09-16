@@ -42,7 +42,7 @@ def redirect_uri(provider: OAuthProvider) -> str:
     """Return the registered public callback URL for one OAuth provider."""
 
     # The frontend proxy exposes API routes at the same browser-facing public origin.
-    return f"{env.PUBLIC_URL.rstrip('/')}/api/v1/auth/oauth/{provider}/callback"
+    return f"{env.PUBLIC_URL}/api/v1/auth/oauth/{provider}/callback"
 
 
 def authorization_url(provider: OAuthProvider, state: str, verifier: str) -> str:

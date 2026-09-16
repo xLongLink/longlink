@@ -1,5 +1,4 @@
 import { Seo } from '@/components/Seo';
-import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -30,6 +29,12 @@ const documentationRouteLabels: Record<string, string> = {
     sdk: 'Solutions',
     views: 'Views',
 };
+
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+});
 
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { decodePathSegment, startCase } from '@/lib/utils';
+import { startCase } from 'es-toolkit/compat';
+import { decodePathSegment } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders breadcrumb items derived from the current URL path. */

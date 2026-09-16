@@ -283,7 +283,7 @@ def create_client(user: User | None = None) -> AsyncClient:
     from main import app
 
     cookies = authenticated_cookies(user) if user is not None else None
-    headers = {"origin": env.PUBLIC_URL.rstrip("/")}
+    headers = {"origin": env.PUBLIC_URL}
 
     return AsyncClient(
         transport=ASGITransport(app=app),

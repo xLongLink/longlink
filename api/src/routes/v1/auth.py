@@ -36,7 +36,7 @@ def oauth_failure_response() -> RedirectResponse:
     """Return a generic failed OAuth redirect after removing transient state."""
 
     # Do not expose provider or account details through the browser-facing failure response.
-    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1", status_code=302)
+    response = RedirectResponse(f"{env.PUBLIC_URL}/login?oauth_error=1", status_code=302)
     response.headers["Cache-Control"] = "no-store"
     cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
     return response
@@ -143,7 +143,7 @@ async def complete_oauth_login(
             return oauth_failure_response()
 
     # Publish the signed browser credential only after durable projection demand commits.
-    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/user/organizations", status_code=302)
+    response = RedirectResponse(f"{env.PUBLIC_URL}/user/organizations", status_code=302)
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent OAuth login effects commit.

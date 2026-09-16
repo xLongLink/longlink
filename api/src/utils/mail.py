@@ -57,7 +57,7 @@ async def send_password_reset_email(recipient: str, credential: str) -> None:
     """Deliver one password-reset link email."""
 
     # Keep bearer proof in the fragment so it is not sent in the initial HTTP request.
-    reset_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password#{urlencode({'token': credential})}"
+    reset_url = f"{env.PUBLIC_URL}/auth/reset-password#{urlencode({'token': credential})}"
     subject = "Reset your LongLink password"
     text = f"Reset your password:\n\n{reset_url}\n"
     html = render_mjml_template("password_reset.mjml", reset_url=reset_url)
@@ -69,7 +69,7 @@ async def send_organization_invitation_email(recipient: str, organization_name: 
 
     # Prefill the shared registration flow while retaining the sign-in option for existing accounts.
     subject = f"Invitation to join {organization_name} on LongLink"
-    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/register?{urlencode({'email': recipient})}"
+    invitation_url = f"{env.PUBLIC_URL}/auth/register?{urlencode({'email': recipient})}"
     role_label = role.value
 
     # Keep a plain-text fallback for clients that do not render HTML.
@@ -97,7 +97,7 @@ async def send_signup_verification_email(recipient: str, token: str) -> None:
 
     # Render the responsive MJML body while preserving a plain-text fallback for all clients.
     subject = "Welcome to LongLink"
-    verification_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/verify-email#{urlencode({'token': token})}"
+    verification_url = f"{env.PUBLIC_URL}/auth/verify-email#{urlencode({'token': token})}"
     text = (
         "Welcome to LongLink.\n\n"
         "Please confirm your email address to continue account setup.\n\n"
