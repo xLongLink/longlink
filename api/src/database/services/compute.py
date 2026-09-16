@@ -59,10 +59,10 @@ async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_
 
     # Translate duplicate names or physical clusters to one stable API conflict.
     try:
-        session.add(Operation(kind=OperationKind.compute_validate, target_id=registry.id))
         await session.flush()
     except IntegrityError as exc:
         raise ConflictError("Compute registry already exists") from exc
+    await operations.enqueue(session, kind=OperationKind.compute_validate, target_id=registry.id)
 
     return registry
 

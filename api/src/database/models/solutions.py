@@ -1,10 +1,11 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Literal, ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 from sqlmodel import Field, Relationship
 from sqlalchemy import Enum, Column, Integer, CheckConstraint, UniqueConstraint, ForeignKeyConstraint, event, inspect
 from sqlalchemy.orm import Mapper
 from src.environments import env
+from src.models.types import MinScale
 from sqlalchemy.engine import Connection
 from src.database.types import EncryptedType
 from src.models.statuses import Status
@@ -102,7 +103,7 @@ class Revision(AuditTable, table=True):
     solution_id: UUID = Field(foreign_key="solutions.id", ondelete="CASCADE")
     image: str = Field(max_length=512)
     source: str = Field(max_length=512)
-    min_scale: Literal[0, 1] = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
+    min_scale: MinScale = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     # Observed state does not modify the snapshot.
     failed: bool = Field(default=False)
