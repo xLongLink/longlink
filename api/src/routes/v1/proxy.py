@@ -8,9 +8,7 @@ from longlink import identity
 from src.auth import authuser, get_session
 from src.utils import roles
 from contextlib import AsyncExitStack
-from src.logger import logger
 from src.kubernetes import namespace
-from src.operations import databases
 from collections.abc import AsyncIterator
 from src.models.roles import SOLUTION_PROXY_METHOD_ROLES
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -26,7 +24,6 @@ PROXY_REQUEST_TIMEOUT_SECONDS = 120
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 PROXY_ERROR_MAX_BYTES = 64 * 1024
 PROXY_ERROR_TIMEOUT_SECONDS = 5
-RUNTIME_ADMISSION_TIMEOUT_SECONDS = 120
 
 
 async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
@@ -80,17 +77,6 @@ async def proxy_solution_request(
 
     # Release the authorization snapshot before independent runtime transactions begin.
     await session.commit()
-    try:
-        async with asyncio.timeout(RUNTIME_ADMISSION_TIMEOUT_SECONDS):
-            lease = await runtime.enter_async_context(databases.activity(solution.organization_id))
-    except Exception as exc:
-        logger.warning("Runtime admission failed for Organization %s: %s", solution.organization_id, type(exc).__name__)
-        raise HTTPException(
-            status_code=503,
-            detail="Organization database is waking. Please try again shortly.",
-            headers={"Retry-After": "5", "Cache-Control": "no-store"},
-        ) from exc
-    assert lease is not None
 
     # Wake can outlast an access change; never reuse pre-wake authorization for runtime admission.
     access = await organizations.solution_runtime_access(session, user.id, solution_id)
@@ -104,13 +90,12 @@ async def proxy_solution_request(
         """Stream one bounded request body to the solution gateway."""
 
         # Count streamed bytes before forwarding each request chunk.
-        with lease.protect():
-            size = 0
-            async for chunk in request.stream():
-                size += len(chunk)
-                if size > PROXY_REQUEST_MAX_BYTES:
-                    raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
-                yield chunk
+        size = 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > PROXY_REQUEST_MAX_BYTES:
+                raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
+            yield chunk
 
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
@@ -193,9 +178,8 @@ async def proxy_solution_request(
         """Stream the upstream response and release network resources on completion."""
 
         # The request-scoped exit stack owns upstream resources through completion or disconnect.
-        with lease.protect():
-            async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
-                async for chunk in upstream.aiter_bytes():
-                    yield chunk
+        async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
+            async for chunk in upstream.aiter_bytes():
+                yield chunk
 
     return StreamingResponse(response_content(), status_code=upstream.status_code, headers=response_headers)

@@ -4,7 +4,7 @@ import asyncio
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import Request
-from contextlib import AsyncExitStack, nullcontext, asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from src.routes.v1 import proxy
 from collections.abc import AsyncIterator
 from src.models.roles import OrganizationRoles
@@ -17,7 +17,7 @@ pytestmark = pytest.mark.no_db
 def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     """Supply authorized runtime boundaries while exercising the real proxy resource ownership."""
 
-    # Keep activity cleanup observable independently of HTTP cleanup.
+    # Keep HTTP cleanup observable through the production runtime scope.
     closed: list[str] = []
     solution = SimpleNamespace(
         id=uuid4(),
@@ -36,17 +36,7 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     async def commit() -> None:
         """Release the authorization snapshot."""
 
-    @asynccontextmanager
-    async def activity(*args: object) -> AsyncIterator[SimpleNamespace]:
-        """Observe activity release after all network resources."""
-
-        try:
-            yield SimpleNamespace(protect=nullcontext)
-        finally:
-            closed.append("activity")
-
     monkeypatch.setattr(proxy.organizations, "solution_runtime_access", access)
-    monkeypatch.setattr(proxy.databases, "activity", activity)
     request = Request(
         {
             "type": "http",
@@ -73,10 +63,31 @@ def request_scope(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     )
 
 
+class GatewayClient:
+    """Share the fake gateway transport shape across resource-ownership tests."""
+
+    closed: list[str]
+
+    def __init__(self, **_kwargs: object) -> None:
+        """Accept the request client configuration."""
+
+    def build_request(
+        self, method: str, url: str, *, content: AsyncIterator[bytes], headers: dict[str, str]
+    ) -> object:
+        """Build an opaque request accepted by the fake transport."""
+
+        return object()
+
+    async def aclose(self) -> None:
+        """Record client cleanup."""
+
+        self.closed.append("client")
+
+
 async def test_gateway_response_closes_client_when_response_close_fails(
     monkeypatch: pytest.MonkeyPatch, request_scope: SimpleNamespace
 ) -> None:
-    """Close client and activity even when the streamed response fails to close."""
+    """Close the client even when the streamed response fails to close."""
 
     # Provide independently observable response and client cleanup paths.
     class Response:
@@ -89,24 +100,15 @@ async def test_gateway_response_closes_client_when_response_close_fails(
             request_scope.closed.append("response")
             raise RuntimeError("response close failed")
 
-    class Client:
-        def __init__(self, **kwargs: object) -> None:
-            """Accept the request client configuration."""
+    class Client(GatewayClient):
+        """Return the upstream response."""
 
-        def build_request(self, *args: object, **kwargs: object) -> object:
-            """Build an opaque request accepted by the fake transport."""
-
-            return object()
+        closed = request_scope.closed
 
         async def send(self, request: object, stream: bool) -> Response:
             """Return the upstream response."""
 
             return Response()
-
-        async def aclose(self) -> None:
-            """Record client cleanup."""
-
-            request_scope.closed.append("client")
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
@@ -115,7 +117,7 @@ async def test_gateway_response_closes_client_when_response_close_fails(
         async with asynccontextmanager(proxy.runtime_scope)() as runtime:
             await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
             assert request_scope.closed == []
-    assert request_scope.closed == ["response", "client", "activity"]
+    assert request_scope.closed == ["response", "client"]
 
 
 async def test_gateway_request_closes_client_when_send_is_cancelled(
@@ -123,33 +125,24 @@ async def test_gateway_request_closes_client_when_send_is_cancelled(
 ) -> None:
     """Close partial acquisitions immediately when cancellation interrupts response creation."""
 
-    class Client:
-        def __init__(self, **kwargs: object) -> None:
-            """Accept the request client configuration."""
+    class Client(GatewayClient):
+        """Cancel request submission."""
 
-        def build_request(self, *args: object, **kwargs: object) -> object:
-            """Build an opaque request accepted by the fake transport."""
-
-            return object()
+        closed = request_scope.closed
 
         async def send(self, request: object, stream: bool) -> None:
             """Cancel request submission."""
 
             raise asyncio.CancelledError
 
-        async def aclose(self) -> None:
-            """Record client cleanup."""
-
-            request_scope.closed.append("client")
-
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
-    # Failed acquisition cleans up before the caller releases activity.
+    # Failed acquisition cleans up before the caller releases runtime resources.
     async with asynccontextmanager(proxy.runtime_scope)() as runtime:
         with pytest.raises(asyncio.CancelledError):
             await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
         assert request_scope.closed == ["client"]
-    assert request_scope.closed == ["client", "activity"]
+    assert request_scope.closed == ["client"]
 
 
 async def test_gateway_request_forwards_identity_and_defers_cleanup(
@@ -171,7 +164,11 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
 
             request_scope.closed.append("response")
 
-    class Client:
+    class Client(GatewayClient):
+        """Capture the gateway client configuration."""
+
+        closed = request_scope.closed
+
         def __init__(self, *, verify: proxy.ssl.SSLContext, trust_env: bool, timeout: float, follow_redirects: bool) -> None:
             """Capture the gateway client configuration."""
 
@@ -198,9 +195,9 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             return Response()
 
         async def aclose(self) -> None:
-            """Record client cleanup."""
+            """Record client cleanup before closing the wrapped HTTP client."""
 
-            request_scope.closed.append("client")
+            await super().aclose()
             await self.client.aclose()
 
     tls = proxy.ssl.create_default_context()
@@ -232,4 +229,4 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         assert request.headers["content-type"] == "application/json"
         assert "authorization" not in request.headers
         assert request_scope.closed == []
-    assert request_scope.closed == ["response", "client", "activity"]
+    assert request_scope.closed == ["response", "client"]

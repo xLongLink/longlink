@@ -4,6 +4,7 @@ import pytest
 from pathlib import Path
 from contextlib import asynccontextmanager
 from src.database import session as database_session
+from collections.abc import Callable, Awaitable
 from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.no_db
@@ -57,30 +58,25 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
 
         events.append("administrator")
 
-    async def scheduler() -> None:
-        """Record scheduler startup and cancellation from lifespan shutdown."""
+    def run_scheduler(name: str) -> Callable[[], Awaitable[None]]:
+        """Return one scheduler that records its startup and lifespan-shutdown cancellation."""
 
-        events.append("scheduler start")
-        try:
-            await main.asyncio.Event().wait()
-        except main.asyncio.CancelledError:
-            events.append("scheduler cancel")
-            raise
+        async def scheduler() -> None:
+            """Record scheduler startup and cancellation from lifespan shutdown."""
 
-    async def database_scheduler() -> None:
-        """Record database scheduling startup and cancellation from lifespan shutdown."""
+            events.append(f"{name} start")
+            try:
+                await main.asyncio.Event().wait()
+            except main.asyncio.CancelledError:
+                events.append(f"{name} cancel")
+                raise
 
-        events.append("database start")
-        try:
-            await main.asyncio.Event().wait()
-        except main.asyncio.CancelledError:
-            events.append("database cancel")
-            raise
+        return scheduler
 
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
-    monkeypatch.setattr(main.jobs, "run_operation_scheduler", scheduler)
-    monkeypatch.setattr(main.jobs, "run_database_scheduler", database_scheduler)
+    monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_scheduler("scheduler"))
+    monkeypatch.setattr(main.jobs, "run_database_scheduler", run_scheduler("database"))
 
     # Act
     async with main.lifespan(main.app):

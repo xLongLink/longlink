@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes
+from conftest import StorageKubernetes, OperationKubernetes
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_compute
 from src.operations import organizations as organization_operations
@@ -23,12 +23,6 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
-    class Database(DatabasePostgres):
-        async def prepare_organization_database(self, organization_id: object) -> None:
-            """Record database preparation."""
-
-            calls.append("database")
-
     class Storage(StorageKubernetes):
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
@@ -45,70 +39,57 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         assert organization_id == organization.id
         calls.append("namespace")
 
-    class Kubernetes(AsyncKubernetes):
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Expose Organization Kubernetes operations."""
+    class Kubernetes(OperationKubernetes):
+        """Expose Organization Kubernetes operations."""
 
-    async def sync_users(*args: object, **kwargs: object) -> None:
-        """Record user projection after publication."""
-
-        calls.append("users")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.kubernetes_organizations, "apply", apply_namespace)
-    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Reconcile and inspect the published state.
     await organization_operations.reconcile(organization.id)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
 
-    # Every boundary completes before user projection and status publication.
-    assert calls == ["database", "users", "storage", "namespace"]
+    # Every boundary completes before status publication.
+    assert calls == ["storage", "namespace"]
     assert refreshed is not None
     assert refreshed.status == Status.running
 
 
-async def test_reconcile_rolls_back_publication_when_user_projection_fails(
+async def test_reconcile_rolls_back_publication_when_storage_fails(
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Keep an Organization unpublished when its user projection fails."""
+    """Keep an Organization unpublished when its storage boundary fails."""
 
     # Arrange
     compute = await create_ready_compute()
     organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
-    class Database(DatabasePostgres):
-        async def prepare_organization_database(self, organization_id: object) -> None:
-            """Record database preparation."""
+    class Storage(StorageKubernetes):
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
 
-            assert organization_id == organization.id
-            calls.append("database")
+        def bucket(self, organization: UUID):
+            """Fail bucket creation."""
 
-    class Kubernetes(AsyncKubernetes):
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Expose Organization Kubernetes operations."""
+            calls.append("storage")
+            raise RuntimeError("storage failed")
 
-    async def sync_users(*args: object, **kwargs: object) -> None:
-        """Fail the user projection after every external boundary is ready."""
+    class Kubernetes(OperationKubernetes):
+        """Expose Organization Kubernetes operations."""
 
-        calls.append("users")
-        raise RuntimeError("user projection failed")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
 
     # Act and assert
-    with pytest.raises(RuntimeError, match="user projection failed"):
+    with pytest.raises(RuntimeError, match="storage failed"):
         await organization_operations.reconcile(organization.id)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
-    assert calls == ["database", "users"]
+    assert calls == ["storage"]
     assert refreshed is not None
     assert refreshed.status == Status.creating
 
@@ -251,10 +232,13 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
         raise RuntimeError("namespace deletion failed")
 
-    class Kubernetes(AsyncKubernetes):
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Expose the failing Organization Kubernetes operations."""
+    class Kubernetes(OperationKubernetes):
+        """Expose the failing Organization Kubernetes operations."""
 
+        def __init__(self, *args: object) -> None:
+            """Expose the failing Organization database operations."""
+
+            super().__init__(*args)
             self.databases = Database()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
@@ -309,10 +293,13 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         assert organization_id == organization.id
         calls.append("namespace")
 
-    class Kubernetes(AsyncKubernetes):
-        def __init__(self, kubeconfig: dict[str, object]) -> None:
-            """Expose Organization Kubernetes operations."""
+    class Kubernetes(OperationKubernetes):
+        """Expose Organization Kubernetes operations."""
 
+        def __init__(self, *args: object) -> None:
+            """Expose the Organization database operations."""
+
+            super().__init__(*args)
             self.databases = Database()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)

@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 from uuid import UUID
-from typing import Literal
 from datetime import datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
@@ -163,48 +162,6 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
     session.add(row)
     await session.flush()
     return Lease(row.id, organization_id, row.expires_at)
-
-
-@contextlib.asynccontextmanager
-async def activity(organization_id: UUID, *, mode: Literal["demand", "recover"] = "demand") -> AsyncIterator[Lease | None]:
-    """Keep SQL awake for requests, migrations, deployment, and schema cleanup."""
-
-    # Persist demand before waking; a concurrent hibernation must finish before admission.
-    async with session_scope() as session:
-        organization = await lock(session, organization_id)
-        if organization is None or organization.deleted_at is not None:
-            raise RuntimeError("Organization is unavailable")
-        transition = await session.get(OrganizationActivity, organization_id)
-        lease = None
-
-        # Select admission from fresh state under the same lock used to claim activity.
-        if mode == "demand":
-            admit = True
-        else:
-            # Recovery admits only interrupted transitions or unsynchronized state, not runtime demand.
-            admit = (
-                organization.status == Status.running
-                and (transition is None or transition.expires_at <= utcnow())
-                and organization.database_state
-                in (
-                    DatabaseState.failed,
-                    DatabaseState.resuming,
-                    DatabaseState.hibernating,
-                    DatabaseState.needs_sync,
-                )
-            )
-
-        # Persist admitted activity before releasing the admission lock.
-        if admit:
-            lease = await _claim(session, organization_id)
-            organization.database_last_active_at = utcnow()
-        await session.commit()
-    if lease is None:
-        yield None
-        return
-    async with lease.maintain():
-        await ready(organization_id)
-        yield lease
 
 
 @contextlib.asynccontextmanager
@@ -448,6 +405,4 @@ async def reconcile(organization_id: UUID) -> None:
         organization = await session.get(Organization, organization_id)
     if organization is None or organization.deleted_at is not None or organization.status != Status.running:
         return
-    async with activity(organization_id, mode="recover"):
-        pass
     await hibernate(organization_id)

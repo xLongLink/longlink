@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes, DatabaseKubernetes
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes
 from factories import (
     claim_operation,
     create_solution,
@@ -37,22 +37,6 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
         await session.commit()
 
     return organization, solution
-
-
-class OperationKubernetes(AsyncKubernetes):
-    """Expose the Solution lifecycle client without external Kubernetes I/O."""
-
-    def __init__(self, *_args: object) -> None:
-        """Share one fake cluster connection with the solution and database clients."""
-
-        self.solutions = self
-        self.databases = DatabaseKubernetes()
-
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
-        """Provide the database tunnel owned by the shared fake database client."""
-
-        # Reuse the single provider-tunnel contract instead of restating it.
-        return await self.databases.portforward(name, namespace, port)
 
 
 async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
@@ -424,7 +408,11 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         assert identity_secret
         if identity is not None:
             assert identity_secret == identity
-        assert persisted.secrets == {**initial_secrets, "LONGLINK_IDENTITY_SECRET": identity_secret}
+        assert persisted.secrets == {
+            **initial_secrets,
+            "LONGLINK_IDENTITY_SECRET": identity_secret,
+            "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+        }
         assert persisted.status == Status.running
         assert persisted.deployed_revision_id == solution.desired_revision_id
     assert captured == [

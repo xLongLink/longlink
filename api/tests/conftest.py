@@ -117,7 +117,6 @@ class DatabaseKubernetes(AsyncKubernetes):
         """Expose database operations through the production client shape."""
 
         self.databases = self
-        self.storage = StorageKubernetes()
 
     async def apply(self, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1) -> None:
         """Accept Organization cluster provisioning."""
@@ -137,6 +136,22 @@ class DatabaseKubernetes(AsyncKubernetes):
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"
+
+
+class OperationKubernetes(AsyncKubernetes):
+    """Expose the Solution lifecycle client without external Kubernetes I/O."""
+
+    def __init__(self, *_args: object) -> None:
+        """Share one fake cluster connection with the solution and database clients."""
+
+        self.solutions = self
+        self.databases = DatabaseKubernetes()
+
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
+        """Provide the database tunnel owned by the shared fake database client."""
+
+        # Reuse the single provider-tunnel contract instead of restating it.
+        return await self.databases.portforward(name, namespace, port)
 
 
 class DatabasePostgres:

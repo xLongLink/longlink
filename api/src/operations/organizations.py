@@ -15,7 +15,7 @@ from src.database.models.organizations import Organization
 
 
 async def reconcile(organization_id: UUID) -> None:
-    """Keep the Organization database active throughout boundary reconciliation."""
+    """Reconcile the Organization boundary and publish it."""
 
     # Removed lifecycle targets are already converged and must not acquire runtime demand.
     async with session_scope() as session:
@@ -27,50 +27,49 @@ async def reconcile(organization_id: UUID) -> None:
         )
     if active_organization_id is None:
         return
-    async with databases.activity(organization_id):
-        # Skip removed Organizations.
-        async with session_scope() as session:
-            target = await organizations.infrastructure(session, organization_id)
-        if target is None:
-            logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
-            return
-        organization, compute = target
-        if organization.deleted_at is not None:
-            logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
-            return
+    # Skip removed Organizations.
+    async with session_scope() as session:
+        target = await organizations.infrastructure(session, organization_id)
+    if target is None:
+        logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
+        return
+    organization, compute = target
+    if organization.deleted_at is not None:
+        logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
+        return
 
-        # Converge the Organization bucket before Solutions receive scoped credentials.
-        logger.info("Creating object storage bucket for Organization %s", organization.id)
-        logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
-        cluster = Kubernetes(
-            compute.kubeconfig,
+    # Converge the Organization bucket before Solutions receive scoped credentials.
+    logger.info("Creating object storage bucket for Organization %s", organization.id)
+    logger.info("Applying Kubernetes boundary for Organization %s", organization.id)
+    cluster = Kubernetes(
+        compute.kubeconfig,
+    )
+    async with cluster:
+        storage = Storage(compute)
+        await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
+        await kubernetes_organizations.apply(
+            cluster,
+            organization.id,
+            cpu_limit=organization.compute_cpu_limit,
+            memory_limit_gib=organization.compute_memory_limit_gib,
+            ephemeral_limit_gib=organization.compute_ephemeral_limit_gib,
+            pods=organization.compute_pods,
         )
-        async with cluster:
-            storage = Storage(compute)
-            await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
-            await kubernetes_organizations.apply(
-                cluster,
-                organization.id,
-                cpu_limit=organization.compute_cpu_limit,
-                memory_limit_gib=organization.compute_memory_limit_gib,
-                ephemeral_limit_gib=organization.compute_ephemeral_limit_gib,
-                pods=organization.compute_pods,
-            )
 
-        # Publish the Organization after its provider and Kubernetes boundaries are ready.
-        logger.info("Publishing Organization %s", organization.id)
-        async with session_scope() as session:
-            await session.execute(
-                update(Organization)
-                .where(
-                    col(Organization.id) == organization.id,
-                    col(Organization.deleted_at).is_(None),
-                    col(Organization.status).in_((Status.creating, Status.failed)),
-                )
-                .values(status=Status.running)
+    # Publish the Organization after its provider and Kubernetes boundaries are ready.
+    logger.info("Publishing Organization %s", organization.id)
+    async with session_scope() as session:
+        await session.execute(
+            update(Organization)
+            .where(
+                col(Organization.id) == organization.id,
+                col(Organization.deleted_at).is_(None),
+                col(Organization.status).in_((Status.creating, Status.failed)),
             )
+            .values(status=Status.running)
+        )
 
-            await session.commit()
+        await session.commit()
 
 
 async def delete(organization_id: UUID) -> str | None:
