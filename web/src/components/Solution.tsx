@@ -7,7 +7,7 @@ import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { matchRoutes, useParams } from 'react-router';
+import { matchRoutes, Navigate, useParams } from 'react-router';
 import { RouterXmlRuntime } from '@/components/RouterXmlRuntime';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
@@ -145,6 +145,11 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     );
 
     let content: ReactNode;
+
+    // The browser never requests the solution server root, so mirror its redirect client-side.
+    if (!routePath && firstTabView) {
+        return <Navigate replace to={tabs[0].href} />;
+    }
 
     // The server redirects the browser root to the first tab; render errors and views below.
     if (isNotFound) {
