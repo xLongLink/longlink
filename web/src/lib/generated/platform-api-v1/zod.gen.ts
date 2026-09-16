@@ -152,8 +152,7 @@ export const zOperationResponse = z.object({
  * Validate organization creation payloads.
  */
 export const zOrganizationCreate = z.object({
-    name: z.string().min(1).max(128),
-    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
+    name: z.string().min(1).max(128)
 });
 
 /**
@@ -165,11 +164,7 @@ export const zOrganizationQuotasResponse = z.object({
     id: z.uuid(),
     database_size_mib: z.int(),
     database_instances: z.int(),
-    storage_quota_bytes: z.int(),
-    compute_cpu_limit: z.int(),
-    compute_memory_limit_gib: z.int(),
-    compute_ephemeral_limit_gib: z.int(),
-    compute_pods: z.int()
+    storage_quota_bytes: z.int()
 });
 
 /**
@@ -235,8 +230,7 @@ export const zOrganizationUpdate = z.object({
     avatar: z.union([
         z.url().min(1).max(2083),
         z.literal('')
-    ]).nullish(),
-    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
+    ]).nullish()
 });
 
 /**
@@ -352,7 +346,6 @@ export const zOrganizationIdentity = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    database_idle_seconds: z.int(),
     status: zStatus
 });
 
