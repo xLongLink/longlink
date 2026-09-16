@@ -118,10 +118,6 @@ def upgrade() -> None:
         sa.Column("database_size_mib", sa.Integer(), nullable=False, server_default="100"),
         sa.Column("database_instances", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("storage_quota_bytes", sa.BigInteger(), nullable=False, server_default="1073741824"),
-        sa.Column("compute_cpu_limit", sa.Integer(), nullable=False, server_default="4"),
-        sa.Column("compute_memory_limit_gib", sa.Integer(), nullable=False, server_default="3"),
-        sa.Column("compute_ephemeral_limit_gib", sa.Integer(), nullable=False, server_default="4"),
-        sa.Column("compute_pods", sa.Integer(), nullable=False, server_default="8"),
         sa.Column(
             "status",
             sa.Enum(

@@ -55,12 +55,6 @@ class Organization(AuditTable, table=True):
     # Storage
     storage_quota_bytes: int = Field(default=1073741824, ge=1073741824, sa_type=BigInteger)
 
-    # Compute
-    compute_cpu_limit: int = Field(default=4, ge=4)
-    compute_memory_limit_gib: int = Field(default=3, ge=3)
-    compute_ephemeral_limit_gib: int = Field(default=4, ge=4)
-    compute_pods: int = Field(default=8, ge=8)
-
     # State
     status: Status = Field(
         default=Status.creating,

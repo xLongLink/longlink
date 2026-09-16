@@ -83,12 +83,6 @@ class OrganizationQuotasResponse(BaseModel):
     # Storage
     storage_quota_bytes: int
 
-    # Compute
-    compute_cpu_limit: int
-    compute_memory_limit_gib: int
-    compute_ephemeral_limit_gib: int
-    compute_pods: int
-
 
 class OrganizationInvitationCreate(BaseModel):
     """Validate organization invitation payloads."""
