@@ -53,6 +53,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("cluster_uid", sa.String(length=128), nullable=False),
         sa.Column("kubeconfig", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
+        sa.Column("compute_version", sa.String(length=128), nullable=True),
         sa.Column(
             "status",
             sa.Enum(

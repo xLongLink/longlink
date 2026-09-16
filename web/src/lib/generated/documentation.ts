@@ -825,6 +825,14 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
+                "description": "Enables scrollable overflow when content exceeds the height.",
+                "name": "isScrollable"
+            },
+            {
+                "description": "Fixed height of the stack, as pixels or a CSS size. Pair with isScrollable for a scroll region.",
+                "name": "height"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -832,7 +840,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.",
         "example": "<Stack direction=\"horizontal\" align=\"center\">\n  $order.number\n  <StackItem size=\"fill\">Order details</StackItem>\n  <Button>Open</Button>\n</Stack>",
         "name": "Stack",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [

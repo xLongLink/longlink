@@ -8,7 +8,10 @@ import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../h
 
 const toast = vi.fn();
 
-vi.mock('@/lib/hooks/use-toast', () => ({ useToast: () => toast }));
+vi.mock('@astryxdesign/core/Toast', async (importOriginal) => ({
+    ...(await importOriginal()),
+    useToast: () => toast,
+}));
 
 describe('Action', () => {
     let root: ReturnType<typeof createRoot> | undefined;

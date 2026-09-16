@@ -57,6 +57,7 @@
                     <Text type="supporting">$row.gateway_url</Text>
                 </Stack>
             </TableColumn>
+            <TableColumn field="live_version" header="Version" />
             <TableColumn field="id" header="Actions">
                 <MoreMenu value="$metadata">
                     <Option
@@ -89,66 +90,68 @@
         purpose="form"
     >
         <Stack gap="3">
-            <TextInput
-                label="Name"
-                value="$registration.name"
-                isRequired="true"
-            />
-            <TextInput
-                label="Gateway URL"
-                value="$registration.gateway_url"
-                isRequired="true"
-            />
-            <TextArea
-                label="Gateway CA certificate"
-                value="$registration.gateway_certificate"
-            />
-            <TextInput
-                label="Database storage class"
-                value="$registration.database_storage_class"
-                isRequired="true"
-            />
-            <NumberInput
-                label="Database size per instance"
-                value="$registration.database_size_gib"
-                min="1"
-                max="65536"
-                step="1"
-            />
-            <NumberInput
-                label="Database instances"
-                value="$registration.database_instances"
-                min="1"
-                max="3"
-                step="1"
-            />
-            <TextInput
-                label="Storage HTTPS endpoint"
-                value="$registration.storage_endpoint"
-                isRequired="true"
-            />
-            <TextInput
-                label="RustFS controller access key"
-                value="$registration.storage_access_key"
-                isRequired="true"
-            />
-            <TextInput
-                label="RustFS controller secret key"
-                value="$registration.storage_secret_key"
-                isRequired="true"
-            />
-            <TextArea
-                label="Storage CA certificate"
-                value="$registration.storage_certificate"
-            />
-            <NumberInput
-                label="Organization bucket byte quota"
-                value="$registration.bucket_size_bytes"
-                min="1024"
-                max="70368744177664"
-                step="1024"
-            />
-            <TextArea label="Kubeconfig" value="$registration.kubeconfig" />
+            <Stack gap="3" isScrollable="true" height="50dvh">
+                <TextInput
+                    label="Name"
+                    value="$registration.name"
+                    isRequired="true"
+                />
+                <TextInput
+                    label="Gateway URL"
+                    value="$registration.gateway_url"
+                    isRequired="true"
+                />
+                <TextArea
+                    label="Gateway CA certificate"
+                    value="$registration.gateway_certificate"
+                />
+                <TextInput
+                    label="Database storage class"
+                    value="$registration.database_storage_class"
+                    isRequired="true"
+                />
+                <NumberInput
+                    label="Database size per instance"
+                    value="$registration.database_size_gib"
+                    min="1"
+                    max="65536"
+                    step="1"
+                />
+                <NumberInput
+                    label="Database instances"
+                    value="$registration.database_instances"
+                    min="1"
+                    max="3"
+                    step="1"
+                />
+                <TextInput
+                    label="Storage HTTPS endpoint"
+                    value="$registration.storage_endpoint"
+                    isRequired="true"
+                />
+                <TextInput
+                    label="RustFS controller access key"
+                    value="$registration.storage_access_key"
+                    isRequired="true"
+                />
+                <TextInput
+                    label="RustFS controller secret key"
+                    value="$registration.storage_secret_key"
+                    isRequired="true"
+                />
+                <TextArea
+                    label="Storage CA certificate"
+                    value="$registration.storage_certificate"
+                />
+                <NumberInput
+                    label="Organization bucket byte quota"
+                    value="$registration.bucket_size_bytes"
+                    min="1024"
+                    max="70368744177664"
+                    step="1024"
+                />
+                <TextArea label="Kubeconfig" value="$registration.kubeconfig" />
+            </Stack>
             <Stack direction="horizontal" gap="2" justify="end">
                 <Action>
                     <Patch
@@ -183,6 +186,14 @@
             <Text>
                 <b>Gateway</b>
                 $metadata.item.gateway_url
+            </Text>
+            <Text>
+                <b>Live version</b>
+                $metadata.item.live_version
+            </Text>
+            <Text>
+                <b>Validated version</b>
+                $metadata.item.compute_version
             </Text>
             <Text>
                 <b>Database storage class</b>

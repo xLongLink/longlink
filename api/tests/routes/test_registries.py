@@ -64,6 +64,8 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     }
     expected_item = {
         "bucket_size_bytes": 1073741824,
+        "compute_version": None,
+        "live_version": None,
         "gateway_url": "https://gateway.example",
         "status": "creating",
         "database_storage_class": "local-path",

@@ -307,6 +307,46 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
     }
 
 
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_deleted_account_without_browser_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject OAuth login for a soft-deleted account without linking its provider identity."""
+
+    # Arrange
+    user = users[1]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        persisted = await session.get(User, user.id)
+    assert persisted is not None
+    assert persisted.google_id is None
+    assert persisted.github_id is None
+
+
 async def test_registration_request_does_not_enumerate_existing_accounts(
     client: AsyncClient, users: tuple[User, User, User], captured_mail: list[tuple[str, str, str, str | None]]
 ) -> None:

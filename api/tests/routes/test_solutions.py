@@ -462,6 +462,7 @@ async def test_get_app_logs_returns_pod_logs(
     ("role", "expected_detail"),
     [
         pytest.param(None, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
         pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
     ],
 )
@@ -496,6 +497,39 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
+
+
+async def test_app_logs_return_pod_logs_for_maintain_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Return recent pod logs to a maintain member at the runtime permission boundary."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    organization = await create_organization(owner)
+    app = await create_solution(organization)
+    async with session_scope() as session:
+        session.add(
+            UserOrganization(
+                user_id=member.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.maintain,
+            )
+        )
+        await session.commit()
+    captured: dict[str, UUID | str] = {}
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1"], captured))
+
+    # Act
+    response = await clients[1].get(f"/api/v1/solutions/{app.id}/logs")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == ["line 1"]
+    assert captured["logs"] == app.id
+    assert captured["organization"] == organization.id
 
 
 async def test_app_logs_return_unavailable_when_backend_fails(

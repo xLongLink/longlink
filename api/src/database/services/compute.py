@@ -27,6 +27,8 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.name,
+                ComputeRegistry.compute_version,
+                ComputeRegistry.kubeconfig,
                 ComputeRegistry.gateway_url,
                 ComputeRegistry.database_size_gib,
                 ComputeRegistry.database_instances,

@@ -3,7 +3,6 @@ import httpx2
 import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
-from src.environments import env
 from kr8s.asyncio.objects import Secret, ConfigMap, Deployment
 from src.kubernetes.utils import deployment_is_ready
 
@@ -11,8 +10,8 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> None:
-    """Inspect package compatibility and readiness without changing infrastructure."""
+async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> str:
+    """Inspect package compatibility and readiness, returning the observed Compute package version."""
 
     # Validate trust before opening the operator-configured endpoint.
     endpoint = urlsplit(gateway_url)
@@ -33,7 +32,10 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
     release = ConfigMap("compute-release", namespace="longlink-system", api=api)
     await release.refresh()
     data = release.raw.get("data", {})
-    if data.get("contract") != "1" or data.get("platform_version") != env.VERSION:
+    if data.get("contract") != "1":
+        raise ValueError("Compute package is incompatible; deploy a supported Compute package")
+    version = data.get("platform_version")
+    if not isinstance(version, str) or not version:
         raise ValueError("Compute package is incompatible; deploy a supported Compute package")
     secret = Secret("longlink-gateway-tls", namespace="knative-serving", api=api)
     await secret.refresh()
@@ -67,7 +69,17 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
                         await asyncio.sleep(5)
                         continue
                     if response.status_code == 200:
-                        return
+                        return version
                     await asyncio.sleep(5)
     except TimeoutError:
         raise RuntimeError("Shared controllers or verified Kourier endpoint did not become ready") from None
+
+
+async def read_package_version(cluster: "Kubernetes") -> str | None:
+    """Return the installed Compute package version without checking readiness."""
+
+    # Overview reads must never fail the caller; unavailability surfaces as a missing version.
+    release = ConfigMap("compute-release", namespace="longlink-system", api=await cluster.api())
+    await release.refresh()
+    version = release.raw.get("data", {}).get("platform_version")
+    return version if isinstance(version, str) and version else None

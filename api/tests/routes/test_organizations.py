@@ -262,6 +262,53 @@ async def test_update_organization_rejects_write_member(
     assert unchanged.updated_at == original_updated_at
 
 
+@pytest.mark.parametrize("name", [pytest.param("", id="empty"), pytest.param("a" * 129, id="too-long")])
+async def test_create_organization_rejects_invalid_name_without_persisting_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    name: str,
+) -> None:
+    """Reject organization names outside the 1-128 character contract without side effects."""
+
+    # Act
+    response = await clients[0].post("/api/v1/organizations", json={"name": name})
+
+    # Assert
+    assert response.status_code == 422
+    async with session_scope() as session:
+        assert await session.scalar(select(Organization)) is None
+    assert await fetch_operations() == []
+
+
+@pytest.mark.parametrize(
+    "avatar",
+    [
+        pytest.param("not-a-url", id="not-a-url"),
+        pytest.param(f"https://example.com/{'a' * 2048}.png", id="too-long"),
+    ],
+)
+async def test_update_organization_rejects_invalid_avatar_without_mutating_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    avatar: str,
+) -> None:
+    """Reject organization avatars outside the URL and length contract without mutation."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    original_updated_at = organization.updated_at
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": avatar})
+
+    # Assert
+    assert response.status_code == 422
+    async with session_scope() as session:
+        unchanged = await session.get(Organization, organization.id)
+    assert unchanged is not None
+    assert unchanged.avatar == organization.avatar
+    assert unchanged.updated_at == original_updated_at
+
+
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

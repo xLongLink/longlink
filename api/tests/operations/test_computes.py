@@ -18,10 +18,11 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
     registry = await create_compute()
     connections: list[tuple[str, str | None]] = []
 
-    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> None:
+    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> str:
         """Record the configured gateway connection."""
 
         connections.append((url, certificate))
+        return "v9.9.9"
 
     class Kubernetes(AsyncKubernetes):
         """Expose the shared-controller boundary."""
@@ -57,6 +58,7 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
         refreshed = await session.get(ComputeRegistry, registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
+    assert refreshed.compute_version == "v9.9.9"
     assert refreshed.gateway_url == registry.gateway_url
     assert refreshed.gateway_certificate == registry.gateway_certificate
 

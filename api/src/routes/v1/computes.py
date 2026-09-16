@@ -1,6 +1,8 @@
+import asyncio
 from uuid import UUID
 from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session, authdeployment
+from src.kubernetes import gateway
 from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryEndpointUpdate
 from src.database.services import compute
@@ -10,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 
 router = APIRouter()
+
+LIVE_VERSION_TIMEOUT_SECONDS = 1.0
 
 
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=202, dependencies=[Depends(authadmin)])
@@ -30,11 +34,33 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
 @router.get("/computes", response_model=Page[ComputeRegistryResponse], dependencies=[Depends(authadmin)])
 async def list_compute_registries(
     pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)
-) -> dict[str, Sequence[ComputeRegistry] | int]:
-    """Return all registered compute backends."""
+) -> dict[str, Sequence[ComputeRegistryResponse] | int]:
+    """Return all registered compute backends with live package versions."""
 
     items, total = await compute.fetch_page(session, pagination)
-    return {"items": items, "total": total}
+
+    # Resolve live versions in parallel; unreachable clusters degrade to a missing version.
+    versions = await asyncio.gather(*(_live_version(registry) for registry in items))
+    return {
+        "items": [
+            ComputeRegistryResponse.model_validate({**registry.model_dump(), "live_version": version})
+            for registry, version in zip(items, versions)
+        ],
+        "total": total,
+    }
+
+
+async def _live_version(registry: ComputeRegistry) -> str | None:
+    """Return the live Compute package version without failing the page."""
+
+    # Unreachable clusters surface as a missing version; the stored overview remains available.
+    cluster = Kubernetes(registry.kubeconfig)
+    try:
+        async with cluster:
+            async with asyncio.timeout(LIVE_VERSION_TIMEOUT_SECONDS):
+                return await gateway.read_package_version(cluster)
+    except Exception:
+        return None
 
 
 @router.delete("/computes/{registry_id}", status_code=204, dependencies=[Depends(authadmin)])
