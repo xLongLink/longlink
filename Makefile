@@ -108,6 +108,6 @@ sdk:
 
 
 # Seed the local example Organization and Solution after the Platform API starts.
-seed:
+seed: image
 	@umask 077; cp -n api/.env.sample api/.env
 	cd api && uv run --locked python ../dev/scripts/seed.py

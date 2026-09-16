@@ -75,29 +75,31 @@ VALID_FRAGMENTS = [
 ]
 
 INVALID_FRAGMENTS = [
-    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>'),
-    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'),
-    ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
-    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>'),
-    ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
-    ("badge-label-attribute", '<Badge label="Active" />'),
-    ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
-    ("button-label-attribute", '<Button label="Save">Save</Button>'),
-    ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style", '<Button style="color: red">Save</Button>'),
+    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>', "Request"),
+    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>', "Link"),
+    ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />', "type"),
+    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>', "id"),
+    ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />', "color"),
+    ("badge-label-attribute", '<Badge label="Active" />', "label"),
+    ("slot-attribute", '<Badge slot="icon">Active</Badge>', "slot"),
+    ("button-label-attribute", '<Button label="Save">Save</Button>', "label"),
+    ("missing-for-as", '<For each="items" />', "as"),
+    ("forbidden-style", '<Button style="color: red">Save</Button>', "style"),
     (
         "invalid-action-child",
         '<Action tone="accent"><Button>Save</Button></Action>',
+        "tone",
     ),
     (
         "missing-option-value",
         '<Selector label="View"><Option label="Overview" /></Selector>',
+        "value",
     ),
-    ("missing-query-path", '<Query id="projects" />'),
-    ("missing-state-id", '<State value="[]" />'),
-    ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
-    ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
-    ("invalid-stack-spacing", '<Stack gap="7">Content</Stack>'),
+    ("missing-query-path", '<Query id="projects" />', "path"),
+    ("missing-state-id", '<State value="[]" />', "id"),
+    ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>', "field"),
+    ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>', "value"),
+    ("invalid-stack-spacing", '<Stack gap="7">Content</Stack>', "gap"),
 ]
 
 UNSUPPORTED_MARKUP = [
@@ -131,14 +133,19 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the View schema."""
 
-    # Validate the fragment through the View schema.
-    validate_xml(content)
+    # Assert the validator returns the parsed document instead of silently accepting input.
+    assert validate_xml(content).tag == "longlink"
 
 
-@pytest.mark.parametrize("content", [pytest.param(f"<longlink>{content}</longlink>", id=name) for name, content in INVALID_FRAGMENTS])
-def test_root_schema_rejects_invalid_fragments(content: str) -> None:
+@pytest.mark.parametrize(("content", "expected"), [pytest.param(f"<longlink>{content}</longlink>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS])
+def test_root_schema_rejects_invalid_fragments(content: str, expected: str) -> None:
     """Reject representative invalid XML fragments through the View schema."""
 
-    # Require schema validation to reject the fragment.
-    with pytest.raises(ValueError, match="XML is invalid"):
+    # Require schema validation to reject the fragment for its specific rule.
+    try:
         validate_xml(content)
+    except ValueError as error:
+        assert "XML is invalid" in str(error)
+        assert expected in str(error)
+    else:
+        raise AssertionError("invalid fragment passed schema validation")

@@ -18,6 +18,41 @@
     html {
         scrollbar-gutter: stable;
     }
+    @media (forced-colors: none) {
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-border) transparent;
+        }
+        *::-webkit-scrollbar:vertical {
+            width: var(--spacing-5);
+        }
+        *::-webkit-scrollbar:horizontal {
+            height: var(--spacing-5);
+        }
+        *::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+        *::-webkit-scrollbar-thumb:vertical {
+            background-color: var(--color-border);
+            background-clip: padding-box;
+            border-top: var(--spacing-0-5) solid transparent;
+            border-right: var(--spacing-0-5) solid transparent;
+            border-bottom: var(--spacing-0-5) solid transparent;
+            border-left: var(--spacing-1-5) solid transparent;
+            border-radius: var(--radius-full);
+        }
+        *::-webkit-scrollbar-thumb:horizontal {
+            background-color: var(--color-border);
+            background-clip: padding-box;
+            border-top: var(--spacing-1-5) solid transparent;
+            border-right: var(--spacing-0-5) solid transparent;
+            border-bottom: var(--spacing-0-5) solid transparent;
+            border-radius: var(--radius-full);
+        }
+        *:hover::-webkit-scrollbar-thumb {
+            background-color: var(--color-border-emphasized);
+        }
+    }
     .article-content :is(h2, h3, h4, h5, h6) {
         margin-block-start: var(--spacing-8);
     }

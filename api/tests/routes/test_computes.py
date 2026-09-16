@@ -416,3 +416,99 @@ async def test_deployment_token_rejects_unknown_cluster_uid_without_queuing_work
     assert response.status_code == 404
     assert response.json() == {"detail": "Compute registry not found"}
     assert await fetch_operations() == []
+
+
+async def test_deployment_compute_returns_status_for_valid_token(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Return deployment-visible Compute status without a browser session."""
+
+    # Arrange
+    compute = await create_ready_compute()
+    token = "deployment-token-that-is-long-enough"
+    monkeypatch.setattr(auth.env, "DEPLOYMENT_TOKEN", token)
+
+    # Act
+    response = await client.get(
+        f"/api/v1/deployment/computes/{compute.cluster_uid}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Assert
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(compute.id)
+    assert body["gateway_url"] == compute.gateway_url
+    assert await fetch_operations() == []
+
+
+async def test_deployment_compute_returns_not_found_when_token_unset(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hide the deployment Compute lookup when no machine credential is configured."""
+
+    # Arrange
+    compute = await create_compute()
+    monkeypatch.setattr(auth.env, "DEPLOYMENT_TOKEN", None)
+
+    # Act
+    response = await client.get(
+        f"/api/v1/deployment/computes/{compute.cluster_uid}",
+        headers={"Authorization": "Bearer deployment-token-that-is-long-enough"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found"}
+    assert await fetch_operations() == []
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    [
+        pytest.param(None, id="missing-header"),
+        pytest.param("Token deployment-token-that-is-long-enough", id="wrong-scheme"),
+        pytest.param("Bearer wrong-deployment-token-value", id="wrong-token"),
+    ],
+)
+async def test_deployment_compute_rejects_invalid_authorization_without_side_effects(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch, authorization: str | None
+) -> None:
+    """Reject missing, non-Bearer, and wrong machine credentials without side effects."""
+
+    # Arrange
+    compute = await create_compute()
+    monkeypatch.setattr(auth.env, "DEPLOYMENT_TOKEN", "deployment-token-that-is-long-enough")
+    headers = {"Authorization": authorization} if authorization is not None else {}
+
+    # Act
+    response = await client.get(
+        f"/api/v1/deployment/computes/{compute.cluster_uid}",
+        headers=headers,
+    )
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+    assert await fetch_operations() == []
+
+
+async def test_deployment_compute_rejects_unknown_cluster_uid_without_side_effects(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Return the Compute-specific error for an unknown physical cluster identity."""
+
+    # Arrange
+    token = "deployment-token-that-is-long-enough"
+    monkeypatch.setattr(auth.env, "DEPLOYMENT_TOKEN", token)
+
+    # Act
+    response = await client.get(
+        "/api/v1/deployment/computes/unknown-cluster",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Compute registry not found"}
+    assert await fetch_operations() == []

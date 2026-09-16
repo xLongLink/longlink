@@ -75,6 +75,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
 async def test_list_users_returns_administrator_page_and_total(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
 ) -> None:
     """Return a bounded administrator page with the full visible-user total."""
 
@@ -87,6 +88,19 @@ async def test_list_users_returns_administrator_page_and_total(
     assert len(payload["items"]) == 1
     assert payload["items"][0]["name"] == "Platform Administrator"
     assert payload["total"] == 3
+    assert set(payload["items"][0]) == {"id", "name", "email", "avatar", "administrator"}
+    assert users[0].password not in response.text
+
+
+async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> None:
+    """Require authentication before exposing user summaries."""
+
+    # Act
+    response = await client.get("/api/v1/users")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 async def test_patch_me_queues_sync_for_every_active_organization_after_profile_change(

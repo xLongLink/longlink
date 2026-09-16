@@ -41,7 +41,6 @@ class SeedSettings(BaseSettings):
     # API connection
     API_URL: str = "http://127.0.0.1:8000"
     PUBLIC_URL: str = "http://localhost:5173"
-    COMPUTE_TIMEOUT_SECONDS: int = Field(default=300, ge=1)
 
     # Platform administrator
     ADMIN_EMAIL: str = Field(default="", min_length=1, validate_default=True)
@@ -131,27 +130,6 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     return organization
 
 
-async def wait_for_organization(client: httpx2.AsyncClient, organization: Resource, settings: SeedSettings) -> Resource:
-    """Wait until the local Organization accepts Solution provisioning."""
-
-    # Wait for the asynchronous storage and Kubernetes boundary provisioning.
-    try:
-        async with asyncio.timeout(settings.COMPUTE_TIMEOUT_SECONDS):
-            while organization.status == "creating":
-                await asyncio.sleep(1)
-                current = await development_organization(client)
-                if current is None:
-                    raise RuntimeError("Local Organization was removed")
-                organization = current
-
-            if organization.status == "failed":
-                raise RuntimeError("Local Organization provisioning failed")
-    except TimeoutError as exc:
-        raise RuntimeError("Local Organization provisioning timed out") from exc
-
-    return organization
-
-
 async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
     """Create or retry the local sample Solution."""
 
@@ -172,6 +150,8 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 "description": "A sample solution for local development.",
             },
         )
+        if response.status_code == 404:
+            raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
         response.raise_for_status()
         return
 
@@ -181,6 +161,8 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
             f"/api/v1/solutions/{solution.id}/update",
             json={"envs": settings.SAMPLE_ENVS},
         )
+        if response.status_code == 404:
+            raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
         response.raise_for_status()
 
 
@@ -197,7 +179,6 @@ async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
     await register_compute(client, settings)
 
     organization = await create_organization(client)
-    organization = await wait_for_organization(client, organization, settings)
     await create_sample(client, settings, organization)
 
 

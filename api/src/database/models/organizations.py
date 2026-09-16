@@ -11,6 +11,7 @@ from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
+from src import policy
 
 
 class Organization(AuditTable, table=True):
@@ -35,6 +36,8 @@ class Organization(AuditTable, table=True):
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
+    database_size_gib: int = Field(default=policy.DATABASE_SIZE_GIB, ge=policy.DATABASE_SIZE_GIB)
+    database_instances: int = Field(default=policy.DATABASE_INSTANCES, ge=policy.DATABASE_INSTANCES)
     database_state: DatabaseState = Field(
         default=DatabaseState.needs_sync,
         sa_column=Column(

@@ -320,6 +320,7 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
 async def test_solution_responses_do_not_expose_environment_secrets(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Redact persisted Solution environment values from every response surface."""
 
@@ -327,6 +328,14 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     owner = users[0]
     organization = await create_organization(owner)
     await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
+
+    # Resolve update metadata at the external boundary without registry I/O.
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Return deterministic metadata for the persisted test source."""
+
+        return LongLinkMetadata(image=image)
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
     # Read the administrator list and Organization solution response surfaces.
     list_response = await clients[0].get("/api/v1/solutions")
@@ -341,6 +350,17 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert all("secrets" not in item and "envs" not in item for item in organization_solutions)
     assert "runtime-secret" not in list_response.text
     assert "runtime-secret" not in organization_response.text
+
+    # The advisory update check must expose configured names without values.
+    solution_id = list_solutions[0]["id"]
+    check_response = await clients[0].get(f"/api/v1/solutions/{solution_id}/update")
+
+    # Assert
+    assert check_response.status_code == 200
+    check_payload = check_response.json()
+    assert check_payload["configured_envs"] == ["API_KEY"]
+    assert "secrets" not in check_payload and "envs" not in check_payload
+    assert "runtime-secret" not in check_response.text
 
 
 async def test_create_app_returns_403_for_regular_member(
