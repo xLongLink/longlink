@@ -27,6 +27,11 @@
         logsOpen="${false}"
         deleteOpen="${false}"
     />
+    <Query
+        id="solutionLogs"
+        if="$solutionMenu.logsOpen"
+        path="/api/v1/solutions/${solutionMenu.item.id}/logs"
+    />
 
     <Stack gap="8">
         <Stack direction="horizontal" gap="3" align="center">
@@ -313,11 +318,10 @@
         </Menu>
     </Stack>
 
-    <SolutionLogs
-        if="$solutionMenu.item"
-        solutionId="$solutionMenu.item.id"
-        isOpen="$solutionMenu.logsOpen"
-    />
+    <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen">
+        <Invalidate query="solutionLogs" if="$solutionMenu.logsOpen" />
+        <CodeBlock value="$solutionLogs" />
+    </Dialog>
     <Dialog
         title="Delete solution"
         isOpen="$solutionMenu.deleteOpen"

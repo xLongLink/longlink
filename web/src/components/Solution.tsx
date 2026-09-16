@@ -151,7 +151,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         return <Navigate replace to={tabs[0].href} />;
     }
 
-    // The server redirects the browser root to the first tab; render errors and views below.
+    // The solution base redirects above; render errors and views below.
     if (isNotFound) {
         content = (
             <PageError description="This page doesn't exist or isn't available." title="We can't find that page" />

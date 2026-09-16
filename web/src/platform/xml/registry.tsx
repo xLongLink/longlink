@@ -1,4 +1,4 @@
-import { SolutionLogs } from './adapters/SolutionLogs';
+import { Invalidate } from './adapters/Invalidate';
 import type { XmlComponentRegistry } from '@/xml/types';
 import { SolutionUpdate } from './adapters/SolutionUpdate';
 import { sdkXmlComponentRegistry } from '@/xml/core/registry';
@@ -8,6 +8,6 @@ import { CreateSolutionXml as CreateSolution } from '@/components/dialogs/Create
 export const platformXmlComponentRegistry: XmlComponentRegistry = {
     ...sdkXmlComponentRegistry,
     CreateSolution,
-    SolutionLogs,
+    Invalidate,
     SolutionUpdate,
 };

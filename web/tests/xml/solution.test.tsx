@@ -53,9 +53,8 @@ describe('SolutionRuntime', () => {
         const output = await renderRuntime('/');
 
         // Assert
-        await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))
-        );
+        // Router navigation does not settle inside act, so observe it directly.
+        await vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
         expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home');
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Home')));
     });
