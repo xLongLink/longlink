@@ -72,15 +72,18 @@ class AsyncKubernetes:
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    async def verify(self, compute: object) -> None:
+    def __init__(self, compute: object | None = None) -> None:
+        """Accept the bound Compute registry without opening connections."""
+
+    async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID, compute: object) -> None:
+    async def apply(self, organization: UUID) -> None:
         """Accept provisioning."""
 
-        self.bucket(organization, compute)
+        self.bucket(organization)
 
-    def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+    def bucket(self, organization: UUID) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
         return SimpleNamespace(name=organization.hex, storage=self, admin=self)
@@ -96,7 +99,7 @@ class StorageKubernetes:
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         """Accept owner-scoped object cleanup."""
 
-    async def delete(self, organization: UUID, solutions: Sequence[UUID], compute: object) -> None:
+    async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Accept organization storage deletion."""
 
     async def usage(self, bucket: str) -> int:

@@ -26,7 +26,7 @@
     <Stack gap="8">
         <Stack direction="horizontal" gap="3" align="center">
             <Avatar
-                kind="organization"
+                shape="rounded"
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />

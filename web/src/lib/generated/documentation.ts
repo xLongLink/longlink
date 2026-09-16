@@ -103,8 +103,8 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "alt"
             },
             {
-                "description": "Avatar kind. Use organization for a squircle organization image; user is circular.",
-                "name": "kind"
+                "description": "Avatar shape. Use rounded for organization images; circle and square follow the Astryx avatar shapes.",
+                "name": "shape"
             },
             {
                 "description": "Conditional rendering expression.",

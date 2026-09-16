@@ -46,8 +46,8 @@ async def reconcile(organization_id: UUID) -> None:
             compute.kubeconfig,
         )
         async with cluster:
-            storage = Storage()
-            await storage.apply(organization.id, compute)
+            storage = Storage(compute)
+            await storage.apply(organization.id)
             await kubernetes_organizations.apply(cluster, organization.id)
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
@@ -104,8 +104,8 @@ async def delete(organization_id: UUID) -> str | None:
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
-            storage = Storage()
-            await storage.delete(organization.id, solution_ids, compute)
+            storage = Storage(compute)
+            await storage.delete(organization.id, solution_ids)
 
         # Purge the tombstone only after all external resources are absent.
         logger.info("Purging Organization %s", organization.id)

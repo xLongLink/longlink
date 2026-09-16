@@ -19,7 +19,7 @@
             <TableColumn field="name" header="Name">
                 <Stack direction="horizontal" gap="3" align="center">
                     <Avatar
-                        kind="organization"
+                        shape="rounded"
                         name="$row.name"
                         src="$row.avatar"
                     />

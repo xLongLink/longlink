@@ -55,8 +55,8 @@ async def deploy(revision_id: UUID) -> None:
             compute.kubeconfig,
         )
         async with cluster:
-            storage = Storage()
-            bucket = storage.bucket(organization.id, compute)
+            storage = Storage(compute)
+            bucket = storage.bucket(organization.id)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
@@ -179,8 +179,8 @@ async def delete(solution_id: UUID) -> None:
             await db.delete_solution_schema(organization.id, solution.id)
 
             # Revoke the service account before owner credentials remove its private objects.
-            storage = Storage()
-            bucket = storage.bucket(organization.id, compute)
+            storage = Storage(compute)
+            bucket = storage.bucket(organization.id)
             await bucket.admin.revoke(solution.id)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 

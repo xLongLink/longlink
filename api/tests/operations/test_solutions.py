@@ -192,11 +192,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     class Storage(StorageKubernetes):
         """Observe bucket resolution and authorization around persisted credentials."""
 
-        def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+        def bucket(self, organization: UUID) -> SimpleNamespace:
             """Record the owner connection resolution."""
 
             calls.append("bucket")
-            return super().bucket(organization, compute)
+            return super().bucket(organization)
 
         async def service_account(self, bucket: str, solution: UUID) -> Credentials:
             """Record credential creation after quota admission."""

@@ -30,8 +30,8 @@ async def validate(compute_id: UUID) -> str | None:
         logger.info("Validating shared controllers for Compute %s", registry.id)
         await gateway.verify(cluster, registry.gateway_url, registry.gateway_certificate)
         logger.info("Validating RustFS object storage for Compute %s", registry.id)
-        storage = Storage()
-        await storage.verify(registry)
+        storage = Storage(registry)
+        await storage.verify()
 
     # Preserve operator connection input and avoid overwriting a concurrent lifecycle change.
     async with session_scope() as session:

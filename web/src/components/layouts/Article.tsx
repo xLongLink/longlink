@@ -1,4 +1,3 @@
-import { Seo } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -12,6 +11,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { Seo, documentationRouteLabels } from '@/components/Seo';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
@@ -21,13 +21,6 @@ type ArticlePage = {
     toc?: Array<{ id: string; label: string; level: number }>;
     editUrl?: string;
     title: string;
-};
-
-const documentationRouteLabels: Record<string, string> = {
-    docs: 'Documentation',
-    api: 'Platform',
-    sdk: 'Solutions',
-    views: 'Views',
 };
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
