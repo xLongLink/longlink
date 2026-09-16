@@ -189,7 +189,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 
-class FakeKubernetes:
+class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
 
     async def api(self) -> Api:

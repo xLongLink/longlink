@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from conftest import AsyncKubernetes, DatabaseKubernetes
-from factories import claim_operation, create_solution, complete_operation, create_organization
+from factories import claim_operation, create_solution, drain_operations, complete_operation, create_organization
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
 from src.environments import env
@@ -98,9 +98,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current.desired_revision.failed
             await operations.schedule_reconciliation(session)
             await session.commit()
-        while (scheduled := await claim_operation()) is not None:
-            assert scheduled.kind != OperationKind.solution_deploy
-            await complete_operation(scheduled.id)
+        drained = await drain_operations()
+        assert all(scheduled.kind != OperationKind.solution_deploy for scheduled in drained)
         return
     assert result.failed is None
     good_id = initial.target_id
@@ -195,9 +194,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     async with session_scope() as session:
         await operations.schedule_reconciliation(session)
         await session.commit()
-    while (scheduled := await claim_operation()) is not None:
-        assert not (scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id)
-        await complete_operation(scheduled.id)
+    drained = await drain_operations()
+    assert not any(scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id for scheduled in drained)
 
 
 async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:

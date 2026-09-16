@@ -49,12 +49,10 @@ class OperationKubernetes(AsyncKubernetes):
         self.databases = DatabaseKubernetes()
 
     async def portforward(self, name: str, namespace: str, port: int) -> int:
-        """Provide the database tunnel used for provider schema operations."""
+        """Provide the database tunnel owned by the shared fake database client."""
 
-        assert name == "database-rw"
-        assert namespace.startswith("longlink-database-")
-        assert port == 5432
-        return 15432
+        # Reuse the single provider-tunnel contract instead of restating it.
+        return await self.databases.portforward(name, namespace, port)
 
 
 async def test_solution_delete_failure_stops_before_provider_credential_cleanup(

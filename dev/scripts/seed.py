@@ -118,8 +118,8 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     if organization is not None:
         return organization
 
-    # Let the API select the sole validated local Compute.
-    response = await client.post("/api/v1/organizations", json={"name": "Development"})
+    # Disable database hibernation for local development; zero keeps it awake.
+    response = await client.post("/api/v1/organizations", json={"name": "Development", "database_idle_seconds": 0})
     if response.status_code != 409:
         response.raise_for_status()
         return Resource.model_validate(response.json())
@@ -147,6 +147,8 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 "name": "Sample",
                 "image": "localhost:15000/sample:dev",
                 "envs": settings.SAMPLE_ENVS,
+                "min_scale": 1,
+                "idle_seconds": 0,
                 "description": "A sample solution for local development.",
             },
         )
@@ -156,10 +158,10 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         return
 
     if solution.status == "failed":
-        # Retry failed sample provisioning through a fresh revision of its persisted source.
+        # Retry failed sample provisioning through a fresh warm revision of its persisted source.
         response = await client.post(
             f"/api/v1/solutions/{solution.id}/update",
-            json={"envs": settings.SAMPLE_ENVS},
+            json={"envs": settings.SAMPLE_ENVS, "min_scale": 1, "idle_seconds": 0},
         )
         if response.status_code == 404:
             raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")

@@ -60,6 +60,17 @@ async def fetch_operations() -> Sequence[Operation]:
         return result.all()
 
 
+async def drain_operations() -> Sequence[Operation]:
+    """Claim and complete every queued Operation, returning them in claim order."""
+
+    # Keep polling ownership in one helper; each test asserts on the returned work.
+    drained: list[Operation] = []
+    while (scheduled := await claim_operation()) is not None:
+        await complete_operation(scheduled.id)
+        drained.append(scheduled)
+    return drained
+
+
 async def persist_compute(*, ready: bool) -> ComputeRegistry:
     """Persist one Compute registry with shared connection fields and its readiness mode."""
 

@@ -3,7 +3,6 @@ import pytest
 import asyncio
 from uuid import uuid4
 from types import SimpleNamespace
-from typing import cast
 from fastapi import Request
 from contextlib import AsyncExitStack, nullcontext, asynccontextmanager
 from src.routes.v1 import proxy
@@ -159,7 +158,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
     """Retain exact signed request construction and defer upstream cleanup until runtime exit."""
 
     # Capture production client settings and use the real HTTP request builder.
-    captured: dict[str, object] = {}
+    captured_request: httpx2.Request | None = None
+    captured_client_kwargs: dict[str, object] = {}
     client_type = httpx2.AsyncClient
 
     class Response:
@@ -175,7 +175,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         def __init__(self, *, verify: proxy.ssl.SSLContext, trust_env: bool, timeout: float, follow_redirects: bool) -> None:
             """Capture the gateway client configuration."""
 
-            captured["client_kwargs"] = {
+            nonlocal captured_client_kwargs
+            captured_client_kwargs = {
                 "verify": verify,
                 "trust_env": trust_env,
                 "timeout": timeout,
@@ -191,7 +192,8 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
         async def send(self, request: httpx2.Request, stream: bool) -> Response:
             """Capture the actual outbound request without closing its response."""
 
-            captured["request"] = request
+            nonlocal captured_request
+            captured_request = request
             assert stream is True
             return Response()
 
@@ -216,10 +218,11 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
     # Assert exact raw URL, routing authority, signed identity, and safe header forwarding.
     async with AsyncExitStack() as runtime:
         await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
-        request = cast(httpx2.Request, captured["request"])
+        assert captured_request is not None
+        request = captured_request
         identity_token = request.headers["x-longlink-identity"]
         assert proxy.identity.identity_token_user(identity_token, "identity-secret-012345678901234567") == request_scope.user.id
-        assert captured["client_kwargs"] == {"follow_redirects": False, "trust_env": False, "timeout": 300.0, "verify": tls}
+        assert captured_client_kwargs == {"follow_redirects": False, "trust_env": False, "timeout": 300.0, "verify": tls}
         assert request.method == "POST"
         assert request.url == "https://gateway.example/health%2Fstatus?verbose=true&raw=%2F+%25"
         assert request.url.raw_path == b"/health%2Fstatus?verbose=true&raw=%2F+%25"
