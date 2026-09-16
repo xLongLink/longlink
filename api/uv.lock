@@ -1263,7 +1263,7 @@ requires-dist = [
     { name = "sqlmodel", specifier = ">=0.0.39" },
     { name = "testcontainers", marker = "extra == 'dev'", specifier = ">=4.15.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.69" },
-    { name = "types-aiobotocore-s3", marker = "extra == 'dev'", specifier = "==3.9.0" },
+    { name = "types-aiobotocore-s3", marker = "extra == 'dev'", specifier = "==3.9.1" },
     { name = "uvicorn", specifier = ">=0.52.1" },
 ]
 provides-extras = ["dev"]
@@ -2425,11 +2425,11 @@ wheels = [
 
 [[package]]
 name = "types-aiobotocore-s3"
-version = "3.9.0"
+version = "3.9.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b1/d8/50676b92e2f470f483df68b4675e12407e8a0403c0596d378a692f249847/types_aiobotocore_s3-3.9.0.tar.gz", hash = "sha256:bf6978aa30cd2ae5b49cfd4e6afc2d8996ec48667df4e03dcb56d7ae6d7b04e8", size = 79454, upload-time = "2026-08-02T03:03:37.391Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/fb/cf224df7177061d8f99d24daf2b891b0cae5527ac986086976a09685a6d8/types_aiobotocore_s3-3.9.1.tar.gz", hash = "sha256:ec7e375953c05fca2f2560b7b8bbcea0cf136e4226f9edf72f0f236ec0b5f20b", size = 79646, upload-time = "2026-09-08T03:39:19.948Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/78/2a60987f59ccd7e6c3fc3b7da0723c12d8523946f712d407a2401a7a6b72/types_aiobotocore_s3-3.9.0-py3-none-any.whl", hash = "sha256:39691b6336bd5b32d683dd236a262ded628f1ddb3d83aa6b30be082eae94d5bd", size = 87373, upload-time = "2026-08-02T03:03:35.529Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/99/431c0c5099d02e80760958dd0784d74f37c46ab935235c5a6a5089922151/types_aiobotocore_s3-3.9.1-py3-none-any.whl", hash = "sha256:f98fb7143ac2fe2b034e76c1ca2eadc15f9ae7bbde29106244d2fa3f6aac2ecb", size = 87490, upload-time = "2026-09-08T03:39:18.625Z" },
 ]
 
 [[package]]
