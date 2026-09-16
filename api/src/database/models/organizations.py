@@ -36,13 +36,12 @@ class Organization(AuditTable, table=True):
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     database_state: DatabaseState = Field(
-        default=DatabaseState.available,
+        default=DatabaseState.needs_sync,
         sa_column=Column(
             Enum(DatabaseState, name="database_state_enum", native_enum=False, create_constraint=True, validate_strings=True),
             nullable=False,
         ),
     )
-    database_sync_pending: bool = Field(default=True)
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
 
     # State

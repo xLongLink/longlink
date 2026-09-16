@@ -29,14 +29,9 @@
         <xsd:documentation>Space between child elements.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="isScrollable" type="xsd:boolean" default="false">
-      <xsd:annotation>
-        <xsd:documentation>Enables scrollable overflow when content exceeds the height.</xsd:documentation>
-      </xsd:annotation>
-    </xsd:attribute>
     <xsd:attribute name="height" type="xsd:string">
       <xsd:annotation>
-        <xsd:documentation>Fixed height of the stack, as pixels or a CSS size. Pair with isScrollable for a scroll region.</xsd:documentation>
+        <xsd:documentation>Fixed height of the stack, as pixels or a CSS size. Content that exceeds the height scrolls.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>

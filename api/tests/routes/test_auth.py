@@ -13,6 +13,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
 from src.database.services import invitations
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -581,7 +582,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
     await register_and_verify(client, captured_mail, email)
@@ -608,7 +609,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     ]
     assert invitation is None
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
     assert client.cookies.get("longlink_auth") is not None
 
 
@@ -624,7 +625,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
         await session.commit()
 
@@ -649,7 +650,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert membership is not None
     assert membership.role == OrganizationRoles.write
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
 
 
 async def test_registration_completion_rejects_duplicate_account(

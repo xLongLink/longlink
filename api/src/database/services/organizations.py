@@ -18,6 +18,7 @@ from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -112,14 +113,11 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.kubeconfig,
-                ComputeRegistry.database_size_gib,
-                ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_access_key,
                 ComputeRegistry.storage_secret_key,
                 ComputeRegistry.storage_certificate,
-                ComputeRegistry.bucket_size_bytes,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -353,7 +351,7 @@ async def update_member_role(
 
     # Persist the role change and request its shared-user projection.
     membership.role = role
-    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:

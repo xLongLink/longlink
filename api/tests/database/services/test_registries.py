@@ -68,7 +68,6 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
             "current-context": "context",
             "users": [{"name": "user", "user": {"token": "secret"}}],
         },
-        bucket_size_bytes=1073741824,
         gateway_url="https://gateway.example",
         database_storage_class="local-path",
         storage_endpoint="https://storage.example",

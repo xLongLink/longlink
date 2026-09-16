@@ -52,7 +52,7 @@ VALID_FRAGMENTS = [
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
-    ("stack-scroll", '<Stack gap="3" isScrollable="true" height="50dvh">Content</Stack>'),
+    ("stack-scroll", '<Stack gap="3" height="50dvh">Content</Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",

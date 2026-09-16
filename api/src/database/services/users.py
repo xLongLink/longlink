@@ -12,6 +12,7 @@ from src.models.users import UserUpdate
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -110,7 +111,7 @@ async def update_profile(session: AsyncSession, user: User, payload: UserUpdate)
 
     # Request shared-user projections in stable Organization order before changing the user.
     for organization_id in sorted(result.all()):
-        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))
 
     # Keep profile changes and projection demand in the caller's transaction.
     if payload.name is not None:

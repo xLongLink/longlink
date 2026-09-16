@@ -17,6 +17,7 @@ class DatabaseState(StrEnum):
     hibernated = "hibernated"
     resuming = "resuming"
     failed = "failed"
+    needs_sync = "needs_sync"
 
 
 class OrganizationCreate(BaseModel):

@@ -2,6 +2,7 @@ import ssl
 import json
 import base64
 import asyncio
+from src import policy
 from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
@@ -44,7 +45,7 @@ class Databases:
 
         self._client = client
 
-    async def apply(self, organization_id: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
+    async def apply(self, organization_id: UUID, password: str, storage_class: str) -> None:
         """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
         database_namespace = namespace.database(organization_id)
@@ -53,11 +54,11 @@ class Databases:
             namespace=database_namespace,
             compute_namespace=namespace.compute(organization_id),
             storage_class=json.dumps(storage_class),
-            size_gib=size_gib,
-            instances=instances,
-            quota_pods=2 * instances + 1,
-            quota_instances=instances + 1,
-            quota_storage_gib=size_gib * (instances + 1),
+            size_gib=policy.DATABASE_SIZE_GIB,
+            instances=policy.DATABASE_INSTANCES,
+            quota_pods=2 * policy.DATABASE_INSTANCES + 1,
+            quota_instances=policy.DATABASE_INSTANCES + 1,
+            quota_storage_gib=policy.DATABASE_SIZE_GIB * (policy.DATABASE_INSTANCES + 1),
         )
         api = await self._client.api()
 

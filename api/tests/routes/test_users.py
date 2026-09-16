@@ -2,6 +2,7 @@ from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
 from src.database.services import organizations as organization_service
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.organizations import Organization
 
@@ -99,8 +100,8 @@ async def test_patch_me_queues_sync_for_every_active_organization_after_profile_
     first_organization = await create_organization(user, name="acme")
     second_organization = await create_organization(user, name="globex")
     async with session_scope() as session:
-        first_organization.database_sync_pending = False
-        second_organization.database_sync_pending = False
+        first_organization.database_state = DatabaseState.available
+        second_organization.database_state = DatabaseState.available
         session.add_all([first_organization, second_organization])
         await session.commit()
 
@@ -116,10 +117,10 @@ async def test_patch_me_queues_sync_for_every_active_organization_after_profile_
         assert persisted_user.name == "Updated User"
         persisted_first_organization = await session.get(Organization, first_organization.id)
         assert persisted_first_organization is not None
-        assert persisted_first_organization.database_sync_pending is True
+        assert persisted_first_organization.database_state == DatabaseState.needs_sync
         persisted_second_organization = await session.get(Organization, second_organization.id)
         assert persisted_second_organization is not None
-        assert persisted_second_organization.database_sync_pending is True
+        assert persisted_second_organization.database_state == DatabaseState.needs_sync
 
 
 async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchanged(
@@ -133,8 +134,8 @@ async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchang
     first_organization = await create_organization(user, name="acme")
     second_organization = await create_organization(user, name="globex")
     async with session_scope() as session:
-        first_organization.database_sync_pending = False
-        second_organization.database_sync_pending = False
+        first_organization.database_state = DatabaseState.available
+        second_organization.database_state = DatabaseState.available
         session.add_all([first_organization, second_organization])
         await session.commit()
 
@@ -150,7 +151,7 @@ async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchang
         assert persisted_user.name == "Platform Administrator"
         persisted_first_organization = await session.get(Organization, first_organization.id)
         assert persisted_first_organization is not None
-        assert persisted_first_organization.database_sync_pending is False
+        assert persisted_first_organization.database_state == DatabaseState.available
         persisted_second_organization = await session.get(Organization, second_organization.id)
         assert persisted_second_organization is not None
-        assert persisted_second_organization.database_sync_pending is False
+        assert persisted_second_organization.database_state == DatabaseState.available

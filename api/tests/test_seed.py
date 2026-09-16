@@ -127,7 +127,6 @@ async def test_local_seed_creates_example_through_api(
                     "storage_endpoint": "https://storage.example",
                     "storage_access_key": "controller",
                     "storage_secret_key": "controller-secret",
-                    "bucket_size_bytes": 134217728,
                 },
             )
             assert compute_response.status_code == 202

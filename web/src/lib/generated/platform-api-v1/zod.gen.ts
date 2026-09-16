@@ -28,12 +28,9 @@ export const zComputeRegistryCreate = z.object({
     storage_certificate: z.string().max(65536).nullish(),
     name: z.string().min(1).max(128),
     kubeconfig: z.record(z.string(), z.unknown()),
-    database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
-    database_instances: z.int().gte(1).lte(3).optional().default(1),
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
     storage_access_key: z.string().min(1).max(128),
-    storage_secret_key: z.string().min(8).max(1024),
-    bucket_size_bytes: z.int().gte(1024).lte(70368744177664)
+    storage_secret_key: z.string().min(8).max(1024)
 });
 
 /**
@@ -318,12 +315,10 @@ export const zStatus = z.enum([
 export const zComputeRegistryResponse = z.object({
     id: z.uuid(),
     name: z.string(),
+    live_version: z.string().nullish(),
     gateway_url: z.string(),
-    database_size_gib: z.int(),
-    database_instances: z.int(),
     database_storage_class: z.string(),
     storage_endpoint: z.string(),
-    bucket_size_bytes: z.int(),
     status: zStatus
 });
 

@@ -437,7 +437,6 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
         assert persisted is not None
         persisted.status = Status.running
         persisted.database_state = database_state
-        persisted.database_sync_pending = False
         persisted.database_usage_bytes = usage
         await session.commit()
 
@@ -569,7 +568,7 @@ async def test_organization_resource_endpoints_allow_members(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.status = Status.running
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         persisted.database_usage_bytes = 0
         await session.commit()
     client = clients[1]
@@ -949,7 +948,7 @@ async def test_update_organization_member_changes_role(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -973,7 +972,7 @@ async def test_update_organization_member_changes_role(
         updated_members = await organizations.members(session, organization.id)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is True
+        assert persisted.database_state == DatabaseState.needs_sync
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
 
@@ -990,7 +989,7 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -1015,7 +1014,7 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
         unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is False
+        assert persisted.database_state == DatabaseState.available
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
 
@@ -1107,7 +1106,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -1145,7 +1144,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
         assert unchanged.updated_at == original_updated_at
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is False
+        assert persisted.database_state == DatabaseState.available
 
 
 @pytest.mark.parametrize(

@@ -825,11 +825,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
-                "description": "Enables scrollable overflow when content exceeds the height.",
-                "name": "isScrollable"
-            },
-            {
-                "description": "Fixed height of the stack, as pixels or a CSS size. Pair with isScrollable for a scroll region.",
+                "description": "Fixed height of the stack, as pixels or a CSS size. Content that exceeds the height scrolls.",
                 "name": "height"
             },
             {

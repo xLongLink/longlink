@@ -96,7 +96,6 @@ async def test_compute_registry_creation_queues_validation_operation(
     # Arrange
     payload = {
         "name": "Queued Compute",
-        "bucket_size_bytes": 1073741824,
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",

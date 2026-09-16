@@ -8,6 +8,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -117,4 +118,4 @@ async def accept(session: AsyncSession, user: User) -> None:
 
     # Durably request projection only for changed memberships, in a stable lock order.
     for organization_id in sorted(changed_organization_ids):
-        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))

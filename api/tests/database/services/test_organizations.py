@@ -14,6 +14,7 @@ from src.models.solutions import SolutionCreate
 from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -33,7 +34,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Assert
     assert organization.compute_id == compute.id
-    assert organization.database_sync_pending is True
+    assert organization.database_state == DatabaseState.needs_sync
     assert organization.status == Status.creating
 
     async with session_scope() as session:

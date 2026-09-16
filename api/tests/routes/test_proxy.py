@@ -11,6 +11,7 @@ from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -88,7 +89,7 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
         persisted_organization = await session.get(Organization, organization.id)
         assert persisted_organization is not None
         persisted_organization.status = Status.running
-        persisted_organization.database_sync_pending = False
+        persisted_organization.database_state = DatabaseState.available
         persisted_solution = await session.get(Solution, solution.id)
         assert persisted_solution is not None
         persisted_solution.secrets = {

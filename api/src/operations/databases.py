@@ -182,14 +182,16 @@ async def activity(organization_id: UUID, *, mode: Literal["demand", "recover"] 
         if mode == "demand":
             admit = True
         else:
-            # Recovery admits only interrupted transitions or pending synchronization, not runtime demand.
+            # Recovery admits only interrupted transitions or unsynchronized state, not runtime demand.
             admit = (
                 organization.status == Status.running
                 and (transition is None or transition.expires_at <= utcnow())
-                and (
-                    organization.database_state in (DatabaseState.failed, DatabaseState.resuming, DatabaseState.hibernating)
-                    or organization.database_state == DatabaseState.available
-                    and organization.database_sync_pending
+                and organization.database_state
+                in (
+                    DatabaseState.failed,
+                    DatabaseState.resuming,
+                    DatabaseState.hibernating,
+                    DatabaseState.needs_sync,
                 )
             )
 
@@ -245,10 +247,8 @@ async def ready(organization_id: UUID) -> None:
             if organization is None or organization.deleted_at is not None:
                 raise RuntimeError("Organization is unavailable")
             transition = await session.get(OrganizationActivity, organization_id)
-            if (
-                organization.database_state == DatabaseState.available
-                and not organization.database_sync_pending
-                and (transition is None or transition.expires_at <= utcnow())
+            if organization.database_state == DatabaseState.available and (
+                transition is None or transition.expires_at <= utcnow()
             ):
                 return
             lease = await _claim(session, organization_id, transition=True)
@@ -274,8 +274,6 @@ async def ready(organization_id: UUID) -> None:
                             organization_id,
                             organization.database_password,
                             compute.database_storage_class,
-                            compute.database_size_gib,
-                            compute.database_instances,
                         )
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.
@@ -286,12 +284,11 @@ async def ready(organization_id: UUID) -> None:
                         await database.prepare_organization_database(organization_id)
 
                     while True:
-                        # Clear before taking the snapshot; concurrent mutations set it again.
+                        # Verify ownership before taking the snapshot; the publish gate rechecks shared state.
                         async with session_scope() as session:
                             organization = await lock(session, organization_id)
                             if organization is None or organization.deleted_at is not None or not await lease.owned(session):
                                 raise RuntimeError("Organization transition lease was lost")
-                            organization.database_sync_pending = False
                             await session.commit()
                         await lease.check()
                         async with session_scope() as session:
@@ -301,23 +298,22 @@ async def ready(organization_id: UUID) -> None:
                         async with asyncio.timeout(10), database._connection(organization_id.hex) as sql:
                             await sql.execute(text("SELECT 1"))
 
-                        # Publish only if no mutation committed after the consumed dirty marker.
+                        # Publish only if no mutation requested another synchronization after the snapshot.
                         async with session_scope() as session:
                             organization = await lock(session, organization_id)
                             if organization is None or organization.deleted_at is not None or not await lease.owned(session):
                                 raise RuntimeError("Organization transition lease was lost")
-                            if not organization.database_sync_pending:
+                            if organization.database_state == DatabaseState.resuming:
                                 organization.database_state = DatabaseState.available
                                 await session.commit()
                                 return
                             await session.commit()
             except BaseException:
-                # An interrupted snapshot is retried even when its dirty marker was already cleared.
+                # An interrupted snapshot is retried through the failed state.
                 async with session_scope() as session:
                     organization = await lock(session, organization_id)
                     if organization is not None and await lease.owned(session):
                         organization.database_state = DatabaseState.failed
-                        organization.database_sync_pending = True
                     await session.commit()
                 raise
 
@@ -384,7 +380,9 @@ async def hibernate(organization_id: UUID) -> bool:
                             active is not None
                             or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
                         ):
-                            organization.database_state = DatabaseState.available
+                            # Preserve synchronization demand that arrived while hibernation was evaluated.
+                            if organization.database_state == DatabaseState.hibernating:
+                                organization.database_state = DatabaseState.available
                             await session.commit()
                             return False
                         await session.commit()
@@ -428,7 +426,9 @@ async def hibernate(organization_id: UUID) -> bool:
                 async with session_scope() as session:
                     organization = await lock(session, organization_id)
                     if organization is not None and await lease.owned(session):
-                        organization.database_state = state
+                        # Preserve synchronization demand that arrived during hibernation.
+                        if organization.database_state == DatabaseState.hibernating:
+                            organization.database_state = state
                     await session.commit()
                 return state == DatabaseState.hibernated
         except BaseException:

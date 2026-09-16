@@ -3,7 +3,7 @@ import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Stack', () => {
     it('renders scroll region content', () => {
-        const output = renderXmlToMarkup(parseFragment('<Stack gap="3" isScrollable="true" height="50dvh">Content</Stack>'));
+        const output = renderXmlToMarkup(parseFragment('<Stack gap="3" height="50dvh">Content</Stack>'));
 
         expect(output).toContain('Content');
     });

@@ -91,14 +91,11 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": "https://127.0.0.1:8443",
             "gateway_certificate": gateway_certificate,
-            "database_size_gib": 10,
-            "database_instances": 1,
             "database_storage_class": "local-path",
             "storage_endpoint": "https://storage.localhost:9443",
             "storage_access_key": "rustfsadmin",
             "storage_secret_key": "rustfsadmin",
             "storage_certificate": storage_certificate,
-            "bucket_size_bytes": 134217728,
         },
     )
     if response.status_code != 409:

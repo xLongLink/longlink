@@ -139,16 +139,11 @@ class ComputeRegistryCreate(ComputeRegistryEndpoints):
     kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
 
     # Database
-    database_size_gib: int = Field(default=10, ge=1, le=65536, strict=True)
-    database_instances: int = Field(default=1, ge=1, le=3, strict=True)
     database_storage_class: StorageClassName
 
     # Object storage controller
     storage_access_key: str = Field(min_length=1, max_length=128)
     storage_secret_key: str = Field(min_length=8, max_length=1024)
-
-    # Storage policy
-    bucket_size_bytes: int = Field(ge=1024, le=70368744177664, multiple_of=1024, strict=True)
 
     @field_validator("database_storage_class")
     @classmethod
@@ -185,15 +180,10 @@ class ComputeRegistryResponse(BaseModel):
     gateway_url: str
 
     # Database
-    database_size_gib: int
-    database_instances: int
     database_storage_class: str
 
     # Object storage
     storage_endpoint: str
-
-    # Storage policy
-    bucket_size_bytes: int
 
     # State
     status: Status

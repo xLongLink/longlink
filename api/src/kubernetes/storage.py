@@ -1,3 +1,4 @@
+from src import policy
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
@@ -52,7 +53,7 @@ class Storage:
                     "RestrictPublicBuckets": True,
                 },
             )
-        await bucket.admin.quota(bucket.name, self._compute.bucket_size_bytes)
+        await bucket.admin.quota(bucket.name, policy.BUCKET_SIZE_BYTES)
 
     def bucket(self, organization: UUID) -> Bucket:
         """Resolve an Organization bucket connection without provisioning it."""

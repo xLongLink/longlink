@@ -11,16 +11,17 @@ const stackPropsSchema = z.object({
     direction: z.enum(ORIENTATIONS).optional(),
     gap: xmlSpacingSchema.default(0),
     height: z.union([z.number(), z.string().refine((value) => value.trim().length > 0, 'must not be blank')]).optional(),
-    isScrollable: z.boolean().optional(),
     justify: z.enum(STACK_JUSTIFICATIONS).optional(),
     wrap: z.enum(STACK_WRAPS).optional(),
 });
 
 export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { align, direction, gap, height, isScrollable, justify, wrap } = resolveXmlProps(props, ctx, stackPropsSchema);
+    const { align, direction, gap, height, justify, wrap } = resolveXmlProps(props, ctx, stackPropsSchema);
 
-    // Gap only separates items, so a scroll region would otherwise end flush against its last child.
+    // Height bounds the stack into a scroll region, so the gap keeps the last child clear of the scroll edge.
+    const isScrollable = height !== undefined;
+
     return (
         <UiStack
             align={align}

@@ -2711,20 +2711,6 @@
             "type": "object",
             "title": "Kubeconfig"
           },
-          "database_size_gib": {
-            "type": "integer",
-            "maximum": 65536.0,
-            "minimum": 1.0,
-            "title": "Database Size Gib",
-            "default": 10
-          },
-          "database_instances": {
-            "type": "integer",
-            "maximum": 3.0,
-            "minimum": 1.0,
-            "title": "Database Instances",
-            "default": 1
-          },
           "database_storage_class": {
             "type": "string",
             "maxLength": 253,
@@ -2743,13 +2729,6 @@
             "maxLength": 1024,
             "minLength": 8,
             "title": "Storage Secret Key"
-          },
-          "bucket_size_bytes": {
-            "type": "integer",
-            "multipleOf": 1024.0,
-            "maximum": 70368744177664.0,
-            "minimum": 1024.0,
-            "title": "Bucket Size Bytes"
           }
         },
         "type": "object",
@@ -2760,8 +2739,7 @@
           "kubeconfig",
           "database_storage_class",
           "storage_access_key",
-          "storage_secret_key",
-          "bucket_size_bytes"
+          "storage_secret_key"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
@@ -2844,14 +2822,6 @@
             "type": "string",
             "title": "Gateway Url"
           },
-          "database_size_gib": {
-            "type": "integer",
-            "title": "Database Size Gib"
-          },
-          "database_instances": {
-            "type": "integer",
-            "title": "Database Instances"
-          },
           "database_storage_class": {
             "type": "string",
             "title": "Database Storage Class"
@@ -2859,10 +2829,6 @@
           "storage_endpoint": {
             "type": "string",
             "title": "Storage Endpoint"
-          },
-          "bucket_size_bytes": {
-            "type": "integer",
-            "title": "Bucket Size Bytes"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -2873,11 +2839,8 @@
           "id",
           "name",
           "gateway_url",
-          "database_size_gib",
-          "database_instances",
           "database_storage_class",
           "storage_endpoint",
-          "bucket_size_bytes",
           "status"
         ],
         "title": "ComputeRegistryResponse",

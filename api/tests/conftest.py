@@ -117,7 +117,7 @@ class DatabaseKubernetes(AsyncKubernetes):
         self.databases = self
         self.storage = StorageKubernetes()
 
-    async def apply(self, organization: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
+    async def apply(self, organization: UUID, password: str, storage_class: str) -> None:
         """Accept Organization cluster provisioning."""
 
     async def resume(self, organization: UUID) -> None:
