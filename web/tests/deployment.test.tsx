@@ -23,6 +23,7 @@ const candidate = {
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     revision_id: revisionId,
     min_scale: 1,
+    idle_seconds: 60,
     configured_envs: ['KEEP', 'DROP', 'UNDECLARED'],
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
