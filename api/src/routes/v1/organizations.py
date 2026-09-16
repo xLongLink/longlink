@@ -1,5 +1,4 @@
 import asyncio
-from src import policy
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
@@ -21,10 +20,12 @@ from src.models.organizations import (
     OrganizationUpdate,
     OrganizationDetails,
     OrganizationMemberUpdate,
+    OrganizationQuotasResponse,
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 STORAGE_USAGE_TIMEOUT_SECONDS = 15
@@ -109,6 +110,21 @@ async def update_organization(
     return organization
 
 
+@router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
+async def get_organization_quotas(
+    organization_id: UUID,
+    _user: User = Depends(authadmin),
+    session: AsyncSession = Depends(get_session),
+):
+    """Return stored Organization quotas for administrator views."""
+
+    # Read stored quotas without touching provider boundaries.
+    organization = await session.get(Organization, organization_id)
+    if organization is None or organization.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return organization
+
+
 @router.get(
     "/organizations/{organization_id}/database",
     response_model=DatabaseUsage,
@@ -118,11 +134,11 @@ async def get_organization_database_usage(
 ):
     """Return cached database usage without waking the Organization for telemetry."""
 
-    # Allocation is Platform policy, so even sleeping databases need no Kubernetes or SQL request.
+    # Allocation is stored per Organization, so even sleeping databases need no Kubernetes or SQL request.
     organization = membership.organization
     return {
         "size_bytes": organization.database_usage_bytes,
-        "allocated_bytes": policy.DATABASE_SIZE_GIB * 1024**3,
+        "allocated_bytes": organization.database_size_mib * 1024**2,
     }
 
 
@@ -159,7 +175,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage, "quota_bytes": policy.BUCKET_SIZE_BYTES}
+    return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)

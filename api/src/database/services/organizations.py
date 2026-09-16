@@ -351,7 +351,9 @@ async def update_member_role(
 
     # Persist the role change and request its shared-user projection.
     membership.role = role
-    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))
+    await session.execute(
+        sql_update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync)
+    )
 
 
 async def create_default(session: AsyncSession, name: str, user: User) -> Organization:

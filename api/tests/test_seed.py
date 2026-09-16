@@ -71,7 +71,7 @@ async def test_local_seed_creates_example_through_api(
     async def verify_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
         """Accept the configured gateway connection."""
 
-    async def apply_organization(_cluster: object, _organization_id: UUID) -> None:
+    async def apply_organization(_cluster: object, _organization_id: UUID, **_kwargs: object) -> None:
         """Accept the requested Organization boundary."""
 
     class Solutions:

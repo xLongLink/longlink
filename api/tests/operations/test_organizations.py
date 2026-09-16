@@ -39,7 +39,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             return super().bucket(organization)
 
-    async def apply_namespace(_cluster: object, organization_id: UUID) -> None:
+    async def apply_namespace(_cluster: object, organization_id: UUID, **_kwargs: object) -> None:
         """Record namespace reconciliation."""
 
         assert organization_id == organization.id

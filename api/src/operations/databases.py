@@ -247,9 +247,7 @@ async def ready(organization_id: UUID) -> None:
             if organization is None or organization.deleted_at is not None:
                 raise RuntimeError("Organization is unavailable")
             transition = await session.get(OrganizationActivity, organization_id)
-            if organization.database_state == DatabaseState.available and (
-                transition is None or transition.expires_at <= utcnow()
-            ):
+            if organization.database_state == DatabaseState.available and (transition is None or transition.expires_at <= utcnow()):
                 return
             lease = await _claim(session, organization_id, transition=True)
             if lease is not None:
@@ -274,6 +272,8 @@ async def ready(organization_id: UUID) -> None:
                             organization_id,
                             organization.database_password,
                             compute.database_storage_class,
+                            size_mib=organization.database_size_mib,
+                            instances=organization.database_instances,
                         )
                     else:
                         # Reassert the desired annotation even after an expired worker's interrupted sleep.

@@ -78,7 +78,7 @@ class StorageKubernetes:
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID) -> None:
+    async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
         """Accept provisioning."""
 
         self.bucket(organization)
@@ -117,7 +117,7 @@ class DatabaseKubernetes(AsyncKubernetes):
         self.databases = self
         self.storage = StorageKubernetes()
 
-    async def apply(self, organization: UUID, password: str, storage_class: str) -> None:
+    async def apply(self, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1) -> None:
         """Accept Organization cluster provisioning."""
 
     async def resume(self, organization: UUID) -> None:

@@ -21,36 +21,53 @@
     @media (forced-colors: none) {
         * {
             scrollbar-width: thin;
-            scrollbar-color: var(--color-border) transparent;
+            scrollbar-color: var(--color-border-emphasized) transparent;
         }
-        *::-webkit-scrollbar:vertical {
-            width: var(--spacing-5);
+        *::-webkit-scrollbar {
+            width: var(--spacing-6);
+            height: var(--spacing-6);
         }
-        *::-webkit-scrollbar:horizontal {
-            height: var(--spacing-5);
+        *::-webkit-scrollbar-button,
+        *::-webkit-scrollbar-button:single-button,
+        *::-webkit-scrollbar-button:double-button,
+        *::-webkit-scrollbar-button:horizontal,
+        *::-webkit-scrollbar-button:vertical,
+        *::-webkit-scrollbar-button:start,
+        *::-webkit-scrollbar-button:end,
+        *::-webkit-scrollbar-button:decrement,
+        *::-webkit-scrollbar-button:increment {
+            display: none;
+            width: 0;
+            height: 0;
+            border: 0;
+            background-color: transparent;
         }
         *::-webkit-scrollbar-track {
             background-color: transparent;
         }
+        *::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
         *::-webkit-scrollbar-thumb:vertical {
-            background-color: var(--color-border);
+            background-color: var(--color-border-emphasized);
             background-clip: padding-box;
             border-top: var(--spacing-0-5) solid transparent;
             border-right: var(--spacing-0-5) solid transparent;
             border-bottom: var(--spacing-0-5) solid transparent;
-            border-left: var(--spacing-1-5) solid transparent;
+            border-left: var(--spacing-2) solid transparent;
             border-radius: var(--radius-full);
         }
         *::-webkit-scrollbar-thumb:horizontal {
-            background-color: var(--color-border);
+            background-color: var(--color-border-emphasized);
             background-clip: padding-box;
-            border-top: var(--spacing-1-5) solid transparent;
+            border-top: var(--spacing-2) solid transparent;
             border-right: var(--spacing-0-5) solid transparent;
             border-bottom: var(--spacing-0-5) solid transparent;
+            border-left: var(--spacing-0-5) solid transparent;
             border-radius: var(--radius-full);
         }
         *:hover::-webkit-scrollbar-thumb {
-            background-color: var(--color-border-emphasized);
+            background-color: var(--color-text-secondary);
         }
     }
     .article-content :is(h2, h3, h4, h5, h6) {

@@ -11,7 +11,6 @@ from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
-from src import policy
 
 
 class Organization(AuditTable, table=True):
@@ -36,8 +35,8 @@ class Organization(AuditTable, table=True):
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
-    database_size_gib: int = Field(default=policy.DATABASE_SIZE_GIB, ge=policy.DATABASE_SIZE_GIB)
-    database_instances: int = Field(default=policy.DATABASE_INSTANCES, ge=policy.DATABASE_INSTANCES)
+    database_size_mib: int = Field(default=100, ge=100)
+    database_instances: int = Field(default=1, ge=1)
     database_state: DatabaseState = Field(
         default=DatabaseState.needs_sync,
         sa_column=Column(
@@ -46,6 +45,15 @@ class Organization(AuditTable, table=True):
         ),
     )
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
+
+    # Storage
+    storage_quota_bytes: int = Field(default=1073741824, ge=1073741824, sa_type=BigInteger)
+
+    # Compute
+    compute_cpu_limit: int = Field(default=4, ge=4)
+    compute_memory_limit_gib: int = Field(default=3, ge=3)
+    compute_ephemeral_limit_gib: int = Field(default=4, ge=4)
+    compute_pods: int = Field(default=8, ge=8)
 
     # State
     status: Status = Field(

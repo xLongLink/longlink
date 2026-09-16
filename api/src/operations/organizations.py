@@ -47,8 +47,15 @@ async def reconcile(organization_id: UUID) -> None:
         )
         async with cluster:
             storage = Storage(compute)
-            await storage.apply(organization.id)
-            await kubernetes_organizations.apply(cluster, organization.id)
+            await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
+            await kubernetes_organizations.apply(
+                cluster,
+                organization.id,
+                cpu_limit=organization.compute_cpu_limit,
+                memory_limit_gib=organization.compute_memory_limit_gib,
+                ephemeral_limit_gib=organization.compute_ephemeral_limit_gib,
+                pods=organization.compute_pods,
+            )
 
         # Publish the Organization after its provider and Kubernetes boundaries are ready.
         logger.info("Publishing Organization %s", organization.id)

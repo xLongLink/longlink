@@ -16,10 +16,10 @@ metadata:
 spec:
     hard:
         # Budget for old/new revisions, queue proxies, and one migration during rollout.
-        limits.cpu: '4'
-        limits.ephemeral-storage: 4Gi
-        limits.memory: 3Gi
-        pods: '8'
+        limits.cpu: '$cpu_limit'
+        limits.ephemeral-storage: '${ephemeral_limit_gib}Gi'
+        limits.memory: '${memory_limit_gib}Gi'
+        pods: '$pods'
         requests.cpu: '1'
         requests.ephemeral-storage: 3Gi
         requests.memory: 2Gi

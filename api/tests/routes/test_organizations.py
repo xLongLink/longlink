@@ -454,7 +454,7 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
     assert response.status_code == 200
     assert response.json() == {
         "size_bytes": usage,
-        "allocated_bytes": 10 * 1024**3,
+        "allocated_bytes": 100 * 1024**2,
     }
 
 
@@ -579,7 +579,7 @@ async def test_organization_resource_endpoints_allow_members(
     # Assert
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
-        "database": {"size_bytes": 0, "allocated_bytes": 10 * 1024**3},
+        "database": {"size_bytes": 0, "allocated_bytes": 100 * 1024**2},
         "storage": {"space_used": 0, "quota_bytes": 1073741824},
     }
     assert response.json() == expected_payloads[resource]
