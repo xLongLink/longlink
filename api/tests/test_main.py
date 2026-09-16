@@ -76,7 +76,6 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_scheduler("scheduler"))
-    monkeypatch.setattr(main.jobs, "run_database_scheduler", run_scheduler("database"))
 
     # Act
     async with main.lifespan(main.app):
@@ -88,10 +87,8 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
         "administrator",
         "commit",
         "scheduler start",
-        "database start",
         "serving",
         "scheduler cancel",
-        "database cancel",
     ]
 
 

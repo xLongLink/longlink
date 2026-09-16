@@ -4,7 +4,7 @@ from sqlmodel import col
 from src.utils import names, roles, postgres
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
-from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
@@ -360,8 +360,6 @@ async def create_default(
     session: AsyncSession,
     name: str,
     user: User,
-    *,
-    database_idle_seconds: int | None = None,
 ) -> Organization:
     """Create an Organization on the least-assigned available infrastructure."""
 
@@ -404,7 +402,6 @@ async def create_default(
         name,
         user,
         compute_id=compute_id,
-        database_idle_seconds=database_idle_seconds,
     )
 
 
@@ -414,12 +411,8 @@ async def create(
     user: User,
     *,
     compute_id: UUID,
-    database_idle_seconds: int | None = None,
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
-
-    if database_idle_seconds is not None and database_idle_seconds != 0 and database_idle_seconds < 60:
-        raise InvalidError("database_idle_seconds must be 0 or between 60 and 604800")
 
     # A no-op write serializes admission on every supported backend, including SQLite.
     await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
@@ -433,8 +426,6 @@ async def create(
         slug=names.slugify(name),
         compute_id=compute_id,
     )
-    if database_idle_seconds is not None:
-        organization.database_idle_seconds = database_idle_seconds
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
@@ -464,13 +455,8 @@ async def update(
     organization_id: UUID,
     avatar: str | None,
     user_id: UUID,
-    *,
-    database_idle_seconds: int | None = None,
 ) -> Organization | None:
     """Update mutable Organization metadata."""
-
-    if database_idle_seconds is not None and database_idle_seconds != 0 and database_idle_seconds < 60:
-        raise InvalidError("database_idle_seconds must be 0 or between 60 and 604800")
 
     # Take a portable write lock before refreshing metadata already loaded by authentication.
     await session.execute(
@@ -484,8 +470,6 @@ async def update(
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
-    if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
-        organization.database_idle_seconds = database_idle_seconds
 
     return organization
 

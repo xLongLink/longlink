@@ -668,7 +668,6 @@ async def test_registration_completion_accepts_pending_organization_invitation(
                 "name": "acme",
                 "slug": "acme",
                 "avatar": "",
-                "database_idle_seconds": organization.database_idle_seconds,
                 "status": "creating",
             },
             "role": "write",

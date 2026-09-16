@@ -15,7 +15,7 @@ from src.database.models.organizations import Organization
 
 
 async def reconcile(organization_id: UUID) -> None:
-    """Reconcile the Organization boundary and publish it."""
+    """Provision the Organization database, then reconcile its boundary and publish it."""
 
     # Removed lifecycle targets are already converged and must not acquire runtime demand.
     async with session_scope() as session:
@@ -27,6 +27,8 @@ async def reconcile(organization_id: UUID) -> None:
         )
     if active_organization_id is None:
         return
+    # Provision the database before Solutions receive scoped credentials.
+    await databases.ready(organization_id)
     # Skip removed Organizations.
     async with session_scope() as session:
         target = await organizations.infrastructure(session, organization_id)

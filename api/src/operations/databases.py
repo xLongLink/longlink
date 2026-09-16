@@ -138,8 +138,6 @@ class Lease:
                     organization = await lock(session, self.organization_id)
                     if organization is not None and await self.owned(session):
                         await session.execute(delete(OrganizationActivity).where(col(OrganizationActivity.id) == self.id))
-                        if self.id != self.organization_id:
-                            organization.database_last_active_at = utcnow()
                     await session.commit()
 
 
@@ -194,10 +192,10 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
 
 
 async def ready(organization_id: UUID) -> None:
-    """Coalesce wake and shared projection behind one persisted transition lease."""
+    """Provision the database and shared projection behind one persisted transition lease."""
 
     while True:
-        # Admission and sleep decisions share the same short write transaction.
+        # Provisioning decisions share the same short write transaction.
         async with session_scope() as session:
             organization = await lock(session, organization_id)
             if organization is None or organization.deleted_at is not None:
@@ -206,8 +204,6 @@ async def ready(organization_id: UUID) -> None:
             if organization.database_state == DatabaseState.available and (transition is None or transition.expires_at <= utcnow()):
                 return
             lease = await _claim(session, organization_id, transition=True)
-            if lease is not None:
-                organization.database_state = DatabaseState.resuming
             await session.commit()
         if lease is None:
             await asyncio.sleep(0.5)
@@ -254,16 +250,14 @@ async def ready(organization_id: UUID) -> None:
                         async with asyncio.timeout(10), database._connection(organization_id.hex) as sql:
                             await sql.execute(text("SELECT 1"))
 
-                        # Publish only if no mutation requested another synchronization after the snapshot.
+                        # Publish the provisioned database and its shared projection.
                         async with session_scope() as session:
                             organization = await lock(session, organization_id)
                             if organization is None or organization.deleted_at is not None or not await lease.owned(session):
                                 raise RuntimeError("Organization transition lease was lost")
-                            if organization.database_state == DatabaseState.resuming:
-                                organization.database_state = DatabaseState.available
-                                await session.commit()
-                                return
+                            organization.database_state = DatabaseState.available
                             await session.commit()
+                            return
             except BaseException:
                 # An interrupted snapshot is retried through the failed state.
                 async with session_scope() as session:
@@ -272,137 +266,3 @@ async def ready(organization_id: UUID) -> None:
                         organization.database_state = DatabaseState.failed
                     await session.commit()
                 raise
-
-
-async def hibernate(organization_id: UUID) -> bool:
-    """Hibernate an idle Organization while fencing new runtime admission."""
-
-    # Recheck the per-Organization idle interval and persisted leases under the admission lock.
-    async with session_scope() as session:
-        organization = await lock(session, organization_id)
-        if organization is not None and organization.deleted_at is None and organization.database_state == DatabaseState.hibernated:
-            return True
-        if (
-            organization is None
-            or organization.deleted_at is not None
-            or organization.status != Status.running
-            or organization.database_state != DatabaseState.available
-            or organization.database_idle_seconds == 0
-            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
-        ):
-            return False
-        active = await session.scalar(
-            select(col(OrganizationActivity.id))
-            .where(
-                col(OrganizationActivity.organization_id) == organization_id,
-                col(OrganizationActivity.expires_at) > utcnow(),
-            )
-            .limit(1)
-        )
-        if active is not None:
-            return False
-        lease = await _claim(session, organization_id, transition=True)
-        assert lease is not None
-        organization.database_state = DatabaseState.hibernating
-        await session.commit()
-
-    async with lease.maintain():
-        try:
-            async with session_scope() as session:
-                target = await organizations.infrastructure(session, organization_id)
-            if target is None:
-                return False
-            organization, compute = target
-            cluster = Kubernetes(compute.kubeconfig)
-            async with cluster:
-                state = DatabaseState.available
-                if await cluster.databases.can_hibernate(organization_id):
-                    database = await connection(organization, cluster)
-                    usage = await database.database_usage(organization_id.hex)
-                    async with session_scope() as session:
-                        organization = await lock(session, organization_id)
-                        if organization is None or organization.deleted_at is not None or not await lease.owned(session):
-                            return False
-                        organization.database_usage_bytes = usage
-                        active = await session.scalar(
-                            select(col(OrganizationActivity.id))
-                            .where(
-                                col(OrganizationActivity.organization_id) == organization_id,
-                                col(OrganizationActivity.id) != lease.id,
-                                col(OrganizationActivity.expires_at) > utcnow(),
-                            )
-                            .limit(1)
-                        )
-                        if (
-                            active is not None
-                            or organization.database_idle_seconds == 0
-                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
-                        ):
-                            # Preserve synchronization demand that arrived while hibernation was evaluated.
-                            if organization.database_state == DatabaseState.hibernating:
-                                organization.database_state = DatabaseState.available
-                            await session.commit()
-                            return False
-                        await session.commit()
-                    if await cluster.databases.can_hibernate(organization_id):
-                        # New demand interrupts the wait, but only the next fenced resume may publish availability.
-                        async def sleep() -> None:
-                            """Revalidate the transition inside the task issuing the external mutation."""
-
-                            await lease.check()
-                            await cluster.databases.hibernate(organization_id)
-
-                        sleeping = asyncio.create_task(sleep())
-                        try:
-                            while True:
-                                completed, _ = await asyncio.wait({sleeping}, timeout=1)
-                                if completed:
-                                    await sleeping
-                                    state = DatabaseState.hibernated
-                                    break
-                                async with session_scope() as session:
-                                    organization = await lock(session, organization_id)
-                                    if organization is None or not await lease.owned(session):
-                                        raise RuntimeError("Organization transition lease was lost")
-                                    demand = await session.scalar(
-                                        select(col(OrganizationActivity.id))
-                                        .where(
-                                            col(OrganizationActivity.organization_id) == organization_id,
-                                            col(OrganizationActivity.id) != lease.id,
-                                            col(OrganizationActivity.expires_at) > utcnow(),
-                                        )
-                                        .limit(1)
-                                    )
-                                    interrupted = demand is not None or organization.deleted_at is not None
-                                if interrupted:
-                                    state = DatabaseState.resuming
-                                    break
-                        finally:
-                            sleeping.cancel()
-                            with contextlib.suppress(asyncio.CancelledError):
-                                await sleeping
-                async with session_scope() as session:
-                    organization = await lock(session, organization_id)
-                    if organization is not None and await lease.owned(session):
-                        # Preserve synchronization demand that arrived during hibernation.
-                        if organization.database_state == DatabaseState.hibernating:
-                            organization.database_state = state
-                    await session.commit()
-                return state == DatabaseState.hibernated
-        except BaseException:
-            async with session_scope() as session:
-                organization = await lock(session, organization_id)
-                if organization is not None and await lease.owned(session):
-                    organization.database_state = DatabaseState.failed
-                await session.commit()
-            raise
-
-
-async def reconcile(organization_id: UUID) -> None:
-    """Recover interrupted transitions and synchronize awake Organizations."""
-
-    async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
-    if organization is None or organization.deleted_at is not None or organization.status != Status.running:
-        return
-    await hibernate(organization_id)

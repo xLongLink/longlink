@@ -3,10 +3,9 @@ from typing import ClassVar
 from secrets import token_urlsafe
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Column, Integer, BigInteger
+from sqlalchemy import Enum, Column, BigInteger
 from src.environments import env
 from src.database.types import EncryptedType
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable, PlatformModel
@@ -34,7 +33,6 @@ class Organization(AuditTable, table=True):
 
     # Database
     database_password: str = Field(default_factory=token_urlsafe, sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    database_last_active_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
     database_size_mib: int = Field(default=100, ge=100)
     database_instances: int = Field(default=1, ge=1)
     database_state: DatabaseState = Field(
@@ -45,12 +43,6 @@ class Organization(AuditTable, table=True):
         ),
     )
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
-    database_idle_seconds: int = Field(
-        default=300,
-        ge=0,
-        le=604800,
-        sa_column=Column(Integer, nullable=False, server_default="300"),
-    )
 
     # Storage
     storage_quota_bytes: int = Field(default=1073741824, ge=1073741824, sa_type=BigInteger)

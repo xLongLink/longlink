@@ -134,7 +134,6 @@ async def test_get_organization_by_slug_returns_owner_membership(
             "name": "acme",
             "slug": "acme",
             "avatar": "",
-            "database_idle_seconds": organization.database_idle_seconds,
             "status": "creating",
         },
         "role": "owner",
@@ -310,89 +309,6 @@ async def test_update_organization_rejects_invalid_avatar_without_mutating_metad
     assert unchanged.updated_at == original_updated_at
 
 
-@pytest.mark.parametrize("database_idle_seconds", [pytest.param(1, id="one"), pytest.param(59, id="below-minimum"), pytest.param(604801, id="above-maximum"), pytest.param(-1, id="negative")])
-async def test_create_organization_rejects_invalid_database_idle_seconds_without_persisting_state(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    database_idle_seconds: int,
-) -> None:
-    """Reject database idle timeouts outside the never-sleep zero or 60-604800 contract."""
-
-    # Act
-    response = await clients[0].post("/api/v1/organizations", json={"name": "acme", "database_idle_seconds": database_idle_seconds})
-
-    # Assert
-    assert response.status_code == 422
-    async with session_scope() as session:
-        assert await session.scalar(select(Organization)) is None
-    assert await fetch_operations() == []
-
-
-@pytest.mark.parametrize("database_idle_seconds", [pytest.param(0, id="never-sleep"), pytest.param(60, id="minimum"), pytest.param(604800, id="maximum")])
-async def test_create_organization_accepts_database_idle_seconds_boundaries(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    database_idle_seconds: int,
-) -> None:
-    """Persist never-sleep zero and the bounded database idle timeout edges."""
-
-    # Arrange
-    await create_ready_compute()
-
-    # Act
-    response = await clients[0].post("/api/v1/organizations", json={"name": "acme", "database_idle_seconds": database_idle_seconds})
-
-    # Assert
-    assert response.status_code == 202
-    assert response.json()["database_idle_seconds"] == database_idle_seconds
-    async with session_scope() as session:
-        persisted = await session.scalar(select(Organization))
-    assert persisted is not None
-    assert persisted.database_idle_seconds == database_idle_seconds
-
-
-@pytest.mark.parametrize("database_idle_seconds", [pytest.param(1, id="one"), pytest.param(59, id="below-minimum"), pytest.param(604801, id="above-maximum")])
-async def test_update_organization_rejects_invalid_database_idle_seconds_without_mutation(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    database_idle_seconds: int,
-) -> None:
-    """Reject database idle timeout updates outside the never-sleep zero or 60-604800 contract."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    original_idle_seconds = organization.database_idle_seconds
-
-    # Act
-    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"database_idle_seconds": database_idle_seconds})
-
-    # Assert
-    assert response.status_code == 422
-    async with session_scope() as session:
-        unchanged = await session.get(Organization, organization.id)
-    assert unchanged is not None
-    assert unchanged.database_idle_seconds == original_idle_seconds
-
-
-async def test_update_organization_accepts_database_idle_seconds_minimum(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Persist a bounded database idle timeout update."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act
-    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"database_idle_seconds": 60})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["database_idle_seconds"] == 60
-    async with session_scope() as session:
-        updated = await session.get(Organization, organization.id)
-    assert updated is not None
-    assert updated.database_idle_seconds == 60
-
-
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -498,7 +414,7 @@ async def test_other_organization_user_cannot_delete_solution(
     ("database_state", "usage"),
     [
         pytest.param(DatabaseState.available, 3584, id="available"),
-        pytest.param(DatabaseState.hibernated, None, id="hibernated"),
+        pytest.param(DatabaseState.failed, None, id="failed"),
     ],
 )
 async def test_organization_database_usage_returns_cached_usage_without_provider_access(
@@ -515,7 +431,7 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
     client = clients[0]
     organization = await create_organization(owner, compute=await create_ready_compute())
 
-    # Persist cached telemetry for an active or hibernated Organization.
+    # Persist cached telemetry for an Organization.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -770,7 +686,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "name": "globex",
                 "slug": "globex",
                 "avatar": "",
-                "database_idle_seconds": organization.database_idle_seconds,
                 "status": "creating",
             }
         ],

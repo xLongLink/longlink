@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from conftest import StorageKubernetes, OperationKubernetes
+from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_compute
 from src.operations import organizations as organization_operations
@@ -23,6 +23,12 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
+    class Database(DatabasePostgres):
+        async def prepare_organization_database(self, organization_id: object) -> None:
+            """Record database preparation."""
+
+            calls.append("database")
+
     class Storage(StorageKubernetes):
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
@@ -42,17 +48,24 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     class Kubernetes(OperationKubernetes):
         """Expose Organization Kubernetes operations."""
 
+    async def sync_users(*args: object, **kwargs: object) -> None:
+        """Record user projection after publication."""
+
+        calls.append("users")
+
+    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
     monkeypatch.setattr(organization_operations.kubernetes_organizations, "apply", apply_namespace)
+    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Reconcile and inspect the published state.
     await organization_operations.reconcile(organization.id)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
 
-    # Every boundary completes before status publication.
-    assert calls == ["storage", "namespace"]
+    # Every boundary completes before user projection and status publication.
+    assert calls == ["database", "users", "storage", "namespace"]
     assert refreshed is not None
     assert refreshed.status == Status.running
 

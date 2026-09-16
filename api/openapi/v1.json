@@ -2078,7 +2078,7 @@
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return cached database usage without waking the Organization for telemetry.",
+        "description": "Return cached database usage for telemetry.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -3151,19 +3151,6 @@
             "maxLength": 128,
             "minLength": 1,
             "title": "Name"
-          },
-          "database_idle_seconds": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 604800.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
@@ -3221,10 +3208,6 @@
             "type": "string",
             "title": "Avatar"
           },
-          "database_idle_seconds": {
-            "type": "integer",
-            "title": "Database Idle Seconds"
-          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -3235,7 +3218,6 @@
           "name",
           "slug",
           "avatar",
-          "database_idle_seconds",
           "status"
         ],
         "title": "OrganizationIdentity",
@@ -3338,22 +3320,6 @@
           "storage_quota_bytes": {
             "type": "integer",
             "title": "Storage Quota Bytes"
-          },
-          "compute_cpu_limit": {
-            "type": "integer",
-            "title": "Compute Cpu Limit"
-          },
-          "compute_memory_limit_gib": {
-            "type": "integer",
-            "title": "Compute Memory Limit Gib"
-          },
-          "compute_ephemeral_limit_gib": {
-            "type": "integer",
-            "title": "Compute Ephemeral Limit Gib"
-          },
-          "compute_pods": {
-            "type": "integer",
-            "title": "Compute Pods"
           }
         },
         "type": "object",
@@ -3361,11 +3327,7 @@
           "id",
           "database_size_mib",
           "database_instances",
-          "storage_quota_bytes",
-          "compute_cpu_limit",
-          "compute_memory_limit_gib",
-          "compute_ephemeral_limit_gib",
-          "compute_pods"
+          "storage_quota_bytes"
         ],
         "title": "OrganizationQuotasResponse",
         "description": "Represent stored per-Organization quotas in administrator responses."
@@ -3485,19 +3447,6 @@
               }
             ],
             "title": "Avatar"
-          },
-          "database_idle_seconds": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 604800.0,
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Database Idle Seconds"
           }
         },
         "type": "object",

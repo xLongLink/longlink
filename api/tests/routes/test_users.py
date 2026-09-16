@@ -43,7 +43,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
                 "name": "acme",
                 "slug": "acme",
                 "avatar": "",
-                "database_idle_seconds": organization.database_idle_seconds,
                 "status": "creating",
             },
             "role": "owner",
