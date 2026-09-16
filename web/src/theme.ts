@@ -278,6 +278,13 @@ export const stoneTheme = defineTheme({
             },
         },
 
+        toast: {
+            'type:info': {
+                backgroundColor: 'var(--color-background-green)',
+                color: 'var(--color-text-green)',
+            },
+        },
+
         text: {
             'color:navigation': {
                 color: 'var(--color-text-secondary)',

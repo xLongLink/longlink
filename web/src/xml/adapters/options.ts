@@ -1,16 +1,10 @@
 import { z } from 'zod';
 import type { ASTNode, Scope } from '../types';
-import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+import type { StoneIconName } from '@/components/ui/Icon';
+import { isVisibleXmlNode, resolveXmlProps, xmlIconSchema, xmlNonblankStringSchema } from '../core/props';
 
 const optionPropsSchema = z.object({
-    icon: z
-        .string()
-        .refine(
-            (value: string): value is StoneIconName => Object.hasOwn(stoneIconComponents, value),
-            'must be a supported icon name'
-        )
-        .optional(),
+    icon: xmlIconSchema.optional(),
     label: z.string().optional(),
     value: z.unknown().refine((value) => value !== undefined, 'is required'),
 });

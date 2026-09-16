@@ -2,6 +2,11 @@ from typing import Literal, TypedDict
 from fastapi import Response
 from src.environments import env
 
+AUTH_COOKIE = "longlink_auth"
+OAUTH_STATE_COOKIE = "longlink_oauth"
+PASSWORD_RESET_COOKIE = "longlink_password_reset"
+REGISTRATION_COOKIE = "longlink_registration"
+
 
 class CookiePolicy(TypedDict):
     """Shared browser-credential security parameters for setting and deleting one cookie."""

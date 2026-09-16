@@ -2,8 +2,6 @@ import { z } from 'zod';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import type { ASTNode, Props, Scope } from '../types';
-import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
-import { isVisibleXmlNode, resolveXmlProps, xmlNonblankStringSchema, xmlSpacingSchema } from '../core/props';
 import {
     Menu as SolutionMenu,
     menuItemId,
@@ -11,17 +9,18 @@ import {
     type MenuSection,
     type MenuEntry,
 } from '@/components/ui/Menu';
+import {
+    isVisibleXmlNode,
+    resolveXmlProps,
+    xmlIconSchema,
+    xmlNonblankStringSchema,
+    xmlSpacingSchema,
+} from '../core/props';
 
 const menuSectionPropsSchema = z.object({ isHeaderHidden: z.boolean().optional(), title: xmlNonblankStringSchema });
 const menuPropsSchema = z.object({ gap: xmlSpacingSchema.default(3) });
 const menuEntryPropsSchema = z.object({
-    icon: z
-        .string()
-        .refine(
-            (value: string): value is StoneIconName => Object.hasOwn(stoneIconComponents, value),
-            'must be a supported icon name'
-        )
-        .optional(),
+    icon: xmlIconSchema.optional(),
     label: xmlNonblankStringSchema,
 });
 

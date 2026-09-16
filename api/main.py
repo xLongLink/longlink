@@ -9,6 +9,7 @@ from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
+from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
 from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
 from src.database.session import session_scope
@@ -54,10 +55,10 @@ app = FastAPI(
 
 AUTHENTICATION_COOKIES = frozenset(
     {
-        "longlink_auth",
-        "longlink_oauth",
-        "longlink_password_reset",
-        "longlink_registration",
+        AUTH_COOKIE,
+        OAUTH_STATE_COOKIE,
+        PASSWORD_RESET_COOKIE,
+        REGISTRATION_COOKIE,
     }
 )
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})

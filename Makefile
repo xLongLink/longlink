@@ -51,8 +51,12 @@ up:
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" helm upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
-	KUBECONFIG="$(abspath dev/kubeconfig.yaml)" kubectl apply --filename dev/compute.yaml
+	helm --kubeconfig dev/kubeconfig.yaml upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
+	kubectl --kubeconfig dev/kubeconfig.yaml apply --filename dev/compute.yaml
+	
+	# Wait for the storage backend to pass its readiness probe before checking through the proxies.
+	kubectl --kubeconfig dev/kubeconfig.yaml wait --for=condition=Ready pod --selector=app.kubernetes.io/name=rustfs --namespace rustfs --timeout=10m
+	kubectl --kubeconfig dev/kubeconfig.yaml rollout status deployment/longlink-storage --namespace rustfs --timeout=5m
 	install -d -m 700 dev/certificates
 	kubectl --kubeconfig dev/kubeconfig.yaml --namespace knative-serving get secret longlink-gateway-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/gateway.crt
 	kubectl --kubeconfig dev/kubeconfig.yaml --namespace rustfs get secret longlink-storage-tls --output jsonpath='{.data.tls\.crt}' | base64 --decode > dev/certificates/storage.crt

@@ -32,10 +32,10 @@ class OAuthIdentity:
 def is_configured(provider: OAuthProvider) -> bool:
     """Return whether one OAuth provider has complete runtime credentials."""
 
-    # Providers remain unavailable until both of their confidential credentials are configured.
+    # The environment validator guarantees client credentials arrive as a complete pair.
     if provider == "google":
-        return env.GOOGLE_OAUTH_CLIENT_ID is not None and env.GOOGLE_OAUTH_CLIENT_SECRET is not None
-    return env.GITHUB_OAUTH_CLIENT_ID is not None and env.GITHUB_OAUTH_CLIENT_SECRET is not None
+        return env.GOOGLE_OAUTH_CLIENT_ID is not None
+    return env.GITHUB_OAUTH_CLIENT_ID is not None
 
 
 def redirect_uri(provider: OAuthProvider) -> str:
