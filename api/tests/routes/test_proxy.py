@@ -303,14 +303,14 @@ async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
     assert response.headers["content-type"] == "application/json"
 
 
-@pytest.mark.parametrize("origin", [None, "https://attacker.example"])
+@pytest.mark.parametrize("origin", [None, "", "https://attacker.example"])
 async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
     origin: str | None,
 ) -> None:
-    """Reject missing and foreign origins before an authenticated write reaches the gateway."""
+    """Reject missing, empty, and foreign origins before an authenticated write reaches the gateway."""
 
     # Arrange a running Solution and fail if CSRF protection is bypassed.
     solution, _ = await create_running_solution(users[0])
@@ -837,6 +837,101 @@ async def test_solution_proxy_enforces_method_role(
     # Verify the HTTP method requires its Organization role before reaching the gateway.
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
+
+
+async def test_solution_proxy_allows_write_member_to_post(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Forward a write-method proxy request from an Organization write member."""
+
+    # Arrange
+    user = users[0]
+    solution, _ = await create_running_solution(user)
+    async with session_scope() as session:
+        organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
+        assert organization_membership is not None
+        organization_membership.role = OrganizationRoles.write
+        await session.commit()
+
+    class FakeProxyResponse:
+        """Return one successful proxied document."""
+
+        status_code = 200
+        headers = {"content-type": "application/json"}
+
+        async def aiter_bytes(self):
+            """Yield the proxied document."""
+
+            yield b"{}"
+
+    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+@pytest.mark.parametrize(
+    ("role", "expected_status", "expected_detail"),
+    [
+        pytest.param(OrganizationRoles.write, 403, {"detail": "Organization maintain access required"}, id="write-rejected"),
+        pytest.param(OrganizationRoles.maintain, 200, {}, id="maintain-allowed"),
+    ],
+)
+async def test_solution_proxy_enforces_maintain_role_for_delete(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    role: OrganizationRoles,
+    expected_status: int,
+    expected_detail: dict[str, str],
+) -> None:
+    """Require Organization maintain access before a proxy DELETE reaches the gateway."""
+
+    # Arrange
+    user = users[0]
+    solution, _ = await create_running_solution(user)
+    async with session_scope() as session:
+        organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
+        assert organization_membership is not None
+        organization_membership.role = role
+        await session.commit()
+
+    class FakeProxyResponse:
+        """Return one successful proxied deletion."""
+
+        status_code = 200
+        headers = {"content-type": "application/json"}
+
+        async def aiter_bytes(self):
+            """Yield the proxied document."""
+
+            yield b"{}"
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if an unauthorized delete reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client must not be constructed")
+
+    if expected_status == 200:
+        monkeypatch.setattr(
+            httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(FakeGatewayResponse(FakeProxyResponse()))
+        )
+    else:
+        monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+
+    # Act
+    response = await clients[0].request("DELETE", f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
+
+    # Assert
+    assert response.status_code == expected_status
+    assert response.json() == expected_detail
 
 
 async def test_solution_proxy_shows_loading_when_solution_is_not_ready(

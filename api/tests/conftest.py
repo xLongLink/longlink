@@ -17,7 +17,6 @@ TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
 os.environ["SMTP_HOST"] = "smtp.example.com"
-os.environ["IMAGE_REGISTRIES"] = '{"ghcr.io":"https://ghcr.io","localhost:15000":"http://localhost:15000"}'
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"

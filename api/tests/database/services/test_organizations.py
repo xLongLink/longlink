@@ -1,10 +1,10 @@
 import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
-from sqlmodel import col
+from sqlmodel import col, select
 from factories import create_solution, fetch_operations, create_organization, create_ready_compute
 from sqlalchemy import update
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -501,6 +501,43 @@ async def test_update_returns_none_for_missing_organization(users: tuple[User, U
 
     # Assert
     assert updated is None
+
+
+@pytest.mark.parametrize("database_idle_seconds", [pytest.param(1, id="one"), pytest.param(59, id="below-minimum")])
+async def test_create_rejects_invalid_database_idle_seconds_without_persisting_state(
+    users: tuple[User, User, User], database_idle_seconds: int
+) -> None:
+    """Reject direct service creation with idle timeouts outside the 0 or 60-604800 contract."""
+
+    # Arrange
+    compute = await create_ready_compute()
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(InvalidError, match="database_idle_seconds"):
+            await organizations.create(session, "acme", users[0], compute_id=compute.id, database_idle_seconds=database_idle_seconds)
+    async with session_scope() as session:
+        assert await session.scalar(select(Organization)) is None
+
+
+@pytest.mark.parametrize("database_idle_seconds", [pytest.param(1, id="one"), pytest.param(59, id="below-minimum")])
+async def test_update_rejects_invalid_database_idle_seconds_without_mutation(
+    users: tuple[User, User, User], database_idle_seconds: int
+) -> None:
+    """Reject direct service updates with idle timeouts outside the 0 or 60-604800 contract."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    original_idle_seconds = organization.database_idle_seconds
+
+    # Act and assert
+    async with session_scope() as session:
+        with pytest.raises(InvalidError, match="database_idle_seconds"):
+            await organizations.update(session, organization.id, None, users[0].id, database_idle_seconds=database_idle_seconds)
+    async with session_scope() as session:
+        unchanged = await session.get(Organization, organization.id)
+    assert unchanged is not None
+    assert unchanged.database_idle_seconds == original_idle_seconds
 
 
 async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tuple[User, User, User]) -> None:
