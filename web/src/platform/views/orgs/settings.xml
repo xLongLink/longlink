@@ -21,12 +21,7 @@
         path="/api/v1/organizations/${membership.organization.id}/solutions"
     />
     <State id="invitation" email="" role="write" />
-    <State
-        id="memberMenu"
-        item="${null}"
-        role="read"
-        open="${false}"
-    />
+    <State id="memberMenu" item="${null}" role="read" open="${false}" />
     <State
         id="solutionMenu"
         item="${null}"
@@ -102,7 +97,8 @@
                                 <TableColumn
                                     if="${membership.role === 'admin' || membership.role === 'owner'}"
                                     field="user.id"
-                                    header="Actions" align="end"
+                                    header="Actions"
+                                    align="end"
                                 >
                                     <MoreMenu value="$memberMenu">
                                         <Option
@@ -197,7 +193,8 @@
                                 <TableColumn
                                     if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     field="id"
-                                    header="Actions" align="end"
+                                    header="Actions"
+                                    align="end"
                                 >
                                     <Action>
                                         <Request
@@ -254,7 +251,8 @@
                             <TableColumn
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 field="id"
-                                header="Actions" align="end"
+                                header="Actions"
+                                align="end"
                             >
                                 <Stack
                                     direction="horizontal"
@@ -291,10 +289,7 @@
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
                 <Action>
-                    <Patch
-                        state="memberMenu"
-                        value="${{ open: false }}"
-                    />
+                    <Patch state="memberMenu" value="${{ open: false }}" />
                     <Button variant="ghost">Cancel</Button>
                 </Action>
                 <Action>

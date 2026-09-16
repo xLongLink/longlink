@@ -135,7 +135,8 @@
                             </TableColumn>
                             <TableColumn
                                 field="organization.id"
-                                header="Actions" align="end"
+                                header="Actions"
+                                align="end"
                             >
                                 <Action if="${row.role === 'owner'}">
                                     <Patch

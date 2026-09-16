@@ -1,19 +1,22 @@
 import { z } from 'zod';
 import { renderNode } from '../core/node';
 import type { Props, Scope } from '../types';
+import { TABLE_COLUMN_ALIGNS } from '../constants';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { isSafePropertyName, readSafeProperty } from '../expressions/resolve';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
-import { TABLE_COLUMN_ALIGNS } from '../constants';
 
 const tablePropsSchema = z.object({
     data: z.array(z.record(z.string(), z.unknown())),
     hasHover: z.boolean().default(false),
     idKey: z.string().optional(),
 });
-const tableColumnPropsSchema = z.object({ align: z.enum(TABLE_COLUMN_ALIGNS).optional(), header: z.string().optional() });
+const tableColumnPropsSchema = z.object({
+    align: z.enum(TABLE_COLUMN_ALIGNS).optional(),
+    header: z.string().optional(),
+});
 
 export function Table({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();

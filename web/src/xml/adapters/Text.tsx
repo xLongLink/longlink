@@ -3,8 +3,8 @@ import type { Props } from '../types';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
-import * as AstryxText from '@astryxdesign/core/Text';
 import { Children, type ReactNode } from 'react';
+import * as AstryxText from '@astryxdesign/core/Text';
 import { TEXT_COLORS, TEXT_TYPES } from '../constants';
 
 const textPropsSchema = z.object({

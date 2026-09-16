@@ -17,5 +17,12 @@ export function CodeBlock({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { hasLineNumbers, value } = resolveXmlProps(props, ctx, codeBlockPropsSchema, ['value']);
 
-    return <AstryxCodeBlock code={Array.isArray(value) ? value.join('\n') : value} hasLineNumbers={hasLineNumbers} isWrapped size="sm" />;
+    return (
+        <AstryxCodeBlock
+            code={Array.isArray(value) ? value.join('\n') : value}
+            hasLineNumbers={hasLineNumbers}
+            isWrapped
+            size="sm"
+        />
+    );
 }

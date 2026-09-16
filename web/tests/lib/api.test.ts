@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, api } from '@/lib/api';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => {
     // Arrange isolation for the global transport boundary.
@@ -82,7 +82,10 @@ describe('api error mapping', () => {
 describe('api success contract', () => {
     it('returns parsed JSON for a successful get', async () => {
         // Arrange
-        vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ total: 3 }, 200)));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => jsonResponse({ total: 3 }, 200))
+        );
 
         // Act
         const payload = await api.get('https://api.example/organizations').json<{ total: number }>();
@@ -101,7 +104,9 @@ describe('api success contract', () => {
         vi.stubGlobal('fetch', transport);
 
         // Act
-        const payload = await api.post('https://api.example/organizations', { json: { name: 'acme' } }).json<{ id: string }>();
+        const payload = await api
+            .post('https://api.example/organizations', { json: { name: 'acme' } })
+            .json<{ id: string }>();
 
         // Assert
         expect(payload).toEqual({ id: 'acme' });

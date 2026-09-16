@@ -10,7 +10,9 @@ const stackPropsSchema = z.object({
     align: z.enum(BOX_ALIGNS).optional(),
     direction: z.enum(ORIENTATIONS).optional(),
     gap: xmlSpacingSchema.default(0),
-    height: z.union([z.number(), z.string().refine((value) => value.trim().length > 0, 'must not be blank')]).optional(),
+    height: z
+        .union([z.number(), z.string().refine((value) => value.trim().length > 0, 'must not be blank')])
+        .optional(),
     justify: z.enum(STACK_JUSTIFICATIONS).optional(),
     wrap: z.enum(STACK_WRAPS).optional(),
 });
