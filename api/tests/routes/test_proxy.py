@@ -2,12 +2,11 @@ import httpx2
 import pytest
 import asyncio
 from httpx2 import AsyncClient
-from typing import Protocol, TypedDict
 from longlink import identity
 from factories import create_solution, create_organization, create_ready_compute
 from contextlib import asynccontextmanager
 from src.routes.v1 import proxy as proxy_routes
-from collections.abc import Callable, Awaitable, AsyncIterator
+from collections.abc import Callable, Sequence, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -19,50 +18,61 @@ from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
-class ProxyCapture(TypedDict, total=False):
-    """Represent values observed by the proxy transport fakes."""
-
-    close_count: int
-    method: str
-    url: str
-    content: bytes
-    content_type: str
-    solution_id: str
-    user_id: str
-
-
-class ProxyResponse(Protocol):
-    """Expose the upstream metadata and stream used by response fixtures."""
-
-    status_code: int
-    headers: dict[str, str]
-
-    def aiter_bytes(self) -> AsyncIterator[bytes]:
-        """Iterate the upstream response."""
-
-        ...
-
-
 class FakeGatewayResponse(httpx2.Response):
     """Represent an upstream HTTP response with observable cleanup."""
 
-    def __init__(self, response: ProxyResponse, on_close: Callable[[], None] = lambda: None) -> None:
-        """Store the upstream response and its cleanup callback."""
+    def __init__(
+        self,
+        status_code: int,
+        headers: dict[str, str],
+        chunks: Sequence[bytes],
+        delay_seconds: float = 0.0,
+        error: Exception | None = None,
+        on_close: Callable[[], None] = lambda: None,
+    ) -> None:
+        """Store the upstream status, headers, body chunks, and cleanup callback."""
 
-        super().__init__(response.status_code, headers=response.headers)
-        self.upstream = response
+        super().__init__(status_code, headers=headers)
+
+        self._chunks = chunks
+        self._delay_seconds = delay_seconds
+        self._error = error
         self.on_close = on_close
 
     async def aiter_bytes(self, chunk_size: int | None = None) -> AsyncIterator[bytes]:
-        """Stream the configured upstream body."""
+        """Stream the configured upstream body, optionally delayed or failed."""
 
-        async for chunk in self.upstream.aiter_bytes():
+        # Preserve lazy streaming so timeout and failure tests observe real cancellation.
+        if self._delay_seconds:
+            await asyncio.sleep(self._delay_seconds)
+
+        for chunk in self._chunks:
             yield chunk
+
+        if self._error is not None:
+            raise self._error
 
     async def aclose(self) -> None:
         """Release the gateway response."""
 
         self.on_close()
+
+
+def make_upstream(
+    status_code: int,
+    headers: dict[str, str],
+    body: bytes | Sequence[bytes] = b"",
+    *,
+    delay_seconds: float = 0.0,
+    error: Exception | None = None,
+    on_close: Callable[[], None] = lambda: None,
+) -> FakeGatewayResponse:
+    """Build one fake upstream gateway response from status, headers, and body."""
+
+    # Accept a single body for the common case without hiding the chunked stream.
+    chunks = [body] if isinstance(body, bytes) else list(body)
+
+    return FakeGatewayResponse(status_code, headers, chunks, delay_seconds, error, on_close)
 
 
 def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitable[FakeGatewayResponse]]:
@@ -112,22 +122,7 @@ async def test_solution_proxy_forwards_safe_content(
     # Prepare a running remote Solution and capture gateway traffic.
     user = users[0]
     solution, _ = await create_running_solution(user)
-    captured: ProxyCapture = {}
-
-    class FakeProxyResponse:
-        """Stream one fake upstream solution response."""
-
-        status_code = 201
-        headers = {
-            "content-type": "text/plain",
-            "set-cookie": "ignored=1",
-        }
-
-        async def aiter_bytes(self):
-            """Yield the fake response body."""
-
-            # Emit one upstream chunk through the proxy response stream.
-            yield b"proxied"
+    captured: dict[str, object] = {}
 
     async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
         """Record the actual signed HTTP request and return a safe response."""
@@ -145,7 +140,12 @@ async def test_solution_proxy_forwards_safe_content(
 
             captured["close_count"] = 1
 
-        return FakeGatewayResponse(FakeProxyResponse(), close)
+        return make_upstream(
+            201,
+            {"content-type": "text/plain", "set-cookie": "ignored=1"},
+            b"proxied",
+            on_close=close,
+        )
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
     client = clients[0]
@@ -188,23 +188,16 @@ async def test_solution_proxy_sanitizes_json_upstream_error(
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    class FakeProxyResponse:
-        """Return a public error alongside private upstream diagnostics."""
-
-        status_code = 429
-        headers = {
+    gateway_response = make_upstream(
+        429,
+        {
             "content-type": "application/json",
             "retry-after": "17",
             "set-cookie": "upstream_session=private-json-cookie",
             "x-debug": "private-json-diagnostics",
-        }
-
-        async def aiter_bytes(self) -> AsyncIterator[bytes]:
-            """Yield public detail and a distinctive private diagnostic field."""
-
-            yield b'{"detail":"Please retry shortly.","diagnostics":"private-json-diagnostics"}'
-
-    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+        },
+        b'{"detail":"Please retry shortly.","diagnostics":"private-json-diagnostics"}',
+    )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -229,23 +222,16 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    class FakeProxyResponse:
-        """Return a private upstream HTML error page."""
-
-        status_code = 503
-        headers = {
+    gateway_response = make_upstream(
+        503,
+        {
             "content-type": "text/html",
             "retry-after": "23",
             "set-cookie": "upstream_session=private-html-cookie",
             "x-debug": "private-html-diagnostics",
-        }
-
-        async def aiter_bytes(self) -> AsyncIterator[bytes]:
-            """Yield an HTML page containing distinctive private diagnostics."""
-
-            yield b"<html><body>private-html-diagnostics</body></html>"
-
-    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+        },
+        b"<html><body>private-html-diagnostics</body></html>",
+    )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -280,18 +266,7 @@ async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    class FakeProxyResponse:
-        """Return an upstream error without an explicitly public string detail."""
-
-        status_code = 502
-        headers = {"content-type": "application/json"}
-
-        async def aiter_bytes(self) -> AsyncIterator[bytes]:
-            """Yield the configured non-public error body."""
-
-            yield body
-
-    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    gateway_response = make_upstream(502, {"content-type": "application/json"}, body)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -348,24 +323,13 @@ async def test_solution_proxy_streams_response_without_upstream_content_type(
     solution, _ = await create_running_solution(users[0])
     close_count = 0
 
-    class FakeProxyResponse:
-        """Represent an upstream response without a content type."""
-
-        status_code = 201
-        headers: dict[str, str] = {}
-
-        async def aiter_bytes(self):
-            """Yield the upstream response body."""
-
-            yield b"proxied"
-
     def close() -> None:
         """Record gateway resource cleanup."""
 
         nonlocal close_count
         close_count += 1
 
-    gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
+    gateway_response = make_upstream(201, {}, b"proxied", on_close=close)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -418,25 +382,19 @@ async def test_solution_proxy_propagates_timed_out_response_stream(
     solution, _infrastructure = await create_running_solution(users[0])
     close_count = 0
 
-    class SlowProxyResponse:
-        """Delay the first upstream response chunk."""
-
-        status_code = 200
-        headers = {"content-type": "text/plain"}
-
-        async def aiter_bytes(self):
-            """Yield only after the configured stream deadline."""
-
-            await asyncio.sleep(0.01)
-            yield b"late"
-
     def close() -> None:
         """Record gateway resource cleanup."""
 
         nonlocal close_count
         close_count += 1
 
-    gateway_response = FakeGatewayResponse(SlowProxyResponse(), close)
+    gateway_response = make_upstream(
+        200,
+        {"content-type": "text/plain"},
+        b"late",
+        delay_seconds=0.01,
+        on_close=close,
+    )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
     monkeypatch.setattr(proxy_routes, "PROXY_RESPONSE_TIMEOUT_SECONDS", 0.001)
 
@@ -466,24 +424,13 @@ async def test_solution_proxy_rejects_active_content(
     solution, _ = await create_running_solution(users[0])
     closed = False
 
-    class FakeProxyResponse:
-        """Represent an active document returned by the upstream solution."""
-
-        status_code = 200
-        headers = {"content-type": content_type}
-
-        async def aiter_bytes(self) -> AsyncIterator[bytes]:
-            """Provide an unused active-document body."""
-
-            yield b"active"
-
     def close() -> None:
         """Record gateway cleanup."""
 
         nonlocal closed
         closed = True
 
-    gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
+    gateway_response = make_upstream(200, {"content-type": content_type}, b"active", on_close=close)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -506,25 +453,19 @@ async def test_solution_proxy_closes_gateway_response_when_upstream_stream_fails
     solution, _ = await create_running_solution(users[0])
     close_count = 0
 
-    class FakeProxyResponse:
-        """Produce one chunk before simulating an upstream stream failure."""
-
-        status_code = 200
-        headers = {"content-type": "text/plain"}
-
-        async def aiter_bytes(self):
-            """Fail after streaming an initial response chunk."""
-
-            yield b"partial"
-            raise RuntimeError("upstream interrupted")
-
     def close() -> None:
         """Record the proxy resource release."""
 
         nonlocal close_count
         close_count += 1
 
-    gateway_response = FakeGatewayResponse(FakeProxyResponse(), close)
+    gateway_response = make_upstream(
+        200,
+        {"content-type": "text/plain"},
+        b"partial",
+        error=RuntimeError("upstream interrupted"),
+        on_close=close,
+    )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act and assert
@@ -614,23 +555,12 @@ async def test_solution_proxy_allows_organization_read_members(
     solution, _infrastructure = await create_running_solution(owner)
     called = False
 
-    class FakeProxyResponse:
-        """Return one successful proxied document."""
-
-        status_code = 200
-        headers = {"content-type": "application/json"}
-
-        async def aiter_bytes(self):
-            """Yield the proxied document."""
-
-            yield b"{}"
-
     async def request(*_args: object, **_kwargs: object) -> FakeGatewayResponse:
         """Record the authorized gateway request."""
 
         nonlocal called
         called = True
-        return FakeGatewayResponse(FakeProxyResponse())
+        return make_upstream(200, {"content-type": "application/json"}, b"{}")
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", request)
     async with session_scope() as session:
@@ -855,18 +785,7 @@ async def test_solution_proxy_allows_write_member_to_post(
         organization_membership.role = OrganizationRoles.write
         await session.commit()
 
-    class FakeProxyResponse:
-        """Return one successful proxied document."""
-
-        status_code = 200
-        headers = {"content-type": "application/json"}
-
-        async def aiter_bytes(self):
-            """Yield the proxied document."""
-
-            yield b"{}"
-
-    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    gateway_response = make_upstream(200, {"content-type": "application/json"}, b"{}")
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act
@@ -903,17 +822,6 @@ async def test_solution_proxy_enforces_maintain_role_for_delete(
         organization_membership.role = role
         await session.commit()
 
-    class FakeProxyResponse:
-        """Return one successful proxied deletion."""
-
-        status_code = 200
-        headers = {"content-type": "application/json"}
-
-        async def aiter_bytes(self):
-            """Yield the proxied document."""
-
-            yield b"{}"
-
     def unexpected_gateway(*_args: object) -> object:
         """Fail if an unauthorized delete reaches the gateway boundary."""
 
@@ -921,7 +829,9 @@ async def test_solution_proxy_enforces_maintain_role_for_delete(
 
     if expected_status == 200:
         monkeypatch.setattr(
-            httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(FakeGatewayResponse(FakeProxyResponse()))
+            httpx2.AsyncHTTPTransport,
+            "handle_async_request",
+            fake_gateway_request(make_upstream(200, {"content-type": "application/json"}, b"{}")),
         )
     else:
         monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)

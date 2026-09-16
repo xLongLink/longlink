@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from types import TracebackType
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
 from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
@@ -44,6 +44,9 @@ from src.utils.s3 import Credentials
 from src.environments import env
 from src.database.models import registry
 from src.database.models.users import User
+
+if TYPE_CHECKING:
+    from src.kubernetes.client import Kubernetes
 
 
 class AsyncKubernetes:
@@ -203,6 +206,13 @@ class FakeKubernetes:
         """Return a synthetic development gateway port without external I/O."""
 
         return 18444
+
+
+def kubernetes_client() -> "Kubernetes":
+    """Return the Kubernetes test double typed as its production client."""
+
+    # Centralize the intentional test-double substitution so call sites need no suppressions.
+    return cast("Kubernetes", FakeKubernetes())
 
 
 class RegistryKubernetes(AsyncKubernetes):

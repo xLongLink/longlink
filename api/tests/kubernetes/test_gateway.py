@@ -3,7 +3,7 @@ import yaml
 import pytest
 import subprocess
 from pathlib import Path
-from conftest import FakeKubernetes
+from conftest import kubernetes_client
 from src.kubernetes import gateway
 
 pytestmark = pytest.mark.no_db
@@ -71,7 +71,7 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
     """Observe installed controllers and verify HTTPS without any Kubernetes writes."""
 
     # Exercise the actual verifier against boundaries that expose no mutation methods.
-    await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
+    await gateway.verify(kubernetes_client(), "https://gateway.example")
     assert ("longlink-system", "compute-release") in observed_resources
     assert ("cnpg-system", "cnpg-controller-manager") in observed_resources
 
@@ -95,7 +95,7 @@ async def test_gateway_rejects_non_origin_url(gateway_url: str, observed_resourc
 
     # Act and assert
     with pytest.raises(ValueError, match="Gateway endpoint must be an HTTPS origin"):
-        await gateway.verify(FakeKubernetes(), gateway_url)  # type: ignore[arg-type]
+        await gateway.verify(kubernetes_client(), gateway_url)
 
 
 async def test_gateway_propagates_controller_lookup_errors(
@@ -111,7 +111,7 @@ async def test_gateway_propagates_controller_lookup_errors(
 
     monkeypatch.setattr(gateway, "Deployment", deployment)
     with pytest.raises(LookupError, match="controller unavailable"):
-        await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
+        await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
 async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
@@ -125,7 +125,7 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
 
     monkeypatch.setattr(gateway, "Deployment", deployment)
     with pytest.raises(RuntimeError, match="Shared controllers or verified Kourier endpoint did not become ready"):
-        await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
+        await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
 async def test_gateway_accepts_version_skew(
@@ -148,7 +148,7 @@ async def test_gateway_accepts_version_skew(
         raw = {"data": {"contract": "1", "platform_version": "v9.9.9"}}
 
     monkeypatch.setattr(gateway, "ConfigMap", SkewedRelease)
-    await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
+    await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
 async def test_gateway_rejects_contract_mismatch(
@@ -172,7 +172,7 @@ async def test_gateway_rejects_contract_mismatch(
 
     monkeypatch.setattr(gateway, "ConfigMap", ForeignRelease)
     with pytest.raises(ValueError, match="Compute package is incompatible"):
-        await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
+        await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
 async def test_read_package_version_returns_observed_version(observed_resources: list[tuple[str, str]]) -> None:
@@ -180,7 +180,7 @@ async def test_read_package_version_returns_observed_version(observed_resources:
 
     # Exercise the overview read against the installed release metadata.
     _ = observed_resources
-    assert await gateway.read_package_version(FakeKubernetes()) == "v0.0.0"  # type: ignore[arg-type]
+    assert await gateway.read_package_version(kubernetes_client()) == "v0.0.0"
 
 
 async def test_read_package_version_omits_missing_version(
@@ -203,7 +203,7 @@ async def test_read_package_version_omits_missing_version(
         raw = {"data": {"contract": "1"}}
 
     monkeypatch.setattr(gateway, "ConfigMap", UnversionedRelease)
-    assert await gateway.read_package_version(FakeKubernetes()) is None  # type: ignore[arg-type]
+    assert await gateway.read_package_version(kubernetes_client()) is None
 
 
 async def test_read_package_version_propagates_lookup_errors(
@@ -221,7 +221,7 @@ async def test_read_package_version_propagates_lookup_errors(
 
     monkeypatch.setattr(gateway, "ConfigMap", release)
     with pytest.raises(LookupError, match="release unavailable"):
-        await gateway.read_package_version(FakeKubernetes())  # type: ignore[arg-type]
+        await gateway.read_package_version(kubernetes_client())
 
 
 def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
