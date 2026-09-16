@@ -3,9 +3,8 @@ import hmac
 from uuid import UUID
 from typing import Literal
 from datetime import timedelta
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from src.environments import env
-from src.utils.emails import EMAIL_ADAPTER
 from longlink.utils.time import utcnow
 from src.database.services import users
 from longlink.shared.models import Email
@@ -53,7 +52,7 @@ def registration_claims(token: str) -> Email:
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
     try:
-        return EMAIL_ADAPTER.validate_python(email)
+        return TypeAdapter(Email).validate_python(email)
     except ValidationError as exc:
         raise jwt.InvalidTokenError("Invalid registration token claims") from exc
 
