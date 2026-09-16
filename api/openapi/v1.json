@@ -3151,6 +3151,19 @@
             "maxLength": 128,
             "minLength": 1,
             "title": "Name"
+          },
+          "database_idle_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
@@ -3208,6 +3221,10 @@
             "type": "string",
             "title": "Avatar"
           },
+          "database_idle_seconds": {
+            "type": "integer",
+            "title": "Database Idle Seconds"
+          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -3218,6 +3235,7 @@
           "name",
           "slug",
           "avatar",
+          "database_idle_seconds",
           "status"
         ],
         "title": "OrganizationIdentity",
@@ -3467,6 +3485,19 @@
               }
             ],
             "title": "Avatar"
+          },
+          "database_idle_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 604800.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Idle Seconds"
           }
         },
         "type": "object",
@@ -3673,6 +3704,13 @@
             "title": "Min Scale",
             "default": 0
           },
+          "idle_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 0.0,
+            "title": "Idle Seconds",
+            "default": 60
+          },
           "description": {
             "anyOf": [
               {
@@ -3724,6 +3762,19 @@
               }
             ],
             "title": "Min Scale"
+          },
+          "idle_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3600.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Seconds"
           },
           "expected_revision_id": {
             "anyOf": [
@@ -3839,6 +3890,10 @@
             ],
             "title": "Min Scale"
           },
+          "idle_seconds": {
+            "type": "integer",
+            "title": "Idle Seconds"
+          },
           "revision_id": {
             "type": "string",
             "format": "uuid",
@@ -3863,6 +3918,7 @@
         "type": "object",
         "required": [
           "min_scale",
+          "idle_seconds",
           "revision_id",
           "current_image",
           "configured_envs",

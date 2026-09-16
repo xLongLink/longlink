@@ -152,7 +152,24 @@ export const zOperationResponse = z.object({
  * Validate organization creation payloads.
  */
 export const zOrganizationCreate = z.object({
-    name: z.string().min(1).max(128)
+    name: z.string().min(1).max(128),
+    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
+});
+
+/**
+ * OrganizationQuotasResponse
+ *
+ * Represent stored per-Organization quotas in administrator responses.
+ */
+export const zOrganizationQuotasResponse = z.object({
+    id: z.uuid(),
+    database_size_mib: z.int(),
+    database_instances: z.int(),
+    storage_quota_bytes: z.int(),
+    compute_cpu_limit: z.int(),
+    compute_memory_limit_gib: z.int(),
+    compute_ephemeral_limit_gib: z.int(),
+    compute_pods: z.int()
 });
 
 /**
@@ -218,7 +235,8 @@ export const zOrganizationUpdate = z.object({
     avatar: z.union([
         z.url().min(1).max(2083),
         z.literal('')
-    ]).nullish()
+    ]).nullish(),
+    database_idle_seconds: z.int().gte(0).lte(604800).nullish()
 });
 
 /**
@@ -268,6 +286,7 @@ export const zSolutionCreate = z.object({
     image: z.string(),
     name: z.string().min(1).max(100),
     min_scale: z.union([z.literal(0), z.literal(1)]).optional().default(0),
+    idle_seconds: z.int().gte(0).lte(3600).optional().default(60),
     description: z.string().max(255).nullish()
 });
 
@@ -279,6 +298,7 @@ export const zSolutionCreate = z.object({
 export const zSolutionPatch = z.object({
     envs: z.record(z.string(), z.string().nullable()).optional(),
     min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
+    idle_seconds: z.int().gte(0).lte(3600).nullish(),
     expected_revision_id: z.uuid().nullish()
 });
 
@@ -289,6 +309,7 @@ export const zSolutionPatch = z.object({
  */
 export const zSolutionUpdateCheck = z.object({
     min_scale: z.union([z.literal(0), z.literal(1)]),
+    idle_seconds: z.int(),
     revision_id: z.uuid(),
     current_image: z.string(),
     configured_envs: z.array(z.string()),
@@ -331,6 +352,7 @@ export const zOrganizationIdentity = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
+    database_idle_seconds: z.int(),
     status: zStatus
 });
 
@@ -738,6 +760,15 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  * Successful Response
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
+
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
 
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()
