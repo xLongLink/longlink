@@ -56,17 +56,9 @@
                         src="$row.organization.avatar"
                     />
                     <Stack align="start">
-                        <Stack direction="horizontal" gap="1" align="center">
-                            <Link to="/orgs/${row.organization.slug}">
-                                $row.organization.name
-                            </Link>
-                            <Badge
-                                if="${row.organization.status !== 'running'}"
-                                variant="${({ creating: 'info', failed: 'error' })[row.organization.status]}"
-                            >
-                                ${({ creating: 'Creating', failed: 'Failed' })[row.organization.status]}
-                            </Badge>
-                        </Stack>
+                        <Link to="/orgs/${row.organization.slug}">
+                            $row.organization.name
+                        </Link>
                         <Text type="supporting">Organization</Text>
                     </Stack>
                 </Stack>
