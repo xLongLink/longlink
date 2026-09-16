@@ -1,6 +1,6 @@
 services:
     mail:
-        image: axllent/mailpit:v1.29.2@sha256:030f06031ce5c60913ac9363da1ab0d4be6fd2a78147dd0e1ca0fcac665d6b34
+        image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
         restart: unless-stopped
         ports:
             - '127.0.0.1:1025:1025'
