@@ -176,7 +176,6 @@ async def deploy(
         else:
             merged[name] = value
     try:
-        EnvironmentValues.validate_environment_variables({name: value or "" for name, value in envs.items()})
         EnvironmentValues.validate_environment_variables(merged)
     except ValueError as exc:
         raise InvalidError(str(exc)) from exc
