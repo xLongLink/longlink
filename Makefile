@@ -1,15 +1,11 @@
-.PHONY: install check format build test up image down api web sdk sample seed
+.PHONY: install check format build test up image down api web sdk seed
 
 # Install all development dependencies.
-install: api/.env
+install:
+	@umask 077; cp -n api/.env.sample api/.env
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
-
-
-# Initialize local configuration once; existing settings remain operator-owned.
-api/.env:
-	@umask 077; cp -n api/.env.sample api/.env
 
 
 # Run lint, type, and contract checks.
@@ -67,7 +63,12 @@ up:
 
 
 # Build and push the local sample, preserving an existing development project.
-image: sample
+image:
+	cd web && vp run build:sdk:bundle --logLevel warn
+	@if [ ! -d sdk/dev ]; then \
+		cd sdk && uv run --locked longlink init --folder dev --name sample && \
+		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
+	fi
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
@@ -92,20 +93,17 @@ web:
 	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
-# Prepare the local sample for both host development and image builds.
-sample:
+# Run the local sample Solution, preserving an existing development project.
+sdk:
 	cd web && vp run build:sdk:bundle --logLevel warn
 	@if [ ! -d sdk/dev ]; then \
 		cd sdk && uv run --locked longlink init --folder dev --name sample && \
 		printf '\n\n[tool.uv.sources]\nlonglink = { path = "..", editable = true }\n' >> dev/pyproject.toml; \
 	fi
-
-
-# Run the local sample Solution.
-sdk: sample
 	cd sdk/dev && uv run longlink dev
 
 
 # Seed the local example Organization and Solution after the Platform API starts.
-seed: api/.env
+seed:
+	@umask 077; cp -n api/.env.sample api/.env
 	cd api && uv run --locked python ../dev/scripts/seed.py
