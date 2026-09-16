@@ -9,7 +9,6 @@ from sqlalchemy import text, delete, select, update
 from dataclasses import field, dataclass
 from src.kubernetes import namespace
 from collections.abc import Iterator, AsyncIterator
-from src.environments import env
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import Status
@@ -321,7 +320,7 @@ async def ready(organization_id: UUID) -> None:
 async def hibernate(organization_id: UUID) -> bool:
     """Hibernate an idle Organization while fencing new runtime admission."""
 
-    # Recheck the Platform idle interval and persisted leases under the admission lock.
+    # Recheck the per-Organization idle interval and persisted leases under the admission lock.
     async with session_scope() as session:
         organization = await lock(session, organization_id)
         if organization is not None and organization.deleted_at is None and organization.database_state == DatabaseState.hibernated:
@@ -331,7 +330,8 @@ async def hibernate(organization_id: UUID) -> bool:
             or organization.deleted_at is not None
             or organization.status != Status.running
             or organization.database_state != DatabaseState.available
-            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
+            or organization.database_idle_seconds == 0
+            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
         ):
             return False
         active = await session.scalar(
@@ -378,7 +378,8 @@ async def hibernate(organization_id: UUID) -> bool:
                         )
                         if (
                             active is not None
-                            or organization.database_last_active_at + timedelta(seconds=env.DATABASE_IDLE_SECONDS) > utcnow()
+                            or organization.database_idle_seconds == 0
+                            or organization.database_last_active_at + timedelta(seconds=organization.database_idle_seconds) > utcnow()
                         ):
                             # Preserve synchronization demand that arrived while hibernation was evaluated.
                             if organization.database_state == DatabaseState.hibernating:

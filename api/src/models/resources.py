@@ -16,6 +16,9 @@ class OrganizationIdentity(BaseModel):
     slug: str
     avatar: str
 
+    # Database
+    database_idle_seconds: int
+
     # State
     status: Status
 

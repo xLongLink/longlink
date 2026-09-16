@@ -3,7 +3,7 @@ from typing import ClassVar
 from secrets import token_urlsafe
 from datetime import datetime
 from sqlmodel import Field
-from sqlalchemy import Enum, Column, BigInteger
+from sqlalchemy import Enum, Column, Integer, BigInteger
 from src.environments import env
 from src.database.types import EncryptedType
 from longlink.utils.time import utcnow
@@ -45,6 +45,12 @@ class Organization(AuditTable, table=True):
         ),
     )
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
+    database_idle_seconds: int = Field(
+        default_factory=lambda: env.DATABASE_IDLE_SECONDS,
+        ge=0,
+        le=604800,
+        sa_column=Column(Integer, nullable=False, server_default="300"),
+    )
 
     # Storage
     storage_quota_bytes: int = Field(default=1073741824, ge=1073741824, sa_type=BigInteger)

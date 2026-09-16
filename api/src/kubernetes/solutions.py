@@ -229,9 +229,15 @@ class Solutions:
         *,
         revision_id: UUID,
         min_scale: MinScale = 0,
+        idle_seconds: int = 60,
         migrate: bool = True,
     ) -> None:
         """Deploy one Solution and wait for its rollout."""
+
+        # min_scale and idle_seconds are independent: min_scale decides whether
+        # scale-to-zero is allowed; idle_seconds only tunes the stable window.
+        # Zero idle falls back to the platform default window.
+        window = "60s" if idle_seconds == 0 else f"{idle_seconds}s"
 
         # Render workload resources before the first cluster mutation.
         compute_namespace = namespace.compute(organization_id)
@@ -246,6 +252,7 @@ class Solutions:
             migration_id=migration_id,
             secret_id=secret_id,
             min_scale=min_scale,
+            window=window,
         )
 
         api = await self._client.api()

@@ -640,7 +640,14 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
         {
-            "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "avatar": "", "status": "creating"},
+            "organization": {
+                "id": str(organization.id),
+                "name": "acme",
+                "slug": "acme",
+                "avatar": "",
+                "database_idle_seconds": organization.database_idle_seconds,
+                "status": "creating",
+            },
             "role": "write",
         }
     ]

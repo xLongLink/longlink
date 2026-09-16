@@ -134,6 +134,7 @@ async def test_get_organization_by_slug_returns_owner_membership(
             "name": "acme",
             "slug": "acme",
             "avatar": "",
+            "database_idle_seconds": organization.database_idle_seconds,
             "status": "creating",
         },
         "role": "owner",
@@ -222,7 +223,7 @@ async def test_update_organization_returns_not_found_when_active_organization_di
     # Arrange
     organization = await create_organization(users[0])
 
-    async def missing_organization(*_args: object) -> None:
+    async def missing_organization(*_args: object, **_kwargs: object) -> None:
         """Simulate the Organization disappearing before its update."""
 
     monkeypatch.setattr(organizations, "update", missing_organization)
@@ -686,6 +687,7 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "name": "globex",
                 "slug": "globex",
                 "avatar": "",
+                "database_idle_seconds": organization.database_idle_seconds,
                 "status": "creating",
             }
         ],

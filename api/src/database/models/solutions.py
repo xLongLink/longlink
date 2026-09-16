@@ -104,6 +104,7 @@ class Revision(AuditTable, table=True):
     image: str = Field(max_length=512)
     source: str = Field(max_length=512)
     min_scale: MinScale = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
+    idle_seconds: int = Field(default=60, ge=0, le=3600, sa_column=Column(Integer, nullable=False, server_default="60"))
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     # Observed state does not modify the snapshot.
     failed: bool = Field(default=False)
@@ -124,6 +125,6 @@ def protect_snapshot(_mapper: Mapper[Revision], _connection: Connection, revisio
     state = inspect(revision)
     if any(
         state.attrs[name].history.has_changes()
-        for name in ("id", "solution_id", "source", "image", "envs", "min_scale", "created_at", "created_id")
+        for name in ("id", "solution_id", "source", "image", "envs", "min_scale", "idle_seconds", "created_at", "created_id")
     ):
         raise ValueError("Revision snapshots are immutable")

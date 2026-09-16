@@ -103,6 +103,7 @@ async def update_organization(
         membership.organization_id,
         str(payload.avatar) if payload.avatar is not None else None,
         user.id,
+        database_idle_seconds=payload.database_idle_seconds,
     )
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -264,6 +265,11 @@ async def create_organization(
     """Create Organization desired state and queue infrastructure creation."""
 
     # Persist the Organization with transactionally selected infrastructure registries.
-    organization = await organizations.create_default(session, payload.name, user)
+    organization = await organizations.create_default(
+        session,
+        payload.name,
+        user,
+        database_idle_seconds=payload.database_idle_seconds,
+    )
     await session.commit()
     return organization

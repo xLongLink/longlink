@@ -54,7 +54,17 @@ class SolutionCreate(EnvironmentValues):
     image: Image
     name: str = Field(min_length=1, max_length=100)
     min_scale: MinScale = 0
+    idle_seconds: int = Field(default=60, ge=0, le=3600)
     description: str | None = Field(default=None, max_length=255)
+
+    @field_validator("idle_seconds")
+    @classmethod
+    def validate_idle_seconds(cls, value: int) -> int:
+        """Allow never-sleep zero or a bounded scale-to-zero timeout."""
+
+        if value != 0 and value < 30:
+            raise ValueError("idle_seconds must be 0 or between 30 and 3600")
+        return value
 
 
 class SolutionPatch(BaseModel):
@@ -62,7 +72,17 @@ class SolutionPatch(BaseModel):
 
     envs: dict[str, str | None] = Field(default_factory=dict)
     min_scale: MinScale | None = None
+    idle_seconds: int | None = Field(default=None, ge=0, le=3600)
     expected_revision_id: UUID | None = None
+
+    @field_validator("idle_seconds")
+    @classmethod
+    def validate_idle_seconds(cls, value: int | None) -> int | None:
+        """Allow never-sleep zero or a bounded scale-to-zero timeout."""
+
+        if value is not None and value != 0 and value < 30:
+            raise ValueError("idle_seconds must be 0 or between 30 and 3600")
+        return value
 
     @field_validator("envs")
     @classmethod
@@ -77,6 +97,7 @@ class SolutionUpdateCheck(BaseModel):
     """Expose a candidate and configured names, never environment values."""
 
     min_scale: MinScale
+    idle_seconds: int
     revision_id: UUID
     current_image: str = Field(description="Immutable image of the desired revision used for this update check.")
     configured_envs: list[str]
