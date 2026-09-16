@@ -18,11 +18,10 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
     registry = await create_compute()
     connections: list[tuple[str, str | None]] = []
 
-    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> str:
+    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> None:
         """Record the configured gateway connection."""
 
         connections.append((url, certificate))
-        return "v9.9.9"
 
     class Kubernetes(AsyncKubernetes):
         """Expose the shared-controller boundary."""
@@ -58,7 +57,6 @@ async def test_execute_compute_validate_operation_verifies_gateway_without_rotat
         refreshed = await session.get(ComputeRegistry, registry.id)
     assert refreshed is not None
     assert refreshed.status == Status.running
-    assert refreshed.compute_version == "v9.9.9"
     assert refreshed.gateway_url == registry.gateway_url
     assert refreshed.gateway_certificate == registry.gateway_certificate
 
@@ -87,6 +85,93 @@ async def test_execute_compute_validate_operation_fails_provider_error(monkeypat
 
     monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
+    await queue_operation(target_id=registry.id)
+    claimed = await claim_operation()
+    assert claimed is not None
+
+    # Act
+    failed = await execute(claimed)
+
+    # Assert
+    assert failed.status == OperationStatus.failed
+    async with session_scope() as session:
+        refreshed = await session.get(ComputeRegistry, registry.id)
+    assert refreshed is not None
+    assert refreshed.status == Status.failed
+
+
+async def test_execute_compute_validate_operation_rejects_foreign_cluster(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make a Compute terminal when its connection points to a different physical cluster."""
+
+    # Arrange
+    registry = await create_compute()
+    calls: list[tuple[str, str | None]] = []
+
+    async def verify_gateway(_cluster: object, url: str, certificate: str | None) -> None:
+        """Reject unexpected gateway verification for a foreign cluster."""
+
+        calls.append((url, certificate))
+
+    class Kubernetes(AsyncKubernetes):
+        """Expose a mismatched physical cluster identity."""
+
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Initialize the provider boundary."""
+
+        async def cluster_uid(self) -> str:
+            """Return a different physical cluster identity."""
+
+            return "foreign-cluster"
+
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
+    await queue_operation(target_id=registry.id)
+    claimed = await claim_operation()
+    assert claimed is not None
+
+    # Act
+    failed = await execute(claimed)
+
+    # Assert
+    assert failed.status == OperationStatus.failed
+    assert calls == []
+    async with session_scope() as session:
+        refreshed = await session.get(ComputeRegistry, registry.id)
+    assert refreshed is not None
+    assert refreshed.status == Status.failed
+
+
+async def test_execute_compute_validate_operation_fails_storage_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make a Compute terminal when shared storage verification fails."""
+
+    # Arrange
+    registry = await create_compute()
+
+    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None) -> None:
+        """Accept gateway verification before storage verification."""
+
+    class Kubernetes(AsyncKubernetes):
+        """Expose the registered physical cluster identity."""
+
+        def __init__(self, kubeconfig: dict[str, object]) -> None:
+            """Initialize the provider boundary."""
+
+        async def cluster_uid(self) -> str:
+            """Return the registered physical cluster identity."""
+
+            return registry.cluster_uid
+
+    class FailingStorage(StorageKubernetes):
+        """Report unavailable shared storage."""
+
+        async def verify(self) -> None:
+            """Raise the storage provider failure."""
+
+            raise RuntimeError("storage unavailable")
+
+    monkeypatch.setattr(compute_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(compute_operations.gateway, "verify", verify_gateway)
+    monkeypatch.setattr(compute_operations, "Storage", FailingStorage)
     await queue_operation(target_id=registry.id)
     claimed = await claim_operation()
     assert claimed is not None

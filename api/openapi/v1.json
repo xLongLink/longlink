@@ -2829,17 +2829,6 @@
             "type": "string",
             "title": "Name"
           },
-          "compute_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Compute Version"
-          },
           "live_version": {
             "anyOf": [
               {
@@ -2883,7 +2872,6 @@
         "required": [
           "id",
           "name",
-          "compute_version",
           "gateway_url",
           "database_size_gib",
           "database_instances",

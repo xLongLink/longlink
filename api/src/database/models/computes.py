@@ -23,7 +23,6 @@ class ComputeRegistry(AuditTable, table=True):
     name: str = Field(unique=True, max_length=128)
     cluster_uid: str = Field(unique=True, max_length=128)
     kubeconfig: dict[str, object] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
-    compute_version: str | None = Field(default=None, max_length=128)
 
     # Reconciliation
     status: Status = Field(

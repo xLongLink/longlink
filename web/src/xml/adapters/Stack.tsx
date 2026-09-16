@@ -20,6 +20,7 @@ export function Stack({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { align, direction, gap, height, isScrollable, justify, wrap } = resolveXmlProps(props, ctx, stackPropsSchema);
 
+    // Gap only separates items, so a scroll region would otherwise end flush against its last child.
     return (
         <UiStack
             align={align}
@@ -28,6 +29,7 @@ export function Stack({ props, nodes }: Props) {
             height={height}
             isScrollable={isScrollable}
             justify={justify}
+            paddingBlockEnd={isScrollable ? 3 : undefined}
             wrap={wrap}
         >
             {renderNode(nodes, ctx)}

@@ -28,7 +28,7 @@ async def validate(compute_id: UUID) -> str | None:
         if await cluster.cluster_uid() != registry.cluster_uid:
             raise ValueError("Registered Compute connection points to a different physical cluster")
         logger.info("Validating shared controllers for Compute %s", registry.id)
-        compute_version = await gateway.verify(cluster, registry.gateway_url, registry.gateway_certificate)
+        await gateway.verify(cluster, registry.gateway_url, registry.gateway_certificate)
         logger.info("Validating RustFS object storage for Compute %s", registry.id)
         storage = Storage(registry)
         await storage.verify()
@@ -38,7 +38,7 @@ async def validate(compute_id: UUID) -> str | None:
         result = await session.execute(
             update(ComputeRegistry)
             .where(col(ComputeRegistry.id) == registry.id, col(ComputeRegistry.status) == registry.status)
-            .values(status=Status.running, compute_version=compute_version)
+            .values(status=Status.running)
         )
         if result.rowcount != 1:
             return "Compute readiness was not recorded"

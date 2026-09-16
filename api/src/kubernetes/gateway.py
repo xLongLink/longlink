@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> str:
-    """Inspect package compatibility and readiness, returning the observed Compute package version."""
+async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> None:
+    """Inspect package compatibility and readiness without changing infrastructure."""
 
     # Validate trust before opening the operator-configured endpoint.
     endpoint = urlsplit(gateway_url)
@@ -33,9 +33,6 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
     await release.refresh()
     data = release.raw.get("data", {})
     if data.get("contract") != "1":
-        raise ValueError("Compute package is incompatible; deploy a supported Compute package")
-    version = data.get("platform_version")
-    if not isinstance(version, str) or not version:
         raise ValueError("Compute package is incompatible; deploy a supported Compute package")
     secret = Secret("longlink-gateway-tls", namespace="knative-serving", api=api)
     await secret.refresh()
@@ -69,7 +66,7 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
                         await asyncio.sleep(5)
                         continue
                     if response.status_code == 200:
-                        return version
+                        return
                     await asyncio.sleep(5)
     except TimeoutError:
         raise RuntimeError("Shared controllers or verified Kourier endpoint did not become ready") from None

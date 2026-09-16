@@ -177,7 +177,6 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-    compute_version: str | None
 
     # Live overview
     live_version: str | None = None

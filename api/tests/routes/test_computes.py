@@ -63,6 +63,31 @@ async def test_compute_list_reports_live_package_versions(
     assert items[0]["live_version"] == "v9.9.9"
 
 
+async def test_compute_list_omits_live_version_when_cluster_unreachable(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Return stored Compute overview with a missing version when the cluster is unreachable."""
+
+    # Arrange
+    compute = await create_compute()
+
+    async def unreachable_version(cluster: object) -> str | None:
+        """Report the unreachable release boundary."""
+
+        raise LookupError("release unavailable")
+
+    monkeypatch.setattr("src.routes.v1.computes.gateway.read_package_version", unreachable_version)
+
+    # Act
+    response = await clients[0].get("/api/v1/computes")
+
+    # Assert
+    assert response.status_code == 200
+    items = [item for item in response.json()["items"] if item["id"] == str(compute.id)]
+    assert len(items) == 1
+    assert items[0]["live_version"] is None
+
+
 async def test_compute_registry_creation_queues_validation_operation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:

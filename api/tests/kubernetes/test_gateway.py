@@ -71,8 +71,7 @@ async def test_gateway_verifies_installed_controllers(observed_resources: list[t
     """Observe installed controllers and verify HTTPS without any Kubernetes writes."""
 
     # Exercise the actual verifier against boundaries that expose no mutation methods.
-    version = await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
-    assert version == "v0.0.0"
+    await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
     assert ("longlink-system", "compute-release") in observed_resources
     assert ("cnpg-system", "cnpg-controller-manager") in observed_resources
 
@@ -107,10 +106,10 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
         await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
 
 
-async def test_gateway_records_version_skew(
+async def test_gateway_accepts_version_skew(
     monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]
 ) -> None:
-    """Accept version-skewed Compute packages while reporting their observed version."""
+    """Accept version-skewed Compute packages without failing validation."""
 
     # Exercise the contract gate against a Compute package newer than the Platform.
     _ = observed_resources
@@ -127,8 +126,7 @@ async def test_gateway_records_version_skew(
         raw = {"data": {"contract": "1", "platform_version": "v9.9.9"}}
 
     monkeypatch.setattr(gateway, "ConfigMap", SkewedRelease)
-    version = await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
-    assert version == "v9.9.9"
+    await gateway.verify(FakeKubernetes(), "https://gateway.example")  # type: ignore[arg-type]
 
 
 async def test_gateway_rejects_contract_mismatch(
