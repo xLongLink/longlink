@@ -1,5 +1,3 @@
-import { Seo } from '@/components/Seo';
-import { dateFormatter } from '@/lib/utils';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -13,6 +11,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { PathBreadcrumb } from '@/components/breadcrumb/Path';
 import { BreadcrumbItem } from '@astryxdesign/core/Breadcrumbs';
+import { Seo, documentationRouteLabels } from '@/components/Seo';
 import { useEffect, useEffectEvent, type ReactNode } from 'react';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 
@@ -24,12 +23,11 @@ type ArticlePage = {
     title: string;
 };
 
-const documentationRouteLabels: Record<string, string> = {
-    docs: 'Documentation',
-    api: 'Platform',
-    sdk: 'Solutions',
-    views: 'Views',
-};
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+});
 
 /** Renders shared documentation and legal article content. */
 export function Article({ children, page }: { children: ReactNode; page: ArticlePage }) {

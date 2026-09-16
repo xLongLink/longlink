@@ -4,17 +4,12 @@ import { renderNode } from '../core/node';
 import { GRID_REPEATS } from '../constants';
 import { useXmlRuntime } from '../core/context';
 import { Grid as AstryxGrid } from '@astryxdesign/core/Grid';
-import {
-    resolveXmlProps,
-    xmlPositiveIntegerSchema,
-    xmlPositiveNumberSchema,
-    xmlSpacingWithDefaultSchema,
-} from '../core/props';
+import { resolveXmlProps, xmlPositiveIntegerSchema, xmlPositiveNumberSchema, xmlSpacingSchema } from '../core/props';
 
 const gridPropsSchema = z
     .object({
         columns: xmlPositiveIntegerSchema.optional(),
-        gap: xmlSpacingWithDefaultSchema,
+        gap: xmlSpacingSchema.default(1),
         maxColumns: xmlPositiveIntegerSchema.optional(),
         minColumnWidth: xmlPositiveNumberSchema.optional(),
         repeat: z.enum(GRID_REPEATS).optional(),

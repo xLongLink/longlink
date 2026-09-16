@@ -41,7 +41,7 @@ describe('SolutionRuntime', () => {
         expect(output.textContent).toContain('The solution definition could not be loaded.');
     });
 
-    it('redirects an empty route to the first non-index static tab', async () => {
+    it('leaves an empty route in place for the server redirect', async () => {
         // Arrange
         stubFetch((url) =>
             url.endsWith('/views.json')
@@ -56,10 +56,7 @@ describe('SolutionRuntime', () => {
         await act(async () =>
             vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'))
         );
-        await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))
-        );
-        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Home')));
+        expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/');
     });
 
     it('renders an empty manifest response', async () => {

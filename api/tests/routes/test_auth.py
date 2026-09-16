@@ -169,7 +169,7 @@ async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
@@ -200,7 +200,7 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
@@ -240,7 +240,7 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
     assert response.headers["cache-control"] == "no-store"
     assert "Max-Age=0" in response.headers["set-cookie"]
     assert "longlink_auth=" not in response.headers["set-cookie"]
@@ -291,7 +291,7 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
 
     # Assert
     assert response.status_code == 302
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
     assert profile_response.status_code == 200

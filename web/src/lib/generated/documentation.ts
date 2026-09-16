@@ -103,8 +103,8 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "alt"
             },
             {
-                "description": "Avatar kind. Use organization for a squircle organization image; user is circular.",
-                "name": "kind"
+                "description": "Avatar shape. Use rounded for organization images; circle and square follow the Astryx avatar shapes.",
+                "name": "shape"
             },
             {
                 "description": "Conditional rendering expression.",
@@ -659,10 +659,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
             {
                 "description": "Solution-relative JSON endpoint path.",
                 "name": "path"
-            },
-            {
-                "description": "Milliseconds between automatic refreshes.",
-                "name": "pollInterval"
             },
             {
                 "description": "Conditional rendering expression.",

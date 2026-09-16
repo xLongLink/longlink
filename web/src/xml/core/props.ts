@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { SPACING_VALUES } from '../constants';
 import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
-import { SPACING_VALUES, XML_LAYOUT_GAP } from '../constants';
+import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
 
 type XmlSpacing = (typeof SPACING_VALUES)[number];
 
@@ -22,7 +23,12 @@ export const xmlSpacingSchema = z
     .number()
     .refine((value) => SPACING_VALUES.includes(value as XmlSpacing), 'must use the spacing scale')
     .transform((value) => value as XmlSpacing);
-export const xmlSpacingWithDefaultSchema = xmlSpacingSchema.default(XML_LAYOUT_GAP);
+export const xmlIconSchema = z
+    .string()
+    .refine(
+        (value): value is StoneIconName => Object.hasOwn(stoneIconComponents, value),
+        'must be a supported icon name'
+    );
 
 /** Reads a compiled XML prop without coercion. */
 export function readXmlProp(props: ASTProps, name: string): ASTProps[string] | undefined {

@@ -1,15 +1,15 @@
 import type { ComponentProps } from 'react';
-import { Avatar as AstryxAvatar } from '@astryxdesign/core/Avatar';
+import { Avatar as AstryxAvatar, type AvatarShape } from '@astryxdesign/core/Avatar';
 
 type AstryxAvatarProps = Omit<ComponentProps<typeof AstryxAvatar>, 'shape' | 'src'>;
 
 interface AvatarProps extends AstryxAvatarProps {
-    kind?: 'organization' | 'user';
     name?: string;
+    shape?: AvatarShape;
     src?: string | null;
 }
 
-/** Renders a circular user avatar or rounded-square organization avatar. */
-export function Avatar({ kind, src, ...props }: AvatarProps) {
-    return <AstryxAvatar {...props} shape={kind === 'organization' ? 'rounded' : 'circle'} src={src ?? undefined} />;
+/** Renders an Astryx avatar with an explicit shape, normalizing null sources to undefined. */
+export function Avatar({ shape = 'circle', src, ...props }: AvatarProps) {
+    return <AstryxAvatar {...props} shape={shape} src={src ?? undefined} />;
 }

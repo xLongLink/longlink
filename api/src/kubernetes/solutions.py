@@ -2,12 +2,13 @@ import json
 import asyncio
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 from src.utils import templates
 from src.logger import logger
 from kr8s.asyncio import Api
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator
+from src.models.types import MinScale
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
 from src.kubernetes.utils import apply
@@ -200,7 +201,7 @@ class Solutions:
         secrets: dict[str, str],
         *,
         revision_id: UUID,
-        min_scale: Literal[0, 1] = 0,
+        min_scale: MinScale = 0,
         migrate: bool = True,
     ) -> None:
         """Deploy one Solution and wait for its rollout."""

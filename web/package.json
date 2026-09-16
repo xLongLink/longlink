@@ -33,6 +33,7 @@
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/react-query": "^5.102.0",
         "acorn": "^8.17.0",
+        "es-toolkit": "^1.52.0",
         "fast-xml-parser": "^5.11.1",
         "isbot": "^5",
         "ky": "^2.1.0",

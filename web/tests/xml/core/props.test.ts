@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
 import { compileProps, createContext } from '../helpers';
-import { resolveXmlProps, xmlSpacingWithDefaultSchema } from '@/xml/core/props';
+import { resolveXmlProps, xmlSpacingSchema } from '@/xml/core/props';
 
 describe('resolveXmlProps', () => {
     it('resolves scalar and raw props with schema defaults', () => {
         const values = resolveXmlProps(
             compileProps({ count: '2', label: 'Ready' }),
             createContext().scope,
-            z.object({ count: z.number(), gap: xmlSpacingWithDefaultSchema, label: z.string() }),
+            z.object({ count: z.number(), gap: xmlSpacingSchema.default(1), label: z.string() }),
             ['label']
         );
 
@@ -20,7 +20,7 @@ describe('resolveXmlProps', () => {
             resolveXmlProps(
                 compileProps({ gap: '7' }),
                 createContext().scope,
-                z.object({ gap: xmlSpacingWithDefaultSchema })
+                z.object({ gap: xmlSpacingSchema.default(1) })
             )
         ).toThrow('gap: must use the spacing scale');
     });

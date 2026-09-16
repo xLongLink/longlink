@@ -460,7 +460,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
     if isinstance(usage, NotFoundError):
 
-        def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
+        def missing_bucket(self: StorageKubernetes, organization_id: UUID) -> None:
             """Report the missing Kubernetes bucket claim at its actual transport boundary."""
 
             assert organization_id == organization.id

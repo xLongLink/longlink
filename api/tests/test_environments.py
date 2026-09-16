@@ -93,4 +93,4 @@ def test_env_accepts_loopback_with_smtp_delivery() -> None:
 
     # Assert
     assert environment.SMTP_HOST == "127.0.0.1"
-    assert environment.trusted_origins() == {"http://localhost:5173"}
+    assert environment.PUBLIC_URL == "http://localhost:5173"

@@ -48,15 +48,14 @@ async def deploy(revision_id: UUID) -> None:
             await session.execute(update(Solution).where(col(Solution.id) == solution_id).values(status=Status.creating))
             await session.commit()
         runtime_secrets = dict(solution.secrets)
-        database_certificate: str | None = None
 
         # Organization reconciliation owns bucket provisioning and quota admission.
         cluster = Kubernetes(
             compute.kubeconfig,
         )
         async with cluster:
-            storage = Storage()
-            bucket = storage.bucket(organization.id, compute)
+            storage = Storage(compute)
+            bucket = storage.bucket(organization.id)
 
             # Reuse generated credentials after an interrupted creation attempt.
             if "LONGLINK_ENV" not in runtime_secrets:
@@ -65,7 +64,7 @@ async def deploy(revision_id: UUID) -> None:
                 logger.info("Creating object storage credentials for Solution %s", solution.id)
                 database_password = secrets.token_urlsafe(24)
                 credentials = await bucket.admin.service_account(bucket.name, solution.id)
-                database, database_certificate = await databases.connection(organization, cluster)
+                database = await databases.connection(organization, cluster)
                 database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
                 # Build and commit the complete runtime contract before creating the workload.
@@ -107,9 +106,8 @@ async def deploy(revision_id: UUID) -> None:
 
                     await session.commit()
 
-            # Reuse the CA fetched for initial schema provisioning; retries fetch the current CA.
-            if database_certificate is None:
-                database_certificate = await cluster.databases.certificate(organization.id)
+            # Fetch the current CA once for workload rendering on every path.
+            database_certificate = await cluster.databases.certificate(organization.id)
 
             # Apply the captured desired release so reconciliation repairs workload drift.
             logger.info("Applying Kubernetes workload for Solution %s", solution.id)
@@ -174,13 +172,13 @@ async def delete(solution_id: UUID) -> None:
         )
         async with cluster:
             await cluster.solutions.delete(organization.id, solution.id)
-            db, _ = await databases.connection(organization, cluster)
+            db = await databases.connection(organization, cluster)
             logger.info("Deleting PostgreSQL schema for Solution %s", solution.id)
             await db.delete_solution_schema(organization.id, solution.id)
 
             # Revoke the service account before owner credentials remove its private objects.
-            storage = Storage()
-            bucket = storage.bucket(organization.id, compute)
+            storage = Storage(compute)
+            bucket = storage.bucket(organization.id)
             await bucket.admin.revoke(solution.id)
             await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
 

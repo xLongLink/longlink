@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Literal
 from sqlmodel import col
 from src.utils import names, roles, images
 from sqlalchemy import func, select, update
@@ -8,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, raiseload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
-from src.models.types import Image
+from src.models.types import Image, MinScale
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionCreate, EnvironmentValues
@@ -163,7 +162,7 @@ async def deploy(
     envs: Mapping[str, str | None],
     *,
     source: Image | None = None,
-    min_scale: Literal[0, 1] | None = None,
+    min_scale: MinScale | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
@@ -176,7 +175,6 @@ async def deploy(
         else:
             merged[name] = value
     try:
-        EnvironmentValues.validate_environment_variables({name: value or "" for name, value in envs.items()})
         EnvironmentValues.validate_environment_variables(merged)
     except ValueError as exc:
         raise InvalidError(str(exc)) from exc

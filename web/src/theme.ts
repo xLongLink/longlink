@@ -56,6 +56,11 @@ export const stoneTheme = defineTheme({
 
     syntax: stoneSyntax,
 
+    // Success toast surface mirrors error-inverted: solid green, dark enough for white text in both modes.
+    localTokens: {
+        '--color-background-success-inverted': ['#2e6b33', '#2e7d32'],
+    },
+
     tokens: {
         '--color-accent': 'var(--color-text-primary)',
         '--color-accent-muted': ['#25252a14', '#f3f3f520'], // light: Stone Neutral T15 · 8% / dark: T96 · 12.5%
@@ -275,6 +280,13 @@ export const stoneTheme = defineTheme({
                 borderRadius: 'var(--radius-container)',
                 borderStyle: 'solid',
                 borderWidth: 'var(--border-width)',
+            },
+        },
+
+        toast: {
+            'type:info': {
+                backgroundColor: 'var(--color-background-success-inverted)',
+                color: 'var(--color-on-dark)',
             },
         },
 

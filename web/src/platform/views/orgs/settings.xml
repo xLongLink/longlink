@@ -19,14 +19,13 @@
     <Query
         id="solutions"
         path="/api/v1/organizations/${membership.organization.id}/solutions"
-        pollInterval="5000"
     />
     <State id="invitation" email="" role="write" />
 
     <Stack gap="8">
         <Stack direction="horizontal" gap="3" align="center">
             <Avatar
-                kind="organization"
+                shape="rounded"
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />

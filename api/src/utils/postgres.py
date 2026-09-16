@@ -1,9 +1,9 @@
-import tempfile
 import contextlib
 from uuid import UUID
 from sqlalchemy import String, text
 from collections.abc import Iterator, AsyncGenerator
 from longlink.shared import migrations as shared_migrations
+from longlink.storage import tls
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
@@ -80,10 +80,8 @@ class Postgres:
         if self._certificate is None:
             yield url
         else:
-            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".crt") as certificate:
-                certificate.write(self._certificate)
-                certificate.flush()
-                yield url.update_query_dict({"sslrootcert": certificate.name})
+            with tls.certificate_file(self._certificate) as name:
+                yield url.update_query_dict({"sslrootcert": name})
 
     @staticmethod
     def quote(conn: AsyncConnection, value: str) -> str:

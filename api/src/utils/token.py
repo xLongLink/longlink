@@ -3,8 +3,9 @@ import hmac
 from uuid import UUID
 from typing import Literal
 from datetime import timedelta
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 from src.environments import env
+from src.utils.emails import EMAIL_ADAPTER
 from longlink.utils.time import utcnow
 from src.database.services import users
 from longlink.shared.models import Email
@@ -18,7 +19,6 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
-EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 
 
 def password_fingerprint(password: str) -> str:

@@ -84,11 +84,5 @@ class Env(BaseSettings):
 
         return self
 
-    def trusted_origins(self) -> set[str]:
-        """Return the browser origins allowed to perform cookie-authenticated requests."""
-
-        # Trust only the configured frontend origin in every environment.
-        return {self.PUBLIC_URL.rstrip("/")}
-
 
 env = Env()

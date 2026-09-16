@@ -6,7 +6,6 @@
     <Query
         id="solutions"
         path="/api/v1/solutions?page=${pages.value}&amp;page_size=25"
-        pollInterval="5000"
     />
 
     <Stack gap="8">
@@ -35,7 +34,7 @@
             <TableColumn field="organization.name" header="Organization">
                 <Stack direction="horizontal" gap="3" align="center">
                     <Avatar
-                        kind="organization"
+                        shape="rounded"
                         name="$row.organization.name"
                         src="$row.organization.avatar"
                     />

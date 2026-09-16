@@ -7,9 +7,10 @@ from src.logger import logger
 from collections.abc import Mapping
 from src.environments import env
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
-from src.models.metadata import ImageLabels, LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
+LABELS_ADAPTER = TypeAdapter(dict[str, str])
 ENVIRONMENTS_ADAPTER = TypeAdapter(list[EnvironmentMetadata])
 MANIFEST_ACCEPT = (
     "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, "
@@ -185,7 +186,7 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             return None
 
         raw_labels = image_config.get("Labels")
-        labels: dict[str, str] = {} if raw_labels is None else ImageLabels.model_validate(raw_labels).root
+        labels: dict[str, str] = {} if raw_labels is None else LABELS_ADAPTER.validate_python(raw_labels)
 
         result = LongLinkMetadata(
             image=Image(f"{image.registry}/{image.repository}@{digest}"),

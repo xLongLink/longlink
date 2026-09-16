@@ -110,7 +110,7 @@
                                     align="center"
                                 >
                                     <Avatar
-                                        kind="organization"
+                                        shape="rounded"
                                         name="$row.organization.name"
                                         src="$row.organization.avatar"
                                     />

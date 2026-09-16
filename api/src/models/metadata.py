@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, RootModel, StrictStr
+from pydantic import Field, BaseModel
 from src.models.types import Image
 
 
@@ -9,10 +9,6 @@ class EnvironmentMetadata(BaseModel):
     name: str
     required: bool
     description: str | None = None
-
-
-class ImageLabels(RootModel[dict[StrictStr, StrictStr]]):
-    """Strict OCI image labels."""
 
 
 class LongLinkMetadata(BaseModel):
