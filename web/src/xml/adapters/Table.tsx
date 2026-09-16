@@ -6,13 +6,14 @@ import { useXmlRuntime, XmlContext } from '../core/context';
 import { isSafePropertyName, readSafeProperty } from '../expressions/resolve';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
 import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
+import { TABLE_COLUMN_ALIGNS } from '../constants';
 
 const tablePropsSchema = z.object({
     data: z.array(z.record(z.string(), z.unknown())),
     hasHover: z.boolean().default(false),
     idKey: z.string().optional(),
 });
-const tableColumnPropsSchema = z.object({ header: z.string().optional() });
+const tableColumnPropsSchema = z.object({ align: z.enum(TABLE_COLUMN_ALIGNS).optional(), header: z.string().optional() });
 
 export function Table({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
@@ -51,10 +52,11 @@ export function Table({ props, nodes }: Props) {
             throw new Error('TableColumn requires a usable field path');
         }
         const field = fieldParts.join('.');
-        const { header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
+        const { align, header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
         const header = headerValue ?? field;
 
         return {
+            align,
             header,
             key: field,
             renderCell: (row) => {

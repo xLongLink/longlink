@@ -972,7 +972,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Displays tabular data from an array.",
         "example": "<Table data=\"$orders.items\">\n  <TableColumn field=\"number\" header=\"Number\" />\n  <TableColumn field=\"status\" header=\"Status\" />\n</Table>",
         "name": "Table",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [
@@ -983,6 +983,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "Column header text.",
                         "name": "header"
+                    },
+                    {
+                        "description": "Horizontal alignment of header and body cells.",
+                        "name": "align"
                     },
                     {
                         "description": "Conditional rendering expression.",

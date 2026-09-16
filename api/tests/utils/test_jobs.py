@@ -14,10 +14,10 @@ pytestmark = pytest.mark.no_db
 
 
 def leased_operation() -> Operation:
-    """Build one claimed Compute validation Operation."""
+    """Build one claimed Operation."""
 
     return Operation(
-        kind=OperationKind.compute_validate,
+        kind=OperationKind.organization_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         lease_expires_at=utcnow() + timedelta(minutes=1),
     )
@@ -217,7 +217,7 @@ async def test_execute_rejects_operation_without_a_worker_lease() -> None:
 
     # Arrange
     operation = Operation(
-        kind=OperationKind.compute_validate,
+        kind=OperationKind.organization_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
     )
 

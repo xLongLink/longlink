@@ -1023,7 +1023,7 @@
     "/api/v1/computes": {
       "post": {
         "summary": "Create Compute Registry",
-        "description": "Register a compute target and queue its initial validation.",
+        "description": "Register a compute target after verifying its infrastructure inline.",
         "operationId": "create_compute_registry_api_v1_computes_post",
         "parameters": [
           {
@@ -1054,7 +1054,7 @@
           }
         },
         "responses": {
-          "202": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1228,7 +1228,7 @@
     "/api/v1/deployment/computes/endpoints": {
       "put": {
         "summary": "Rotate Compute Endpoints",
-        "description": "Replace registered Compute endpoints after an infrastructure deployment.",
+        "description": "Replace registered Compute endpoints after verifying them inline.",
         "operationId": "rotate_compute_endpoints_api_v1_deployment_computes_endpoints_put",
         "parameters": [
           {
@@ -1259,7 +1259,7 @@
           }
         },
         "responses": {
-          "202": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2986,7 +2986,6 @@
       "OperationKind": {
         "type": "string",
         "enum": [
-          "compute.validate",
           "solution.deploy",
           "solution.delete",
           "organization.create",

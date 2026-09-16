@@ -64,14 +64,14 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     expected_item = {
         "live_version": None,
         "gateway_url": "https://gateway.example",
-        "status": "creating",
+        "status": "running",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
     }
     beta_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Beta Registry"})
     alpha_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Alpha Registry"})
-    assert alpha_response.status_code == 202
-    assert beta_response.status_code == 202
+    assert alpha_response.status_code == 201
+    assert beta_response.status_code == 201
     beta_id = beta_response.json()["id"]
 
     # Act
@@ -107,7 +107,7 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     duplicate_response = await clients[0].post("/api/v1/computes", json=payload)
     created = create_response.json()
 
-    assert create_response.status_code == 202
+    assert create_response.status_code == 201
     assert created["name"] == payload["name"]
     assert "kubeconfig" not in created
     assert "compute-credential-must-not-leak" not in create_response.text

@@ -260,6 +260,49 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
     assert "x-debug" not in response.headers
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(b'{"detail":"   "}', id="whitespace-detail"),
+        pytest.param(b'{"detail":123}', id="non-string-detail"),
+        pytest.param(b'[1,2]', id="non-object-payload"),
+        pytest.param(b'not-json', id="invalid-json"),
+    ],
+)
+async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    body: bytes,
+) -> None:
+    """Replace non-public upstream error details with the safe fallback."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    class FakeProxyResponse:
+        """Return an upstream error without an explicitly public string detail."""
+
+        status_code = 502
+        headers = {"content-type": "application/json"}
+
+        async def aiter_bytes(self) -> AsyncIterator[bytes]:
+            """Yield the configured non-public error body."""
+
+            yield body
+
+    gateway_response = FakeGatewayResponse(FakeProxyResponse())
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}
+    assert response.headers["content-type"] == "application/json"
+
+
 @pytest.mark.parametrize("origin", [None, "https://attacker.example"])
 async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
@@ -683,6 +726,45 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Access required"}
+
+
+async def test_solution_proxy_rechecks_readiness_after_runtime_admission(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject proxy traffic when the Solution leaves running state while its database wakes."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    @asynccontextmanager
+    async def activity(organization_id: object) -> AsyncIterator[object]:
+        """Move the Solution out of running state while runtime admission holds the request."""
+
+        assert organization_id == solution.organization_id
+        async with session_scope() as session:
+            persisted_solution = await session.get(Solution, solution.id)
+            assert persisted_solution is not None
+            persisted_solution.status = Status.creating
+            await session.commit()
+        yield object()
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if non-running traffic reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(proxy_routes.databases, "activity", activity)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Solution is not ready"}
+    assert response.headers["retry-after"] == "5"
 
 
 async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(

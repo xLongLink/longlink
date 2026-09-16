@@ -10,7 +10,12 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: str | None = None) -> None:
+async def verify(
+    client: "Kubernetes",
+    gateway_url: str,
+    gateway_certificate: str | None = None,
+    timeout_seconds: float = 300,
+) -> None:
     """Inspect package compatibility and readiness without changing infrastructure."""
 
     # Validate trust before opening the operator-configured endpoint.
@@ -41,7 +46,7 @@ async def verify(client: "Kubernetes", gateway_url: str, gateway_certificate: st
 
     # Observe current rollouts; registration never repairs or upgrades these controllers.
     try:
-        async with asyncio.timeout(300):
+        async with asyncio.timeout(timeout_seconds):
             for namespace, name in (
                 ("knative-serving", "controller"),
                 ("knative-serving", "webhook"),

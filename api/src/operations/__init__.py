@@ -1,10 +1,9 @@
-from . import computes, solutions, organizations
+from . import solutions, organizations
 from uuid import UUID
 from collections.abc import Callable, Awaitable
 from src.models.operations import OperationKind
 
 handlers: dict[OperationKind, Callable[[UUID], Awaitable[str | None]]] = {
-    OperationKind.compute_validate: computes.validate,
     OperationKind.solution_deploy: solutions.deploy,
     OperationKind.solution_delete: solutions.delete,
     OperationKind.organization_create: organizations.reconcile,

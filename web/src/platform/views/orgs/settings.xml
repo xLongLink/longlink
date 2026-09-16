@@ -85,7 +85,7 @@
                                 <TableColumn
                                     if="${membership.role === 'admin' || membership.role === 'owner'}"
                                     field="user.id"
-                                    header="Actions"
+                                    header="Actions" align="end"
                                 >
                                     <Stack
                                         direction="horizontal"
@@ -220,7 +220,7 @@
                                 <TableColumn
                                     if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     field="id"
-                                    header="Actions"
+                                    header="Actions" align="end"
                                 >
                                     <Action>
                                         <Request
@@ -277,7 +277,7 @@
                             <TableColumn
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 field="id"
-                                header="Actions"
+                                header="Actions" align="end"
                             >
                                 <Stack
                                     direction="horizontal"

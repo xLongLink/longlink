@@ -74,12 +74,7 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
 
     compute = await development_compute(client)
     if compute is not None:
-        if compute.status != "failed":
-            return compute
-
-        # Re-register the local Compute after a completed validation failure.
-        response = await client.delete(f"/api/v1/computes/{compute.id}")
-        response.raise_for_status()
+        return compute
 
     # Register the fixed local infrastructure through the same API contract as an administrator.
     gateway_certificate = LOCAL_GATEWAY_CERTIFICATE.read_text(encoding="utf-8")
@@ -106,25 +101,6 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
     if compute is None:
         raise RuntimeError("Local Compute registration was not recorded")
     return compute
-
-
-async def wait_for_compute(client: httpx2.AsyncClient, compute: Resource, settings: SeedSettings) -> None:
-    """Wait until the local Compute is ready for Organization assignment."""
-
-    # The Organization API assigns only validated Compute registrations.
-    try:
-        async with asyncio.timeout(settings.COMPUTE_TIMEOUT_SECONDS):
-            while compute.status == "creating":
-                await asyncio.sleep(1)
-                current = await development_compute(client)
-                if current is None:
-                    raise RuntimeError("Local Compute registration was removed")
-                compute = current
-
-            if compute.status == "failed":
-                raise RuntimeError("Local Compute validation failed")
-    except TimeoutError as exc:
-        raise RuntimeError("Local Compute validation timed out") from exc
 
 
 async def development_organization(client: httpx2.AsyncClient) -> Resource | None:
@@ -218,8 +194,7 @@ async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
     )
     response.raise_for_status()
 
-    compute = await register_compute(client, settings)
-    await wait_for_compute(client, compute, settings)
+    await register_compute(client, settings)
 
     organization = await create_organization(client)
     organization = await wait_for_organization(client, organization, settings)

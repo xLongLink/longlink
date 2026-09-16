@@ -52,6 +52,7 @@ export const BADGE_VARIANTS = [
     'yellow',
 ] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
+export const TABLE_COLUMN_ALIGNS = ['start', 'center', 'end'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'around', 'evenly'] as const;
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;

@@ -32,7 +32,7 @@
                     </Stack>
                 </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions">
+            <TableColumn field="id" header="Actions" align="end">
                 <MoreMenu value="$metadata">
                     <Option
                         value="${{ item: row, open: true }}"

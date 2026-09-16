@@ -112,7 +112,6 @@ export const zOAuthAvailability = z.object({
  * Supported registered operation handlers.
  */
 export const zOperationKind = z.enum([
-    'compute.validate',
     'solution.deploy',
     'solution.delete',
     'organization.create',

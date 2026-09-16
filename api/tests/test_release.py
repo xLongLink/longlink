@@ -1,16 +1,17 @@
 import pytest
 from src import release
-from factories import create_compute, claim_operation
+from factories import claim_operation, create_organization
 from src.database.session import session_scope
 from src.database.services import operations
+from src.database.models.users import User
 from src.database.models.operations import Operation
 
 
-async def test_schedule_reconciliation_commits_scheduled_work() -> None:
+async def test_schedule_reconciliation_commits_scheduled_work(users: tuple[User, User, User]) -> None:
     """Reject live old workers and commit reconciliation after their leases release."""
 
     # An old worker must not consume a new release's mutable-resource reconciliation.
-    compute = await create_compute()
+    organization = await create_organization(users[0])
     await release.schedule_reconciliation()
     claimed = await claim_operation()
     assert claimed is not None
@@ -24,7 +25,7 @@ async def test_schedule_reconciliation_commits_scheduled_work() -> None:
     await release.schedule_reconciliation()
     async with session_scope() as session:
         persisted = await session.get(Operation, claimed.id)
-        assert persisted is not None and persisted.target_id == compute.id
+        assert persisted is not None and persisted.target_id == organization.id
         assert persisted.lease_expires_at is None and persisted.finished_at is None
 
     # A completed target receives new committed reconciliation work.
@@ -36,4 +37,4 @@ async def test_schedule_reconciliation_commits_scheduled_work() -> None:
     await release.schedule_reconciliation()
     successor = await claim_operation()
     assert successor is not None and successor.id != claimed.id
-    assert successor.target_id == compute.id
+    assert successor.target_id == organization.id

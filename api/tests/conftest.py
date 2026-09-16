@@ -225,6 +225,10 @@ class RegistryKubernetes(AsyncKubernetes):
         return str(uuid4())
 
 
+async def verify_compute_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
+    """Accept inline Compute verification without external Kubernetes I/O."""
+
+
 @pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""
@@ -258,6 +262,8 @@ async def reset_db(
 
     engine = create_async_engine(db_url)
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(registry.metadata.create_all)
