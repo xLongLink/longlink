@@ -36,7 +36,7 @@ class Storage:
         async with self._storage.client() as client:
             await client.list_buckets()
 
-    async def apply(self, organization: UUID) -> None:
+    async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
         """Create an Organization bucket and apply its RustFS hard byte quota."""
 
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.
@@ -52,7 +52,7 @@ class Storage:
                     "RestrictPublicBuckets": True,
                 },
             )
-        await bucket.admin.quota(bucket.name, self._compute.bucket_size_bytes)
+        await bucket.admin.quota(bucket.name, quota_bytes)
 
     def bucket(self, organization: UUID) -> Bucket:
         """Resolve an Organization bucket connection without provisioning it."""

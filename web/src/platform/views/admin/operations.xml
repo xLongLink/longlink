@@ -19,7 +19,7 @@
             <TableColumn field="kind" header="Operation">
                 <Stack align="start">
                     <Text
-                        value="${({ 'compute.validate': 'Compute validation', 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}"
+                        value="${({ 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}"
                     />
                     <Text type="supporting">
                         ${row.finished_at ? ({ scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' })[row.status] + ' - ' + row.finished_at : 'Started - ' + row.created_at}
@@ -30,11 +30,11 @@
                 <Stack align="start">
                     <Text>${row.resource_name ?? 'Resource unavailable'}</Text>
                     <Text type="supporting">
-                        ${({ 'compute.validate': 'Compute', 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}
+                        ${({ 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}
                     </Text>
                 </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions">
+            <TableColumn field="id" header="Actions" align="end">
                 <MoreMenu value="$metadata">
                     <Option
                         value="${{ item: row, open: true }}"

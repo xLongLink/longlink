@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 from httpx2 import AsyncClient
 from datetime import timedelta
@@ -60,3 +61,18 @@ async def test_operations_endpoint_paginates_history(
     assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
     assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]
     assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])
+
+
+@pytest.mark.parametrize("query", [pytest.param("page=0", id="page-below-minimum"), pytest.param("page_size=0", id="page-size-below-minimum"), pytest.param("page_size=101", id="page-size-above-maximum")])
+async def test_operations_endpoint_rejects_out_of_bounds_pagination(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    query: str,
+) -> None:
+    """Reject offset-based page requests outside the published bounds."""
+
+    # Act
+    response = await clients[0].get(f"/api/v1/operations?{query}")
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid request. Please check your input and try again."}

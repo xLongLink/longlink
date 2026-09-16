@@ -10,7 +10,15 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-async def apply(client: "Kubernetes", organization_id: UUID) -> None:
+async def apply(
+    client: "Kubernetes",
+    organization_id: UUID,
+    *,
+    cpu_limit: int = 4,
+    memory_limit_gib: int = 3,
+    ephemeral_limit_gib: int = 4,
+    pods: int = 8,
+) -> None:
     """Create one Organization Namespace boundary for its explicit lifecycle."""
 
     # Render and apply only the requested Organization boundary.
@@ -18,12 +26,17 @@ async def apply(client: "Kubernetes", organization_id: UUID) -> None:
     namespace_manifest, resource_quota, network_policy = templates.readyml_list(
         files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
         namespace=compute_namespace,
+        cpu_limit=cpu_limit,
+        memory_limit_gib=memory_limit_gib,
+        ephemeral_limit_gib=ephemeral_limit_gib,
+        pods=pods,
     )
 
     api = await client.api()
     await utils.apply(Namespace(namespace_manifest, api=api))
     await utils.apply(ResourceQuota(resource_quota, api=api))
     await utils.apply(NetworkPolicy(network_policy, api=api))
+
 
 async def delete(client: "Kubernetes", organization_id: UUID) -> None:
     """Delete one Organization Namespace and wait for completion."""

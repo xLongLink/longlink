@@ -15,7 +15,7 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def queue_operation(*, kind: OperationKind = OperationKind.compute_validate, target_id: UUID) -> Operation:
+async def queue_operation(*, kind: OperationKind = OperationKind.organization_create, target_id: UUID) -> Operation:
     """Queue one standalone Operation through an explicit test transaction."""
 
     # Tests without a resource command transaction commit their queued work here.
@@ -68,7 +68,6 @@ async def create_compute() -> ComputeRegistry:
         compute = ComputeRegistry(
             name="Local compute",
             cluster_uid="local-cluster",
-            bucket_size_bytes=1073741824,
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
             storage_endpoint="https://storage.example",
@@ -90,7 +89,6 @@ async def create_ready_compute() -> ComputeRegistry:
         compute = ComputeRegistry(
             name=f"Local testing compute {suffix}",
             cluster_uid=f"local-testing-cluster-{suffix}",
-            bucket_size_bytes=1073741824,
             kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             database_storage_class="local-path",

@@ -78,6 +78,7 @@ describe('renderNode', () => {
     });
 
     it('renders Heading content', () => {
+        // Arrange
         const output = renderXmlToMarkup([
             {
                 name: 'Heading',
@@ -86,6 +87,20 @@ describe('renderNode', () => {
             },
         ]);
 
+        // Assert
+        expect(output).toContain('<h1');
         expect(output).toContain('Orders');
+    });
+
+    it('rejects Heading levels outside the schema', () => {
+        // Arrange
+        const node: ASTNode = {
+            name: 'Heading',
+            params: compileProps({ level: '7' }),
+            children: [{ name: '$text', params: compileProps({ value: 'Orders' }), children: [] }],
+        };
+
+        // Act and assert
+        expect(() => renderXmlToMarkup([node])).toThrow();
     });
 });

@@ -4,7 +4,7 @@ from sqlmodel import col
 from src.utils import names, roles, postgres
 from sqlalchemy import Select, func, delete, select
 from sqlalchemy import update as sql_update
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import InvalidError, ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
@@ -18,6 +18,7 @@ from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -112,14 +113,11 @@ def _infrastructure_query() -> Select[tuple[Organization, ComputeRegistry]]:
             load_only(
                 ComputeRegistry.id,
                 ComputeRegistry.kubeconfig,
-                ComputeRegistry.database_size_gib,
-                ComputeRegistry.database_instances,
                 ComputeRegistry.database_storage_class,
                 ComputeRegistry.storage_endpoint,
                 ComputeRegistry.storage_access_key,
                 ComputeRegistry.storage_secret_key,
                 ComputeRegistry.storage_certificate,
-                ComputeRegistry.bucket_size_bytes,
             ),
         )
         .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
@@ -353,10 +351,18 @@ async def update_member_role(
 
     # Persist the role change and request its shared-user projection.
     membership.role = role
-    await session.execute(sql_update(Organization).where(col(Organization.id) == organization_id).values(database_sync_pending=True))
+    await session.execute(
+        sql_update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync)
+    )
 
 
-async def create_default(session: AsyncSession, name: str, user: User) -> Organization:
+async def create_default(
+    session: AsyncSession,
+    name: str,
+    user: User,
+    *,
+    database_idle_seconds: int | None = None,
+) -> Organization:
     """Create an Organization on the least-assigned available infrastructure."""
 
     # Serialize each creator's quota check and insert to prevent concurrent requests exceeding the beta limit.
@@ -398,6 +404,7 @@ async def create_default(session: AsyncSession, name: str, user: User) -> Organi
         name,
         user,
         compute_id=compute_id,
+        database_idle_seconds=database_idle_seconds,
     )
 
 
@@ -407,8 +414,12 @@ async def create(
     user: User,
     *,
     compute_id: UUID,
+    database_idle_seconds: int | None = None,
 ) -> Organization:
     """Create an Organization with the specified infrastructure."""
+
+    if database_idle_seconds is not None and database_idle_seconds != 0 and database_idle_seconds < 60:
+        raise InvalidError("database_idle_seconds must be 0 or between 60 and 604800")
 
     # A no-op write serializes admission on every supported backend, including SQLite.
     await session.execute(sql_update(ComputeRegistry).where(col(ComputeRegistry.id) == compute_id).values(name=col(ComputeRegistry.name)))
@@ -422,6 +433,8 @@ async def create(
         slug=names.slugify(name),
         compute_id=compute_id,
     )
+    if database_idle_seconds is not None:
+        organization.database_idle_seconds = database_idle_seconds
 
     # Attach the creator as the initial owner for every organization.
     organization.created_id = user.id
@@ -446,8 +459,18 @@ async def create(
     return organization
 
 
-async def update(session: AsyncSession, organization_id: UUID, avatar: str | None, user_id: UUID) -> Organization | None:
+async def update(
+    session: AsyncSession,
+    organization_id: UUID,
+    avatar: str | None,
+    user_id: UUID,
+    *,
+    database_idle_seconds: int | None = None,
+) -> Organization | None:
     """Update mutable Organization metadata."""
+
+    if database_idle_seconds is not None and database_idle_seconds != 0 and database_idle_seconds < 60:
+        raise InvalidError("database_idle_seconds must be 0 or between 60 and 604800")
 
     # Take a portable write lock before refreshing metadata already loaded by authentication.
     await session.execute(
@@ -461,6 +484,8 @@ async def update(session: AsyncSession, organization_id: UUID, avatar: str | Non
     await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
     if avatar is not None and organization.avatar != avatar:
         organization.avatar = avatar
+    if database_idle_seconds is not None and organization.database_idle_seconds != database_idle_seconds:
+        organization.database_idle_seconds = database_idle_seconds
 
     return organization
 

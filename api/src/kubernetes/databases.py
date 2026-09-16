@@ -44,7 +44,15 @@ class Databases:
 
         self._client = client
 
-    async def apply(self, organization_id: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
+    async def apply(
+        self,
+        organization_id: UUID,
+        password: str,
+        storage_class: str,
+        *,
+        size_mib: int = 100,
+        instances: int = 1,
+    ) -> None:
         """Create the database boundary and wait for a writable PostgreSQL cluster."""
 
         database_namespace = namespace.database(organization_id)
@@ -53,11 +61,11 @@ class Databases:
             namespace=database_namespace,
             compute_namespace=namespace.compute(organization_id),
             storage_class=json.dumps(storage_class),
-            size_gib=size_gib,
+            size_mib=size_mib,
             instances=instances,
             quota_pods=2 * instances + 1,
             quota_instances=instances + 1,
-            quota_storage_gib=size_gib * (instances + 1),
+            quota_storage_mib=size_mib * (instances + 1),
         )
         api = await self._client.api()
 

@@ -13,6 +13,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
 from src.database.services import invitations
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -175,6 +176,43 @@ async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange
     assert client.cookies.get("longlink_auth") is None
 
 
+async def test_oauth_callback_rejects_cross_provider_state_without_provider_exchange(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a callback that replays another provider's browser-bound OAuth state."""
+
+    # Arrange
+    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    async def unexpected_identity(
+        _provider: oauth.OAuthProvider,
+        _code: str,
+        _verifier: str,
+    ) -> oauth.OAuthIdentity | None:
+        """Fail if cross-provider callback state reaches the external provider."""
+
+        raise AssertionError("cross-provider OAuth state must not reach the provider")
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
+
+    # Act
+    response = await client.get(
+        "/api/v1/auth/oauth/github/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+
+
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
 async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     client: AsyncClient,
@@ -305,6 +343,46 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
         (account_a.id, account_a.email, "12345"),
         (account_b.id, account_b.email, None),
     }
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_deleted_account_without_browser_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject OAuth login for a soft-deleted account without linking its provider identity."""
+
+    # Arrange
+    user = users[1]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        persisted = await session.get(User, user.id)
+    assert persisted is not None
+    assert persisted.google_id is None
+    assert persisted.github_id is None
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
@@ -541,7 +619,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
     await register_and_verify(client, captured_mail, email)
@@ -562,13 +640,20 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
         {
-            "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "avatar": "", "status": "creating"},
+            "organization": {
+                "id": str(organization.id),
+                "name": "acme",
+                "slug": "acme",
+                "avatar": "",
+                "database_idle_seconds": organization.database_idle_seconds,
+                "status": "creating",
+            },
             "role": "write",
         }
     ]
     assert invitation is None
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
     assert client.cookies.get("longlink_auth") is not None
 
 
@@ -584,7 +669,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
         await session.commit()
 
@@ -609,7 +694,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert membership is not None
     assert membership.role == OrganizationRoles.write
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
 
 
 async def test_registration_completion_rejects_duplicate_account(

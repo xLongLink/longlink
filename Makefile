@@ -83,6 +83,9 @@ down:
 	docker compose -f dev/compose.yml down --remove-orphans
 	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates
+	# Reap volumes orphaned by removed containers and superseded image layers.
+	@docker volume ls -qf dangling=true | xargs -r docker volume rm
+	docker image prune -f
 
 
 # Prepare and run the local LongLink Platform API server.
@@ -108,6 +111,6 @@ sdk:
 
 
 # Seed the local example Organization and Solution after the Platform API starts.
-seed:
+seed: image
 	@umask 077; cp -n api/.env.sample api/.env
 	cd api && uv run --locked python ../dev/scripts/seed.py

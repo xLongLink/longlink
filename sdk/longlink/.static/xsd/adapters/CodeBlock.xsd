@@ -4,6 +4,9 @@
     <xsd:attribute name="value" type="xsd:string" use="required">
       <xsd:annotation><xsd:documentation>Text or array expression displayed as code.</xsd:documentation></xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="hasLineNumbers" type="xsd:boolean" default="false">
+      <xsd:annotation><xsd:documentation>Show line numbers alongside the code.</xsd:documentation></xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="CodeBlock" type="CodeBlockType"/>

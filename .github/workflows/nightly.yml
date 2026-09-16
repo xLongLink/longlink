@@ -93,13 +93,13 @@ jobs:
               id: api
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
-                    context: .
-                    file: api/Dockerfile
-                    platforms: linux/amd64
-                    push: true
-                    build-args: |
+                  context: .
+                  file: api/Dockerfile
+                  platforms: linux/amd64
+                  push: true
+                  build-args: |
                       VERSION=${{ steps.platform.outputs.version }}
-                    labels: |
+                  labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ steps.platform.outputs.version }}
                       longlink.dev/release-version=${{ steps.compute.outputs.chart_version }}
@@ -107,11 +107,11 @@ jobs:
                       longlink.dev/release-compute-version=${{ steps.compute.outputs.chart_version }}
                       longlink.dev/release-compute-sha256=${{ steps.compute.outputs.chart_sha256 }}
                       longlink.dev/release-sdk-version=${{ steps.platform.outputs.version }}
-                    annotations: |
+                  annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
-                    tags: ghcr.io/xlonglink/longlink:nightly
-                    cache-from: type=gha,scope=api
-                    cache-to: type=gha,mode=max,scope=api
+                  tags: ghcr.io/xlonglink/longlink:nightly
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
 
             - name: Remove old nightly API image versions
               uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5

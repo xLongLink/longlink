@@ -15,9 +15,25 @@ type DialogProps = Omit<ComponentProps<typeof AstryxDialog>, 'aria-label' | 'chi
 };
 
 /** Renders a shared dialog with a titled, divided header and structured content. */
-export function Dialog({ children, gap = 3, onOpenChange, purpose, subtitle, title, ...props }: DialogProps) {
+export function Dialog({
+    children,
+    gap = 3,
+    onOpenChange,
+    purpose,
+    subtitle,
+    title,
+    width = 640,
+    ...props
+}: DialogProps) {
     return (
-        <AstryxDialog {...props} aria-label={title} padding={0} onOpenChange={onOpenChange} purpose={purpose}>
+        <AstryxDialog
+            {...props}
+            aria-label={title}
+            padding={0}
+            width={width}
+            onOpenChange={onOpenChange}
+            purpose={purpose}
+        >
             <Stack gap={0}>
                 <Stack
                     direction="horizontal"

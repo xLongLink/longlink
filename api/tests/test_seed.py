@@ -68,10 +68,10 @@ async def test_local_seed_creates_example_through_api(
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
-    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None) -> None:
+    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
         """Accept the configured gateway connection."""
 
-    async def apply_organization(_cluster: object, _organization_id: UUID) -> None:
+    async def apply_organization(_cluster: object, _organization_id: UUID, **_kwargs: object) -> None:
         """Accept the requested Organization boundary."""
 
     class Solutions:
@@ -102,9 +102,9 @@ async def test_local_seed_creates_example_through_api(
 
             return solution_id.hex
 
-    monkeypatch.setattr("src.operations.computes.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.operations.computes.gateway.verify", verify_gateway)
-    monkeypatch.setattr("src.operations.computes.Storage", StorageKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", Kubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.databases.Kubernetes", Kubernetes)
     monkeypatch.setattr("src.operations.organizations.Kubernetes", Kubernetes)
     monkeypatch.setattr("src.operations.organizations.kubernetes_organizations.apply", apply_organization)
@@ -127,15 +127,13 @@ async def test_local_seed_creates_example_through_api(
                     "storage_endpoint": "https://storage.example",
                     "storage_access_key": "controller",
                     "storage_secret_key": "controller-secret",
-                    "bucket_size_bytes": 134217728,
                 },
             )
-            assert compute_response.status_code == 202
+            assert compute_response.status_code == 201
             async with session_scope() as session:
                 compute = await session.get(ComputeRegistry, UUID(compute_response.json()["id"]))
                 assert compute is not None
-                compute.status = Status.running
-                await session.commit()
+                assert compute.status == Status.running
 
             await seed(local_settings, client)
             await seed(local_settings, client)

@@ -45,6 +45,7 @@ def test_solution_template_constrains_workloads() -> None:
         migration_id="solution-migration",
         secret_id="solution-revision",
         min_scale=1,
+        window="60s",
     )
 
     # Assert
@@ -118,10 +119,9 @@ async def test_solution_apply_stops_after_failed_migration_job(monkeypatch: pyte
             self.name = metadata["name"]
             self.namespace = metadata["namespace"]
 
-        async def wait(self, conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Supply the failed status returned by Kubernetes."""
 
-            assert conditions == ["condition=Complete", "condition=Failed"]
             self.raw["status"] = {"conditions": [{"type": "Failed", "status": "True"}]}
 
     class MigrationPod:
@@ -194,7 +194,11 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
         """Retain an interrupted migration while stopping its schema mutations."""
 
         name = "interrupted"
-        raw: ClassVar[dict[str, object]] = {"status": {}}
+
+        def __init__(self) -> None:
+            """Expose pending status before suspension is acknowledged."""
+
+            self.raw: dict[str, object] = {"status": {}}
 
         async def patch(self, patch: dict[str, object]) -> None:
             """Suspend the old migration before applying any new workload."""
@@ -202,11 +206,11 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
             assert patch == {"spec": {"suspend": True}}
             applied.append("suspend")
 
-        async def wait(self, conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Acknowledge suspension before checking for remaining Pods."""
 
-            assert conditions == ["condition=Suspended"]
             applied.append("suspended")
+            self.raw = {"status": {"conditions": [{"type": "Suspended", "status": "True"}]}}
 
     class Resource:
         """Supply Kubernetes-generated rollout state for desired resources."""
@@ -239,10 +243,9 @@ async def test_solution_apply_waits_for_deployment_and_route_readiness(monkeypat
 
         jobs: ClassVar[list[object]] = [InterruptedJob()]
 
-        async def wait(self, conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Supply the completed status returned by Kubernetes."""
 
-            assert conditions == ["condition=Complete", "condition=Failed"]
             assert migrate
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
 
@@ -304,7 +307,7 @@ async def test_solution_apply_reports_quota_admission_failure(monkeypatch: pytes
     class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
-        async def wait(self, _conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Complete the migration before the rollout failure."""
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
@@ -348,7 +351,7 @@ async def test_solution_apply_reports_disappeared_deployment(monkeypatch: pytest
     class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
-        async def wait(self, _conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Complete the migration before rollout polling."""
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}
@@ -398,7 +401,7 @@ async def test_solution_apply_waits_for_route_after_deployment_readiness(monkeyp
     class MigrationJob(Resource, MigrationJobs):
         """Report a completed migration Job."""
 
-        async def wait(self, _conditions: list[str]) -> None:
+        async def refresh(self) -> None:
             """Complete the migration before rollout polling."""
 
             self.raw["status"] = {"conditions": [{"type": "Complete", "status": "True"}]}

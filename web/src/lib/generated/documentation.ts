@@ -825,6 +825,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
+                "description": "Fixed height of the stack, as pixels or a CSS size. Content that exceeds the height scrolls.",
+                "name": "height"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -832,7 +836,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.",
         "example": "<Stack direction=\"horizontal\" align=\"center\">\n  $order.number\n  <StackItem size=\"fill\">Order details</StackItem>\n  <Button>Open</Button>\n</Stack>",
         "name": "Stack",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [
@@ -968,7 +972,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Displays tabular data from an array.",
         "example": "<Table data=\"$orders.items\">\n  <TableColumn field=\"number\" header=\"Number\" />\n  <TableColumn field=\"status\" header=\"Status\" />\n</Table>",
         "name": "Table",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [
@@ -979,6 +983,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "Column header text.",
                         "name": "header"
+                    },
+                    {
+                        "description": "Horizontal alignment of header and body cells.",
+                        "name": "align"
                     },
                     {
                         "description": "Conditional rendering expression.",

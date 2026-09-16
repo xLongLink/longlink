@@ -1,8 +1,11 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import type { Props } from '@/xml/types';
 import { Dialog } from '@/components/ui/Dialog';
 import { useId, useRef, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
+import { useXmlRuntime } from '@/xml/core/context';
+import { resolveXmlProps } from '@/xml/core/props';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -11,6 +14,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { invalidateOrganizationSolutionQueries } from '@/lib/hooks/use-organization';
 import { zLongLinkMetadata, zSolutionCreate } from '@/lib/generated/platform-api-v1/zod.gen';
+
+const createSolutionXmlPropsSchema = z.object({ organizationId: z.string().uuid() });
 
 const createSolutionFormSchema = z.object({
     image: z.string().trim(),
@@ -27,6 +32,14 @@ const defaultCreateSolutionValues: CreateSolutionInput = {
     description: '',
     envs: {},
 };
+
+/** Renders the established Solution creation workflow from an XML View. */
+export function CreateSolutionXml({ props }: Props) {
+    const { scope: ctx } = useXmlRuntime();
+    const { organizationId } = resolveXmlProps(props, ctx, createSolutionXmlPropsSchema);
+
+    return <CreateSolution organizationId={organizationId} />;
+}
 
 /** Renders the create-solution dialog for an organization. */
 export default function CreateSolution({ organizationId }: { organizationId: string }) {

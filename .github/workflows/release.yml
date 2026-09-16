@@ -133,15 +133,15 @@ jobs:
               id: image
               uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
               with:
-                    context: .
-                    file: api/Dockerfile
-                    platforms: linux/amd64
-                    push: true
-                    build-args: |
+                  context: .
+                  file: api/Dockerfile
+                  platforms: linux/amd64
+                  push: true
+                  build-args: |
                       VERSION=${{ github.ref_name }}
-                    annotations: |
+                  annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
-                    labels: |
+                  labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ github.ref_name }}
                       longlink.dev/release-version=${{ github.ref_name }}
@@ -149,9 +149,9 @@ jobs:
                       longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
                       longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
                       longlink.dev/release-sdk-version=${{ github.ref_name }}
-                    tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
-                    cache-from: type=gha,scope=api
-                    cache-to: type=gha,mode=max,scope=api
+                  tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                  cache-from: type=gha,scope=api
+                  cache-to: type=gha,mode=max,scope=api
 
     publish-compute-chart:
         needs: tests

@@ -116,6 +116,7 @@ async def create(
         payload.envs,
         source=payload.image,
         min_scale=payload.min_scale,
+        idle_seconds=payload.idle_seconds,
     )
 
     return solution
@@ -163,6 +164,7 @@ async def deploy(
     *,
     source: Image | None = None,
     min_scale: MinScale | None = None,
+    idle_seconds: int | None = None,
 ) -> None:
     """Append a snapshot and queue its exact deployment target."""
 
@@ -185,6 +187,10 @@ async def deploy(
     # Preserve omitted scaling and reject identical snapshots before queuing work.
     if min_scale is None:
         min_scale = current.min_scale if current is not None else 0
+    if idle_seconds is None:
+        idle_seconds = current.idle_seconds if current is not None else 60
+    if idle_seconds != 0 and idle_seconds < 30:
+        raise InvalidError("idle_seconds must be 0 or between 30 and 3600")
     if source is None:
         source = metadata.image
     if (
@@ -194,6 +200,7 @@ async def deploy(
         and current.source == source
         and current.envs == merged
         and current.min_scale == min_scale
+        and current.idle_seconds == idle_seconds
     ):
         raise ConflictError("Source and configuration are up to date. No revision was created.")
 
@@ -203,6 +210,7 @@ async def deploy(
         image=metadata.image,
         source=source,
         min_scale=min_scale,
+        idle_seconds=idle_seconds,
         envs=merged,
         created_id=user_id,
     )

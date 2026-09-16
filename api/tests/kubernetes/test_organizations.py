@@ -15,6 +15,10 @@ def test_organization_template_limits_ephemeral_storage() -> None:
     _, resource_quota, _ = templates.readyml_list(
         files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
         namespace="acme",
+        cpu_limit=4,
+        memory_limit_gib=3,
+        ephemeral_limit_gib=4,
+        pods=8,
     )
 
     # Assert

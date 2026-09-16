@@ -1,11 +1,10 @@
 import pytest
 from uuid import uuid4
-from factories import create_compute, queue_operation, create_ready_compute
+from factories import create_ready_compute
 from src.errors import ConflictError, NotFoundError
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
 from src.database.services import compute
-from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 
 
@@ -36,25 +35,6 @@ async def test_delete_removes_unused_registry() -> None:
     assert persisted is None
 
 
-async def test_delete_rejects_compute_with_unfinished_validation_operation() -> None:
-    """Retain a compute registry while its validation operation is unfinished."""
-
-    # Arrange
-    compute_registry = await create_compute()
-    compute_id = compute_registry.id
-    await queue_operation(kind=OperationKind.compute_validate, target_id=compute_id)
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(ConflictError, match=r"^Compute registry has unfinished validation operation$"):
-            await compute.delete(session, compute_id)
-
-    # Assert
-    async with session_scope() as session:
-        persisted = await session.get(ComputeRegistry, compute_id)
-    assert persisted is not None
-
-
 async def test_create_rejects_duplicate_compute_clusters() -> None:
     """Translate duplicate physical clusters into the stable domain conflict."""
 
@@ -68,7 +48,6 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
             "current-context": "context",
             "users": [{"name": "user", "user": {"token": "secret"}}],
         },
-        bucket_size_bytes=1073741824,
         gateway_url="https://gateway.example",
         database_storage_class="local-path",
         storage_endpoint="https://storage.example",

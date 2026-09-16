@@ -119,6 +119,13 @@
       <xsd:enumeration value="wrap-reverse"/>
     </xsd:restriction>
   </xsd:simpleType>
+  <xsd:simpleType name="TableColumnAlignType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="start"/>
+      <xsd:enumeration value="center"/>
+      <xsd:enumeration value="end"/>
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="TextColorType">
     <xsd:restriction base="xsd:string">
       <xsd:enumeration value="primary"/>

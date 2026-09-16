@@ -2,11 +2,10 @@ import base64
 import httpx2
 import hashlib
 from typing import Literal
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from dataclasses import dataclass
 from urllib.parse import urlencode
 from src.environments import env
-from src.utils.emails import EMAIL_ADAPTER
 from longlink.shared.models import Email
 
 OAuthProvider = Literal["google", "github"]
@@ -193,7 +192,7 @@ def _email(payload: object) -> Email | None:
     if value is None:
         return None
     try:
-        return EMAIL_ADAPTER.validate_python(value)
+        return TypeAdapter(Email).validate_python(value)
     except ValidationError:
         return None
 

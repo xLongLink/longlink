@@ -126,6 +126,7 @@ async def test_delete_records_the_solution_tombstone(users: tuple[User, User, Us
     [
         pytest.param(None, "Access required", id="non-member"),
         pytest.param(OrganizationRoles.read, "Permission required", id="read-member"),
+        pytest.param(OrganizationRoles.write, "Permission required", id="write-member"),
     ],
 )
 async def test_delete_rejects_callers_without_maintain_access(
