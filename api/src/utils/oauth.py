@@ -2,14 +2,14 @@ import base64
 import httpx2
 import hashlib
 from typing import Literal
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 from dataclasses import dataclass
 from urllib.parse import urlencode
 from src.environments import env
+from src.utils.emails import EMAIL_ADAPTER
 from longlink.shared.models import Email
 
 OAuthProvider = Literal["google", "github"]
-EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
