@@ -164,7 +164,7 @@ export default function UpdateSolution({
                         render={({ field }) => (
                             <CheckboxInput
                                 label="Always on"
-                                description="Keep at least one instance running. Uses resources while idle and prevents the organization database from hibernating."
+                                description="Keep at least one instance running. Uses resources while idle."
                                 value={field.value}
                                 onChange={field.onChange}
                                 onBlur={field.onBlur}

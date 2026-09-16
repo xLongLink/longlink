@@ -103,7 +103,6 @@ async def update_organization(
         membership.organization_id,
         str(payload.avatar) if payload.avatar is not None else None,
         user.id,
-        database_idle_seconds=payload.database_idle_seconds,
     )
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -133,9 +132,9 @@ async def get_organization_quotas(
 async def get_organization_database_usage(
     membership: UserOrganization = Depends(organization_access),
 ):
-    """Return cached database usage without waking the Organization for telemetry."""
+    """Return cached database usage for telemetry."""
 
-    # Allocation is stored per Organization, so even sleeping databases need no Kubernetes or SQL request.
+    # Allocation is stored per Organization, so telemetry needs no Kubernetes or SQL request.
     organization = membership.organization
     return {
         "size_bytes": organization.database_usage_bytes,
@@ -269,7 +268,6 @@ async def create_organization(
         session,
         payload.name,
         user,
-        database_idle_seconds=payload.database_idle_seconds,
     )
     await session.commit()
     return organization

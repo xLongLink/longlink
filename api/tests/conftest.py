@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from types import TracebackType
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
 from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
@@ -17,7 +17,6 @@ TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
 os.environ["SMTP_HOST"] = "smtp.example.com"
-os.environ["IMAGE_REGISTRIES"] = '{"ghcr.io":"https://ghcr.io","localhost:15000":"http://localhost:15000"}'
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
@@ -45,6 +44,9 @@ from src.utils.s3 import Credentials
 from src.environments import env
 from src.database.models import registry
 from src.database.models.users import User
+
+if TYPE_CHECKING:
+    from src.kubernetes.client import Kubernetes
 
 
 class AsyncKubernetes:
@@ -115,7 +117,6 @@ class DatabaseKubernetes(AsyncKubernetes):
         """Expose database operations through the production client shape."""
 
         self.databases = self
-        self.storage = StorageKubernetes()
 
     async def apply(self, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1) -> None:
         """Accept Organization cluster provisioning."""
@@ -135,6 +136,22 @@ class DatabaseKubernetes(AsyncKubernetes):
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"
+
+
+class OperationKubernetes(AsyncKubernetes):
+    """Expose the Solution lifecycle client without external Kubernetes I/O."""
+
+    def __init__(self, *_args: object) -> None:
+        """Share one fake cluster connection with the solution and database clients."""
+
+        self.solutions = self
+        self.databases = DatabaseKubernetes()
+
+    async def portforward(self, name: str, namespace: str, port: int) -> int:
+        """Provide the database tunnel owned by the shared fake database client."""
+
+        # Reuse the single provider-tunnel contract instead of restating it.
+        return await self.databases.portforward(name, namespace, port)
 
 
 class DatabasePostgres:
@@ -187,7 +204,7 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 
-class FakeKubernetes:
+class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
 
     async def api(self) -> Api:
@@ -204,6 +221,13 @@ class FakeKubernetes:
         """Return a synthetic development gateway port without external I/O."""
 
         return 18444
+
+
+def kubernetes_client() -> "Kubernetes":
+    """Return the Kubernetes test double typed as its production client."""
+
+    # Centralize the intentional test-double substitution so call sites need no suppressions.
+    return cast("Kubernetes", FakeKubernetes())
 
 
 class RegistryKubernetes(AsyncKubernetes):

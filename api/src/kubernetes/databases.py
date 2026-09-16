@@ -8,25 +8,21 @@ from typing import TYPE_CHECKING
 from src.utils import templates
 from src.kubernetes import namespace
 from importlib.resources import files
-from kr8s.asyncio.objects import Job, Pod, Secret, Namespace, new_class, object_from_spec
+from kr8s.asyncio.objects import Pod, Secret, Namespace, new_class, object_from_spec
 from src.kubernetes.utils import apply
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 ClusterResource = new_class("Cluster", "postgresql.cnpg.io/v1", asyncio=True, plural="clusters")
-BackupResource = new_class("Backup", "postgresql.cnpg.io/v1", asyncio=True, plural="backups")
-ScheduledBackupResource = new_class("ScheduledBackup", "postgresql.cnpg.io/v1", asyncio=True, plural="scheduledbackups")
 
 
 class Databases:
-    """Reconcile, hibernate, connect to, and delete isolated Organization CNPG clusters.
+    """Reconcile, connect to, and delete isolated Organization CNPG clusters.
 
     An Organization database lives in ``longlink-database-{organization UUID hex}``
     with its Cluster, credentials, quota, and network policy. ``apply`` renders that
-    boundary before creating CNPG resources. Hibernation retains the cluster PVCs
-    but is allowed only after compute work, migration Jobs, backups, and enabled
-    backup schedules can no longer use PostgreSQL. ``resume`` confirms both CNPG
+    boundary before creating CNPG resources. ``resume`` confirms both CNPG
     status and ready instance Pods before callers connect.
 
         Structure::
@@ -89,35 +85,6 @@ class Databases:
         await apply(cluster)
         await self.resume(organization_id)
 
-    async def hibernate(self, organization_id: UUID) -> None:
-        """Stop database Pods while retaining PVCs; callers serialize this with activation."""
-
-        # Never intentionally shut down SQL beneath live compute, backup, or database maintenance work.
-        if not await self.idle(organization_id):
-            raise RuntimeError("Organization still has live Pods or pending compute/database work")
-        api = await self._client.api()
-        database_namespace = namespace.database(organization_id)
-        cluster = ClusterResource(
-            "database",
-            namespace=database_namespace,
-            api=api,
-        )
-        await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "on"}}})
-        async with asyncio.timeout(10 * 60):
-            while True:
-                # CNPG acknowledges successful shutdown through its documented condition.
-                await cluster.refresh()
-                if any(
-                    condition.get("type") == "cnpg.io/hibernation" and condition.get("status") == "True"
-                    for condition in cluster.raw.get("status", {}).get("conditions", [])
-                ):
-                    async for pod in Pod.list(api=api, namespace=database_namespace):
-                        if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
-                            break
-                    else:
-                        return
-                await asyncio.sleep(5)
-
     async def resume(self, organization_id: UUID) -> None:
         """Wait for acknowledged wake and the expected ready, nonterminating database Pods."""
 
@@ -165,76 +132,10 @@ class Databases:
                             return
                 await asyncio.sleep(5)
 
-    async def idle(self, organization_id: UUID) -> bool:
-        """Return whether live compute, runnable Jobs, and database backup/maintenance work are absent."""
-
-        # Check all Pods rather than trusting labels; completed migration Jobs do not keep SQL awake.
-        api = await self._client.api()
-        compute_namespace = namespace.compute(organization_id)
-        async for pod in Pod.list(api=api, namespace=compute_namespace):
-            if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
-                return False
-
-        # An unsuspended migration can still start after a lost lease, even before its first Pod exists.
-        async for job in Job.list(api=api, namespace=compute_namespace):
-            if job.spec.get("suspend") is not True and not any(
-                condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
-                for condition in job.raw.get("status", {}).get("conditions", [])
-            ):
-                return False
-
-        # Plugin and snapshot backups can execute inside PostgreSQL without creating a separate Pod.
-        database_namespace = namespace.database(organization_id)
-        async for backup in BackupResource.list(api=api, namespace=database_namespace):
-            if backup.raw.get("status", {}).get("phase") not in {"completed", "failed"}:
-                return False
-
-        # Pending Jobs also block sleep before their Pods exist; retained terminal Jobs do not.
-        async for job in Job.list(api=api, namespace=database_namespace):
-            if not any(
-                condition.get("type") in {"Complete", "Failed"} and condition.get("status") == "True"
-                for condition in job.raw.get("status", {}).get("conditions", [])
-            ):
-                return False
-
-        # Account for lingering Job Pods and standalone maintenance Pods, but not the database instances themselves.
-        async for pod in Pod.list(api=api, namespace=database_namespace, label_selector="cnpg.io/podRole!=instance"):
-            if pod.raw.get("status", {}).get("phase") not in {"Succeeded", "Failed"}:
-                return False
-        return True
-
-    async def can_hibernate(self, organization_id: UUID) -> bool:
-        """Reject sleep beneath compute, reconciliation, or autonomous backup schedules."""
-
-        # Scheduled work does not acquire Platform leases, so enabled schedules require an awake database.
-        if not await self.idle(organization_id):
-            return False
-        api = await self._client.api()
-        database_namespace = namespace.database(organization_id)
-        cluster = ClusterResource(
-            "database",
-            api=api,
-            namespace=database_namespace,
-        )
-        await cluster.refresh()
-        status = cluster.raw.get("status", {})
-        if (
-            status.get("readyInstances") != cluster.spec.get("instances")
-            or status.get("currentPrimary") != status.get("targetPrimary")
-            or not any(condition.get("type") == "Ready" and condition.get("status") == "True" for condition in status.get("conditions", []))
-        ):
-            raise RuntimeError("Database is reconciling and cannot hibernate")
-
-        # Enabled schedules can start unleased database work after the current idle check.
-        async for schedule in ScheduledBackupResource.list(api=api, namespace=database_namespace):
-            if schedule.spec.get("suspend") is not True:
-                return False
-        return True
-
     async def certificate(self, organization_id: UUID) -> str:
         """Read the CNPG-generated server CA as PEM text, not a filesystem path."""
 
-        # CNPG's default server CA Secret is named after its Cluster and survives hibernation.
+        # CNPG's default server CA Secret is named after its Cluster.
         secret = Secret(
             "database-ca",
             namespace=namespace.database(organization_id),

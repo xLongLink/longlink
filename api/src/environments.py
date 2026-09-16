@@ -40,9 +40,6 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
-    # Administrator-controlled registry origins, keyed by the image registry name.
-    IMAGE_REGISTRIES: dict[str, HttpUrl] = Field(default_factory=lambda: {"ghcr.io": HttpUrl("https://ghcr.io")})
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -69,11 +66,6 @@ class Env(BaseSettings):
         # Authenticated SMTP requires a complete credential pair and a delivery host.
         if (self.SMTP_USERNAME is None) != (self.SMTP_PASSWORD is None):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
-
-        # Registry configuration must contain only credential-free origins; requests cannot supply new destinations.
-        for url in self.IMAGE_REGISTRIES.values():
-            if url.username is not None or url.password is not None or url.path not in {None, "/"} or url.query or url.fragment:
-                raise ValueError("IMAGE_REGISTRIES must contain origins without credentials, path, query, or fragment")
 
         # OAuth providers require both confidential client credentials before their routes are enabled.
         if (self.GOOGLE_OAUTH_CLIENT_ID is None) != (self.GOOGLE_OAUTH_CLIENT_SECRET is None):

@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from uuid import uuid4
+from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from sqlmodel import col
 from factories import create_solution, create_organization
@@ -337,7 +337,7 @@ async def test_local_registry_release_roundtrip(
     assert response.status_code == 204
     listing = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
     assert listing.status_code == 200 and listing.json()[0]["deployment_pending"]
-    solution_id = listing.json()[0]["id"]
+    solution_id = UUID(listing.json()[0]["id"])
     url = f"/api/v1/solutions/{solution_id}/update"
     check = await clients[0].get(url)
     assert check.status_code == 200

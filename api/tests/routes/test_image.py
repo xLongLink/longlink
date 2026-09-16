@@ -72,3 +72,16 @@ async def test_inspect_image_returns_declared_metadata(
         "description": None,
         "environments": [{"name": "API_KEY", "description": "API key", "required": True}],
     }
+
+
+async def test_inspect_image_rejects_disallowed_registry(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Reject image inspection for a well-formed reference from an unconfigured registry."""
+
+    # Act
+    response = await clients[0].get("/api/v1/image?image=registry.example.com/longlink/dashboard:latest")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Image registry is not allowed"}

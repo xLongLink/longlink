@@ -6,23 +6,30 @@ pytestmark = pytest.mark.no_db
 
 
 @pytest.mark.parametrize(
-    ("source", "expected"),
+    ("source", "expected", "expected_connect_args"),
     [
-        ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db"),
+        ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db", {}),
         (
             "postgresql+asyncpg://control:secret@db:5432/longlink",
             "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require",
+            {"server_settings": {"timezone": "UTC"}},
         ),
         (
             "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require&application_name=longlink",
             "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink&ssl=require",
+            {"server_settings": {"timezone": "UTC"}},
         ),
     ],
 )
-def test_database_url_normalization(source: str, expected: str) -> None:
+def test_database_url_normalization(source: str, expected: str, expected_connect_args: dict[str, object]) -> None:
     """Normalize database URLs for async SQLAlchemy usage."""
 
-    assert urls.database(source).url.render_as_string(hide_password=False) == expected
+    # Arrange and act
+    connection = urls.database(source)
+
+    # Assert
+    assert connection.url.render_as_string(hide_password=False) == expected
+    assert connection.connect_args == expected_connect_args
 
 
 @pytest.mark.parametrize(
@@ -49,6 +56,7 @@ def test_database_url_preserves_ssl_and_other_query_params(
 
     # Assert
     assert connection.url.query == {**expected_query, "ssl": "disable"}
+    assert connection.connect_args == {"server_settings": {"timezone": "UTC"}}
 
 
 def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options() -> None:

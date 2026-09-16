@@ -2,6 +2,7 @@ import pytest
 from src import auth
 from uuid import uuid4
 from httpx2 import AsyncClient
+from conftest import FakeKubernetes
 from factories import (
     create_compute,
     create_solution,
@@ -32,26 +33,20 @@ async def test_compute_list_reports_live_package_versions(
 
         raw = {"data": {"contract": "1", "platform_version": "v9.9.9"}}
 
-    class FakeKubernetes:
+    class ReleaseKubernetes(FakeKubernetes):
         """Expose the release boundary without opening a cluster connection."""
 
         def __init__(self, kubeconfig: object) -> None:
             """Ignore the stored connection settings."""
 
-        async def __aenter__(self) -> "FakeKubernetes":
-            """Enter the release lifetime."""
-
-            return self
-
-        async def __aexit__(self, *args: object) -> None:
-            """Close the release lifetime."""
+            super().__init__()
 
         async def api(self) -> object:
             """Return the release boundary."""
 
             return object()
 
-    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", FakeKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", ReleaseKubernetes)
     monkeypatch.setattr("src.kubernetes.gateway.ConfigMap", FakeConfigMap)
 
     # Act

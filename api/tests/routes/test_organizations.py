@@ -134,7 +134,6 @@ async def test_get_organization_by_slug_returns_owner_membership(
             "name": "acme",
             "slug": "acme",
             "avatar": "",
-            "database_idle_seconds": organization.database_idle_seconds,
             "status": "creating",
         },
         "role": "owner",
@@ -415,7 +414,7 @@ async def test_other_organization_user_cannot_delete_solution(
     ("database_state", "usage"),
     [
         pytest.param(DatabaseState.available, 3584, id="available"),
-        pytest.param(DatabaseState.hibernated, None, id="hibernated"),
+        pytest.param(DatabaseState.failed, None, id="failed"),
     ],
 )
 async def test_organization_database_usage_returns_cached_usage_without_provider_access(
@@ -432,7 +431,7 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
     client = clients[0]
     organization = await create_organization(owner, compute=await create_ready_compute())
 
-    # Persist cached telemetry for an active or hibernated Organization.
+    # Persist cached telemetry for an Organization.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -687,7 +686,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "name": "globex",
                 "slug": "globex",
                 "avatar": "",
-                "database_idle_seconds": organization.database_idle_seconds,
                 "status": "creating",
             }
         ],

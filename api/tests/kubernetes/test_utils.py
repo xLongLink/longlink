@@ -1,6 +1,8 @@
 import pytest
 from kr8s import NotFoundError
 from types import SimpleNamespace
+from typing import cast
+from kr8s.asyncio.objects import APIObject
 from src.kubernetes.utils import apply, deployment_is_ready
 
 pytestmark = pytest.mark.no_db
@@ -79,7 +81,7 @@ async def test_apply_creates_missing_resources_and_repairs_existing_ones(
                 raise NotFoundError("Resource missing")
 
     # Act
-    await apply(Resource())  # type: ignore[arg-type]
+    await apply(cast(APIObject, Resource()))
 
     # Assert
     assert calls == expected_calls

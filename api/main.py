@@ -26,11 +26,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         await user_service.ensure_administrator(session)
         await session.commit()
 
-    # Start this replica's schedulers.
-    tasks = (
-        asyncio.create_task(jobs.run_operation_scheduler()),
-        asyncio.create_task(jobs.run_database_scheduler()),
-    )
+    # Start this replica's scheduler.
+    tasks = (asyncio.create_task(jobs.run_operation_scheduler()),)
 
     # Always stop background Operation work when the application lifespan exits.
     try:

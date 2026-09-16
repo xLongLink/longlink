@@ -96,14 +96,10 @@ def upgrade() -> None:
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("database_password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("database_last_active_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column(
             "database_state",
             sa.Enum(
                 "available",
-                "hibernating",
-                "hibernated",
-                "resuming",
                 "failed",
                 "needs_sync",
                 name="database_state_enum",
@@ -114,14 +110,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("database_usage_bytes", sa.BigInteger(), nullable=True),
-        sa.Column("database_idle_seconds", sa.Integer(), nullable=False, server_default="300"),
         sa.Column("database_size_mib", sa.Integer(), nullable=False, server_default="100"),
         sa.Column("database_instances", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("storage_quota_bytes", sa.BigInteger(), nullable=False, server_default="1073741824"),
-        sa.Column("compute_cpu_limit", sa.Integer(), nullable=False, server_default="4"),
-        sa.Column("compute_memory_limit_gib", sa.Integer(), nullable=False, server_default="3"),
-        sa.Column("compute_ephemeral_limit_gib", sa.Integer(), nullable=False, server_default="4"),
-        sa.Column("compute_pods", sa.Integer(), nullable=False, server_default="8"),
         sa.Column(
             "status",
             sa.Enum(
