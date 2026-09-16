@@ -46,7 +46,7 @@ class Organization(AuditTable, table=True):
     )
     database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
     database_idle_seconds: int = Field(
-        default_factory=lambda: env.DATABASE_IDLE_SECONDS,
+        default=300,
         ge=0,
         le=604800,
         sa_column=Column(Integer, nullable=False, server_default="300"),

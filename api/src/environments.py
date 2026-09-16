@@ -9,7 +9,6 @@ class Env(BaseSettings):
 
     # Runtime scheduling
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
-    DATABASE_IDLE_SECONDS: int = Field(default=300, ge=300, le=604800)
     VERSION: str = Field(default="v0.0.0", pattern=r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-.+)?$")
 
     # Authentication
