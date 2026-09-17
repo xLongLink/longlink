@@ -26,9 +26,9 @@
 
     <Table data="$attachments" idKey="id">
         <TableColumn field="name" header="File">
-            <Link href="/api/items/${params.item}/attachments/${row.id}">
-                $row.name
-            </Link>
+            <Dialog title="$row.name" triggerLabel="$row.name" purpose="info" width="90%" height="90vh">
+                <FileViewer src="/api/items/${params.item}/attachments/${row.id}" title="$row.name" />
+            </Dialog>
         </TableColumn>
     </Table>
 </longlink>

@@ -25,6 +25,7 @@ import { FileInput } from '../adapters/FileInput';
 import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
+import { FileViewer } from '../adapters/FileViewer';
 import type { XmlComponentRegistry } from '../types';
 import { NumberInput } from '../adapters/NumberInput';
 import { ProgressBar } from '../adapters/ProgressBar';
@@ -45,6 +46,7 @@ export const sdkXmlComponentRegistry: XmlComponentRegistry = {
     Dialog,
     Divider,
     FileInput,
+    FileViewer,
     For,
     Grid,
     GridSpan,
