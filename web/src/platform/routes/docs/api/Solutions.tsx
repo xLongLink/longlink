@@ -6,12 +6,12 @@ import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 
-const solutionPaths = ['Use', 'Adapt', 'Create'];
+const solutionPaths = ['Adopt', 'Branch', 'Create'];
 
 const article = {
     description: 'Learn how to create, deploy, and operate Solutions on the LongLink Platform.',
     toc: [{ id: 'solutions', label: 'Solutions', level: 1 }],
-    lastUpdated: '2026-08-05',
+    lastUpdated: '2026-09-17',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/api/Solutions.tsx',
     title: 'Solutions | Platform Documentation | LongLink',
 };
@@ -29,7 +29,7 @@ export default function DocsArticleRoute() {
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
-                        Use
+                        Adopt
                     </Text>{' '}
                     an existing one when its process already reflects the way your organization works. LongLink provides
                     a consistent way to deploy and operate it while making it available to authorized users and
@@ -37,7 +37,7 @@ export default function DocsArticleRoute() {
                 </Text>
                 <Text as="p">
                     <Text size="lg" type="label" weight="bold">
-                        Adapt
+                        Branch
                     </Text>{' '}
                     an existing project when the underlying process is familiar but the details differ. Teams can fork
                     its Python code and adjust the workflows, rules, data model, views, and integrations to match their

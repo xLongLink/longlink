@@ -1,8 +1,8 @@
+import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
-import { PlatformFlowDiagram } from '@/components/PlatformFlowDiagram';
 
 const article = {
     description: 'Learn how the LongLink Platform manages organizations, Solutions, and shared infrastructure.',
@@ -32,7 +32,31 @@ export default function DocsArticleRoute() {
                     This gives teams a consistent and governed operating model without rebuilding the same foundation
                     for every service.
                 </Text>
-                <PlatformFlowDiagram />
+                <Card className="handwritten-diagram relative overflow-hidden" padding={0} variant="transparent">
+                    <img
+                        alt="Core application logic surrounded by services and deployment infrastructure"
+                        className="aspect-video w-full object-contain"
+                        src="/images/platform.png"
+                    />
+                    <Text
+                        className="absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                        hasCapsize
+                        textWrap="nowrap"
+                        type="display-3"
+                        weight="semibold"
+                    >
+                        Services
+                    </Text>
+                    <Text
+                        className="absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                        hasCapsize
+                        textWrap="nowrap"
+                        type="display-3"
+                        weight="semibold"
+                    >
+                        Deployment
+                    </Text>
+                </Card>
             </Stack>
         </Article>
     );

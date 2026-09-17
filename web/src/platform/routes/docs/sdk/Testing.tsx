@@ -58,7 +58,9 @@ uv run pytest tests/test_app.py -q`}
                     code={`from longlink.testclient import TestClient
 from main import app
 
+
 client = TestClient(app)
+
 
 def test_healthcheck() -> None:
     """Return the LongLink runtime health payload."""
