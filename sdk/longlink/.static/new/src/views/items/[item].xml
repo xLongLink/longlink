@@ -25,6 +25,10 @@
     </Stack>
 
     <Table data="$attachments" idKey="id">
-        <TableColumn field="name" header="File" />
+        <TableColumn field="name" header="File">
+            <Link href="/api/items/${params.item}/attachments/${row.id}">
+                $row.name
+            </Link>
+        </TableColumn>
     </Table>
 </longlink>
