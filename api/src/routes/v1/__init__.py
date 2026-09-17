@@ -1,10 +1,3 @@
-"""Internal, unstable Platform API for the bundled Web frontend.
-
-API and Web contract changes ship together; /api/v1 is not a supported external
-integration API or a backward-compatibility promise. Authentication and
-authorization remain required. The Platform-to-Solution runtime contract is separate.
-"""
-
 from . import auth, image, proxy, users, health, computes, solutions, operations, organizations
 from fastapi import APIRouter
 from src.errors import ErrorResponse
