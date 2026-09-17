@@ -11,7 +11,6 @@ const article = {
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
-        { id: 'request-context', label: 'Request context', level: 2 },
     ],
     lastUpdated: '2026-09-17',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Routes.tsx',
@@ -30,44 +29,29 @@ export default function DocsArticleRoute() {
                     <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
                         FastAPI
                     </Link>
-                    . Define routes directly on the <Code>LongLink</Code> application in <Code>main.py</Code>.
+                    . Define routes directly on the <Code>LongLink</Code> application in <Code>main.py</Code>. Type a
+                    route parameter as <Code>Context</Code> to receive the request-scoped database session, storage
+                    filesystem, and signed-in user.
                 </Text>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={`from longlink import LongLink
-
-app = LongLink()
-
-@app.get("/api/sample")
-async def sample() -> str:
-    """This is a fastapi endpoint"""
-    return "ok"`}
-                    language="python"
-                    title="main.py"
-                />
-                <Heading id="request-context" level={2}>
-                    Request context
-                </Heading>
-                <Text as="p">
-                    Type a route parameter as <Code>Context</Code> to receive the request-scoped database session,
-                    storage filesystem, and signed-in user. No <Code>Depends</Code> is needed.
-                </Text>
-                <CodeBlock
-                    code={`from collections.abc import Sequence
-from longlink import Context, LongLink
-from sqlmodel import select
+                    code={`from sqlmodel import select
 from src.models.items import Item
+from longlink import Context, LongLink
+
 
 app = LongLink()
+
 
 @app.get("/api/items", response_model=list[Item])
-async def list_items(ctx: Context) -> Sequence[Item]:
+async def list_items(ctx: Context) -> list[Item]:
     """Return catalog items."""
     result = await ctx.database.exec(select(Item).order_by("id"))
     return result.all()`}
                     language="python"
+                    title="main.py"
                 />
             </Stack>
         </Article>

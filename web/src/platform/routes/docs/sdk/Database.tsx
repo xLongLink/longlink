@@ -99,9 +99,11 @@ export default function DocsArticleRoute() {
                     code={`from longlink import Context
 from sqlmodel import Field, SQLModel
 
+
 class Project(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
+
 
 async def create_project(ctx: Context) -> None:
     ctx.database.add(Project(name="Launch"))
@@ -117,12 +119,14 @@ async def create_project(ctx: Context) -> None:
                 </Text>
                 <CodeBlock
                     code={`from datetime import UTC, datetime
-from longlink.database.types import UTCDateTime
 from sqlmodel import Field, SQLModel
+from longlink.database.types import UTCDateTime
+
 
 class Event(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     starts_at: datetime = Field(sa_type=UTCDateTime)
+
 
 event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     language="python"
@@ -136,12 +140,14 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     user relationships.
                 </Text>
                 <CodeBlock
-                    code={`from longlink.database.base import AuditTable
-from sqlmodel import Field
+                    code={`from sqlmodel import Field
+from longlink.database.base import AuditTable
+
 
 class Approval(AuditTable, table=True):
     id: int | None = Field(default=None, primary_key=True)
     status: str
+
 
 approval = Approval(status="pending")
 print(approval.status)  # pending
