@@ -91,7 +91,8 @@ async def deploy(revision_id: UUID) -> None:
         # Define every LONGLINK_* variable next to the persisted runtime contract.
         runtime_secrets = {
             **runtime_secrets,
-            "LONGLINK_STORAGE_ENDPOINT_URL": compute.storage_endpoint,
+            # Workloads always reach object storage through the cluster-local TLS proxy.
+            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
             # Fetch the current CA once for workload rendering on every path.
             "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
             **(
