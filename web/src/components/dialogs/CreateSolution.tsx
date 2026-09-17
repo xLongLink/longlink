@@ -49,7 +49,7 @@ export default function CreateSolution({ organizationId }: { organizationId: str
     return (
         <>
             <Button
-                label="Create Solution"
+                label="New Solution"
                 isDisabled={organizationId.length === 0}
                 clickAction={() => {
                     // Start fresh on opening; retain the previous dialog through its close effects.
