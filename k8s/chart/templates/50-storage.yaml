@@ -7,6 +7,8 @@ data:
     default.conf: |
         server {
             listen 443 ssl;
+            # Mirror the local host-mapped port so the host endpoint stays reachable from outside the cluster.
+            listen 9443 ssl;
             ssl_certificate /etc/nginx/tls/tls.crt;
             ssl_certificate_key /etc/nginx/tls/tls.key;
             client_max_body_size 0;
@@ -39,6 +41,8 @@ spec:
                   ports:
                       - containerPort: 443
                         name: https
+                      - containerPort: 9443
+                        name: https-local
                   volumeMounts:
                       - name: configuration
                         mountPath: /etc/nginx/conf.d
@@ -79,5 +83,9 @@ spec:
 {{- with .Values.storage.service.nodePort }}
           nodePort: {{ . }}
 {{- end }}
+        # Expose the local host-mapped port so the host endpoint stays reachable from outside the cluster.
+        - name: https-local
+          port: 9443
+          targetPort: https-local
     selector:
         app.kubernetes.io/name: longlink-storage

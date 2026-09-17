@@ -2,14 +2,13 @@ import ssl
 import json
 import base64
 import asyncio
-from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from src.kubernetes import namespace
 from importlib.resources import files
-from kr8s.asyncio.objects import Pod, Secret, Namespace, new_class, object_from_spec
-from src.kubernetes.utils import apply
+from kr8s.asyncio.objects import Pod, Secret, new_class, object_from_spec
+from src.kubernetes.utils import apply, delete_namespace
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
@@ -66,7 +65,10 @@ class Databases:
         api = await self._client.api()
 
         # Establish independent database quota and ingress before CNPG creates any Pods.
-        for document in documents[:-1]:
+        cluster_document = next(document for document in documents if document.get("kind") == "Cluster")
+        for document in documents:
+            if document is cluster_document:
+                continue
             resource = object_from_spec(document, api=api)
             await apply(resource)
         secret = Secret(
@@ -79,7 +81,7 @@ class Databases:
         )
         await apply(secret)
         cluster = ClusterResource(
-            documents[-1],
+            cluster_document,
             api=api,
         )
         await apply(cluster)
@@ -150,13 +152,4 @@ class Databases:
         """Delete the database namespace, including its Cluster, credentials, and PVCs."""
 
         # Namespace termination is the completion boundary for destructive database cleanup.
-        resource = Namespace(
-            namespace.database(organization_id),
-            api=await self._client.api(),
-        )
-        try:
-            await resource.delete()
-        except NotFoundError:
-            return
-        async with asyncio.timeout(10 * 60):
-            await resource.wait("delete")
+        await delete_namespace(await self._client.api(), namespace.database(organization_id))

@@ -32,6 +32,8 @@ export const ICON_NAMES = [
     'wrench',
     'stop',
     'microphone',
+    'logs',
+    'trash',
 ] as const;
 export const ORIENTATIONS = ['horizontal', 'vertical'] as const;
 export const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as const;

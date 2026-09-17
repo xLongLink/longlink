@@ -39,14 +39,28 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             return super().bucket(organization)
 
-    async def apply_namespace(_cluster: object, organization_id: UUID, **_kwargs: object) -> None:
+    async def apply_namespace(organization_id: UUID, **_kwargs: object) -> None:
         """Record namespace reconciliation."""
 
         assert organization_id == organization.id
         calls.append("namespace")
 
+    class Organizations:
+        """Record Organization boundary reconciliation."""
+
+        async def apply(self, organization_id: UUID) -> None:
+            """Record namespace reconciliation."""
+
+            await apply_namespace(organization_id)
+
     class Kubernetes(OperationKubernetes):
         """Expose Organization Kubernetes operations."""
+
+        def __init__(self, *args: object) -> None:
+            """Expose the recording Organization boundary."""
+
+            super().__init__(*args)
+            self.organizations = Organizations()
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Record user projection after publication."""
@@ -56,7 +70,6 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
-    monkeypatch.setattr(organization_operations.kubernetes_organizations, "apply", apply_namespace)
     monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
 
     # Reconcile and inspect the published state.
@@ -240,10 +253,13 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
             calls.append("bucket")
 
-    async def delete_namespace(_cluster: object, _organization_id: UUID) -> None:
-        """Fail namespace deletion."""
+    class Organizations:
+        """Fail Organization boundary deletion."""
 
-        raise RuntimeError("namespace deletion failed")
+        async def delete(self, _organization_id: UUID) -> None:
+            """Fail namespace deletion."""
+
+            raise RuntimeError("namespace deletion failed")
 
     class Kubernetes(OperationKubernetes):
         """Expose the failing Organization Kubernetes operations."""
@@ -253,9 +269,9 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
 
             super().__init__(*args)
             self.databases = Database()
+            self.organizations = Organizations()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations.kubernetes_organizations, "delete", delete_namespace)
 
     # Namespace failure must prevent destructive provider cleanup.
     with pytest.raises(RuntimeError, match="namespace deletion failed"):
@@ -300,11 +316,14 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
             assert solutions == [solution.id]
             calls.append("bucket")
 
-    async def delete_namespace(_cluster: object, organization_id: UUID) -> None:
-        """Record namespace deletion."""
+    class Organizations:
+        """Record Organization boundary deletion."""
 
-        assert organization_id == organization.id
-        calls.append("namespace")
+        async def delete(self, organization_id: UUID) -> None:
+            """Record namespace deletion."""
+
+            assert organization_id == organization.id
+            calls.append("namespace")
 
     class Kubernetes(OperationKubernetes):
         """Expose Organization Kubernetes operations."""
@@ -314,10 +333,10 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
 
             super().__init__(*args)
             self.databases = Database()
+            self.organizations = Organizations()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
-    monkeypatch.setattr(organization_operations.kubernetes_organizations, "delete", delete_namespace)
 
     # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None

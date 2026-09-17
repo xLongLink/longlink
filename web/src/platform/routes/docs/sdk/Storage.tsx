@@ -15,7 +15,7 @@ const article = {
         { id: 'usage', label: 'Usage', level: 2 },
         { id: 'assets', label: 'Assets', level: 2 },
     ],
-    lastUpdated: '2026-07-20',
+    lastUpdated: '2026-09-17',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Storage.tsx',
     title: 'Storage | LongLink Documentation',
 };
@@ -28,7 +28,7 @@ export default function DocsArticleRoute() {
                     Storage
                 </Heading>
                 <Text as="p">
-                    The SDK creates a solution-scoped <Code>storage</Code> filesystem backed by{' '}
+                    The SDK provides a solution-scoped <Code>ctx.storage</Code> filesystem backed by{' '}
                     <Link
                         href="https://filesystem-spec.readthedocs.io/en/latest/"
                         hasUnderline
@@ -38,6 +38,7 @@ export default function DocsArticleRoute() {
                         fsspec
                     </Link>
                     . Project source uses the same filesystem interface in local development, tests, and production.
+                    Type a route parameter as <Code>Context</Code> to receive it.
                 </Text>
                 <Table>
                     <TableHeader>
@@ -92,10 +93,11 @@ export default function DocsArticleRoute() {
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={`from longlink import storage
+                    code={`from longlink import Context
 
-with storage.open("reports/example.txt", "wb") as f:
-    f.write(b"hello")`}
+async def write_report(ctx: Context) -> None:
+    with ctx.storage.open("reports/example.txt", "wb") as f:
+        f.write(b"hello")`}
                     language="python"
                 />
             </Stack>

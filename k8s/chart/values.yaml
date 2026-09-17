@@ -17,6 +17,8 @@ rustfs:
     mode: distributed
     secret:
         existingSecret: longlink-rustfs
+        accessKey: ''
+        secretKey: ''
     storage:
         name: block-storage
         dataStorageSize: 100Gi

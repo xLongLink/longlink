@@ -1,7 +1,7 @@
 import pytest
 import logging
 from pytest import MonkeyPatch
-from fastapi import FastAPI
+from fastapi import APIRouter
 from pathlib import Path
 from longlink import app as longlink_app
 from pydantic import ValidationError
@@ -14,8 +14,7 @@ def create_runtime_client() -> TestClient:
     """Build an SDK runtime client from the current generated Solution source tree."""
 
     # Register the generated view catalog before serving requests.
-    app = FastAPI()
-    LongLink(app)
+    app = LongLink()
     return TestClient(app)
 
 
@@ -53,7 +52,7 @@ def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, t
     # Reject startup with the missing artifact's exact location.
     frontend_index = tmp_path / ".static" / "web" / "index.html"
     with pytest.raises(RuntimeError, match=f"LongLink embedded frontend is required: {frontend_index}"):
-        LongLink(FastAPI())
+        LongLink()
 
 
 def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
@@ -65,7 +64,7 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
 
     # Reject startup before the Solution begins serving requests.
     with pytest.raises(ValidationError, match="DATABASE_HOST"):
-        LongLink(FastAPI())
+        LongLink()
 
 
 def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
@@ -76,7 +75,7 @@ def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monk
 
     # Act and assert
     with pytest.raises(ValueError, match=f"Solution source directory is required: {tmp_path / 'src' / 'views'}"):
-        LongLink(FastAPI())
+        LongLink()
 
 
 @pytest.mark.usefixtures("solution_source")
@@ -94,8 +93,8 @@ def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch)
     monkeypatch.setattr(access_logger, "filters", [])
 
     # Act
-    LongLink(FastAPI())
-    LongLink(FastAPI())
+    LongLink()
+    LongLink()
 
     # Assert
     assert sum(isinstance(item, ApiAccessFilter) for item in access_logger.filters) == 1
@@ -203,14 +202,10 @@ def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> No
     # Arrange: Discover the valid view before the invalid catalog entry.
     (solution_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
     (solution_source / "views" / "z-broken.xml").write_text("<unknown />", encoding="utf-8")
-    app = FastAPI()
 
-    # Act
+    # Act and assert
     with pytest.raises(ValueError, match="XML is invalid"):
-        LongLink(app)
-
-    # Assert
-    assert not any(getattr(route, "path", None) == "/views/valid" for route in app.router.routes)
+        LongLink()
 
 
 COLLIDING_SOLUTION_ROUTES = [
@@ -228,19 +223,20 @@ def test_solution_routes_colliding_with_view_endpoints_are_rejected(solution_sou
         "<longlink>Dashboard</longlink>",
         encoding="utf-8",
     )
-    app = FastAPI()
+    solution_router = APIRouter()
 
-    @app.get(route)
+    @solution_router.get(route)
     async def solution_dashboard() -> dict[str, str]:
         """Return the Solution dashboard resource."""
 
         return {"source": "solution"}
 
+    # Act
+    app = LongLink()
     original_routes = app.router.routes.copy()
 
-    # Act
     with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
-        LongLink(app)
+        app.include_router(solution_router)
 
     # Assert
     assert app.router.routes == original_routes
@@ -274,11 +270,6 @@ def test_duplicate_browser_routes_are_rejected(
     first_path.write_text("<longlink>First</longlink>", encoding="utf-8")
     second_path.write_text("<longlink>Second</longlink>", encoding="utf-8")
 
-    app = FastAPI()
-
     # Act and assert
     with pytest.raises(ValueError, match=message):
-        LongLink(app)
-
-    # Assert
-    assert not any(getattr(route, "path", "").startswith("/views/") for route in app.router.routes)
+        LongLink()

@@ -41,7 +41,7 @@
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />
-            <Stack>
+            <Stack gap="1">
                 <Heading level="4" accessibilityLevel="1">
                     $details.organization.name
                 </Heading>
@@ -88,11 +88,18 @@
                                             name="$row.user.name"
                                             src="$row.user.avatar"
                                         />
-                                        <Text>$row.user.name</Text>
+                                        <Stack align="start">
+                                            <Stack
+                                                direction="horizontal"
+                                                gap="1"
+                                                align="center"
+                                            >
+                                                <Text>$row.user.name</Text>
+                                                <Badge>$row.role</Badge>
+                                            </Stack>
+                                            <Text type="supporting">$row.user.email</Text>
+                                        </Stack>
                                     </Stack>
-                                </TableColumn>
-                                <TableColumn field="role" header="Role">
-                                    <Badge>$row.role</Badge>
                                 </TableColumn>
                                 <TableColumn
                                     if="${membership.role === 'admin' || membership.role === 'owner'}"
@@ -131,7 +138,7 @@
                             <Stack
                                 direction="horizontal"
                                 justify="between"
-                                align="center"
+                                align="end"
                                 wrap="wrap"
                             >
                                 <Heading level="2">Invitations</Heading>
@@ -219,7 +226,7 @@
                         <Stack
                             direction="horizontal"
                             justify="between"
-                            align="center"
+                            align="end"
                             wrap="wrap"
                         >
                             <Heading level="2">Solutions</Heading>
@@ -245,9 +252,6 @@
                                     </Text>
                                 </Stack>
                             </TableColumn>
-                            <TableColumn field="status" header="Status">
-                                <StatusBadge status="$row.status" />
-                            </TableColumn>
                             <TableColumn
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 field="id"
@@ -258,6 +262,7 @@
                                     direction="horizontal"
                                     gap="1"
                                     align="center"
+                                    justify="end"
                                 >
                                     <SolutionUpdate
                                         organizationId="$membership.organization.id"
@@ -267,10 +272,12 @@
                                         <Option
                                             value="${{ item: row, logsOpen: true, deleteOpen: false }}"
                                             label="Logs"
+                                            icon="logs"
                                         />
                                         <Option
                                             value="${{ item: row, logsOpen: false, deleteOpen: true }}"
                                             label="Delete"
+                                            icon="trash"
                                         />
                                     </MoreMenu>
                                 </Stack>

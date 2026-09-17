@@ -66,7 +66,7 @@ async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pyt
     monkeypatch.setattr(kubernetes_client.kr8s.asyncio, "api", create_api)
     kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
     await kubernetes.api()
-    kubernetes.connections.push_async_callback(close_tunnel)
+    kubernetes._connections.push_async_callback(close_tunnel)
 
     # Act
     async with kubernetes:

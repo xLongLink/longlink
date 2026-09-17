@@ -71,14 +71,17 @@ async def test_local_seed_creates_example_through_api(
     async def verify_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
         """Accept the configured gateway connection."""
 
-    async def apply_organization(_cluster: object, _organization_id: UUID, **_kwargs: object) -> None:
-        """Accept the requested Organization boundary."""
-
     class Solutions:
         """Accept Solution workload provisioning."""
 
         async def apply(self, *_args: object, **_kwargs: object) -> None:
             """Accept the requested workload."""
+
+    class Organizations:
+        """Accept Organization boundary provisioning."""
+
+        async def apply(self, *_args: object, **_kwargs: object) -> None:
+            """Accept the requested Organization boundary."""
 
     class Kubernetes(DatabaseKubernetes):
         """Expose every lifecycle provider boundary without external I/O."""
@@ -88,6 +91,7 @@ async def test_local_seed_creates_example_through_api(
 
             super().__init__()
             self.solutions = Solutions()
+            self.organizations = Organizations()
 
         async def cluster_uid(self) -> str:
             """Return the identity submitted by the test Compute."""
@@ -107,7 +111,6 @@ async def test_local_seed_creates_example_through_api(
     monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.databases.Kubernetes", Kubernetes)
     monkeypatch.setattr("src.operations.organizations.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.operations.organizations.kubernetes_organizations.apply", apply_organization)
     monkeypatch.setattr("src.operations.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr("src.operations.solutions.Kubernetes", Kubernetes)
     monkeypatch.setattr("src.operations.solutions.Storage", StorageKubernetes)

@@ -18,6 +18,8 @@ storage:
 rustfs:
     secret:
         existingSecret: rustfs-secret
+        accessKey: rustfsadmin
+        secretKey: rustfsadmin
     mode: standalone
     storage:
         name: local-path

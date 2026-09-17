@@ -178,6 +178,8 @@
       <xsd:enumeration value="wrench"/>
       <xsd:enumeration value="stop"/>
       <xsd:enumeration value="microphone"/>
+      <xsd:enumeration value="logs"/>
+      <xsd:enumeration value="trash"/>
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>

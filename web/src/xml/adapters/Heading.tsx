@@ -17,7 +17,7 @@ export function Heading({ props, nodes }: Props) {
     const { accessibilityLevel, level } = resolveXmlProps(props, ctx, headingPropsSchema);
 
     return (
-        <AstryxHeading accessibilityLevel={accessibilityLevel} level={level}>
+        <AstryxHeading accessibilityLevel={accessibilityLevel} level={level} hasCapsize>
             {renderNode(nodes, ctx)}
         </AstryxHeading>
     );

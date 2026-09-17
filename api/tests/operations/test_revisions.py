@@ -173,13 +173,13 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert current.secrets == {
             **solution.secrets,
             "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
-            "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         }
     assert calls[-1][1] == {
         "KEY": "old",
         **solution.secrets,
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
     assert calls[-1][2] is False
     assert await claim_operation() is None
