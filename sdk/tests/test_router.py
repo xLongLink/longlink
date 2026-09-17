@@ -1,5 +1,5 @@
 import pytest
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter
 from longlink import LongLink
 from fastapi.testclient import TestClient
 
@@ -18,9 +18,8 @@ def test_solution_router_preserves_explicit_api_prefix() -> None:
 
         return {"message": "ok"}
 
-    app = FastAPI()
+    app = LongLink()
     app.include_router(router)
-    LongLink(app)
 
     client = TestClient(app)
 
@@ -38,15 +37,16 @@ def test_solution_route_overrides_frontend_fallback() -> None:
     """Serve a Solution route before the frontend fallback."""
 
     # Arrange
-    app = FastAPI()
+    solution_router = APIRouter()
 
-    @app.get("/settings")
+    @solution_router.get("/settings")
     async def settings_get_endpoint() -> dict[str, str]:
         """Return Solution-owned settings."""
 
         return {"source": "solution"}
 
-    LongLink(app)
+    app = LongLink()
+    app.include_router(solution_router)
     client = TestClient(app)
 
     # Act

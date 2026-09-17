@@ -20,6 +20,12 @@ You are working on a LongLink Solution project:
 └── main.py           # Service entry point
 ```
 
+## Solution runtime
+
+- Build the app with `app = LongLink()` and register routers via `app.include_router(...)` in `main.py`.
+- Type route parameters as `ctx: Context` for the request database session, storage filesystem, and signed-in user.
+- Store one item's files under its own `{item_id}/` storage prefix.
+
 ## XML views
 
 - A View uses XML, not HTML.

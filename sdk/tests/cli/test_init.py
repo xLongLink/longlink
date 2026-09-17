@@ -57,7 +57,9 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             *ci_paths,
         ]:
             assert (target / path).exists()
-        assert "LongLink(app)" in (target / "main.py").read_text(encoding="utf-8")
+        main_source = (target / "main.py").read_text(encoding="utf-8")
+        assert "app = LongLink()" in main_source
+        assert "app.include_router(items.router)" in main_source
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
         assert f'name = "{project_name}"' in pyproject
         assert "[tool.longlink]" in pyproject

@@ -1,8 +1,8 @@
 import mimetypes
 from uuid import uuid4
-from fastapi import Depends, APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
-from longlink import Context, data
+from longlink import Context
 from sqlmodel import select
 from urllib.parse import quote
 from collections.abc import Iterator, Sequence
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api")
 
 
 @router.get("/items", response_model=list[Item])
-async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
+async def items_get_endpoint(ctx: Context) -> Sequence[Item]:
     """Return catalog items."""
 
     # Query items for display.
@@ -24,9 +24,7 @@ async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
 
 
 @router.post("/items", response_model=Item)
-async def items_post_endpoint(
-    payload: ItemCreate, ctx: Context = Depends(data)
-) -> Item:
+async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
     """Create a catalog item."""
 
     # Persist the item so it includes its generated id.
@@ -37,7 +35,7 @@ async def items_post_endpoint(
 
 
 @router.get("/items/{item_id}", response_model=Item)
-async def item_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> Item:
+async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
     """Return one catalog item for a dynamic XML View."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -49,9 +47,7 @@ async def item_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> Item:
 
 
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
-async def item_attachments_get_endpoint(
-    item_id: int, ctx: Context = Depends(data)
-) -> list[ItemAttachmentRead]:
+async def item_attachments_get_endpoint(item_id: int, ctx: Context) -> list[ItemAttachmentRead]:
     """Return files attached to one catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -76,9 +72,7 @@ async def item_attachments_get_endpoint(
 
 
 @router.get("/items/{item_id}/attachments/{attachment_id}")
-async def item_attachment_download_endpoint(
-    item_id: int, attachment_id: str, ctx: Context = Depends(data)
-) -> StreamingResponse:
+async def item_attachment_download_endpoint(item_id: int, attachment_id: str, ctx: Context) -> StreamingResponse:
     """Stream one stored attachment for inline browser preview."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -124,9 +118,7 @@ async def item_attachment_download_endpoint(
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
-async def item_attachments_post_endpoint(
-    item_id: int, file: UploadFile, ctx: Context = Depends(data)
-) -> ItemAttachmentRead:
+async def item_attachments_post_endpoint(item_id: int, file: UploadFile, ctx: Context) -> ItemAttachmentRead:
     """Upload one file attachment for a catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.
