@@ -91,7 +91,6 @@ down:
 # Prepare and run the local LongLink Platform API server.
 api:
 	cd api && uv run --locked alembic upgrade head
-	cd api && uv run --locked python -m src.release
 	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
