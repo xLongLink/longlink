@@ -22,8 +22,12 @@ VALID_FRAGMENTS = [
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form">This action cannot be undone.</Dialog>',
     ),
     ("divider", "<Divider>or</Divider>"),
+    ("dialog-fullscreen", '<Dialog title="Contract" fullscreen="true">Content</Dialog>'),
+    ("dialog-width", '<Dialog title="Contract" width="90%">Content</Dialog>'),
+    ("dialog-height", '<Dialog title="Contract" height="90vh">Content</Dialog>'),
     ("divider-runtime-attributes", '<Divider if="show" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" />'),
+    ("file-viewer", '<FileViewer src="/api/items/1/attachments/a.pdf" title="Contract" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
         "form-layout",
@@ -83,6 +87,7 @@ INVALID_FRAGMENTS = [
     ("badge-label-attribute", '<Badge label="Active" />', "label"),
     ("slot-attribute", '<Badge slot="icon">Active</Badge>', "slot"),
     ("button-label-attribute", '<Button label="Save">Save</Button>', "label"),
+    ("missing-file-viewer-src", '<FileViewer title="Contract" />', "src"),
     ("missing-for-as", '<For each="items" />', "as"),
     ("forbidden-style", '<Button style="color: red">Save</Button>', "style"),
     (
@@ -137,7 +142,10 @@ def test_root_schema_accepts_valid_fragments(content: str) -> None:
     assert validate_xml(content).tag == "longlink"
 
 
-@pytest.mark.parametrize(("content", "expected"), [pytest.param(f"<longlink>{content}</longlink>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS])
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [pytest.param(f"<longlink>{content}</longlink>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS],
+)
 def test_root_schema_rejects_invalid_fragments(content: str, expected: str) -> None:
     """Reject representative invalid XML fragments through the View schema."""
 

@@ -177,6 +177,13 @@ export default function DocsArticleRoute() {
                                 <Divider label="Or" />
                             </Stack>
                         </SummaryCard>
+                        <SummaryCard name="FileViewer">
+                            <Stack gap={2} align="center" width="100%">
+                                <Stack aria-hidden="true" className="h-20 w-full rounded-lg bg-neutral" />
+                                <Stack aria-hidden="true" className="h-3 w-3/4 rounded-full bg-neutral" />
+                                <Stack aria-hidden="true" className="h-3 w-1/2 rounded-full bg-neutral" />
+                            </Stack>
+                        </SummaryCard>
                     </Grid>
                 </Stack>
                 <Stack gap={3}>

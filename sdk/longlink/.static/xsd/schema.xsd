@@ -23,6 +23,7 @@
   <xsd:include schemaLocation="adapters/TextInput.xsd" />
   <xsd:include schemaLocation="adapters/NumberInput.xsd" />
   <xsd:include schemaLocation="adapters/FileInput.xsd" />
+  <xsd:include schemaLocation="adapters/FileViewer.xsd" />
   <xsd:include schemaLocation="adapters/TextArea.xsd" />
   <xsd:include schemaLocation="adapters/CheckboxInput.xsd" />
   <xsd:include schemaLocation="adapters/Switch.xsd" />

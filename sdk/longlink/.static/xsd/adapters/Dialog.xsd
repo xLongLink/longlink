@@ -34,6 +34,21 @@
         <xsd:documentation>Space between dialog content elements.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="fullscreen" type="xsd:boolean" default="false">
+      <xsd:annotation>
+        <xsd:documentation>Expand the dialog to take up the entire viewport.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="width" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Dialog width in pixels or any CSS width, ignored when fullscreen.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="height" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Caps the dialog height in pixels or any CSS height, ignored when fullscreen.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Dialog" type="DialogType">

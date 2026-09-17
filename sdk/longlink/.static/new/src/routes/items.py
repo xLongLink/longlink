@@ -47,7 +47,9 @@ async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
 
 
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
-async def item_attachments_get_endpoint(item_id: int, ctx: Context) -> list[ItemAttachmentRead]:
+async def item_attachments_get_endpoint(
+    item_id: int, ctx: Context
+) -> list[ItemAttachmentRead]:
     """Return files attached to one catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -72,7 +74,9 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context) -> list[Item
 
 
 @router.get("/items/{item_id}/attachments/{attachment_id}")
-async def item_attachment_download_endpoint(item_id: int, attachment_id: str, ctx: Context) -> StreamingResponse:
+async def item_attachment_download_endpoint(
+    item_id: int, attachment_id: str, ctx: Context
+) -> StreamingResponse:
     """Stream one stored attachment for inline browser preview."""
 
     # Retrieve the item and translate a missing record into an API error.
@@ -118,7 +122,9 @@ async def item_attachment_download_endpoint(item_id: int, attachment_id: str, ct
 
 
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
-async def item_attachments_post_endpoint(item_id: int, file: UploadFile, ctx: Context) -> ItemAttachmentRead:
+async def item_attachments_post_endpoint(
+    item_id: int, file: UploadFile, ctx: Context
+) -> ItemAttachmentRead:
     """Upload one file attachment for a catalog item."""
 
     # Retrieve the item and translate a missing record into an API error.

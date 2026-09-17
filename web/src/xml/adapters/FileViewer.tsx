@@ -1,0 +1,122 @@
+import { z } from 'zod';
+import { api } from '@/lib/api';
+import type { Props } from '../types';
+import { renderNode } from '../core/node';
+import { resolveAnchorUrl } from '../core/url';
+import { Text } from '@astryxdesign/core/Text';
+import { useXmlRuntime } from '../core/context';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { useEffect, useRef, useState } from 'react';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Link as AstryxLink } from '@astryxdesign/core/Link';
+import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+
+const fileViewerPropsSchema = z.object({
+    src: xmlNonblankStringSchema,
+    title: xmlNonblankStringSchema,
+});
+
+type FileViewerStatus = 'pending' | 'loading' | 'ready' | 'fallback' | 'error';
+
+/** Previews a PDF document inline with a download fallback for other file types. */
+export function FileViewer({ props, nodes }: Props) {
+    const { scope: ctx, services } = useXmlRuntime();
+    const { src, title } = resolveXmlProps(props, ctx, fileViewerPropsSchema, ['src', 'title']);
+    const url = resolveAnchorUrl(services.requestBaseUrl, src);
+    const frameRef = useRef<HTMLElement | null>(null);
+    const [objectUrl, setObjectUrl] = useState<string | null>(null);
+    const [status, setStatus] = useState<FileViewerStatus>(url ? 'pending' : 'error');
+
+    // Defer the download until the preview scrolls into view, so hidden dialogs don't fetch upfront.
+    useEffect(() => {
+        if (!url || status !== 'pending') return;
+
+        const target = frameRef.current;
+
+        if (target == null || typeof IntersectionObserver === 'undefined') {
+            setStatus('loading');
+            return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                setStatus('loading');
+            }
+        });
+        observer.observe(target);
+
+        return () => observer.disconnect();
+    }, [url, status]);
+
+    // Fetch file bytes through the authenticated API client and expose them as a blob URL.
+    useEffect(() => {
+        if (!url || status !== 'loading') return;
+
+        const controller = new AbortController();
+        let previewUrl: string | null = null;
+        let cancelled = false;
+
+        void (async () => {
+            try {
+                const blob = await api(url, { headers: { Accept: '*/*' }, signal: controller.signal }).blob();
+
+                if (cancelled) return;
+
+                // Only PDFs render inside the sandboxed frame; uploads are untrusted.
+                if (blob.type !== 'application/pdf') {
+                    setStatus('fallback');
+                    return;
+                }
+
+                previewUrl = URL.createObjectURL(blob);
+
+                if (cancelled) {
+                    URL.revokeObjectURL(previewUrl);
+                    return;
+                }
+
+                setObjectUrl(previewUrl);
+                setStatus('ready');
+            } catch {
+                if (!cancelled) {
+                    setStatus('error');
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+        };
+    }, [url, status]);
+
+    return (
+        <Stack ref={frameRef} gap={3} height="65vh">
+            {status === 'ready' && objectUrl ? (
+                // Chromium blocks PDF rendering inside sandboxed frames, so sandbox must stay off here.
+                // Only exact application/pdf blobs are framed; every other type falls back to a download link.
+                <iframe title={title} src={objectUrl} className="h-full w-full rounded-lg" />
+            ) : status === 'fallback' ? (
+                <Stack gap={2}>
+                    <Text type="supporting">This file type can&apos;t be previewed.</Text>
+                    <AstryxLink as="a" isExternalLink href={url}>
+                        {title}
+                    </AstryxLink>
+                </Stack>
+            ) : status === 'error' ? (
+                <EmptyState title="Preview unavailable" isCompact />
+            ) : (
+                <Center minHeight={192} width="100%">
+                    <Spinner label={`Loading ${title}`} />
+                </Center>
+            )}
+            {renderNode(nodes, ctx)}
+        </Stack>
+    );
+}

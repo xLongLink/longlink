@@ -258,6 +258,18 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
+                "description": "Expand the dialog to take up the entire viewport.",
+                "name": "fullscreen"
+            },
+            {
+                "description": "Dialog width in pixels or any CSS width, ignored when fullscreen.",
+                "name": "width"
+            },
+            {
+                "description": "Caps the dialog height in pixels or any CSS height, ignored when fullscreen.",
+                "name": "height"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -311,6 +323,29 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "nested": [],
         "slug": "file-input",
         "source": "adapters/FileInput.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "Solution-relative file URL, resolved like Link href.",
+                "name": "src"
+            },
+            {
+                "description": "Accessible name for the previewed document.",
+                "name": "title"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "FileViewer previews a PDF document inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.",
+        "example": "<FileViewer src=\"/api/items/${item.id}/attachments/${attachment.id}\" title=\"$attachment.name\" />",
+        "name": "FileViewer",
+        "lastUpdated": "2026-09-17",
+        "nested": [],
+        "slug": "file-viewer",
+        "source": "adapters/FileViewer.xsd"
     },
     {
         "attributes": [
