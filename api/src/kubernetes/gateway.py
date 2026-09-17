@@ -4,10 +4,28 @@ import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 from kr8s.asyncio.objects import Secret, ConfigMap, Deployment
-from src.kubernetes.utils import deployment_is_ready
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
+
+
+def _deployment_is_ready(deployment: Deployment) -> bool:
+    """Return whether every replica belongs to the observed Deployment generation."""
+
+    # Require the controller to observe this generation and make every desired replica available.
+    generation = deployment.metadata.get("generation")
+    replicas = deployment.spec.get("replicas", 1)
+    status = deployment.raw.get("status")
+    return (
+        isinstance(generation, int)
+        and isinstance(replicas, int)
+        and isinstance(status, dict)
+        and status.get("observedGeneration") == generation
+        and status.get("replicas") == replicas
+        and status.get("updatedReplicas") == replicas
+        and status.get("readyReplicas") == replicas
+        and status.get("availableReplicas") == replicas
+    )
 
 
 async def verify(
@@ -57,7 +75,7 @@ async def verify(
                 deployment = Deployment(name, namespace=namespace, api=api)
                 while True:
                     await deployment.refresh()
-                    if deployment_is_ready(deployment):
+                    if _deployment_is_ready(deployment):
                         break
                     await asyncio.sleep(5)
 

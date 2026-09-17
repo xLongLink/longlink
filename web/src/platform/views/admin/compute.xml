@@ -107,7 +107,7 @@
                     isRequired="true"
                 />
                 <TextInput
-                    label="Storage HTTPS endpoint"
+                    label="Storage controller HTTPS endpoint"
                     value="$registration.storage_endpoint"
                     isRequired="true"
                 />

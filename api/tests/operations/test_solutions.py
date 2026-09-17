@@ -262,7 +262,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         "API_KEY": "replacement",
         **persisted.secrets,
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
     async with session_scope() as session:
         updated = await session.get(Solution, solution.id)
@@ -348,7 +348,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
         "LONGLINK_DATABASE_USERNAME": "persisted-database-user",
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         "LONGLINK_STORAGE_PASSWORD": "persisted-storage-password",
         "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
         "LONGLINK_STORAGE_REGION": "us-east-1",

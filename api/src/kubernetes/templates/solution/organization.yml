@@ -29,8 +29,6 @@ spec:
                         app.kubernetes.io/name: longlink-storage
           ports:
               - { protocol: TCP, port: 443 }
-              # Workloads address the proxy through the registered endpoint port.
-              - { protocol: TCP, port: 9443 }
         # Preserve public SOS/S3 and HTTPS integrations without opening private or special-use networks.
         - to:
               - ipBlock:
