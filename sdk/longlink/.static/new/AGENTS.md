@@ -52,3 +52,4 @@ You are working on a LongLink Solution project:
 - Test observable behavior with clear, deterministic assertions.
 - Use Arrange, Act, Assert sections for non-trivial tests.
 - Mock external boundaries, not business logic.
+- Use `longlink.testclient.TestClient` for route tests; importing it selects the testing environment.

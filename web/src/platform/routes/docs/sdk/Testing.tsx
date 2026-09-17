@@ -1,3 +1,4 @@
+import { Code } from '@astryxdesign/core/Code';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -39,6 +40,12 @@ export default function DocsArticleRoute() {
                     </Link>{' '}
                     workflows.
                 </Text>
+                <Text as="p">
+                    Import <Code>TestClient</Code> from <Code>longlink.testclient</Code> instead of{' '}
+                    <Code>fastapi.testclient</Code>. The import selects the testing environment with isolated in-memory
+                    services, so no environment setup is needed. Keep the client import above the application import so
+                    the environment applies when the app is created.
+                </Text>
                 <CodeBlock
                     code={`uv run pytest
 uv run pytest tests/test_app.py -q`}
@@ -48,8 +55,8 @@ uv run pytest tests/test_app.py -q`}
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={`from main import app
-from fastapi.testclient import TestClient
+                    code={`from longlink.testclient import TestClient
+from main import app
 
 client = TestClient(app)
 

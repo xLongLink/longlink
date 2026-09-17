@@ -56,9 +56,11 @@ async def sample() -> str:
                 </Text>
                 <CodeBlock
                     code={`from collections.abc import Sequence
-from longlink import Context
+from longlink import Context, LongLink
 from sqlmodel import select
 from src.models.items import Item
+
+app = LongLink()
 
 @app.get("/api/items", response_model=list[Item])
 async def list_items(ctx: Context) -> Sequence[Item]:

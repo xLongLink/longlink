@@ -1,15 +1,13 @@
-import pytest
-from fastapi.testclient import TestClient
+# TestClient must stay first so the testing environment applies when the app is created.
+from longlink.testclient import TestClient  # noqa: I001
+from main import app
 
 
-def test_solution_serves_health_check(monkeypatch: pytest.MonkeyPatch) -> None:
+client = TestClient(app)
+
+
+def test_solution_serves_health_check() -> None:
     """Serve the LongLink runtime health check."""
-
-    # Arrange
-    monkeypatch.setenv("LONGLINK_ENV", "testing")
-    from main import app
-
-    client = TestClient(app)
 
     # Act
     response = client.get("/health")
