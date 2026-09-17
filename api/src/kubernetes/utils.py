@@ -1,5 +1,7 @@
+import asyncio
 from kr8s import NotFoundError
-from kr8s.asyncio.objects import APIObject, Deployment
+from kr8s.asyncio import Api
+from kr8s.asyncio.objects import APIObject, Namespace
 
 
 async def apply(resource: APIObject) -> None:
@@ -12,20 +14,14 @@ async def apply(resource: APIObject) -> None:
         await resource.create()
 
 
-def deployment_is_ready(deployment: Deployment) -> bool:
-    """Return whether every replica belongs to the observed Deployment generation."""
+async def delete_namespace(api: Api, name: str, timeout_seconds: float = 600) -> None:
+    """Delete one Namespace and wait until Kubernetes reports its absence."""
 
-    # Require the controller to observe this generation and make every desired replica available.
-    generation = deployment.metadata.get("generation")
-    replicas = deployment.spec.get("replicas", 1)
-    status = deployment.raw.get("status")
-    return (
-        isinstance(generation, int)
-        and isinstance(replicas, int)
-        and isinstance(status, dict)
-        and status.get("observedGeneration") == generation
-        and status.get("replicas") == replicas
-        and status.get("updatedReplicas") == replicas
-        and status.get("readyReplicas") == replicas
-        and status.get("availableReplicas") == replicas
-    )
+    # Issue deletion once and wait for Kubernetes to report terminal absence.
+    resource = Namespace(name, api=api)
+    try:
+        await resource.delete()
+    except NotFoundError:
+        return
+    async with asyncio.timeout(timeout_seconds):
+        await resource.wait("delete")

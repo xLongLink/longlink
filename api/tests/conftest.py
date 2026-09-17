@@ -124,18 +124,26 @@ class DatabaseKubernetes(AsyncKubernetes):
     async def resume(self, organization: UUID) -> None:
         """Accept database resumption."""
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
+    async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
 
-        assert name == "database-rw"
-        assert namespace.startswith("longlink-database-")
-        assert port == 5432
+        assert str(organization)
         return 15432
 
     async def certificate(self, organization: UUID) -> str:
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"
+
+
+class OrganizationsDouble:
+    """Supply the Organization compute-boundary facade for lifecycle tests."""
+
+    async def apply(self, organization: UUID) -> None:
+        """Accept Organization boundary provisioning."""
+
+    async def delete(self, organization: UUID) -> None:
+        """Accept Organization boundary deletion."""
 
 
 class OperationKubernetes(AsyncKubernetes):
@@ -146,12 +154,13 @@ class OperationKubernetes(AsyncKubernetes):
 
         self.solutions = self
         self.databases = DatabaseKubernetes()
+        self.organizations = OrganizationsDouble()
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
+    async def forward_database(self, organization: UUID) -> int:
         """Provide the database tunnel owned by the shared fake database client."""
 
         # Reuse the single provider-tunnel contract instead of restating it.
-        return await self.databases.portforward(name, namespace, port)
+        return await self.databases.forward_database(organization)
 
 
 class DatabasePostgres:
@@ -207,6 +216,13 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
 class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
 
+    def __init__(self, *_args: object) -> None:
+        """Expose production facade shapes without external I/O."""
+
+        from src.kubernetes.organizations import Organizations
+
+        self.organizations = Organizations(cast("Kubernetes", self))
+
     async def api(self) -> Api:
         """Return the fake API client used by resource fakes."""
 
@@ -217,7 +233,7 @@ class FakeKubernetes(AsyncKubernetes):
 
         return "test-cluster"
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
+    async def forward_database(self, organization: UUID) -> int:
         """Return a synthetic development gateway port without external I/O."""
 
         return 18444

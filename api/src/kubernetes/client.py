@@ -1,11 +1,14 @@
 import kr8s
+from uuid import UUID
 from types import TracebackType
 from typing import Self, cast
 from contextlib import AsyncExitStack
 from kr8s.asyncio import Api
+from src.kubernetes import namespace
 from kr8s.asyncio.objects import Service, Namespace
 from src.kubernetes.databases import Databases
 from src.kubernetes.solutions import Solutions
+from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
@@ -21,10 +24,11 @@ class Kubernetes:
 
         self._kubeconfig = kubeconfig
         self._api_client: Api | None = None
-        self.connections = AsyncExitStack()
+        self._connections = AsyncExitStack()
 
         self.databases = Databases(self)
         self.solutions = Solutions(self)
+        self.organizations = Organizations(self)
 
     async def __aenter__(self) -> Self:
         """Return this Kubernetes client for an async resource scope."""
@@ -53,7 +57,7 @@ class Kubernetes:
         """Close local tunnels before releasing their Kubernetes HTTP session."""
 
         # Tunnels depend on the kr8s session and must finish before its transport closes.
-        await self.connections.aclose()
+        await self._connections.aclose()
         if self._api_client is not None and self._api_client._session is not None:
             await self._api_client._session.aclose()
         self._api_client = None
@@ -62,18 +66,18 @@ class Kubernetes:
         """Return the stable UID of the configured Kubernetes cluster."""
 
         # The system Namespace is created with the cluster and provides an identity independent of kubeconfig aliases.
-        namespace = Namespace("kube-system", api=await self.api())
-        await namespace.refresh()
-        metadata = namespace.raw.get("metadata")
+        system = Namespace("kube-system", api=await self.api())
+        await system.refresh()
+        metadata = system.raw.get("metadata")
         uid = metadata.get("uid") if isinstance(metadata, dict) else None
         if not isinstance(uid, str) or not uid:
             raise RuntimeError("Kubernetes cluster identity is unavailable")
         return uid
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
-        """Keep a loopback Service tunnel alive until this Kubernetes client closes."""
+    async def forward_database(self, organization_id: UUID) -> int:
+        """Keep the Organization database tunnel alive until this Kubernetes client closes."""
 
         # Refresh the selector before kr8s resolves a ready Pod for the Service.
-        service = Service(name, namespace=namespace, api=await self.api())
+        service = Service("database-rw", namespace=namespace.database(organization_id), api=await self.api())
         await service.refresh()
-        return await self.connections.enter_async_context(service.portforward(port, local_port="auto"))
+        return await self._connections.enter_async_context(service.portforward(5432, local_port="auto"))

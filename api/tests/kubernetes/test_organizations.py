@@ -1,6 +1,7 @@
 import pytest
 from uuid import UUID
 from conftest import kubernetes_client
+from src.kubernetes import utils as kubernetes_utils
 from src.kubernetes import organizations
 
 pytestmark = pytest.mark.no_db
@@ -20,7 +21,7 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     monkeypatch.setattr(organizations.utils, "apply", apply)
 
     # Act
-    await organizations.apply(kubernetes_client(), UUID("00000000-0000-4000-8000-000000000001"))
+    await kubernetes_client().organizations.apply(UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert [resource["kind"] for resource in applied] == ["Namespace", "NetworkPolicy"]
@@ -58,10 +59,10 @@ async def test_organization_delete_waits_for_namespace_termination(monkeypatch: 
 
             waits.append(condition)
 
-    monkeypatch.setattr(organizations, "Namespace", Namespace)
+    monkeypatch.setattr(kubernetes_utils, "Namespace", Namespace)
 
     # Act
-    await organizations.delete(kubernetes_client(), UUID("00000000-0000-4000-8000-000000000001"))
+    await kubernetes_client().organizations.delete(UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert deleted == [True]
