@@ -52,8 +52,6 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
@@ -91,8 +89,6 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     payload = {
         "name": "Ephemeral Compute",
         "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "kubeconfig": {

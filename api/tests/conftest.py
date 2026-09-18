@@ -77,6 +77,12 @@ class StorageKubernetes:
     def __init__(self, compute: object | None = None) -> None:
         """Accept the bound Compute registry without opening connections."""
 
+    @staticmethod
+    async def controller_credentials(cluster: object) -> Credentials:
+        """Return stable chart-managed credentials without cluster I/O."""
+
+        return Credentials("controller", "controller-secret")
+
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 

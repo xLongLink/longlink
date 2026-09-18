@@ -128,8 +128,6 @@ async def test_local_seed_creates_example_through_api(
                     "gateway_url": "https://gateway.example",
                     "database_storage_class": "local-path",
                     "storage_endpoint": "https://storage.example",
-                    "storage_access_key": "controller",
-                    "storage_secret_key": "controller-secret",
                 },
             )
             assert compute_response.status_code == 201
