@@ -2784,18 +2784,6 @@
             "minLength": 1,
             "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
             "title": "Database Storage Class"
-          },
-          "storage_access_key": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Storage Access Key"
-          },
-          "storage_secret_key": {
-            "type": "string",
-            "maxLength": 1024,
-            "minLength": 8,
-            "title": "Storage Secret Key"
           }
         },
         "type": "object",
@@ -2804,9 +2792,7 @@
           "storage_endpoint",
           "name",
           "kubeconfig",
-          "database_storage_class",
-          "storage_access_key",
-          "storage_secret_key"
+          "database_storage_class"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."

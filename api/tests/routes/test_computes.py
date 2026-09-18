@@ -95,8 +95,6 @@ async def test_compute_registry_creation_registers_running_compute_without_queui
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
@@ -133,8 +131,6 @@ async def test_compute_registry_creation_rejects_incompatible_package(
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
@@ -172,8 +168,6 @@ async def test_compute_registry_creation_rejects_unready_infrastructure(
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
             "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],

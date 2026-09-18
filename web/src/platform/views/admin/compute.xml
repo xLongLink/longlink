@@ -11,9 +11,7 @@
         gateway_url=""
         gateway_certificate=""
         database_storage_class=""
-        storage_endpoint="https://longlink-storage.rustfs.svc:443"
-        storage_access_key=""
-        storage_secret_key=""
+        storage_endpoint=""
         storage_certificate=""
     />
     <Query
@@ -37,7 +35,7 @@
             <Action>
                 <Patch
                     state="registration"
-                    value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', storage_endpoint: 'https://longlink-storage.rustfs.svc:443', storage_access_key: '', storage_secret_key: '', storage_certificate: '' }}"
+                    value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', storage_endpoint: '', storage_certificate: '' }}"
                 />
                 <Patch state="registrationDialog" value="${{ open: true }}" />
                 <Button>Register Compute</Button>
@@ -109,18 +107,14 @@
                 <TextInput
                     label="Storage controller HTTPS endpoint"
                     value="$registration.storage_endpoint"
+                    placeholder="https://storage.example:9443"
                     isRequired="true"
                 />
-                <TextInput
-                    label="RustFS controller access key"
-                    value="$registration.storage_access_key"
-                    isRequired="true"
-                />
-                <TextInput
-                    label="RustFS controller secret key"
-                    value="$registration.storage_secret_key"
-                    isRequired="true"
-                />
+                <Text type="supporting">
+                    Reachable from the Platform. Administrator keys are read
+                    from the rustfs/longlink-rustfs Secret. Workloads use
+                    https://longlink-storage.rustfs.svc:443.
+                </Text>
                 <TextArea
                     label="Storage CA certificate"
                     value="$registration.storage_certificate"
@@ -138,7 +132,7 @@
                 <Action>
                     <Validate
                         value="$registration"
-                        rules="${{ name: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, kubeconfig: { type: 'string', trim: true, minLength: 1 }, gateway_url: { type: 'string', trim: true, maxLength: 512, format: 'https-origin' }, gateway_certificate: { type: 'string', nullable: true, maxLength: 65536 }, database_storage_class: { type: 'string', minLength: 1, maxLength: 253, pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$' }, storage_endpoint: { type: 'string', trim: true, maxLength: 512, format: 'https-url' }, storage_access_key: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, storage_secret_key: { type: 'string', trim: true, minLength: 8, maxLength: 1024 }, storage_certificate: { type: 'string', nullable: true, maxLength: 65536 } }}"
+                        rules="${{ name: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, kubeconfig: { type: 'string', trim: true, minLength: 1 }, gateway_url: { type: 'string', trim: true, maxLength: 512, format: 'https-origin' }, gateway_certificate: { type: 'string', nullable: true, maxLength: 65536 }, database_storage_class: { type: 'string', minLength: 1, maxLength: 253, pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$' }, storage_endpoint: { type: 'string', trim: true, maxLength: 512, format: 'https-url' }, storage_certificate: { type: 'string', nullable: true, maxLength: 65536 } }}"
                     />
                     <Request
                         url="/api/v1/computes"
