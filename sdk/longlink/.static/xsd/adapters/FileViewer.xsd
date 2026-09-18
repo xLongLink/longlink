@@ -18,7 +18,7 @@
   </xsd:complexType>
   <xsd:element name="FileViewer" type="FileViewerType">
     <xsd:annotation>
-      <xsd:documentation>FileViewer previews a PDF document inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.</xsd:documentation>
+      <xsd:documentation>FileViewer previews PDF documents, images, video, and audio inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="file-viewer" category="Content" lastUpdated="2026-09-17" source="adapters/FileViewer.xsd"/>
         <longlink:example>&lt;FileViewer src="/api/items/${item.id}/attachments/${attachment.id}" title="$attachment.name" /&gt;</longlink:example>
