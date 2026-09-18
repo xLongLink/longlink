@@ -1,6 +1,5 @@
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
-import { Card } from '@astryxdesign/core/Card';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
@@ -20,12 +19,11 @@ export default function OrganizationSolution() {
     const { solutions, isLoading, error } = useOrganizationRoute(organization);
 
     const solutionAccess = solutions.find((item) => item.slug === solution);
-    const pageMetadata = <NoIndex title="Solution | LongLink" />;
 
     if (isLoading) {
         return (
             <>
-                {pageMetadata}
+                <NoIndex title="Solution | LongLink" />
                 <PageLoading label="Loading solution" />
             </>
         );
@@ -38,7 +36,7 @@ export default function OrganizationSolution() {
     if (error && !solutionAccess) {
         return (
             <>
-                {pageMetadata}
+                <NoIndex title="Solution | LongLink" />
                 <PageError description="We couldn't load this solution." title="Unable to load solution" />
             </>
         );
@@ -51,25 +49,35 @@ export default function OrganizationSolution() {
     const action = <ProfileMenu user={user} />;
     const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
 
-    if (solutionAccess.status === 'creating' || solutionAccess.status === 'failed') {
-        const isCreating = solutionAccess.status === 'creating';
-
+    // Show a standalone notice while the solution is still deploying.
+    if (solutionAccess.status === 'creating') {
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <NoIndex title={`${solutionAccess.name} | LongLink`} />
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <Card maxWidth={576} padding={6} width="100%">
-                        <EmptyState
-                            description={
-                                isCreating
-                                    ? 'Please try again in a moment.'
-                                    : 'Review the failed operation in the Platform administration area.'
-                            }
-                            headingLevel={1}
-                            role="alert"
-                            title={isCreating ? 'Solution is being deployed' : 'Solution deployment failed'}
-                        />
-                    </Card>
+                    <EmptyState
+                        description="Please try again in a moment."
+                        headingLevel={1}
+                        role="alert"
+                        title="Solution is being deployed"
+                    />
+                </Center>
+            </Platform>
+        );
+    }
+
+    // Show a standalone notice when the solution deployment has failed.
+    if (solutionAccess.status === 'failed') {
+        return (
+            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
+                <NoIndex title={`${solutionAccess.name} | LongLink`} />
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
+                    <EmptyState
+                        description="Review the failed operation in the Platform administration area."
+                        headingLevel={1}
+                        role="alert"
+                        title="Solution deployment failed"
+                    />
                 </Center>
             </Platform>
         );
