@@ -44,7 +44,8 @@ The chart creates the RustFS namespace and administrator Secret
 through the provided kubeconfig, so they never leave the cluster. Leave
 `rustfs.secret.accessKey`/`secretKey` empty to generate strong random
 credentials on first install; set them to bring your own keys. Generated
-credentials are kept across upgrades and uninstalls.
+credentials are kept across upgrades and uninstalls. Keep the Secret name
+`longlink-rustfs`: Compute registration always reads that name.
 
 Solution workloads always reach object storage through the cluster-local proxy at `https://longlink-storage.rustfs.svc:443`. The registered storage endpoint is the Platform controller endpoint used from outside the cluster.
 
