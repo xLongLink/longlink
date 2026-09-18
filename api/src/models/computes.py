@@ -141,10 +141,6 @@ class ComputeRegistryCreate(ComputeRegistryEndpoints):
     # Database
     database_storage_class: StorageClassName
 
-    # Object storage controller
-    storage_access_key: str = Field(min_length=1, max_length=128)
-    storage_secret_key: str = Field(min_length=8, max_length=1024)
-
     @field_validator("database_storage_class")
     @classmethod
     def validate_storage_class(cls, value: str) -> str:

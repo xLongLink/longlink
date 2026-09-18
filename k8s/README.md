@@ -39,17 +39,12 @@ Compute cluster
 
 ## Requirements
 
-The chart creates the RustFS namespace and administrator Secret. Retrieve
-the generated credentials for Compute registration:
-
-```bash
-kubectl get secret longlink-rustfs \
-  --namespace rustfs \
-  --output jsonpath='{.data.RUSTFS_ACCESS_KEY}' | base64 --decode
-kubectl get secret longlink-rustfs \
-  --namespace rustfs \
-  --output jsonpath='{.data.RUSTFS_SECRET_KEY}' | base64 --decode
-```
+The chart creates the RustFS namespace and administrator Secret
+(`rustfs/longlink-rustfs`). Compute registration reads those credentials
+through the provided kubeconfig, so they never leave the cluster. Leave
+`rustfs.secret.accessKey`/`secretKey` empty to generate strong random
+credentials on first install; set them to bring your own keys. Generated
+credentials are kept across upgrades and uninstalls.
 
 Solution workloads always reach object storage through the cluster-local proxy at `https://longlink-storage.rustfs.svc:443`. The registered storage endpoint is the Platform controller endpoint used from outside the cluster.
 

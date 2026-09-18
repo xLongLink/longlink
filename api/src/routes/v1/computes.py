@@ -51,18 +51,27 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
 
-    # Resolve the physical cluster and verify shared infrastructure before persisting anything.
+    # Resolve the physical cluster and read its chart-managed storage credentials before persisting anything.
     cluster = Kubernetes(payload.kubeconfig)
     async with cluster:
         cluster_uid = await cluster.cluster_uid()
+        try:
+            credentials = await Storage.controller_credentials(cluster)
+        except ValueError as exc:
+            raise InvalidError(str(exc)) from exc
+        except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
+            logger.warning("Compute infrastructure unavailable: %s", exc)
+            raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
         candidate = ComputeRegistry(
             **payload.model_dump(),
+            storage_access_key=credentials.access_key,
+            storage_secret_key=credentials.secret_key,
             cluster_uid=cluster_uid,
         )
         await _verify_compute(cluster, candidate)
 
     # Persist the verified connection as immediately assignable.
-    registry = await compute.create(session, payload, cluster_uid)
+    registry = await compute.create(session, payload, cluster_uid, credentials)
     await session.commit()
     return registry
 
