@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import func, select
 from src.errors import ConflictError, NotFoundError
+from src.utils.s3 import Credentials
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
@@ -44,12 +45,14 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_uid: str) -> ComputeRegistry:
+async def create(session: AsyncSession, payload: ComputeRegistryCreate, cluster_uid: str, credentials: Credentials) -> ComputeRegistry:
     """Register one verified compute target as immediately assignable."""
 
-    # Persist the inline-verified target; duplicates translate to one stable API conflict.
+    # Persist the inline-verified target with cluster-read storage credentials; duplicates translate to one stable API conflict.
     registry = ComputeRegistry(
         **payload.model_dump(),
+        storage_access_key=credentials.access_key,
+        storage_secret_key=credentials.secret_key,
         cluster_uid=cluster_uid,
         status=Status.running,
     )

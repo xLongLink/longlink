@@ -13,8 +13,6 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
         {
             "name": "Compute",
             "storage_endpoint": "https://storage.example",
-            "storage_access_key": "controller",
-            "storage_secret_key": "controller-secret",
             "gateway_url": "https://gateway.example",
             "database_storage_class": "local-path",
             "kubeconfig": (
@@ -42,8 +40,6 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
-                "storage_access_key": "controller",
-                "storage_secret_key": "controller-secret",
                 "kubeconfig": {
                     "apiVersion": "v1",
                     "clusters": [{"name": "cluster", "cluster": {}}],
@@ -96,7 +92,5 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
-                "storage_access_key": "controller",
-                "storage_secret_key": "controller-secret",
             }
         )

@@ -16,12 +16,39 @@ const publicPagePaths = [
     '/',
     '/blog',
     '/blog/introducing-longlink',
+    '/login',
     '/pricing',
     '/terms',
     '/impressum',
     '/privacy',
     ...documentationPaths,
 ];
+
+/** Sitemap priorities signal the important pages to search engines. */
+const publicPagePriorities: Record<string, number> = {
+    '/': 1.0,
+    '/blog/introducing-longlink': 0.9,
+    '/blog': 0.8,
+    '/docs': 0.8,
+    '/login': 0.7,
+    '/pricing': 0.6,
+};
+
+/** Returns the sitemap priority for a public page, defaulting by section depth. */
+function sitemapPriority(pagePath: string): number {
+    // Prioritized marketing and documentation entry points keep their explicit weight.
+    const priority = publicPagePriorities[pagePath];
+    if (priority !== undefined) return priority;
+
+    // Legal pages stay discoverable without competing with acquisition content.
+    if (pagePath === '/terms' || pagePath === '/impressum' || pagePath === '/privacy') return 0.3;
+
+    // Generated component references are numerous, so keep them below curated guides.
+    if (pagePath.startsWith('/docs/sdk/views/')) return 0.4;
+
+    // Everything else stays below the prioritized pages.
+    return 0.5;
+}
 const outputDirectory = path.resolve(
     import.meta.dirname,
     isSolution ? '../sdk/longlink/.static/web' : '../api/src/.static/web'
@@ -45,7 +72,7 @@ export default {
             const urls = publicPagePaths
                 .map(
                     (pagePath) =>
-                        `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc></url>`
+                        `    <url><loc>${new URL(pagePath === '/' ? '/' : `${pagePath}/`, siteUrl).href}</loc><priority>${sitemapPriority(pagePath).toFixed(1)}</priority></url>`
                 )
                 .join('\n');
             await writeFile(

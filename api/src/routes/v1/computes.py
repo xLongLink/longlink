@@ -18,30 +18,24 @@ from src.database.models.computes import ComputeRegistry
 
 router = APIRouter()
 
-LIVE_VERSION_TIMEOUT_SECONDS = 1.0
-INLINE_VALIDATION_TIMEOUT_SECONDS = 30
-
 
 async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> None:
     """Verify gateway and storage reachability with a short fail-fast budget."""
 
     # Fail fast when shared infrastructure is still converging; the administrator retries registration.
     try:
-        async with asyncio.timeout(INLINE_VALIDATION_TIMEOUT_SECONDS):
+        async with asyncio.timeout(30):
             await gateway.verify(
                 cluster,
                 registry.gateway_url,
                 registry.gateway_certificate,
-                timeout_seconds=INLINE_VALIDATION_TIMEOUT_SECONDS,
+                timeout_seconds=30,
             )
             await Storage(registry).verify()
     except ValueError as exc:
         raise InvalidError(str(exc)) from exc
     except TimeoutError as exc:
-        raise UnavailableError(
-            f"Compute did not become ready within {INLINE_VALIDATION_TIMEOUT_SECONDS} seconds; "
-            "verify shared infrastructure and retry"
-        ) from exc
+        raise UnavailableError("Compute did not become ready within 30 seconds; verify shared infrastructure and retry") from exc
     except (RuntimeError, NotFoundError, ServerError, ClientError, BotoCoreError, OSError) as exc:
         logger.warning("Compute infrastructure unavailable: %s", exc)
         raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
@@ -51,18 +45,27 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
 
-    # Resolve the physical cluster and verify shared infrastructure before persisting anything.
+    # Resolve the physical cluster and read its chart-managed storage credentials before persisting anything.
     cluster = Kubernetes(payload.kubeconfig)
     async with cluster:
         cluster_uid = await cluster.cluster_uid()
+        try:
+            credentials = await Storage.controller_credentials(cluster)
+        except ValueError as exc:
+            raise InvalidError(str(exc)) from exc
+        except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
+            logger.warning("Compute infrastructure unavailable: %s", exc)
+            raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
         candidate = ComputeRegistry(
             **payload.model_dump(),
+            storage_access_key=credentials.access_key,
+            storage_secret_key=credentials.secret_key,
             cluster_uid=cluster_uid,
         )
         await _verify_compute(cluster, candidate)
 
     # Persist the verified connection as immediately assignable.
-    registry = await compute.create(session, payload, cluster_uid)
+    registry = await compute.create(session, payload, cluster_uid, credentials)
     await session.commit()
     return registry
 
@@ -93,7 +96,7 @@ async def _live_version(registry: ComputeRegistry) -> str | None:
     cluster = Kubernetes(registry.kubeconfig)
     try:
         async with cluster:
-            async with asyncio.timeout(LIVE_VERSION_TIMEOUT_SECONDS):
+            async with asyncio.timeout(1.0):
                 return await gateway.read_package_version(cluster)
     except Exception:
         return None

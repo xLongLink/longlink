@@ -86,9 +86,8 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
             "gateway_url": "https://127.0.0.1:8443",
             "gateway_certificate": gateway_certificate,
             "database_storage_class": "local-path",
+            # Controller endpoint reachable from the host; administrator keys are read from the cluster.
             "storage_endpoint": "https://storage.localhost:9443",
-            "storage_access_key": "rustfsadmin",
-            "storage_secret_key": "rustfsadmin",
             "storage_certificate": storage_certificate,
         },
     )

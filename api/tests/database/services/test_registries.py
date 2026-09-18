@@ -2,6 +2,7 @@ import pytest
 from uuid import uuid4
 from factories import create_ready_compute
 from src.errors import ConflictError, NotFoundError
+from src.utils.s3 import Credentials
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
 from src.database.services import compute
@@ -51,14 +52,13 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
         gateway_url="https://gateway.example",
         database_storage_class="local-path",
         storage_endpoint="https://storage.example",
-        storage_access_key="controller",
-        storage_secret_key="controller-secret",
     )
+    credentials = Credentials("controller", "controller-secret")
     async with session_scope() as session:
-        await compute.create(session, payload, "cluster-uid")
+        await compute.create(session, payload, "cluster-uid", credentials)
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(session, payload.model_copy(update={"name": "Cluster Alias"}), "cluster-uid")
+            await compute.create(session, payload.model_copy(update={"name": "Cluster Alias"}), "cluster-uid", credentials)

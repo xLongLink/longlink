@@ -21,7 +21,6 @@ router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
 INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
-OAUTH_STATE_COOKIE_PATH = "/api/v1/auth/oauth"
 
 
 def set_auth_session(response: Response, credential: str) -> None:
@@ -37,7 +36,7 @@ def oauth_failure_response() -> RedirectResponse:
     # Do not expose provider or account details through the browser-facing failure response.
     response = RedirectResponse(f"{env.PUBLIC_URL}/login?oauth_error=1", status_code=302)
     response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
 
@@ -85,7 +84,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    cookies.set_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, credential, OAUTH_STATE_COOKIE_PATH, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, credential, "/api/v1/auth/oauth", token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
     return response
 
 
@@ -147,7 +146,7 @@ async def complete_oauth_login(
 
     # Publish authentication only after all persistent OAuth login effects commit.
     set_auth_session(response, credential)
-    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
 
