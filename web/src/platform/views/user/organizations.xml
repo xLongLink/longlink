@@ -10,7 +10,7 @@
             align="center"
             wrap="wrap"
         >
-            <Stack>
+            <Stack gap="1">
                 <Heading level="1">Organizations</Heading>
                 <Text color="secondary">
                     Manage the workspaces connected to your LongLink account.
@@ -55,7 +55,7 @@
                         name="$row.organization.name"
                         src="$row.organization.avatar"
                     />
-                    <Stack align="start">
+                    <Stack align="start" gap="0">
                         <Link to="/orgs/${row.organization.slug}">
                             $row.organization.name
                         </Link>

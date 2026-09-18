@@ -41,7 +41,7 @@
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />
-            <Stack gap="1">
+            <Stack gap="0">
                 <Heading level="4" accessibilityLevel="1">
                     $details.organization.name
                 </Heading>
@@ -53,7 +53,12 @@
             <MenuSection title="Settings" isHeaderHidden="true">
                 <MenuItem label="Organization" icon="building2">
                     <Stack gap="4">
-                        <Heading level="2">Organization</Heading>
+                        <Stack gap="1">
+                            <Heading level="2">Organization</Heading>
+                            <Text color="secondary">
+                                Review database and storage usage.
+                            </Text>
+                        </Stack>
                         <Divider />
                         <ProgressBar
                             label="Database"
@@ -71,7 +76,12 @@
                 <MenuSubSection label="People" icon="users">
                     <MenuItem label="Members">
                         <Stack gap="4">
-                            <Heading level="2">Members</Heading>
+                            <Stack gap="1">
+                                <Heading level="2">Members</Heading>
+                                <Text color="secondary">
+                                    Manage the people in this organization.
+                                </Text>
+                            </Stack>
                             <Divider />
                             <Table
                                 data="$details.members"
@@ -138,10 +148,15 @@
                             <Stack
                                 direction="horizontal"
                                 justify="between"
-                                align="end"
+                                align="center"
                                 wrap="wrap"
                             >
-                                <Heading level="2">Invitations</Heading>
+                                <Stack gap="1">
+                                    <Heading level="2">Invitations</Heading>
+                                    <Text color="secondary">
+                                        Send an invitation to join this organization.
+                                    </Text>
+                                </Stack>
                                 <Dialog
                                     if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     title="Invite user"
@@ -226,10 +241,15 @@
                         <Stack
                             direction="horizontal"
                             justify="between"
-                            align="end"
+                            align="center"
                             wrap="wrap"
                         >
-                            <Heading level="2">Solutions</Heading>
+                            <Stack gap="1">
+                                <Heading level="2">Solutions</Heading>
+                                <Text color="secondary">
+                                    Manage the solutions attached to this organization.
+                                </Text>
+                            </Stack>
                             <CreateSolution
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 organizationId="$membership.organization.id"

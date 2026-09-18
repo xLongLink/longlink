@@ -131,7 +131,7 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
 
 
 async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
-    """Create or retry the local sample Solution."""
+    """Create, retry, or redeploy the local sample Solution."""
 
     response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
     response.raise_for_status()
@@ -157,19 +157,25 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         response.raise_for_status()
         return
 
-    if solution.status == "failed":
-        # Retry failed sample provisioning through a fresh warm revision of its persisted source.
-        response = await client.post(
-            f"/api/v1/solutions/{solution.id}/update",
-            json={"envs": settings.SAMPLE_ENVS, "min_scale": 1, "idle_seconds": 0},
-        )
-        if response.status_code == 404:
-            raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
-        response.raise_for_status()
+    if solution.status == "creating":
+        # Leave in-flight provisioning alone; a later seed redeploys once it settles.
+        return
+
+    # Re-resolve the mutable development tag so a rebuilt image deploys a fresh revision.
+    response = await client.post(
+        f"/api/v1/solutions/{solution.id}/update",
+        json={"envs": settings.SAMPLE_ENVS, "min_scale": 1, "idle_seconds": 0},
+    )
+    if response.status_code == 404:
+        raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
+    if response.status_code == 409 and str(response.json().get("detail", "")).endswith("No revision was created."):
+        # The rebuilt image matches the deployed snapshot, keeping repeated seeding idempotent.
+        return
+    response.raise_for_status()
 
 
 async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
-    """Register local infrastructure and create the local example Organization and Solution."""
+    """Register local infrastructure and create or redeploy the local example Organization and Solution."""
 
     # Authenticate with the administrator that the API initializes during startup.
     response = await client.post(

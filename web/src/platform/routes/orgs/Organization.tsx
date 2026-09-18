@@ -1,100 +1,17 @@
-import type { z } from 'zod';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import NotFoundLayout from '@/components/layouts/NotFound';
+import { PlatformView } from '@/components/PlatformView';
 import { PageContainer } from '@/components/PageContainer';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { PageError, PageLoading } from '@/components/Utils';
-import CreateSolution from '@/components/dialogs/CreateSolution';
-import { useOrganizationRoute } from '@/lib/hooks/use-organization';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
-import { zOrganizationRoles, zOrganizationSolutionSummary } from '@/lib/generated/platform-api-v1/zod.gen';
+import source from '@/platform/views/orgs/organization.xml?raw';
 
-/** Renders the organization solutions page. */
+/** Renders the XML-backed organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
-    const { organizationId, role, solutions, isLoading, error } = useOrganizationRoute(organization);
 
-    const canManageSolutions =
-        role !== null && zOrganizationRoles.options.indexOf(role) >= zOrganizationRoles.options.indexOf('maintain');
-    const pageMetadata = <NoIndex title="Organization Solutions | LongLink" />;
-
-    // Hide missing or inaccessible orgs behind the shared 404 page.
-    if (error?.status === 404) {
-        return <NotFoundLayout />;
-    }
-
-    if (isLoading && solutions.length === 0) {
-        return (
-            <>
-                {pageMetadata}
-                <PageLoading label="Loading solutions" />
-            </>
-        );
-    }
-
-    if (error && solutions.length === 0) {
-        return (
-            <>
-                {pageMetadata}
-                <PageError
-                    description="We couldn't load the solutions for this organization."
-                    title="Unable to load solutions"
-                />
-            </>
-        );
-    }
-
-    // Keep edge-aware content aligned within the centered page container.
     return (
         <PageContainer gap={8} padding={2}>
-            {pageMetadata}
-            <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-                <Stack>
-                    <Heading level={1}>Solutions</Heading>
-                    <Text as="p" color="secondary">
-                        Manage the solutions attached to this organization.
-                    </Text>
-                </Stack>
-                {canManageSolutions ? <CreateSolution organizationId={organizationId ?? ''} /> : null}
-            </Stack>
-            <Table
-                data={solutions}
-                density="compact"
-                emptyState={<EmptyState title="No results." isCompact />}
-                hasHover
-                idKey="id"
-                columns={
-                    [
-                        {
-                            key: 'name',
-                            header: 'Solution',
-                            width: proportional(1),
-                            renderCell: (solution) => (
-                                <Stack>
-                                    <Stack direction="horizontal" gap={1} align="center">
-                                        <Link
-                                            href={`/orgs/${organization}/solutions/${solution.slug}`}
-                                            weight="semibold"
-                                        >
-                                            {solution.name}
-                                        </Link>
-                                        <StatusBadge status={solution.status} />
-                                    </Stack>
-                                    {solution.description ? (
-                                        <Text type="supporting">{solution.description}</Text>
-                                    ) : null}
-                                </Stack>
-                            ),
-                        },
-                    ] satisfies TableColumn<z.output<typeof zOrganizationSolutionSummary>>[]
-                }
-            />
+            <NoIndex title="Organization Solutions | LongLink" />
+            <PlatformView source={source} params={{ organization }} />
         </PageContainer>
     );
 }
