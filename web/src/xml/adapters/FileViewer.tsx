@@ -19,14 +19,16 @@ const fileViewerPropsSchema = z.object({
 });
 
 type FileViewerStatus = 'pending' | 'loading' | 'ready' | 'fallback' | 'error';
+type FileViewerMedia = 'pdf' | 'image' | 'video' | 'audio';
 
-/** Previews a PDF document inline with a download fallback for other file types. */
+/** Previews PDF documents, images, video, and audio inline with a download fallback for other file types. */
 export function FileViewer({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
     const { src, title } = resolveXmlProps(props, ctx, fileViewerPropsSchema, ['src', 'title']);
     const url = resolveAnchorUrl(services.requestBaseUrl, src);
     const frameRef = useRef<HTMLElement | null>(null);
     const [objectUrl, setObjectUrl] = useState<string | null>(null);
+    const [media, setMedia] = useState<FileViewerMedia | null>(null);
     const [status, setStatus] = useState<FileViewerStatus>(url ? 'pending' : 'error');
 
     // Defer the download until the preview scrolls into view, so hidden dialogs don't fetch upfront.
@@ -64,8 +66,20 @@ export function FileViewer({ props, nodes }: Props) {
 
                 if (cancelled) return;
 
-                // Only PDFs render inside the sandboxed frame; uploads are untrusted.
-                if (blob.type !== 'application/pdf') {
+                // Media elements never execute embedded scripts, so images, video, and audio
+                // preview directly while every other non-PDF type falls back to a download link.
+                const mediaType: FileViewerMedia | null =
+                    blob.type === 'application/pdf'
+                        ? 'pdf'
+                        : blob.type.startsWith('image/')
+                          ? 'image'
+                          : blob.type.startsWith('video/')
+                            ? 'video'
+                            : blob.type.startsWith('audio/')
+                              ? 'audio'
+                              : null;
+
+                if (mediaType === null) {
                     setStatus('fallback');
                     return;
                 }
@@ -77,6 +91,7 @@ export function FileViewer({ props, nodes }: Props) {
                     return;
                 }
 
+                setMedia(mediaType);
                 setObjectUrl(previewUrl);
                 setStatus('ready');
             } catch {
@@ -98,10 +113,19 @@ export function FileViewer({ props, nodes }: Props) {
 
     return (
         <Stack ref={frameRef} gap={3} height="65vh">
-            {status === 'ready' && objectUrl ? (
+            {status === 'ready' && objectUrl && media === 'pdf' ? (
                 // Chromium blocks PDF rendering inside sandboxed frames, so sandbox must stay off here.
-                // Only exact application/pdf blobs are framed; every other type falls back to a download link.
                 <iframe title={title} src={objectUrl} className="h-full w-full rounded-lg" />
+            ) : status === 'ready' && objectUrl && media === 'image' ? (
+                <Center minHeight={192} width="100%">
+                    <img alt={title} src={objectUrl} className="max-h-full max-w-full rounded-lg object-contain" />
+                </Center>
+            ) : status === 'ready' && objectUrl && media === 'video' ? (
+                <Center minHeight={192} width="100%">
+                    <video aria-label={title} src={objectUrl} controls className="max-h-full w-full rounded-lg" />
+                </Center>
+            ) : status === 'ready' && objectUrl && media === 'audio' ? (
+                <audio aria-label={title} src={objectUrl} controls className="w-full" />
             ) : status === 'fallback' ? (
                 <Stack gap={2}>
                     <Text type="supporting">This file type can&apos;t be previewed.</Text>

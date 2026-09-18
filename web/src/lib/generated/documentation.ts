@@ -339,7 +339,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "if"
             }
         ],
-        "description": "FileViewer previews a PDF document inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.",
+        "description": "FileViewer previews PDF documents, images, video, and audio inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.",
         "example": "<FileViewer src=\"/api/items/${item.id}/attachments/${attachment.id}\" title=\"$attachment.name\" />",
         "name": "FileViewer",
         "lastUpdated": "2026-09-17",

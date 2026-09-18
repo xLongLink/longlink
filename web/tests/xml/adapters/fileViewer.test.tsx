@@ -107,6 +107,28 @@ describe('FileViewer', () => {
         expect(fetchRequest).toHaveBeenCalledOnce();
     });
 
+    it.each([
+        { type: 'image/png', tag: 'img' },
+        { type: 'video/mp4', tag: 'video' },
+        { type: 'audio/mpeg', tag: 'audio' },
+    ])('previews $type inline with a $tag element', async ({ type, tag }) => {
+        // Arrange
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': type } }))
+        );
+        const container = await renderViewer('<FileViewer src="/api/items/1/attachments/media.bin" title="Media" />');
+
+        // Act
+        await vi.waitFor(() => expect(container.querySelector(tag)).not.toBeNull());
+
+        // Assert
+        const element = container.querySelector(tag);
+        expect(container.querySelector('iframe')).toBeNull();
+        expect(element?.getAttribute('src')).toBe('blob:preview');
+        expect(element?.getAttribute(tag === 'img' ? 'alt' : 'aria-label')).toBe('Media');
+    });
+
     it('falls back to a new-tab link for non-PDF files', async () => {
         vi.stubGlobal(
             'fetch',
