@@ -4,31 +4,33 @@
     <Query id="attachments" path="/api/items/${params.item}/attachments" />
     <State id="attachment" file="${null}" />
 
-    <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-        <Stack>
-            <Heading level="3">$item.name</Heading>
-            ${`CHF ${item.price}`}
-        </Stack>
-        <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
-            <FileInput label="Attachment" value="$attachment.file" />
-            <Action>
-                <Request
-                    url="/api/items/${params.item}/attachments"
-                    method="POST"
-                    closeDialog="true"
-                    form="${{ file: attachment.file }}"
-                />
-                <Patch state="attachments" invalidate="true" />
-                <Button variant="primary">Upload attachment</Button>
-            </Action>
-        </Dialog>
-    </Stack>
-
-    <Table data="$attachments" idKey="id">
-        <TableColumn field="name" header="File">
-            <Dialog title="$row.name" triggerLabel="$row.name" purpose="info" width="90%" height="90vh">
-                <FileViewer src="/api/items/${params.item}/attachments/${row.id}" title="$row.name" />
+    <Stack gap="8">
+        <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
+            <Stack gap="1">
+                <Heading level="3">$item.name</Heading>
+                ${`CHF ${item.price}`}
+            </Stack>
+            <Dialog title="Attachments" triggerLabel="Upload attachment" purpose="form">
+                <FileInput label="Attachment" value="$attachment.file" />
+                <Action>
+                    <Request
+                        url="/api/items/${params.item}/attachments"
+                        method="POST"
+                        closeDialog="true"
+                        form="${{ file: attachment.file }}"
+                    />
+                    <Patch state="attachments" invalidate="true" />
+                    <Button variant="primary">Upload attachment</Button>
+                </Action>
             </Dialog>
-        </TableColumn>
-    </Table>
+        </Stack>
+
+        <Table data="$attachments" idKey="id">
+            <TableColumn field="name" header="File">
+                <Dialog title="$row.name" triggerLabel="$row.name" purpose="info" width="90%" height="90vh">
+                    <FileViewer src="/api/items/${params.item}/attachments/${row.id}" title="$row.name" />
+                </Dialog>
+            </TableColumn>
+        </Table>
+    </Stack>
 </longlink>
