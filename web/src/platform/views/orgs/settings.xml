@@ -41,7 +41,7 @@
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />
-            <Stack gap="1">
+            <Stack gap="0">
                 <Heading level="4" accessibilityLevel="1">
                     $details.organization.name
                 </Heading>

@@ -1,0 +1,52 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Organization Solutions" icon="boxes">
+    <Query
+        id="membership"
+        path="/api/v1/organizations/slug/${params.organization}"
+    />
+    <Query
+        id="solutions"
+        path="/api/v1/organizations/${membership.organization.id}/solutions"
+    />
+
+    <Stack gap="8">
+        <Stack
+            direction="horizontal"
+            justify="between"
+            align="center"
+            wrap="wrap"
+        >
+            <Stack gap="1">
+                <Heading level="1">Solutions</Heading>
+                <Text color="secondary">
+                    Manage the solutions attached to this organization.
+                </Text>
+            </Stack>
+            <CreateSolution
+                if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
+                organizationId="$membership.organization.id"
+            />
+        </Stack>
+
+        <Table data="$solutions" idKey="id" hasHover="true">
+            <TableColumn field="name" header="Solution">
+                <Stack gap="0">
+                    <Stack direction="horizontal" gap="1" align="center">
+                        <Link
+                            to="/orgs/${params.organization}/solutions/${row.slug}"
+                        >
+                            $row.name
+                        </Link>
+                        <StatusBadge status="$row.status" />
+                    </Stack>
+                    <Text
+                        if="$row.description"
+                        type="supporting"
+                    >
+                        $row.description
+                    </Text>
+                </Stack>
+            </TableColumn>
+        </Table>
+    </Stack>
+</longlink>
