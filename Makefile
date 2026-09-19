@@ -1,4 +1,28 @@
-.PHONY: install check format build test up image down api web sdk seed
+.PHONY: install apt check format build test up image down api web sdk seed
+
+
+# Install host requirements (make, docker, k3d, helm, kubectl, uv) on Ubuntu.
+apt:
+	sudo apt-get update
+	sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+	sudo install -m 0755 -d /etc/apt/keyrings
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+	sudo chmod a+r /etc/apt/keyrings/docker.asc
+	@CODENAME=$$(. /etc/os-release && echo "$${UBUNTU_CODENAME:-$$VERSION_CODENAME}"); \
+	ARCH=$$(dpkg --print-architecture); \
+	printf "Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nArchitectures: %s\nSigned-By: /etc/apt/keyrings/docker.asc\n" "$$CODENAME" "$$ARCH" | sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null
+	curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey -o $${TMPDIR:-/tmp}/helm.gpg
+	@if [ "$$(gpg --show-keys --with-colons $${TMPDIR:-/tmp}/helm.gpg | awk -F: '$$1 == "fpr" {print $$10}' | head -n 1)" != "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6" ]; then echo "ERROR: Unexpected Helm APT key ID" >&2; exit 1; fi
+	cat $${TMPDIR:-/tmp}/helm.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+	echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list > /dev/null
+	curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.37/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
+	sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+	sudo apt-get update
+	sudo apt-get install -y make docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin helm kubectl
+	@if ! command -v k3d >/dev/null 2>&1; then curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash; fi
+	@if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
 
 # Install all development dependencies.
 install:
@@ -90,12 +114,14 @@ down:
 
 # Prepare and run the local LongLink Platform API server.
 api:
+	@umask 077; cp -n api/.env.sample api/.env
 	cd api && uv run --locked alembic upgrade head
 	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Run the Vite web app.
 web:
+	cd web && vp install --frozen-lockfile
 	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
