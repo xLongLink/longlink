@@ -26,7 +26,7 @@ apt:
 
 # Install all development dependencies.
 install:
-	@umask 077; cp -n api/.env.sample api/.env
+	@umask 077; cp --update=none api/.env.sample api/.env
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
@@ -114,7 +114,7 @@ down:
 
 # Prepare and run the local LongLink Platform API server.
 api:
-	@umask 077; cp -n api/.env.sample api/.env
+	@umask 077; cp --update=none api/.env.sample api/.env
 	cd api && uv run --locked alembic upgrade head
 	cd api && uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
@@ -137,5 +137,5 @@ sdk:
 
 # Seed the local example Organization and Solution after the Platform API starts.
 seed: image
-	@umask 077; cp -n api/.env.sample api/.env
+	@umask 077; cp --update=none api/.env.sample api/.env
 	cd api && uv run --locked python ../dev/scripts/seed.py

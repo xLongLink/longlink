@@ -64,6 +64,12 @@ LongLink aims to bring software-development principles to the way organisations 
 
 ## Development
 
+On linux install the requirements using:
+
+```bash
+make apt   # Ubuntu, Debian, ...
+```
+
 Work on the LongLink Platform:
 
 ```bash
