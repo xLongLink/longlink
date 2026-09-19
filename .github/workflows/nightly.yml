@@ -113,14 +113,6 @@ jobs:
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
-            - name: Remove old nightly API image versions
-              uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5
-              with:
-                  package-name: longlink
-                  package-type: container
-                  min-versions-to-keep: 3
-                  delete-only-untagged-versions: true
-
             - name: Remove old nightly Compute chart versions
               env:
                   GH_TOKEN: ${{ github.token }}
