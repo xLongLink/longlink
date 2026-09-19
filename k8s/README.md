@@ -2,8 +2,6 @@
 
 <img src="../banner.png" alt="LongLink banner" />
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
-
 </div>
 
 ## LongLink Compute package
