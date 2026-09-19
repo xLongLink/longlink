@@ -149,7 +149,9 @@ jobs:
                       longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
                       longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
                       longlink.dev/release-sdk-version=${{ github.ref_name }}
-                  tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                  tags: |
+                      ghcr.io/xlonglink/longlink:${{ github.ref_name }}
+                      ghcr.io/xlonglink/longlink:latest
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
