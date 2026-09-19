@@ -7,6 +7,7 @@ from src.database import session as database
 from collections.abc import AsyncIterator
 from src.environments import env
 from longlink.database import audit
+from src.utils.cookies import AUTH_COOKIE
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +25,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
 
 async def authuser(
     request: Request,
-    credential: str | None = Cookie(default=None, alias="longlink_auth"),
+    credential: str | None = Cookie(default=None, alias=AUTH_COOKIE),
     session: AsyncSession = Depends(get_session),
 ) -> AsyncIterator[User]:
     """Return the authenticated user with current LongLink resource access."""

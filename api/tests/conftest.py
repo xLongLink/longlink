@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from types import TracebackType
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
-from typing import Self, cast
+from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
 from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
 from kr8s.asyncio import Api
@@ -17,7 +17,6 @@ TEST_PASSWORD = "longlink-test-password"
 
 # Seed the required settings before importing the FastAPI app.
 os.environ["SMTP_HOST"] = "smtp.example.com"
-os.environ["IMAGE_REGISTRIES"] = '{"ghcr.io":"https://ghcr.io","localhost:15000":"http://localhost:15000"}'
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
@@ -46,6 +45,9 @@ from src.environments import env
 from src.database.models import registry
 from src.database.models.users import User
 
+if TYPE_CHECKING:
+    from src.kubernetes.client import Kubernetes
+
 
 class AsyncKubernetes:
     """Provide Kubernetes resource-scope cleanup for test doubles."""
@@ -72,15 +74,24 @@ class AsyncKubernetes:
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    async def verify(self, compute: object) -> None:
+    def __init__(self, compute: object | None = None) -> None:
+        """Accept the bound Compute registry without opening connections."""
+
+    @staticmethod
+    async def controller_credentials(cluster: object) -> Credentials:
+        """Return stable chart-managed credentials without cluster I/O."""
+
+        return Credentials("controller", "controller-secret")
+
+    async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID, compute: object) -> None:
+    async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
         """Accept provisioning."""
 
-        self.bucket(organization, compute)
+        self.bucket(organization)
 
-    def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+    def bucket(self, organization: UUID) -> SimpleNamespace:
         """Return the owner connection for an organization bucket."""
 
         return SimpleNamespace(name=organization.hex, storage=self, admin=self)
@@ -96,7 +107,7 @@ class StorageKubernetes:
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         """Accept owner-scoped object cleanup."""
 
-    async def delete(self, organization: UUID, solutions: Sequence[UUID], compute: object) -> None:
+    async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Accept organization storage deletion."""
 
     async def usage(self, bucket: str) -> int:
@@ -112,26 +123,50 @@ class DatabaseKubernetes(AsyncKubernetes):
         """Expose database operations through the production client shape."""
 
         self.databases = self
-        self.storage = StorageKubernetes()
 
-    async def apply(self, organization: UUID, password: str, storage_class: str, size_gib: int, instances: int) -> None:
+    async def apply(self, organization: UUID, password: str, storage_class: str, *, size_mib: int = 100, instances: int = 1) -> None:
         """Accept Organization cluster provisioning."""
 
     async def resume(self, organization: UUID) -> None:
         """Accept database resumption."""
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
+    async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
 
-        assert name == "database-rw"
-        assert namespace.startswith("longlink-database-")
-        assert port == 5432
+        assert str(organization)
         return 15432
 
     async def certificate(self, organization: UUID) -> str:
         """Return a synthetic certificate consumed only by the SQL fake."""
 
         return "test-database-ca"
+
+
+class OrganizationsDouble:
+    """Supply the Organization compute-boundary facade for lifecycle tests."""
+
+    async def apply(self, organization: UUID) -> None:
+        """Accept Organization boundary provisioning."""
+
+    async def delete(self, organization: UUID) -> None:
+        """Accept Organization boundary deletion."""
+
+
+class OperationKubernetes(AsyncKubernetes):
+    """Expose the Solution lifecycle client without external Kubernetes I/O."""
+
+    def __init__(self, *_args: object) -> None:
+        """Share one fake cluster connection with the solution and database clients."""
+
+        self.solutions = self
+        self.databases = DatabaseKubernetes()
+        self.organizations = OrganizationsDouble()
+
+    async def forward_database(self, organization: UUID) -> int:
+        """Provide the database tunnel owned by the shared fake database client."""
+
+        # Reuse the single provider-tunnel contract instead of restating it.
+        return await self.databases.forward_database(organization)
 
 
 class DatabasePostgres:
@@ -184,8 +219,15 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 
-class FakeKubernetes:
+class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
+
+    def __init__(self, *_args: object) -> None:
+        """Expose production facade shapes without external I/O."""
+
+        from src.kubernetes.organizations import Organizations
+
+        self.organizations = Organizations(cast("Kubernetes", self))
 
     async def api(self) -> Api:
         """Return the fake API client used by resource fakes."""
@@ -197,10 +239,17 @@ class FakeKubernetes:
 
         return "test-cluster"
 
-    async def portforward(self, name: str, namespace: str, port: int) -> int:
+    async def forward_database(self, organization: UUID) -> int:
         """Return a synthetic development gateway port without external I/O."""
 
         return 18444
+
+
+def kubernetes_client() -> "Kubernetes":
+    """Return the Kubernetes test double typed as its production client."""
+
+    # Centralize the intentional test-double substitution so call sites need no suppressions.
+    return cast("Kubernetes", FakeKubernetes())
 
 
 class RegistryKubernetes(AsyncKubernetes):
@@ -220,6 +269,10 @@ class RegistryKubernetes(AsyncKubernetes):
             if isinstance(cluster, dict) and isinstance(cluster.get("server"), str):
                 return cluster["server"]
         return str(uuid4())
+
+
+async def verify_compute_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
+    """Accept inline Compute verification without external Kubernetes I/O."""
 
 
 @pytest.fixture
@@ -255,6 +308,8 @@ async def reset_db(
 
     engine = create_async_engine(db_url)
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:
         await conn.run_sync(registry.metadata.create_all)
@@ -283,7 +338,7 @@ def create_client(user: User | None = None) -> AsyncClient:
     from main import app
 
     cookies = authenticated_cookies(user) if user is not None else None
-    headers = {"origin": env.PUBLIC_URL.rstrip("/")}
+    headers = {"origin": env.PUBLIC_URL}
 
     return AsyncClient(
         transport=ASGITransport(app=app),

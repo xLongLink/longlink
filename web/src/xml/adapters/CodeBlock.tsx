@@ -5,6 +5,7 @@ import { resolveXmlProps } from '../core/props';
 import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
 
 const codeBlockPropsSchema = z.object({
+    hasLineNumbers: z.boolean().optional(),
     value: z
         .union([z.string(), z.array(z.string())])
         .optional()
@@ -14,7 +15,14 @@ const codeBlockPropsSchema = z.object({
 /** Renders text or JSON log lines in a readable code block. */
 export function CodeBlock({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { value } = resolveXmlProps(props, ctx, codeBlockPropsSchema, ['value']);
+    const { hasLineNumbers, value } = resolveXmlProps(props, ctx, codeBlockPropsSchema, ['value']);
 
-    return <AstryxCodeBlock code={Array.isArray(value) ? value.join('\n') : value} isWrapped size="sm" />;
+    return (
+        <AstryxCodeBlock
+            code={Array.isArray(value) ? value.join('\n') : value}
+            hasLineNumbers={hasLineNumbers}
+            isWrapped
+            size="sm"
+        />
+    );
 }

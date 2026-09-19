@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
-
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+<img src="banner.png" alt="LongLink banner" />
 
 </div>
 
@@ -11,7 +9,6 @@
 > [!WARNING]
 > LongLink is currently in development. \
 > APIs, features, license and documentation may change as the project evolves.
-
 
 ## Introduction
 
@@ -65,14 +62,18 @@ LongLink aims to bring software-development principles to the way organisations 
 
 ## Development
 
+On linux install the requirements using:
+
+```bash
+make apt   # Ubuntu, Debian, ...
+```
+
 Work on the LongLink Platform:
 
 ```bash
-make install
 make up     # Create local infrastructure
 make api    # In one terminal
-make image  # Build and push the sample Solution after the API starts
-make seed   # In another terminal after the image is available
+make seed   # In another terminal after the api is up
 make web    # In another terminal
 ```
 

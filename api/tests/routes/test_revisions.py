@@ -1,17 +1,19 @@
 import pytest
 import asyncio
-from uuid import uuid4
+from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from sqlmodel import col
 from factories import create_solution, create_organization
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
+from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
+from src.database.models.association import UserOrganization
 
 
 @pytest.mark.parametrize("reference", ["desired_revision_id", "deployed_revision_id"])
@@ -131,6 +133,81 @@ async def test_update_preserves_patches_and_reresolves(
         prior = await session.get(Revision, solution.desired_revision_id)
         assert prior is not None and prior.envs == {"KEEP": "private-value", "DROP": "old-value"}
     assert inspected[-1] == source
+
+
+@pytest.mark.parametrize(
+    ("role", "status", "detail"),
+    [
+        pytest.param(None, 403, "Access required", id="non-member"),
+        pytest.param(OrganizationRoles.read, 403, "Permission required", id="read-member"),
+        pytest.param(OrganizationRoles.write, 403, "Permission required", id="write-member"),
+    ],
+)
+async def test_update_check_rejects_callers_without_maintain_access(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+    role: OrganizationRoles | None,
+    status: int,
+    detail: str,
+) -> None:
+    """Require maintain access before inspecting or re-resolving a desired release."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    if role is not None:
+        async with session_scope() as session:
+            session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=role))
+            await session.commit()
+    url = f"/api/v1/solutions/{solution.id}/update"
+
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if denied inspection reaches remote image resolution."""
+
+        raise AssertionError("denied update check must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+
+    # Act
+    get_response = await clients[1].get(url)
+    post_response = await clients[1].post(url, json={})
+
+    # Assert
+    assert get_response.status_code == status
+    assert get_response.json() == {"detail": detail}
+    assert post_response.status_code == status
+    assert post_response.json() == {"detail": detail}
+
+
+async def test_update_check_allows_maintainer_without_registry_oracle(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Allow maintainers to inspect the desired release source."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        await session.commit()
+    url = f"/api/v1/solutions/{solution.id}/update"
+
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Resolve metadata for the persisted source at the external boundary."""
+
+        return LongLinkMetadata(image=image)
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+
+    # Act
+    response = await clients[1].get(url)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["configured_envs"] == []
 
 
 @pytest.mark.parametrize("method", ["GET", "POST"])
@@ -260,7 +337,7 @@ async def test_local_registry_release_roundtrip(
     assert response.status_code == 204
     listing = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
     assert listing.status_code == 200 and listing.json()[0]["deployment_pending"]
-    solution_id = listing.json()[0]["id"]
+    solution_id = UUID(listing.json()[0]["id"])
     url = f"/api/v1/solutions/{solution_id}/update"
     check = await clients[0].get(url)
     assert check.status_code == 200

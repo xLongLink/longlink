@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
-
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+<img src="../banner.png" alt="LongLink banner" />
 
 </div>
 
@@ -39,20 +37,14 @@ Compute cluster
 
 ## Requirements
 
-Create the RustFS namespace:
+The chart creates the RustFS namespace and administrator Secret
+(`rustfs/longlink-rustfs`). Compute registration reads those credentials
+through the provided kubeconfig, so they never leave the cluster. Leave
+`rustfs.secret.accessKey`/`secretKey` empty to generate strong random
+credentials on first install; set them to bring your own keys. Generated
+credentials are kept across upgrades and uninstalls.
 
-```bash
-kubectl create namespace rustfs
-```
-
-Create the RustFS administrator Secret:
-
-```bash
-kubectl create secret generic longlink-rustfs \
-  --namespace rustfs \
-  --from-literal=RUSTFS_ACCESS_KEY=<access-key> \
-  --from-literal=RUSTFS_SECRET_KEY=<secret-key>
-```
+Solution workloads always reach object storage through the cluster-local proxy at `https://longlink-storage.rustfs.svc:443`. The registered storage endpoint is the Platform controller endpoint used from outside the cluster.
 
 <br />
 

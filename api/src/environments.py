@@ -9,7 +9,6 @@ class Env(BaseSettings):
 
     # Runtime scheduling
     OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
-    DATABASE_IDLE_SECONDS: int = Field(default=300, ge=300, le=604800)
     VERSION: str = Field(default="v0.0.0", pattern=r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-.+)?$")
 
     # Authentication
@@ -41,9 +40,6 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
-    # Administrator-controlled registry origins, keyed by the image registry name.
-    IMAGE_REGISTRIES: dict[str, HttpUrl] = Field(default_factory=lambda: {"ghcr.io": HttpUrl("https://ghcr.io")})
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -71,11 +67,6 @@ class Env(BaseSettings):
         if (self.SMTP_USERNAME is None) != (self.SMTP_PASSWORD is None):
             raise ValueError("SMTP_USERNAME and SMTP_PASSWORD must be configured together")
 
-        # Registry configuration must contain only credential-free origins; requests cannot supply new destinations.
-        for url in self.IMAGE_REGISTRIES.values():
-            if url.username is not None or url.password is not None or url.path not in {None, "/"} or url.query or url.fragment:
-                raise ValueError("IMAGE_REGISTRIES must contain origins without credentials, path, query, or fragment")
-
         # OAuth providers require both confidential client credentials before their routes are enabled.
         if (self.GOOGLE_OAUTH_CLIENT_ID is None) != (self.GOOGLE_OAUTH_CLIENT_SECRET is None):
             raise ValueError("GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must be configured together")
@@ -83,12 +74,6 @@ class Env(BaseSettings):
             raise ValueError("GITHUB_OAUTH_CLIENT_ID and GITHUB_OAUTH_CLIENT_SECRET must be configured together")
 
         return self
-
-    def trusted_origins(self) -> set[str]:
-        """Return the browser origins allowed to perform cookie-authenticated requests."""
-
-        # Trust only the configured frontend origin in every environment.
-        return {self.PUBLIC_URL.rstrip("/")}
 
 
 env = Env()

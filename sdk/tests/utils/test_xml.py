@@ -22,8 +22,12 @@ VALID_FRAGMENTS = [
         '<Dialog title="Delete issue" triggerLabel="Open" isOpen="$dialog.value" purpose="form">This action cannot be undone.</Dialog>',
     ),
     ("divider", "<Divider>or</Divider>"),
+    ("dialog-fullscreen", '<Dialog title="Contract" fullscreen="true">Content</Dialog>'),
+    ("dialog-width", '<Dialog title="Contract" width="90%">Content</Dialog>'),
+    ("dialog-height", '<Dialog title="Contract" height="90vh">Content</Dialog>'),
     ("divider-runtime-attributes", '<Divider if="show" />'),
     ("file-input", '<FileInput label="Document" value="$document.file" accept=".pdf" />'),
+    ("file-viewer", '<FileViewer src="/api/items/1/attachments/a.pdf" title="Contract" />'),
     ("for", '<For each="items" as="item">$item.name</For>'),
     (
         "form-layout",
@@ -52,6 +56,7 @@ VALID_FRAGMENTS = [
     ),
     ("slider", '<Slider label="Volume" value="$settings.volume" min="0" max="100" />'),
     ("stack", '<Stack direction="horizontal" justify="between"><StackItem size="fill">First</StackItem></Stack>'),
+    ("stack-scroll", '<Stack gap="3" height="50dvh">Content</Stack>'),
     ("state", '<State id="filters" value="[]" />'),
     (
         "switch",
@@ -74,28 +79,32 @@ VALID_FRAGMENTS = [
 ]
 
 INVALID_FRAGMENTS = [
-    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>'),
-    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>'),
-    ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />'),
-    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>'),
-    ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />'),
-    ("badge-label-attribute", '<Badge label="Active" />'),
-    ("slot-attribute", '<Badge slot="icon">Active</Badge>'),
-    ("button-label-attribute", '<Button label="Save">Save</Button>'),
-    ("missing-for-as", '<For each="items" />'),
-    ("forbidden-style", '<Button style="color: red">Save</Button>'),
+    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>', "Request"),
+    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>', "Link"),
+    ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />', "type"),
+    ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>', "id"),
+    ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />', "color"),
+    ("badge-label-attribute", '<Badge label="Active" />', "label"),
+    ("slot-attribute", '<Badge slot="icon">Active</Badge>', "slot"),
+    ("button-label-attribute", '<Button label="Save">Save</Button>', "label"),
+    ("missing-file-viewer-src", '<FileViewer title="Contract" />', "src"),
+    ("missing-for-as", '<For each="items" />', "as"),
+    ("forbidden-style", '<Button style="color: red">Save</Button>', "style"),
     (
         "invalid-action-child",
         '<Action tone="accent"><Button>Save</Button></Action>',
+        "tone",
     ),
     (
         "missing-option-value",
         '<Selector label="View"><Option label="Overview" /></Selector>',
+        "value",
     ),
-    ("missing-query-path", '<Query id="projects" />'),
-    ("missing-state-id", '<State value="[]" />'),
-    ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>'),
-    ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>'),
+    ("missing-query-path", '<Query id="projects" />', "path"),
+    ("missing-state-id", '<State value="[]" />', "id"),
+    ("missing-table-column-field", '<Table data="$items"><TableColumn header="SKU" /></Table>', "field"),
+    ("missing-tab-value", '<Tabs><Tab label="Overview">Overview</Tab></Tabs>', "value"),
+    ("invalid-stack-spacing", '<Stack gap="7">Content</Stack>', "gap"),
 ]
 
 UNSUPPORTED_MARKUP = [
@@ -129,14 +138,20 @@ def test_xml_validation_rejects_unsupported_markup(content: str) -> None:
 def test_root_schema_accepts_valid_fragments(content: str) -> None:
     """Validate representative XML fragments through the View schema."""
 
-    # Validate the fragment through the View schema.
-    validate_xml(content)
+    # Assert the validator returns the parsed document instead of silently accepting input.
+    assert validate_xml(content).tag == "longlink"
 
 
-@pytest.mark.parametrize("content", [pytest.param(f"<longlink>{content}</longlink>", id=name) for name, content in INVALID_FRAGMENTS])
-def test_root_schema_rejects_invalid_fragments(content: str) -> None:
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [pytest.param(f"<longlink>{content}</longlink>", expected, id=name) for name, content, expected in INVALID_FRAGMENTS],
+)
+def test_root_schema_rejects_invalid_fragments(content: str, expected: str) -> None:
     """Reject representative invalid XML fragments through the View schema."""
 
-    # Require schema validation to reject the fragment.
-    with pytest.raises(ValueError, match="XML is invalid"):
+    # Act
+    with pytest.raises(ValueError, match="XML is invalid") as exc_info:
         validate_xml(content)
+
+    # Assert
+    assert expected in str(exc_info.value)

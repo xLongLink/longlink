@@ -41,7 +41,6 @@ class SeedSettings(BaseSettings):
     # API connection
     API_URL: str = "http://127.0.0.1:8000"
     PUBLIC_URL: str = "http://localhost:5173"
-    COMPUTE_TIMEOUT_SECONDS: int = Field(default=300, ge=1)
 
     # Platform administrator
     ADMIN_EMAIL: str = Field(default="", min_length=1, validate_default=True)
@@ -74,12 +73,7 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
 
     compute = await development_compute(client)
     if compute is not None:
-        if compute.status != "failed":
-            return compute
-
-        # Re-register the local Compute after a completed validation failure.
-        response = await client.delete(f"/api/v1/computes/{compute.id}")
-        response.raise_for_status()
+        return compute
 
     # Register the fixed local infrastructure through the same API contract as an administrator.
     gateway_certificate = LOCAL_GATEWAY_CERTIFICATE.read_text(encoding="utf-8")
@@ -91,14 +85,10 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": "https://127.0.0.1:8443",
             "gateway_certificate": gateway_certificate,
-            "database_size_gib": 10,
-            "database_instances": 1,
             "database_storage_class": "local-path",
+            # Controller endpoint reachable from the host; administrator keys are read from the cluster.
             "storage_endpoint": "https://storage.localhost:9443",
-            "storage_access_key": "rustfsadmin",
-            "storage_secret_key": "rustfsadmin",
             "storage_certificate": storage_certificate,
-            "bucket_size_bytes": 134217728,
         },
     )
     if response.status_code != 409:
@@ -109,25 +99,6 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
     if compute is None:
         raise RuntimeError("Local Compute registration was not recorded")
     return compute
-
-
-async def wait_for_compute(client: httpx2.AsyncClient, compute: Resource, settings: SeedSettings) -> None:
-    """Wait until the local Compute is ready for Organization assignment."""
-
-    # The Organization API assigns only validated Compute registrations.
-    try:
-        async with asyncio.timeout(settings.COMPUTE_TIMEOUT_SECONDS):
-            while compute.status == "creating":
-                await asyncio.sleep(1)
-                current = await development_compute(client)
-                if current is None:
-                    raise RuntimeError("Local Compute registration was removed")
-                compute = current
-
-            if compute.status == "failed":
-                raise RuntimeError("Local Compute validation failed")
-    except TimeoutError as exc:
-        raise RuntimeError("Local Compute validation timed out") from exc
 
 
 async def development_organization(client: httpx2.AsyncClient) -> Resource | None:
@@ -146,8 +117,8 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     if organization is not None:
         return organization
 
-    # Let the API select the sole validated local Compute.
-    response = await client.post("/api/v1/organizations", json={"name": "Development"})
+    # Disable database hibernation for local development; zero keeps it awake.
+    response = await client.post("/api/v1/organizations", json={"name": "Development", "database_idle_seconds": 0})
     if response.status_code != 409:
         response.raise_for_status()
         return Resource.model_validate(response.json())
@@ -158,29 +129,8 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
     return organization
 
 
-async def wait_for_organization(client: httpx2.AsyncClient, organization: Resource, settings: SeedSettings) -> Resource:
-    """Wait until the local Organization accepts Solution provisioning."""
-
-    # Wait for the asynchronous storage and Kubernetes boundary provisioning.
-    try:
-        async with asyncio.timeout(settings.COMPUTE_TIMEOUT_SECONDS):
-            while organization.status == "creating":
-                await asyncio.sleep(1)
-                current = await development_organization(client)
-                if current is None:
-                    raise RuntimeError("Local Organization was removed")
-                organization = current
-
-            if organization.status == "failed":
-                raise RuntimeError("Local Organization provisioning failed")
-    except TimeoutError as exc:
-        raise RuntimeError("Local Organization provisioning timed out") from exc
-
-    return organization
-
-
 async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, organization: Resource) -> None:
-    """Create or retry the local sample Solution."""
+    """Create, retry, or redeploy the local sample Solution."""
 
     response = await client.get(f"/api/v1/organizations/{organization.id}/solutions")
     response.raise_for_status()
@@ -196,23 +146,35 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
                 "name": "Sample",
                 "image": "localhost:15000/sample:dev",
                 "envs": settings.SAMPLE_ENVS,
+                "min_scale": 1,
+                "idle_seconds": 0,
                 "description": "A sample solution for local development.",
             },
         )
+        if response.status_code == 404:
+            raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
         response.raise_for_status()
         return
 
-    if solution.status == "failed":
-        # Retry failed sample provisioning through a fresh revision of its persisted source.
-        response = await client.post(
-            f"/api/v1/solutions/{solution.id}/update",
-            json={"envs": settings.SAMPLE_ENVS},
-        )
-        response.raise_for_status()
+    if solution.status == "creating":
+        # Leave in-flight provisioning alone; a later seed redeploys once it settles.
+        return
+
+    # Re-resolve the mutable development tag so a rebuilt image deploys a fresh revision.
+    response = await client.post(
+        f"/api/v1/solutions/{solution.id}/update",
+        json={"envs": settings.SAMPLE_ENVS, "min_scale": 1, "idle_seconds": 0},
+    )
+    if response.status_code == 404:
+        raise RuntimeError("Sample image 'localhost:15000/sample:dev' was not found in the local registry; run 'make image' first")
+    if response.status_code == 409 and str(response.json().get("detail", "")).endswith("No revision was created."):
+        # The rebuilt image matches the deployed snapshot, keeping repeated seeding idempotent.
+        return
+    response.raise_for_status()
 
 
 async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
-    """Register local infrastructure and create the local example Organization and Solution."""
+    """Register local infrastructure and create or redeploy the local example Organization and Solution."""
 
     # Authenticate with the administrator that the API initializes during startup.
     response = await client.post(
@@ -221,11 +183,9 @@ async def seed(settings: SeedSettings, client: httpx2.AsyncClient) -> None:
     )
     response.raise_for_status()
 
-    compute = await register_compute(client, settings)
-    await wait_for_compute(client, compute, settings)
+    await register_compute(client, settings)
 
     organization = await create_organization(client)
-    organization = await wait_for_organization(client, organization, settings)
     await create_sample(client, settings, organization)
 
 

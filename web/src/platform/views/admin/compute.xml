@@ -11,18 +11,12 @@
         gateway_url=""
         gateway_certificate=""
         database_storage_class=""
-        database_size_gib="${10}"
-        database_instances="${1}"
-        storage_endpoint="https://longlink-storage.rustfs.svc:443"
-        storage_access_key=""
-        storage_secret_key=""
+        storage_endpoint=""
         storage_certificate=""
-        bucket_size_bytes="${1024}"
     />
     <Query
         id="computes"
         path="/api/v1/computes?page=${pages.value}&amp;page_size=25"
-        pollInterval="5000"
     />
 
     <Stack gap="8">
@@ -35,14 +29,13 @@
             <Stack>
                 <Heading level="1">Compute</Heading>
                 <Text color="secondary">
-                    Manage Kubernetes connections, Kourier gateways, and
-                    database provisioning settings.
+                    Manage Kubernetes connections and Kourier gateways.
                 </Text>
             </Stack>
             <Action>
                 <Patch
                     state="registration"
-                    value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', database_size_gib: 10, database_instances: 1, storage_endpoint: 'https://longlink-storage.rustfs.svc:443', storage_access_key: '', storage_secret_key: '', storage_certificate: '', bucket_size_bytes: 1024 }}"
+                    value="${{ name: '', kubeconfig: '', gateway_url: '', gateway_certificate: '', database_storage_class: '', storage_endpoint: '', storage_certificate: '' }}"
                 />
                 <Patch state="registrationDialog" value="${{ open: true }}" />
                 <Button>Register Compute</Button>
@@ -58,7 +51,8 @@
                     <Text type="supporting">$row.gateway_url</Text>
                 </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions">
+            <TableColumn field="live_version" header="Version" />
+            <TableColumn field="id" header="Actions" align="end">
                 <MoreMenu value="$metadata">
                     <Option
                         value="${{ item: row, open: true }}"
@@ -90,66 +84,43 @@
         purpose="form"
     >
         <Stack gap="3">
-            <TextInput
-                label="Name"
-                value="$registration.name"
-                isRequired="true"
-            />
-            <TextInput
-                label="Gateway URL"
-                value="$registration.gateway_url"
-                isRequired="true"
-            />
-            <TextArea
-                label="Gateway CA certificate"
-                value="$registration.gateway_certificate"
-            />
-            <TextInput
-                label="Database storage class"
-                value="$registration.database_storage_class"
-                isRequired="true"
-            />
-            <NumberInput
-                label="Database size per instance"
-                value="$registration.database_size_gib"
-                min="1"
-                max="65536"
-                step="1"
-            />
-            <NumberInput
-                label="Database instances"
-                value="$registration.database_instances"
-                min="1"
-                max="3"
-                step="1"
-            />
-            <TextInput
-                label="Storage HTTPS endpoint"
-                value="$registration.storage_endpoint"
-                isRequired="true"
-            />
-            <TextInput
-                label="RustFS controller access key"
-                value="$registration.storage_access_key"
-                isRequired="true"
-            />
-            <TextInput
-                label="RustFS controller secret key"
-                value="$registration.storage_secret_key"
-                isRequired="true"
-            />
-            <TextArea
-                label="Storage CA certificate"
-                value="$registration.storage_certificate"
-            />
-            <NumberInput
-                label="Organization bucket byte quota"
-                value="$registration.bucket_size_bytes"
-                min="1024"
-                max="70368744177664"
-                step="1024"
-            />
-            <TextArea label="Kubeconfig" value="$registration.kubeconfig" />
+            <Stack gap="3" height="50dvh">
+                <TextInput
+                    label="Name"
+                    value="$registration.name"
+                    isRequired="true"
+                />
+                <TextInput
+                    label="Gateway URL"
+                    value="$registration.gateway_url"
+                    isRequired="true"
+                />
+                <TextArea
+                    label="Gateway CA certificate"
+                    value="$registration.gateway_certificate"
+                />
+                <TextInput
+                    label="Database storage class"
+                    value="$registration.database_storage_class"
+                    isRequired="true"
+                />
+                <TextInput
+                    label="Storage controller HTTPS endpoint"
+                    value="$registration.storage_endpoint"
+                    placeholder="https://storage.example:9443"
+                    isRequired="true"
+                />
+                <Text type="supporting">
+                    Reachable from the Platform. Administrator keys are read
+                    from the rustfs/longlink-rustfs Secret. Workloads use
+                    https://longlink-storage.rustfs.svc:443.
+                </Text>
+                <TextArea
+                    label="Storage CA certificate"
+                    value="$registration.storage_certificate"
+                />
+                <TextArea label="Kubeconfig" value="$registration.kubeconfig" />
+            </Stack>
             <Stack direction="horizontal" gap="2" justify="end">
                 <Action>
                     <Patch
@@ -161,7 +132,7 @@
                 <Action>
                     <Validate
                         value="$registration"
-                        rules="${{ name: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, kubeconfig: { type: 'string', trim: true, minLength: 1 }, gateway_url: { type: 'string', trim: true, maxLength: 512, format: 'https-origin' }, gateway_certificate: { type: 'string', nullable: true, maxLength: 65536 }, database_storage_class: { type: 'string', minLength: 1, maxLength: 253, pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$' }, database_size_gib: { type: 'number', integer: true, min: 1, max: 65536 }, database_instances: { type: 'number', integer: true, min: 1, max: 3 }, storage_endpoint: { type: 'string', trim: true, maxLength: 512, format: 'https-url' }, storage_access_key: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, storage_secret_key: { type: 'string', trim: true, minLength: 8, maxLength: 1024 }, storage_certificate: { type: 'string', nullable: true, maxLength: 65536 }, bucket_size_bytes: { type: 'number', integer: true, min: 1024, max: 70368744177664, multipleOf: 1024 } }}"
+                        rules="${{ name: { type: 'string', trim: true, minLength: 1, maxLength: 128 }, kubeconfig: { type: 'string', trim: true, minLength: 1 }, gateway_url: { type: 'string', trim: true, maxLength: 512, format: 'https-origin' }, gateway_certificate: { type: 'string', nullable: true, maxLength: 65536 }, database_storage_class: { type: 'string', minLength: 1, maxLength: 253, pattern: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$' }, storage_endpoint: { type: 'string', trim: true, maxLength: 512, format: 'https-url' }, storage_certificate: { type: 'string', nullable: true, maxLength: 65536 } }}"
                     />
                     <Request
                         url="/api/v1/computes"
@@ -186,16 +157,12 @@
                 $metadata.item.gateway_url
             </Text>
             <Text>
+                <b>Live version</b>
+                $metadata.item.live_version
+            </Text>
+            <Text>
                 <b>Database storage class</b>
                 $metadata.item.database_storage_class
-            </Text>
-            <Text>
-                <b>Database size per instance</b>
-                $metadata.item.database_size_gib GiB
-            </Text>
-            <Text>
-                <b>Database instances</b>
-                $metadata.item.database_instances
             </Text>
             <Text>
                 <b>ID</b>
@@ -204,10 +171,6 @@
             <Text>
                 <b>Storage endpoint</b>
                 $metadata.item.storage_endpoint
-            </Text>
-            <Text>
-                <b>Organization bucket byte quota</b>
-                $metadata.item.bucket_size_bytes bytes
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
                 <Action>
@@ -227,7 +190,7 @@
     <Dialog title="Delete compute" isOpen="$deletion.open" purpose="form">
         <Stack gap="3">
             <Text color="secondary">
-                Remove compute $deletion.item.name from the LongLink
+                Remove compute ${deletion.item.name} from the LongLink
                 Platform? Its Kubernetes resources will remain unchanged.
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">

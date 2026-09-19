@@ -5,43 +5,6 @@ from src.models.computes import ComputeRegistryCreate
 pytestmark = pytest.mark.no_db
 
 
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("bucket_size_bytes", 0),
-        ("bucket_size_bytes", 1025),
-        ("bucket_size_bytes", None),
-    ],
-)
-def test_storage_policy_requires_explicit_positive_limits(field: str, value: object) -> None:
-    """Require precise finite byte quotas for Organization buckets."""
-
-    # Validate a real complete registration before changing just one policy input.
-    payload = {
-        "name": "quota",
-        "gateway_url": "https://gateway.example",
-        "database_storage_class": "database",
-        "storage_endpoint": "https://storage.example",
-        "storage_access_key": "controller",
-        "storage_secret_key": "controller-secret",
-        "bucket_size_bytes": 1073741824,
-        "kubeconfig": {
-            "clusters": [{"name": "test", "cluster": {}}],
-            "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
-            "users": [{"name": "test", "user": {}}],
-            "current-context": "test",
-        },
-    }
-    assert ComputeRegistryCreate.model_validate(payload).bucket_size_bytes == 1073741824
-    if value is None:
-        del payload[field]
-    else:
-        payload[field] = value
-    with pytest.raises(ValidationError) as error:
-        ComputeRegistryCreate.model_validate(payload)
-    assert any(item["loc"] == (field,) for item in error.value.errors())
-
-
 def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     """Accept YAML kubeconfigs and persist their JSON-compatible mapping."""
 
@@ -49,10 +12,7 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     payload = ComputeRegistryCreate.model_validate(
         {
             "name": "Compute",
-            "bucket_size_bytes": 1073741824,
             "storage_endpoint": "https://storage.example",
-            "storage_access_key": "controller",
-            "storage_secret_key": "controller-secret",
             "gateway_url": "https://gateway.example",
             "database_storage_class": "local-path",
             "kubeconfig": (
@@ -80,8 +40,6 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
-                "storage_access_key": "controller",
-                "storage_secret_key": "controller-secret",
                 "kubeconfig": {
                     "apiVersion": "v1",
                     "clusters": [{"name": "cluster", "cluster": {}}],
@@ -134,7 +92,5 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
                 "gateway_url": "https://gateway.example",
                 "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
-                "storage_access_key": "controller",
-                "storage_secret_key": "controller-secret",
             }
         )

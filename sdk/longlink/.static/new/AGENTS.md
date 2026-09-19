@@ -20,6 +20,12 @@ You are working on a LongLink Solution project:
 └── main.py           # Service entry point
 ```
 
+## Solution runtime
+
+- Build the app with `app = LongLink()` and register routers via `app.include_router(...)` in `main.py`.
+- Type route parameters as `ctx: Context` for the request database session, storage filesystem, and signed-in user.
+- Store one item's files under its own `{item_id}/` storage prefix.
+
 ## XML views
 
 - A View uses XML, not HTML.
@@ -46,3 +52,4 @@ You are working on a LongLink Solution project:
 - Test observable behavior with clear, deterministic assertions.
 - Use Arrange, Act, Assert sections for non-trivial tests.
 - Mock external boundaries, not business logic.
+- Use `longlink.testclient.TestClient` for route tests; importing it selects the testing environment.

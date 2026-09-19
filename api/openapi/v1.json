@@ -1023,7 +1023,7 @@
     "/api/v1/computes": {
       "post": {
         "summary": "Create Compute Registry",
-        "description": "Register a compute target and queue its initial validation.",
+        "description": "Register a compute target after verifying its infrastructure inline.",
         "operationId": "create_compute_registry_api_v1_computes_post",
         "parameters": [
           {
@@ -1054,7 +1054,7 @@
           }
         },
         "responses": {
-          "202": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -1088,7 +1088,7 @@
       },
       "get": {
         "summary": "List Compute Registries",
-        "description": "Return all registered compute backends.",
+        "description": "Return all registered compute backends with live package versions.",
         "operationId": "list_compute_registries_api_v1_computes_get",
         "parameters": [
           {
@@ -1228,7 +1228,7 @@
     "/api/v1/deployment/computes/endpoints": {
       "put": {
         "summary": "Rotate Compute Endpoints",
-        "description": "Replace registered Compute endpoints after an infrastructure deployment.",
+        "description": "Replace registered Compute endpoints after verifying them inline.",
         "operationId": "rotate_compute_endpoints_api_v1_deployment_computes_endpoints_put",
         "parameters": [
           {
@@ -1259,7 +1259,7 @@
           }
         },
         "responses": {
-          "202": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2008,10 +2008,77 @@
         }
       }
     },
+    "/api/v1/organizations/{organization_id}/quotas": {
+      "get": {
+        "summary": "Get Organization Quotas",
+        "description": "Return stored Organization quotas for administrator views.",
+        "operationId": "get_organization_quotas_api_v1_organizations__organization_id__quotas_get",
+        "parameters": [
+          {
+            "name": "organization_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Organization Id"
+            }
+          },
+          {
+            "name": "longlink_auth",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Longlink Auth"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationQuotasResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/api/v1/organizations/{organization_id}/database": {
       "get": {
         "summary": "Get Organization Database Usage",
-        "description": "Return cached database usage without waking the Organization for telemetry.",
+        "description": "Return cached database usage for telemetry.",
         "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
         "parameters": [
           {
@@ -2711,45 +2778,12 @@
             "type": "object",
             "title": "Kubeconfig"
           },
-          "database_size_gib": {
-            "type": "integer",
-            "maximum": 65536.0,
-            "minimum": 1.0,
-            "title": "Database Size Gib",
-            "default": 10
-          },
-          "database_instances": {
-            "type": "integer",
-            "maximum": 3.0,
-            "minimum": 1.0,
-            "title": "Database Instances",
-            "default": 1
-          },
           "database_storage_class": {
             "type": "string",
             "maxLength": 253,
             "minLength": 1,
             "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
             "title": "Database Storage Class"
-          },
-          "storage_access_key": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Storage Access Key"
-          },
-          "storage_secret_key": {
-            "type": "string",
-            "maxLength": 1024,
-            "minLength": 8,
-            "title": "Storage Secret Key"
-          },
-          "bucket_size_bytes": {
-            "type": "integer",
-            "multipleOf": 1024.0,
-            "maximum": 70368744177664.0,
-            "minimum": 1024.0,
-            "title": "Bucket Size Bytes"
           }
         },
         "type": "object",
@@ -2758,10 +2792,7 @@
           "storage_endpoint",
           "name",
           "kubeconfig",
-          "database_storage_class",
-          "storage_access_key",
-          "storage_secret_key",
-          "bucket_size_bytes"
+          "database_storage_class"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
@@ -2829,17 +2860,20 @@
             "type": "string",
             "title": "Name"
           },
+          "live_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Live Version"
+          },
           "gateway_url": {
             "type": "string",
             "title": "Gateway Url"
-          },
-          "database_size_gib": {
-            "type": "integer",
-            "title": "Database Size Gib"
-          },
-          "database_instances": {
-            "type": "integer",
-            "title": "Database Instances"
           },
           "database_storage_class": {
             "type": "string",
@@ -2848,10 +2882,6 @@
           "storage_endpoint": {
             "type": "string",
             "title": "Storage Endpoint"
-          },
-          "bucket_size_bytes": {
-            "type": "integer",
-            "title": "Bucket Size Bytes"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -2862,11 +2892,8 @@
           "id",
           "name",
           "gateway_url",
-          "database_size_gib",
-          "database_instances",
           "database_storage_class",
           "storage_endpoint",
-          "bucket_size_bytes",
           "status"
         ],
         "title": "ComputeRegistryResponse",
@@ -3012,7 +3039,6 @@
       "OperationKind": {
         "type": "string",
         "enum": [
-          "compute.validate",
           "solution.deploy",
           "solution.delete",
           "organization.create",
@@ -3261,6 +3287,36 @@
         ],
         "title": "OrganizationMemberUpdate",
         "description": "Validate organization member update payloads."
+      },
+      "OrganizationQuotasResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "database_size_mib": {
+            "type": "integer",
+            "title": "Database Size Mib"
+          },
+          "database_instances": {
+            "type": "integer",
+            "title": "Database Instances"
+          },
+          "storage_quota_bytes": {
+            "type": "integer",
+            "title": "Storage Quota Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "database_size_mib",
+          "database_instances",
+          "storage_quota_bytes"
+        ],
+        "title": "OrganizationQuotasResponse",
+        "description": "Represent stored per-Organization quotas in administrator responses."
       },
       "OrganizationRoles": {
         "type": "string",
@@ -3583,6 +3639,13 @@
             "title": "Min Scale",
             "default": 0
           },
+          "idle_seconds": {
+            "type": "integer",
+            "maximum": 3600.0,
+            "minimum": 0.0,
+            "title": "Idle Seconds",
+            "default": 60
+          },
           "description": {
             "anyOf": [
               {
@@ -3634,6 +3697,19 @@
               }
             ],
             "title": "Min Scale"
+          },
+          "idle_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3600.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idle Seconds"
           },
           "expected_revision_id": {
             "anyOf": [
@@ -3749,6 +3825,10 @@
             ],
             "title": "Min Scale"
           },
+          "idle_seconds": {
+            "type": "integer",
+            "title": "Idle Seconds"
+          },
           "revision_id": {
             "type": "string",
             "format": "uuid",
@@ -3773,6 +3853,7 @@
         "type": "object",
         "required": [
           "min_scale",
+          "idle_seconds",
           "revision_id",
           "current_image",
           "configured_envs",

@@ -43,14 +43,11 @@ function resetRuntime(runtime: XmlRuntime, invalidate: (id: string) => Promise<v
     runtime.services.invalidate = invalidate;
 }
 
-/** Clears and returns one setup declaration so it can repopulate its runtime binding. */
+/** Returns one setup declaration so it can repopulate its runtime binding. */
 function takeRuntimeSetup(runtime: XmlRuntime, id: string) {
     if (!Object.hasOwn(runtime.services.setups, id)) return undefined;
 
-    const setup = runtime.services.setups[id];
-    delete runtime.scope.bindings[id];
-
-    return setup;
+    return runtime.services.setups[id];
 }
 
 /**
@@ -87,10 +84,20 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             // Ignore invalidations after this renderer releases ownership.
             if (!mounted) return;
 
+            // Keep stale data visible while the refresh runs; restore it if the refresh fails.
+            const previous = ctx.scope.bindings[id];
+
             // Skip unknown invalidation targets.
             const setup = takeRuntimeSetup(ctx, id);
             if (setup) {
-                await setup();
+                try {
+                    await setup();
+                } catch (error: unknown) {
+                    if (!mounted) return;
+                    ctx.scope.bindings[id] = previous;
+                    reportSetupError(error instanceof Error ? error : new Error('XML refresh failed'));
+                    return;
+                }
             }
 
             // Do not publish changes when cleanup occurred during setup.

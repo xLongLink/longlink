@@ -101,6 +101,38 @@ def test_auth_token_claims_reject_expired_token() -> None:
         token.auth_token_claims(encoded)
 
 
+def test_oauth_state_claims_rejects_cross_provider_token() -> None:
+    """Reject OAuth browser credentials reused on another provider."""
+
+    # Arrange
+    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError, match="Invalid OAuth state token claims"):
+        token.oauth_state_claims(credential, "github")
+
+
+def test_oauth_state_claims_reject_expired_token() -> None:
+    """Reject expired OAuth browser credentials before exchanging an authorization code."""
+
+    # Arrange
+    encoded = jwt.encode(
+        {
+            "provider": "google",
+            "state": "expected-state",
+            "verifier": "pkce-verifier",
+            "aud": token.OAUTH_STATE_TOKEN_AUDIENCE,
+            "exp": token.utcnow() - timedelta(seconds=1),
+        },
+        token.env.SESSION_KEY,
+        algorithm=token.JWT_ALGORITHM,
+    )
+
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
+        token.oauth_state_claims(encoded, "google")
+
+
 @pytest.mark.parametrize(
     ("claims", "function", "message"),
     [

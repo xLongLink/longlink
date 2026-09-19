@@ -1,7 +1,6 @@
 from uuid import uuid4
 from datetime import timedelta
 from factories import (
-    create_compute,
     fail_operation,
     claim_operation,
     fetch_operations,
@@ -15,7 +14,6 @@ from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind, OperationStatus
 from src.models.pagination import Pagination
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
@@ -134,7 +132,6 @@ async def test_operations_service_schedules_all_active_solution_creation_once() 
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_validate, compute_registry.id),
         (OperationKind.organization_create, organization.id),
         (OperationKind.solution_deploy, revision.id),
         (OperationKind.solution_delete, deleted.id),
@@ -195,13 +192,12 @@ async def test_operations_service_schedules_only_organization_deletion_for_delet
     scheduled = {(operation.kind, operation.target_id) for operation in await fetch_operations()}
 
     assert scheduled == {
-        (OperationKind.compute_validate, compute_registry.id),
         (OperationKind.organization_delete, organization.id),
     }
 
 
 async def test_operations_service_claim_claims_oldest_available_operation() -> None:
-    """Claim the oldest available Compute validation first."""
+    """Claim the oldest available Operation first."""
 
     older_operation = await queue(target_id=uuid4())
     await queue(target_id=uuid4())
@@ -309,7 +305,6 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     """Expose failed creation work with its concrete failed resource names."""
 
     # Arrange
-    compute = await create_compute()
     compute_registry = await create_ready_compute()
     async with session_scope() as session:
         organization = Organization(
@@ -338,12 +333,6 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
         solution.desired_revision_id = revision.id
         await session.commit()
 
-    compute_operation = await queue(kind=OperationKind.compute_validate, target_id=compute.id)
-    compute_claim = await claim_operation()
-    assert compute_claim is not None
-    assert compute_claim.id == compute_operation.id
-    assert await fail_operation(compute_operation.id, "compute validation failed") is not None
-
     organization_operation = await queue(kind=OperationKind.organization_create, target_id=organization.id)
     organization_claim = await claim_operation()
     assert organization_claim is not None
@@ -358,26 +347,20 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
 
     # Act
     async with session_scope() as session:
-        compute_row = await session.get(ComputeRegistry, compute.id)
         organization_row = await session.get(Organization, organization.id)
         solution_row = await session.get(Solution, solution.id)
         items, total = await operations.fetch_page(session, Pagination())
 
     # Assert
-    assert compute_row is not None
-    assert compute_row.status == Status.failed
     assert organization_row is not None
     assert organization_row.status == Status.failed
     assert solution_row is not None
     assert solution_row.status == Status.failed
-    assert total == 3
+    assert total == 2
 
     items_by_kind = {item.kind: item for item in items}
-    compute_item = items_by_kind[OperationKind.compute_validate]
     organization_item = items_by_kind[OperationKind.organization_create]
     solution_item = items_by_kind[OperationKind.solution_deploy]
-    assert compute_item.resource_name == compute.name
-    assert compute_item.status == OperationStatus.failed
     assert organization_item.resource_name == organization.name
     assert organization_item.status == OperationStatus.failed
     assert solution_item.resource_name == solution.name

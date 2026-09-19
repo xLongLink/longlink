@@ -5,16 +5,29 @@ from pydantic import TypeAdapter
 from src.errors import ForbiddenError
 from src.logger import logger
 from collections.abc import Mapping
-from src.environments import env
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
-from src.models.metadata import ImageLabels, LongLinkMetadata, EnvironmentMetadata
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_METADATA_MAX_BYTES = 1024 * 1024
+LABELS_ADAPTER = TypeAdapter(dict[str, str])
 ENVIRONMENTS_ADAPTER = TypeAdapter(list[EnvironmentMetadata])
 MANIFEST_ACCEPT = (
     "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, "
     "application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.oci.image.index.v1+json"
 )
+GHCR_ORIGIN = "https://ghcr.io"
+LOCAL_ORIGIN = "http://localhost:15000"
+
+
+def registry_base(registry: str) -> str | None:
+    """Return the fixed origin for one supported image registry host."""
+
+    # Only the public release registry and the local development registry are supported.
+    if registry == "ghcr.io":
+        return GHCR_ORIGIN
+    if registry == "localhost:15000":
+        return LOCAL_ORIGIN
+    return None
 
 
 def missing_envs(metadata: LongLinkMetadata, envs: Mapping[str, str]) -> list[str]:
@@ -84,11 +97,10 @@ async def registry_json(
 async def metadata(image: Image) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
-    # Only administrator-configured registry origins may receive image requests.
-    origin = env.IMAGE_REGISTRIES.get(image.registry)
-    if origin is None:
+    # Only supported registry origins may receive image requests.
+    base = registry_base(image.registry)
+    if base is None:
         raise ForbiddenError("Image registry is not allowed")
-    base = str(origin).rstrip("/")
 
     async with httpx2.AsyncClient(follow_redirects=False, timeout=5.0, trust_env=False) as client:
         try:
@@ -103,11 +115,14 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
 async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLinkMetadata | None:
     """Resolve one manifest or linux/amd64 index child and inspect its configuration."""
 
+    # Only the public release registry uses token authentication and CDN blob redirects.
+    is_ghcr = base == GHCR_ORIGIN
+
     headers = {"Accept": MANIFEST_ACCEPT}
-    if base == "https://ghcr.io":
+    if is_ghcr:
         token_result = await registry_json(
             client,
-            "https://ghcr.io/token",
+            f"{GHCR_ORIGIN}/token",
             params={"service": "ghcr.io", "scope": f"repository:{image.repository}:pull"},
         )
         if token_result is None:
@@ -170,7 +185,7 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             client,
             f"{base}/v2/{image.repository}/blobs/{config_digest}",
             headers=headers,
-            ghcr_blob=base == "https://ghcr.io",
+            ghcr_blob=is_ghcr,
         )
         if config_result is None:
             return None
@@ -185,7 +200,7 @@ async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLi
             return None
 
         raw_labels = image_config.get("Labels")
-        labels: dict[str, str] = {} if raw_labels is None else ImageLabels.model_validate(raw_labels).root
+        labels: dict[str, str] = {} if raw_labels is None else LABELS_ADAPTER.validate_python(raw_labels)
 
         result = LongLinkMetadata(
             image=Image(f"{image.registry}/{image.repository}@{digest}"),

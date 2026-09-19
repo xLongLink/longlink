@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import AsyncKubernetes, DatabasePostgres, StorageKubernetes, DatabaseKubernetes
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes
 from factories import (
     claim_operation,
     create_solution,
@@ -64,14 +64,8 @@ async def test_solution_delete_failure_stops_before_provider_credential_cleanup(
     assert claimed is not None
     assert claimed.target_id == solution.id
 
-    class FailingKubernetes(AsyncKubernetes):
+    class FailingKubernetes(OperationKubernetes):
         """Expose the failing Solution workload client."""
-
-        def __init__(self, _kubeconfig: str) -> None:
-            """Initialize the fake Kubernetes client."""
-
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
 
         async def delete(self, *_args: object) -> None:
             """Raise the Kubernetes deletion failure under test."""
@@ -110,27 +104,13 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
     _, solution = await create_deleted_solution(users[0])
     calls: list[tuple[str, object]] = []
 
-    class FakeKubernetes(AsyncKubernetes):
+    class FakeKubernetes(OperationKubernetes):
         """Record workload deletion."""
-
-        def __init__(self, _kubeconfig: str) -> None:
-            """Expose the solution lifecycle client."""
-
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
 
         async def delete(self, _organization_id: object, solution_id: object) -> None:
             """Record workload removal."""
 
             calls.append(("workload", solution_id))
-
-        async def portforward(self, name: str, namespace: str, port: int) -> int:
-            """Provide the database tunnel used for schema cleanup."""
-
-            assert name == "database-rw"
-            assert namespace.startswith("longlink-database-")
-            assert port == 5432
-            return 15432
 
     class FakePostgres(DatabasePostgres):
         """Record schema deletion."""
@@ -192,11 +172,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     class Storage(StorageKubernetes):
         """Observe bucket resolution and authorization around persisted credentials."""
 
-        def bucket(self, organization: UUID, compute: object) -> SimpleNamespace:
+        def bucket(self, organization: UUID) -> SimpleNamespace:
             """Record the owner connection resolution."""
 
             calls.append("bucket")
-            return super().bucket(organization, compute)
+            return super().bucket(organization)
 
         async def service_account(self, bucket: str, solution: UUID) -> Credentials:
             """Record credential creation after quota admission."""
@@ -214,14 +194,13 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             calls.append("schema")
             return "solution"
 
-    class FakeKubernetes(AsyncKubernetes):
+    class FakeKubernetes(OperationKubernetes):
         """Capture the Kubernetes Secret submitted during deployment."""
 
         def __init__(self, *_args: object) -> None:
-            """Expose the solution lifecycle client."""
+            """Record client construction alongside shared fake ownership."""
 
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
+            super().__init__()
             calls.append("open")
 
         async def apply(
@@ -233,6 +212,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             *,
             revision_id: object,
             min_scale: int,
+            idle_seconds: int = 60,
             migrate: bool,
         ) -> None:
             """Capture the generated runtime environment."""
@@ -240,14 +220,6 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
             assert organization_id == organization.id
             captured["secrets"] = secrets
             calls.append("workload")
-
-        async def portforward(self, name: str, namespace: str, port: int) -> int:
-            """Provide the database tunnel used for initial schema setup."""
-
-            assert name == "database-rw"
-            assert namespace.startswith("longlink-database-")
-            assert port == 5432
-            return 15432
 
         async def aclose(self) -> None:
             """Provide the Kubernetes client cleanup contract."""
@@ -290,7 +262,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         "API_KEY": "replacement",
         **persisted.secrets,
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
     async with session_scope() as session:
         updated = await session.get(Solution, solution.id)
@@ -376,7 +348,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
         "LONGLINK_DATABASE_USERNAME": "persisted-database-user",
         "LONGLINK_STORAGE_BUCKET": organization.id.hex,
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
         "LONGLINK_STORAGE_PASSWORD": "persisted-storage-password",
         "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
         "LONGLINK_STORAGE_REGION": "us-east-1",
@@ -398,14 +370,8 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
 
         raise AssertionError("retry regenerated provider credentials")
 
-    class FakeKubernetes(AsyncKubernetes):
+    class FakeKubernetes(OperationKubernetes):
         """Capture the retry workload environment."""
-
-        def __init__(self, *_args: object) -> None:
-            """Expose the solution lifecycle client."""
-
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
 
         async def apply(
             self,
@@ -416,6 +382,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
             *,
             revision_id: object,
             min_scale: int,
+            idle_seconds: int = 60,
             migrate: bool,
         ) -> None:
             """Capture the persisted runtime environment."""
@@ -441,7 +408,11 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
         assert identity_secret
         if identity is not None:
             assert identity_secret == identity
-        assert persisted.secrets == {**initial_secrets, "LONGLINK_IDENTITY_SECRET": identity_secret}
+        assert persisted.secrets == {
+            **initial_secrets,
+            "LONGLINK_IDENTITY_SECRET": identity_secret,
+            "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+        }
         assert persisted.status == Status.running
         assert persisted.deployed_revision_id == solution.desired_revision_id
     assert captured == [

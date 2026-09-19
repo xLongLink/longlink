@@ -1,8 +1,6 @@
 # LongLink Agent Guide
 
 - Project is in _MVP mode - No need for backwards compatibility - Collapse migrations_
-- Use the cleanup skill located at `./opencode/skills/cleanup`
-- Focus on building complex things as simple as possible. Find ways to reduce complexity when solving problems
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.
@@ -11,64 +9,7 @@
 
 - Platform: Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
 - Solution: Simplest possible representation of a business process expressed as code.
-- View: XML interface definition rendered by the shared Web runtime.
-
-## Architecture
-
-```text
-LongLink
-├── Deployment configuration
-│   ├── k8s → versioned Helm chart, vendored upstream charts, and production manifests
-│   ├── dev/ → local cluster configuration and supporting services
-│   └── Hosting repository → cloud topology, release selection, and deployment workflows
-├── Control plane
-│   ├── API replicas
-│   │   ├── Authentication, authorization, memberships, and request proxy
-│   │   ├── Operation scheduler → tenant provisioning, deployments, and Compute validation
-│   │   └── Database scheduler → activity, wake/sleep, and identity sync
-│   ├── Web → renders Views served by Solutions
-│   └── Platform database → desired state, activity, operation leases, and history
-├── External container registry → immutable Solution images
-└── Compute registration → operator-provided Kubernetes cluster
-    ├── Shared infrastructure
-    │   ├── Kourier → private Platform-to-Solution HTTPS routing
-    │   ├── Knative → application lifecycle and scaling
-    │   ├── CloudNativePG → PostgreSQL lifecycle
-    │   └── RustFS → S3 object storage and scoped Solution service accounts
-    └── Organization (many per cluster)
-        ├── Compute namespace
-        │   └── Solution (many per Organization)
-        │       ├── Cluster-local Knative Service and runtime Pods
-        │       ├── Revision Secrets
-        │       └── Migration Jobs
-        ├── Database namespace
-        │   └── CloudNativePG cluster + persistent volumes
-        │       └── Organization PostgreSQL database
-        │           ├── Shared identity schema
-        │           └── Schema + role per Solution
-        └── RustFS
-            └── Organization bucket
-                ├── Shared S3 key prefix
-                └── S3 key prefix per Solution
-```
-
-## Boundaries and Contracts
-
-- Platform metadata is separate from Solution business data.
-- Shared Compute infrastructure is installed externally through `k8s/chart`; API reconciliation validates it without installing operators.
-- Local development installs infrastructure before starting API workers. Stop workers before `make up` or `make down`.
-- The API uses the same runtime code in local and hosted deployments. `dev/` owns workstation setup, endpoint connections, split DNS, and mail capture; no development transport belongs in the API.
-- Organizations own isolated namespaces, a PostgreSQL cluster, and a storage bucket; Solutions own scoped schemas, credentials, and storage prefixes.
-- Each physical Kubernetes cluster has one Compute registration, identified by its immutable `kube-system` namespace UID.
-- Compute registrations define CNPG storage, RustFS controller credentials, and HTTPS gateway/S3 endpoints; no external tenant database or storage registry exists.
-- Organization databases may hibernate when idle; activity wakes them and synchronizes shared users before work begins.
-- Diagnostics use cached data without waking databases, and storage allocation is reported per database instance.
-- Platform users and memberships flow one way into the Organization's shared schema.
-- Platform, shared-schema, and Solution migrations have separate owners.
-- OpenAPI generates Web API contracts; SDK XSD schemas define XML Views implemented by Web.
-- Edit source contracts, not generated files, and keep implementations aligned.
-- API and SDK define safe errors; shared Web reports API failures while local UI handles interaction recovery.
-- XML permits declarative UI only, and frontend access controls never replace backend authorization.
+- Views: XML interface definition rendered by the shared Web runtime.
 
 ## Python Guidelines
 
@@ -89,15 +30,10 @@ LongLink
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
 - Store asynchronous query results in a named variable before calling `.all()`, `.one_or_none()`, or similar result methods.
 - Use `collections.abc.Sequence` for read-only query result return types instead of `list`.
-
 - Declare `response_model` on FastAPI routes, let FastAPI validating response model.
 - Group Pydantic fields into commented sections from shortest name to longest name within each section.
-
 - Add a docstring to every Python function.
 - Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
-
-### Testing
-
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 

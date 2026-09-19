@@ -1,13 +1,12 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
+<img src="../banner.png" alt="LongLink banner" />
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 </div>
 
 ## LongLink Platform API
 
-LongLink provides the shared foundation for running Solutions. 
+LongLink provides the shared foundation for running Solutions.
 The Platform API manages organizations, users, access,
 deployments, and supporting infrastructure.
 
@@ -18,10 +17,10 @@ deployments, and supporting infrastructure.
 The API is published as a Linux AMD64 container image on GitHub Container
 Registry.
 
-| Name    | Image                                | Tag                              | Published                            |
-| ------- | ------------------------------------ | -------------------------------- | ------------------------------------ |
-| Stable  | `ghcr.io/xlonglink/longlink`         | `v<major>.<minor>.<patch>`       | When the matching Git tag is pushed. |
-| Nightly | `ghcr.io/xlonglink/longlink`         | `nightly`                        | Daily from the default branch.       |
+| Name    | Image                        | Tag                        | Published                            |
+| ------- | ---------------------------- | -------------------------- | ------------------------------------ |
+| Stable  | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>` | When the matching Git tag is pushed. |
+| Nightly | `ghcr.io/xlonglink/longlink` | `nightly`                  | Daily from the default branch.       |
 
 <br />
 

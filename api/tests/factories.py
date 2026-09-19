@@ -15,7 +15,7 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def queue_operation(*, kind: OperationKind = OperationKind.compute_validate, target_id: UUID) -> Operation:
+async def queue_operation(*, kind: OperationKind = OperationKind.organization_create, target_id: UUID) -> Operation:
     """Queue one standalone Operation through an explicit test transaction."""
 
     # Tests without a resource command transaction commit their queued work here.
@@ -60,48 +60,52 @@ async def fetch_operations() -> Sequence[Operation]:
         return result.all()
 
 
-async def create_compute() -> ComputeRegistry:
-    """Create one minimal Compute registry without queueing reconciliation."""
+async def drain_operations() -> Sequence[Operation]:
+    """Claim and complete every queued Operation, returning them in claim order."""
 
-    # Operation tests need a persisted Compute target without registry service side effects.
+    # Keep polling ownership in one helper; each test asserts on the returned work.
+    drained: list[Operation] = []
+    while (scheduled := await claim_operation()) is not None:
+        await complete_operation(scheduled.id)
+        drained.append(scheduled)
+    return drained
+
+
+async def persist_compute(*, ready: bool) -> ComputeRegistry:
+    """Persist one Compute registry with shared connection fields and its readiness mode."""
+
+    # Keep the registry field set in one owner; readiness is the only business mode.
+    suffix = uuid4().hex[:8]
+
     async with session_scope() as session:
         compute = ComputeRegistry(
-            name="Local compute",
-            cluster_uid="local-cluster",
-            bucket_size_bytes=1073741824,
+            name=f"Local testing compute {suffix}",
+            cluster_uid=f"local-testing-cluster-{suffix}",
+            kubeconfig={"apiVersion": "v1", "clusters": []},
             gateway_url="https://gateway.example",
             database_storage_class="local-path",
             storage_endpoint="https://storage.example",
             storage_access_key="controller",
             storage_secret_key="controller-secret",
-            kubeconfig={"apiVersion": "v1", "clusters": []},
+            status=Status.running if ready else Status.creating,
         )
         session.add(compute)
         await session.commit()
         return compute
+
+
+async def create_compute() -> ComputeRegistry:
+    """Create one minimal Compute registry without queueing reconciliation."""
+
+    # Non-ready registries exercise unavailability paths without provider side effects.
+    return await persist_compute(ready=False)
 
 
 async def create_ready_compute() -> ComputeRegistry:
     """Create a ready Compute registry without provider side effects."""
 
     # Test setup persists the exact assignable registry shape while avoiding provider side effects.
-    async with session_scope() as session:
-        suffix = uuid4().hex[:8]
-        compute = ComputeRegistry(
-            name=f"Local testing compute {suffix}",
-            cluster_uid=f"local-testing-cluster-{suffix}",
-            bucket_size_bytes=1073741824,
-            kubeconfig={"apiVersion": "v1", "clusters": []},
-            gateway_url="https://gateway.example",
-            database_storage_class="local-path",
-            storage_endpoint="https://storage.example",
-            storage_access_key="controller",
-            storage_secret_key="controller-secret",
-            status=Status.running,
-        )
-        session.add(compute)
-        await session.commit()
-        return compute
+    return await persist_compute(ready=True)
 
 
 async def create_organization(

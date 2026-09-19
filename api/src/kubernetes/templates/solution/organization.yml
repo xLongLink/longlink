@@ -1,4 +1,4 @@
-# Template for one owned Organization Namespace, quota, and network boundary.
+# Template for one owned Organization Namespace and network boundary.
 ---
 apiVersion: v1
 kind: Namespace
@@ -7,22 +7,6 @@ metadata:
     labels:
         longlink.io/namespace: compute
         pod-security.kubernetes.io/enforce: restricted
----
-apiVersion: v1
-kind: ResourceQuota
-metadata:
-    name: longlink-solutions
-    namespace: '$namespace'
-spec:
-    hard:
-        # Budget for old/new revisions, queue proxies, and one migration during rollout.
-        limits.cpu: '4'
-        limits.ephemeral-storage: 4Gi
-        limits.memory: 3Gi
-        pods: '8'
-        requests.cpu: '1'
-        requests.ephemeral-storage: 3Gi
-        requests.memory: 2Gi
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

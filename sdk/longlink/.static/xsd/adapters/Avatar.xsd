@@ -16,14 +16,15 @@
         <xsd:documentation>Alternative text for the image.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="kind" default="user">
+    <xsd:attribute name="shape" default="circle">
       <xsd:annotation>
-        <xsd:documentation>Avatar kind. Use organization for a squircle organization image; user is circular.</xsd:documentation>
+        <xsd:documentation>Avatar shape. Use rounded for organization images; circle and square follow the Astryx avatar shapes.</xsd:documentation>
       </xsd:annotation>
       <xsd:simpleType>
         <xsd:restriction base="xsd:string">
-          <xsd:enumeration value="organization"/>
-          <xsd:enumeration value="user"/>
+          <xsd:enumeration value="circle"/>
+          <xsd:enumeration value="rounded"/>
+          <xsd:enumeration value="square"/>
         </xsd:restriction>
       </xsd:simpleType>
     </xsd:attribute>

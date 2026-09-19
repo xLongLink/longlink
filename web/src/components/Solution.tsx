@@ -1,17 +1,49 @@
 import { api } from '@/lib/api';
 import { parseXML } from '@/xml';
 import type { ReactNode } from 'react';
-import { startCase } from '@/lib/utils';
 import { viewsSchema } from '@/xml/views';
+import { startCase } from 'es-toolkit/compat';
 import { PageError } from '@/components/Utils';
 import { useQuery } from '@tanstack/react-query';
 import { Center } from '@astryxdesign/core/Center';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { iconComponents } from '@/components/ui/Icon';
 import { matchRoutes, Navigate, useParams } from 'react-router';
 import { RouterXmlRuntime } from '@/components/RouterXmlRuntime';
 import type { NavigationTab } from '@/platform/layouts/Platform';
 import { resolveNavigationUrl, resolveRequestUrl } from '@/xml/core/url';
+import {
+    Activity,
+    ArrowRight,
+    Banknote,
+    Bell,
+    Box,
+    Boxes,
+    Building2,
+    Check,
+    ClipboardList,
+    Container,
+    Cpu,
+    Database,
+    Download,
+    HardDrive,
+    Layers,
+    LayoutDashboard,
+    LayoutGrid,
+    Link as LinkIcon,
+    List as ListIcon,
+    ListChecks,
+    MapPin,
+    Plus,
+    Rocket,
+    RotateCcw,
+    Settings2,
+    ShieldCheck,
+    SlidersHorizontal,
+    Timer,
+    Users,
+    X,
+    type LucideIcon,
+} from 'lucide-react';
 
 type SolutionRuntimeProps = {
     children: (solution: { content: ReactNode; tabs: readonly NavigationTab[]; title?: string }) => ReactNode;
@@ -20,6 +52,40 @@ type SolutionRuntimeProps = {
 };
 
 const EMPTY_VIEWS = [] as const;
+
+/** Maps Solution manifest icon names to their Lucide components. */
+const iconComponents: Record<string, LucideIcon> = {
+    activity: Activity,
+    'arrow-right': ArrowRight,
+    banknote: Banknote,
+    bell: Bell,
+    box: Box,
+    boxes: Boxes,
+    'building-2': Building2,
+    check: Check,
+    'clipboard-list': ClipboardList,
+    container: Container,
+    cpu: Cpu,
+    database: Database,
+    download: Download,
+    'hard-drive': HardDrive,
+    layers: Layers,
+    'layout-dashboard': LayoutDashboard,
+    'layout-grid': LayoutGrid,
+    link: LinkIcon,
+    list: ListIcon,
+    'list-check': ListChecks,
+    'map-pin': MapPin,
+    plus: Plus,
+    rocket: Rocket,
+    'rotate-ccw': RotateCcw,
+    'settings-2': Settings2,
+    'shield-check': ShieldCheck,
+    'sliders-horizontal': SlidersHorizontal,
+    timer: Timer,
+    users: Users,
+    x: X,
+};
 
 /** Formats the SDK's route-derived fallback label when a View has no explicit name. */
 function routeLabel(route: string): string {
@@ -80,9 +146,13 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
 
     let content: ReactNode;
 
+    // The browser never requests the solution server root, so mirror its redirect client-side.
     if (!routePath && firstTabView) {
-        content = <Navigate replace to={resolveNavigationUrl(navigationBaseUrl, firstTabView.route)} />;
-    } else if (isNotFound) {
+        return <Navigate replace to={tabs[0].href} />;
+    }
+
+    // The solution base redirects above; render errors and views below.
+    if (isNotFound) {
         content = (
             <PageError description="This page doesn't exist or isn't available." title="We can't find that page" />
         );

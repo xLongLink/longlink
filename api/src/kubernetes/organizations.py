@@ -1,38 +1,38 @@
-from kr8s import NotFoundError
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import templates
 from src.kubernetes import utils, namespace
 from importlib.resources import files
-from kr8s.asyncio.objects import Namespace, NetworkPolicy, ResourceQuota
+from kr8s.asyncio.objects import Namespace, NetworkPolicy
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-async def apply(client: "Kubernetes", organization_id: UUID) -> None:
-    """Create one Organization Namespace boundary for its explicit lifecycle."""
+class Organizations:
+    """Reconcile and delete one Organization compute Namespace boundary."""
 
-    # Render and apply only the requested Organization boundary.
-    compute_namespace = namespace.compute(organization_id)
-    namespace_manifest, resource_quota, network_policy = templates.readyml_list(
-        files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
-        namespace=compute_namespace,
-    )
+    def __init__(self, client: "Kubernetes") -> None:
+        """Share the Compute Kubernetes connection."""
 
-    api = await client.api()
-    await utils.apply(Namespace(namespace_manifest, api=api))
-    await utils.apply(ResourceQuota(resource_quota, api=api))
-    await utils.apply(NetworkPolicy(network_policy, api=api))
+        self._client = client
 
-async def delete(client: "Kubernetes", organization_id: UUID) -> None:
-    """Delete one Organization Namespace and wait for completion."""
+    async def apply(self, organization_id: UUID) -> None:
+        """Create one Organization Namespace boundary for its explicit lifecycle."""
 
-    # Issue deletion once and wait for Kubernetes to report terminal absence.
-    resource = Namespace(namespace.compute(organization_id), api=await client.api())
-    try:
-        await resource.delete()
-    except NotFoundError:
-        return
+        # Render and apply only the requested Organization boundary.
+        compute_namespace = namespace.compute(organization_id)
+        namespace_manifest, network_policy = templates.readyml_list(
+            files("src.kubernetes.templates").joinpath("solution", "organization.yml"),
+            namespace=compute_namespace,
+        )
 
-    await resource.wait("delete")
+        api = await self._client.api()
+        await utils.apply(Namespace(namespace_manifest, api=api))
+        await utils.apply(NetworkPolicy(network_policy, api=api))
+
+    async def delete(self, organization_id: UUID) -> None:
+        """Delete one Organization Namespace and wait for completion."""
+
+        # Namespace termination is the completion boundary for compute cleanup.
+        await utils.delete_namespace(await self._client.api(), namespace.compute(organization_id))

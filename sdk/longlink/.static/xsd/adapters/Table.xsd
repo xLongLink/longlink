@@ -35,13 +35,18 @@
         <xsd:documentation>Column header text.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="align" type="TableColumnAlignType" default="start">
+      <xsd:annotation>
+        <xsd:documentation>Horizontal alignment of header and body cells.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Table" type="TableType">
     <xsd:annotation>
       <xsd:documentation>Displays tabular data from an array.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="table" category="Layout" lastUpdated="2026-07-21" source="adapters/Table.xsd"/>
+        <longlink:docs slug="table" category="Layout" lastUpdated="2026-09-16" source="adapters/Table.xsd"/>
         <longlink:example>&lt;Table data="$orders.items"&gt;
   &lt;TableColumn field="number" header="Number" /&gt;
   &lt;TableColumn field="status" header="Status" /&gt;

@@ -28,12 +28,7 @@ export const zComputeRegistryCreate = z.object({
     storage_certificate: z.string().max(65536).nullish(),
     name: z.string().min(1).max(128),
     kubeconfig: z.record(z.string(), z.unknown()),
-    database_size_gib: z.int().gte(1).lte(65536).optional().default(10),
-    database_instances: z.int().gte(1).lte(3).optional().default(1),
-    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/),
-    storage_access_key: z.string().min(1).max(128),
-    storage_secret_key: z.string().min(8).max(1024),
-    bucket_size_bytes: z.int().gte(1024).lte(70368744177664)
+    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/)
 });
 
 /**
@@ -115,7 +110,6 @@ export const zOAuthAvailability = z.object({
  * Supported registered operation handlers.
  */
 export const zOperationKind = z.enum([
-    'compute.validate',
     'solution.deploy',
     'solution.delete',
     'organization.create',
@@ -157,6 +151,18 @@ export const zOperationResponse = z.object({
  */
 export const zOrganizationCreate = z.object({
     name: z.string().min(1).max(128)
+});
+
+/**
+ * OrganizationQuotasResponse
+ *
+ * Represent stored per-Organization quotas in administrator responses.
+ */
+export const zOrganizationQuotasResponse = z.object({
+    id: z.uuid(),
+    database_size_mib: z.int(),
+    database_instances: z.int(),
+    storage_quota_bytes: z.int()
 });
 
 /**
@@ -272,6 +278,7 @@ export const zSolutionCreate = z.object({
     image: z.string(),
     name: z.string().min(1).max(100),
     min_scale: z.union([z.literal(0), z.literal(1)]).optional().default(0),
+    idle_seconds: z.int().gte(0).lte(3600).optional().default(60),
     description: z.string().max(255).nullish()
 });
 
@@ -283,6 +290,7 @@ export const zSolutionCreate = z.object({
 export const zSolutionPatch = z.object({
     envs: z.record(z.string(), z.string().nullable()).optional(),
     min_scale: z.union([z.literal(0), z.literal(1)]).nullish(),
+    idle_seconds: z.int().gte(0).lte(3600).nullish(),
     expected_revision_id: z.uuid().nullish()
 });
 
@@ -293,6 +301,7 @@ export const zSolutionPatch = z.object({
  */
 export const zSolutionUpdateCheck = z.object({
     min_scale: z.union([z.literal(0), z.literal(1)]),
+    idle_seconds: z.int(),
     revision_id: z.uuid(),
     current_image: z.string(),
     configured_envs: z.array(z.string()),
@@ -318,12 +327,10 @@ export const zStatus = z.enum([
 export const zComputeRegistryResponse = z.object({
     id: z.uuid(),
     name: z.string(),
+    live_version: z.string().nullish(),
     gateway_url: z.string(),
-    database_size_gib: z.int(),
-    database_instances: z.int(),
     database_storage_class: z.string(),
     storage_endpoint: z.string(),
-    bucket_size_bytes: z.int(),
     status: zStatus
 });
 
@@ -744,6 +751,15 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  * Successful Response
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
+
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
+    organization_id: z.uuid()
+});
+
+/**
+ * Successful Response
+ */
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
 
 export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
     organization_id: z.uuid()

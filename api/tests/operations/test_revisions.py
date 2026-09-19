@@ -1,8 +1,8 @@
 import pytest
 import asyncio
 from uuid import UUID
-from conftest import AsyncKubernetes, DatabaseKubernetes
-from factories import claim_operation, create_solution, complete_operation, create_organization
+from conftest import OperationKubernetes
+from factories import claim_operation, create_solution, drain_operations, complete_operation, create_organization
 from src.operations import solutions as runtime
 from src.utils.jobs import execute
 from src.environments import env
@@ -38,15 +38,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     rollout_finalized = asyncio.Event()
     failing = failure == "initial"
 
-    class Kubernetes(AsyncKubernetes):
+    class Kubernetes(OperationKubernetes):
         """Control rollout readiness at the external-system boundary."""
-
-        def __init__(self, *_args: object) -> None:
-            """Expose the runtime adapter."""
-
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
-            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -57,6 +50,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             *,
             revision_id: UUID,
             min_scale: int,
+            idle_seconds: int = 60,
             migrate: bool,
         ) -> None:
             """Capture the exact snapshot and simulate rollout outcomes."""
@@ -81,9 +75,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
                     rollout_finalized.set()
             raise RuntimeError("rollout failed")
 
-        async def aclose(self) -> None:
-            """Close the adapter without external resources."""
-
     monkeypatch.setattr(runtime, "Kubernetes", Kubernetes)
     initial = await claim_operation()
     assert initial is not None
@@ -97,9 +88,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current.desired_revision.failed
             await operations.schedule_reconciliation(session)
             await session.commit()
-        while (scheduled := await claim_operation()) is not None:
-            assert scheduled.kind != OperationKind.solution_deploy
-            await complete_operation(scheduled.id)
+        drained = await drain_operations()
+        assert all(scheduled.kind != OperationKind.solution_deploy for scheduled in drained)
         return
     assert result.failed is None
     good_id = initial.target_id
@@ -180,12 +170,16 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         good = await session.get(Revision, good_id)
         assert good is not None and not good.failed
         assert current.status == (Status.failed if failure == "restoration" else Status.running)
-        assert current.secrets == solution.secrets
+        assert current.secrets == {
+            **solution.secrets,
+            "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
+            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+        }
     assert calls[-1][1] == {
         "KEY": "old",
         **solution.secrets,
         "LONGLINK_DATABASE_CERTIFICATE": "test-database-ca",
-        "LONGLINK_STORAGE_ENDPOINT_URL": "https://storage.example",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
     }
     assert calls[-1][2] is False
     assert await claim_operation() is None
@@ -194,9 +188,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     async with session_scope() as session:
         await operations.schedule_reconciliation(session)
         await session.commit()
-    while (scheduled := await claim_operation()) is not None:
-        assert not (scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id)
-        await complete_operation(scheduled.id)
+    drained = await drain_operations()
+    assert not any(scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id for scheduled in drained)
 
 
 async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -222,15 +215,8 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         "third": "ghcr.io/longlink/dashboard@sha256:third",
     }
 
-    class Kubernetes(AsyncKubernetes):
+    class Kubernetes(OperationKubernetes):
         """Capture which queued snapshot reaches the runtime."""
-
-        def __init__(self, *_args: object) -> None:
-            """Expose runtime deployment."""
-
-            self.solutions = self
-            self.databases = DatabaseKubernetes()
-            self.storage = self.databases.storage
 
         async def apply(
             self,
@@ -241,6 +227,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             *,
             revision_id: UUID,
             min_scale: int,
+            idle_seconds: int = 60,
             migrate: bool,
         ) -> None:
             """Capture immutable image and environment pairs."""
@@ -262,9 +249,6 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                     await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"})
                     await session.commit()
                     third_id = current.desired_revision_id
-
-        async def aclose(self) -> None:
-            """Close the adapter."""
 
     monkeypatch.setattr(runtime, "Kubernetes", Kubernetes)
     await execute(initial)

@@ -1,13 +1,15 @@
 import json
+import httpx
 import asyncio
 from kr8s import ServerError, NotFoundError, APITimeoutError, ConnectionClosedError
 from uuid import UUID
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 from src.utils import templates
 from src.logger import logger
 from kr8s.asyncio import Api
 from src.kubernetes import namespace
 from collections.abc import AsyncIterator
+from src.models.types import MinScale
 from importlib.resources import files
 from kr8s.asyncio.objects import Job, Pod, Event, Secret, APIObject, Namespace, new_class
 from src.kubernetes.utils import apply
@@ -41,6 +43,28 @@ async def _delete_resources(resources: AsyncIterator[APIObject]) -> bool:
     return remaining
 
 
+async def _wait_for_job_condition(job: Job, wanted: set[str]) -> None:
+    """Poll one Job until Kubernetes reports a wanted condition as true."""
+
+    # Poll with refresh so a dropped watch stream cannot fail the operation.
+    while True:
+        try:
+            await job.refresh()
+        except NotFoundError as exc:
+            raise RuntimeError(f"Migration Job '{job.name}' disappeared while waiting") from exc
+        except (APITimeoutError, ConnectionClosedError, ServerError, httpx.HTTPError):
+            # Transient transport failures retry under the operation timeout.
+            logger.warning("Migration Job %s status refresh failed; retrying", job.name)
+            await asyncio.sleep(5)
+            continue
+
+        # Treat only explicit true conditions as terminal acknowledgement.
+        conditions = job.raw.get("status", {}).get("conditions", [])
+        if any(condition.get("type") in wanted and condition.get("status") == "True" for condition in conditions):
+            return
+        await asyncio.sleep(5)
+
+
 async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_job: str | None) -> None:
     """Suspend conflicting migrations and wait until their Pods stop using the schema."""
 
@@ -57,7 +81,7 @@ async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_j
 
         # Controller acknowledgement precedes checking for remaining migration Pods.
         await job.patch({"spec": {"suspend": True}})
-        await job.wait(["condition=Suspended"])
+        await _wait_for_job_condition(job, {"Suspended"})
         while await _has_active_pods(api, namespace, {"job-name": job.name}):
             await asyncio.sleep(5)
 
@@ -122,7 +146,7 @@ async def _run_migration(migration_job: Job) -> None:
     migration_id = metadata["name"]
     await apply(migration_job)
     try:
-        await migration_job.wait(["condition=Complete", "condition=Failed"])
+        await _wait_for_job_condition(migration_job, {"Complete", "Failed"})
     except asyncio.CancelledError:
         # Preserve the operation timeout or worker shutdown after bounded diagnostics.
         logger.error("Migration Job %s did not reach a terminal state before the operation stopped", migration_id)
@@ -130,9 +154,8 @@ async def _run_migration(migration_job: Job) -> None:
         raise
 
     # Treat the Kubernetes terminal condition as the authoritative Job outcome.
-    if any(
-        condition.get("type") == "Failed" and condition.get("status") == "True" for condition in migration_job.raw["status"]["conditions"]
-    ):
+    conditions = migration_job.raw.get("status", {}).get("conditions", [])
+    if any(condition.get("type") == "Failed" and condition.get("status") == "True" for condition in conditions):
         logger.error(
             "Migration Job %s failed for Solution %s in namespace %s",
             migration_id,
@@ -152,6 +175,11 @@ async def _wait_for_rollout(deployed: APIObject) -> None:
             await deployed.refresh()
         except NotFoundError as exc:
             raise RuntimeError("Knative Solution Service disappeared during rollout") from exc
+        except (APITimeoutError, ConnectionClosedError, ServerError, httpx.HTTPError):
+            # Transient transport failures retry under the operation timeout.
+            logger.warning("Knative Solution Service status refresh failed; retrying")
+            await asyncio.sleep(5)
+            continue
 
         # Ignore stale failures while the controller observes a replacement or fallback revision.
         status = deployed.raw.get("status")
@@ -200,10 +228,16 @@ class Solutions:
         secrets: dict[str, str],
         *,
         revision_id: UUID,
-        min_scale: Literal[0, 1] = 0,
+        min_scale: MinScale = 0,
+        idle_seconds: int = 60,
         migrate: bool = True,
     ) -> None:
         """Deploy one Solution and wait for its rollout."""
+
+        # min_scale and idle_seconds are independent: min_scale decides whether
+        # scale-to-zero is allowed; idle_seconds only tunes the stable window.
+        # Zero idle falls back to the platform default window.
+        window = "60s" if idle_seconds == 0 else f"{idle_seconds}s"
 
         # Render workload resources before the first cluster mutation.
         compute_namespace = namespace.compute(organization_id)
@@ -218,6 +252,7 @@ class Solutions:
             migration_id=migration_id,
             secret_id=secret_id,
             min_scale=min_scale,
+            window=window,
         )
 
         api = await self._client.api()

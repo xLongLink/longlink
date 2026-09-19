@@ -2,10 +2,8 @@ import asyncio
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
-from sqlmodel import col
 from src.auth import authuser, authadmin, get_session, organization_access
 from src.utils import mail, roles
-from sqlalchemy import select
 from src.logger import logger
 from src.models.roles import OrganizationRoles
 from src.models.users import UserOrganizationMembership
@@ -22,11 +20,12 @@ from src.models.organizations import (
     OrganizationUpdate,
     OrganizationDetails,
     OrganizationMemberUpdate,
+    OrganizationQuotasResponse,
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 STORAGE_USAGE_TIMEOUT_SECONDS = 15
@@ -111,26 +110,35 @@ async def update_organization(
     return organization
 
 
+@router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
+async def get_organization_quotas(
+    organization_id: UUID,
+    _user: User = Depends(authadmin),
+    session: AsyncSession = Depends(get_session),
+):
+    """Return stored Organization quotas for administrator views."""
+
+    # Read stored quotas without touching provider boundaries.
+    organization = await session.get(Organization, organization_id)
+    if organization is None or organization.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return organization
+
+
 @router.get(
     "/organizations/{organization_id}/database",
     response_model=DatabaseUsage,
 )
 async def get_organization_database_usage(
     membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
 ):
-    """Return cached database usage without waking the Organization for telemetry."""
+    """Return cached database usage for telemetry."""
 
-    # Allocation is Platform metadata, so even sleeping databases need no Kubernetes or SQL request.
+    # Allocation is stored per Organization, so telemetry needs no Kubernetes or SQL request.
     organization = membership.organization
-    database_size_gib = await session.scalar(
-        select(col(ComputeRegistry.database_size_gib)).where(col(ComputeRegistry.id) == organization.compute_id)
-    )
-    if database_size_gib is None:
-        raise HTTPException(status_code=404, detail="Organization not found")
     return {
         "size_bytes": organization.database_usage_bytes,
-        "allocated_bytes": database_size_gib * 1024**3,
+        "allocated_bytes": organization.database_size_mib * 1024**2,
     }
 
 
@@ -155,7 +163,7 @@ async def get_organization_storage_usage(
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            bucket = Storage().bucket(membership.organization_id, compute)
+            bucket = Storage(compute).bucket(membership.organization_id)
             usage = await bucket.storage.usage(bucket.name)
     except NotFoundError:
         return None
@@ -167,7 +175,7 @@ async def get_organization_storage_usage(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-    return {"space_used": usage, "quota_bytes": compute.bucket_size_bytes}
+    return {"space_used": usage, "quota_bytes": membership.organization.storage_quota_bytes}
 
 
 @router.post("/organizations/{organization_id}/invitations", status_code=204)
@@ -256,6 +264,10 @@ async def create_organization(
     """Create Organization desired state and queue infrastructure creation."""
 
     # Persist the Organization with transactionally selected infrastructure registries.
-    organization = await organizations.create_default(session, payload.name, user)
+    organization = await organizations.create_default(
+        session,
+        payload.name,
+        user,
+    )
     await session.commit()
     return organization

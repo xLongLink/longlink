@@ -3,7 +3,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
@@ -91,7 +91,7 @@ def test_data_resolves_request_services(
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
-    async def get_context(value: context.Context = Depends(context.data)) -> dict[str, bool]:
+    async def get_context(value: context.Context) -> dict[str, bool]:
         """Expose dependency values for the request-boundary test."""
 
         return {"user_matches": value.user is user, "storage_matches": value.storage is storage}
@@ -138,7 +138,7 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
-    async def fail(_value: context.Context = Depends(context.data)) -> None:
+    async def fail(_value: context.Context) -> None:
         """Fail after the context dependency opens its session."""
 
         raise RuntimeError("endpoint failed")

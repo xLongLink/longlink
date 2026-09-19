@@ -2,10 +2,10 @@ import { api } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
-import { useToast } from '@/lib/hooks/use-toast';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { AuthForm, AuthLayout } from './AuthLayout';
+import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,7 +20,7 @@ export default function Register() {
     const [searchParams] = useSearchParams();
     const registration = useMutation({
         mutationFn: (payload: EmailPayload) => api('/api/v1/auth/register', { json: payload, method: 'POST' }),
-        onSuccess: () => showToast({ body: 'If this email can be registered, a registration link is on the way.' }),
+        onSuccess: () => showToast({ body: 'Check your inbox for the registration link.' }),
     });
     const form = useForm<EmailPayload>({
         defaultValues: { email: searchParams.get('email') ?? '' },

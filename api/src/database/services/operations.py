@@ -9,7 +9,6 @@ from src.models.statuses import Status
 from src.models.operations import OperationKind, OperationResponse
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
@@ -40,7 +39,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     operations = result.all()
 
     # Group targets by their concrete resource table.
-    compute_target_ids = {operation.target_id for operation in operations if operation.kind == OperationKind.compute_validate}
     organization_target_ids = {
         operation.target_id
         for operation in operations
@@ -50,12 +48,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
 
     # Load compact resource details for each target type.
     resource_names: dict[tuple[OperationKind, UUID], str] = {}
-    if compute_target_ids:
-        result = await session.execute(
-            select(col(ComputeRegistry.id), col(ComputeRegistry.name)).where(col(ComputeRegistry.id).in_(compute_target_ids))
-        )
-        for resource_id, name in result:
-            resource_names[(OperationKind.compute_validate, resource_id)] = name
 
     if organization_target_ids:
         result = await session.execute(
@@ -104,7 +96,6 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     """Schedule every release reconciliation target in dependency order."""
 
     # Reconcile every present resource and clean up every tombstone.
-    compute_result = await session.scalars(select(col(ComputeRegistry.id)).order_by(col(ComputeRegistry.id)))
     organization_result = await session.execute(
         select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
     )
@@ -124,8 +115,6 @@ async def schedule_reconciliation(session: AsyncSession) -> None:
     )
 
     # Create or reuse every desired-state operation in one transaction.
-    for compute_id in compute_result:
-        await enqueue(session, kind=OperationKind.compute_validate, target_id=compute_id)
     for organization_id, deleted in organization_result:
         await enqueue(
             session,
@@ -284,9 +273,8 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
         return None
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
-    # Expose failed initial validation or creation on its target without changing deletion lifecycle state.
+    # Expose failed creation on its target without changing deletion lifecycle state.
     model = {
-        OperationKind.compute_validate: ComputeRegistry,
         OperationKind.organization_create: Organization,
     }.get(operation.kind)
     if model is not None:

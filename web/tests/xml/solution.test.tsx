@@ -41,7 +41,7 @@ describe('SolutionRuntime', () => {
         expect(output.textContent).toContain('The solution definition could not be loaded.');
     });
 
-    it('redirects an empty route to the first non-index static tab', async () => {
+    it('redirects the solution base to the first tab', async () => {
         // Arrange
         stubFetch((url) =>
             url.endsWith('/views.json')
@@ -53,12 +53,9 @@ describe('SolutionRuntime', () => {
         const output = await renderRuntime('/');
 
         // Assert
-        await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home'))
-        );
-        await act(async () =>
-            vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'))
-        );
+        // Router navigation does not settle inside act, so observe it directly.
+        await vi.waitFor(() => expect(output.querySelector('[data-path]')?.getAttribute('data-path')).toBe('/home'));
+        expect(output.querySelector('[data-path]')?.getAttribute('data-tabs')).toBe('/home');
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Home')));
     });
 

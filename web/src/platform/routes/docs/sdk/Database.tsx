@@ -16,7 +16,7 @@ const article = {
         { id: 'timezone', label: 'Timezone', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
     ],
-    lastUpdated: '2026-08-05',
+    lastUpdated: '2026-09-17',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Database.tsx',
     title: 'Database | LongLink Documentation',
 };
@@ -33,11 +33,12 @@ export default function DocsArticleRoute() {
                     <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
                         SQLModel
                     </Link>{' '}
-                    tables. The SDK adds <Code>database.session()</Code> for a Solution-scoped async{' '}
+                    tables. Routes receive a Solution-scoped async{' '}
                     <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
                         SQLAlchemy
                     </Link>{' '}
-                    database session. Migrations are based on{' '}
+                    database session as <Code>ctx.database</Code> by typing a route parameter as <Code>Context</Code>.
+                    Migrations are based on{' '}
                     <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
                         Alembic
                     </Link>
@@ -95,17 +96,18 @@ export default function DocsArticleRoute() {
                     Basic usage
                 </Heading>
                 <CodeBlock
-                    code={`from longlink import database
+                    code={`from longlink import Context
 from sqlmodel import Field, SQLModel
+
 
 class Project(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
 
-async def create_project() -> None:
-    async with database.session() as session:
-        session.add(Project(name="Launch"))
-        await session.commit()`}
+
+async def create_project(ctx: Context) -> None:
+    ctx.database.add(Project(name="Launch"))
+    await ctx.database.commit()`}
                     language="python"
                 />
                 <Heading id="timezone" level={2}>
@@ -117,12 +119,14 @@ async def create_project() -> None:
                 </Text>
                 <CodeBlock
                     code={`from datetime import UTC, datetime
-from longlink.database.types import UTCDateTime
 from sqlmodel import Field, SQLModel
+from longlink.database.types import UTCDateTime
+
 
 class Event(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     starts_at: datetime = Field(sa_type=UTCDateTime)
+
 
 event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     language="python"
@@ -131,22 +135,24 @@ event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     Audit table
                 </Heading>
                 <Text as="p">
-                    Use <Code>database.AuditTable</Code> only when a database table needs Platform-user attribution. It
-                    adds creation, update, and deletion timestamps; the matching Platform user identifiers; and
-                    read-only user relationships.
+                    Use <Code>AuditTable</Code> only when a database table needs Platform-user attribution. It adds
+                    creation, update, and deletion timestamps; the matching Platform user identifiers; and read-only
+                    user relationships.
                 </Text>
                 <CodeBlock
-                    code={`from longlink import database
-from sqlmodel import Field
+                    code={`from sqlmodel import Field
+from longlink.database.base import AuditTable
 
-class Approval(database.AuditTable, table=True):
+
+class Approval(AuditTable, table=True):
     id: int | None = Field(default=None, primary_key=True)
     status: str
+
 
 approval = Approval(status="pending")
 print(approval.status)  # pending
 
-# approval.created_by and approval.updated_by are database.AuditUser values after persistence.`}
+# approval.created_by and approval.updated_by are Audit users after persistence.`}
                     language="python"
                 />
                 <Heading id="migrations" level={2}>

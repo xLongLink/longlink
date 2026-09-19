@@ -103,8 +103,8 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "alt"
             },
             {
-                "description": "Avatar kind. Use organization for a squircle organization image; user is circular.",
-                "name": "kind"
+                "description": "Avatar shape. Use rounded for organization images; circle and square follow the Astryx avatar shapes.",
+                "name": "shape"
             },
             {
                 "description": "Conditional rendering expression.",
@@ -258,6 +258,18 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
+                "description": "Expand the dialog to take up the entire viewport.",
+                "name": "fullscreen"
+            },
+            {
+                "description": "Dialog width in pixels or any CSS width, ignored when fullscreen.",
+                "name": "width"
+            },
+            {
+                "description": "Caps the dialog height in pixels or any CSS height, ignored when fullscreen.",
+                "name": "height"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -311,6 +323,29 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "nested": [],
         "slug": "file-input",
         "source": "adapters/FileInput.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "Solution-relative file URL, resolved like Link href.",
+                "name": "src"
+            },
+            {
+                "description": "Accessible name for the previewed document.",
+                "name": "title"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "FileViewer previews PDF documents, images, video, and audio inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.",
+        "example": "<FileViewer src=\"/api/items/${item.id}/attachments/${attachment.id}\" title=\"$attachment.name\" />",
+        "name": "FileViewer",
+        "lastUpdated": "2026-09-17",
+        "nested": [],
+        "slug": "file-viewer",
+        "source": "adapters/FileViewer.xsd"
     },
     {
         "attributes": [
@@ -661,10 +696,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "path"
             },
             {
-                "description": "Milliseconds between automatic refreshes.",
-                "name": "pollInterval"
-            },
-            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -829,6 +860,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "gap"
             },
             {
+                "description": "Fixed height of the stack, as pixels or a CSS size. Content that exceeds the height scrolls.",
+                "name": "height"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -836,7 +871,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.",
         "example": "<Stack direction=\"horizontal\" align=\"center\">\n  $order.number\n  <StackItem size=\"fill\">Order details</StackItem>\n  <Button>Open</Button>\n</Stack>",
         "name": "Stack",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [
@@ -972,7 +1007,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Displays tabular data from an array.",
         "example": "<Table data=\"$orders.items\">\n  <TableColumn field=\"number\" header=\"Number\" />\n  <TableColumn field=\"status\" header=\"Status\" />\n</Table>",
         "name": "Table",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-09-16",
         "nested": [
             {
                 "attributes": [
@@ -983,6 +1018,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "Column header text.",
                         "name": "header"
+                    },
+                    {
+                        "description": "Horizontal alignment of header and body cells.",
+                        "name": "align"
                     },
                     {
                         "description": "Conditional rendering expression.",

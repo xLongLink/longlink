@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
 from sqlmodel import Field
-from sqlalchemy import Enum, Text, Column, BigInteger
+from sqlalchemy import Enum, Text, Column
 from src.environments import env
 from src.database.types import EncryptedType
 from src.models.statuses import Status
@@ -37,8 +37,6 @@ class ComputeRegistry(AuditTable, table=True):
     gateway_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
 
     # Database
-    database_size_gib: int = Field(default=10)
-    database_instances: int = Field(default=1)
     database_storage_class: str = Field(max_length=253)
 
     # Object storage
@@ -46,6 +44,3 @@ class ComputeRegistry(AuditTable, table=True):
     storage_access_key: str = Field(max_length=128)
     storage_secret_key: str = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     storage_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-
-    # Storage policy
-    bucket_size_bytes: int = Field(sa_column=Column(BigInteger, nullable=False))

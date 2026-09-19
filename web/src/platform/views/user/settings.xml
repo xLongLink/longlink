@@ -110,7 +110,7 @@
                                     align="center"
                                 >
                                     <Avatar
-                                        kind="organization"
+                                        shape="rounded"
                                         name="$row.organization.name"
                                         src="$row.organization.avatar"
                                     />
@@ -136,6 +136,7 @@
                             <TableColumn
                                 field="organization.id"
                                 header="Actions"
+                                align="end"
                             >
                                 <Action if="${row.role === 'owner'}">
                                     <Patch

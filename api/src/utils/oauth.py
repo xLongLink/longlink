@@ -9,7 +9,6 @@ from src.environments import env
 from longlink.shared.models import Email
 
 OAuthProvider = Literal["google", "github"]
-EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
@@ -32,17 +31,17 @@ class OAuthIdentity:
 def is_configured(provider: OAuthProvider) -> bool:
     """Return whether one OAuth provider has complete runtime credentials."""
 
-    # Providers remain unavailable until both of their confidential credentials are configured.
+    # The environment validator guarantees client credentials arrive as a complete pair.
     if provider == "google":
-        return env.GOOGLE_OAUTH_CLIENT_ID is not None and env.GOOGLE_OAUTH_CLIENT_SECRET is not None
-    return env.GITHUB_OAUTH_CLIENT_ID is not None and env.GITHUB_OAUTH_CLIENT_SECRET is not None
+        return env.GOOGLE_OAUTH_CLIENT_ID is not None
+    return env.GITHUB_OAUTH_CLIENT_ID is not None
 
 
 def redirect_uri(provider: OAuthProvider) -> str:
     """Return the registered public callback URL for one OAuth provider."""
 
     # The frontend proxy exposes API routes at the same browser-facing public origin.
-    return f"{env.PUBLIC_URL.rstrip('/')}/api/v1/auth/oauth/{provider}/callback"
+    return f"{env.PUBLIC_URL}/api/v1/auth/oauth/{provider}/callback"
 
 
 def authorization_url(provider: OAuthProvider, state: str, verifier: str) -> str:
@@ -193,7 +192,7 @@ def _email(payload: object) -> Email | None:
     if value is None:
         return None
     try:
-        return EMAIL_ADAPTER.validate_python(value)
+        return TypeAdapter(Email).validate_python(value)
     except ValidationError:
         return None
 

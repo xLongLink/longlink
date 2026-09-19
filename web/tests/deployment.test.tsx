@@ -23,6 +23,7 @@ const candidate = {
     current_image: `ghcr.io/owner/sample@sha256:${'a'.repeat(64)}`,
     revision_id: revisionId,
     min_scale: 1,
+    idle_seconds: 60,
     configured_envs: ['KEEP', 'DROP', 'UNDECLARED'],
     metadata: {
         image: `ghcr.io/owner/sample@sha256:${'b'.repeat(64)}`,
@@ -81,13 +82,11 @@ describe('Solution source update dialog', () => {
         return found;
     }
 
-    it('preserves configured secrets, removes explicitly, supplies new required values, and shows final validation errors', async () => {
-        const submissions: unknown[] = [];
+    it('shows preserved secrets and required values when a source update is available', async () => {
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
             if (request.method === 'GET') return Response.json(candidate);
-            submissions.push(await request.json());
-            return Response.json({ detail: 'Final image requires ANOTHER variable' }, { status: 422 });
+            throw new Error('Unexpected submission');
         });
         await render();
         await act(async () => button('Check for updates').click());
@@ -106,6 +105,21 @@ describe('Solution source update dialog', () => {
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
         expect(document.body.textContent).not.toContain('Remove KEEP');
+    });
+
+    it('submits explicit removals and shows final validation errors', async () => {
+        const submissions: unknown[] = [];
+        vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+            const request = input instanceof Request ? input : new Request(input, init);
+            if (request.method === 'GET') return Response.json(candidate);
+            submissions.push(await request.json());
+            return Response.json({ detail: 'Final image requires ANOTHER variable' }, { status: 422 });
+        });
+        await render();
+        await act(async () => button('Check for updates').click());
+        await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
+        await act(async () => button('Update').click());
+        const required = document.querySelector<HTMLInputElement>('input[name="envs.NEW"]');
         if (!required) throw new Error('Required field missing');
         const user = userEvent.setup();
         await act(async () => user.type(required, 'new-secret'));
@@ -117,8 +131,32 @@ describe('Solution source update dialog', () => {
         expect(submissions).toEqual([
             { envs: { NEW: 'new-secret', DROP: null }, min_scale: 1, expected_revision_id: revisionId },
         ]);
+    });
+
+    it('allows undoing removals and resubmitting with cleared values', async () => {
+        const submissions: unknown[] = [];
+        vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+            const request = input instanceof Request ? input : new Request(input, init);
+            if (request.method === 'GET') return Response.json(candidate);
+            submissions.push(await request.json());
+            return Response.json({ detail: 'Final image requires ANOTHER variable' }, { status: 422 });
+        });
+        await render();
+        await act(async () => button('Check for updates').click());
+        await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
+        await act(async () => button('Update').click());
+        const required = document.querySelector<HTMLInputElement>('input[name="envs.NEW"]');
+        if (!required) throw new Error('Required field missing');
+        const user = userEvent.setup();
+        await act(async () => user.type(required, 'new-secret'));
+        await act(async () => button('Remove DROP').click());
+        await act(async () => button('Update solution').click());
+        await act(async () =>
+            vi.waitFor(() => expect(document.body.textContent).toContain('Final image requires ANOTHER'))
+        );
         await act(async () => button('Undo DROP change').click());
         const drop = document.querySelector<HTMLInputElement>('input[name="envs.DROP"]');
+        const keep = document.querySelector<HTMLInputElement>('input[name="envs.KEEP"]');
         if (!drop || !keep) throw new Error('Configured field missing');
         await act(async () => user.type(keep, 'replacement'));
         await act(async () => user.clear(keep));

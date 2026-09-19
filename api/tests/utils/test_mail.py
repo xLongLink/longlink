@@ -145,7 +145,7 @@ async def test_password_reset_email_keeps_credential_in_url_fragment(
         rendered.append((template_name, context))
         return "<p>Reset</p>"
 
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev/")
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev")
     monkeypatch.setattr(mail, "render_mjml_template", render)
 
     # Act
@@ -171,7 +171,7 @@ async def test_organization_invitation_email_prefills_the_recipient(
         rendered.append((template_name, context))
         return "<p>Invitation</p>"
 
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev/")
+    monkeypatch.setattr(env, "PUBLIC_URL", "https://longlink.dev")
     monkeypatch.setattr(mail, "render_mjml_template", render)
 
     # Act

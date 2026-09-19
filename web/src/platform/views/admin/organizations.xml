@@ -19,7 +19,7 @@
             <TableColumn field="name" header="Name">
                 <Stack direction="horizontal" gap="3" align="center">
                     <Avatar
-                        kind="organization"
+                        shape="rounded"
                         name="$row.name"
                         src="$row.avatar"
                     />
@@ -32,7 +32,7 @@
                     </Stack>
                 </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions">
+            <TableColumn field="id" header="Actions" align="end">
                 <MoreMenu value="$metadata">
                     <Option
                         value="${{ item: row, open: true }}"
@@ -92,7 +92,7 @@
     <Dialog title="Delete organization" isOpen="$deletion.open" purpose="form">
         <Stack gap="3">
             <Text color="secondary">
-                Delete organization $deletion.item.name?
+                Delete organization ${deletion.item.name}?
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
                 <Action>

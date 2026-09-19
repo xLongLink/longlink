@@ -1,23 +1,20 @@
+import mimetypes
 from uuid import uuid4
-from fastapi import Depends, APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
-from longlink import Context, data
+from longlink import Context
 from sqlmodel import select
-from collections.abc import Sequence
+from urllib.parse import quote
+from collections.abc import Iterator, Sequence
 from src.models.items import Item
-from src.schemas.items import (
-    ItemCreate,
-    ItemAttachmentRead,
-)
-from sqlmodel.ext.asyncio.session import AsyncSession
+from fastapi.responses import StreamingResponse
+from src.schemas.items import ItemCreate, ItemAttachmentRead
 
 router = APIRouter(prefix="/api")
 
-ATTACHMENTS_DIRECTORY = "item-attachments"
-
 
 @router.get("/items", response_model=list[Item])
-async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
+async def items_get_endpoint(ctx: Context) -> Sequence[Item]:
     """Return catalog items."""
 
     # Query items for display.
@@ -27,7 +24,7 @@ async def items_get_endpoint(ctx: Context = Depends(data)) -> Sequence[Item]:
 
 
 @router.post("/items", response_model=Item)
-async def items_post_endpoint(payload: ItemCreate, ctx: Context = Depends(data)) -> Item:
+async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
     """Create a catalog item."""
 
     # Persist the item so it includes its generated id.
@@ -38,22 +35,31 @@ async def items_post_endpoint(payload: ItemCreate, ctx: Context = Depends(data))
 
 
 @router.get("/items/{item_id}", response_model=Item)
-async def item_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> Item:
+async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
     """Return one catalog item for a dynamic XML View."""
 
-    return await _require_item(item_id, ctx.database)
+    # Retrieve the item and translate a missing record into an API error.
+    item = await ctx.database.get(Item, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return item
 
 
 @router.get("/items/{item_id}/attachments", response_model=list[ItemAttachmentRead])
-async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(data)) -> list[ItemAttachmentRead]:
+async def item_attachments_get_endpoint(
+    item_id: int, ctx: Context
+) -> list[ItemAttachmentRead]:
     """Return files attached to one catalog item."""
 
-    # Validate the item before accessing its attachment storage.
-    await _require_item(item_id, ctx.database)
+    # Retrieve the item and translate a missing record into an API error.
+    item = await ctx.database.get(Item, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
 
     # Treat an item without a storage directory as having no attachments.
     try:
-        entries = ctx.storage.ls(f"{ATTACHMENTS_DIRECTORY}/{item_id}", detail=False)
+        entries = ctx.storage.ls(f"{item_id}", detail=False)
     except FileNotFoundError:
         return []
 
@@ -67,28 +73,77 @@ async def item_attachments_get_endpoint(item_id: int, ctx: Context = Depends(dat
     ]
 
 
+@router.get("/items/{item_id}/attachments/{attachment_id}")
+async def item_attachment_download_endpoint(
+    item_id: int, attachment_id: str, ctx: Context
+) -> StreamingResponse:
+    """Stream one stored attachment for inline browser preview."""
+
+    # Retrieve the item and translate a missing record into an API error.
+    item = await ctx.database.get(Item, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Keep attachment access beneath the item-specific storage directory.
+    safe_id = PurePosixPath(attachment_id).name
+    if not safe_id or safe_id != attachment_id:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    # Treat a missing storage object as a missing attachment.
+    storage_path = f"{item_id}/{safe_id}"
+    if not ctx.storage.exists(storage_path):
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
+    # Derive the display name from the generated storage id.
+    display_name = safe_id.split("-", 1)[-1] or safe_id
+
+    # Fall back to a generic binary type when the extension is unknown.
+    media_type = mimetypes.guess_type(display_name)[0] or "application/octet-stream"
+
+    def content() -> Iterator[bytes]:
+        """Yield stored bytes and release the file on completion."""
+
+        # Open the stored object for the response lifetime.
+        with ctx.storage.open(storage_path, "rb") as stored_file:
+            # Stream the download through LongLink storage in every runtime environment.
+            while chunk := stored_file.read(1024 * 1024):
+                yield chunk
+
+    # Display the file inline so PDFs and images open in the browser.
+    safe_name = display_name.replace('"', "")
+
+    disposition = (
+        f"inline; filename=\"{safe_name}\"; filename*=UTF-8''{quote(display_name)}"
+    )
+
+    return StreamingResponse(
+        content(), media_type=media_type, headers={"content-disposition": disposition}
+    )
+
+
 @router.post("/items/{item_id}/attachments", response_model=ItemAttachmentRead)
 async def item_attachments_post_endpoint(
-    item_id: int, file: UploadFile, ctx: Context = Depends(data)
+    item_id: int, file: UploadFile, ctx: Context
 ) -> ItemAttachmentRead:
     """Upload one file attachment for a catalog item."""
 
-    # Validate the item before accepting attachment content.
-    await _require_item(item_id, ctx.database)
+    # Retrieve the item and translate a missing record into an API error.
+    item = await ctx.database.get(Item, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
 
-    # Keep the uploaded basename beneath the item-specific storage directory.
-    file_name = (
-        PurePosixPath(file.filename or "attachment.bin").name or "attachment.bin"
-    )
+    # Require a filename and keep its basename beneath the item directory.
+    file_name = PurePosixPath(file.filename).name if file.filename else ""
+    if not file_name:
+        raise HTTPException(status_code=400, detail="Filename is required")
+
     file_id = f"{uuid4().hex}-{file_name}"
 
     # Create the attachment directory and close the upload after storage completes.
     try:
-        ctx.storage.makedirs(f"{ATTACHMENTS_DIRECTORY}/{item_id}", exist_ok=True)
+        ctx.storage.makedirs(f"{item_id}", exist_ok=True)
 
-        with ctx.storage.open(
-            f"{ATTACHMENTS_DIRECTORY}/{item_id}/{file_id}", "wb"
-        ) as stored_file:
+        with ctx.storage.open(f"{item_id}/{file_id}", "wb") as stored_file:
             # Stream the upload through LongLink storage in every runtime environment.
             while chunk := await file.read(1024 * 1024):
                 stored_file.write(chunk)
@@ -96,14 +151,3 @@ async def item_attachments_post_endpoint(
         await file.close()
 
     return ItemAttachmentRead(id=file_id, name=file_name)
-
-
-async def _require_item(item_id: int, session: AsyncSession) -> Item:
-    """Return one catalog item or raise a 404 response."""
-
-    # Retrieve the item and translate a missing record into an API error.
-    item = await session.get(Item, item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-
-    return item

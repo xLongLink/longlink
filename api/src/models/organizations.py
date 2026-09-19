@@ -13,9 +13,7 @@ class DatabaseState(StrEnum):
     """Describe the availability of an Organization's CNPG database."""
 
     available = "available"
-    hibernating = "hibernating"
-    hibernated = "hibernated"
-    resuming = "resuming"
+    needs_sync = "needs_sync"
     failed = "failed"
 
 
@@ -41,6 +39,22 @@ class OrganizationUpdate(BaseModel):
 
     # Metadata
     avatar: HttpUrl | Literal[""] | None = Field(default=None, max_length=2048)
+
+
+class OrganizationQuotasResponse(BaseModel):
+    """Represent stored per-Organization quotas in administrator responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Database
+    database_size_mib: int
+    database_instances: int
+
+    # Storage
+    storage_quota_bytes: int
 
 
 class OrganizationInvitationCreate(BaseModel):

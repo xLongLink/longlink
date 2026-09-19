@@ -1,5 +1,6 @@
 import logging
-from fastapi import FastAPI
+from typing import Any
+from fastapi import FastAPI, APIRouter
 from pathlib import Path
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
@@ -26,11 +27,14 @@ class RuntimeState:
     database: Database
 
 
-class LongLink:
-    """Install LongLink runtime services into one Solution-owned FastAPI app."""
+class LongLink(FastAPI):
+    """LongLink runtime application with Platform services installed."""
 
-    def __init__(self, app: FastAPI) -> None:
-        """Install runtime services, routes, and the frontend fallback into a Solution's FastAPI app."""
+    def __init__(self) -> None:
+        """Install runtime services, routes, and the frontend fallback."""
+
+        super().__init__()
+        self._view_endpoints: list[str] = []
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
@@ -46,7 +50,7 @@ class LongLink:
             raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before installing runtime services.
-        discovered_views = self._discover_views(views_directory, app.routes)
+        discovered_views = self._discover_views(views_directory, self.routes)
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Initialize Solution storage and database connections.
@@ -54,10 +58,10 @@ class LongLink:
         database = Database(settings)
 
         # Supply safe defaults while preserving Solution-owned exception handlers.
-        install_error_handlers(app)
+        install_error_handlers(self)
 
         # Compress the embedded frontend and apply safe browser cache policies.
-        app.add_middleware(FrontendMiddleware)
+        self.add_middleware(FrontendMiddleware)
 
         # Production containers attach API access filtering here.
         if settings.ENV == "production":
@@ -69,13 +73,13 @@ class LongLink:
                 access_logger.addFilter(ApiAccessFilter())
 
         # Mount SDK-managed routes before user-facing assets.
-        app.include_router(router(view_definitions))
+        self.include_router(router(view_definitions))
 
         # Bind Platform request identity across downstream request handling.
-        install_context_middleware(app, settings.IDENTITY_SECRET or "")
+        install_context_middleware(self, settings.IDENTITY_SECRET or "")
 
-        app.state.longlink = RuntimeState(storage=storage, database=database)
-        app.router.add_event_handler("shutdown", database.dispose)
+        self.state.longlink = RuntimeState(storage=storage, database=database)
+        self.router.add_event_handler("shutdown", database.dispose)
 
         # Views are registered once before the frontend mount is installed.
         for definition, content in discovered_views:
@@ -85,7 +89,7 @@ class LongLink:
 
                 return Response(content, media_type="application/xml")
 
-            app.add_api_route(
+            self.add_api_route(
                 f"/{definition.path}",
                 _view,
                 methods=["GET"],
@@ -96,14 +100,52 @@ class LongLink:
         first_tab_view = next((definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None)
         if first_tab_view is not None:
 
-            @app.get("/", include_in_schema=False)
+            @self.get("/", include_in_schema=False)
             async def redirect_root() -> RedirectResponse:
                 """Redirect the Solution root to its first static tab."""
 
                 return RedirectResponse(first_tab_view.route)
 
-        # Serve the embedded frontend last so Solution routes retain precedence.
-        app.frontend("/", directory=frontend_index.parent)
+        # Remember View endpoints so Solution routes added later can be validated against them.
+        self._view_endpoints = [f"/{definition.path}" for definition in view_definitions]
+
+        # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
+        self.frontend("/", directory=frontend_index.parent)
+
+    def include_router(self, router: APIRouter, **kwargs: Any) -> None:
+        """Include Solution routes after validating them against View endpoints."""
+
+        # Snapshot routes so a colliding include leaves no partial registration.
+        added = len(self.router.routes)
+        super().include_router(router, **kwargs)
+
+        try:
+            self._ensure_no_view_overlap(self.router.routes[added:])
+        except ValueError:
+            del self.router.routes[added:]
+            raise
+
+    def add_api_route(self, *args: Any, **kwargs: Any) -> None:
+        """Register a Solution route after validating it against View endpoints."""
+
+        # Snapshot routes so a colliding registration leaves no partial registration.
+        added = len(self.router.routes)
+        super().add_api_route(*args, **kwargs)
+
+        try:
+            self._ensure_no_view_overlap(self.router.routes[added:])
+        except ValueError:
+            del self.router.routes[added:]
+            raise
+
+    def _ensure_no_view_overlap(self, routes: list[BaseRoute]) -> None:
+        """Reject routes that would overlap a registered View endpoint."""
+
+        # Solution routes added after startup respect the same View endpoint contract.
+        for view_path in self._view_endpoints:
+            scope = {"type": "http", "method": "GET", "path": view_path}
+            if any(route.matches(scope)[0] is Match.FULL for route in routes):
+                raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
 
     @staticmethod
     def _discover_views(views_directory: Path, solution_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:

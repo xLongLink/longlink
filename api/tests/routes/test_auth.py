@@ -13,6 +13,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
 from src.database.services import invitations
+from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -67,6 +68,28 @@ def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, Us
     return responses
 
 
+def override_oauth_email(
+    responses: dict[str, object],
+    users: tuple[User, User, User],
+    provider: oauth.OAuthProvider,
+    verification: dict[str, bool | str] | list[dict[str, bool]],
+) -> None:
+    """Apply one unverified provider email shape to the fake OAuth responses."""
+
+    # Keep provider-response construction in one owner instead of branching in each test.
+    if isinstance(verification, dict):
+        responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "12345", "email": users[1].email, **verification}
+    else:
+        responses[oauth.GITHUB_EMAILS_URL] = [{"email": user.email, **flags} for user, flags in zip(users[1:], verification)]
+
+
+def extract_fragment_token(url: str) -> str:
+    """Return the token carried by one link fragment."""
+
+    # Both registration and password-reset links carry browser-only proof in the fragment.
+    return parse_qs(urlparse(url).fragment)["token"][0]
+
+
 def registration_verification_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
     """Extract the registration token from captured verification mail."""
 
@@ -76,19 +99,19 @@ def registration_verification_token(captured_mail: list[tuple[str, str, str, str
         for line in captured_mail[0][2].splitlines()
         if line.startswith("Continue account setup: ")
     )
-    return parse_qs(urlparse(verification_url).fragment)["token"][0]
+    return extract_fragment_token(verification_url)
 
 
-async def register_and_verify(client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]], email: str) -> str:
-    """Register an email address and return its verified setup token."""
+async def register_and_verify(
+    client: AsyncClient, captured_mail: list[tuple[str, str, str, str | None]], email: str
+) -> tuple[httpx2.Response, httpx2.Response, str]:
+    """Register an email address and return its setup responses with the verified token."""
 
-    # Complete the shared unauthenticated registration setup.
+    # Return both responses so each test owns its status assertions.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
-    assert register_response.status_code == 202
     verification_token = registration_verification_token(captured_mail)
     verify_response = await client.post("/api/v1/auth/verify", json={"token": verification_token})
-    assert verify_response.status_code == 200
-    return verification_token
+    return register_response, verify_response, verification_token
 
 
 def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) -> str:
@@ -96,7 +119,7 @@ def password_reset_token(captured_mail: list[tuple[str, str, str, str | None]]) 
 
     # Extract browser-only proof from the password-reset link fragment.
     reset_url = next(line for line in captured_mail[0][2].splitlines() if line.startswith("http"))
-    return parse_qs(urlparse(reset_url).fragment)["token"][0]
+    return extract_fragment_token(reset_url)
 
 
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
@@ -169,7 +192,44 @@ async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+
+
+async def test_oauth_callback_rejects_cross_provider_state_without_provider_exchange(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject a callback that replays another provider's browser-bound OAuth state."""
+
+    # Arrange
+    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    async def unexpected_identity(
+        _provider: oauth.OAuthProvider,
+        _code: str,
+        _verifier: str,
+    ) -> oauth.OAuthIdentity | None:
+        """Fail if cross-provider callback state reaches the external provider."""
+
+        raise AssertionError("cross-provider OAuth state must not reach the provider")
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
+
+    # Act
+    response = await client.get(
+        "/api/v1/auth/oauth/github/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
@@ -200,7 +260,7 @@ async def test_oauth_callback_links_existing_email_and_authenticates_browser(
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
@@ -223,10 +283,7 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     """Reject unverified provider emails without leaking details or changing accounts."""
 
     # Arrange
-    if isinstance(verification, dict):
-        oauth_responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "12345", "email": users[1].email, **verification}
-    else:
-        oauth_responses[oauth.GITHUB_EMAILS_URL] = [{"email": user.email, **flags} for user, flags in zip(users[1:], verification)]
+    override_oauth_email(oauth_responses, users, provider, verification)
     credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
 
@@ -240,7 +297,7 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     # Assert
     assert response.status_code == 302
     assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
     assert response.headers["cache-control"] == "no-store"
     assert "Max-Age=0" in response.headers["set-cookie"]
     assert "longlink_auth=" not in response.headers["set-cookie"]
@@ -258,7 +315,7 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
 async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email(
     client: AsyncClient,
     users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
+    oauth_responses: dict[str, object],
     provider: oauth.OAuthProvider,
 ) -> None:
     """Authenticate the subject owner even when the provider returns another account's email."""
@@ -271,13 +328,12 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
         setattr(linked_user, f"{provider}_id", "12345")
         await session.commit()
 
-    async def identity(_provider: oauth.OAuthProvider, _code: str, _verifier: str) -> oauth.OAuthIdentity:
-        """Return the existing subject with a different account's verified email."""
-
-        # Supply the provider result while retaining real local account resolution.
-        return oauth.OAuthIdentity(subject="12345", email=account_b.email, name="Provider Name", avatar="")
-
-    monkeypatch.setattr(oauth, "identity", identity)
+    # Return the existing subject with a different account's verified email.
+    if provider == "google":
+        oauth_responses[oauth.GOOGLE_USERINFO_URL] = {"sub": "12345", "email": account_b.email, "email_verified": True}
+    else:
+        oauth_responses[oauth.GITHUB_USER_URL] = {"id": 12345, "email": account_b.email}
+        oauth_responses[oauth.GITHUB_EMAILS_URL] = [{"email": account_b.email, "primary": True, "verified": True}]
     credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
 
@@ -291,7 +347,7 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
 
     # Assert
     assert response.status_code == 302
-    assert response.headers["location"] == f"{env.PUBLIC_URL.rstrip('/')}/user/organizations"
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/user/organizations"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is not None
     assert profile_response.status_code == 200
@@ -305,6 +361,46 @@ async def test_oauth_callback_prefers_linked_subject_over_another_accounts_email
         (account_a.id, account_a.email, "12345"),
         (account_b.id, account_b.email, None),
     }
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_deleted_account_without_browser_session(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject OAuth login for a soft-deleted account without linking its provider identity."""
+
+    # Arrange
+    user = users[1]
+    async with session_scope() as session:
+        deleted_user = await session.get(User, user.id)
+        assert deleted_user is not None
+        deleted_user.deleted_at = utcnow()
+        await session.commit()
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.content == b""
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert response.headers["cache-control"] == "no-store"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        persisted = await session.get(User, user.id)
+    assert persisted is not None
+    assert persisted.google_id is None
+    assert persisted.github_id is None
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
@@ -443,7 +539,9 @@ async def test_registration_completion_creates_authenticated_account(
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
     login_payload = {"email": email, "password": TEST_PASSWORD}
-    await register_and_verify(client, captured_mail, email)
+    register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
+    assert register_response.status_code == 202
+    assert verify_response.status_code == 200
 
     # Act
     unauthenticated_login = await client.post("/api/v1/auth/password/login", json=login_payload)
@@ -541,10 +639,13 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, email, OrganizationRoles.write)
         await session.commit()
-    await register_and_verify(client, captured_mail, email)
+
+    register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
+    assert register_response.status_code == 202
+    assert verify_response.status_code == 200
 
     # Act
     response = await client.post(
@@ -562,13 +663,19 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
         {
-            "organization": {"id": str(organization.id), "name": "acme", "slug": "acme", "avatar": "", "status": "creating"},
+            "organization": {
+                "id": str(organization.id),
+                "name": "acme",
+                "slug": "acme",
+                "avatar": "",
+                "status": "creating",
+            },
             "role": "write",
         }
     ]
     assert invitation is None
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
     assert client.cookies.get("longlink_auth") is not None
 
 
@@ -584,7 +691,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
         await session.commit()
 
@@ -609,7 +716,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert membership is not None
     assert membership.role == OrganizationRoles.write
     assert persisted is not None
-    assert persisted.database_sync_pending is True
+    assert persisted.database_state == DatabaseState.needs_sync
 
 
 async def test_registration_completion_rejects_duplicate_account(
@@ -620,7 +727,9 @@ async def test_registration_completion_rejects_duplicate_account(
     # Arrange
     email = "registered@example.com"
     completion_payload = {"name": "Registered User", "password": TEST_PASSWORD}
-    verification_token = await register_and_verify(client, captured_mail, email)
+    register_response, verify_response, verification_token = await register_and_verify(client, captured_mail, email)
+    assert register_response.status_code == 202
+    assert verify_response.status_code == 200
     first_completion = await client.post(
         "/api/v1/auth/register/complete",
         json=completion_payload,

@@ -10,7 +10,7 @@
             align="center"
             wrap="wrap"
         >
-            <Stack>
+            <Stack gap="1">
                 <Heading level="1">Organizations</Heading>
                 <Text color="secondary">
                     Manage the workspaces connected to your LongLink account.
@@ -51,22 +51,14 @@
             <TableColumn field="organization.name" header="Name">
                 <Stack direction="horizontal" gap="3" align="center">
                     <Avatar
-                        kind="organization"
+                        shape="rounded"
                         name="$row.organization.name"
                         src="$row.organization.avatar"
                     />
-                    <Stack align="start">
-                        <Stack direction="horizontal" gap="1" align="center">
-                            <Link to="/orgs/${row.organization.slug}">
-                                $row.organization.name
-                            </Link>
-                            <Badge
-                                if="${row.organization.status !== 'running'}"
-                                variant="${({ creating: 'info', failed: 'error' })[row.organization.status]}"
-                            >
-                                ${({ creating: 'Creating', failed: 'Failed' })[row.organization.status]}
-                            </Badge>
-                        </Stack>
+                    <Stack align="start" gap="0">
+                        <Link to="/orgs/${row.organization.slug}">
+                            $row.organization.name
+                        </Link>
                         <Text type="supporting">Organization</Text>
                     </Stack>
                 </Stack>

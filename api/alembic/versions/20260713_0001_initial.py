@@ -68,13 +68,10 @@ def upgrade() -> None:
         ),
         sa.Column("gateway_url", sa.String(length=512), nullable=False),
         sa.Column("gateway_certificate", sa.Text(), nullable=True),
-        sa.Column("database_size_gib", sa.Integer(), nullable=False),
-        sa.Column("database_instances", sa.Integer(), nullable=False),
         sa.Column("database_storage_class", sa.String(length=253), nullable=False),
         sa.Column("storage_endpoint", sa.String(length=512), nullable=False),
         sa.Column("storage_access_key", sa.String(length=128), nullable=False),
         sa.Column("storage_secret_key", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("bucket_size_bytes", sa.BigInteger(), nullable=False),
         sa.Column("storage_certificate", sa.Text(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -99,15 +96,12 @@ def upgrade() -> None:
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("database_password", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
-        sa.Column("database_last_active_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column(
             "database_state",
             sa.Enum(
                 "available",
-                "hibernating",
-                "hibernated",
-                "resuming",
                 "failed",
+                "needs_sync",
                 name="database_state_enum",
                 native_enum=False,
                 create_constraint=True,
@@ -115,8 +109,10 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("database_sync_pending", sa.Boolean(), nullable=False),
         sa.Column("database_usage_bytes", sa.BigInteger(), nullable=True),
+        sa.Column("database_size_mib", sa.Integer(), nullable=False, server_default="100"),
+        sa.Column("database_instances", sa.Integer(), nullable=False, server_default="1"),
+        sa.Column("storage_quota_bytes", sa.BigInteger(), nullable=False, server_default="1073741824"),
         sa.Column(
             "status",
             sa.Enum(
@@ -207,6 +203,7 @@ def upgrade() -> None:
         sa.Column("source", sa.String(512), nullable=False),
         sa.Column("min_scale", sa.Integer(), server_default="0", nullable=False),
         sa.CheckConstraint("min_scale IN (0, 1)", name="revision_min_scale"),
+        sa.Column("idle_seconds", sa.Integer(), server_default="60", nullable=False),
         sa.Column("envs", EncryptedType(env.ENCRYPTION_KEY), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), sa.ForeignKey("users.id"), nullable=True),
@@ -285,7 +282,6 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "compute.validate",
                 "solution.deploy",
                 "solution.delete",
                 "organization.create",

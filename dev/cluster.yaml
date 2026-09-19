@@ -8,11 +8,6 @@ subnet: 172.30.0.0/24
 kubeAPI:
     hostIP: 127.0.0.1
     hostPort: '8001'
-files:
-    - source: bootstrap.yaml
-      destination: k3s-manifests-custom/longlink.yaml
-      nodeFilters:
-          - server:0
 ports:
     - port: 127.0.0.1:8443:30443
       nodeFilters:

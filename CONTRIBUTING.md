@@ -25,8 +25,7 @@ vp env setup
 ```bash
 sudo snap install helm --classic
 mkdir -p "$HOME/.local/bin"
-curl -fsSL https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz \
-  | tar -xzO linux-amd64/helm > "$HOME/.local/bin/helm"
+curl -fsSL https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz | tar -xzO linux-amd64/helm > "$HOME/.local/bin/helm"
 chmod +x "$HOME/.local/bin/helm"
 ```
 
@@ -67,13 +66,7 @@ radius      # none | small | medium | large
 ## Images
 
 ```xml
-<image>
-  <style>
-    Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
-  </style>
-
-  <content>
-  </content>
-</image>
-
+<style>
+  Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
+</style>
 ```

@@ -169,15 +169,6 @@ export async function setupContext(
             };
             services.setups[id] = setup;
             await setup();
-
-            const pollInterval =
-                node.params.pollInterval == null ? undefined : Number(evaluate(node.params.pollInterval, scope));
-            if (pollInterval !== undefined && Number.isFinite(pollInterval) && pollInterval > 0) {
-                const timer = window.setInterval(() => void services.invalidate(id), pollInterval);
-                signal?.addEventListener('abort', () => window.clearInterval(timer), {
-                    once: true,
-                });
-            }
         }
     }
 }

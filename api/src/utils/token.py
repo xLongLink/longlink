@@ -18,7 +18,6 @@ PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
 OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
-EMAIL_ADAPTER: TypeAdapter[Email] = TypeAdapter(Email)
 
 
 def password_fingerprint(password: str) -> str:
@@ -53,7 +52,7 @@ def registration_claims(token: str) -> Email:
     if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
     try:
-        return EMAIL_ADAPTER.validate_python(email)
+        return TypeAdapter(Email).validate_python(email)
     except ValidationError as exc:
         raise jwt.InvalidTokenError("Invalid registration token claims") from exc
 

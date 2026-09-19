@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router';
+import { startCase } from 'es-toolkit/compat';
 import { Wordmark } from '@/components/Wordmark';
-import { decodePathSegment, startCase } from '@/lib/utils';
+import { decodePathSegment } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders the top navigation breadcrumb for organization and admin routes. */

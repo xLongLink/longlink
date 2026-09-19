@@ -19,18 +19,29 @@
     <Query
         id="solutions"
         path="/api/v1/organizations/${membership.organization.id}/solutions"
-        pollInterval="5000"
     />
     <State id="invitation" email="" role="write" />
+    <State id="memberMenu" item="${null}" role="read" open="${false}" />
+    <State
+        id="solutionMenu"
+        item="${null}"
+        logsOpen="${false}"
+        deleteOpen="${false}"
+    />
+    <Query
+        id="solutionLogs"
+        if="$solutionMenu.logsOpen"
+        path="/api/v1/solutions/${solutionMenu.item.id}/logs"
+    />
 
     <Stack gap="8">
         <Stack direction="horizontal" gap="3" align="center">
             <Avatar
-                kind="organization"
+                shape="rounded"
                 name="$details.organization.name"
                 src="$details.organization.avatar"
             />
-            <Stack>
+            <Stack gap="0">
                 <Heading level="4" accessibilityLevel="1">
                     $details.organization.name
                 </Heading>
@@ -42,7 +53,12 @@
             <MenuSection title="Settings" isHeaderHidden="true">
                 <MenuItem label="Organization" icon="building2">
                     <Stack gap="4">
-                        <Heading level="2">Organization</Heading>
+                        <Stack gap="1">
+                            <Heading level="2">Organization</Heading>
+                            <Text color="secondary">
+                                Review database and storage usage.
+                            </Text>
+                        </Stack>
                         <Divider />
                         <ProgressBar
                             label="Database"
@@ -60,7 +76,12 @@
                 <MenuSubSection label="People" icon="users">
                     <MenuItem label="Members">
                         <Stack gap="4">
-                            <Heading level="2">Members</Heading>
+                            <Stack gap="1">
+                                <Heading level="2">Members</Heading>
+                                <Text color="secondary">
+                                    Manage the people in this organization.
+                                </Text>
+                            </Stack>
                             <Divider />
                             <Table
                                 data="$details.members"
@@ -77,79 +98,47 @@
                                             name="$row.user.name"
                                             src="$row.user.avatar"
                                         />
-                                        <Text>$row.user.name</Text>
+                                        <Stack align="start">
+                                            <Stack
+                                                direction="horizontal"
+                                                gap="1"
+                                                align="center"
+                                            >
+                                                <Text>$row.user.name</Text>
+                                                <Badge>$row.role</Badge>
+                                            </Stack>
+                                            <Text type="supporting">$row.user.email</Text>
+                                        </Stack>
                                     </Stack>
-                                </TableColumn>
-                                <TableColumn field="role" header="Role">
-                                    <Badge>$row.role</Badge>
                                 </TableColumn>
                                 <TableColumn
                                     if="${membership.role === 'admin' || membership.role === 'owner'}"
                                     field="user.id"
                                     header="Actions"
+                                    align="end"
                                 >
-                                    <Stack
-                                        direction="horizontal"
-                                        gap="1"
-                                        wrap="wrap"
-                                    >
-                                        <Action if="${row.role !== 'read'}">
-                                            <Request
-                                                url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}"
-                                                method="PATCH"
-                                                json="${{ role: 'read' }}"
-                                            />
-                                            <Patch
-                                                state="details"
-                                                invalidate="true"
-                                            />
-                                            <Button variant="ghost">
-                                                Read
-                                            </Button>
-                                        </Action>
-                                        <Action if="${row.role !== 'write'}">
-                                            <Request
-                                                url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}"
-                                                method="PATCH"
-                                                json="${{ role: 'write' }}"
-                                            />
-                                            <Patch
-                                                state="details"
-                                                invalidate="true"
-                                            />
-                                            <Button variant="ghost">
-                                                Write
-                                            </Button>
-                                        </Action>
-                                        <Action if="${row.role !== 'maintain'}">
-                                            <Request
-                                                url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}"
-                                                method="PATCH"
-                                                json="${{ role: 'maintain' }}"
-                                            />
-                                            <Patch
-                                                state="details"
-                                                invalidate="true"
-                                            />
-                                            <Button variant="ghost">
-                                                Maintain
-                                            </Button>
-                                        </Action>
-                                        <Action if="${row.role !== 'admin'}">
-                                            <Request
-                                                url="/api/v1/organizations/${membership.organization.id}/members/${row.user.id}"
-                                                method="PATCH"
-                                                json="${{ role: 'admin' }}"
-                                            />
-                                            <Patch
-                                                state="details"
-                                                invalidate="true"
-                                            />
-                                            <Button variant="ghost">
-                                                Admin
-                                            </Button>
-                                        </Action>
-                                    </Stack>
+                                    <MoreMenu value="$memberMenu">
+                                        <Option
+                                            if="${row.role !== 'read'}"
+                                            value="${{ item: row, role: 'read', open: true }}"
+                                            label="Set as Read"
+                                        />
+                                        <Option
+                                            if="${row.role !== 'write'}"
+                                            value="${{ item: row, role: 'write', open: true }}"
+                                            label="Set as Write"
+                                        />
+                                        <Option
+                                            if="${row.role !== 'maintain'}"
+                                            value="${{ item: row, role: 'maintain', open: true }}"
+                                            label="Set as Maintain"
+                                        />
+                                        <Option
+                                            if="${row.role !== 'admin'}"
+                                            value="${{ item: row, role: 'admin', open: true }}"
+                                            label="Set as Admin"
+                                        />
+                                    </MoreMenu>
                                 </TableColumn>
                             </Table>
                         </Stack>
@@ -162,7 +151,12 @@
                                 align="center"
                                 wrap="wrap"
                             >
-                                <Heading level="2">Invitations</Heading>
+                                <Stack gap="1">
+                                    <Heading level="2">Invitations</Heading>
+                                    <Text color="secondary">
+                                        Send an invitation to join this organization.
+                                    </Text>
+                                </Stack>
                                 <Dialog
                                     if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     title="Invite user"
@@ -222,6 +216,7 @@
                                     if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     field="id"
                                     header="Actions"
+                                    align="end"
                                 >
                                     <Action>
                                         <Request
@@ -249,7 +244,12 @@
                             align="center"
                             wrap="wrap"
                         >
-                            <Heading level="2">Solutions</Heading>
+                            <Stack gap="1">
+                                <Heading level="2">Solutions</Heading>
+                                <Text color="secondary">
+                                    Manage the solutions attached to this organization.
+                                </Text>
+                            </Stack>
                             <CreateSolution
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 organizationId="$membership.organization.id"
@@ -272,37 +272,34 @@
                                     </Text>
                                 </Stack>
                             </TableColumn>
-                            <TableColumn field="status" header="Status">
-                                <StatusBadge status="$row.status" />
-                            </TableColumn>
                             <TableColumn
                                 if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 field="id"
                                 header="Actions"
+                                align="end"
                             >
                                 <Stack
                                     direction="horizontal"
                                     gap="1"
-                                    wrap="wrap"
+                                    align="center"
+                                    justify="end"
                                 >
                                     <SolutionUpdate
                                         organizationId="$membership.organization.id"
                                         solution="$row"
                                     />
-                                    <SolutionLogs solutionId="$row.id" />
-                                    <Action>
-                                        <Request
-                                            url="/api/v1/solutions/${row.id}"
-                                            method="DELETE"
+                                    <MoreMenu value="$solutionMenu">
+                                        <Option
+                                            value="${{ item: row, logsOpen: true, deleteOpen: false }}"
+                                            label="Logs"
+                                            icon="logs"
                                         />
-                                        <Patch
-                                            state="solutions"
-                                            invalidate="true"
+                                        <Option
+                                            value="${{ item: row, logsOpen: false, deleteOpen: true }}"
+                                            label="Delete"
+                                            icon="trash"
                                         />
-                                        <Button variant="destructive">
-                                            Delete
-                                        </Button>
-                                    </Action>
+                                    </MoreMenu>
                                 </Stack>
                             </TableColumn>
                         </Table>
@@ -311,4 +308,65 @@
             </MenuSection>
         </Menu>
     </Stack>
+
+    <Dialog title="Change role" isOpen="$memberMenu.open" purpose="form">
+        <Stack gap="3">
+            <Text color="secondary">
+                Change ${memberMenu.item.user.name} to ${memberMenu.role}?
+            </Text>
+            <Stack direction="horizontal" gap="2" justify="end">
+                <Action>
+                    <Patch state="memberMenu" value="${{ open: false }}" />
+                    <Button variant="ghost">Cancel</Button>
+                </Action>
+                <Action>
+                    <Request
+                        url="/api/v1/organizations/${membership.organization.id}/members/${memberMenu.item.user.id}"
+                        method="PATCH"
+                        json="${{ role: memberMenu.role }}"
+                        closeDialog="true"
+                    />
+                    <Patch state="details" invalidate="true" />
+                    <Button variant="primary">Confirm</Button>
+                </Action>
+            </Stack>
+        </Stack>
+    </Dialog>
+    <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen">
+        <Invalidate query="solutionLogs" if="$solutionMenu.logsOpen" />
+        <Stack height="60vh">
+            <StackItem size="static">
+                <CodeBlock value="$solutionLogs" hasLineNumbers="true" />
+            </StackItem>
+        </Stack>
+    </Dialog>
+    <Dialog
+        title="Delete solution"
+        isOpen="$solutionMenu.deleteOpen"
+        purpose="form"
+    >
+        <Stack gap="3">
+            <Text color="secondary">
+                Delete solution ${solutionMenu.item.name}?
+            </Text>
+            <Stack direction="horizontal" gap="2" justify="end">
+                <Action>
+                    <Patch
+                        state="solutionMenu"
+                        value="${{ deleteOpen: false }}"
+                    />
+                    <Button variant="ghost">Cancel</Button>
+                </Action>
+                <Action>
+                    <Request
+                        url="/api/v1/solutions/${solutionMenu.item.id}"
+                        method="DELETE"
+                        closeDialog="true"
+                    />
+                    <Patch state="solutions" invalidate="true" />
+                    <Button variant="destructive">Delete</Button>
+                </Action>
+            </Stack>
+        </Stack>
+    </Dialog>
 </longlink>

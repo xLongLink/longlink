@@ -222,7 +222,7 @@ async def test_update_organization_returns_not_found_when_active_organization_di
     # Arrange
     organization = await create_organization(users[0])
 
-    async def missing_organization(*_args: object) -> None:
+    async def missing_organization(*_args: object, **_kwargs: object) -> None:
         """Simulate the Organization disappearing before its update."""
 
     monkeypatch.setattr(organizations, "update", missing_organization)
@@ -255,6 +255,53 @@ async def test_update_organization_rejects_write_member(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
+    async with session_scope() as session:
+        unchanged = await session.get(Organization, organization.id)
+    assert unchanged is not None
+    assert unchanged.avatar == organization.avatar
+    assert unchanged.updated_at == original_updated_at
+
+
+@pytest.mark.parametrize("name", [pytest.param("", id="empty"), pytest.param("a" * 129, id="too-long")])
+async def test_create_organization_rejects_invalid_name_without_persisting_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    name: str,
+) -> None:
+    """Reject organization names outside the 1-128 character contract without side effects."""
+
+    # Act
+    response = await clients[0].post("/api/v1/organizations", json={"name": name})
+
+    # Assert
+    assert response.status_code == 422
+    async with session_scope() as session:
+        assert await session.scalar(select(Organization)) is None
+    assert await fetch_operations() == []
+
+
+@pytest.mark.parametrize(
+    "avatar",
+    [
+        pytest.param("not-a-url", id="not-a-url"),
+        pytest.param(f"https://example.com/{'a' * 2048}.png", id="too-long"),
+    ],
+)
+async def test_update_organization_rejects_invalid_avatar_without_mutating_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    avatar: str,
+) -> None:
+    """Reject organization avatars outside the URL and length contract without mutation."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    original_updated_at = organization.updated_at
+
+    # Act
+    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": avatar})
+
+    # Assert
+    assert response.status_code == 422
     async with session_scope() as session:
         unchanged = await session.get(Organization, organization.id)
     assert unchanged is not None
@@ -367,7 +414,7 @@ async def test_other_organization_user_cannot_delete_solution(
     ("database_state", "usage"),
     [
         pytest.param(DatabaseState.available, 3584, id="available"),
-        pytest.param(DatabaseState.hibernated, None, id="hibernated"),
+        pytest.param(DatabaseState.failed, None, id="failed"),
     ],
 )
 async def test_organization_database_usage_returns_cached_usage_without_provider_access(
@@ -384,13 +431,12 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
     client = clients[0]
     organization = await create_organization(owner, compute=await create_ready_compute())
 
-    # Persist cached telemetry for an active or hibernated Organization.
+    # Persist cached telemetry for an Organization.
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.status = Status.running
         persisted.database_state = database_state
-        persisted.database_sync_pending = False
         persisted.database_usage_bytes = usage
         await session.commit()
 
@@ -408,7 +454,7 @@ async def test_organization_database_usage_returns_cached_usage_without_provider
     assert response.status_code == 200
     assert response.json() == {
         "size_bytes": usage,
-        "allocated_bytes": 10 * 1024**3,
+        "allocated_bytes": 100 * 1024**2,
     }
 
 
@@ -460,7 +506,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
     if isinstance(usage, NotFoundError):
 
-        def missing_bucket(self: StorageKubernetes, organization_id: UUID, compute: object) -> None:
+        def missing_bucket(self: StorageKubernetes, organization_id: UUID) -> None:
             """Report the missing Kubernetes bucket claim at its actual transport boundary."""
 
             assert organization_id == organization.id
@@ -522,7 +568,7 @@ async def test_organization_resource_endpoints_allow_members(
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
         persisted.status = Status.running
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         persisted.database_usage_bytes = 0
         await session.commit()
     client = clients[1]
@@ -533,7 +579,7 @@ async def test_organization_resource_endpoints_allow_members(
     # Assert
     assert response.status_code == 200
     expected_payloads: dict[str, object] = {
-        "database": {"size_bytes": 0, "allocated_bytes": 10 * 1024**3},
+        "database": {"size_bytes": 0, "allocated_bytes": 100 * 1024**2},
         "storage": {"space_used": 0, "quota_bytes": 1073741824},
     }
     assert response.json() == expected_payloads[resource]
@@ -902,7 +948,7 @@ async def test_update_organization_member_changes_role(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -926,7 +972,7 @@ async def test_update_organization_member_changes_role(
         updated_members = await organizations.members(session, organization.id)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is True
+        assert persisted.database_state == DatabaseState.needs_sync
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
 
@@ -943,7 +989,7 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=member.id,
@@ -968,7 +1014,7 @@ async def test_update_organization_member_keeps_unchanged_role_without_persisten
         unchanged = next(item for item in await organizations.members(session, organization.id) if item.user_id == member.id)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is False
+        assert persisted.database_state == DatabaseState.available
     assert unchanged.role == OrganizationRoles.write
     assert unchanged.updated_at == original_updated_at
 
@@ -1060,7 +1106,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        persisted.database_sync_pending = False
+        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=regular_member.id,
@@ -1098,7 +1144,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
         assert unchanged.updated_at == original_updated_at
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_sync_pending is False
+        assert persisted.database_state == DatabaseState.available
 
 
 @pytest.mark.parametrize(

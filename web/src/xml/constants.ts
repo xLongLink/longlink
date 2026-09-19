@@ -32,6 +32,8 @@ export const ICON_NAMES = [
     'wrench',
     'stop',
     'microphone',
+    'logs',
+    'trash',
 ] as const;
 export const ORIENTATIONS = ['horizontal', 'vertical'] as const;
 export const BUTTON_VARIANTS = ['primary', 'secondary', 'ghost', 'destructive'] as const;
@@ -52,9 +54,9 @@ export const BADGE_VARIANTS = [
     'yellow',
 ] as const;
 export const GRID_REPEATS = ['fill', 'fit'] as const;
+export const TABLE_COLUMN_ALIGNS = ['start', 'center', 'end'] as const;
 export const BOX_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const STACK_JUSTIFICATIONS = ['start', 'center', 'end', 'between', 'around', 'evenly'] as const;
 export const STACK_WRAPS = ['nowrap', 'wrap', 'wrap-reverse'] as const;
 export const STACK_ITEM_SIZES = ['static', 'fill'] as const;
 export const SPACING_VALUES = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10] as const;
-export const XML_LAYOUT_GAP = 1;

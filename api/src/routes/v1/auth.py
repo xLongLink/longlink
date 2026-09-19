@@ -21,24 +21,22 @@ router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
 INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
-OAUTH_STATE_COOKIE = "longlink_oauth"
-OAUTH_STATE_COOKIE_PATH = "/api/v1/auth/oauth"
 
 
 def set_auth_session(response: Response, credential: str) -> None:
     """Apply the browser response policy for one signed authentication credential."""
 
     # Publish authentication as a private, browser-only session.
-    cookies.set_browser_cookie(response, "longlink_auth", credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
 def oauth_failure_response() -> RedirectResponse:
     """Return a generic failed OAuth redirect after removing transient state."""
 
     # Do not expose provider or account details through the browser-facing failure response.
-    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/login?oauth_error=1", status_code=302)
+    response = RedirectResponse(f"{env.PUBLIC_URL}/login?oauth_error=1", status_code=302)
     response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
 
@@ -86,7 +84,7 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    cookies.set_browser_cookie(response, OAUTH_STATE_COOKIE, credential, OAUTH_STATE_COOKIE_PATH, token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, credential, "/api/v1/auth/oauth", token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
     return response
 
 
@@ -97,7 +95,7 @@ async def complete_oauth_login(
     code: Annotated[str | None, Query(max_length=4096)] = None,
     state: Annotated[str | None, Query(max_length=512)] = None,
     error: Annotated[str | None, Query(max_length=128)] = None,
-    oauth_state: str | None = Cookie(default=None, alias=OAUTH_STATE_COOKIE),
+    oauth_state: str | None = Cookie(default=None, alias=cookies.OAUTH_STATE_COOKIE),
 ):
     """Complete one verified provider sign-in and issue a LongLink browser session."""
 
@@ -143,12 +141,12 @@ async def complete_oauth_login(
             return oauth_failure_response()
 
     # Publish the signed browser credential only after durable projection demand commits.
-    response = RedirectResponse(f"{env.PUBLIC_URL.rstrip('/')}/user/organizations", status_code=302)
+    response = RedirectResponse(f"{env.PUBLIC_URL}/user/organizations", status_code=302)
     credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent OAuth login effects commit.
     set_auth_session(response, credential)
-    cookies.delete_browser_cookie(response, OAUTH_STATE_COOKIE, OAUTH_STATE_COOKIE_PATH)
+    cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
 
@@ -186,11 +184,11 @@ async def logout(
     """Remove the active browser credential."""
 
     # Block cross-origin requests from clearing an authenticated browser session.
-    if origin is not None and origin not in env.trusted_origins():
+    if origin is not None and origin != env.PUBLIC_URL:
         raise HTTPException(status_code=403, detail="Origin required")
 
     # Match the authentication-cookie scope so browsers reliably remove the credential.
-    cookies.delete_browser_cookie(response, "longlink_auth", "/")
+    cookies.delete_browser_cookie(response, cookies.AUTH_COOKIE, "/")
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
@@ -222,13 +220,13 @@ async def verify_password_reset_token(payload: TokenPayload, response: Response,
 
     # Validate the bearer credential before moving it into a restricted cookie.
     await password_reset_user(session, payload.token)
-    cookies.set_browser_cookie(response, "longlink_password_reset", payload.token, "/api/v1/auth/reset-password", 900)
+    cookies.set_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE, payload.token, "/api/v1/auth/reset-password", 900)
 
 
 @router.get("/auth/reset-password/setup", status_code=204)
 async def get_password_reset_setup(
     response: Response,
-    password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
+    password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
     session: AsyncSession = Depends(get_session),
 ):
     """Restore password reset state from browser-only proof."""
@@ -242,7 +240,7 @@ async def get_password_reset_setup(
 async def reset_password(
     payload: PasswordResetComplete,
     response: Response,
-    password_reset_token: str | None = Cookie(default=None, alias="longlink_password_reset"),
+    password_reset_token: str | None = Cookie(default=None, alias=cookies.PASSWORD_RESET_COOKIE),
     session: AsyncSession = Depends(get_session),
 ):
     """Replace a password using browser-only reset proof."""
@@ -257,7 +255,7 @@ async def reset_password(
 
     # Remove reset proof only after the replacement password commits.
     response.headers["Cache-Control"] = "no-store"
-    cookies.delete_browser_cookie(response, "longlink_password_reset", "/api/v1/auth/reset-password")
+    cookies.delete_browser_cookie(response, cookies.PASSWORD_RESET_COOKIE, "/api/v1/auth/reset-password")
 
 
 # Deployment rate limiting bounds unauthenticated email delivery requests before they reach the API.
@@ -283,13 +281,13 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
     # Convert invalid and expired tokens into one stable authentication error.
     email = registration_email(payload.token)
     cookies.set_browser_cookie(
-        response, "longlink_registration", payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS
+        response, cookies.REGISTRATION_COOKIE, payload.token, "/api/v1/auth/register", token.EMAIL_TOKEN_LIFETIME_SECONDS
     )
     return {"email": email}
 
 
 @router.get("/auth/register/setup", response_model=EmailPayload)
-async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
+async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE)):
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.
@@ -302,7 +300,7 @@ async def get_registration_setup(response: Response, registration_token: str | N
 async def complete_registration(
     payload: RegistrationComplete,
     response: Response,
-    registration_token: str | None = Cookie(default=None, alias="longlink_registration"),
+    registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE),
     session: AsyncSession = Depends(get_session),
 ):
     """Create and authenticate an account after stateless email verification."""
@@ -326,5 +324,5 @@ async def complete_registration(
 
     # Publish browser authentication only after both persistent records commit.
     set_auth_session(response, credential)
-    cookies.delete_browser_cookie(response, "longlink_registration", "/api/v1/auth/register")
+    cookies.delete_browser_cookie(response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
     return user

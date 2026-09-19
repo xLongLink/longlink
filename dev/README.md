@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
-
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+<img src="../banner.png" alt="LongLink banner" />
 
 </div>
 
@@ -15,7 +13,6 @@ Requirements: Linux AMD64, Docker, k3d, kubectl, OpenSSL, curl, Helm,
 uv, Vite+, and `storage.localhost` resolving to loopback.
 
 <br />
-
 
 ---
 

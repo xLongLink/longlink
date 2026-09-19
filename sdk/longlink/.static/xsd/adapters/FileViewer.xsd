@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="FileViewerType">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+    </xsd:sequence>
+    <xsd:attribute name="src" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Solution-relative file URL, resolved like Link href.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="title" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Accessible name for the previewed document.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="FileViewer" type="FileViewerType">
+    <xsd:annotation>
+      <xsd:documentation>FileViewer previews PDF documents, images, video, and audio inline and falls back to a download link for other file types. Place it inside a Dialog for document review workflows such as signatures.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="file-viewer" category="Content" lastUpdated="2026-09-17" source="adapters/FileViewer.xsd"/>
+        <longlink:example>&lt;FileViewer src="/api/items/${item.id}/attachments/${attachment.id}" title="$attachment.name" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>
