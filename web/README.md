@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
+<img src="../banner.png" alt="LongLink banner" />
 
 Frontend runtime, docs, and platform UI for LongLink.
 
