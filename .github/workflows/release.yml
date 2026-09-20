@@ -99,9 +99,9 @@ jobs:
                   printf 'longlink %s was not available on PyPI within five minutes.\n' "$version" >&2
                   exit 1
 
-    # The API is packaged into a container, so we will publish the image to GHCR on each release.
+    # The API image embeds the matching Compute chart, so GHCR holds a single release artifact.
     publish-api-image:
-        needs: [tests, publish-compute-chart]
+        needs: tests
         runs-on: ubuntu-24.04
         timeout-minutes: 30
 
@@ -118,6 +118,27 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Set up Helm
+              uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
+              with:
+                  version: v4.3.0
+
+            - name: Package Compute chart
+              id: compute
+              run: |
+                  set -euo pipefail
+
+                  version="${GITHUB_REF_NAME#v}"
+                  archive="longlink-${version}.tgz"
+                  helm package k8s/chart --version "$version" --app-version "$GITHUB_REF_NAME" --destination .
+                  sha256sum "$archive" > "${archive}.sha256"
+
+                  {
+                      echo "version=$version"
+                      echo "archive=$archive"
+                      echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
+                  } >> "$GITHUB_OUTPUT"
 
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -139,71 +160,21 @@ jobs:
                   push: true
                   build-args: |
                       VERSION=${{ github.ref_name }}
+                      COMPUTE_ARCHIVE=${{ steps.compute.outputs.archive }}
                   annotations: |
                       index:org.opencontainers.image.description=LongLink backend API
                   labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ github.ref_name }}
                       longlink.dev/release-version=${{ github.ref_name }}
-                      longlink.dev/release-compute-chart=${{ needs.publish-compute-chart.outputs.chart }}
-                      longlink.dev/release-compute-version=${{ needs.publish-compute-chart.outputs.version }}
-                      longlink.dev/release-compute-sha256=${{ needs.publish-compute-chart.outputs.sha256 }}
+                      longlink.dev/release-compute-version=${{ steps.compute.outputs.version }}
+                      longlink.dev/release-compute-sha256=${{ steps.compute.outputs.sha256 }}
                       longlink.dev/release-sdk-version=${{ github.ref_name }}
                   tags: |
                       ghcr.io/xlonglink/longlink:${{ github.ref_name }}
                       ghcr.io/xlonglink/longlink:latest
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
-
-    publish-compute-chart:
-        needs: tests
-        runs-on: ubuntu-24.04
-        timeout-minutes: 20
-
-        outputs:
-            chart: ${{ steps.compute.outputs.chart }}
-            version: ${{ steps.compute.outputs.version }}
-            sha256: ${{ steps.compute.outputs.sha256 }}
-
-        environment:
-            name: release
-
-        permissions:
-            contents: read
-            packages: write
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Set up Helm
-              uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
-              with:
-                  version: v4.3.0
-
-            - name: Package Compute
-              id: compute
-              run: |
-                  set -euo pipefail
-
-                  version="${GITHUB_REF_NAME#v}"
-                  archive="longlink-${version}.tgz"
-                  helm package k8s/chart --version "$version" --app-version "$GITHUB_REF_NAME" --destination .
-                  sha256sum "$archive" > "${archive}.sha256"
-
-                  {
-                      echo "chart=oci://ghcr.io/xlonglink/longlink"
-                      echo "version=$version"
-                      echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
-                  } >> "$GITHUB_OUTPUT"
-
-            - name: Publish Compute chart
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-                  set -euo pipefail
-                  printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-                  helm push "longlink-${{ steps.compute.outputs.version }}.tgz" oci://ghcr.io/xlonglink
 
     sync-sample:
         needs: [publish-sdk, publish-api-image]
@@ -217,7 +188,7 @@ jobs:
             SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
 
     publish-github-release:
-        needs: [publish-sdk, publish-api-image, publish-compute-chart, sync-sample]
+        needs: [publish-sdk, publish-api-image, sync-sample]
         runs-on: ubuntu-24.04
         timeout-minutes: 10
 

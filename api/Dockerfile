@@ -37,6 +37,10 @@ ENV VERSION=${VERSION}
 COPY api/ /app/
 COPY --chown=10001:10001 --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
+# Embedded Compute chart packaged by the release workflows.
+ARG COMPUTE_ARCHIVE
+COPY ${COMPUTE_ARCHIVE} /app/compute/
+
 EXPOSE 8000
 
 USER 10001:10001
