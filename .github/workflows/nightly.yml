@@ -66,18 +66,9 @@ jobs:
 
                   {
                       echo "archive=$archive"
-                      echo "chart=oci://ghcr.io/xlonglink/longlink"
                       echo "chart_version=$chart_version"
                       echo "chart_sha256=$checksum"
                   } >> "$GITHUB_OUTPUT"
-
-            - name: Publish nightly Compute chart
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-                  set -euo pipefail
-                  printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
-                   helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink
 
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
@@ -99,11 +90,11 @@ jobs:
                   push: true
                   build-args: |
                       VERSION=${{ steps.platform.outputs.version }}
+                      COMPUTE_ARCHIVE=${{ steps.compute.outputs.archive }}
                   labels: |
                       org.opencontainers.image.revision=${{ github.sha }}
                       org.opencontainers.image.version=${{ steps.platform.outputs.version }}
                       longlink.dev/release-version=${{ steps.compute.outputs.chart_version }}
-                      longlink.dev/release-compute-chart=${{ steps.compute.outputs.chart }}
                       longlink.dev/release-compute-version=${{ steps.compute.outputs.chart_version }}
                       longlink.dev/release-compute-sha256=${{ steps.compute.outputs.chart_sha256 }}
                       longlink.dev/release-sdk-version=${{ steps.platform.outputs.version }}

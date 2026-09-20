@@ -50,10 +50,25 @@ Solution workloads always reach object storage through the cluster-local proxy a
 
 ## Setup
 
-Install the shared Compute infrastructure:
+Install the shared Compute infrastructure from source:
 
 ```bash
 helm upgrade --install longlink-compute k8s/chart \
+  --namespace <release-namespace> \
+  --create-namespace \
+  --set gateway.address=<gateway-address> \
+  --set storage.address=<storage-address> \
+  --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
+```
+
+Install from a release image instead, which embeds its matching chart at
+`app/compute/`:
+
+```bash
+version=<release-version>
+crane export --platform linux/amd64 "ghcr.io/xlonglink/longlink:${version}" - \
+  | tar -xO "app/compute/longlink-${version#v}.tgz" > longlink-chart.tgz
+helm upgrade --install longlink-compute longlink-chart.tgz \
   --namespace <release-namespace> \
   --create-namespace \
   --set gateway.address=<gateway-address> \

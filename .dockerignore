@@ -7,6 +7,9 @@
 !web/
 !web/**
 
+# Embedded Compute chart packaged by the release workflows.
+!longlink-*.tgz
+
 # Development-only source
 api/Dockerfile
 api/tests
