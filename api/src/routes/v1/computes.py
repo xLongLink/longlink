@@ -1,3 +1,4 @@
+import httpx
 import asyncio
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
@@ -36,7 +37,8 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
         raise InvalidError(str(exc)) from exc
     except TimeoutError as exc:
         raise UnavailableError("Compute did not become ready within 30 seconds; verify shared infrastructure and retry") from exc
-    except (RuntimeError, NotFoundError, ServerError, ClientError, BotoCoreError, OSError) as exc:
+    except (RuntimeError, NotFoundError, ServerError, ClientError, BotoCoreError, OSError, httpx.HTTPError) as exc:
+        # Cluster API transport failures surface as httpx errors through kr8s.
         logger.warning("Compute infrastructure unavailable: %s", exc)
         raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
 

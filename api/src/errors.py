@@ -16,11 +16,11 @@ class ErrorResponse(BaseModel):
 async def unexpected_error_response(_request: Request, error: Exception) -> JSONResponse:
     """Log unexpected failures server-side and return a safe public message."""
 
-    # Record stack locations without exception values, SQL parameters, or submitted inputs.
+    # Record the failure type and stack locations without exception values, SQL parameters, or submitted inputs.
     stack = "\n".join(
         f"  {frame.f_code.co_filename}:{lineno} in {frame.f_code.co_name}" for frame, lineno in traceback.walk_tb(error.__traceback__)
     )
-    logger.error("Unhandled API error\n%s", stack)
+    logger.error("Unhandled API error %s\n%s", type(error).__name__, stack)
     return JSONResponse(
         status_code=500,
         content={"detail": "An unexpected error occurred. Please try again later."},
