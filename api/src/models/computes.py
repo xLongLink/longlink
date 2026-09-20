@@ -152,12 +152,6 @@ class ComputeRegistryCreate(ComputeRegistryEndpoints):
         return value
 
 
-class ComputeRegistryEndpointUpdate(ComputeRegistryEndpoints):
-    """Validate one deployment-controller endpoint rotation request."""
-
-    cluster_uid: str = Field(min_length=1, max_length=128)
-
-
 class ComputeRegistryResponse(BaseModel):
     """Describe one compute backend without exposing its private connection state or secrets."""
 
