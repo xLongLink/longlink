@@ -15,7 +15,6 @@ class Env(BaseSettings):
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
     SESSION_KEY: str = Field(min_length=32)
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
-    DEPLOYMENT_TOKEN: str | None = Field(default=None, min_length=32)
     GITHUB_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
     GOOGLE_OAUTH_CLIENT_ID: str | None = Field(default=None, min_length=1)
     GITHUB_OAUTH_CLIENT_SECRET: str | None = Field(default=None, min_length=1)

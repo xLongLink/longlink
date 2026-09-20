@@ -1,11 +1,10 @@
 import jwt
 import hmac
 from uuid import UUID
-from fastapi import Cookie, Header, Depends, Request, HTTPException
+from fastapi import Cookie, Depends, Request, HTTPException
 from src.utils import token
 from src.database import session as database
 from collections.abc import AsyncIterator
-from src.environments import env
 from longlink.database import audit
 from src.utils.cookies import AUTH_COOKIE
 from src.database.services import users as user_service
@@ -60,18 +59,6 @@ def authadmin(user: User = Depends(authuser)) -> User:
     if not user.administrator:
         raise HTTPException(status_code=403, detail="Permission required")
     return user
-
-
-def authdeployment(authorization: str | None = Header(default=None)) -> None:
-    """Authorize the deployment controller to rotate registered Compute endpoints."""
-
-    # Keep the machine credential separate from browser sessions and administrators.
-    if env.DEPLOYMENT_TOKEN is None:
-        raise HTTPException(status_code=404, detail="Not found")
-    if authorization is None or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    if not hmac.compare_digest(authorization.removeprefix("Bearer "), env.DEPLOYMENT_TOKEN):
-        raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 async def organization_access(

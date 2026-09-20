@@ -32,19 +32,6 @@ export const zComputeRegistryCreate = z.object({
 });
 
 /**
- * ComputeRegistryEndpointUpdate
- *
- * Validate one deployment-controller endpoint rotation request.
- */
-export const zComputeRegistryEndpointUpdate = z.object({
-    gateway_url: z.string().max(512),
-    gateway_certificate: z.string().max(65536).nullish(),
-    storage_endpoint: z.string().max(512),
-    storage_certificate: z.string().max(65536).nullish(),
-    cluster_uid: z.string().min(1).max(128)
-});
-
-/**
  * DatabaseUsage
  *
  * Report database usage and configured storage per CNPG instance.
@@ -639,30 +626,6 @@ export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeletePath = z.object(
  * Successful Response
  */
 export const zDeleteComputeRegistryApiV1ComputesRegistryIdDeleteResponse = z.void();
-
-export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutBody = zComputeRegistryEndpointUpdate;
-
-export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutHeaders = z.object({
-    authorization: z.string().nullish()
-});
-
-/**
- * Successful Response
- */
-export const zRotateComputeEndpointsApiV1DeploymentComputesEndpointsPutResponse = zComputeRegistryResponse;
-
-export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetHeaders = z.object({
-    authorization: z.string().nullish()
-});
-
-export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetPath = z.object({
-    cluster_uid: z.string()
-});
-
-/**
- * Successful Response
- */
-export const zDeploymentComputeRegistryApiV1DeploymentComputesClusterUidGetResponse = zComputeRegistryResponse;
 
 /**
  * Response Healthz Api V1 Healthz Get

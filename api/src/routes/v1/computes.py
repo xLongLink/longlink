@@ -2,12 +2,12 @@ import asyncio
 from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter
-from src.auth import authadmin, get_session, authdeployment
+from src.auth import authadmin, get_session
 from src.errors import InvalidError, UnavailableError
 from src.logger import logger
 from src.kubernetes import gateway
 from collections.abc import Sequence
-from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryEndpointUpdate
+from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.models.pagination import Page, Pagination
@@ -105,30 +105,3 @@ async def delete_compute_registry(registry_id: UUID, session: AsyncSession = Dep
     # Remove only a registered Compute with no Organization dependency.
     await compute.delete(session, registry_id)
     await session.commit()
-
-
-@router.put("/deployment/computes/endpoints", response_model=ComputeRegistryResponse, status_code=200, dependencies=[Depends(authdeployment)])
-async def rotate_compute_endpoints(payload: ComputeRegistryEndpointUpdate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
-    """Replace registered Compute endpoints after verifying them inline."""
-
-    # Verify the new endpoints against the stored cluster connection before persisting them.
-    registry = await compute.by_cluster_uid(session, payload.cluster_uid)
-    registry.gateway_url = payload.gateway_url
-    registry.gateway_certificate = payload.gateway_certificate
-    registry.storage_endpoint = payload.storage_endpoint
-    registry.storage_certificate = payload.storage_certificate
-    cluster = Kubernetes(registry.kubeconfig)
-    async with cluster:
-        await _verify_compute(cluster, registry)
-
-    # Persist the verified endpoints and reconcile dependent workloads.
-    rotated = await compute.rotate_endpoints(session, payload)
-    await session.commit()
-    return rotated
-
-
-@router.get("/deployment/computes/{cluster_uid}", response_model=ComputeRegistryResponse, dependencies=[Depends(authdeployment)])
-async def deployment_compute_registry(cluster_uid: str, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
-    """Return deployment-visible status for one immutable Compute identity."""
-
-    return await compute.by_cluster_uid(session, cluster_uid)
