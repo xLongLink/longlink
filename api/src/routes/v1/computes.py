@@ -7,7 +7,6 @@ from src.errors import InvalidError, UnavailableError
 from src.logger import logger
 from src.kubernetes import gateway
 from collections.abc import Sequence
-from botocore.exceptions import ClientError, BotoCoreError
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse, ComputeRegistryEndpointUpdate
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
@@ -32,11 +31,8 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
                 timeout_seconds=30,
             )
             await Storage(registry).verify()
-    except ValueError as exc:
-        raise InvalidError(str(exc)) from exc
-    except TimeoutError as exc:
-        raise UnavailableError("Compute did not become ready within 30 seconds; verify shared infrastructure and retry") from exc
-    except (RuntimeError, NotFoundError, ServerError, ClientError, BotoCoreError, OSError) as exc:
+    except Exception as exc:
+        # Any verification failure means unreachable infrastructure.
         logger.warning("Compute infrastructure unavailable: %s", exc)
         raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
 

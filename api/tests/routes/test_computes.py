@@ -115,7 +115,7 @@ async def test_compute_registry_creation_registers_running_compute_without_queui
 async def test_compute_registry_creation_rejects_incompatible_package(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Return 422 without persisting when inline verification rejects the Compute package."""
+    """Return 503 without persisting when inline verification rejects the Compute package."""
 
     # Arrange
     async def incompatible_gateway(
@@ -143,7 +143,7 @@ async def test_compute_registry_creation_rejects_incompatible_package(
     response = await clients[0].post("/api/v1/computes", json=payload)
 
     # Assert
-    assert response.status_code == 422
+    assert response.status_code == 503
     assert await fetch_operations() == []
     list_response = await clients[0].get("/api/v1/computes")
     assert "Incompatible Compute" not in {item["name"] for item in list_response.json()["items"]}
