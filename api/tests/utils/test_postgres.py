@@ -225,24 +225,3 @@ async def test_postgres_rejects_schema_provisioning_without_string_literal_suppo
     # Act and assert
     with pytest.raises(ValueError, match=r"^PostgreSQL string literal processing is unavailable$"):
         await adapter.solution_schema(organization_id, solution_id, "stable-runtime-password")
-
-
-@pytest.mark.integration
-async def test_postgres_reports_usage_for_present_and_missing_databases(
-    postgres_database: tuple[postgres.Postgres, UUID, UUID],
-) -> None:
-    """Report nonzero usage for a provisioned database and None for a missing database."""
-
-    # Arrange
-    adapter, organization_id, _ = postgres_database
-    missing_organization_id = UUID("55555555-5555-5555-5555-555555555555")
-    await adapter.prepare_organization_database(organization_id)
-
-    # Act
-    database_usage = await adapter.database_usage(organization_id.hex)
-    missing_database_usage = await adapter.database_usage(missing_organization_id.hex)
-
-    # Assert
-    assert database_usage is not None
-    assert database_usage > 0
-    assert missing_database_usage is None

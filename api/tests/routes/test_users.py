@@ -103,11 +103,11 @@ async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> Non
     assert response.json() == {"detail": "Not authenticated"}
 
 
-async def test_patch_me_queues_sync_for_every_active_organization_after_profile_change(
+async def test_patch_me_persists_profile_change_without_organization_sync(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Persist the changed profile and queue synchronization for both organizations."""
+    """Persist the changed profile without touching organization synchronization."""
 
     # Arrange
     user = users[0]
@@ -131,10 +131,10 @@ async def test_patch_me_queues_sync_for_every_active_organization_after_profile_
         assert persisted_user.name == "Updated User"
         persisted_first_organization = await session.get(Organization, first_organization.id)
         assert persisted_first_organization is not None
-        assert persisted_first_organization.database_state == DatabaseState.needs_sync
+        assert persisted_first_organization.database_state == DatabaseState.available
         persisted_second_organization = await session.get(Organization, second_organization.id)
         assert persisted_second_organization is not None
-        assert persisted_second_organization.database_state == DatabaseState.needs_sync
+        assert persisted_second_organization.database_state == DatabaseState.available
 
 
 async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchanged(

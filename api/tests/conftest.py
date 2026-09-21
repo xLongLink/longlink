@@ -198,11 +198,6 @@ class DatabasePostgres:
     async def prepare_organization_database(self, organization: UUID) -> None:
         """Accept shared schema provisioning."""
 
-    async def database_usage(self, database: str) -> int | None:
-        """Return deterministic database usage."""
-
-        return 128
-
 
 @pytest.fixture
 def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1942,73 +1942,6 @@
         }
       }
     },
-    "/api/v1/organizations/{organization_id}/database": {
-      "get": {
-        "summary": "Get Organization Database Usage",
-        "description": "Return cached database usage for telemetry.",
-        "operationId": "get_organization_database_usage_api_v1_organizations__organization_id__database_get",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatabaseUsage"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
     "/api/v1/organizations/{organization_id}/storage": {
       "get": {
         "summary": "Get Organization Storage Usage",
@@ -2713,33 +2646,6 @@
         ],
         "title": "ComputeRegistryResponse",
         "description": "Describe one compute backend without exposing its private connection state or secrets."
-      },
-      "DatabaseUsage": {
-        "properties": {
-          "size_bytes": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Size Bytes"
-          },
-          "allocated_bytes": {
-            "type": "integer",
-            "title": "Allocated Bytes",
-            "description": "Configured storage bytes per database instance, not summed across replicas"
-          }
-        },
-        "type": "object",
-        "required": [
-          "size_bytes",
-          "allocated_bytes"
-        ],
-        "title": "DatabaseUsage",
-        "description": "Report database usage and configured storage per CNPG instance."
       },
       "EmailPayload": {
         "properties": {

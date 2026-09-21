@@ -2,7 +2,7 @@ import asyncio
 from uuid import UUID
 from pwdlib import PasswordHash
 from sqlmodel import col
-from sqlalchemy import func, select, update
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
@@ -12,10 +12,7 @@ from src.models.users import UserUpdate
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 PASSWORD_HASH = PasswordHash.recommended()
 
@@ -92,28 +89,13 @@ async def register(session: AsyncSession, name: str, email: str, password: str, 
 
 
 async def update_profile(session: AsyncSession, user: User, payload: UserUpdate) -> bool:
-    """Update a user profile and request every affected Organization projection."""
+    """Update a user profile."""
 
-    # Avoid persistence and synchronization for unchanged profile values.
+    # Avoid persistence for unchanged profile values.
     if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
         return False
 
-    # Resolve synchronization targets without loading membership or Organization objects.
-    statement = (
-        select(col(UserOrganization.organization_id))
-        .join(Organization, col(Organization.id) == col(UserOrganization.organization_id))
-        .where(
-            col(UserOrganization.user_id) == user.id,
-            col(Organization.deleted_at).is_(None),
-        )
-    )
-    result = await session.scalars(statement)
-
-    # Request shared-user projections in stable Organization order before changing the user.
-    for organization_id in sorted(result.all()):
-        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))
-
-    # Keep profile changes and projection demand in the caller's transaction.
+    # Keep profile changes in the caller's transaction.
     if payload.name is not None:
         user.name = payload.name
     if payload.avatar is not None:
