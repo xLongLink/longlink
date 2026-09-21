@@ -1,6 +1,4 @@
-import type { ASTNode } from '@/xml/types';
 import type { ReactNode, Ref } from 'react';
-import type { XmlRuntime } from '@/xml/types';
 import { describe, expect, it } from 'vitest';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -25,25 +23,27 @@ function RouterStub({
     );
 }
 
-/** Renders XML with a router-aware link provider like the production app. */
-function renderWithRouter(ast: ASTNode[], ctx: XmlRuntime): string {
-    return renderToStaticMarkup(
-        <LinkProvider component={RouterStub}>
-            <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={ctx} />
-        </LinkProvider>
-    );
+/** Creates the shared navigation context for link rendering. */
+function createLinkContext() {
+    // Keep solution navigation and proxy base URLs identical across link variants.
+    return createContext({
+        navigationBaseUrl: '/orgs/acme/solutions/tracker',
+        requestBaseUrl: '/api/v1/solutions/tracker/proxy',
+    });
 }
 
 describe('Link', () => {
     it('keeps solution navigation on the SPA router when a provider is present', () => {
         // Arrange
-        const context = createContext({
-            navigationBaseUrl: '/orgs/acme/solutions/tracker',
-            requestBaseUrl: '/api/v1/solutions/tracker/proxy',
-        });
+        const context = createLinkContext();
+        const ast = parseFragment('<Link to="/issues/123">Issue</Link>');
 
         // Act
-        const output = renderWithRouter(parseFragment('<Link to="/issues/123">Issue</Link>'), context);
+        const output = renderToStaticMarkup(
+            <LinkProvider component={RouterStub}>
+                <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={context} />
+            </LinkProvider>
+        );
 
         // Assert
         expect(output).toContain('data-router-link="/orgs/acme/solutions/tracker/issues/123"');
@@ -51,15 +51,14 @@ describe('Link', () => {
 
     it('renders file links as native anchors that bypass the SPA router', () => {
         // Arrange
-        const context = createContext({
-            navigationBaseUrl: '/orgs/acme/solutions/tracker',
-            requestBaseUrl: '/api/v1/solutions/tracker/proxy',
-        });
+        const context = createLinkContext();
+        const ast = parseFragment('<Link href="/api/items/1/attachments/report.pdf">Report</Link>');
 
         // Act
-        const output = renderWithRouter(
-            parseFragment('<Link href="/api/items/1/attachments/report.pdf">Report</Link>'),
-            context
+        const output = renderToStaticMarkup(
+            <LinkProvider component={RouterStub}>
+                <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={context} />
+            </LinkProvider>
         );
 
         // Assert
@@ -70,10 +69,7 @@ describe('Link', () => {
 
     it('drops unsafe expression-backed navigation targets and falls back to a safe href', () => {
         // Arrange
-        const context = createContext({
-            navigationBaseUrl: '/orgs/acme/solutions/tracker',
-            requestBaseUrl: '/api/v1/solutions/tracker/proxy',
-        });
+        const context = createLinkContext();
         Object.assign(context.scope.bindings, { destination: 'javascript:alert(1)', fallback: '/files/document.pdf' });
 
         // Act
