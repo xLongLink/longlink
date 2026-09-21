@@ -6,6 +6,7 @@ from pathlib import Path
 from longlink import errors as solution_errors
 from src.utils import jobs
 from src.routes import v1, branding
+from urllib.parse import urlsplit
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
@@ -59,6 +60,35 @@ AUTHENTICATION_COOKIES = frozenset(
     }
 )
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def is_trusted_authentication_origin(origin: str | None) -> bool:
+    """Return whether an origin can submit browser-authenticated writes."""
+
+    # Preserve exact origin matching for every configured deployment.
+    if origin == env.PUBLIC_URL:
+        return True
+    if origin is None:
+        return False
+
+    # Local development can use equivalent loopback hostnames with the configured port.
+    public = urlsplit(env.PUBLIC_URL)
+    candidate = urlsplit(origin)
+    try:
+        return (
+            public.hostname in LOOPBACK_HOSTS
+            and candidate.scheme == public.scheme
+            and candidate.hostname in LOOPBACK_HOSTS
+            and candidate.port == public.port
+            and candidate.username is None
+            and candidate.password is None
+            and candidate.path == ""
+            and not candidate.query
+            and not candidate.fragment
+        )
+    except ValueError:
+        return False
 
 
 @app.middleware("http")
@@ -72,7 +102,7 @@ async def prevent_cross_origin_authenticated_writes(
     if (
         request.method in UNSAFE_METHODS
         and AUTHENTICATION_COOKIES.intersection(request.cookies)
-        and request.headers.get("origin") != env.PUBLIC_URL
+        and not is_trusted_authentication_origin(request.headers.get("origin"))
     ):
         return JSONResponse(status_code=403, content={"detail": "Origin required"})
 
