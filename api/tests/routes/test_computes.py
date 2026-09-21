@@ -87,7 +87,6 @@ async def test_compute_registry_creation_does_not_queue_work(
     payload = {
         "name": "Queued Compute",
         "gateway_url": "https://gateway.example",
-        "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],
@@ -102,6 +101,7 @@ async def test_compute_registry_creation_does_not_queue_work(
 
     # Assert
     assert response.status_code == 201
+    assert response.json()["database_storage_class"] == "local-path"
     assert await fetch_operations() == []
 
 
@@ -131,7 +131,6 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
     payload = {
         "name": name,
         "gateway_url": "https://gateway.example",
-        "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
         "kubeconfig": {
             "clusters": [{"name": "cluster", "cluster": {}}],

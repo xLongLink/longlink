@@ -4,11 +4,6 @@ from uuid import UUID
 from typing import Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 
-StorageClassName = Annotated[
-    str,
-    Field(min_length=1, max_length=253, pattern=r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$"),
-]
-
 
 def kubeconfig_mapping(value: object) -> dict[str, object]:
     """Parse one YAML or mapping kubeconfig into a JSON-compatible mapping."""
@@ -115,20 +110,6 @@ class ComputeRegistryCreate(ComputeRegistryEndpoints):
 
     # Connection
     kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
-
-    # Database
-    database_storage_class: StorageClassName
-
-    @field_validator("database_storage_class")
-    @classmethod
-    def validate_storage_class(cls, value: str) -> str:
-        """Require DNS labels within the Kubernetes storage class name."""
-
-        # Kubernetes DNS subdomain labels are limited to 63 characters each.
-        if any(len(label) > 63 for label in value.split(".")):
-            raise ValueError("Storage class DNS labels must not exceed 63 characters")
-        return value
-
 
 class ComputeRegistryResponse(BaseModel):
     """Describe one compute backend without exposing its private connection state or secrets."""

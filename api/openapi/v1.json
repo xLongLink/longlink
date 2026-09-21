@@ -2478,13 +2478,6 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Kubeconfig"
-          },
-          "database_storage_class": {
-            "type": "string",
-            "maxLength": 253,
-            "minLength": 1,
-            "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
-            "title": "Database Storage Class"
           }
         },
         "type": "object",
@@ -2492,8 +2485,7 @@
           "gateway_url",
           "storage_endpoint",
           "name",
-          "kubeconfig",
-          "database_storage_class"
+          "kubeconfig"
         ],
         "title": "ComputeRegistryCreate",
         "description": "Validate one compute registry creation payload."
