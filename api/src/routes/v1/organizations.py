@@ -16,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.models.organizations import (
     OrganizationCreate,
-    OrganizationUpdate,
     OrganizationDetails,
     OrganizationMemberUpdate,
     OrganizationQuotasResponse,
@@ -85,28 +84,6 @@ async def get_organization_solutions(
     """Return solutions visible to the current organization member."""
 
     return await organizations.solutions(session, membership.organization_id)
-
-
-@router.patch("/organizations/{organization_id}", response_model=OrganizationIdentity)
-async def update_organization(
-    payload: OrganizationUpdate,
-    user: User = Depends(authuser),
-    membership: UserOrganization = Depends(organization_access),
-    session: AsyncSession = Depends(get_session),
-):
-    """Update mutable organization settings."""
-
-    # Persist mutable metadata only while the Organization remains active.
-    organization = await organizations.update(
-        session,
-        membership.organization_id,
-        str(payload.avatar) if payload.avatar is not None else None,
-        user.id,
-    )
-    if organization is None:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    await session.commit()
-    return organization
 
 
 @router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)

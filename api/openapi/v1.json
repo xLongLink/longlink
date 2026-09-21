@@ -1734,81 +1734,6 @@
           }
         }
       },
-      "patch": {
-        "summary": "Update Organization",
-        "description": "Update mutable organization settings.",
-        "operationId": "update_organization_api_v1_organizations__organization_id__patch",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OrganizationUpdate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationIdentity"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      },
       "delete": {
         "summary": "Delete Organization",
         "description": "Mark one Organization absent and queue lifecycle cleanup.",
@@ -3129,36 +3054,6 @@
         ],
         "title": "OrganizationStorageUsageResponse",
         "description": "Report current logical object usage and quota for one Organization bucket."
-      },
-      "OrganizationUpdate": {
-        "properties": {
-          "avatar": {
-            "anyOf": [
-              {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "maxLength": 2083,
-                    "minLength": 1,
-                    "format": "uri"
-                  },
-                  {
-                    "type": "string",
-                    "const": ""
-                  }
-                ],
-                "maxLength": 2048
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Avatar"
-          }
-        },
-        "type": "object",
-        "title": "OrganizationUpdate",
-        "description": "Validate mutable organization settings."
       },
       "Page_ComputeRegistryResponse_": {
         "properties": {
