@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { startCase } from 'es-toolkit/compat';
-import { decodePathSegment } from '@/components/breadcrumb/text';
+import { formatPathSegment } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders breadcrumb items derived from the current URL path. */
@@ -26,7 +25,7 @@ export function PathBreadcrumb({
 
                 return (
                     <BreadcrumbItem key={href} href={isLast ? undefined : href} isCurrent={isLast}>
-                        {labels[segment] ?? startCase(decodePathSegment(segment))}
+                        {formatPathSegment(segment, labels)}
                     </BreadcrumbItem>
                 );
             })}

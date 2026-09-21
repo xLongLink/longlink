@@ -127,7 +127,7 @@ spec:
                   envFrom:
                       - configMapRef: {name: rustfs-config}
                       - secretRef:
-                            name: {{ .Values.secret.existingSecret }}
+                            name: longlink-rustfs
                   livenessProbe:
                       httpGet: {path: /health, port: 9000}
                       initialDelaySeconds: 30
@@ -215,7 +215,7 @@ spec:
                   envFrom:
                       - configMapRef: {name: rustfs-config}
                       - secretRef:
-                            name: {{ .Values.secret.existingSecret }}
+                            name: longlink-rustfs
                   livenessProbe:
                       httpGet: {path: /health, port: 9000}
                       initialDelaySeconds: 30

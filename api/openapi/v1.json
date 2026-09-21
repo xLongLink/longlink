@@ -2800,10 +2800,6 @@
             "type": "string",
             "title": "Slug"
           },
-          "avatar": {
-            "type": "string",
-            "title": "Avatar"
-          },
           "status": {
             "$ref": "#/components/schemas/Status"
           }
@@ -2813,7 +2809,6 @@
           "id",
           "name",
           "slug",
-          "avatar",
           "status"
         ],
         "title": "OrganizationIdentity",

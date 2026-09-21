@@ -312,7 +312,6 @@ export const zOrganizationIdentity = z.object({
     id: z.uuid(),
     name: z.string(),
     slug: z.string(),
-    avatar: z.string(),
     status: zStatus
 });
 

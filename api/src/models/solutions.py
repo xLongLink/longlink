@@ -8,6 +8,14 @@ from src.models.statuses import Status
 from src.models.resources import OrganizationIdentity
 
 
+def validate_idle_seconds(value: int) -> int:
+    """Allow never-sleep zero or a bounded scale-to-zero timeout."""
+
+    if value != 0 and value < 30:
+        raise ValueError("idle_seconds must be 0 or between 30 and 3600")
+    return value
+
+
 class EnvironmentValues(BaseModel):
     """Validate a complete environment snapshot."""
 
@@ -62,9 +70,7 @@ class SolutionCreate(EnvironmentValues):
     def validate_idle_seconds(cls, value: int) -> int:
         """Allow never-sleep zero or a bounded scale-to-zero timeout."""
 
-        if value != 0 and value < 30:
-            raise ValueError("idle_seconds must be 0 or between 30 and 3600")
-        return value
+        return validate_idle_seconds(value)
 
 
 class SolutionPatch(BaseModel):
@@ -80,9 +86,7 @@ class SolutionPatch(BaseModel):
     def validate_idle_seconds(cls, value: int | None) -> int | None:
         """Allow never-sleep zero or a bounded scale-to-zero timeout."""
 
-        if value is not None and value != 0 and value < 30:
-            raise ValueError("idle_seconds must be 0 or between 30 and 3600")
-        return value
+        return None if value is None else validate_idle_seconds(value)
 
     @field_validator("envs")
     @classmethod

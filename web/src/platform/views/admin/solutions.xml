@@ -36,7 +36,6 @@
                     <Avatar
                         shape="rounded"
                         name="$row.organization.name"
-                        src="$row.organization.avatar"
                     />
                     <Link to="/orgs/${row.organization.slug}">
                         $row.organization.name

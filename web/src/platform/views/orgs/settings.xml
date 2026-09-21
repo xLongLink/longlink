@@ -35,7 +35,6 @@
             <Avatar
                 shape="rounded"
                 name="$details.organization.name"
-                src="$details.organization.avatar"
             />
             <Stack gap="0">
                 <Heading level="4" accessibilityLevel="1">

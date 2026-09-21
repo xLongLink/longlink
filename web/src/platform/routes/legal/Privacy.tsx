@@ -155,9 +155,9 @@ function PrivacyContent() {
                     <ListItem
                         label={
                             <Text>
-                                Organization and access data: organization name, slug, avatar, infrastructure
-                                assignments, memberships and organization roles, invitation email addresses, invited
-                                roles, and audit records for created, updated, or deleted resources.
+                                Organization and access data: organization name, slug, infrastructure assignments,
+                                memberships and organization roles, invitation email addresses, invited roles, and audit
+                                records for created, updated, or deleted resources.
                             </Text>
                         }
                     />

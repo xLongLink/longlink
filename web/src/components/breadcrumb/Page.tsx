@@ -1,14 +1,13 @@
 import { useLocation } from 'react-router';
-import { startCase } from 'es-toolkit/compat';
 import { Wordmark } from '@/components/Wordmark';
-import { decodePathSegment } from '@/components/breadcrumb/text';
+import { formatPathSegment } from '@/components/breadcrumb/text';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 
 /** Renders the top navigation breadcrumb for organization and admin routes. */
 export function PageBreadcrumb({ solutionName }: { solutionName?: string }) {
     const { pathname } = useLocation();
     const organization = pathname.split('/')[2] ?? '';
-    const label = pathname.startsWith('/admin/') ? 'Admin' : startCase(decodePathSegment(organization));
+    const label = pathname.startsWith('/admin/') ? 'Admin' : formatPathSegment(organization);
     const isSolutionBreadcrumb = solutionName !== undefined;
     return (
         <Breadcrumbs separator=">" variant="supporting">

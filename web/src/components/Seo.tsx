@@ -1,7 +1,6 @@
 import { siteName, siteUrl } from '@/site';
 import { useLocation } from 'react-router';
-import { startCase } from 'es-toolkit/compat';
-import { decodePathSegment } from '@/components/breadcrumb/text';
+import { formatPathSegment } from '@/components/breadcrumb/text';
 
 /** Labels for documentation route segments shared with article breadcrumbs. */
 export const documentationRouteLabels: Record<string, string> = {
@@ -23,11 +22,6 @@ function canonicalPath(pathname: string): string {
     return pathname === '/' ? pathname : `${pathname.replace(/\/+$/, '')}/`;
 }
 
-/** Formats a URL path segment for breadcrumb structured data. */
-function pathLabel(segment: string): string {
-    return documentationRouteLabels[segment] ?? startCase(decodePathSegment(segment));
-}
-
 /** Builds breadcrumb structured data for an article's current route. */
 function breadcrumbs(pathname: string): object {
     const segments = pathname.split('/').filter(Boolean);
@@ -38,7 +32,7 @@ function breadcrumbs(pathname: string): object {
         items.push({
             '@type': 'ListItem',
             position: index + 2,
-            name: pathLabel(segment),
+            name: formatPathSegment(segment, documentationRouteLabels),
             item: `${siteUrl}${canonicalPath(path)}`,
         });
     }

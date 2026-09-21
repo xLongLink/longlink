@@ -112,7 +112,6 @@
                                     <Avatar
                                         shape="rounded"
                                         name="$row.organization.name"
-                                        src="$row.organization.avatar"
                                     />
                                     <Stack align="start">
                                         <Stack

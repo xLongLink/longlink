@@ -16,8 +16,6 @@ storage:
         type: NodePort
 
 rustfs:
-    secret:
-        existingSecret: longlink-rustfs
     mode: standalone
     storage:
         name: local-path

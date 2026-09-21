@@ -633,7 +633,6 @@ async def test_registration_completion_accepts_pending_organization_invitation(
                 "id": str(organization.id),
                 "name": "acme",
                 "slug": "acme",
-                "avatar": "",
                 "status": "creating",
             },
             "role": "write",
