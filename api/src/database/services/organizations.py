@@ -267,7 +267,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
         return
 
     # The Platform owns the transaction for its authoritative Organization user projection.
-    async with db._connection(organization_id.hex, search_path="shared") as conn:
+    async with db.connection(organization_id.hex, search_path="shared") as conn:
         await shared_audit.sync(conn, rows)
 
 

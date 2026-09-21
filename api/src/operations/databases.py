@@ -248,7 +248,7 @@ async def ready(organization_id: UUID) -> None:
                             await organizations.project_users(session, organization_id, database)
 
                         # Empty snapshots skip SQL; verify the tenant connection immediately before publication.
-                        async with asyncio.timeout(10), database._connection(organization_id.hex) as sql:
+                        async with asyncio.timeout(10), database.connection(organization_id.hex) as sql:
                             await sql.execute(text("SELECT 1"))
 
                         # Publish the provisioned database and its shared projection.

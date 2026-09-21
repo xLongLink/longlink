@@ -2,7 +2,7 @@ import pytest
 from uuid import UUID, uuid4
 from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
 from datetime import UTC, datetime
-from factories import create_solution, create_organization, create_ready_compute
+from factories import create_compute, create_solution, create_organization
 from src.operations import organizations as organization_operations
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -19,7 +19,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
     """Reconcile every Organization boundary before publishing the Organization."""
 
     # Arrange an unpublished Organization with ready immutable infrastructure.
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
@@ -33,11 +33,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        def bucket(self, organization: UUID):
+        async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
             """Record bucket creation."""
 
             calls.append("storage")
-            return super().bucket(organization)
+            await super().apply(organization, quota_bytes=quota_bytes)
 
     async def apply_namespace(organization_id: UUID, **_kwargs: object) -> None:
         """Record namespace reconciliation."""
@@ -90,7 +90,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
     """Keep an Organization unpublished when its storage boundary fails."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     calls: list[str] = []
 
@@ -98,7 +98,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        def bucket(self, organization: UUID):
+        async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
             """Fail bucket creation."""
 
             calls.append("storage")
@@ -140,7 +140,7 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
     """Avoid provider work after an Organization has been tombstoned."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
@@ -163,7 +163,7 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
     """Reject cleanup for an active Organization before constructing providers."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     reject_provider_construction(
         monkeypatch,
@@ -196,7 +196,7 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     """Keep provider data intact when Kubernetes namespace deletion fails."""
 
     # Arrange a tombstoned Organization whose namespace cannot terminate.
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
@@ -253,7 +253,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
     """Delete the namespace, database and roles, storage, then the Organization tombstone."""
 
     # Arrange a tombstoned Organization and an active sibling on the same infrastructure.
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(organization)
     sibling_organization = await create_organization(users[1], name="sibling", compute=compute)

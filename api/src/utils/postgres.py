@@ -90,7 +90,7 @@ class Postgres:
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
 
     @contextlib.asynccontextmanager
-    async def _connection(
+    async def connection(
         self,
         database: str,
         *,
@@ -126,7 +126,7 @@ class Postgres:
         """
 
         # Create the organization database from the maintenance database when it is missing.
-        async with self._connection("postgres", autocommit=True) as conn:
+        async with self.connection("postgres", autocommit=True) as conn:
             # Create the database only when PostgreSQL does not already list it.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
@@ -138,7 +138,7 @@ class Postgres:
             await shared_migrations.migrate_database(url)
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
-        async with self._connection(organization.hex) as conn:
+        async with self.connection(organization.hex) as conn:
             shared_schema = self.quote(conn, "shared")
             await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
@@ -155,7 +155,7 @@ class Postgres:
         runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
 
         # Create the solution schema and bind the runtime role inside the organization database.
-        async with self._connection(organization.hex) as conn:
+        async with self.connection(organization.hex) as conn:
             await conn.execute(CreateSchema(quoted_name(solution.hex, True), if_not_exists=True))
 
             # Create or rotate the solution login role before granting schema permissions.
@@ -200,7 +200,7 @@ class Postgres:
         """Delete a solution schema and its runtime role when present."""
 
         # Skip cleanup when the organization database was already removed.
-        async with self._connection("postgres", autocommit=True) as conn:
+        async with self.connection("postgres", autocommit=True) as conn:
             # Stop once PostgreSQL confirms the organization database is absent.
             if await conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex}) is None:
                 return
@@ -208,7 +208,7 @@ class Postgres:
         runtime_username = f"longlink_{organization.hex[:16]}_{solution.hex[:16]}"
 
         # Drop solution-owned objects before dropping the global role from the maintenance database.
-        async with self._connection(organization.hex) as conn:
+        async with self.connection(organization.hex) as conn:
             schema = self.quote(conn, solution.hex)
             role = self.quote(conn, runtime_username)
             database = self.quote(conn, organization.hex)
@@ -228,6 +228,6 @@ class Postgres:
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self._connection("postgres", autocommit=True) as conn:
+        async with self.connection("postgres", autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")

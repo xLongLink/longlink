@@ -4,7 +4,7 @@ import asyncio
 from uuid import UUID
 from httpx2 import AsyncClient
 from longlink import identity
-from factories import create_solution, create_organization, create_ready_compute
+from factories import create_compute, create_solution, create_organization
 from src.routes.v1 import proxy as proxy_routes
 from collections.abc import Callable, Sequence, Awaitable, AsyncIterator
 from src.models.roles import OrganizationRoles
@@ -91,7 +91,7 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     """Create one Solution with the running state required for gateway tests."""
 
     # Arrange an assignable gateway target and its running Solution.
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(user, compute=compute)
     solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 

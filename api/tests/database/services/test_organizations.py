@@ -2,7 +2,7 @@ import pytest
 from uuid import uuid4
 from conftest import DatabasePostgres
 from sqlmodel import col
-from factories import create_solution, fetch_operations, create_organization, create_ready_compute
+from factories import create_compute, create_solution, fetch_operations, create_organization
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.models.roles import OrganizationRoles
@@ -27,7 +27,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
 
     # Act
     organization = await create_organization(owner, compute=compute)
@@ -426,7 +426,7 @@ async def test_create_allows_creating_compute(users: tuple[User, User, User]) ->
 
     # Arrange
     owner = users[0]
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, compute.id)
         assert registry is not None
@@ -452,8 +452,8 @@ async def test_create_default_selects_least_assigned_ready_infrastructure(users:
 
     # Arrange
     owner = users[0]
-    assigned_compute = await create_ready_compute()
-    available_compute = await create_ready_compute()
+    assigned_compute = await create_compute(ready=True)
+    available_compute = await create_compute(ready=True)
     await create_organization(owner, compute=assigned_compute)
 
     # Act
@@ -478,7 +478,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
     """Reject duplicate Organization names without persisting a second membership."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     await create_organization(users[0], compute=compute)
 
     # Act and assert

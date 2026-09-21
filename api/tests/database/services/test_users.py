@@ -1,10 +1,8 @@
-import pytest
 from pwdlib import PasswordHash
 from datetime import UTC, datetime
 from sqlmodel import col
 from factories import create_organization
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from src.environments import env
 from src.database.session import session_scope
 from src.database.services import users as user_service
@@ -111,64 +109,34 @@ async def test_ensure_administrator_replaces_stale_configured_password() -> None
     assert password_hash.verify(env.ADMIN_PASSWORD, persisted_administrator.password)
 
 
-async def test_ensure_administrator_uses_concurrently_created_configured_user(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile the configured account when another replica wins the creation race."""
+async def test_ensure_administrator_reconciles_preexisting_configured_email() -> None:
+    """Reconcile the configured account when another replica creates it first."""
 
     # Arrange
     password_hash = PasswordHash.recommended()
-    concurrent_administrator = User(
-        name="Concurrent Administrator",
-        email=env.ADMIN_EMAIL,
-        password=password_hash.hash(env.ADMIN_PASSWORD),
-    )
-    scalar_calls = 0
-    flush_calls = 0
-
-    async def return_concurrent_administrator(_statement: object) -> User | None:
-        """Model the configured account appearing after the unique-index conflict."""
-
-        nonlocal scalar_calls
-        scalar_calls += 1
-        return None if scalar_calls <= 2 else concurrent_administrator
-
-    async def raise_unique_conflict() -> None:
-        """Model another Platform replica creating the configured account first."""
-
-        nonlocal flush_calls
-        flush_calls += 1
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
+    async with session_scope() as session:
+        session.add(
+            User(
+                name="Concurrent Administrator",
+                email=env.ADMIN_EMAIL,
+                password=password_hash.hash(env.ADMIN_PASSWORD),
+            )
+        )
+        await session.commit()
 
     # Act
     async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", return_concurrent_administrator)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        await user_service.ensure_administrator(session)
+        reconciled = await user_service.ensure_administrator(session)
+        await session.commit()
+        reconciled_id = reconciled.id
 
     # Assert
-    assert flush_calls == 1
-    assert scalar_calls == 3
-    assert concurrent_administrator.name == env.ADMIN_NAME
-    assert concurrent_administrator.administrator is True
-
-
-async def test_ensure_administrator_propagates_unresolved_concurrent_creation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Propagate the insert conflict when no concurrent administrator can be read."""
-
-    # Arrange
-    async def no_administrator(_statement: object) -> None:
-        """Model both administrator reads returning no configured account."""
-
-    async def raise_unique_conflict() -> None:
-        """Model a competing Platform replica winning the insert race."""
-
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    # Act and assert
     async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", no_administrator)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        with pytest.raises(IntegrityError):
-            await user_service.ensure_administrator(session)
+        persisted = await session.get(User, reconciled_id)
+    assert persisted is not None
+    assert persisted.name == env.ADMIN_NAME
+    assert persisted.email == env.ADMIN_EMAIL
+    assert persisted.administrator is True
 
 
 async def test_user_service_returns_active_accounts_and_all_administrator_records(

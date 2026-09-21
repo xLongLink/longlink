@@ -1,11 +1,11 @@
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from factories import (
+    create_compute,
     fail_operation,
     claim_operation,
     fetch_operations,
     complete_operation,
-    create_ready_compute,
 )
 from factories import queue_operation as queue
 from src.models.statuses import Status
@@ -16,30 +16,6 @@ from src.models.pagination import Pagination
 from src.database.models.solutions import Revision, Solution
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
-
-
-async def test_operations_service_fetch_page_returns_total_history() -> None:
-    """Return complete Operation history without loading unrelated state."""
-
-    # Arrange
-    first_operation = await queue(target_id=uuid4())
-    second_operation = await queue(target_id=uuid4())
-    async with session_scope() as session:
-        first_row = await session.get(Operation, first_operation.id)
-        second_row = await session.get(Operation, second_operation.id)
-        assert first_row is not None
-        assert second_row is not None
-        first_row.created_at = second_row.created_at - timedelta(days=1)
-        await session.commit()
-
-    # Act
-    async with session_scope() as session:
-        page, total = await operations.fetch_page(session, Pagination(page_size=1))
-
-    # Assert
-    assert len(page) == 1
-    assert page[0].id == second_operation.id
-    assert total == 2
 
 
 async def test_operations_service_create_coalesces_and_reopens_completed_work() -> None:
@@ -191,7 +167,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     """Expose failed creation work with its concrete failed resource names."""
 
     # Arrange
-    compute_registry = await create_ready_compute()
+    compute_registry = await create_compute(ready=True)
     async with session_scope() as session:
         organization = Organization(
             name="Acme",

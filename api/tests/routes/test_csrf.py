@@ -1,7 +1,7 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import fetch_operations, create_organization, create_ready_compute
+from factories import create_compute, fetch_operations, create_organization
 from sqlalchemy import func
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -18,7 +18,7 @@ async def test_authenticated_organization_creation_rejects_untrusted_origin_befo
     """Reject unsafe cookie-authenticated writes before the route can persist data."""
 
     # Arrange
-    await create_ready_compute()
+    await create_compute(ready=True)
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:
@@ -158,7 +158,7 @@ async def test_authenticated_compute_deletion_rejects_untrusted_origin_without_m
     """Reject cookie-authenticated Compute deletion before the registry can change."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:

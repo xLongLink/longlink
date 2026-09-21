@@ -1,13 +1,12 @@
 import pytest
 from uuid import UUID, uuid4
-from types import SimpleNamespace
 from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes, reject_provider_construction
 from factories import (
+    create_compute,
     claim_operation,
     create_solution,
     complete_operation,
     create_organization,
-    create_ready_compute,
 )
 from src.utils.s3 import Credentials
 from src.operations import solutions as solution_operations
@@ -29,7 +28,7 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     """Create one Solution tombstone with assigned infrastructure."""
 
     # Persist the complete deletion target used by Solution cleanup tests.
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization)
     async with session_scope() as session:
@@ -131,7 +130,7 @@ async def test_solution_delete_removes_provider_state_and_tombstone(
 
             calls.append(("revoke", solution))
 
-        async def delete_prefix(self, bucket: str, prefix: str) -> None:
+        async def delete_prefix(self, organization: UUID, prefix: str) -> None:
             """Record solution file removal."""
 
             calls.append(("prefix", prefix))
@@ -162,7 +161,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
     # Persist a Solution with a user-owned runtime value.
     owner = users[0]
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
@@ -172,17 +171,11 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     class Storage(StorageKubernetes):
         """Observe bucket resolution and authorization around persisted credentials."""
 
-        def bucket(self, organization: UUID) -> SimpleNamespace:
-            """Record the owner connection resolution."""
-
-            calls.append("bucket")
-            return super().bucket(organization)
-
-        async def service_account(self, bucket: str, solution: UUID) -> Credentials:
+        async def service_account(self, organization: UUID, solution: UUID) -> Credentials:
             """Record credential creation after quota admission."""
 
             calls.append("credentials")
-            return await super().service_account(bucket, solution)
+            return await super().service_account(organization, solution)
 
     class FakePostgres(DatabasePostgres):
         """Provide generated schema credentials without contacting PostgreSQL."""
@@ -234,7 +227,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     await solution_operations.deploy(solution.desired_revision_id)
 
     # User values and generated Platform values share the runtime Secret.
-    assert calls == ["open", "bucket", "credentials", "schema", "workload", "close"]
+    assert calls == ["open", "credentials", "schema", "workload", "close"]
     calls.clear()
     assert captured["secrets"]["API_KEY"] == "runtime-secret"
     assert captured["secrets"]["LONGLINK_DATABASE_HOST"] == f"database-rw.longlink-database-{organization.id.hex}.svc.cluster.local"
@@ -256,7 +249,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
-    assert calls == ["open", "bucket", "workload", "close"]
+    assert calls == ["open", "workload", "close"]
     assert len(database_passwords) == 1
     assert captured["secrets"] == {
         "API_KEY": "replacement",
@@ -279,7 +272,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
     # Arrange
     owner = users[0]
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     initial_secrets = dict(solution.secrets)
@@ -299,7 +292,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
     monkeypatch.setattr(solution_operations, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(solution_operations, "Storage", StorageKubernetes)
 
-    async def service_account(self: StorageKubernetes, bucket: str, solution: UUID) -> Credentials:
+    async def service_account(self: StorageKubernetes, organization: UUID, solution: UUID) -> Credentials:
         """Record credential creation at the external boundary."""
 
         calls.append("credentials")
@@ -333,7 +326,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     """Apply a retry without rotating persisted provider credentials."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(
         organization,
@@ -469,7 +462,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
     """Do not deploy credentials after the solution is deleted concurrently."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(organization)
 

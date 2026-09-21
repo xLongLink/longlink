@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from factories import create_ready_compute
+from factories import create_compute
 from src.errors import ConflictError, NotFoundError
 from src.utils.s3 import Credentials
 from src.models.computes import ComputeRegistryCreate
@@ -22,7 +22,7 @@ async def test_delete_removes_unused_registry() -> None:
     """Delete a registry that has no organization assignment."""
 
     # Arrange
-    compute_registry = await create_ready_compute()
+    compute_registry = await create_compute(ready=True)
     registry_id = compute_registry.id
 
     # Act

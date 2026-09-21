@@ -71,7 +71,7 @@ async def drain_operations() -> Sequence[Operation]:
     return drained
 
 
-async def persist_compute(*, ready: bool) -> ComputeRegistry:
+async def create_compute(*, ready: bool = False) -> ComputeRegistry:
     """Persist one Compute registry with shared connection fields and its readiness mode."""
 
     # Keep the registry field set in one owner; readiness is the only business mode.
@@ -94,20 +94,6 @@ async def persist_compute(*, ready: bool) -> ComputeRegistry:
         return compute
 
 
-async def create_compute() -> ComputeRegistry:
-    """Create one minimal Compute registry without queueing reconciliation."""
-
-    # Non-ready registries exercise unavailability paths without provider side effects.
-    return await persist_compute(ready=False)
-
-
-async def create_ready_compute() -> ComputeRegistry:
-    """Create a ready Compute registry without provider side effects."""
-
-    # Test setup persists the exact assignable registry shape while avoiding provider side effects.
-    return await persist_compute(ready=True)
-
-
 async def create_organization(
     owner: User,
     name: str = "acme",
@@ -116,7 +102,7 @@ async def create_organization(
     """Create one Organization with the specified or independent ready Compute registry."""
 
     if compute is None:
-        compute = await create_ready_compute()
+        compute = await create_compute(ready=True)
 
     async with session_scope() as session:
         organization = await organizations.create(
