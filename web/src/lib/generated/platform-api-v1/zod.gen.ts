@@ -32,16 +32,6 @@ export const zComputeRegistryCreate = z.object({
 });
 
 /**
- * DatabaseUsage
- *
- * Report database usage and configured storage per CNPG instance.
- */
-export const zDatabaseUsage = z.object({
-    size_bytes: z.int().nullable(),
-    allocated_bytes: z.int()
-});
-
-/**
  * EmailPayload
  *
  * Return one verified email address.
@@ -723,15 +713,6 @@ export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath
  * Successful Response
  */
 export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
-
-export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationDatabaseUsageApiV1OrganizationsOrganizationIdDatabaseGetResponse = zDatabaseUsage;
 
 export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
     organization_id: z.uuid()
