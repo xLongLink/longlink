@@ -445,30 +445,6 @@ async def create(
     return organization
 
 
-async def update(
-    session: AsyncSession,
-    organization_id: UUID,
-    avatar: str | None,
-    user_id: UUID,
-) -> Organization | None:
-    """Update mutable Organization metadata."""
-
-    # Take a portable write lock before refreshing metadata already loaded by authentication.
-    await session.execute(
-        sql_update(Organization).where(col(Organization.id) == organization_id).values(updated_at=col(Organization.updated_at))
-    )
-    organization = await session.get(Organization, organization_id, populate_existing=True)
-    if organization is None or organization.deleted_at is not None:
-        return None
-
-    # Revalidate the caller while the Organization is locked to reject revoked administrators.
-    await _locked_membership(session, user_id, organization_id, OrganizationRoles.admin)
-    if avatar is not None and organization.avatar != avatar:
-        organization.avatar = avatar
-
-    return organization
-
-
 async def create_invitation(
     session: AsyncSession,
     organization_id: UUID,

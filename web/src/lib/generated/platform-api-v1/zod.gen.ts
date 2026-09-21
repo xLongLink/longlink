@@ -197,18 +197,6 @@ export const zOrganizationStorageUsageResponse = z.object({
 });
 
 /**
- * OrganizationUpdate
- *
- * Validate mutable organization settings.
- */
-export const zOrganizationUpdate = z.object({
-    avatar: z.union([
-        z.url().min(1).max(2083),
-        z.literal('')
-    ]).nullish()
-});
-
-/**
  * Page[OperationResponse]
  */
 export const zPageOperationResponse = z.object({
@@ -693,17 +681,6 @@ export const zGetOrganizationApiV1OrganizationsOrganizationIdGetPath = z.object(
  * Successful Response
  */
 export const zGetOrganizationApiV1OrganizationsOrganizationIdGetResponse = zOrganizationDetails;
-
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchBody = zOrganizationUpdate;
-
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
 
 export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
     organization_id: z.uuid()
