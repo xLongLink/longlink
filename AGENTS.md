@@ -20,6 +20,7 @@
 - Validate types at the boundary.
 - Avoid `Any` and prefer precise type annotations.
 - Keep the code pytonic, prefer readability over efficiency.
+- Use `datetime.now(UTC)` for current UTC timestamps.
 - Use clear domain names, prefer single-word Python filenames.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Use blank lines in functions, sparingly, to indicate logical sections.

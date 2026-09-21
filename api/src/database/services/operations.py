@@ -1,10 +1,9 @@
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from sqlalchemy import Update, or_, case, func, select, update
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.models.operations import OperationKind, OperationResponse
 from src.models.pagination import Pagination
@@ -124,7 +123,7 @@ async def claim(session: AsyncSession) -> Operation | None:
     """Claim the next unfinished Operation."""
 
     # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
-    now = utcnow()
+    now = datetime.now(UTC)
 
     # Classify the active lease, expired lease, or next Operation.
     operation = await session.scalar(
@@ -178,7 +177,7 @@ async def complete(session: AsyncSession, operation_id: UUID) -> Operation | Non
     """Complete one operation while the caller owns its unexpired lease."""
 
     # Complete only the currently leased operation.
-    now = utcnow()
+    now = datetime.now(UTC)
     result = await session.execute(_leased_operation_update(operation_id, now).values(finished_at=now, lease_expires_at=None))
     if result.rowcount != 1:
         return None
@@ -208,7 +207,7 @@ async def release(session: AsyncSession, operation_id: UUID) -> Operation | None
     """Release one interrupted Operation for another worker to resume."""
 
     # Release only work still owned by this worker.
-    now = utcnow()
+    now = datetime.now(UTC)
     result = await session.execute(_leased_operation_update(operation_id, now).values(lease_expires_at=None))
     if result.rowcount != 1:
         return None
@@ -219,7 +218,7 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
     """Fail one leased Operation."""
 
     # Mark only an unfinished Operation that remains leased terminal.
-    now = utcnow()
+    now = datetime.now(UTC)
     result = await session.execute(
         _leased_operation_update(operation_id, now).values(
             failed=(reason.strip() or "Operation failed")[:500],

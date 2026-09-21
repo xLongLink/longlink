@@ -1,9 +1,8 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlmodel import Field
 from sqlalchemy import Enum, Index, Column
-from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable
@@ -58,7 +57,7 @@ class Operation(AuditTable, table=True):
             return OperationStatus.failed if self.failed else OperationStatus.completed
 
         # An unexpired lease identifies the currently active attempt.
-        if self.lease_expires_at is not None and self.lease_expires_at > utcnow():
+        if self.lease_expires_at is not None and self.lease_expires_at > datetime.now(UTC):
             return OperationStatus.active
 
         return OperationStatus.scheduled

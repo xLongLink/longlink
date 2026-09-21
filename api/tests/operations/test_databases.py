@@ -2,9 +2,8 @@ import pytest
 import asyncio
 from uuid import uuid4
 from types import SimpleNamespace
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from src.operations import databases
-from longlink.utils.time import utcnow
 
 pytestmark = pytest.mark.no_db
 
@@ -17,7 +16,7 @@ def make_lease(**overrides: object) -> databases.Lease:
     values: dict[str, object] = {
         "id": lease_id,
         "organization_id": organization_id,
-        "expires_at": utcnow() + timedelta(seconds=180),
+        "expires_at": datetime.now(UTC) + timedelta(seconds=180),
     }
     values.update(overrides)
     return databases.Lease(**values)  # type: ignore[arg-type]
@@ -70,7 +69,7 @@ async def test_protect_rejects_expired_lease() -> None:
     """Refuse new work when the committed expiry has already passed."""
 
     # Arrange
-    lease = make_lease(expires_at=utcnow() - timedelta(seconds=1))
+    lease = make_lease(expires_at=datetime.now(UTC) - timedelta(seconds=1))
 
     # Act and assert
     with pytest.raises(RuntimeError, match="lease was lost"):
@@ -97,7 +96,7 @@ async def test_owned_rejects_replacement_expiry() -> None:
 
     # Arrange
     lease = make_lease()
-    session = FakeSession(SimpleNamespace(expires_at=utcnow() + timedelta(seconds=300)))
+    session = FakeSession(SimpleNamespace(expires_at=datetime.now(UTC) + timedelta(seconds=300)))
 
     # Act
     result = await lease.owned(session)  # type: ignore[arg-type]
@@ -124,7 +123,7 @@ async def test_owned_rejects_expired_row() -> None:
     """Deny ownership when the persisted lease has already expired."""
 
     # Arrange
-    expired = utcnow() - timedelta(seconds=1)
+    expired = datetime.now(UTC) - timedelta(seconds=1)
     lease = make_lease(expires_at=expired)
     session = FakeSession(SimpleNamespace(expires_at=expired))
 

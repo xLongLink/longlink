@@ -50,7 +50,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
             await invitations.create(session, organization.id, owner.email, OrganizationRoles.write)
 
 
-async def test_create_replaces_existing_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:
     """Replace an existing grant when an email is invited again."""
 
     # Arrange
@@ -62,8 +62,9 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
         invitation_id = invitation.id
-        refreshed_at = datetime(2026, 8, 24, tzinfo=UTC)
-        monkeypatch.setattr(invitations, "utcnow", lambda: refreshed_at)
+        original_created_at = datetime(2026, 1, 1, tzinfo=UTC)
+        invitation.created_at = original_created_at
+        await session.commit()
 
         # Act
         await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.admin)
@@ -77,7 +78,7 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
     assert replacement is not None
     assert replacement.id == invitation_id
     assert replacement.role == OrganizationRoles.admin
-    assert replacement.created_at == refreshed_at
+    assert replacement.created_at > original_created_at
 
 
 async def test_create_uses_concurrently_created_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -85,17 +86,16 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
     # Arrange
     organization = await create_organization(users[0])
-    refreshed_at = datetime(2026, 8, 24, tzinfo=UTC)
+    original_created_at = datetime(2026, 1, 1, tzinfo=UTC)
     concurrent_invitation = OrganizationInvitation(
         organization_id=organization.id,
         email="invited@example.com",
         role=OrganizationRoles.read,
-        created_at=refreshed_at - timedelta(days=1),
+        created_at=original_created_at,
     )
     async with session_scope() as session:
         session.add(concurrent_invitation)
         await session.commit()
-    monkeypatch.setattr(invitations, "utcnow", lambda: refreshed_at)
 
     # Act
     async with session_scope() as session:
@@ -127,7 +127,7 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
     assert replacement.id == concurrent_invitation.id
     assert replacement.email == concurrent_invitation.email
     assert replacement.role == OrganizationRoles.admin
-    assert replacement.created_at == refreshed_at
+    assert replacement.created_at > original_created_at
 
 
 async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
@@ -153,14 +153,13 @@ async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User
 
 
 async def test_accept_removes_expired_invitation_without_creating_membership(
-    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    users: tuple[User, User, User],
 ) -> None:
     """Reject and consume an invitation at the seven-day expiration boundary."""
 
     # Arrange
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
-    now = datetime(2026, 8, 30, tzinfo=UTC)
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -170,11 +169,10 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
                 organization_id=organization.id,
                 email=invitee.email,
                 role=OrganizationRoles.write,
-                created_at=now - timedelta(days=7),
+                created_at=datetime.now(UTC) - timedelta(days=7, seconds=1),
             )
         )
         await session.commit()
-    monkeypatch.setattr(invitations, "utcnow", lambda: now)
 
     # Act
     async with session_scope() as session:

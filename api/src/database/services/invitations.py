@@ -1,11 +1,10 @@
 from uuid import UUID
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from sqlalchemy import delete, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
-from longlink.utils.time import utcnow
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -56,7 +55,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
                 raise ConflictError("Invitation could not be created") from exc
 
     invitation.role = role
-    invitation.created_at = utcnow()
+    invitation.created_at = datetime.now(UTC)
 
 
 async def accept(session: AsyncSession, user: User) -> None:
@@ -77,7 +76,7 @@ async def accept(session: AsyncSession, user: User) -> None:
         return
 
     # Keep grants active for seven days and consume expired grants without creating access.
-    cutoff = utcnow() - timedelta(days=7)
+    cutoff = datetime.now(UTC) - timedelta(days=7)
     active_invitations = [invitation for invitation in pending_invitations if invitation.created_at > cutoff]
     delete_pending_invitations = delete(OrganizationInvitation).where(
         col(OrganizationInvitation.id).in_(invitation.id for invitation in pending_invitations)

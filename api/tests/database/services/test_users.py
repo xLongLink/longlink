@@ -1,11 +1,11 @@
 import pytest
 from pwdlib import PasswordHash
+from datetime import UTC, datetime
 from sqlmodel import col
 from factories import create_organization
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from src.environments import env
-from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
@@ -60,7 +60,7 @@ async def test_ensure_administrator_restores_soft_deleted_configured_user(passwo
             name="Deleted Administrator",
             email=env.ADMIN_EMAIL,
             password=password_hash,
-            deleted_at=utcnow(),
+            deleted_at=datetime.now(UTC),
         )
         session.add(deleted_user)
         await session.commit()
@@ -181,7 +181,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
     async with session_scope() as session:
         deleted_row = await session.get(User, deleted_user.id)
         assert deleted_row is not None
-        deleted_row.deleted_at = utcnow()
+        deleted_row.deleted_at = datetime.now(UTC)
         await session.commit()
 
     # Act
@@ -214,7 +214,7 @@ async def test_organization_service_returns_active_user_memberships(
     async with session_scope() as session:
         deleted_organization_row = await session.get(Organization, deleted_organization.id)
         assert deleted_organization_row is not None
-        deleted_organization_row.deleted_at = utcnow()
+        deleted_organization_row.deleted_at = datetime.now(UTC)
         registered = await user_service.register(session, "Registered User", "registered@example.com", "test-password")
         await session.commit()
 

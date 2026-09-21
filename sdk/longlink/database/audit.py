@@ -1,12 +1,11 @@
 from uuid import UUID
 from typing import Protocol, cast
-from datetime import datetime
+from datetime import UTC, datetime
 from contextlib import contextmanager
 from sqlalchemy import event
 from contextvars import ContextVar
 from sqlalchemy.orm import Session as SyncSession
 from collections.abc import Iterator
-from longlink.utils.time import utcnow
 
 current_actor: ContextVar[UUID | None] = ContextVar("current_actor", default=None)
 
@@ -41,7 +40,7 @@ def install_listener(session_type: type[SyncSession], audit_type: type[object]) 
         """Apply request-scoped audit fields before ORM flushes changes."""
 
         # Capture one timestamp and actor for every row changed in this flush.
-        now = utcnow()
+        now = datetime.now(UTC)
         user_id = current_actor.get()
 
         # Apply audit fields to newly tracked rows.

@@ -1,5 +1,5 @@
 from uuid import uuid4
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from factories import (
     fail_operation,
     claim_operation,
@@ -8,7 +8,6 @@ from factories import (
     create_ready_compute,
 )
 from factories import queue_operation as queue
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import operations
@@ -92,7 +91,7 @@ async def test_operations_service_claim_claims_oldest_available_operation() -> N
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
         assert older_row is not None
-        older_row.created_at = utcnow() - timedelta(days=1)
+        older_row.created_at = datetime.now(UTC) - timedelta(days=1)
         await session.commit()
 
     claimed = await claim_operation()
@@ -133,7 +132,7 @@ async def test_operations_service_claim_reclaims_expired_work() -> None:
     async with session_scope() as session:
         row = await session.get(Operation, expired.id)
         assert row is not None
-        row.lease_expires_at = utcnow() - timedelta(seconds=1)
+        row.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
         await session.commit()
     reclaimed = await claim_operation()
     expired_row = next(item for item in await fetch_operations() if item.id == expired.id)
@@ -159,7 +158,7 @@ async def test_operations_service_expired_leases_cannot_finish() -> None:
     async with session_scope() as session:
         row = await session.get(Operation, operation.id)
         assert row is not None
-        row.lease_expires_at = utcnow() - timedelta(seconds=1)
+        row.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
         await session.commit()
     expired_completion = await complete_operation(operation.id)
     expired_failure = await fail_operation(operation.id)

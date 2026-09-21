@@ -2,13 +2,13 @@ import pytest
 import asyncio
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
+from datetime import UTC, datetime
 from sqlmodel import col
 from factories import create_solution, create_organization
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
-from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -39,7 +39,7 @@ async def test_revision_references_require_same_solution(users: tuple[User, User
         ("image", "ghcr.io/longlink/dashboard@sha256:replacement"),
         ("source", "ghcr.io/longlink/dashboard:replacement"),
         ("envs", {"KEY": "replacement"}),
-        ("created_at", utcnow()),
+        ("created_at", datetime.now(UTC)),
         ("created_id", uuid4()),
     ],
 )

@@ -1,11 +1,11 @@
 import asyncio
 from uuid import UUID
+from datetime import UTC, datetime
 from functools import partial
 from src.logger import logger
 from src.operations import handlers
 from collections.abc import Callable, Awaitable
 from src.environments import env
-from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,7 +51,7 @@ async def execute(operation: Operation) -> Operation:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry a live worker lock.
-    if operation.lease_expires_at is None or operation.lease_expires_at <= utcnow():
+    if operation.lease_expires_at is None or operation.lease_expires_at <= datetime.now(UTC):
         raise ValueError("Operation must be claimed before execution")
 
     # Emit stable identifiers so Grafana can follow a complete operation attempt.

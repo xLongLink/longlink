@@ -4,13 +4,13 @@ from src import auth
 from main import app
 from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
+from datetime import UTC, datetime
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import oauth, token
 from urllib.parse import parse_qs, urlparse
 from src.environments import env
 from src.models.roles import OrganizationRoles
-from longlink.utils.time import utcnow
 from src.database.session import get_session, session_scope
 from src.database.services import invitations
 from src.models.organizations import DatabaseState
@@ -377,7 +377,7 @@ async def test_oauth_callback_rejects_deleted_account_without_browser_session(
     async with session_scope() as session:
         deleted_user = await session.get(User, user.id)
         assert deleted_user is not None
-        deleted_user.deleted_at = utcnow()
+        deleted_user.deleted_at = datetime.now(UTC)
         await session.commit()
     credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
@@ -610,7 +610,7 @@ async def test_password_login_rejects_deleted_account_with_correct_password_with
     async with session_scope() as session:
         deleted_user = await session.get(User, user.id)
         assert deleted_user is not None
-        deleted_user.deleted_at = utcnow()
+        deleted_user.deleted_at = datetime.now(UTC)
         await session.commit()
 
     # Act
@@ -916,7 +916,7 @@ async def test_password_requests_do_not_send_mail_to_deleted_account(
     async with session_scope() as session:
         deleted_user = await session.get(User, user.id)
         assert deleted_user is not None
-        deleted_user.deleted_at = utcnow()
+        deleted_user.deleted_at = datetime.now(UTC)
         await session.commit()
 
     # Act
@@ -1072,7 +1072,7 @@ async def test_deleted_user_cannot_use_existing_browser_session(
     async with session_scope() as session:
         persisted = await session.get(User, user.id)
         assert persisted is not None
-        persisted.deleted_at = utcnow()
+        persisted.deleted_at = datetime.now(UTC)
         await session.commit()
 
     # Act

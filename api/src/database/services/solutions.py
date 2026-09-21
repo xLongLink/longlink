@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import UTC, datetime
 from sqlmodel import col
 from src.utils import names, roles, images
 from sqlalchemy import func, select, update
@@ -8,7 +9,6 @@ from sqlalchemy.orm import defer, raiseload, contains_eager
 from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
-from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
 from src.models.solutions import SolutionCreate, EnvironmentValues
 from src.database.services import operations
@@ -227,7 +227,7 @@ async def delete(session: AsyncSession, solution_id: UUID, user_id: UUID) -> Non
     solution = await access(session, solution_id, user_id)
 
     # Record the tombstone and schedule external cleanup in one transaction.
-    now = utcnow()
+    now = datetime.now(UTC)
     solution.deleted_at = now
     solution.deleted_id = user_id
     solution.updated_at = now

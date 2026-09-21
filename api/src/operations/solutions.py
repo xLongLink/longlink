@@ -1,12 +1,12 @@
 import secrets
 from uuid import UUID
+from datetime import UTC, datetime
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.logger import logger
 from src.kubernetes import namespace
 from src.operations import databases
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
@@ -143,7 +143,7 @@ async def deploy(revision_id: UUID) -> None:
             .where(col(Solution.id) == solution.id, col(Solution.deleted_at).is_(None))
             .values(status=Status.running, deployed_revision_id=revision.id)
         )
-        await session.execute(update(Revision).where(col(Revision.id) == revision.id).values(deployed_at=utcnow()))
+        await session.execute(update(Revision).where(col(Revision.id) == revision.id).values(deployed_at=datetime.now(UTC)))
         await session.commit()
 
 
