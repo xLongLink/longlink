@@ -2,17 +2,14 @@
 import { act } from 'react';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
-import { createContext, RenderXML } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createContext, RenderXML, cleanupMountedRoot } from '../helpers';
 
 describe('Button', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         root = undefined;
         vi.unstubAllGlobals();
     });

@@ -3,6 +3,7 @@ import { act } from 'react';
 import { ApiProvider } from '@/providers';
 import type { ASTProps } from '@/xml/types';
 import { createRoot } from 'react-dom/client';
+import { cleanupMountedRoot } from './xml/helpers';
 import userEvent from '@testing-library/user-event';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -44,7 +45,7 @@ describe('Solution source update dialog', () => {
     let container: HTMLElement | undefined;
 
     afterEach(async () => {
-        await act(async () => root?.unmount());
+        await cleanupMountedRoot(root);
         container?.remove();
         vi.unstubAllGlobals();
     });

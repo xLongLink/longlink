@@ -1,12 +1,13 @@
+import { act } from 'react';
 import { vi } from 'vitest';
 import * as xml from '@/xml';
 import { ApiProvider } from '@/providers';
 import * as context from '@/xml/core/context';
+import type { createRoot } from 'react-dom/client';
 import { createQueryRuntime } from '@/lib/react-query';
+import type { ASTNode, XmlRuntime } from '@/xml/types';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LayerProvider } from '@astryxdesign/core/Layer';
-import { compileAttribute } from '@/xml/expressions/compile';
-import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
 
 /** Creates an isolated query runtime with deterministic test defaults. */
 export function createTestQueryRuntime() {
@@ -34,9 +35,13 @@ export function parseFragment(fragment: string): ASTNode[] {
     return xml.parseXML(`<longlink>${fragment}</longlink>`).children;
 }
 
-/** Compiles string fixture attributes through the same document compiler rules. */
-export function compileProps(props: Record<string, string>): ASTProps {
-    return Object.fromEntries(Object.entries(props).map(([name, value]) => [name, compileAttribute(value)]));
+/** Unmounts a test root created with createRoot. */
+export async function cleanupMountedRoot(root: ReturnType<typeof createRoot> | undefined): Promise<void> {
+    // Keep mounted-root lifetime in one owner so suites only handle their own globals.
+    if (root) {
+        const mountedRoot = root;
+        await act(async () => mountedRoot.unmount());
+    }
 }
 
 /** Renders the real XML runtime with application-owned error reporting. */

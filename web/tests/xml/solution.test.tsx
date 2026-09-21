@@ -2,10 +2,10 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { createTestQueryRuntime } from './helpers';
 import { SolutionRuntime } from '@/components/Solution';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createTestQueryRuntime, cleanupMountedRoot } from './helpers';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
 describe('SolutionRuntime', () => {
@@ -13,10 +13,7 @@ describe('SolutionRuntime', () => {
     let locationAssignDescriptor: PropertyDescriptor | undefined;
 
     afterEach(async () => {
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         root = undefined;
         vi.unstubAllGlobals();
 

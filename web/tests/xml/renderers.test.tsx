@@ -3,23 +3,19 @@ import { act } from 'react';
 import type { ASTNode } from '@/xml/types';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { compileProps, createContext, RenderXML, renderXmlToMarkup } from './helpers';
+import { cleanupMountedRoot, createContext, parseFragment, RenderXML, renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         root = undefined;
         vi.restoreAllMocks();
     });
 
     it('skips nodes when if condition is false', () => {
-        const node: ASTNode = { name: 'Button', params: compileProps({ if: '${false}' }), children: [] };
-        expect(renderXmlToMarkup([node])).not.toContain('<button');
+        expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).not.toContain('<button');
     });
 
     it('throws on unknown component', () => {
@@ -40,13 +36,7 @@ describe('renderNode', () => {
         const validAst: ASTNode = {
             name: 'longlink',
             params: {},
-            children: [
-                {
-                    name: 'Heading',
-                    params: compileProps({ level: '1' }),
-                    children: [{ name: '$text', params: compileProps({ value: 'Recovered' }), children: [] }],
-                },
-            ],
+            children: parseFragment('<Heading level="1">Recovered</Heading>'),
         };
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
@@ -67,25 +57,14 @@ describe('renderNode', () => {
     it('resolves input props from expressions', () => {
         const ctx = createContext();
         ctx.scope.bindings.form = { value: 'Ada' };
-        const node: ASTNode = {
-            name: 'TextInput',
-            params: compileProps({ label: 'Name', value: 'form.value' }),
-            children: [],
-        };
-        const output = renderXmlToMarkup([node], ctx);
+        const output = renderXmlToMarkup(parseFragment('<TextInput label="Name" value="form.value" />'), ctx);
 
         expect(output).toContain('value="Ada"');
     });
 
     it('renders Heading content', () => {
         // Arrange
-        const output = renderXmlToMarkup([
-            {
-                name: 'Heading',
-                params: compileProps({ level: '1' }),
-                children: [{ name: '$text', params: compileProps({ value: 'Orders' }), children: [] }],
-            },
-        ]);
+        const output = renderXmlToMarkup(parseFragment('<Heading level="1">Orders</Heading>'));
 
         // Assert
         expect(output).toContain('<h1');
@@ -94,13 +73,9 @@ describe('renderNode', () => {
 
     it('rejects Heading levels outside the schema', () => {
         // Arrange
-        const node: ASTNode = {
-            name: 'Heading',
-            params: compileProps({ level: '7' }),
-            children: [{ name: '$text', params: compileProps({ value: 'Orders' }), children: [] }],
-        };
+        const ast = parseFragment('<Heading level="7">Orders</Heading>');
 
         // Act and assert
-        expect(() => renderXmlToMarkup([node])).toThrow();
+        expect(() => renderXmlToMarkup(ast)).toThrow();
     });
 });

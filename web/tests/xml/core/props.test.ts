@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { describe, expect, it } from 'vitest';
-import { compileProps, createContext } from '../helpers';
+import { createContext, parseFragment } from '../helpers';
 import { resolveXmlProps, xmlSpacingSchema } from '@/xml/core/props';
 
 describe('resolveXmlProps', () => {
     it('resolves scalar and raw props with schema defaults', () => {
         const values = resolveXmlProps(
-            compileProps({ count: '2', label: 'Ready' }),
+            parseFragment('<Widget count="2" label="Ready" />')[0].params,
             createContext().scope,
             z.object({ count: z.number(), gap: xmlSpacingSchema.default(1), label: z.string() }),
             ['label']
@@ -18,7 +18,7 @@ describe('resolveXmlProps', () => {
     it('rejects values outside the declared schema', () => {
         expect(() =>
             resolveXmlProps(
-                compileProps({ gap: '7' }),
+                parseFragment('<Widget gap="7" />')[0].params,
                 createContext().scope,
                 z.object({ gap: xmlSpacingSchema.default(1) })
             )

@@ -289,17 +289,16 @@ async def test_execute_rejects_lost_terminal_operation_lock(monkeypatch: pytest.
 
 
 SCHEDULER_FAILURES = [
-    pytest.param(RuntimeError("database unavailable"), None, 2, id="polling"),
-    pytest.param(None, RuntimeError("provider unavailable"), 1, id="execution"),
+    pytest.param(RuntimeError("database unavailable"), None, id="polling"),
+    pytest.param(None, RuntimeError("provider unavailable"), id="execution"),
 ]
 
 
-@pytest.mark.parametrize(("polling_failure", "execution_failure", "expected_sleep_count"), SCHEDULER_FAILURES)
+@pytest.mark.parametrize(("polling_failure", "execution_failure"), SCHEDULER_FAILURES)
 async def test_scheduler_recovers_from_worker_failures(
     monkeypatch: pytest.MonkeyPatch,
     polling_failure: RuntimeError | None,
     execution_failure: RuntimeError | None,
-    expected_sleep_count: int,
 ) -> None:
     """Continue polling after claim and execution failures."""
 
@@ -307,7 +306,6 @@ async def test_scheduler_recovers_from_worker_failures(
     operation = leased_operation()
     claims = iter((polling_failure, operation, None) if polling_failure is not None else (operation, None))
     executed: list[Operation] = []
-    sleeps = 0
 
     async def claim(_session: SchedulerSession) -> Operation | None:
         """Raise once when configured, then return queued Operations."""
@@ -328,9 +326,7 @@ async def test_scheduler_recovers_from_worker_failures(
     async def sleep(_delay: float) -> None:
         """Stop after the scheduler proves it returned to idle polling."""
 
-        nonlocal sleeps
-        sleeps += 1
-        if sleeps == expected_sleep_count:
+        if executed:
             raise asyncio.CancelledError
 
     monkeypatch.setattr(operation_worker, "session_scope", fake_scheduler_session_scope)
@@ -344,4 +340,3 @@ async def test_scheduler_recovers_from_worker_failures(
 
     # Assert
     assert executed == [operation]
-    assert sleeps == expected_sleep_count

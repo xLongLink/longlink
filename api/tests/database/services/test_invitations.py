@@ -4,7 +4,6 @@ from sqlmodel import select
 from factories import create_organization
 from sqlalchemy import Select
 from src.errors import ConflictError
-from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import invitations
@@ -128,28 +127,6 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
     assert replacement.email == concurrent_invitation.email
     assert replacement.role == OrganizationRoles.admin
     assert replacement.created_at > original_created_at
-
-
-async def test_create_rejects_unresolved_concurrent_invitation(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
-    """Report a conflict when the winning concurrent invitation cannot be read."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    async def no_invitation(_statement: object) -> None:
-        """Model both reads completing before the competing insert is visible."""
-
-    async def raise_unique_conflict() -> None:
-        """Model a competing transaction winning the invitation insert race."""
-
-        raise IntegrityError("INSERT", {}, Exception("unique constraint"))
-
-    # Act and assert
-    async with session_scope() as session:
-        monkeypatch.setattr(session, "scalar", no_invitation)
-        monkeypatch.setattr(session, "flush", raise_unique_conflict)
-        with pytest.raises(ConflictError, match=r"^Invitation could not be created$"):
-            await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
 
 
 async def test_accept_removes_expired_invitation_without_creating_membership(

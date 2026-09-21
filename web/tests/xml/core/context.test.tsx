@@ -1,4 +1,4 @@
-import { compileProps, createContext } from '../helpers';
+import { createContext, parseFragment } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getSetupNodes, setupContext } from '@/xml/core/context';
 
@@ -7,13 +7,7 @@ describe('core/context', () => {
 
     it('recreates state on setup reruns and invalidation', async () => {
         const ctx = createContext();
-        const ast = [
-            {
-                name: 'State',
-                params: compileProps({ id: 'filter', value: 'day', score: '10', list: '[]' }),
-                children: [],
-            },
-        ];
+        const ast = parseFragment('<State id="filter" value="day" score="10" list="[]" />');
 
         await setupContext(getSetupNodes(ast), ctx);
         const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
@@ -31,9 +25,7 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext({ params: { issue: '123' }, requestBaseUrl: 'http://localhost/proxy' });
-        const ast = [
-            { name: 'Query', params: compileProps({ id: 'issue', path: '/api/issues/${params.issue}' }), children: [] },
-        ];
+        const ast = parseFragment('<Query id="issue" path="/api/issues/${params.issue}" />');
         let requestedUrl = '';
 
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
@@ -51,7 +43,7 @@ describe('core/context', () => {
     it('refetches Query data through its registered setup', async () => {
         // Arrange
         const ctx = createContext({ requestBaseUrl: 'http://localhost/proxy' });
-        const ast = [{ name: 'Query', params: compileProps({ id: 'records', path: '/records' }), children: [] }];
+        const ast = parseFragment('<Query id="records" path="/records" />');
         const fetchImpl = vi
             .fn()
             .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
@@ -82,7 +74,7 @@ describe('core/context', () => {
         // Arrange
         const ctx = createContext({ requestBaseUrl: '/proxy' });
         const fetchImpl = vi.fn();
-        const ast = [{ name: 'Query', params: compileProps({ id: 'issue', path }), children: [] }];
+        const ast = parseFragment(`<Query id="issue" path='${path}' />`);
 
         vi.stubGlobal('fetch', fetchImpl);
 
