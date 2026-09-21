@@ -10,7 +10,6 @@ from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eag
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
-from src.models.statuses import Status
 from src.database.services import operations
 from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
@@ -378,13 +377,12 @@ async def create_default(
     if organization_limit_result.scalar_one_or_none() is not None:
         raise ConflictError("Organization limit reached during the beta. Contact LongLink to request additional organizations.")
 
-    # Lock the least-assigned running Compute until the Organization assignment is committed.
+    # Lock the least-assigned Compute until the Organization assignment is committed.
     compute_assignments = (
         select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
         select(col(ComputeRegistry.id))
-        .where(col(ComputeRegistry.status) == Status.running)
         .order_by(compute_assignments, col(ComputeRegistry.name))
         .limit(1)
         .with_for_update()

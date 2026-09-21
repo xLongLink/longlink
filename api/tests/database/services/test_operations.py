@@ -167,7 +167,7 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     """Expose failed creation work with its concrete failed resource names."""
 
     # Arrange
-    compute_registry = await create_compute(ready=True)
+    compute_registry = await create_compute()
     async with session_scope() as session:
         organization = Organization(
             name="Acme",

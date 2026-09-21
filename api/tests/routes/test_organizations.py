@@ -29,7 +29,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
 
     # Act
     response = await clients[0].post(
@@ -60,7 +60,7 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
 
     # Arrange
     owner, other_user, _ = users
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     for name in ("acme", "globex", "initech"):
         await create_organization(owner, name=name, compute=compute)
 
@@ -97,7 +97,7 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     async with session_scope() as session:
         await session.delete(compute)
         await session.commit()
@@ -335,7 +335,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, compute=await create_compute(ready=True))
+    organization = await create_organization(owner, compute=await create_compute())
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""

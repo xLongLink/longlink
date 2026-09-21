@@ -28,7 +28,7 @@ async def create_deleted_solution(owner: User) -> tuple[Organization, Solution]:
     """Create one Solution tombstone with assigned infrastructure."""
 
     # Persist the complete deletion target used by Solution cleanup tests.
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization)
     async with session_scope() as session:
@@ -161,7 +161,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
 
     # Persist a Solution with a user-owned runtime value.
     owner = users[0]
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     captured: dict[str, dict[str, str]] = {}
@@ -272,7 +272,7 @@ async def test_solution_creation_preserves_schema_failure_before_storage_authori
 
     # Arrange
     owner = users[0]
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(owner, compute=compute)
     solution = await create_solution(organization, secrets={"API_KEY": "runtime-secret"})
     initial_secrets = dict(solution.secrets)
@@ -326,7 +326,7 @@ async def test_solution_creation_retry_reuses_persisted_runtime_secrets(
     """Apply a retry without rotating persisted provider credentials."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(
         organization,
@@ -462,7 +462,7 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
     """Do not deploy credentials after the solution is deleted concurrently."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(users[0], compute=compute)
     solution = await create_solution(organization)
 

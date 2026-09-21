@@ -32,6 +32,20 @@ export const zComputeRegistryCreate = z.object({
 });
 
 /**
+ * ComputeRegistryResponse
+ *
+ * Describe one compute backend without exposing its private connection state or secrets.
+ */
+export const zComputeRegistryResponse = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    live_version: z.string().nullish(),
+    gateway_url: z.string(),
+    database_storage_class: z.string(),
+    storage_endpoint: z.string()
+});
+
+/**
  * EmailPayload
  *
  * Return one verified email address.
@@ -197,6 +211,14 @@ export const zOrganizationStorageUsageResponse = z.object({
 });
 
 /**
+ * Page[ComputeRegistryResponse]
+ */
+export const zPageComputeRegistryResponse = z.object({
+    items: z.array(zComputeRegistryResponse),
+    total: z.int().gte(0)
+});
+
+/**
  * Page[OperationResponse]
  */
 export const zPageOperationResponse = z.object({
@@ -285,21 +307,6 @@ export const zStatus = z.enum([
 ]);
 
 /**
- * ComputeRegistryResponse
- *
- * Describe one compute backend without exposing its private connection state or secrets.
- */
-export const zComputeRegistryResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    live_version: z.string().nullish(),
-    gateway_url: z.string(),
-    database_storage_class: z.string(),
-    storage_endpoint: z.string(),
-    status: zStatus
-});
-
-/**
  * OrganizationIdentity
  *
  * Represent a compact Organization in nested API responses.
@@ -325,14 +332,6 @@ export const zOrganizationSolutionSummary = z.object({
     status: zStatus,
     deployment_pending: z.boolean(),
     desired_revision_id: z.uuid().nullable()
-});
-
-/**
- * Page[ComputeRegistryResponse]
- */
-export const zPageComputeRegistryResponse = z.object({
-    items: z.array(zComputeRegistryResponse),
-    total: z.int().gte(0)
 });
 
 /**

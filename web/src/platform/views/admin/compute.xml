@@ -44,10 +44,7 @@
         <Table data="$computes.items" idKey="id" hasHover="true">
             <TableColumn field="name" header="Compute">
                 <Stack align="start">
-                    <Stack direction="horizontal" gap="1" align="center">
-                        <Text>$row.name</Text>
-                        <StatusBadge status="$row.status" />
-                    </Stack>
+                    <Text>$row.name</Text>
                     <Text type="supporting">$row.gateway_url</Text>
                 </Stack>
             </TableColumn>
@@ -148,10 +145,6 @@
     </Dialog>
     <Dialog title="Compute metadata" isOpen="$metadata.open">
         <Stack gap="2">
-            <Text>
-                <b>Status</b>
-                $metadata.item.status
-            </Text>
             <Text>
                 <b>Gateway</b>
                 $metadata.item.gateway_url

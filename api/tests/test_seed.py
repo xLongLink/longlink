@@ -11,7 +11,6 @@ from dev.scripts.seed import SeedSettings, seed
 from src.environments import env
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -131,11 +130,6 @@ async def test_local_seed_creates_example_through_api(
                 },
             )
             assert compute_response.status_code == 201
-            async with session_scope() as session:
-                compute = await session.get(ComputeRegistry, UUID(compute_response.json()["id"]))
-                assert compute is not None
-                assert compute.status == Status.running
-
             await seed(local_settings, client)
             await seed(local_settings, client)
     finally:

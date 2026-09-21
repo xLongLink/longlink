@@ -25,7 +25,7 @@ class Resource(BaseModel):
     slug: str | None = None
 
     # State
-    status: Literal["creating", "failed", "running"]
+    status: Literal["creating", "failed", "running"] | None = None
 
 
 class Page(BaseModel):
@@ -69,7 +69,7 @@ async def development_compute(client: httpx2.AsyncClient) -> Resource | None:
 
 
 async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -> Resource:
-    """Create the local Compute when absent and return its current state."""
+    """Create the local Compute when absent and return its record."""
 
     compute = await development_compute(client)
     if compute is not None:

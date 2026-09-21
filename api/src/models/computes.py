@@ -4,7 +4,6 @@ import yaml
 from uuid import UUID
 from typing import Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
-from src.models.statuses import Status
 
 StorageClassName = Annotated[
     str,
@@ -174,6 +173,3 @@ class ComputeRegistryResponse(BaseModel):
 
     # Object storage
     storage_endpoint: str
-
-    # State
-    status: Status

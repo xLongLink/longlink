@@ -16,7 +16,6 @@ from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -27,7 +26,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
 
     # Act
     organization = await create_organization(owner, compute=compute)
@@ -416,39 +415,13 @@ async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, U
     assert persisted.deleted_at is None
 
 
-async def test_create_allows_creating_compute(users: tuple[User, User, User]) -> None:
-    """Create Organizations queued behind their creating compute target."""
+async def test_create_default_selects_least_assigned_infrastructure(users: tuple[User, User, User]) -> None:
+    """Assign the least-used Compute registry."""
 
     # Arrange
     owner = users[0]
-    compute = await create_compute(ready=True)
-    async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, compute.id)
-        assert registry is not None
-        registry.status = Status.creating
-        await session.commit()
-
-    # Act
-    organization = await create_organization(owner, compute=compute)
-
-    # Assert
-    async with session_scope() as session:
-        fetched, total = await organizations.fetch_page(session, Pagination())
-        assert fetched == [organization]
-        assert total == 1
-        reloaded_compute = await session.get(ComputeRegistry, compute.id)
-        assert reloaded_compute is not None
-        assert reloaded_compute.status == Status.creating
-        assert len(await fetch_operations()) == 1
-
-
-async def test_create_default_selects_least_assigned_ready_infrastructure(users: tuple[User, User, User]) -> None:
-    """Assign the least-used ready registry of each infrastructure type."""
-
-    # Arrange
-    owner = users[0]
-    assigned_compute = await create_compute(ready=True)
-    available_compute = await create_compute(ready=True)
+    assigned_compute = await create_compute()
+    available_compute = await create_compute()
     await create_organization(owner, compute=assigned_compute)
 
     # Act
@@ -473,7 +446,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
     """Reject duplicate Organization names without persisting a second membership."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     await create_organization(users[0], compute=compute)
 
     # Act and assert
