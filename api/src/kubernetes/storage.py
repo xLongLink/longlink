@@ -25,7 +25,6 @@ class Storage:
 
         # The controller identity owns bucket lifecycle and service-account administration.
         credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
-        self._compute = compute
         self._storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
         self._admin = rustfs.RustFS(compute.storage_endpoint, credentials, compute.storage_certificate)
 
@@ -89,7 +88,7 @@ class Storage:
 
         return await self._storage.usage(self.bucket_name(organization))
 
-    async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
+    async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Create an Organization bucket and apply its RustFS hard byte quota."""
 
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.

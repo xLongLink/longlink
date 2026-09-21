@@ -6,11 +6,6 @@ afterEach(() => {
     vi.unstubAllGlobals();
 });
 
-function jsonResponse(payload: unknown, status: number): Response {
-    // Arrange a JSON body at the HTTP transport boundary.
-    return new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' }, status });
-}
-
 // Single owner for the unusable-detail fallback message.
 const FALLBACK_MESSAGE = 'The server could not complete the request. Please try again.';
 
@@ -19,7 +14,7 @@ describe('api error mapping', () => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => jsonResponse({ detail: 'Name too short' }, 422))
+            vi.fn(async () => Response.json({ detail: 'Name too short' }, { status: 422 }))
         );
 
         // Act
@@ -40,7 +35,7 @@ describe('api error mapping', () => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => jsonResponse(payload, status))
+            vi.fn(async () => Response.json(payload, { status }))
         );
 
         // Act
@@ -75,7 +70,7 @@ describe('api success contract', () => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => jsonResponse({ total: 3 }, 200))
+            vi.fn(async () => Response.json({ total: 3 }, { status: 200 }))
         );
 
         // Act
@@ -90,7 +85,7 @@ describe('api success contract', () => {
         let sentBody = '';
         const transport = vi.fn(async (input: Request) => {
             sentBody = await input.clone().text();
-            return jsonResponse({ id: 'acme' }, 201);
+            return Response.json({ id: 'acme' }, { status: 201 });
         });
         vi.stubGlobal('fetch', transport);
 

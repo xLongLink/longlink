@@ -117,16 +117,16 @@ export default function DocsArticleRoute() {
                         <SummaryCard name="Bindings" path="/docs/sdk/views/bindings">
                             <Code>{'value="$form.name"'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="State" path="/docs/sdk/views/state">
+                        <SummaryCard name="State">
                             <Code>{'<State />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Query" path="/docs/sdk/views/query">
+                        <SummaryCard name="Query">
                             <Code>{'<Query />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Action" path="/docs/sdk/views/action">
+                        <SummaryCard name="Action">
                             <Code>{'<Action />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="For" path="/docs/sdk/views/for">
+                        <SummaryCard name="For">
                             <Code>{'<For />'}</Code>
                         </SummaryCard>
                     </Grid>

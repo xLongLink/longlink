@@ -10,6 +10,12 @@ type SetupDeclaration =
     | { name: 'State'; id: string; params: ASTProps }
     | { name: 'Query'; id: string; params: ASTProps; path: ASTAttribute };
 
+type SetupContextOptions = {
+    isActive?: () => boolean;
+    onError?: (error: unknown) => void;
+    signal?: AbortSignal;
+};
+
 export type CreateContextOptions = {
     navigate: RuntimeServices['navigate'];
     navigationBaseUrl: string;
@@ -120,9 +126,38 @@ function validateSetupNode(node: ASTNode): SetupDeclaration {
 export async function setupContext(
     nodes: SetupDeclaration[],
     runtime: XmlRuntime,
-    signal?: AbortSignal
+    options: SetupContextOptions = {}
 ): Promise<void> {
     const { scope, services } = runtime;
+
+    // Reset setup-owned state before registering the next document's declarations.
+    services.setups = {};
+    for (const id of Object.keys(scope.bindings)) {
+        if (id !== 'params') delete scope.bindings[id];
+    }
+
+    services.invalidate = async (id) => {
+        // Ignore invalidations after the rendering scope releases ownership.
+        if (options.isActive && !options.isActive()) return;
+
+        // Keep stale data visible while the refresh runs; restore it if the refresh fails.
+        const previous = scope.bindings[id];
+        const setup = Object.hasOwn(services.setups, id) ? services.setups[id] : undefined;
+        if (!setup) return;
+
+        try {
+            await setup();
+        } catch (error: unknown) {
+            if (options.isActive && !options.isActive()) return;
+
+            scope.bindings[id] = previous;
+            if (options.onError) {
+                options.onError(error);
+                return;
+            }
+            throw error;
+        }
+    };
 
     // Seed setup declarations before rendering the component tree.
     for (const node of nodes) {
@@ -164,7 +199,7 @@ export async function setupContext(
                 const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
                 scope.bindings[id] = await api(url, {
-                    signal,
+                    signal: options.signal,
                 }).json();
             };
             services.setups[id] = setup;

@@ -34,22 +34,6 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
     }
 }
 
-/** Resets the mutable state owned by an XML runtime before its setup declarations run. */
-function resetRuntime(runtime: XmlRuntime, invalidate: (id: string) => Promise<void>) {
-    runtime.services.setups = {};
-    for (const id of Object.keys(runtime.scope.bindings)) {
-        if (id !== 'params') delete runtime.scope.bindings[id];
-    }
-    runtime.services.invalidate = invalidate;
-}
-
-/** Returns one setup declaration so it can repopulate its runtime binding. */
-function takeRuntimeSetup(runtime: XmlRuntime, id: string) {
-    if (!Object.hasOwn(runtime.services.setups, id)) return undefined;
-
-    return runtime.services.setups[id];
-}
-
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
@@ -79,32 +63,11 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
         let mounted = true;
         const controller = new AbortController();
 
-        /* Attach the renderer-owned invalidation hook before async setup runs. */
-        resetRuntime(ctx, async (id) => {
-            // Ignore invalidations after this renderer releases ownership.
-            if (!mounted) return;
-
-            // Keep stale data visible while the refresh runs; restore it if the refresh fails.
-            const previous = ctx.scope.bindings[id];
-
-            // Skip unknown invalidation targets.
-            const setup = takeRuntimeSetup(ctx, id);
-            if (setup) {
-                try {
-                    await setup();
-                } catch (error: unknown) {
-                    if (!mounted) return;
-                    ctx.scope.bindings[id] = previous;
-                    reportSetupError(error instanceof Error ? error : new Error('XML refresh failed'));
-                    return;
-                }
-            }
-
-            // Do not publish changes when cleanup occurred during setup.
-            if (!mounted) return;
-        });
-
-        void setupContext(setup.nodes, ctx, controller.signal)
+        void setupContext(setup.nodes, ctx, {
+            isActive: () => mounted,
+            onError: (error) => reportSetupError(error instanceof Error ? error : new Error('XML refresh failed')),
+            signal: controller.signal,
+        })
             .then(() => {
                 // Do not publish setup completion after cleanup.
                 if (!mounted) return;

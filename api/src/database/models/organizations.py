@@ -26,7 +26,6 @@ class Organization(AuditTable, table=True):
     # Metadata
     name: str = Field(max_length=128)
     slug: str = Field(unique=True, max_length=128)
-    avatar: str = Field(default="", max_length=2048)
 
     # Infrastructure
     compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)

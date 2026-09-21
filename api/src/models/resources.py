@@ -14,7 +14,6 @@ class OrganizationIdentity(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: str
 
     # State
     status: Status

@@ -41,7 +41,13 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser), session:
     """Update the authenticated user's details."""
 
     # Commit profile changes and durable projection demand together, without a no-op transaction.
-    if not await users.update_profile(session, user, payload):
+    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
         return user
+
+    if payload.name is not None:
+        user.name = payload.name
+    if payload.avatar is not None:
+        user.avatar = payload.avatar
+
     await session.commit()
     return user

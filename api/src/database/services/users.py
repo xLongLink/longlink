@@ -8,7 +8,6 @@ from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.utils.oauth import OAuthProvider
 from src.environments import env
-from src.models.users import UserUpdate
 from src.models.pagination import Pagination
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -86,22 +85,6 @@ async def register(session: AsyncSession, name: str, email: str, password: str, 
     session.add(user)
     await session.flush()
     return user
-
-
-async def update_profile(session: AsyncSession, user: User, payload: UserUpdate) -> bool:
-    """Update a user profile."""
-
-    # Avoid persistence for unchanged profile values.
-    if (payload.name is None or payload.name == user.name) and (payload.avatar is None or payload.avatar == user.avatar):
-        return False
-
-    # Keep profile changes in the caller's transaction.
-    if payload.name is not None:
-        user.name = payload.name
-    if payload.avatar is not None:
-        user.avatar = payload.avatar
-
-    return True
 
 
 async def ensure_administrator(session: AsyncSession) -> User:

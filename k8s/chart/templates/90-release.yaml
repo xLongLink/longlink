@@ -6,4 +6,3 @@ metadata:
 data:
     contract: '1'
     platform_version: {{ .Chart.AppVersion | quote }}
-    version: {{ .Chart.Version | quote }}

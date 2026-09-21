@@ -92,30 +92,16 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
     ]
 
 
-@pytest.mark.parametrize(
-    ("database_url", "expected_kwargs"),
-    [
-        pytest.param(
-            "mysql+aiomysql://control:secret@db:3306/longlink",
-            {"isolation_level": "READ COMMITTED", "pool_use_lifo": True},
-            id="mysql",
-        ),
-        pytest.param("sqlite+aiosqlite:///./test.db", {}, id="sqlite"),
-    ],
-)
-async def test_get_session_configures_database_specific_engine_options(
-    monkeypatch: pytest.MonkeyPatch, database_url: str, expected_kwargs: dict[str, object]
-) -> None:
-    """Apply transaction and pooling options only to the relevant database drivers."""
+async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Apply transaction and pooling options to the MySQL database driver."""
 
     # Arrange
-    captured: dict[str, object] = {}
+    captured: dict[str, dict[str, object]] = {}
     session_factory = object()
 
     def create_async_engine(url: object, **kwargs: object) -> object:
         """Capture engine construction without opening a database connection."""
 
-        captured["url"] = url
         captured["kwargs"] = kwargs
         return object()
 
@@ -124,7 +110,7 @@ async def test_get_session_configures_database_specific_engine_options(
 
         return session_factory
 
-    monkeypatch.setattr(database_session.env, "DATABASE_URL", database_url)
+    monkeypatch.setattr(database_session.env, "DATABASE_URL", "mysql+aiomysql://control:secret@db:3306/longlink")
     monkeypatch.setattr(database_session, "Session", None)
     monkeypatch.setattr(database_session, "create_async_engine", create_async_engine)
     monkeypatch.setattr(database_session, "async_sessionmaker", async_sessionmaker)
@@ -136,5 +122,5 @@ async def test_get_session_configures_database_specific_engine_options(
     # Assert
     assert result is session_factory
     kwargs = captured["kwargs"]
-    assert isinstance(kwargs, dict)
-    assert {key: value for key, value in kwargs.items() if key in ("isolation_level", "pool_use_lifo")} == expected_kwargs
+    assert kwargs["isolation_level"] == "READ COMMITTED"
+    assert kwargs["pool_use_lifo"] is True

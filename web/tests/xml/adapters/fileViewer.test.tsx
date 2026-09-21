@@ -11,17 +11,8 @@ describe('FileViewer', () => {
     beforeEach(() => {
         // Force the immediate loading path unless a test provides its own observer.
         vi.stubGlobal('IntersectionObserver', undefined);
-
-        if (typeof URL.createObjectURL === 'function') {
-            vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
-            vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-        } else {
-            Object.defineProperty(URL, 'createObjectURL', {
-                configurable: true,
-                value: vi.fn(() => 'blob:preview'),
-            });
-            Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
-        }
+        vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
+        vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     });
 
     afterEach(async () => {

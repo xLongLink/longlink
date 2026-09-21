@@ -21,7 +21,6 @@
                     <Avatar
                         shape="rounded"
                         name="$row.name"
-                        src="$row.avatar"
                     />
                     <Stack align="start">
                         <Stack direction="horizontal" gap="1" align="center">

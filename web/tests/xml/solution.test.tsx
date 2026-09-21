@@ -42,7 +42,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) =>
             url.endsWith('/views.json')
-                ? jsonResponse([view('index', '/'), view('home', '/home')])
+                ? Response.json([view('index', '/'), view('home', '/home')])
                 : xmlResponse('<longlink><Text>Home</Text></longlink>')
         );
 
@@ -58,7 +58,7 @@ describe('SolutionRuntime', () => {
 
     it('renders an empty manifest response', async () => {
         // Arrange
-        stubFetch(() => jsonResponse([]));
+        stubFetch(() => Response.json([]));
 
         // Act
         const output = await renderRuntime();
@@ -71,7 +71,7 @@ describe('SolutionRuntime', () => {
     it('renders a view failure after loading the manifest', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
+            if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
             return new Response(JSON.stringify({ detail: 'View unavailable' }), { status: 503 });
         });
 
@@ -90,7 +90,7 @@ describe('SolutionRuntime', () => {
             const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
                 const url = input instanceof Request ? input.url : String(input);
 
-                if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home', path)]);
+                if (url.endsWith('/views.json')) return Response.json([view('home', '/home', path)]);
                 throw new Error('View fetch must not occur');
             });
             vi.stubGlobal('fetch', fetchRequest);
@@ -110,7 +110,7 @@ describe('SolutionRuntime', () => {
     it('renders dynamic route parameters', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return jsonResponse([view('issue', '/issues/:issueId')]);
+            if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
             return xmlResponse('<longlink><Text>${params.issueId}</Text></longlink>');
         });
 
@@ -127,7 +127,7 @@ describe('SolutionRuntime', () => {
             const request = input instanceof Request ? input : new Request(input, init);
 
             if (request.url.endsWith('/proxy/views.json?version=1#manifest')) {
-                return jsonResponse([view('home', '/home')]);
+                return Response.json([view('home', '/home')]);
             }
 
             return xmlResponse('<longlink><Text>Welcome</Text></longlink>');
@@ -157,7 +157,7 @@ describe('SolutionRuntime', () => {
     it('rejects unmatched routes', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return jsonResponse([view('issue', '/issues/:issueId')]);
+            if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
             return xmlResponse('<longlink />');
         });
 
@@ -171,7 +171,7 @@ describe('SolutionRuntime', () => {
     it('navigates same-origin XML destinations through the client router', async () => {
         // Arrange
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
+            if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
             return xmlResponse('<longlink><Button to="/next">Continue</Button></longlink>');
         });
         const output = await renderRuntime('/home');
@@ -193,7 +193,7 @@ describe('SolutionRuntime', () => {
         locationAssignDescriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
         Object.defineProperty(window.location, 'assign', { configurable: true, value: assign });
         stubFetch((url) => {
-            if (url.endsWith('/views.json')) return jsonResponse([view('home', '/home')]);
+            if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
             return xmlResponse(
                 '<longlink><Action><Link href="https://example.com/next">Continue</Link></Action></longlink>'
             );
@@ -263,11 +263,6 @@ function stubFetch(response: (url: string) => Response): void {
 
         return response(url);
     });
-}
-
-/** Creates a JSON fetch response. */
-function jsonResponse(body: unknown): Response {
-    return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
 }
 
 /** Creates an XML fetch response. */

@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionCreate, EnvironmentValues
+from src.models.solutions import SolutionCreate, EnvironmentValues, validate_idle_seconds
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -189,8 +189,10 @@ async def deploy(
         min_scale = current.min_scale if current is not None else 0
     if idle_seconds is None:
         idle_seconds = current.idle_seconds if current is not None else 60
-    if idle_seconds != 0 and idle_seconds < 30:
-        raise InvalidError("idle_seconds must be 0 or between 30 and 3600")
+    try:
+        validate_idle_seconds(idle_seconds)
+    except ValueError as exc:
+        raise InvalidError(str(exc)) from exc
     if source is None:
         source = metadata.image
     if (

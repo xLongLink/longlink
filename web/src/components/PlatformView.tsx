@@ -8,8 +8,10 @@ import { platformXmlComponentRegistry } from '@/platform/xml/registry';
 export function PlatformView({ source, params = {} }: { source: string; params?: Record<string, string> }) {
     const queryClient = useQueryClient();
     const ast = useMemo(() => parseXML(source), [source]);
-    const paramsKey = JSON.stringify(Object.entries(params).sort(([left], [right]) => left.localeCompare(right)));
-    const runtimeKey = JSON.stringify([source, paramsKey]);
+    const runtimeKey = JSON.stringify([
+        source,
+        Object.entries(params).sort(([left], [right]) => left.localeCompare(right)),
+    ]);
 
     return (
         <RouterXmlRuntime

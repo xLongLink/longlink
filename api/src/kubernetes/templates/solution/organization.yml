@@ -5,7 +5,6 @@ kind: Namespace
 metadata:
     name: '$namespace'
     labels:
-        longlink.io/namespace: compute
         pod-security.kubernetes.io/enforce: restricted
 ---
 apiVersion: networking.k8s.io/v1

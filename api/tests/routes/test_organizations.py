@@ -133,7 +133,6 @@ async def test_get_organization_by_slug_returns_owner_membership(
             "id": str(organization.id),
             "name": "acme",
             "slug": "acme",
-            "avatar": "",
             "status": "creating",
         },
         "role": "owner",
@@ -514,7 +513,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
                 "id": str(organization.id),
                 "name": "globex",
                 "slug": "globex",
-                "avatar": "",
                 "status": "creating",
             }
         ],
