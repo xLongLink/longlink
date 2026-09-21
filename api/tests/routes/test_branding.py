@@ -32,3 +32,14 @@ async def test_system_logo_svg_uses_system_theme_and_selected_accent(client: Asy
     assert ".logo-theme { fill: #171717; }" in response.text
     assert ".logo-theme { fill: #fafafa; }" in response.text
     assert '<tspan fill="#64748b">LONG</tspan>' in response.text
+
+
+async def test_logo_svg_rejects_invalid_theme_without_rendering_logo(client: AsyncClient) -> None:
+    """Reject a logo theme outside the dark, light, and system contract."""
+
+    # Act
+    response = await client.get("/logo.svg?theme=invalid")
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid request. Please check your input and try again."}

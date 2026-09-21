@@ -4,6 +4,18 @@ from src.models.solutions import SolutionPatch, SolutionCreate
 
 pytestmark = pytest.mark.no_db
 
+INVALID_IDLE_SECONDS = [
+    pytest.param(1, id="one"),
+    pytest.param(29, id="below-minimum"),
+    pytest.param(3601, id="above-maximum"),
+    pytest.param(-1, id="negative"),
+]
+VALID_IDLE_SECONDS = [
+    pytest.param(0, id="never-sleep"),
+    pytest.param(30, id="minimum"),
+    pytest.param(3600, id="maximum"),
+]
+
 
 @pytest.mark.parametrize(
     ("envs", "match"),
@@ -24,7 +36,7 @@ def test_solution_create_rejects_invalid_environment_variables(envs: dict[str, s
         SolutionCreate.model_validate({"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "envs": envs})
 
 
-@pytest.mark.parametrize("idle_seconds", [pytest.param(1, id="one"), pytest.param(29, id="below-minimum"), pytest.param(3601, id="above-maximum"), pytest.param(-1, id="negative")])
+@pytest.mark.parametrize("idle_seconds", INVALID_IDLE_SECONDS)
 def test_solution_create_rejects_invalid_idle_seconds(idle_seconds: int) -> None:
     """Reject scale-to-zero timeouts outside the never-sleep zero or 30-3600 contract."""
 
@@ -36,7 +48,7 @@ def test_solution_create_rejects_invalid_idle_seconds(idle_seconds: int) -> None
         SolutionCreate.model_validate(payload)
 
 
-@pytest.mark.parametrize("idle_seconds", [pytest.param(0, id="never-sleep"), pytest.param(30, id="minimum"), pytest.param(3600, id="maximum")])
+@pytest.mark.parametrize("idle_seconds", VALID_IDLE_SECONDS)
 def test_solution_create_accepts_idle_seconds_boundaries(idle_seconds: int) -> None:
     """Accept never-sleep zero and the bounded scale-to-zero timeout edges."""
 
@@ -47,7 +59,7 @@ def test_solution_create_accepts_idle_seconds_boundaries(idle_seconds: int) -> N
     assert solution.idle_seconds == idle_seconds
 
 
-@pytest.mark.parametrize("idle_seconds", [pytest.param(1, id="one"), pytest.param(29, id="below-minimum"), pytest.param(3601, id="above-maximum")])
+@pytest.mark.parametrize("idle_seconds", INVALID_IDLE_SECONDS)
 def test_solution_patch_rejects_invalid_idle_seconds(idle_seconds: int) -> None:
     """Reject patch scale-to-zero timeouts outside the never-sleep zero or 30-3600 contract."""
 

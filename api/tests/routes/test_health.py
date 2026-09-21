@@ -87,3 +87,5 @@ async def test_readyz_returns_internal_error_when_database_query_fails(monkeypat
 
     # Assert
     assert response.status_code == 500
+    assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
+    assert response.headers["cache-control"] == "no-store"

@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID, uuid4
 from types import SimpleNamespace
-from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes
+from conftest import DatabasePostgres, StorageKubernetes, DatabaseKubernetes, OperationKubernetes, reject_provider_construction
 from factories import (
     claim_operation,
     create_solution,
@@ -433,14 +433,11 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
 
     # Arrange
     _, solution = await create_deleted_solution(users[0])
-
-    def unexpected_provider(*_args: object) -> object:
-        """Reject provider construction for a removed solution."""
-
-        raise AssertionError("providers must not be constructed")
-
-    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
+    reject_provider_construction(
+        monkeypatch,
+        (solution_operations.databases.postgres, "Postgres"),
+        (solution_operations, "Kubernetes"),
+    )
 
     # Act
     result = await solution_operations.deploy(solution.desired_revision_id)
@@ -455,13 +452,11 @@ async def test_solution_creation_skips_missing_solution_without_constructing_pro
     """Treat a missing Solution as an already completed lifecycle target."""
 
     # Arrange
-    def unexpected_provider(*_args: object) -> object:
-        """Reject provider construction for an absent target."""
-
-        raise AssertionError("providers must not be constructed")
-
-    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
+    reject_provider_construction(
+        monkeypatch,
+        (solution_operations.databases.postgres, "Postgres"),
+        (solution_operations, "Kubernetes"),
+    )
 
     # Act and assert
     assert await solution_operations.deploy(uuid4()) is None
@@ -508,13 +503,11 @@ async def test_solution_deletion_skips_missing_solution_without_constructing_pro
     """Treat a missing Solution tombstone as completed cleanup."""
 
     # Arrange
-    def unexpected_provider(*_args: object) -> object:
-        """Reject provider construction for an absent cleanup target."""
-
-        raise AssertionError("providers must not be constructed")
-
-    monkeypatch.setattr(solution_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(solution_operations, "Kubernetes", unexpected_provider)
+    reject_provider_construction(
+        monkeypatch,
+        (solution_operations.databases.postgres, "Postgres"),
+        (solution_operations, "Kubernetes"),
+    )
 
     # Act and assert
     assert await solution_operations.delete(uuid4()) is None

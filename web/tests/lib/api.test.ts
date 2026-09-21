@@ -61,6 +61,22 @@ describe('api error mapping', () => {
         expect((failure as ApiError).status).toBe(500);
     });
 
+    it('falls back when the detail is not a string', async () => {
+        // Arrange
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async () => jsonResponse({ detail: 123 }, 422))
+        );
+
+        // Act
+        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+
+        // Assert
+        expect(failure).toBeInstanceOf(ApiError);
+        expect((failure as ApiError).message).toBe('The server could not complete the request. Please try again.');
+        expect((failure as ApiError).status).toBe(422);
+    });
+
     it('passes network failures through without mapping', async () => {
         // Arrange
         vi.stubGlobal(

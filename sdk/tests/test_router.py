@@ -1,5 +1,6 @@
 import pytest
 from fastapi import APIRouter
+from pathlib import Path
 from longlink import LongLink
 from fastapi.testclient import TestClient
 
@@ -56,3 +57,23 @@ def test_solution_route_overrides_frontend_fallback() -> None:
     assert response.status_code == 200
     assert response.json() == {"source": "solution"}
     assert "application/json" in response.headers["content-type"]
+
+
+def test_solution_add_api_route_rejects_view_endpoint_overlap(solution_source: Path) -> None:
+    """Reject a direct Solution route that would overlap a registered View endpoint."""
+
+    # Arrange
+    (solution_source / "views" / "dashboard.xml").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    app = LongLink()
+    original_routes = app.router.routes.copy()
+
+    async def solution_dashboard() -> dict[str, str]:
+        """Return the Solution dashboard resource."""
+
+        return {"source": "solution"}
+
+    # Act and assert
+    with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
+        app.add_api_route("/views/dashboard", solution_dashboard, methods=["GET"])
+
+    assert app.router.routes == original_routes
