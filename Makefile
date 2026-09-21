@@ -122,7 +122,7 @@ api:
 # Run the Vite web app.
 web:
 	cd web && vp install --frozen-lockfile
-	cd web && vp run dev --host 127.0.0.1 --port 5173
+	cd web && vp run dev --port 5173
 
 
 # Run the local sample Solution, preserving an existing development project.
