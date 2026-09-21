@@ -18,7 +18,7 @@ async def test_authenticated_organization_creation_rejects_untrusted_origin_befo
     """Reject unsafe cookie-authenticated writes before the route can persist data."""
 
     # Arrange
-    await create_compute(ready=True)
+    await create_compute()
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:
@@ -158,7 +158,7 @@ async def test_authenticated_compute_deletion_rejects_untrusted_origin_without_m
     """Reject cookie-authenticated Compute deletion before the registry can change."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:

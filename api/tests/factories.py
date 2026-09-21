@@ -3,7 +3,6 @@ from sqlalchemy import select
 from collections.abc import Sequence
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, operations, organizations
@@ -71,10 +70,10 @@ async def drain_operations() -> Sequence[Operation]:
     return drained
 
 
-async def create_compute(*, ready: bool = False) -> ComputeRegistry:
-    """Persist one Compute registry with shared connection fields and its readiness mode."""
+async def create_compute() -> ComputeRegistry:
+    """Persist one Compute registry with shared connection fields."""
 
-    # Keep the registry field set in one owner; readiness is the only business mode.
+    # Keep the registry field set in one owner.
     suffix = uuid4().hex[:8]
 
     async with session_scope() as session:
@@ -87,7 +86,6 @@ async def create_compute(*, ready: bool = False) -> ComputeRegistry:
             storage_endpoint="https://storage.example",
             storage_access_key="controller",
             storage_secret_key="controller-secret",
-            status=Status.running if ready else Status.creating,
         )
         session.add(compute)
         await session.commit()
@@ -99,10 +97,10 @@ async def create_organization(
     name: str = "acme",
     compute: ComputeRegistry | None = None,
 ) -> Organization:
-    """Create one Organization with the specified or independent ready Compute registry."""
+    """Create one Organization with the specified or independent Compute registry."""
 
     if compute is None:
-        compute = await create_compute(ready=True)
+        compute = await create_compute()
 
     async with session_scope() as session:
         organization = await organizations.create(

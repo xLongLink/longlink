@@ -31,7 +31,7 @@ async def test_platform_user_cannot_delete_compute_registry(clients: tuple[Async
     """Reject registry deletion without modifying the registered backend."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
 
     # Act
     response = await clients[1].delete(f"/api/v1/computes/{compute.id}")
@@ -62,7 +62,6 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     expected_item = {
         "live_version": None,
         "gateway_url": "https://gateway.example",
-        "status": "running",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
     }
@@ -115,7 +114,7 @@ async def test_compute_registry_deletes_unused_registration(clients: tuple[Async
     """Delete an unassigned Compute registry and reject repeated deletion."""
 
     # Arrange
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     registry_id = compute.id
 
     # Act
@@ -136,7 +135,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
 ) -> None:
     """Keep a Compute registry while an Organization references it."""
 
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     await create_organization(users[0], compute=compute)
     registry_id = compute.id
 

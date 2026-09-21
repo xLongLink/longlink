@@ -1875,73 +1875,6 @@
         }
       }
     },
-    "/api/v1/organizations/{organization_id}/quotas": {
-      "get": {
-        "summary": "Get Organization Quotas",
-        "description": "Return stored Organization quotas for administrator views.",
-        "operationId": "get_organization_quotas_api_v1_organizations__organization_id__quotas_get",
-        "parameters": [
-          {
-            "name": "organization_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Organization Id"
-            }
-          },
-          {
-            "name": "longlink_auth",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Longlink Auth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrganizationQuotasResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Default Response"
-          }
-        }
-      }
-    },
     "/api/v1/organizations/{organization_id}/storage": {
       "get": {
         "summary": "Get Organization Storage Usage",
@@ -2630,9 +2563,6 @@
           "storage_endpoint": {
             "type": "string",
             "title": "Storage Endpoint"
-          },
-          "status": {
-            "$ref": "#/components/schemas/Status"
           }
         },
         "type": "object",
@@ -2641,8 +2571,7 @@
           "name",
           "gateway_url",
           "database_storage_class",
-          "storage_endpoint",
-          "status"
+          "storage_endpoint"
         ],
         "title": "ComputeRegistryResponse",
         "description": "Describe one compute backend without exposing its private connection state or secrets."
@@ -3008,36 +2937,6 @@
         ],
         "title": "OrganizationMemberUpdate",
         "description": "Validate organization member update payloads."
-      },
-      "OrganizationQuotasResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "database_size_mib": {
-            "type": "integer",
-            "title": "Database Size Mib"
-          },
-          "database_instances": {
-            "type": "integer",
-            "title": "Database Instances"
-          },
-          "storage_quota_bytes": {
-            "type": "integer",
-            "title": "Storage Quota Bytes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "database_size_mib",
-          "database_instances",
-          "storage_quota_bytes"
-        ],
-        "title": "OrganizationQuotasResponse",
-        "description": "Represent stored per-Organization quotas in administrator responses."
       },
       "OrganizationRoles": {
         "type": "string",

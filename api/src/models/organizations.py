@@ -30,22 +30,6 @@ class OrganizationUpdate(BaseModel):
     avatar: HttpUrl | Literal[""] | None = Field(default=None, max_length=2048)
 
 
-class OrganizationQuotasResponse(BaseModel):
-    """Represent stored per-Organization quotas in administrator responses."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Database
-    database_size_mib: int
-    database_instances: int
-
-    # Storage
-    storage_quota_bytes: int
-
-
 class OrganizationInvitationCreate(BaseModel):
     """Validate organization invitation payloads."""
 

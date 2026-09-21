@@ -2,7 +2,6 @@ import pytest
 from uuid import uuid4
 from factories import create_compute
 from src.errors import ConflictError, NotFoundError
-from src.utils.s3 import Credentials
 from src.models.computes import ComputeRegistryCreate
 from src.database.session import session_scope
 from src.database.services import compute
@@ -22,7 +21,7 @@ async def test_delete_removes_unused_registry() -> None:
     """Delete a registry that has no organization assignment."""
 
     # Arrange
-    compute_registry = await create_compute(ready=True)
+    compute_registry = await create_compute()
     registry_id = compute_registry.id
 
     # Act
@@ -53,12 +52,25 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
         database_storage_class="local-path",
         storage_endpoint="https://storage.example",
     )
-    credentials = Credentials("controller", "controller-secret")
+    registry = ComputeRegistry(
+        **payload.model_dump(),
+        cluster_uid="cluster-uid",
+        storage_access_key="controller",
+        storage_secret_key="controller-secret",
+    )
     async with session_scope() as session:
-        await compute.create(session, payload, "cluster-uid", credentials)
+        await compute.create(session, registry)
         await session.commit()
 
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^Compute registry already exists$"):
-            await compute.create(session, payload.model_copy(update={"name": "Cluster Alias"}), "cluster-uid", credentials)
+            await compute.create(
+                session,
+                ComputeRegistry(
+                    **payload.model_copy(update={"name": "Cluster Alias"}).model_dump(),
+                    cluster_uid="cluster-uid",
+                    storage_access_key="controller",
+                    storage_secret_key="controller-secret",
+                ),
+            )

@@ -61,7 +61,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
         await _verify_compute(cluster, candidate)
 
     # Persist the verified connection as immediately assignable.
-    registry = await compute.create(session, payload, cluster_uid, credentials)
+    registry = await compute.create(session, candidate)
     await session.commit()
     return registry
 

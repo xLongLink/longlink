@@ -19,12 +19,10 @@ from src.models.organizations import (
     OrganizationUpdate,
     OrganizationDetails,
     OrganizationMemberUpdate,
-    OrganizationQuotasResponse,
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 router = APIRouter()
 STORAGE_USAGE_TIMEOUT_SECONDS = 15
@@ -107,22 +105,6 @@ async def update_organization(
         raise HTTPException(status_code=404, detail="Organization not found")
     await session.commit()
     return organization
-
-
-@router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
-async def get_organization_quotas(
-    organization_id: UUID,
-    _user: User = Depends(authadmin),
-    session: AsyncSession = Depends(get_session),
-):
-    """Return stored Organization quotas for administrator views."""
-
-    # Read stored quotas without touching provider boundaries.
-    organization = await session.get(Organization, organization_id)
-    if organization is None or organization.deleted_at is not None:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    return organization
-
 
 @router.get(
     "/organizations/{organization_id}/storage",

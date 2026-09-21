@@ -32,6 +32,20 @@ export const zComputeRegistryCreate = z.object({
 });
 
 /**
+ * ComputeRegistryResponse
+ *
+ * Describe one compute backend without exposing its private connection state or secrets.
+ */
+export const zComputeRegistryResponse = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    live_version: z.string().nullish(),
+    gateway_url: z.string(),
+    database_storage_class: z.string(),
+    storage_endpoint: z.string()
+});
+
+/**
  * EmailPayload
  *
  * Return one verified email address.
@@ -131,18 +145,6 @@ export const zOrganizationCreate = z.object({
 });
 
 /**
- * OrganizationQuotasResponse
- *
- * Represent stored per-Organization quotas in administrator responses.
- */
-export const zOrganizationQuotasResponse = z.object({
-    id: z.uuid(),
-    database_size_mib: z.int(),
-    database_instances: z.int(),
-    storage_quota_bytes: z.int()
-});
-
-/**
  * OrganizationRoles
  *
  * Supported organization membership roles.
@@ -206,6 +208,14 @@ export const zOrganizationUpdate = z.object({
         z.url().min(1).max(2083),
         z.literal('')
     ]).nullish()
+});
+
+/**
+ * Page[ComputeRegistryResponse]
+ */
+export const zPageComputeRegistryResponse = z.object({
+    items: z.array(zComputeRegistryResponse),
+    total: z.int().gte(0)
 });
 
 /**
@@ -297,21 +307,6 @@ export const zStatus = z.enum([
 ]);
 
 /**
- * ComputeRegistryResponse
- *
- * Describe one compute backend without exposing its private connection state or secrets.
- */
-export const zComputeRegistryResponse = z.object({
-    id: z.uuid(),
-    name: z.string(),
-    live_version: z.string().nullish(),
-    gateway_url: z.string(),
-    database_storage_class: z.string(),
-    storage_endpoint: z.string(),
-    status: zStatus
-});
-
-/**
  * OrganizationIdentity
  *
  * Represent a compact Organization in nested API responses.
@@ -337,14 +332,6 @@ export const zOrganizationSolutionSummary = z.object({
     status: zStatus,
     deployment_pending: z.boolean(),
     desired_revision_id: z.uuid().nullable()
-});
-
-/**
- * Page[ComputeRegistryResponse]
- */
-export const zPageComputeRegistryResponse = z.object({
-    items: z.array(zComputeRegistryResponse),
-    total: z.int().gte(0)
 });
 
 /**
@@ -704,15 +691,6 @@ export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.ob
  * Successful Response
  */
 export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
-
-export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
-    organization_id: z.uuid()
-});
-
-/**
- * Successful Response
- */
-export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
 
 export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
     organization_id: z.uuid()

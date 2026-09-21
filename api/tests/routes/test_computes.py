@@ -78,10 +78,10 @@ async def test_compute_list_omits_live_version_when_cluster_unreachable(
     assert items[0]["live_version"] is None
 
 
-async def test_compute_registry_creation_registers_running_compute_without_queuing_work(
+async def test_compute_registry_creation_does_not_queue_work(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Register an inline-verified Compute as immediately assignable."""
+    """Register an inline-verified Compute without queuing work."""
 
     # Arrange
     payload = {
@@ -102,7 +102,6 @@ async def test_compute_registry_creation_registers_running_compute_without_queui
 
     # Assert
     assert response.status_code == 201
-    assert response.json()["status"] == "running"
     assert await fetch_operations() == []
 
 

@@ -91,7 +91,7 @@ async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry
     """Create one Solution with the running state required for gateway tests."""
 
     # Arrange an assignable gateway target and its running Solution.
-    compute = await create_compute(ready=True)
+    compute = await create_compute()
     organization = await create_organization(user, compute=compute)
     solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
 
