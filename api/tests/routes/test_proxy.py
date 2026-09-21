@@ -908,3 +908,86 @@ async def test_solution_proxy_returns_unavailable_when_gateway_requirement_is_mi
     # Assert
     assert response.status_code == 503
     assert response.json() == {"detail": "Solution gateway is not ready"}
+
+
+async def test_solution_proxy_forwards_error_negotiation_headers(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Forward actionable error metadata without upstream cookies or body headers."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    gateway_response = make_upstream(
+        401,
+        {
+            "content-type": "application/json",
+            "www-authenticate": 'Bearer realm="solution"',
+            "allow": "GET, POST",
+            "set-cookie": "upstream_session=private-error-cookie",
+            "content-length": "42",
+        },
+        b'{"detail":"Authentication required."}',
+    )
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Authentication required."}
+    assert response.headers["www-authenticate"] == 'Bearer realm="solution"'
+    assert response.headers["allow"] == "GET, POST"
+    assert "set-cookie" not in response.headers
+    assert response.headers.get("content-length") in (None, str(len(response.content)))
+
+
+async def test_solution_proxy_replaces_oversized_upstream_error(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Replace oversized upstream errors with the public fallback."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    oversized = b'{"detail":"' + b"x" * (64 * 1024) + b'"}'
+    gateway_response = make_upstream(502, {"content-type": "application/json"}, oversized)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}
+
+
+async def test_solution_proxy_replaces_aborted_upstream_error(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Replace partially streamed upstream errors with the public fallback."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    gateway_response = make_upstream(
+        502,
+        {"content-type": "application/json"},
+        [b'{"detail":"partial'],
+        error=RecursionError("stream aborted"),
+    )
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
+
+    # Assert
+    assert response.status_code == 502
+    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}
