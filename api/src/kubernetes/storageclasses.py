@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 
 DEFAULT_CLASS_ANNOTATION = "storageclass.kubernetes.io/is-default-class"
-StorageClassResource = new_class("StorageClass", "storage.k8s.io/v1", asyncio=True, plural="storageclasses")
+StorageClassResource = new_class("StorageClass", "storage.k8s.io/v1", asyncio=True, namespaced=False, plural="storageclasses")
 
 
 async def resolve(cluster: "Kubernetes") -> str:
