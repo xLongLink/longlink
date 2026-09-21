@@ -190,78 +190,6 @@ async def test_get_organization_returns_member_payload(
     assert solutions_payload[0]["id"] == str(solution.id)
 
 
-async def test_update_organization_updates_metadata_for_administrator(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Allow organization owners to update shared organization metadata."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act
-    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": "https://example.com/acme.png"})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["avatar"] == "https://example.com/acme.png"
-    async with session_scope() as session:
-        updated = await session.get(Organization, organization.id)
-    assert updated is not None
-    assert updated.avatar == "https://example.com/acme.png"
-
-
-async def test_update_organization_returns_not_found_when_active_organization_disappears(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Report an Organization removed after its membership was authorized."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    async def missing_organization(*_args: object, **_kwargs: object) -> None:
-        """Simulate the Organization disappearing before its update."""
-
-    monkeypatch.setattr(organizations, "update", missing_organization)
-
-    # Act
-    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": ""})
-
-    # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
-
-
-async def test_update_organization_rejects_write_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject shared metadata changes from non-administrator members."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    organization = await create_organization(owner)
-    original_updated_at = organization.updated_at
-    async with session_scope() as session:
-        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
-        await session.commit()
-
-    # Act
-    response = await clients[1].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": "https://example.com/acme.png"})
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
-    async with session_scope() as session:
-        unchanged = await session.get(Organization, organization.id)
-    assert unchanged is not None
-    assert unchanged.avatar == organization.avatar
-    assert unchanged.updated_at == original_updated_at
-
-
 @pytest.mark.parametrize("name", [pytest.param("", id="empty"), pytest.param("a" * 129, id="too-long")])
 async def test_create_organization_rejects_invalid_name_without_persisting_state(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
@@ -277,36 +205,6 @@ async def test_create_organization_rejects_invalid_name_without_persisting_state
     async with session_scope() as session:
         assert await session.scalar(select(Organization)) is None
     assert await fetch_operations() == []
-
-
-@pytest.mark.parametrize(
-    "avatar",
-    [
-        pytest.param("not-a-url", id="not-a-url"),
-        pytest.param(f"https://example.com/{'a' * 2048}.png", id="too-long"),
-    ],
-)
-async def test_update_organization_rejects_invalid_avatar_without_mutating_metadata(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    avatar: str,
-) -> None:
-    """Reject organization avatars outside the URL and length contract without mutation."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    original_updated_at = organization.updated_at
-
-    # Act
-    response = await clients[0].patch(f"/api/v1/organizations/{organization.id}", json={"avatar": avatar})
-
-    # Assert
-    assert response.status_code == 422
-    async with session_scope() as session:
-        unchanged = await session.get(Organization, organization.id)
-    assert unchanged is not None
-    assert unchanged.avatar == organization.avatar
-    assert unchanged.updated_at == original_updated_at
 
 
 async def test_delete_organization_soft_deletes_and_returns_reconciliation_operation(

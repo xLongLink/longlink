@@ -330,19 +330,18 @@ async def test_update_member_role_allows_demoting_an_owner_when_another_owner_re
     assert membership.role == OrganizationRoles.maintain
 
 
-async def test_mutation_services_revalidate_demoted_administrator_access(users: tuple[User, User, User]) -> None:
-    """Reject stale administrator requests while retaining the owner's current mutation access."""
+async def test_membership_mutation_services_revalidate_demoted_administrator_access(users: tuple[User, User, User]) -> None:
+    """Reject stale administrator requests while retaining the owner's current invitation access."""
 
-    # Arrange an owner and a current administrator with access to every affected mutation.
+    # Arrange an owner and a current administrator with access to every remaining membership mutation.
     owner, administrator = users[1], users[2]
     organization = await create_organization(owner)
     async with session_scope() as session:
         session.add(UserOrganization(user_id=administrator.id, organization_id=organization.id, role=OrganizationRoles.admin))
         await session.commit()
 
-    # Preserve legitimate owner mutations before revoking the administrator.
+    # Preserve legitimate owner invitation access before revoking the administrator.
     async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, "https://example.com/owner.png", owner.id)
         await organizations.create_invitation(
             session,
             organization.id,
@@ -352,18 +351,16 @@ async def test_mutation_services_revalidate_demoted_administrator_access(users: 
         )
         await session.commit()
 
-    assert updated is not None
     async with session_scope() as session:
         invitation_id = (await organizations.invitations(session, organization.id))[0].id
 
     # Cache authorization in independent request sessions before concurrently demoting the administrator.
     async with (
-        session_scope() as update_session,
         session_scope() as create_invitation_session,
         session_scope() as revoke_invitation_session,
         session_scope() as role_session,
     ):
-        for request_session in (update_session, create_invitation_session, revoke_invitation_session, role_session):
+        for request_session in (create_invitation_session, revoke_invitation_session, role_session):
             cached_membership = await organizations.membership(request_session, administrator.id, organization.id)
             assert cached_membership is not None
 
@@ -374,8 +371,6 @@ async def test_mutation_services_revalidate_demoted_administrator_access(users: 
             await concurrent_session.commit()
 
         # Act and assert every service refreshes the persisted membership under its Organization lock.
-        with pytest.raises(ForbiddenError, match="Permission required"):
-            await organizations.update(update_session, organization.id, "https://example.com/blocked.png", administrator.id)
         with pytest.raises(ForbiddenError, match="Permission required"):
             await organizations.create_invitation(
                 create_invitation_session,
@@ -463,32 +458,6 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 users[0],
                 compute_id=compute.id,
             )
-
-
-async def test_update_returns_none_for_missing_organization(users: tuple[User, User, User]) -> None:
-    """Treat updates to missing Organizations as absent resources."""
-
-    # Act
-    async with session_scope() as session:
-        updated = await organizations.update(session, uuid4(), "https://example.com/avatar.png", users[0].id)
-
-    # Assert
-    assert updated is None
-
-
-async def test_update_keeps_organization_unchanged_when_avatar_matches(users: tuple[User, User, User]) -> None:
-    """Return the locked Organization for an identical avatar."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-
-    # Act
-    async with session_scope() as session:
-        updated = await organizations.update(session, organization.id, organization.avatar, users[0].id)
-
-    # Assert
-    assert updated is not None
-    assert updated.avatar == organization.avatar
 
 
 async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: tuple[User, User, User]) -> None:

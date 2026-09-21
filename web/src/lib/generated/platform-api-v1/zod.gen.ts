@@ -145,6 +145,18 @@ export const zOrganizationCreate = z.object({
 });
 
 /**
+ * OrganizationQuotasResponse
+ *
+ * Represent stored per-Organization quotas in administrator responses.
+ */
+export const zOrganizationQuotasResponse = z.object({
+    id: z.uuid(),
+    database_size_mib: z.int(),
+    database_instances: z.int(),
+    storage_quota_bytes: z.int()
+});
+
+/**
  * OrganizationRoles
  *
  * Supported organization membership roles.
@@ -196,18 +208,6 @@ export const zOrganizationMemberUpdate = z.object({
 export const zOrganizationStorageUsageResponse = z.object({
     space_used: z.int().gte(0),
     quota_bytes: z.int().gte(0)
-});
-
-/**
- * OrganizationUpdate
- *
- * Validate mutable organization settings.
- */
-export const zOrganizationUpdate = z.object({
-    avatar: z.union([
-        z.url().min(1).max(2083),
-        z.literal('')
-    ]).nullish()
 });
 
 /**
@@ -681,16 +681,14 @@ export const zGetOrganizationApiV1OrganizationsOrganizationIdGetPath = z.object(
  */
 export const zGetOrganizationApiV1OrganizationsOrganizationIdGetResponse = zOrganizationDetails;
 
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchBody = zOrganizationUpdate;
-
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchPath = z.object({
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetPath = z.object({
     organization_id: z.uuid()
 });
 
 /**
  * Successful Response
  */
-export const zUpdateOrganizationApiV1OrganizationsOrganizationIdPatchResponse = zOrganizationIdentity;
+export const zGetOrganizationQuotasApiV1OrganizationsOrganizationIdQuotasGetResponse = zOrganizationQuotasResponse;
 
 export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetPath = z.object({
     organization_id: z.uuid()

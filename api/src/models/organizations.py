@@ -1,8 +1,7 @@
 from enum import StrEnum
 from uuid import UUID
-from typing import Literal
 from datetime import datetime
-from pydantic import Field, HttpUrl, BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.users import UserIdentity
 from src.models.resources import OrganizationIdentity
@@ -23,11 +22,20 @@ class OrganizationCreate(BaseModel):
     name: str = Field(min_length=1, max_length=128)
 
 
-class OrganizationUpdate(BaseModel):
-    """Validate mutable organization settings."""
+class OrganizationQuotasResponse(BaseModel):
+    """Represent stored per-Organization quotas in administrator responses."""
 
-    # Metadata
-    avatar: HttpUrl | Literal[""] | None = Field(default=None, max_length=2048)
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Database
+    database_size_mib: int
+    database_instances: int
+
+    # Storage
+    storage_quota_bytes: int
 
 
 class OrganizationInvitationCreate(BaseModel):

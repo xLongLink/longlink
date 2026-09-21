@@ -16,13 +16,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.models.organizations import (
     OrganizationCreate,
-    OrganizationUpdate,
     OrganizationDetails,
     OrganizationMemberUpdate,
+    OrganizationQuotasResponse,
     OrganizationInvitationCreate,
 )
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 STORAGE_USAGE_TIMEOUT_SECONDS = 15
@@ -85,26 +86,20 @@ async def get_organization_solutions(
     return await organizations.solutions(session, membership.organization_id)
 
 
-@router.patch("/organizations/{organization_id}", response_model=OrganizationIdentity)
-async def update_organization(
-    payload: OrganizationUpdate,
-    user: User = Depends(authuser),
-    membership: UserOrganization = Depends(organization_access),
+@router.get("/organizations/{organization_id}/quotas", response_model=OrganizationQuotasResponse)
+async def get_organization_quotas(
+    organization_id: UUID,
+    _user: User = Depends(authadmin),
     session: AsyncSession = Depends(get_session),
 ):
-    """Update mutable organization settings."""
+    """Return stored Organization quotas for administrator views."""
 
-    # Persist mutable metadata only while the Organization remains active.
-    organization = await organizations.update(
-        session,
-        membership.organization_id,
-        str(payload.avatar) if payload.avatar is not None else None,
-        user.id,
-    )
-    if organization is None:
+    # Read stored quotas without touching provider boundaries.
+    organization = await session.get(Organization, organization_id)
+    if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Organization not found")
-    await session.commit()
     return organization
+
 
 @router.get(
     "/organizations/{organization_id}/storage",
