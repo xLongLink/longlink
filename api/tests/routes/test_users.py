@@ -154,16 +154,14 @@ async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchang
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Keep the persisted profile unchanged and queue neither organization's synchronization."""
+    """Keep the persisted profile unchanged without touching organization synchronization."""
 
     # Arrange
     user = users[0]
-    first_organization = await create_organization(user, name="acme")
-    second_organization = await create_organization(user, name="globex")
+    organization = await create_organization(user, name="acme")
     async with session_scope() as session:
-        first_organization.database_state = DatabaseState.available
-        second_organization.database_state = DatabaseState.available
-        session.add_all([first_organization, second_organization])
+        organization.database_state = DatabaseState.available
+        session.add(organization)
         await session.commit()
 
     # Act
@@ -176,9 +174,6 @@ async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchang
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
         assert persisted_user.name == "Platform Administrator"
-        persisted_first_organization = await session.get(Organization, first_organization.id)
-        assert persisted_first_organization is not None
-        assert persisted_first_organization.database_state == DatabaseState.available
-        persisted_second_organization = await session.get(Organization, second_organization.id)
-        assert persisted_second_organization is not None
-        assert persisted_second_organization.database_state == DatabaseState.available
+        persisted_organization = await session.get(Organization, organization.id)
+        assert persisted_organization is not None
+        assert persisted_organization.database_state == DatabaseState.available

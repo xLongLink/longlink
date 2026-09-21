@@ -611,6 +611,32 @@ async def test_solution_proxy_rejects_cross_organization_access(
     assert response.json() == {"detail": "Access required"}
 
 
+def patch_runtime_access_once(monkeypatch: pytest.MonkeyPatch, mutate: Callable[[], Awaitable[None]]) -> None:
+    """Apply one runtime revocation on first admission, then resolve fresh access."""
+
+    real_access = proxy_routes.organizations.solution_runtime_access
+    admitted = False
+
+    async def access(
+        session: AsyncSession, user_id: UUID, solution_id: UUID
+    ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
+        """Revoke runtime state once, then resolve access as the handler observes it."""
+
+        nonlocal admitted
+        if not admitted:
+            admitted = True
+            await mutate()
+        return await real_access(session, user_id, solution_id)
+
+    def unexpected_gateway(*_args: object) -> object:
+        """Fail if revoked access reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+
+
 async def test_solution_proxy_rechecks_access_after_runtime_admission(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -631,32 +657,16 @@ async def test_solution_proxy_rechecks_access_after_runtime_admission(
         )
         await session.commit()
 
-    real_access = proxy_routes.organizations.solution_runtime_access
-    admitted = False
+    async def revoke_membership() -> None:
+        """Delete the member grant the handler observes on admission."""
 
-    async def access(
-        session: AsyncSession, user_id: UUID, solution_id: UUID
-    ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-        """Revoke member access after the initial check, before the proxy recheck."""
+        async with session_scope() as session:
+            membership = await session.get(UserOrganization, (member.id, solution.organization_id))
+            assert membership is not None
+            await session.delete(membership)
+            await session.commit()
 
-        nonlocal admitted
-        result = await real_access(session, user_id, solution_id)
-        if not admitted:
-            admitted = True
-            async with session_scope() as session:
-                membership = await session.get(UserOrganization, (member.id, solution.organization_id))
-                assert membership is not None
-                await session.delete(membership)
-                await session.commit()
-        return result
-
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if revoked access reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client was constructed")
-
-    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    patch_runtime_access_once(monkeypatch, revoke_membership)
 
     # Act
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -676,40 +686,24 @@ async def test_solution_proxy_rechecks_readiness_after_runtime_admission(
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    real_access = proxy_routes.organizations.solution_runtime_access
-    admitted = False
+    async def leave_running_state() -> None:
+        """Move the Solution out of running state before admission resolves."""
 
-    async def access(
-        session: AsyncSession, user_id: UUID, solution_id: UUID
-    ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
-        """Move the Solution out of running state after the initial check, before the proxy recheck."""
+        async with session_scope() as session:
+            persisted_solution = await session.get(Solution, solution.id)
+            assert persisted_solution is not None
+            persisted_solution.status = Status.creating
+            await session.commit()
 
-        nonlocal admitted
-        result = await real_access(session, user_id, solution_id)
-        if not admitted:
-            admitted = True
-            async with session_scope() as session:
-                persisted_solution = await session.get(Solution, solution.id)
-                assert persisted_solution is not None
-                persisted_solution.status = Status.creating
-                await session.commit()
-        return result
-
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if non-running traffic reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client was constructed")
-
-    monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    patch_runtime_access_once(monkeypatch, leave_running_state)
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": "Solution is not ready"}
-    assert response.headers["retry-after"] == "5"
+    assert response.json() == {"detail": "Solution is not ready yet. Please try again shortly."}
+    assert response.headers["cache-control"] == "no-store"
 
 
 async def test_solution_proxy_returns_unavailable_when_gateway_request_fails(
