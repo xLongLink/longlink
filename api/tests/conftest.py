@@ -293,6 +293,12 @@ async def gateway_certificate(_cluster: object) -> str:
     return "gateway-certificate"
 
 
+async def database_storage_class(_cluster: object) -> str:
+    """Return the StorageClass selected from the test Compute cluster."""
+
+    return "local-path"
+
+
 @pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""
@@ -328,6 +334,7 @@ async def reset_db(
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
     monkeypatch.setattr("src.routes.v1.computes.gateway.certificate", gateway_certificate)
     monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.storageclasses.resolve", database_storage_class)
     monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     session.enable_sqlite_foreign_keys(engine)
     async with engine.begin() as conn:

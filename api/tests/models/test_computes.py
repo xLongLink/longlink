@@ -14,7 +14,6 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
             "name": "Compute",
             "storage_endpoint": "https://storage.example",
             "gateway_url": "https://gateway.example",
-            "database_storage_class": "local-path",
             "kubeconfig": (
                 "apiVersion: v1\n"
                 "clusters:\n- name: cluster\n  cluster:\n    server: https://kubernetes.example\n"
@@ -38,7 +37,6 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
             {
                 "name": "Compute",
                 "gateway_url": "https://gateway.example",
-                "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
                 "kubeconfig": {
                     "apiVersion": "v1",
@@ -90,7 +88,6 @@ def test_compute_registry_create_rejects_invalid_kubeconfigs(kubeconfig: object,
                 "name": "Compute",
                 "kubeconfig": kubeconfig,
                 "gateway_url": "https://gateway.example",
-                "database_storage_class": "local-path",
                 "storage_endpoint": "https://storage.example",
             }
         )

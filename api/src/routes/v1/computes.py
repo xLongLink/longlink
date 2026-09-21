@@ -5,7 +5,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session
 from src.errors import InvalidError, UnavailableError
 from src.logger import logger
-from src.kubernetes import gateway
+from src.kubernetes import gateway, storageclasses
 from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
@@ -46,6 +46,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
     async with cluster:
         cluster_uid = await cluster.cluster_uid()
         try:
+            database_storage_class = await storageclasses.resolve(cluster)
             credentials = await Storage.controller_credentials(cluster)
             gateway_certificate = await gateway.certificate(cluster)
             storage_certificate = await Storage.certificate(cluster)
@@ -56,6 +57,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
             raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
         candidate = ComputeRegistry(
             **payload.model_dump(),
+            database_storage_class=database_storage_class,
             gateway_certificate=gateway_certificate,
             storage_certificate=storage_certificate,
             storage_access_key=credentials.access_key,

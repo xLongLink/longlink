@@ -49,11 +49,11 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
             "users": [{"name": "user", "user": {"token": "secret"}}],
         },
         gateway_url="https://gateway.example",
-        database_storage_class="local-path",
         storage_endpoint="https://storage.example",
     )
     registry = ComputeRegistry(
         **payload.model_dump(),
+        database_storage_class="local-path",
         cluster_uid="cluster-uid",
         storage_access_key="controller",
         storage_secret_key="controller-secret",
@@ -69,6 +69,7 @@ async def test_create_rejects_duplicate_compute_clusters() -> None:
                 session,
                 ComputeRegistry(
                     **payload.model_copy(update={"name": "Cluster Alias"}).model_dump(),
+                    database_storage_class="local-path",
                     cluster_uid="cluster-uid",
                     storage_access_key="controller",
                     storage_secret_key="controller-secret",
