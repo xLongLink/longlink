@@ -98,15 +98,8 @@
                 <TextInput
                     label="Storage controller HTTPS endpoint"
                     value="$registration.storage_endpoint"
-                    placeholder="https://storage.example:9443"
                     isRequired="true"
                 />
-                <Text type="supporting">
-                    Reachable from the Platform. Administrator keys are read
-                    from rustfs/longlink-rustfs; TLS certificates are read
-                    through the Kubeconfig. Workloads use
-                    https://longlink-storage.rustfs.svc:443.
-                </Text>
                 <TextArea label="Kubeconfig" value="$registration.kubeconfig" isRequired="true" />
             </Stack>
             <Stack direction="horizontal" gap="2" justify="end">
