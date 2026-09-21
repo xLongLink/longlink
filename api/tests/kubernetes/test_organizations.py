@@ -27,7 +27,7 @@ async def test_organization_apply_creates_namespace_boundary_resources(monkeypat
     assert [resource["kind"] for resource in applied] == ["Namespace", "NetworkPolicy"]
     assert applied[0]["metadata"] == {
         "name": "longlink-compute-00000000000040008000000000000001",
-        "labels": {"longlink.io/namespace": "compute", "pod-security.kubernetes.io/enforce": "restricted"},
+        "labels": {"pod-security.kubernetes.io/enforce": "restricted"},
     }
     metadata = applied[1]["metadata"]
     assert isinstance(metadata, dict)

@@ -3,7 +3,6 @@ kind: Namespace
 metadata:
     name: '$namespace'
     labels:
-        longlink.io/namespace: database
         longlink.io/compute-namespace: '$compute_namespace'
 ---
 apiVersion: v1

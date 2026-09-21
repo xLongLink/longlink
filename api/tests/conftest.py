@@ -91,7 +91,7 @@ class StorageKubernetes:
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
-    async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
+    async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Accept provisioning."""
 
     @staticmethod

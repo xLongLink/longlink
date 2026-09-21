@@ -33,7 +33,7 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
+        async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Record bucket creation."""
 
             calls.append("storage")
@@ -98,7 +98,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
         def __init__(self, *args: object) -> None:
             """Accept registry connection settings."""
 
-        async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
+        async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Fail bucket creation."""
 
             calls.append("storage")
