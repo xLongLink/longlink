@@ -962,7 +962,7 @@ async def test_logout_rejects_untrusted_origin_without_browser_session(client: A
         pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
     ],
 )
-async def test_authenticated_logout_rejects_alternate_local_origin_in_production(
+async def test_authenticated_logout_rejects_alternate_local_origin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
     public_origin: str,
@@ -971,7 +971,6 @@ async def test_authenticated_logout_rejects_alternate_local_origin_in_production
     """Reject local development origins when production permits only its public origin."""
 
     # Arrange
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://platform.example")
     monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
     client = clients[0]
 

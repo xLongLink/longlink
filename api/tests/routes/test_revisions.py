@@ -56,26 +56,31 @@ async def test_revision_snapshot_cannot_be_modified(users: tuple[User, User, Use
             await session.commit()
 
 
-async def test_update_preserves_patches_and_reresolves(
+async def test_update_noop_preserves_source_and_patches(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Keep source identity, validate final metadata, and expose names rather than secrets."""
+    """Preserve source identity and patches when resubmitting an unchanged release."""
 
+    # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
     url = f"/api/v1/solutions/{solution.id}/update"
     source = "ghcr.io/longlink/dashboard@sha256:test"
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
-    inspected: list[str] = []
 
     async def metadata(image: Image) -> LongLinkMetadata:
         """Resolve metadata for the persisted source at the external boundary."""
 
-        inspected.append(image)
+        assert image == source
         return resolved
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-    assert (await clients[0].post(url, json={})).status_code == 204
+
+    # Act
+    response = await clients[0].post(url, json={})
+
+    # Assert
+    assert response.status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
@@ -85,43 +90,152 @@ async def test_update_preserves_patches_and_reresolves(
         assert revision.configured_envs == ["DROP", "KEEP"]
         assert revision.min_scale == 0
 
-    # Source checks require maintenance and cannot be used as a registry oracle by other users.
-    inspected.clear()
-    assert (await clients[1].get(url)).status_code == 403
-    assert (await clients[1].post(url, json={})).status_code == 403
+
+async def test_update_rejects_unauthorized_and_stale_revision(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject update inspection without maintain access and stale revision submissions."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    url = f"/api/v1/solutions/{solution.id}/update"
+    inspected: list[str] = []
+
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Fail if denied or stale submissions reach image resolution."""
+
+        inspected.append(image)
+        return LongLinkMetadata(image=image)
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+
+    # Act
+    forbidden_get = await clients[1].get(url)
+    forbidden_post = await clients[1].post(url, json={})
+    stale_response = await clients[0].post(url, json={"expected_revision_id": str(uuid4())})
+
+    # Assert
+    assert forbidden_get.status_code == 403
+    assert forbidden_post.status_code == 403
+    assert stale_response.status_code == 409
     assert inspected == []
-    assert (await clients[0].post(url, json={"expected_revision_id": str(uuid4())})).status_code == 409
-    assert inspected == []
+
+
+async def test_update_check_exposes_names_without_secrets(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Expose configured environment names without values in the advisory check."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    url = f"/api/v1/solutions/{solution.id}/update"
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Resolve metadata for the persisted source at the external boundary."""
+
+        return resolved
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    assert (await clients[0].post(url, json={})).status_code == 204
+
+    # Act
     check = await clients[0].get(url)
+
+    # Assert
     assert check.status_code == 200
     check_payload = check.json()
     assert check_payload["current_image"] == check_payload["metadata"]["image"] == resolved.image
     assert {"source", "image", "available"}.isdisjoint(check_payload)
     assert check_payload["configured_envs"] == ["DROP", "KEEP"]
+    assert check_payload["min_scale"] == 0
     assert "private-value" not in check.text
-    assert check.json()["min_scale"] == 0
-    assert (await clients[0].post(url, json={"envs": {"KEEP": "private-value"}})).status_code == 409
-    async with session_scope() as session:
-        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 2
-    assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
-    assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 409
-    assert (await clients[0].post(url, json={"min_scale": 2})).status_code == 422
 
-    # A review is advisory: submission re-resolves a moved tag and enforces its new requirements.
+
+async def test_update_enforces_idempotency_and_min_scale_bounds(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject unchanged resubmissions and out-of-range scale settings."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    url = f"/api/v1/solutions/{solution.id}/update"
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Resolve metadata for the persisted source at the external boundary."""
+
+        return resolved
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    assert (await clients[0].post(url, json={})).status_code == 204
+
+    # Act
+    unchanged_response = await clients[0].post(url, json={"envs": {"KEEP": "private-value"}})
+    grow_response = await clients[0].post(url, json={"min_scale": 1})
+    repeat_response = await clients[0].post(url, json={"min_scale": 1})
+    invalid_response = await clients[0].post(url, json={"min_scale": 2})
+
+    # Assert
+    assert unchanged_response.status_code == 409
+    assert grow_response.status_code == 204
+    assert repeat_response.status_code == 409
+    assert invalid_response.status_code == 422
+    async with session_scope() as session:
+        assert await session.scalar(select(func.count()).select_from(Revision).where(col(Revision.solution_id) == solution.id)) == 3
+
+
+async def test_update_reresolves_moved_tag_and_enforces_required_envs(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Re-resolve a moved tag on submission and enforce its new required variables."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization, secrets={"KEEP": "private-value", "DROP": "old-value"})
+    url = f"/api/v1/solutions/{solution.id}/update"
+    source = "ghcr.io/longlink/dashboard@sha256:test"
+    resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:first"))
+    inspected: list[str] = []
+
+    async def metadata(image: Image) -> LongLinkMetadata:
+        """Resolve the current candidate metadata at the external boundary."""
+
+        inspected.append(image)
+        return resolved
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
+    assert (await clients[0].post(url, json={})).status_code == 204
+    assert (await clients[0].post(url, json={"min_scale": 1})).status_code == 204
+
+    # Act: the advisory check observes the moved tag without persisting it.
     resolved = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:candidate"))
     check = await clients[0].get(url)
+
+    # Assert the check is advisory before enforcing the new requirements.
     assert check.json()["current_image"] == "ghcr.io/longlink/dashboard@sha256:first"
     assert check.json()["metadata"]["image"] == resolved.image
+
+    # Arrange the final requirements.
     resolved = LongLinkMetadata(
         image=Image("ghcr.io/longlink/dashboard@sha256:final"),
         environments=[EnvironmentMetadata(name="NEW", required=True), EnvironmentMetadata(name="KEEP", required=True)],
     )
+
+    # Act
     missing = await clients[0].post(url, json={})
-    assert missing.status_code == 422 and "NEW" in missing.text
     invalid = await clients[0].post(url, json={"envs": {"LONGLINK_KEY": "private-value"}})
+    keep_removed = await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})
+    success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
+
+    # Assert
+    assert missing.status_code == 422 and "NEW" in missing.text
     assert invalid.status_code == 422 and "private-value" not in invalid.text
-    assert (await clients[0].post(url, json={"envs": {"NEW": "new-value", "KEEP": None}})).status_code == 422
-    assert (await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})).status_code == 204
+    assert keep_removed.status_code == 422
+    assert success.status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
         assert current is not None
