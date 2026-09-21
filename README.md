@@ -10,6 +10,8 @@
 > LongLink is currently in development. \
 > APIs, features, license and documentation may change as the project evolves.
 
+<br />
+
 ## Introduction
 
 AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
@@ -95,6 +97,7 @@ Cleanup
 make down  # Stop local services and the cluster
 ```
 
+<br />
 <br />
 
 ---
