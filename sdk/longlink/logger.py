@@ -21,7 +21,7 @@ class ColorFormatter(logging.Formatter):
 
 
 class ApiAccessFilter(logging.Filter):
-    """Allow access logs for Solution requests while hiding frontend noise."""
+    """Allow relevant access logs while hiding frontend and successful probe noise."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Return True when the request should remain visible in access logs."""
@@ -33,6 +33,12 @@ class ApiAccessFilter(logging.Filter):
         # Extract normalized request metadata from uvicorn access-log arguments.
         method = str(record.args[1]).upper()
         path = str(record.args[2]).split("?", 1)[0]
+
+        # Hide routine successful Platform probes while retaining failures for diagnosis.
+        if path in ("/api/v1/healthz", "/api/v1/readyz") and len(record.args) >= 5:
+            status_code = record.args[4]
+            if isinstance(status_code, int) and 200 <= status_code < 300:
+                return False
 
         # Always show mutating and API requests while hiding frontend and asset requests.
         return method in ("POST", "PUT", "PATCH", "DELETE") or path.startswith("/api/")
