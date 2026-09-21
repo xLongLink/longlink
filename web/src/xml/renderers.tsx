@@ -63,36 +63,11 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
         let mounted = true;
         const controller = new AbortController();
 
-        // Reset renderer-owned state before async setup runs.
-        ctx.services.setups = {};
-        for (const id of Object.keys(ctx.scope.bindings)) {
-            if (id !== 'params') delete ctx.scope.bindings[id];
-        }
-        ctx.services.invalidate = async (id) => {
-            // Ignore invalidations after this renderer releases ownership.
-            if (!mounted) return;
-
-            // Keep stale data visible while the refresh runs; restore it if the refresh fails.
-            const previous = ctx.scope.bindings[id];
-
-            // Skip unknown invalidation targets.
-            const setup = Object.hasOwn(ctx.services.setups, id) ? ctx.services.setups[id] : undefined;
-            if (setup) {
-                try {
-                    await setup();
-                } catch (error: unknown) {
-                    if (!mounted) return;
-                    ctx.scope.bindings[id] = previous;
-                    reportSetupError(error instanceof Error ? error : new Error('XML refresh failed'));
-                    return;
-                }
-            }
-
-            // Do not publish changes when cleanup occurred during setup.
-            if (!mounted) return;
-        };
-
-        void setupContext(setup.nodes, ctx, controller.signal)
+        void setupContext(setup.nodes, ctx, {
+            isActive: () => mounted,
+            onError: (error) => reportSetupError(error instanceof Error ? error : new Error('XML refresh failed')),
+            signal: controller.signal,
+        })
             .then(() => {
                 // Do not publish setup completion after cleanup.
                 if (!mounted) return;
