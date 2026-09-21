@@ -2,10 +2,9 @@ import jwt
 import hmac
 from uuid import UUID
 from typing import Literal
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pydantic import TypeAdapter, ValidationError
 from src.environments import env
-from longlink.utils.time import utcnow
 from src.database.services import users
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,7 +34,7 @@ def create_registration_token(email: Email) -> str:
         {
             "email": email,
             "aud": REGISTRATION_TOKEN_AUDIENCE,
-            "exp": utcnow() + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
+            "exp": datetime.now(UTC) + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
@@ -66,7 +65,7 @@ def create_password_reset_token(user: User) -> str:
             "sub": str(user.id),
             "password_fingerprint": password_fingerprint(user.password),
             "aud": PASSWORD_RESET_TOKEN_AUDIENCE,
-            "exp": utcnow() + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
+            "exp": datetime.now(UTC) + timedelta(seconds=EMAIL_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
@@ -83,7 +82,7 @@ def create_oauth_state_token(provider: Literal["google", "github"], state: str, 
             "state": state,
             "verifier": verifier,
             "aud": OAUTH_STATE_TOKEN_AUDIENCE,
-            "exp": utcnow() + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
+            "exp": datetime.now(UTC) + timedelta(seconds=OAUTH_STATE_TOKEN_LIFETIME_SECONDS),
         },
         env.SESSION_KEY,
         algorithm=JWT_ALGORITHM,
@@ -127,7 +126,7 @@ def create_auth_token(user: User) -> str:
     """Create one signed browser session bound to the current password credential."""
 
     # Bind browser authentication to the current password so password changes invalidate existing cookies.
-    issued_at = utcnow()
+    issued_at = datetime.now(UTC)
     return jwt.encode(
         {
             "sub": str(user.id),

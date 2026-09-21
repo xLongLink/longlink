@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiErrorContext } from '@/lib/errors';
-import { createQueryRuntime } from '@/lib/react-query';
+import { createTestQueryRuntime } from './helpers';
 import { SolutionRuntime } from '@/components/Solution';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -182,9 +182,7 @@ describe('SolutionRuntime', () => {
     async function renderRuntime(initialPath = '/'): Promise<HTMLDivElement> {
         const container = document.createElement('div');
         root = createRoot(container);
-        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-        const { client, reportError } = createQueryRuntime(vi.fn(), false);
-        client.setDefaultOptions({ queries: { retry: false } });
+        const { client, reportError } = createTestQueryRuntime();
 
         await act(async () => {
             root?.render(

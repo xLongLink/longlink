@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from src.utils import names, roles, postgres
 from sqlalchemy import Select, func, delete, select
@@ -10,7 +10,6 @@ from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eag
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
 from src.models.roles import OrganizationRoles
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.services import operations
 from src.database.services import invitations as invitation_service
@@ -207,7 +206,7 @@ async def invitations(session: AsyncSession, organization_id: UUID) -> Sequence[
         .join(Organization, col(Organization.id) == col(OrganizationInvitation.organization_id))
         .where(
             col(OrganizationInvitation.organization_id) == organization_id,
-            col(OrganizationInvitation.created_at) > utcnow() - timedelta(days=7),
+            col(OrganizationInvitation.created_at) > datetime.now(UTC) - timedelta(days=7),
             col(Organization.deleted_at).is_(None),
         )
         .order_by(col(OrganizationInvitation.created_at).desc())
@@ -530,7 +529,7 @@ async def soft_delete(session: AsyncSession, organization_id: UUID, user: User) 
 
     # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
     if organization.deleted_at is None:
-        now = utcnow()
+        now = datetime.now(UTC)
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now

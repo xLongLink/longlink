@@ -1,12 +1,11 @@
 import pytest
 import asyncio
 from uuid import UUID
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
 from collections.abc import Callable, Awaitable, AsyncIterator
-from longlink.utils.time import utcnow
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
 
@@ -19,7 +18,7 @@ def leased_operation() -> Operation:
     return Operation(
         kind=OperationKind.organization_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
-        lease_expires_at=utcnow() + timedelta(minutes=1),
+        lease_expires_at=datetime.now(UTC) + timedelta(minutes=1),
     )
 
 
@@ -31,7 +30,7 @@ def failed_transition(operation: Operation) -> Callable[[object, UUID, str], Awa
 
         assert operation_id == operation.id
         operation.failed = reason
-        operation.finished_at = utcnow()
+        operation.finished_at = datetime.now(UTC)
         return operation
 
     return fail
@@ -143,7 +142,7 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
 
         transitions.append((operation_id, reason))
         operation.failed = reason
-        operation.finished_at = utcnow()
+        operation.finished_at = datetime.now(UTC)
         return operation
 
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
@@ -231,7 +230,7 @@ async def test_execute_rejects_operation_with_an_expired_worker_lease() -> None:
 
     # Arrange
     operation = leased_operation()
-    operation.lease_expires_at = utcnow() - timedelta(seconds=1)
+    operation.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
 
     # Act and assert
     with pytest.raises(ValueError, match="Operation must be claimed before execution"):
@@ -254,7 +253,7 @@ async def test_execute_completes_successful_operation(monkeypatch: pytest.Monkey
         """Record the terminal success transition."""
 
         transitions.append(operation_id)
-        operation.finished_at = utcnow()
+        operation.finished_at = datetime.now(UTC)
         return operation
 
     monkeypatch.setitem(operation_worker.handlers, operation.kind, complete_handler)

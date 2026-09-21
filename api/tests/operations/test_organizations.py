@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID, uuid4
-from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes
+from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_solution, create_organization, create_ready_compute
 from src.operations import organizations as organization_operations
@@ -124,24 +124,14 @@ async def test_reconcile_skips_missing_organization_without_constructing_provide
     """Treat a missing Organization as an already completed reconciliation target."""
 
     # Arrange
-    calls: list[str] = []
+    reject_provider_construction(
+        monkeypatch,
+        (organization_operations.databases.postgres, "Postgres"),
+        (organization_operations, "Kubernetes"),
+    )
 
-    class Provider:
-        """Capture unexpected provider construction."""
-
-        def __init__(self, *args: object) -> None:
-            """Record unexpected provider construction."""
-
-            calls.append("provider")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
-    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
-
-    # Act
+    # Act and assert
     await organization_operations.reconcile(uuid4())
-
-    # Assert
-    assert calls == []
 
 
 async def test_reconcile_skips_deleted_organization_without_constructing_providers(
@@ -157,24 +147,14 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
         assert persisted is not None
         persisted.deleted_at = datetime.now(UTC)
         await session.commit()
-    calls: list[str] = []
+    reject_provider_construction(
+        monkeypatch,
+        (organization_operations.databases.postgres, "Postgres"),
+        (organization_operations, "Kubernetes"),
+    )
 
-    class Provider:
-        """Capture unexpected provider construction."""
-
-        def __init__(self, *args: object) -> None:
-            """Record unexpected provider construction."""
-
-            calls.append("provider")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
-    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
-
-    # Act
+    # Act and assert
     await organization_operations.reconcile(organization.id)
-
-    # Assert
-    assert calls == []
 
 
 async def test_delete_rejects_active_organization_without_external_cleanup(
@@ -185,38 +165,28 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
     # Arrange
     compute = await create_ready_compute()
     organization = await create_organization(users[0], compute=compute)
-    calls: list[str] = []
-
-    class Provider:
-        """Capture unexpected provider construction."""
-
-        def __init__(self, *args: object) -> None:
-            """Record unexpected provider construction."""
-
-            calls.append("provider")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Provider)
-    monkeypatch.setattr(organization_operations, "Kubernetes", Provider)
+    reject_provider_construction(
+        monkeypatch,
+        (organization_operations.databases.postgres, "Postgres"),
+        (organization_operations, "Kubernetes"),
+    )
 
     # Act
     reason = await organization_operations.delete(organization.id)
 
     # Assert
     assert reason == "Active Organizations cannot be deleted by lifecycle cleanup"
-    assert calls == []
 
 
 async def test_delete_skips_missing_organization_without_external_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
     """Treat a missing Organization tombstone as completed cleanup."""
 
     # Arrange
-    def unexpected_provider(*_args: object) -> object:
-        """Reject provider construction for an absent cleanup target."""
-
-        raise AssertionError("providers must not be constructed")
-
-    monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", unexpected_provider)
-    monkeypatch.setattr(organization_operations, "Kubernetes", unexpected_provider)
+    reject_provider_construction(
+        monkeypatch,
+        (organization_operations.databases.postgres, "Postgres"),
+        (organization_operations, "Kubernetes"),
+    )
 
     # Act and assert
     assert await organization_operations.delete(uuid4()) is None

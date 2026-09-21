@@ -1,10 +1,22 @@
+import { vi } from 'vitest';
 import * as xml from '@/xml';
 import { ApiProvider } from '@/providers';
 import * as context from '@/xml/core/context';
+import { createQueryRuntime } from '@/lib/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { compileAttribute } from '@/xml/expressions/compile';
 import type { ASTNode, ASTProps, XmlRuntime } from '@/xml/types';
+
+/** Creates an isolated query runtime with deterministic test defaults. */
+export function createTestQueryRuntime() {
+    // Keep background retries and act warnings identical across runtime suites.
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const runtime = createQueryRuntime(vi.fn(), false);
+    runtime.client.setDefaultOptions({ queries: { retry: false } });
+
+    return runtime;
+}
 
 /** Creates a complete XML runtime with inert host services for tests. */
 export function createContext(options: Partial<context.CreateContextOptions> = {}): XmlRuntime {

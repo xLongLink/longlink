@@ -1,8 +1,7 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import MetaData
-from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 
 
@@ -20,8 +19,8 @@ class AuditTable(PlatformModel):
     """
 
     # Audit timestamps
-    created_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
-    updated_at: datetime = Field(default_factory=utcnow, sa_type=UTCDateTime)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=UTCDateTime)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_type=UTCDateTime)
     deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
 
     # Audit user identifiers

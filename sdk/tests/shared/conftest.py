@@ -2,6 +2,7 @@ import docker
 import pytest
 import asyncio
 import pytest_asyncio
+from contextlib import closing
 from docker.errors import DockerException
 from collections.abc import AsyncIterator
 from docker.constants import DEFAULT_DOCKER_API_VERSION
@@ -16,16 +17,13 @@ POSTGRES_DATABASE = "longlink"
 def require_docker_daemon() -> None:
     """Skip the current test only when the configured Docker daemon cannot be reached."""
 
-    # Use the same Docker client configuration as Testcontainers.
-    client = None
+    # Probe Docker with a fixed API version and close the client on every outcome.
     try:
         client = docker.from_env(version=DEFAULT_DOCKER_API_VERSION)
-        client.ping()
+        with closing(client):
+            client.ping()
     except (DockerException, OSError) as exc:
         pytest.skip(f"Docker daemon is not available: {exc}")
-    finally:
-        if client is not None:
-            client.close()
 
 
 @pytest_asyncio.fixture

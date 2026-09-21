@@ -1,7 +1,7 @@
 import asyncio
 import contextlib
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
 from sqlalchemy import text, delete, select, update
@@ -9,7 +9,6 @@ from dataclasses import field, dataclass
 from src.kubernetes import namespace
 from collections.abc import Iterator, AsyncIterator
 from src.models.types import DatabaseSSLMode
-from longlink.utils.time import utcnow
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import organizations
@@ -66,7 +65,7 @@ class Lease:
         """Register the actual consuming task, including Starlette's streaming task."""
 
         # A response may start in a different task after its admission task has finished.
-        if self.lost or self.expires_at <= utcnow():
+        if self.lost or self.expires_at <= datetime.now(UTC):
             raise RuntimeError("Organization activity lease was lost")
         task = asyncio.current_task()
         if task is None:
@@ -85,7 +84,7 @@ class Lease:
 
         # Expired workers cannot publish results or renew a replacement worker's lease.
         row = await session.get(OrganizationActivity, self.id, populate_existing=True)
-        return row is not None and row.expires_at == self.expires_at and row.expires_at > utcnow()
+        return row is not None and row.expires_at == self.expires_at and row.expires_at > datetime.now(UTC)
 
     async def check(self) -> None:
         """Reject stale transition workers immediately before external operations."""
@@ -110,7 +109,7 @@ class Lease:
                         await lock(session, self.organization_id)
                         if not await self.owned(session):
                             raise RuntimeError("Organization activity lease was lost")
-                        expires_at = utcnow().replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
+                        expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS)
                         await session.execute(
                             update(OrganizationActivity).where(col(OrganizationActivity.id) == self.id).values(expires_at=expires_at)
                         )
@@ -145,7 +144,7 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
     """Insert an activity after the caller has locked its Organization."""
 
     # The Organization UUID reserves one lease slot for exclusive database transitions.
-    now = utcnow()
+    now = datetime.now(UTC)
     await session.execute(
         delete(OrganizationActivity).where(
             col(OrganizationActivity.organization_id) == organization_id,
@@ -177,7 +176,7 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
                 select(col(OrganizationActivity.id))
                 .where(
                     col(OrganizationActivity.organization_id) == organization_id,
-                    col(OrganizationActivity.expires_at) > utcnow(),
+                    col(OrganizationActivity.expires_at) > datetime.now(UTC),
                 )
                 .limit(1)
             )
@@ -201,7 +200,9 @@ async def ready(organization_id: UUID) -> None:
             if organization is None or organization.deleted_at is not None:
                 raise RuntimeError("Organization is unavailable")
             transition = await session.get(OrganizationActivity, organization_id)
-            if organization.database_state == DatabaseState.available and (transition is None or transition.expires_at <= utcnow()):
+            if organization.database_state == DatabaseState.available and (
+                transition is None or transition.expires_at <= datetime.now(UTC)
+            ):
                 return
             lease = await _claim(session, organization_id, transition=True)
             await session.commit()

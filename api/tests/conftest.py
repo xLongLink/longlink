@@ -214,6 +214,19 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
 
 
+def reject_provider_construction(monkeypatch: pytest.MonkeyPatch, *targets: tuple[object, str]) -> None:
+    """Fail any provider construction for absent lifecycle targets."""
+
+    # Absent targets must return before opening external provider connections.
+    def unexpected_provider(*_args: object) -> object:
+        """Reject provider construction for an absent lifecycle target."""
+
+        raise AssertionError("providers must not be constructed")
+
+    for holder, name in targets:
+        monkeypatch.setattr(holder, name, unexpected_provider)
+
+
 class FakeKubernetes(AsyncKubernetes):
     """Provide an opaque Kubernetes API client."""
 
