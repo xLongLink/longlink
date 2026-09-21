@@ -36,14 +36,12 @@ class Organization(AuditTable, table=True):
     database_size_mib: int = Field(default=100, ge=100)
     database_instances: int = Field(default=1, ge=1)
     database_state: DatabaseState = Field(
-        default=DatabaseState.needs_sync,
+        default=DatabaseState.failed,
         sa_column=Column(
             Enum(DatabaseState, name="database_state_enum", native_enum=False, create_constraint=True, validate_strings=True),
             nullable=False,
         ),
     )
-    database_usage_bytes: int | None = Field(default=None, sa_type=BigInteger)
-
     # Storage
     storage_quota_bytes: int = Field(default=1073741824, ge=1073741824, sa_type=BigInteger)
 

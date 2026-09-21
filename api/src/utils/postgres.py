@@ -231,14 +231,3 @@ class Postgres:
         async with self._connection("postgres", autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
-
-    async def database_usage(self, database_name: str) -> int | None:
-        """Return physical size for one database when it exists."""
-
-        # Query through the maintenance database so only a missing catalog row means absence.
-        async with self._connection("postgres") as conn:
-            usage = await conn.scalar(
-                text("SELECT pg_database_size(datname) FROM pg_database WHERE datname = :database_name"),
-                {"database_name": database_name},
-            )
-        return int(usage) if usage is not None else None

@@ -10,7 +10,7 @@ from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import solutions, operations
+from src.database.services import solutions
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
@@ -86,8 +86,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
             assert current is not None and current.status == Status.failed
             assert current.deployed_revision_id is None
             assert current.desired_revision.failed
-            await operations.schedule_reconciliation(session)
-            await session.commit()
         drained = await drain_operations()
         assert all(scheduled.kind != OperationKind.solution_deploy for scheduled in drained)
         return
@@ -184,10 +182,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     assert calls[-1][2] is False
     assert await claim_operation() is None
 
-    # Reconciliation repairs last-known-good, never endlessly retries failed desired.
-    async with session_scope() as session:
-        await operations.schedule_reconciliation(session)
-        await session.commit()
+    # Failed desired is never retried; only live recovery work remains.
     drained = await drain_operations()
     assert not any(scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id for scheduled in drained)
 

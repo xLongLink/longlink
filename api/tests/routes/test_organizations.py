@@ -411,54 +411,6 @@ async def test_other_organization_user_cannot_delete_solution(
 
 
 @pytest.mark.parametrize(
-    ("database_state", "usage"),
-    [
-        pytest.param(DatabaseState.available, 3584, id="available"),
-        pytest.param(DatabaseState.failed, None, id="failed"),
-    ],
-)
-async def test_organization_database_usage_returns_cached_usage_without_provider_access(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-    database_state: DatabaseState,
-    usage: int | None,
-) -> None:
-    """Return cached database usage without reaching Kubernetes or PostgreSQL."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    organization = await create_organization(owner, compute=await create_ready_compute())
-
-    # Persist cached telemetry for an Organization.
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.status = Status.running
-        persisted.database_state = database_state
-        persisted.database_usage_bytes = usage
-        await session.commit()
-
-    def unexpected_storage(*args: object) -> None:
-        """Reject provider access for cached database diagnostics."""
-
-        raise AssertionError("Diagnostics must not access storage")
-
-    monkeypatch.setattr("src.routes.v1.organizations.Storage", unexpected_storage)
-
-    # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/database")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {
-        "size_bytes": usage,
-        "allocated_bytes": 100 * 1024**2,
-    }
-
-
-@pytest.mark.parametrize(
     ("usage", "expected_status", "expected_usage"),
     [
         pytest.param(4096, 200, 4096, id="available"),
@@ -527,14 +479,12 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     assert response.json() == expected_payload
 
 
-@pytest.mark.parametrize("resource", ("database", "storage"))
-async def test_organization_resource_endpoints_allow_members(
+async def test_organization_storage_endpoint_allows_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    resource: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Allow resource usage for organization members."""
+    """Allow storage usage for organization members."""
 
     # Arrange
     owner, regular_member, _ = users
@@ -569,30 +519,23 @@ async def test_organization_resource_endpoints_allow_members(
         assert persisted is not None
         persisted.status = Status.running
         persisted.database_state = DatabaseState.available
-        persisted.database_usage_bytes = 0
         await session.commit()
     client = clients[1]
 
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}/{resource}")
+    response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert response.status_code == 200
-    expected_payloads: dict[str, object] = {
-        "database": {"size_bytes": 0, "allocated_bytes": 100 * 1024**2},
-        "storage": {"space_used": 0, "quota_bytes": 1073741824},
-    }
-    assert response.json() == expected_payloads[resource]
+    assert response.json() == {"space_used": 0, "quota_bytes": 1073741824}
 
 
-@pytest.mark.parametrize("resource", ("database", "storage"))
-async def test_organization_resource_endpoints_reject_non_members(
+async def test_organization_storage_endpoint_rejects_non_members(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
-    resource: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject resource inspection before constructing a tenant provider."""
+    """Reject storage inspection before constructing a tenant provider."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -605,7 +548,7 @@ async def test_organization_resource_endpoints_reject_non_members(
     monkeypatch.setattr("src.routes.v1.organizations.Storage", unexpected_provider)
 
     # Act
-    response = await clients[1].get(f"/api/v1/organizations/{organization.id}/{resource}")
+    response = await clients[1].get(f"/api/v1/organizations/{organization.id}/storage")
 
     # Assert
     assert response.status_code == 403
@@ -972,7 +915,7 @@ async def test_update_organization_member_changes_role(
         updated_members = await organizations.members(session, organization.id)
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
-        assert persisted.database_state == DatabaseState.needs_sync
+        assert persisted.database_state == DatabaseState.available
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
 

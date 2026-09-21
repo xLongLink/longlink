@@ -1,14 +1,13 @@
 from uuid import UUID
 from datetime import timedelta
 from sqlmodel import col
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select
 from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -61,7 +60,7 @@ async def create(session: AsyncSession, organization_id: UUID, email: Email, rol
 
 
 async def accept(session: AsyncSession, user: User) -> None:
-    """Accept email grants and request projection for changed memberships in the caller's transaction."""
+    """Accept email grants for changed memberships in the caller's transaction."""
 
     # Lock the recipient's pending grants before separating active and expired invitations.
     result = await session.scalars(
@@ -98,8 +97,6 @@ async def accept(session: AsyncSession, user: User) -> None:
     )
     memberships_by_organization_id = {membership.organization_id: membership for membership in result}
 
-    changed_organization_ids: set[UUID] = set()
-
     # Create access without changing existing membership roles.
     for invitation in active_invitations:
         membership = memberships_by_organization_id.get(invitation.organization_id)
@@ -111,11 +108,6 @@ async def accept(session: AsyncSession, user: User) -> None:
                     role=invitation.role,
                 )
             )
-            changed_organization_ids.add(invitation.organization_id)
 
     # Consumed and expired grants no longer need an active or audit record.
     await session.execute(delete_pending_invitations)
-
-    # Durably request projection only for changed memberships, in a stable lock order.
-    for organization_id in sorted(changed_organization_ids):
-        await session.execute(update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync))

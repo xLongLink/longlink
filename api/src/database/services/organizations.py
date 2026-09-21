@@ -18,7 +18,6 @@ from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -349,11 +348,8 @@ async def update_member_role(
         if other_owner_id is None:
             raise ConflictError("Organization must have at least one owner")
 
-    # Persist the role change and request its shared-user projection.
+    # Persist the role change.
     membership.role = role
-    await session.execute(
-        sql_update(Organization).where(col(Organization.id) == organization_id).values(database_state=DatabaseState.needs_sync)
-    )
 
 
 async def create_default(

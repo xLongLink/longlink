@@ -15,7 +15,7 @@ async def test_inspect_image_requires_authentication_before_metadata_inspection(
 
         raise AssertionError("metadata inspection should require authentication")
 
-    monkeypatch.setattr("src.routes.v1.image.images.metadata", unexpected_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
 
     # Act
     response = await client.get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")
@@ -34,7 +34,7 @@ async def test_inspect_image_returns_404_when_metadata_missing(
     async def fake_metadata(_image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
-    monkeypatch.setattr("src.routes.v1.image.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -60,7 +60,7 @@ async def test_inspect_image_returns_declared_metadata(
             environments=[EnvironmentMetadata(name="API_KEY", description="API key", required=True)],
         )
 
-    monkeypatch.setattr("src.routes.v1.image.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", fake_metadata)
 
     # Act
     response = await clients[0].get("/api/v1/image?image=ghcr.io/longlink/dashboard:latest")

@@ -13,7 +13,6 @@ class DatabaseState(StrEnum):
     """Describe the availability of an Organization's CNPG database."""
 
     available = "available"
-    needs_sync = "needs_sync"
     failed = "failed"
 
 
@@ -22,16 +21,6 @@ class OrganizationCreate(BaseModel):
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)
-
-
-class DatabaseUsage(BaseModel):
-    """Report database usage and configured storage per CNPG instance."""
-
-    # Measurement
-    size_bytes: int | None
-
-    # Capacity
-    allocated_bytes: int = Field(description="Configured storage bytes per database instance, not summed across replicas")
 
 
 class OrganizationUpdate(BaseModel):

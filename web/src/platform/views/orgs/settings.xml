@@ -9,10 +9,6 @@
         path="/api/v1/organizations/${membership.organization.id}"
     />
     <Query
-        id="database"
-        path="/api/v1/organizations/${membership.organization.id}/database"
-    />
-    <Query
         id="storage"
         path="/api/v1/organizations/${membership.organization.id}/storage"
     />
@@ -56,15 +52,10 @@
                         <Stack gap="1">
                             <Heading level="2">Organization</Heading>
                             <Text color="secondary">
-                                Review database and storage usage.
+                                Review storage usage.
                             </Text>
                         </Stack>
                         <Divider />
-                        <ProgressBar
-                            label="Database"
-                            value="${database.size_bytes ?? 0}"
-                            max="$database.allocated_bytes"
-                        />
                         <ProgressBar
                             if="$storage"
                             label="Storage"

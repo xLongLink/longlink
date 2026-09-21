@@ -15,7 +15,6 @@ from src.models.pagination import Page, Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.kubernetes.storage import Storage
 from src.models.organizations import (
-    DatabaseUsage,
     OrganizationCreate,
     OrganizationUpdate,
     OrganizationDetails,
@@ -123,23 +122,6 @@ async def get_organization_quotas(
     if organization is None or organization.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Organization not found")
     return organization
-
-
-@router.get(
-    "/organizations/{organization_id}/database",
-    response_model=DatabaseUsage,
-)
-async def get_organization_database_usage(
-    membership: UserOrganization = Depends(organization_access),
-):
-    """Return cached database usage for telemetry."""
-
-    # Allocation is stored per Organization, so telemetry needs no Kubernetes or SQL request.
-    organization = membership.organization
-    return {
-        "size_bytes": organization.database_usage_bytes,
-        "allocated_bytes": organization.database_size_mib * 1024**2,
-    }
 
 
 @router.get(

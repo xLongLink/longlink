@@ -675,7 +675,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     ]
     assert invitation is None
     assert persisted is not None
-    assert persisted.database_state == DatabaseState.needs_sync
+    assert persisted.database_state == DatabaseState.available
     assert client.cookies.get("longlink_auth") is not None
 
 
@@ -716,7 +716,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     assert membership is not None
     assert membership.role == OrganizationRoles.write
     assert persisted is not None
-    assert persisted.database_state == DatabaseState.needs_sync
+    assert persisted.database_state == DatabaseState.available
 
 
 async def test_registration_completion_rejects_duplicate_account(

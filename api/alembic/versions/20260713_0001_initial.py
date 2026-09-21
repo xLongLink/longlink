@@ -101,7 +101,6 @@ def upgrade() -> None:
             sa.Enum(
                 "available",
                 "failed",
-                "needs_sync",
                 name="database_state_enum",
                 native_enum=False,
                 create_constraint=True,
@@ -109,7 +108,6 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("database_usage_bytes", sa.BigInteger(), nullable=True),
         sa.Column("database_size_mib", sa.Integer(), nullable=False, server_default="100"),
         sa.Column("database_instances", sa.Integer(), nullable=False, server_default="1"),
         sa.Column("storage_quota_bytes", sa.BigInteger(), nullable=False, server_default="1073741824"),

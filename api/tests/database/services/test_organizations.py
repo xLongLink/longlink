@@ -34,7 +34,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Assert
     assert organization.compute_id == compute.id
-    assert organization.database_state == DatabaseState.needs_sync
+    assert organization.database_state == DatabaseState.failed
     assert organization.status == Status.creating
 
     async with session_scope() as session:

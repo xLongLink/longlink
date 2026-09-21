@@ -92,48 +92,6 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return items, count_result.scalar_one()
 
 
-async def schedule_reconciliation(session: AsyncSession) -> None:
-    """Schedule every release reconciliation target in dependency order."""
-
-    # Reconcile every present resource and clean up every tombstone.
-    organization_result = await session.execute(
-        select(col(Organization.id), col(Organization.deleted_at).is_not(None)).order_by(col(Organization.compute_id), col(Organization.id))
-    )
-    # Load only fields that decide each Solution's reconciliation target.
-    solution_result = await session.execute(
-        select(
-            col(Solution.id),
-            col(Solution.deleted_at).is_not(None),
-            col(Solution.desired_revision_id),
-            col(Solution.deployed_revision_id),
-            col(Revision.failed),
-        )
-        .join(Organization, col(Organization.id) == col(Solution.organization_id))
-        .outerjoin(Revision, col(Revision.id) == col(Solution.desired_revision_id))
-        .where(col(Organization.deleted_at).is_(None))
-        .order_by(col(Organization.compute_id), col(Solution.id))
-    )
-
-    # Create or reuse every desired-state operation in one transaction.
-    for organization_id, deleted in organization_result:
-        await enqueue(
-            session,
-            kind=OperationKind.organization_delete if deleted else OperationKind.organization_create,
-            target_id=organization_id,
-        )
-    for solution_id, deleted, desired_revision_id, deployed_revision_id, desired_revision_failed in solution_result:
-        if deleted:
-            await enqueue(session, kind=OperationKind.solution_delete, target_id=solution_id)
-        else:
-            if desired_revision_id is not None and desired_revision_failed is False:
-                target_id = desired_revision_id
-            else:
-                target_id = deployed_revision_id
-
-            if target_id is not None:
-                await enqueue(session, kind=OperationKind.solution_deploy, target_id=target_id)
-
-
 async def enqueue(
     session: AsyncSession,
     *,
