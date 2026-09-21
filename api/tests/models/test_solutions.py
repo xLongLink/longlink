@@ -6,21 +6,21 @@ pytestmark = pytest.mark.no_db
 
 
 @pytest.mark.parametrize(
-    "envs",
+    ("envs", "match"),
     [
-        {"LONGLINK_DATABASE_HOST": "database.example"},
-        {"BAD-NAME": "value"},
-        {"A": "x" * 32769},
-        {f"ENV_{index}": "value" for index in range(101)},
-        {"A" * 254: "value"},
-        {f"ENV_{index}": "x" * 32768 for index in range(17)},
+        pytest.param({"LONGLINK_DATABASE_HOST": "database.example"}, "reserved for the LongLink Platform", id="reserved-prefix"),
+        pytest.param({"BAD-NAME": "value"}, "is invalid", id="invalid-name"),
+        pytest.param({"A": "x" * 32769}, "value is too long", id="value-too-long"),
+        pytest.param({f"ENV_{index}": "value" for index in range(101)}, "too many variables", id="too-many"),
+        pytest.param({"A" * 254: "value"}, "is too long", id="name-too-long"),
+        pytest.param({f"ENV_{index}": "x" * 32768 for index in range(17)}, "too large", id="total-too-large"),
     ],
 )
-def test_solution_create_rejects_invalid_environment_variables(envs: dict[str, str]) -> None:
+def test_solution_create_rejects_invalid_environment_variables(envs: dict[str, str], match: str) -> None:
     """Reject environment variables that the runtime cannot safely own."""
 
     # Invalid environment values fail at the API model boundary.
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=match):
         SolutionCreate.model_validate({"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "envs": envs})
 
 

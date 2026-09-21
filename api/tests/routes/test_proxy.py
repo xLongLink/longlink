@@ -811,22 +811,12 @@ async def test_solution_proxy_allows_write_member_to_post(
     assert response.json() == {}
 
 
-@pytest.mark.parametrize(
-    ("role", "expected_status", "expected_detail"),
-    [
-        pytest.param(OrganizationRoles.write, 403, {"detail": "Organization maintain access required"}, id="write-rejected"),
-        pytest.param(OrganizationRoles.maintain, 200, {}, id="maintain-allowed"),
-    ],
-)
-async def test_solution_proxy_enforces_maintain_role_for_delete(
+async def test_solution_proxy_delete_rejects_write_member(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
-    role: OrganizationRoles,
-    expected_status: int,
-    expected_detail: dict[str, str],
 ) -> None:
-    """Require Organization maintain access before a proxy DELETE reaches the gateway."""
+    """Reject proxy DELETE from an Organization write member before the gateway."""
 
     # Arrange
     user = users[0]
@@ -834,7 +824,7 @@ async def test_solution_proxy_enforces_maintain_role_for_delete(
     async with session_scope() as session:
         organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
         assert organization_membership is not None
-        organization_membership.role = role
+        organization_membership.role = OrganizationRoles.write
         await session.commit()
 
     def unexpected_gateway(*_args: object) -> object:
@@ -842,21 +832,43 @@ async def test_solution_proxy_enforces_maintain_role_for_delete(
 
         raise AssertionError("Gateway client must not be constructed")
 
-    if expected_status == 200:
-        monkeypatch.setattr(
-            httpx2.AsyncHTTPTransport,
-            "handle_async_request",
-            fake_gateway_request(make_upstream(200, {"content-type": "application/json"}, b"{}")),
-        )
-    else:
-        monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
 
     # Act
     response = await clients[0].request("DELETE", f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
 
     # Assert
-    assert response.status_code == expected_status
-    assert response.json() == expected_detail
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Organization maintain access required"}
+
+
+async def test_solution_proxy_delete_allows_maintain_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Forward proxy DELETE from an Organization maintain member to the gateway."""
+
+    # Arrange
+    user = users[0]
+    solution, _ = await create_running_solution(user)
+    async with session_scope() as session:
+        organization_membership = await session.get(UserOrganization, (user.id, solution.organization_id))
+        assert organization_membership is not None
+        organization_membership.role = OrganizationRoles.maintain
+        await session.commit()
+    monkeypatch.setattr(
+        httpx2.AsyncHTTPTransport,
+        "handle_async_request",
+        fake_gateway_request(make_upstream(200, {"content-type": "application/json"}, b"{}")),
+    )
+
+    # Act
+    response = await clients[0].request("DELETE", f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {}
 
 
 async def test_solution_proxy_shows_loading_when_solution_is_not_ready(
