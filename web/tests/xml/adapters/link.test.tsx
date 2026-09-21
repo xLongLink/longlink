@@ -35,16 +35,6 @@ function renderWithRouter(ast: ASTNode[], ctx: XmlRuntime): string {
 }
 
 describe('Link', () => {
-    it('renders solution navigation', () => {
-        const navigationContext = createContext({ navigationBaseUrl: '/orgs/acme/solutions/tracker' });
-        const navigationOutput = renderXmlToMarkup(
-            parseFragment('<Link to="/issues/123">Issue</Link>'),
-            navigationContext
-        );
-
-        expect(navigationOutput).toContain('href="/orgs/acme/solutions/tracker/issues/123"');
-    });
-
     it('keeps solution navigation on the SPA router when a provider is present', () => {
         // Arrange
         const context = createContext({

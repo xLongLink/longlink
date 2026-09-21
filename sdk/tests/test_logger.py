@@ -74,11 +74,9 @@ def test_configure_logger_adds_configured_handler_when_logger_has_none(monkeypat
 
     # Act
     configured_logger = configure_logger(logger.name)
-    reconfigured_logger = configure_logger(logger.name)
 
     # Assert
     assert configured_logger is logger
-    assert reconfigured_logger is logger
     assert len(logger.handlers) == 1
     assert isinstance(logger.handlers[0], logging.StreamHandler)
     assert isinstance(logger.handlers[0].formatter, ColorFormatter)

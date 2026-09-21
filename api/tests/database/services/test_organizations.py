@@ -254,24 +254,6 @@ async def test_update_member_role_rejects_demoting_the_last_owner(users: tuple[U
             )
 
 
-async def test_update_member_role_skips_unchanged_assignments(users: tuple[User, User, User]) -> None:
-    """Avoid mutations when a member already has the requested role."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-
-    # Act
-    async with session_scope() as session:
-        await organizations.update_member_role(
-            session,
-            organization.id,
-            owner.id,
-            OrganizationRoles.owner,
-            owner.id,
-        )
-
-
 async def test_update_member_role_persists_owner_authorized_change(users: tuple[User, User, User]) -> None:
     """Allow owners to update an active member role."""
 

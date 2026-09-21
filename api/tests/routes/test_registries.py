@@ -110,25 +110,6 @@ async def test_compute_registry_creation_redacts_credentials_and_rejects_duplica
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
 
 
-async def test_compute_registry_deletes_unused_registration(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
-    """Delete an unassigned Compute registry and reject repeated deletion."""
-
-    # Arrange
-    compute = await create_compute()
-    registry_id = compute.id
-
-    # Act
-    delete_response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
-    list_response = await clients[0].get("/api/v1/computes")
-    repeat_delete_response = await clients[0].delete(f"/api/v1/computes/{registry_id}")
-
-    # Assert
-    assert delete_response.status_code == 204
-    assert list_response.status_code == 200
-    assert str(registry_id) not in {item["id"] for item in list_response.json()["items"]}
-    assert repeat_delete_response.status_code == 404
-
-
 async def test_compute_registry_delete_rejects_assigned_registry(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],

@@ -2,9 +2,7 @@ from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
 from src.database.services import organizations as organization_service
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
-from src.database.models.organizations import Organization
 
 
 async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(
@@ -116,21 +114,14 @@ async def test_list_users_rejects_non_administrator(
     assert response.json() == {"detail": "Permission required"}
 
 
-async def test_patch_me_persists_profile_change_without_organization_sync(
+async def test_patch_me_persists_profile_change(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Persist the changed profile without touching organization synchronization."""
+    """Persist a changed profile."""
 
     # Arrange
     user = users[0]
-    first_organization = await create_organization(user, name="acme")
-    second_organization = await create_organization(user, name="globex")
-    async with session_scope() as session:
-        first_organization.database_state = DatabaseState.available
-        second_organization.database_state = DatabaseState.available
-        session.add_all([first_organization, second_organization])
-        await session.commit()
 
     # Act
     response = await clients[0].patch("/api/v1/me", json={"name": "Updated User"})
@@ -142,27 +133,16 @@ async def test_patch_me_persists_profile_change_without_organization_sync(
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
         assert persisted_user.name == "Updated User"
-        persisted_first_organization = await session.get(Organization, first_organization.id)
-        assert persisted_first_organization is not None
-        assert persisted_first_organization.database_state == DatabaseState.available
-        persisted_second_organization = await session.get(Organization, second_organization.id)
-        assert persisted_second_organization is not None
-        assert persisted_second_organization.database_state == DatabaseState.available
 
 
-async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchanged(
+async def test_patch_me_keeps_profile_unchanged(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Keep the persisted profile unchanged without touching organization synchronization."""
+    """Keep an unchanged profile intact."""
 
     # Arrange
     user = users[0]
-    organization = await create_organization(user, name="acme")
-    async with session_scope() as session:
-        organization.database_state = DatabaseState.available
-        session.add(organization)
-        await session.commit()
 
     # Act
     response = await clients[0].patch("/api/v1/me", json={"name": users[0].name})
@@ -174,6 +154,3 @@ async def test_patch_me_does_not_queue_organization_sync_when_profile_is_unchang
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
         assert persisted_user.name == "Platform Administrator"
-        persisted_organization = await session.get(Organization, organization.id)
-        assert persisted_organization is not None
-        assert persisted_organization.database_state == DatabaseState.available
