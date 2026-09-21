@@ -42,7 +42,6 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     assert ready_response.json() == {"ok": True}
 
 
-@pytest.mark.usefixtures("solution_source")
 def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Require the packaged frontend entry point during startup."""
 

@@ -105,22 +105,31 @@ async def test_compute_registry_creation_does_not_queue_work(
     assert await fetch_operations() == []
 
 
-async def test_compute_registry_creation_rejects_incompatible_package(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("error", "name"),
+    [
+        pytest.param(
+            ValueError("Compute package is incompatible; deploy a supported Compute package"),
+            "Incompatible Compute",
+            id="incompatible-package",
+        ),
+        pytest.param(RuntimeError("gateway unavailable"), "Unready Compute", id="unready-infrastructure"),
+    ],
+)
+async def test_compute_registry_creation_rejects_failed_inline_verification(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, error: Exception, name: str
 ) -> None:
-    """Return 503 without persisting when inline verification rejects the Compute package."""
+    """Return 503 without persistence when inline verification fails."""
 
     # Arrange
-    async def incompatible_gateway(
-        _cluster: object, _url: str, _certificate: str | None, **_kwargs: object
-    ) -> None:
-        """Report the incompatible Compute package."""
+    async def failed_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
+        """Report inline verification failure."""
 
-        raise ValueError("Compute package is incompatible; deploy a supported Compute package")
+        raise error
 
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", incompatible_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", failed_gateway)
     payload = {
-        "name": "Incompatible Compute",
+        "name": name,
         "gateway_url": "https://gateway.example",
         "database_storage_class": "local-path",
         "storage_endpoint": "https://storage.example",
@@ -139,44 +148,7 @@ async def test_compute_registry_creation_rejects_incompatible_package(
     assert response.status_code == 503
     assert await fetch_operations() == []
     list_response = await clients[0].get("/api/v1/computes")
-    assert "Incompatible Compute" not in {item["name"] for item in list_response.json()["items"]}
-
-
-async def test_compute_registry_creation_rejects_unready_infrastructure(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Return 503 without persisting when shared infrastructure is unavailable."""
-
-    # Arrange
-    async def unavailable_gateway(
-        _cluster: object, _url: str, _certificate: str | None, **_kwargs: object
-    ) -> None:
-        """Report the unavailable gateway."""
-
-        raise RuntimeError("gateway unavailable")
-
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", unavailable_gateway)
-    payload = {
-        "name": "Unready Compute",
-        "gateway_url": "https://gateway.example",
-        "database_storage_class": "local-path",
-        "storage_endpoint": "https://storage.example",
-        "kubeconfig": {
-            "clusters": [{"name": "cluster", "cluster": {}}],
-            "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "user"}}],
-            "current-context": "context",
-            "users": [{"name": "user", "user": {}}],
-        },
-    }
-
-    # Act
-    response = await clients[0].post("/api/v1/computes", json=payload)
-
-    # Assert
-    assert response.status_code == 503
-    assert await fetch_operations() == []
-    list_response = await clients[0].get("/api/v1/computes")
-    assert "Unready Compute" not in {item["name"] for item in list_response.json()["items"]}
+    assert name not in {item["name"] for item in list_response.json()["items"]}
 
 
 async def test_compute_registry_deletes_unused_registration(

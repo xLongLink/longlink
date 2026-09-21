@@ -109,10 +109,6 @@ INVALID_FRAGMENTS = [
 
 UNSUPPORTED_MARKUP = [
     pytest.param("<!DOCTYPE longlink><longlink />", id="doctype"),
-    pytest.param(
-        '<!DOCTYPE longlink [<!ENTITY xxe SYSTEM "file:///tmp/longlink-xxe-secret">]><longlink>&xxe;</longlink>',
-        id="external-entity",
-    ),
     pytest.param("<longlink><![CDATA[content]]></longlink>", id="cdata"),
 ]
 

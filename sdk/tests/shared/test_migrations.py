@@ -6,6 +6,7 @@ import importlib.util
 import pytest_asyncio
 from uuid import UUID
 from types import SimpleNamespace
+from typing import cast
 from pathlib import Path
 from datetime import UTC, datetime
 from contextlib import nullcontext
@@ -16,7 +17,7 @@ from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
 from longlink.shared.models import Audit
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
 
 
@@ -98,13 +99,9 @@ def test_migration_config_rejects_missing_packaged_resources(tmp_path, monkeypat
 async def test_empty_shared_audit_sync_does_not_execute_sql() -> None:
     """Treat empty shared audit synchronization as a no-op on the supplied connection."""
 
-    # An unopened connection fails if synchronization attempts SQL or starts a transaction.
-    engine = create_async_engine("sqlite+aiosqlite://")
-    try:
-        conn = engine.connect()
-        await shared_audit.sync(conn, [])
-    finally:
-        await engine.dispose()
+    # Empty payloads return before synchronization needs a connection.
+    conn = cast(AsyncConnection, object())
+    await shared_audit.sync(conn, [])
 
 
 async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: Audit) -> None:

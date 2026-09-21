@@ -1,5 +1,6 @@
+import { parseFragment } from '../helpers';
 import { describe, expect, it } from 'vitest';
-import { parseFragment, renderXmlToMarkup } from '../helpers';
+import { getSetupNodes } from '@/xml/core/context';
 
 describe('setup adapters', () => {
     it.each([
@@ -13,7 +14,7 @@ describe('setup adapters', () => {
         '<Query id="user" />',
         '<Query id="params" path="/api/params" />',
         '<State id="data" value="first" /><Query id="data" path="/api/data" />',
-    ])('renders validation error: %s', (xml) => {
-        expect(renderXmlToMarkup(parseFragment(xml))).toContain('Unable to initialize this view');
+    ])('rejects invalid declarations: %s', (xml) => {
+        expect(() => getSetupNodes(parseFragment(xml))).toThrow();
     });
 });

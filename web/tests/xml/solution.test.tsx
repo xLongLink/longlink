@@ -124,6 +124,39 @@ describe('SolutionRuntime', () => {
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('42')));
     });
 
+    it('keeps a custom manifest URL and fetches XML beside it', async () => {
+        // Arrange
+        const fetchRequest = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+            const request = input instanceof Request ? input : new Request(input, init);
+
+            if (request.url.endsWith('/proxy/views.json?version=1#manifest')) {
+                return jsonResponse([view('home', '/home')]);
+            }
+
+            return xmlResponse('<longlink><Text>Welcome</Text></longlink>');
+        });
+        vi.stubGlobal('fetch', fetchRequest);
+
+        // Act
+        const output = await renderRuntime('/home', '/proxy/views.json?version=1#manifest');
+
+        // Assert
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Welcome')));
+        expect(fetchRequest).toHaveBeenCalledTimes(2);
+        const [manifestInput, manifestInit] = fetchRequest.mock.calls[0];
+        const [viewInput, viewInit] = fetchRequest.mock.calls[1];
+        const manifestRequest =
+            manifestInput instanceof Request ? manifestInput : new Request(manifestInput, manifestInit);
+        const viewRequest = viewInput instanceof Request ? viewInput : new Request(viewInput, viewInit);
+        const manifestUrl = new URL(manifestRequest.url);
+        const viewUrl = new URL(viewRequest.url);
+        expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(
+            '/proxy/views.json?version=1#manifest'
+        );
+        expect(viewUrl.pathname).toBe('/proxy/home.xml');
+        expect(viewRequest.headers.get('accept')).toBe('application/xml');
+    });
+
     it('rejects unmatched routes', async () => {
         // Arrange
         stubFetch((url) => {
@@ -179,7 +212,7 @@ describe('SolutionRuntime', () => {
         await act(async () => vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://example.com/next')));
     });
 
-    async function renderRuntime(initialPath = '/'): Promise<HTMLDivElement> {
+    async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
         const container = document.createElement('div');
         root = createRoot(container);
         const { client, reportError } = createTestQueryRuntime();
@@ -192,7 +225,7 @@ describe('SolutionRuntime', () => {
                             <Routes>
                                 <Route
                                     element={
-                                        <SolutionRuntime>
+                                        <SolutionRuntime viewsUrl={viewsUrl}>
                                             {({ content, tabs }) => (
                                                 <>
                                                     <Location tabs={tabs.map((tab) => tab.href).join(',')} />

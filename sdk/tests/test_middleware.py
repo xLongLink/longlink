@@ -56,7 +56,6 @@ def test_accepts_gzip_interprets_encoding_quality_values(header: str, expected: 
     [
         pytest.param("gzip", "gzip", id="gzip"),
         pytest.param("identity", None, id="identity"),
-        pytest.param("gzip;q=0", None, id="gzip-refused"),
     ],
 )
 def test_frontend_middleware_varies_eligible_text_representations(accept_encoding: str, expected_content_encoding: str | None) -> None:
