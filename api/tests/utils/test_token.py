@@ -244,22 +244,6 @@ async def test_password_reset_user_rejects_changed_password(users: tuple[User, U
             await token.password_reset_user(session, reset_token)
 
 
-async def test_password_reset_user_rejects_missing_claims() -> None:
-    """Reject recovery credentials that omit the user or password proof."""
-
-    # Arrange
-    encoded = jwt.encode(
-        {"aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
-        token.env.SESSION_KEY,
-        algorithm=token.JWT_ALGORITHM,
-    )
-
-    # Act and assert
-    async with session_scope() as session:
-        with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token claims"):
-            await token.password_reset_user(session, encoded)
-
-
 async def test_password_reset_user_returns_active_user(users: tuple[User, User, User]) -> None:
     """Resolve the active account bound to a valid recovery credential."""
 

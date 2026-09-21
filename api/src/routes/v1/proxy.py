@@ -48,13 +48,16 @@ async def proxy_solution_request(
     The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
-    # Resolve active Solution access before proxying traffic to its runtime.
+    required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
+
+    # Release the request snapshot before independent runtime transactions begin.
+    await session.commit()
+
+    # Resolve fresh Solution access immediately before runtime admission; never reuse a stale snapshot.
     access = await organizations.solution_runtime_access(session, user.id, solution_id)
     if access is None:
         raise HTTPException(status_code=403, detail="Access required")
     solution, role, registry = access
-
-    required_role = SOLUTION_PROXY_METHOD_ROLES[request.method]
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     if not roles.atleast(role, required_role):
@@ -70,21 +73,11 @@ async def proxy_solution_request(
             detail="Solution is not ready yet. Please try again shortly.",
             headers={"cache-control": "no-store"},
         )
+    await session.commit()
 
     identity_secret = solution.secrets.get("LONGLINK_IDENTITY_SECRET")
     if not identity_secret:
         raise HTTPException(status_code=503, detail="Solution gateway is not ready")
-
-    # Release the authorization snapshot before independent runtime transactions begin.
-    await session.commit()
-
-    # Wake can outlast an access change; never reuse pre-wake authorization for runtime admission.
-    access = await organizations.solution_runtime_access(session, user.id, solution_id)
-    if access is None or not roles.atleast(access[1], required_role):
-        raise HTTPException(status_code=403, detail="Access required")
-    if access[0].status != Status.running:
-        raise HTTPException(status_code=503, detail="Solution is not ready", headers={"Retry-After": "5"})
-    await session.commit()
 
     async def request_content() -> AsyncIterator[bytes]:
         """Stream one bounded request body to the solution gateway."""
