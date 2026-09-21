@@ -104,7 +104,6 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
             return gateway.httpx2.Response(200)
 
     monkeypatch.setattr(gateway, "ConfigMap", Resource)
-    monkeypatch.setattr(gateway, "Secret", Resource)
     monkeypatch.setattr(gateway, "Deployment", Resource)
     monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
     return observed

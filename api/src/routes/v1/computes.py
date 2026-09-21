@@ -47,6 +47,8 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
         cluster_uid = await cluster.cluster_uid()
         try:
             credentials = await Storage.controller_credentials(cluster)
+            gateway_certificate = await gateway.certificate(cluster)
+            storage_certificate = await Storage.certificate(cluster)
         except ValueError as exc:
             raise InvalidError(str(exc)) from exc
         except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
@@ -54,6 +56,8 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
             raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
         candidate = ComputeRegistry(
             **payload.model_dump(),
+            gateway_certificate=gateway_certificate,
+            storage_certificate=storage_certificate,
             storage_access_key=credentials.access_key,
             storage_secret_key=credentials.secret_key,
             cluster_uid=cluster_uid,

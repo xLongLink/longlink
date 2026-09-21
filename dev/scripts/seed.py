@@ -7,8 +7,6 @@ from pydantic import Field, BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
-LOCAL_GATEWAY_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "gateway.crt"
-LOCAL_STORAGE_CERTIFICATE = Path(__file__).resolve().parents[1] / "certificates" / "storage.crt"
 DEVELOPMENT_COMPUTE = "development compute"
 DEVELOPMENT_ORGANIZATION = "development"
 SAMPLE_SOLUTION = "sample"
@@ -76,19 +74,15 @@ async def register_compute(client: httpx2.AsyncClient, settings: SeedSettings) -
         return compute
 
     # Register the fixed local infrastructure through the same API contract as an administrator.
-    gateway_certificate = LOCAL_GATEWAY_CERTIFICATE.read_text(encoding="utf-8")
-    storage_certificate = LOCAL_STORAGE_CERTIFICATE.read_text(encoding="utf-8")
     response = await client.post(
         "/api/v1/computes",
         json={
             "name": DEVELOPMENT_COMPUTE,
             "kubeconfig": settings.KUBECONFIG.read_text(encoding="utf-8"),
             "gateway_url": "https://127.0.0.1:8443",
-            "gateway_certificate": gateway_certificate,
             "database_storage_class": "local-path",
             # Controller endpoint reachable from the host; administrator keys are read from the cluster.
             "storage_endpoint": "https://storage.localhost:9443",
-            "storage_certificate": storage_certificate,
         },
     )
     if response.status_code != 409:

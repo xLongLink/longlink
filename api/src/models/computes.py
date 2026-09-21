@@ -1,4 +1,3 @@
-import ssl
 import json
 import yaml
 from uuid import UUID
@@ -85,18 +84,14 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
 class ComputeRegistryEndpoints(BaseModel):
     """Validate the externally reachable endpoints of one registered Compute."""
 
-    # Gateway
+    # External endpoints
     gateway_url: str = Field(max_length=512)
-    gateway_certificate: str | None = Field(default=None, max_length=65536)
-
-    # Object storage controller
     storage_endpoint: str = Field(max_length=512)
-    storage_certificate: str | None = Field(default=None, max_length=65536)
 
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
-    def validate_gateway_url(cls, value: str) -> str:
-        """Require a credential-free HTTPS gateway origin."""
+    def validate_endpoint(cls, value: str) -> str:
+        """Require a credential-free HTTPS endpoint origin."""
 
         # Keep proxy paths separate from the registered TLS endpoint.
         url = HttpUrl(value)
@@ -108,24 +103,8 @@ class ComputeRegistryEndpoints(BaseModel):
             or url.query is not None
             or url.fragment is not None
         ):
-            raise ValueError("Gateway URL must be an HTTPS origin without credentials, path, query, or fragment")
+            raise ValueError("Endpoint must be an HTTPS origin without credentials, path, query, or fragment")
         return str(url).rstrip("/")
-
-    @field_validator("gateway_certificate", "storage_certificate")
-    @classmethod
-    def validate_gateway_certificate(cls, value: str | None) -> str | None:
-        """Validate an optional PEM trust bundle without accepting private keys."""
-
-        # Let the TLS library validate the same certificate data used by the proxy.
-        if value is None:
-            return None
-        if "PRIVATE KEY" in value or "-----BEGIN CERTIFICATE-----" not in value:
-            raise ValueError("Gateway certificate must be a PEM CA certificate bundle")
-        try:
-            ssl.create_default_context(cadata=value)
-        except ssl.SSLError as exc:
-            raise ValueError("Gateway certificate must be a valid PEM CA certificate bundle") from exc
-        return value
 
 
 class ComputeRegistryCreate(ComputeRegistryEndpoints):

@@ -82,6 +82,12 @@ class StorageKubernetes:
 
         return Credentials("controller", "controller-secret")
 
+    @staticmethod
+    async def certificate(cluster: object) -> str:
+        """Return the chart-managed storage TLS certificate without cluster I/O."""
+
+        return "storage-certificate"
+
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
@@ -281,6 +287,12 @@ async def verify_compute_gateway(_cluster: object, _url: str, _certificate: str 
     """Accept inline Compute verification without external Kubernetes I/O."""
 
 
+async def gateway_certificate(_cluster: object) -> str:
+    """Return the chart-managed gateway TLS certificate without cluster I/O."""
+
+    return "gateway-certificate"
+
+
 @pytest.fixture
 def captured_mail(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str, str, str | None]]:
     """Capture outbound email without sending it through SMTP."""
@@ -314,6 +326,7 @@ async def reset_db(
 
     engine = create_async_engine(db_url)
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.certificate", gateway_certificate)
     monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
     monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     session.enable_sqlite_foreign_keys(engine)
