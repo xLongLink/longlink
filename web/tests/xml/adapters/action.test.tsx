@@ -4,7 +4,7 @@ import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, RenderXML, cleanupMountedRoot, renderXmlToMarkup } from '../helpers';
 
 const toast = vi.fn();
 
@@ -20,10 +20,7 @@ describe('Action', () => {
         vi.unstubAllGlobals();
         toast.mockClear();
 
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         root = undefined;
     });
 

@@ -3,18 +3,15 @@ import { act } from 'react';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
-import { createContext, RenderXML } from '../helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createContext, RenderXML, cleanupMountedRoot } from '../helpers';
 
 describe('useBindableValue', () => {
     let container: HTMLDivElement | undefined;
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         container?.remove();
         vi.unstubAllGlobals();
         container = undefined;

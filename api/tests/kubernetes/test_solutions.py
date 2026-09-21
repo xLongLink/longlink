@@ -543,44 +543,37 @@ async def test_solution_logs_reports_completed_migration_when_solution_pod_is_un
     assert logs == ["Migration Pod migration-123 is Succeeded; Solution Pod unavailable"]
 
 
-async def test_solution_logs_reports_unavailable_when_no_pod_exists(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "pods",
+    [
+        [],
+        [{"raw": {"status": {"phase": "Succeeded"}}, "metadata": {"labels": {"longlink.io/component": "solution"}}}],
+    ],
+    ids=["no-pod", "terminal-solution-pod"],
+)
+async def test_solution_logs_reports_unavailable_without_usable_pods(monkeypatch: pytest.MonkeyPatch, pods: list[dict[str, object]]) -> None:
     """Report unavailable logs when no running or failed migration Pod exists."""
 
     # Arrange
     class PodResource:
-        """Return no Solution Pods from Kubernetes."""
+        """Return configured Solution Pods from Kubernetes."""
+
+        def __init__(self, raw: dict[str, object], metadata: dict[str, object]) -> None:
+            """Expose the Pod fields queried during log selection."""
+
+            self.raw = raw
+            self.metadata = metadata
 
         @classmethod
         async def list(cls, **_kwargs: object):
-            """Yield no matching Pods."""
+            """Yield configured Pods without contacting Kubernetes."""
 
-            if False:
-                yield cls()
-
-    monkeypatch.setattr(solutions, "Pod", PodResource)
-
-    # Act and assert
-    with pytest.raises(RuntimeError, match="Solution logs unavailable"):
-        await solutions.Solutions(kubernetes_client()).logs(
-            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
-        )
-
-
-async def test_solution_logs_ignores_terminal_solution_pods(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Report unavailable logs when only terminal non-migration Pods remain."""
-
-    # Arrange
-    class PodResource:
-        """Represent a completed Solution Pod."""
-
-        raw: ClassVar[dict[str, object]] = {"status": {"phase": "Succeeded"}}
-        metadata: ClassVar[dict[str, object]] = {"labels": {"longlink.io/component": "solution"}}
-
-        @classmethod
-        async def list(cls, **_kwargs: object):
-            """Yield the completed Solution Pod."""
-
-            yield cls()
+            for pod in pods:
+                raw = pod["raw"]
+                metadata = pod["metadata"]
+                assert isinstance(raw, dict)
+                assert isinstance(metadata, dict)
+                yield cls(raw, metadata)
 
     monkeypatch.setattr(solutions, "Pod", PodResource)
 

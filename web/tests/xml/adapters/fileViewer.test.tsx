@@ -3,7 +3,7 @@ import { act } from 'react';
 import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, RenderXML, cleanupMountedRoot, renderXmlToMarkup } from '../helpers';
 
 describe('FileViewer', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -28,10 +28,7 @@ describe('FileViewer', () => {
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
 
-        if (root) {
-            const mountedRoot = root;
-            await act(async () => mountedRoot.unmount());
-        }
+        await cleanupMountedRoot(root);
         root = undefined;
         document.body.innerHTML = '';
     });
