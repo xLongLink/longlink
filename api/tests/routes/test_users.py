@@ -40,7 +40,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
                 "id": str(organization.id),
                 "name": "acme",
                 "slug": "acme",
-                "avatar": "",
                 "status": "creating",
             },
             "role": "owner",
