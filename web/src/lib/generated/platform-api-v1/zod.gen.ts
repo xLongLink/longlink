@@ -25,8 +25,7 @@ export const zComputeRegistryCreate = z.object({
     gateway_url: z.string().max(512),
     storage_endpoint: z.string().max(512),
     name: z.string().min(1).max(128),
-    kubeconfig: z.record(z.string(), z.unknown()),
-    database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/)
+    kubeconfig: z.record(z.string(), z.unknown())
 });
 
 /**
