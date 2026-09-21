@@ -3,10 +3,21 @@ import httpx2
 import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
-from kr8s.asyncio.objects import Secret, ConfigMap, Deployment
+from src.kubernetes import tls
+from kr8s.asyncio.objects import ConfigMap, Deployment
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
+
+
+TLS_SECRET_NAMESPACE = "knative-serving"
+TLS_SECRET_NAME = "longlink-gateway-tls"
+
+
+async def certificate(client: "Kubernetes") -> str:
+    """Read the chart-managed gateway TLS certificate."""
+
+    return await tls.certificate(client, TLS_SECRET_NAMESPACE, TLS_SECRET_NAME)
 
 
 def _deployment_is_ready(deployment: Deployment) -> bool:
@@ -57,11 +68,6 @@ async def verify(
     data = release.raw.get("data", {})
     if data.get("contract") != "1":
         raise ValueError("Compute package is incompatible; deploy a supported Compute package")
-    secret = Secret("longlink-gateway-tls", namespace="knative-serving", api=api)
-    await secret.refresh()
-    if not secret.raw.get("data", {}).get("tls.crt") or not secret.raw.get("data", {}).get("tls.key"):
-        raise ValueError("knative-serving/longlink-gateway-tls requires tls.crt and tls.key")
-
     # Observe current rollouts; registration never repairs or upgrades these controllers.
     try:
         async with asyncio.timeout(timeout_seconds):

@@ -2463,34 +2463,10 @@
             "maxLength": 512,
             "title": "Gateway Url"
           },
-          "gateway_certificate": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 65536
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gateway Certificate"
-          },
           "storage_endpoint": {
             "type": "string",
             "maxLength": 512,
             "title": "Storage Endpoint"
-          },
-          "storage_certificate": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 65536
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Storage Certificate"
           },
           "name": {
             "type": "string",

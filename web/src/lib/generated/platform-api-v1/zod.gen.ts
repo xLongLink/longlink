@@ -23,9 +23,7 @@ export const zBodyRequestRegistrationApiV1AuthRegisterPost = z.object({
  */
 export const zComputeRegistryCreate = z.object({
     gateway_url: z.string().max(512),
-    gateway_certificate: z.string().max(65536).nullish(),
     storage_endpoint: z.string().max(512),
-    storage_certificate: z.string().max(65536).nullish(),
     name: z.string().min(1).max(128),
     kubeconfig: z.record(z.string(), z.unknown()),
     database_storage_class: z.string().min(1).max(253).regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/)

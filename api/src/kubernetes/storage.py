@@ -2,6 +2,7 @@ import base64
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
+from src.kubernetes import tls
 from collections.abc import Sequence
 from kr8s.asyncio.objects import Secret
 
@@ -12,6 +13,8 @@ if TYPE_CHECKING:
 
 RUSTFS_SECRET_NAMESPACE = "rustfs"
 RUSTFS_SECRET_NAME = "longlink-rustfs"
+TLS_SECRET_NAMESPACE = "rustfs"
+TLS_SECRET_NAME = "longlink-storage-tls"
 
 
 class Storage:
@@ -46,6 +49,12 @@ class Storage:
         if not access_key or not secret_key:
             raise ValueError(f"{RUSTFS_SECRET_NAMESPACE}/{RUSTFS_SECRET_NAME} must contain RUSTFS credentials")
         return s3.Credentials(access_key, secret_key)
+
+    @staticmethod
+    async def certificate(cluster: "Kubernetes") -> str:
+        """Read the chart-managed storage proxy TLS certificate."""
+
+        return await tls.certificate(cluster, TLS_SECRET_NAMESPACE, TLS_SECRET_NAME)
 
     async def verify(self) -> None:
         """Verify configured controller credentials can access RustFS without changing it."""
