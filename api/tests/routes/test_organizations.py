@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import select
-from factories import create_solution, fetch_operations, create_organization, create_ready_compute
+from factories import create_compute, create_solution, fetch_operations, create_organization
 from sqlalchemy import func
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
@@ -29,7 +29,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     """Persist Organization desired state and queue its infrastructure creation."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
 
     # Act
     response = await clients[0].post(
@@ -60,7 +60,7 @@ async def test_create_organization_enforces_the_per_user_beta_limit(
 
     # Arrange
     owner, other_user, _ = users
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     for name in ("acme", "globex", "initech"):
         await create_organization(owner, name=name, compute=compute)
 
@@ -97,7 +97,7 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
     """Reject Organization creation when no ready Compute registry is available."""
 
     # Arrange
-    compute = await create_ready_compute()
+    compute = await create_compute(ready=True)
     async with session_scope() as session:
         await session.delete(compute)
         await session.commit()
@@ -335,15 +335,15 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, compute=await create_ready_compute())
+    organization = await create_organization(owner, compute=await create_compute(ready=True))
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
 
-        async def usage(self, bucket_name: str) -> int:
+        async def usage(self, organization_id: UUID) -> int:
             """Return usage or raise the configured storage backend failure."""
 
-            assert bucket_name == organization.id.hex
+            assert organization_id == organization.id
             if isinstance(usage, Exception):
                 raise usage
             return usage
@@ -352,18 +352,6 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
 
     monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
-
-    # Missing provisioning fails during bucket resolution, not during S3 usage measurement.
-    if isinstance(usage, NotFoundError):
-
-        def missing_bucket(self: StorageKubernetes, organization_id: UUID) -> None:
-            """Report the missing Kubernetes bucket claim at its actual transport boundary."""
-
-            assert organization_id == organization.id
-            assert isinstance(usage, NotFoundError)
-            raise usage
-
-        monkeypatch.setattr(StorageKubernetes, "bucket", missing_bucket)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
@@ -401,10 +389,10 @@ async def test_organization_storage_endpoint_allows_members(
     class FakeStorage:
         """Provide an inspectable Organization storage bucket."""
 
-        async def usage(self, bucket_name: str) -> int:
+        async def usage(self, organization_id: UUID) -> int:
             """Return the bucket's live usage."""
 
-            assert bucket_name == organization.id.hex
+            assert organization_id == organization.id
             return 0
 
     from conftest import StorageKubernetes

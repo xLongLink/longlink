@@ -55,7 +55,7 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     request.addfinalizer(urls.close)
     await adapter.prepare_organization_database(organization_id)
     await adapter.prepare_organization_database(organization_id)
-    async with adapter._connection(organization_id.hex, search_path="shared") as conn:
+    async with adapter.connection(organization_id.hex, search_path="shared") as conn:
         await shared_audit.sync(conn, [active_user])
     runtime_password = "stable-runtime-password"
     sibling_id = UUID("55555555-5555-5555-5555-555555555555")
@@ -122,7 +122,7 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
 
     inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
     inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
-    async with adapter._connection(organization_id.hex, search_path="shared") as conn:
+    async with adapter.connection(organization_id.hex, search_path="shared") as conn:
         await shared_audit.sync(conn, [inactive_user])
     maintenance_engine = create_async_engine(urls.enter_context(adapter.url(organization_id.hex)))
     try:
@@ -180,7 +180,7 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
         finally:
             await sibling_engine.dispose()
 
-    async with adapter._connection("postgres") as conn:
+    async with adapter.connection("postgres") as conn:
         role_before_cleanup = await conn.scalar(text("SELECT rolname FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
 
     # Act
@@ -188,7 +188,7 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
         await adapter.delete_solution_schema(organization_id, solution_id)
 
         # Assert
-        async with adapter._connection(organization_id.hex) as conn:
+        async with adapter.connection(organization_id.hex) as conn:
             role_after_cleanup = await conn.scalar(text("SELECT rolname FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             schema_after_cleanup = await conn.scalar(
                 text("SELECT nspname FROM pg_namespace WHERE nspname = :schema"), {"schema": solution_id.hex}

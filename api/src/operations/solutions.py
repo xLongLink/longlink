@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import UTC, datetime
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
-from sqlalchemy import select, update
+from sqlalchemy import update
 from src.logger import logger
 from src.kubernetes import namespace
 from src.operations import databases
@@ -12,23 +12,11 @@ from src.database.session import session_scope
 from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.storage import Storage
-from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Revision, Solution
-from src.database.models.organizations import Organization
 
 
 async def deploy(revision_id: UUID) -> None:
     """Deploy the desired Solution revision."""
-
-    # Admission needs only the organization identity; refresh the full target after waking SQL.
-    async with session_scope() as session:
-        organization_id = await session.scalar(
-            select(col(Solution.organization_id))
-            .join(Revision, col(Revision.solution_id) == col(Solution.id))
-            .where(col(Revision.id) == revision_id, col(Solution.deleted_at).is_(None))
-        )
-        if organization_id is None:
-            return
 
     # Resolve the exact lifecycle target and its immutable infrastructure assignments.
     async with session_scope() as session:
@@ -55,14 +43,14 @@ async def deploy(revision_id: UUID) -> None:
     )
     async with cluster:
         storage = Storage(compute)
-        bucket = storage.bucket(organization.id)
+        bucket_name = storage.bucket_name(organization.id)
 
         # Reuse generated credentials after an interrupted creation attempt.
         if "LONGLINK_ENV" not in runtime_secrets:
             # RustFS service accounts are scoped to this Solution and owner keys never reach workloads.
             logger.info("Creating object storage credentials for Solution %s", solution.id)
             database_password = secrets.token_urlsafe(24)
-            credentials = await bucket.admin.service_account(bucket.name, solution.id)
+            credentials = await storage.service_account(organization.id, solution.id)
             database = await databases.connection(organization, cluster)
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
@@ -76,7 +64,7 @@ async def deploy(revision_id: UUID) -> None:
                 "LONGLINK_DATABASE_PORT": "5432",
                 "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
                 "LONGLINK_DATABASE_USERNAME": database_username,
-                "LONGLINK_STORAGE_BUCKET": bucket.name,
+                "LONGLINK_STORAGE_BUCKET": bucket_name,
                 "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
                 "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
                 "LONGLINK_STORAGE_REGION": "us-east-1",
@@ -150,16 +138,6 @@ async def deploy(revision_id: UUID) -> None:
 async def delete(solution_id: UUID) -> None:
     """Delete the Solution workload, schema, and credentials."""
 
-    # Admission needs only an active Organization identity with an assigned Compute target.
-    async with session_scope() as session:
-        organization_id = await session.scalar(
-            select(col(Solution.organization_id))
-            .join(Organization, col(Organization.id) == col(Solution.organization_id))
-            .join(ComputeRegistry, col(ComputeRegistry.id) == col(Organization.compute_id))
-            .where(col(Solution.id) == solution_id, col(Organization.deleted_at).is_(None))
-        )
-        if organization_id is None:
-            return
     # An absent tombstone means a previous execution completed cleanup.
     async with session_scope() as session:
         target = await organizations.solution_infrastructure(session, solution_id)
@@ -167,6 +145,8 @@ async def delete(solution_id: UUID) -> None:
             logger.info("Solution %s no longer exists; skipping deletion", solution_id)
             return
         solution, organization, compute = target
+        if organization.deleted_at is not None:
+            return
 
     # Remove Solution Kubernetes resources before revoking provider credentials.
     logger.info("Deleting Kubernetes workload for Solution %s", solution.id)
@@ -181,9 +161,8 @@ async def delete(solution_id: UUID) -> None:
 
         # Revoke the service account before owner credentials remove its private objects.
         storage = Storage(compute)
-        bucket = storage.bucket(organization.id)
-        await bucket.admin.revoke(solution.id)
-        await bucket.storage.delete_prefix(bucket.name, f"solutions/{solution.id.hex}/")
+        await storage.revoke(solution.id)
+        await storage.delete_prefix(organization.id, f"solutions/{solution.id.hex}/")
 
     # Purge the tombstone only after all external resources are absent.
     logger.info("Purging Solution %s", solution.id)

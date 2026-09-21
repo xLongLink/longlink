@@ -122,8 +122,7 @@ async def get_organization_storage_usage(
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
-            bucket = Storage(compute).bucket(membership.organization_id)
-            usage = await bucket.storage.usage(bucket.name)
+            usage = await Storage(compute).usage(membership.organization_id)
     except NotFoundError:
         return None
     except (TimeoutError, BotoCoreError, ClientError, ServerError) as exc:

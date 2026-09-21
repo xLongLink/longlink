@@ -1,11 +1,12 @@
 import pytest
 import asyncio
 from uuid import uuid4
-from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
+from factories import create_organization
 from src.operations import databases
-
-pytestmark = pytest.mark.no_db
+from src.database.session import session_scope
+from src.database.models.users import User
+from src.database.models.organizations import OrganizationActivity
 
 
 def make_lease(**overrides: object) -> databases.Lease:
@@ -22,20 +23,17 @@ def make_lease(**overrides: object) -> databases.Lease:
     return databases.Lease(**values)  # type: ignore[arg-type]
 
 
-class FakeSession:
-    """Serve one configured activity row without a database."""
+async def persist_activity(organization_id: object, expires_at: datetime) -> OrganizationActivity:
+    """Persist one activity row for the given Organization."""
 
-    def __init__(self, row: object | None) -> None:
-        """Store the row returned for activity lookups."""
-
-        self._row = row
-
-    async def get(self, _model: object, _identity: object, **_kwargs: object) -> object | None:
-        """Return the configured activity row."""
-
-        return self._row
+    async with session_scope() as session:
+        activity = OrganizationActivity(organization_id=organization_id, expires_at=expires_at)  # type: ignore[arg-type]
+        session.add(activity)
+        await session.commit()
+        return activity
 
 
+@pytest.mark.no_db
 async def test_protect_registers_current_task() -> None:
     """Track the consuming task so lease loss can interrupt its work."""
 
@@ -53,6 +51,7 @@ async def test_protect_registers_current_task() -> None:
     assert lease.consumers == set()
 
 
+@pytest.mark.no_db
 async def test_protect_rejects_lost_lease() -> None:
     """Refuse new work after renewal has marked the lease as lost."""
 
@@ -65,6 +64,7 @@ async def test_protect_rejects_lost_lease() -> None:
             raise AssertionError("lost lease must not yield")
 
 
+@pytest.mark.no_db
 async def test_protect_rejects_expired_lease() -> None:
     """Refuse new work when the committed expiry has already passed."""
 
@@ -77,29 +77,39 @@ async def test_protect_rejects_expired_lease() -> None:
             raise AssertionError("expired lease must not yield")
 
 
-async def test_owned_accepts_matching_unexpired_row() -> None:
+async def test_owned_accepts_matching_unexpired_row(users: tuple[User, User, User]) -> None:
     """Confirm ownership when the persisted expiry matches this worker."""
 
     # Arrange
-    lease = make_lease()
-    session = FakeSession(SimpleNamespace(expires_at=lease.expires_at))
+    organization = await create_organization(users[0], name="owned-accept")
+    expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=180)
+    activity = await persist_activity(organization.id, expires_at)
+    lease = databases.Lease(id=activity.id, organization_id=organization.id, expires_at=activity.expires_at)
 
     # Act
-    result = await lease.owned(session)  # type: ignore[arg-type]
+    async with session_scope() as session:
+        result = await lease.owned(session)
 
     # Assert
     assert result is True
 
 
-async def test_owned_rejects_replacement_expiry() -> None:
+async def test_owned_rejects_replacement_expiry(users: tuple[User, User, User]) -> None:
     """Deny ownership after a replacement worker renews the same activity."""
 
     # Arrange
-    lease = make_lease()
-    session = FakeSession(SimpleNamespace(expires_at=datetime.now(UTC) + timedelta(seconds=300)))
+    organization = await create_organization(users[0], name="owned-replacement")
+    persisted_expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=300)
+    activity = await persist_activity(organization.id, persisted_expires_at)
+    lease = databases.Lease(
+        id=activity.id,
+        organization_id=organization.id,
+        expires_at=persisted_expires_at - timedelta(seconds=120),
+    )
 
     # Act
-    result = await lease.owned(session)  # type: ignore[arg-type]
+    async with session_scope() as session:
+        result = await lease.owned(session)
 
     # Assert
     assert result is False
@@ -110,25 +120,27 @@ async def test_owned_rejects_missing_row() -> None:
 
     # Arrange
     lease = make_lease()
-    session = FakeSession(None)
 
     # Act
-    result = await lease.owned(session)  # type: ignore[arg-type]
+    async with session_scope() as session:
+        result = await lease.owned(session)
 
     # Assert
     assert result is False
 
 
-async def test_owned_rejects_expired_row() -> None:
+async def test_owned_rejects_expired_row(users: tuple[User, User, User]) -> None:
     """Deny ownership when the persisted lease has already expired."""
 
     # Arrange
-    expired = datetime.now(UTC) - timedelta(seconds=1)
-    lease = make_lease(expires_at=expired)
-    session = FakeSession(SimpleNamespace(expires_at=expired))
+    organization = await create_organization(users[0], name="owned-expired")
+    expired = datetime.now(UTC).replace(microsecond=0) - timedelta(seconds=1)
+    activity = await persist_activity(organization.id, expired)
+    lease = databases.Lease(id=activity.id, organization_id=organization.id, expires_at=activity.expires_at)
 
     # Act
-    result = await lease.owned(session)  # type: ignore[arg-type]
+    async with session_scope() as session:
+        result = await lease.owned(session)
 
     # Assert
     assert result is False

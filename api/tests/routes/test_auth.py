@@ -161,11 +161,20 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     assert verifier not in response.headers["location"]
 
 
-async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange(
+@pytest.mark.parametrize(
+    ("callback_provider", "state"),
+    [
+        pytest.param("google", "mismatched-state", id="mismatched-state"),
+        pytest.param("github", "expected-state", id="cross-provider-state"),
+    ],
+)
+async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
+    callback_provider: str,
+    state: str,
 ) -> None:
-    """Reject a callback whose browser-bound OAuth state does not match."""
+    """Reject a callback whose browser-bound OAuth state is invalid."""
 
     # Arrange
     credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
@@ -184,45 +193,8 @@ async def test_oauth_callback_rejects_mismatched_state_without_provider_exchange
 
     # Act
     response = await client.get(
-        "/api/v1/auth/oauth/google/callback",
-        params={"code": "provider-code", "state": "mismatched-state"},
-        follow_redirects=False,
-    )
-
-    # Assert
-    assert response.status_code == 302
-    assert response.content == b""
-    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
-    assert response.headers["cache-control"] == "no-store"
-    assert client.cookies.get("longlink_oauth") is None
-    assert client.cookies.get("longlink_auth") is None
-
-
-async def test_oauth_callback_rejects_cross_provider_state_without_provider_exchange(
-    client: AsyncClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Reject a callback that replays another provider's browser-bound OAuth state."""
-
-    # Arrange
-    credential = token.create_oauth_state_token("google", "expected-state", "pkce-verifier")
-    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
-
-    async def unexpected_identity(
-        _provider: oauth.OAuthProvider,
-        _code: str,
-        _verifier: str,
-    ) -> oauth.OAuthIdentity | None:
-        """Fail if cross-provider callback state reaches the external provider."""
-
-        raise AssertionError("cross-provider OAuth state must not reach the provider")
-
-    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
-
-    # Act
-    response = await client.get(
-        "/api/v1/auth/oauth/github/callback",
-        params={"code": "provider-code", "state": "expected-state"},
+        f"/api/v1/auth/oauth/{callback_provider}/callback",
+        params={"code": "provider-code", "state": state},
         follow_redirects=False,
     )
 

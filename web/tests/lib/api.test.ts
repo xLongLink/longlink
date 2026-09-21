@@ -11,6 +11,9 @@ function jsonResponse(payload: unknown, status: number): Response {
     return new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' }, status });
 }
 
+// Single owner for the unusable-detail fallback message.
+const FALLBACK_MESSAGE = 'The server could not complete the request. Please try again.';
+
 describe('api error mapping', () => {
     it('returns the server detail message with status and url', async () => {
         // Arrange
@@ -29,11 +32,15 @@ describe('api error mapping', () => {
         expect((failure as ApiError).url).toBe('https://api.example/organizations');
     });
 
-    it('falls back when the detail is blank', async () => {
+    it.each([
+        { payload: { detail: '   ' }, status: 422 },
+        { payload: {}, status: 500 },
+        { payload: { detail: 123 }, status: 422 },
+    ])('falls back when the detail is unusable: $payload', async ({ payload, status }) => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => jsonResponse({ detail: '   ' }, 422))
+            vi.fn(async () => jsonResponse(payload, status))
         );
 
         // Act
@@ -41,40 +48,8 @@ describe('api error mapping', () => {
 
         // Assert
         expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('The server could not complete the request. Please try again.');
-        expect((failure as ApiError).status).toBe(422);
-    });
-
-    it('falls back when the payload has no usable detail', async () => {
-        // Arrange
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => jsonResponse({}, 500))
-        );
-
-        // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
-
-        // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('The server could not complete the request. Please try again.');
-        expect((failure as ApiError).status).toBe(500);
-    });
-
-    it('falls back when the detail is not a string', async () => {
-        // Arrange
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => jsonResponse({ detail: 123 }, 422))
-        );
-
-        // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
-
-        // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('The server could not complete the request. Please try again.');
-        expect((failure as ApiError).status).toBe(422);
+        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
+        expect((failure as ApiError).status).toBe(status);
     });
 
     it('passes network failures through without mapping', async () => {
@@ -144,7 +119,7 @@ describe('api success contract', () => {
 
         // Assert
         expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('The server could not complete the request. Please try again.');
+        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
         expect((failure as ApiError).status).toBe(500);
     });
 });

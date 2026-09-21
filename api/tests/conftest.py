@@ -37,7 +37,6 @@ os.environ.pop("GOOGLE_OAUTH_CLIENT_ID", None)
 os.environ.pop("GITHUB_OAUTH_CLIENT_SECRET", None)
 os.environ.pop("GOOGLE_OAUTH_CLIENT_SECRET", None)
 
-from types import SimpleNamespace
 from src.utils import mail, token
 from src.database import session
 from src.utils.s3 import Credentials
@@ -89,14 +88,13 @@ class StorageKubernetes:
     async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
         """Accept provisioning."""
 
-        self.bucket(organization)
+    @staticmethod
+    def bucket_name(organization: UUID) -> str:
+        """Return the deterministic bucket name for an organization bucket."""
 
-    def bucket(self, organization: UUID) -> SimpleNamespace:
-        """Return the owner connection for an organization bucket."""
+        return organization.hex
 
-        return SimpleNamespace(name=organization.hex, storage=self, admin=self)
-
-    async def service_account(self, bucket: str, solution: UUID) -> Credentials:
+    async def service_account(self, organization: UUID, solution: UUID) -> Credentials:
         """Return stable scoped credentials."""
 
         return Credentials("solution", "generated-secret")
@@ -104,13 +102,13 @@ class StorageKubernetes:
     async def revoke(self, solution: UUID) -> None:
         """Accept user deletion."""
 
-    async def delete_prefix(self, bucket: str, prefix: str) -> None:
+    async def delete_prefix(self, organization: UUID, prefix: str) -> None:
         """Accept owner-scoped object cleanup."""
 
     async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Accept organization storage deletion."""
 
-    async def usage(self, bucket: str) -> int:
+    async def usage(self, organization: UUID) -> int:
         """Return deterministic logical usage."""
 
         return 128
@@ -182,7 +180,7 @@ class DatabasePostgres:
         yield URL.create("postgresql+psycopg", host="database.example", database=database)
 
     @asynccontextmanager
-    async def _connection(self, database: str, *, search_path: str | None = None) -> AsyncIterator["DatabasePostgres"]:
+    async def connection(self, database: str, *, search_path: str | None = None) -> AsyncIterator["DatabasePostgres"]:
         """Scope SQL projection and readiness probes to their Organization database."""
 
         # Record the connection target forwarded by the projection service.

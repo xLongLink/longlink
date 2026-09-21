@@ -2,7 +2,6 @@ import base64
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
-from dataclasses import dataclass
 from collections.abc import Sequence
 from kr8s.asyncio.objects import Secret
 
@@ -13,15 +12,6 @@ if TYPE_CHECKING:
 
 RUSTFS_SECRET_NAMESPACE = "rustfs"
 RUSTFS_SECRET_NAME = "longlink-rustfs"
-
-
-@dataclass(frozen=True)
-class Bucket:
-    """Describe one Organization bucket and its controller connections."""
-
-    name: str
-    storage: s3.S3
-    admin: rustfs.RustFS
 
 
 class Storage:
@@ -64,15 +54,41 @@ class Storage:
         async with self._storage.client() as client:
             await client.list_buckets()
 
+    @staticmethod
+    def bucket_name(organization: UUID) -> str:
+        """Resolve an Organization bucket name without provisioning it."""
+
+        return f"longlink-{organization.hex}"
+
+    async def service_account(self, organization: UUID, solution: UUID) -> s3.Credentials:
+        """Create one Solution-scoped service account in the Organization bucket."""
+
+        return await self._admin.service_account(self.bucket_name(organization), solution)
+
+    async def revoke(self, solution: UUID) -> None:
+        """Revoke one Solution service account."""
+
+        await self._admin.revoke(solution)
+
+    async def delete_prefix(self, organization: UUID, prefix: str) -> None:
+        """Remove one Solution prefix from the Organization bucket."""
+
+        await self._storage.delete_prefix(self.bucket_name(organization), prefix)
+
+    async def usage(self, organization: UUID) -> int:
+        """Measure the Organization bucket's live usage."""
+
+        return await self._storage.usage(self.bucket_name(organization))
+
     async def apply(self, organization: UUID, *, quota_bytes: int = 1073741824) -> None:
         """Create an Organization bucket and apply its RustFS hard byte quota."""
 
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.
-        bucket = self.bucket(organization)
-        await bucket.storage.create_bucket(bucket.name)
-        async with bucket.storage.client() as client:
+        name = self.bucket_name(organization)
+        await self._storage.create_bucket(name)
+        async with self._storage.client() as client:
             await client.put_public_access_block(
-                Bucket=bucket.name,
+                Bucket=name,
                 PublicAccessBlockConfiguration={
                     "BlockPublicAcls": True,
                     "IgnorePublicAcls": True,
@@ -80,18 +96,13 @@ class Storage:
                     "RestrictPublicBuckets": True,
                 },
             )
-        await bucket.admin.quota(bucket.name, quota_bytes)
-
-    def bucket(self, organization: UUID) -> Bucket:
-        """Resolve an Organization bucket connection without provisioning it."""
-
-        return Bucket(f"longlink-{organization.hex}", self._storage, self._admin)
+        await self._admin.quota(name, quota_bytes)
 
     async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Revoke all scoped credentials and remove an Organization bucket's complete contents."""
 
         # Revoke every known account before data removal, including tombstoned Solutions.
-        bucket = self.bucket(organization)
+        name = self.bucket_name(organization)
         for solution in solutions:
-            await bucket.admin.revoke(solution)
-        await bucket.storage.delete(bucket.name)
+            await self._admin.revoke(solution)
+        await self._storage.delete(name)
