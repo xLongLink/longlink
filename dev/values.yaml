@@ -10,7 +10,6 @@ storage:
     address: 127.0.0.1
     dnsNames:
         - storage.localhost
-        - longlink-storage.rustfs.svc
     service:
         nodePort: 30943
         type: NodePort

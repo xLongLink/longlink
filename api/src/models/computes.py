@@ -5,8 +5,7 @@ from typing import Annotated, cast
 from pydantic import Field, HttpUrl, BaseModel, ConfigDict, ValidationInfo, BeforeValidator, field_validator
 from urllib.parse import urlsplit
 
-GATEWAY_PORT = 443
-STORAGE_PORT = 9443
+HTTPS_PORT = 443
 
 
 def kubeconfig_mapping(value: object) -> dict[str, object]:
@@ -96,10 +95,9 @@ class ComputeRegistryEndpoints(BaseModel):
         if "://" not in value:
             value = f"https://{value}"
 
-        # Preserve explicit ports and select the Compute service port when it is omitted.
+        # Preserve explicit ports and select standard HTTPS when it is omitted.
         source = urlsplit(value)
-        default_port = STORAGE_PORT if info.field_name == "storage_endpoint" else GATEWAY_PORT
-        port = source.port if source.port is not None else default_port
+        port = source.port if source.port is not None else HTTPS_PORT
 
         # Keep proxy paths separate from the registered TLS endpoint.
         url = HttpUrl(value)
@@ -135,9 +133,6 @@ class ComputeRegistryResponse(BaseModel):
 
     # Metadata
     name: str
-
-    # Live overview
-    live_version: str | None = None
 
     # Gateway
     gateway_url: str

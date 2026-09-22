@@ -1,6 +1,6 @@
 # Vendored Sources
 
-The adjacent Kubernetes manifests and local chart dependencies are pinned below
+The adjacent Kubernetes manifests and local chart dependency are pinned below
 so a Compute chart can be installed with Helm alone.
 
 - Knative Serving CRDs `v1.23.0`

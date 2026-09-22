@@ -36,7 +36,6 @@ export const zComputeRegistryCreate = z.object({
 export const zComputeRegistryResponse = z.object({
     id: z.uuid(),
     name: z.string(),
-    live_version: z.string().nullish(),
     gateway_url: z.string(),
     database_storage_class: z.string(),
     storage_endpoint: z.string()

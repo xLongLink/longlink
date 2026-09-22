@@ -86,7 +86,6 @@ up:
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
 	helm --kubeconfig dev/kubeconfig.yaml upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
-	kubectl --kubeconfig dev/kubeconfig.yaml apply --filename dev/compute.yaml
 	
 	# Wait for the storage backend to pass its readiness probe before checking through the proxies.
 	kubectl --kubeconfig dev/kubeconfig.yaml wait --for=condition=Ready pod --selector=app.kubernetes.io/name=rustfs --namespace rustfs --timeout=10m

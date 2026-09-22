@@ -1088,7 +1088,7 @@
       },
       "get": {
         "summary": "List Compute Registries",
-        "description": "Return all registered compute backends with live package versions.",
+        "description": "Return all registered compute backends.",
         "operationId": "list_compute_registries_api_v1_computes_get",
         "parameters": [
           {
@@ -2500,17 +2500,6 @@
           "name": {
             "type": "string",
             "title": "Name"
-          },
-          "live_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Live Version"
           },
           "gateway_url": {
             "type": "string",

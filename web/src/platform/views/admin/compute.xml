@@ -45,7 +45,6 @@
                     <Text type="supporting">$row.gateway_url</Text>
                 </Stack>
             </TableColumn>
-            <TableColumn field="live_version" header="Version" />
             <TableColumn field="id" header="Actions" align="end">
                 <MoreMenu value="$metadata">
                     <Option
@@ -93,7 +92,7 @@
                 <TextInput
                     label="Storage endpoint"
                     value="$registration.storage_endpoint"
-                    placeholder="https://&lt;nightly_storage_floating_ip&gt;:9443"
+                    placeholder="https://&lt;nightly_storage_floating_ip&gt;"
                     isRequired="true"
                 />
                 <TextArea
@@ -129,10 +128,6 @@
             <Text>
                 <b>Gateway</b>
                 $metadata.item.gateway_url
-            </Text>
-            <Text>
-                <b>Live version</b>
-                $metadata.item.live_version
             </Text>
             <Text>
                 <b>Database storage class</b>
