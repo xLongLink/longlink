@@ -44,7 +44,7 @@ export default function VerifyEmail() {
     });
     const verification = useMutation({
         mutationFn: async ({ signal, token: registrationToken }: VerificationRequest) => {
-            if (!registrationToken) {
+            if (registrationToken === '') {
                 return zEmailPayload.parse(await api('/api/v1/auth/register/setup', { signal }).json());
             }
 
@@ -95,7 +95,7 @@ export default function VerifyEmail() {
             await clearSessionQueries(queryClient);
             queryClient.setQueryData(['api', '/api/v1/me'], user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-            navigate('/user/organizations', { replace: true });
+            void navigate('/user/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {
@@ -114,9 +114,10 @@ export default function VerifyEmail() {
         };
     }, [token]);
 
-    const recoveryRegisterHref = verification.data?.email
-        ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
-        : '/auth/register';
+    const recoveryRegisterHref =
+        verification.data?.email != null
+            ? `/auth/register?${new URLSearchParams({ email: verification.data.email })}`
+            : '/auth/register';
     const pageMetadata = <NoIndex title="Verify Your Email | LongLink" />;
 
     // Keep transient verification failures retryable while expired credentials remain terminal.

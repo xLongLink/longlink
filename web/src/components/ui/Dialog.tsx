@@ -43,9 +43,9 @@ export function Dialog({
                     paddingBlock={2}
                     paddingInline={4}
                 >
-                    <Stack gap={subtitle ? 1 : 0}>
+                    <Stack gap={subtitle != null && subtitle !== '' ? 1 : 0}>
                         <Heading level={2}>{title}</Heading>
-                        {subtitle ? (
+                        {subtitle != null && subtitle !== '' ? (
                             <Text color="secondary" size="sm" type="body">
                                 {subtitle}
                             </Text>

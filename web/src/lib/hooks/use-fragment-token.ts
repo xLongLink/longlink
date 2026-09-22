@@ -7,11 +7,11 @@ export function useFragmentToken(storageKey: string): string {
     const fragmentToken = new URLSearchParams(location.hash.slice(1)).get('token');
 
     useLayoutEffect(() => {
-        if (fragmentToken) {
+        if (fragmentToken !== null) {
             sessionStorage.setItem(storageKey, fragmentToken);
             window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
         }
     }, [fragmentToken, location.pathname, location.search, storageKey]);
 
-    return fragmentToken || sessionStorage.getItem(storageKey) || '';
+    return fragmentToken ?? sessionStorage.getItem(storageKey) ?? '';
 }

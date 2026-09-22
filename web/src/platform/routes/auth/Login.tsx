@@ -39,23 +39,23 @@ export default function Login() {
     const { data: oauthAvailability } = useQuery({
         queryKey: ['api', '/api/v1/auth/oauth'],
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
-        enabled: !user,
+        enabled: user === undefined,
         staleTime: Infinity,
     });
-    const hasOAuthProvider = oauthAvailability?.github || oauthAvailability?.google;
+    const hasOAuthProvider = oauthAvailability?.github === true || oauthAvailability?.google === true;
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' });
     const trimmedEmail = email.trim();
-    const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
+    const registerSearch = trimmedEmail !== '' ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
     const login = useMutation({
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
         onSuccess: async () => {
             // A new login must never reuse data from the previous identity.
             await clearSessionQueries(queryClient);
-            navigate('/user/organizations', { replace: true });
+            void navigate('/user/organizations', { replace: true });
         },
     });
 
@@ -70,7 +70,7 @@ export default function Login() {
     }, [oauthError, reportApiError]);
 
     // Keep authenticated users out of the sign-in page.
-    if (user) {
+    if (user !== undefined) {
         return (
             <>
                 <NoIndex title="LongLink" />

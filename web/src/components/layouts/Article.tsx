@@ -40,7 +40,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
     const nextPage = documentationPaths[currentPage + 1];
 
     const scrollToArticleTop = () => {
-        requestAnimationFrame(() => {
+        void requestAnimationFrame(() => {
             window.scrollTo({ top: 0 });
         });
     };
@@ -66,7 +66,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
         }
 
         event.preventDefault();
-        navigate(destination);
+        void navigate(destination);
         scrollToArticleTop();
     });
 
@@ -156,7 +156,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                             <Text type="supporting">
                                                 {`Last updated: ${dateFormatter.format(new Date(page.lastUpdated))}`}
                                             </Text>
-                                            {page.editUrl ? (
+                                            {page.editUrl != null && page.editUrl !== '' ? (
                                                 <Link href={page.editUrl} hasUnderline isExternalLink type="supporting">
                                                     Edit this page
                                                 </Link>
@@ -165,7 +165,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     </Stack>
                                 </article>
                             </PageContainer>
-                            {page.toc?.length ? (
+                            {page.toc != null && page.toc.length > 0 ? (
                                 <Stack
                                     as="aside"
                                     aria-label="On this page"

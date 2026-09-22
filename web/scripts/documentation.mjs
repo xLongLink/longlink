@@ -3,10 +3,40 @@ import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const outputPath = path.resolve(root, 'src/lib/generated/documentation.ts');
-const schemaPath = path.resolve(root, '../sdk/longlink/.static/xsd/schema.xsd');
-const typesPath = path.resolve(root, '../sdk/longlink/.static/xsd/types.xsd');
+/** @typedef {Record<string, unknown>} XmlNode */
+/** @typedef {{ description: string, name: string }} DocumentedAttribute */
+/** @typedef {{ attributes: DocumentedAttribute[], description: string, example: string, name: string }} DocumentedElement */
+/** @typedef {DocumentedElement & { lastUpdated: string, nested: DocumentedElement[], slug: string, source: string }} DocumentedComponent */
+
+/** Resolves a filesystem path from string segments. @param {...string} segments @returns {string} */
+function resolvePath(...segments) {
+    return path.resolve(...segments);
+}
+
+/** Returns the directory containing this documentation generator. @returns {string} */
+function scriptRoot() {
+    return resolvePath(path.dirname(fileURLToPath(import.meta.url)), '..');
+}
+
+/** Reads a UTF-8 text file. @param {string} filePath @returns {Promise<string>} */
+async function readText(filePath) {
+    return readFile(filePath, 'utf8');
+}
+
+/** Writes a UTF-8 text file. @param {string} filePath @param {string} content @returns {Promise<void>} */
+async function writeText(filePath, content) {
+    await writeFile(filePath, content, 'utf8');
+}
+
+/** Parses XML while retaining unknown output until it is structurally validated. @param {string} source @returns {unknown} */
+function parseXml(source) {
+    return parser.parse(source);
+}
+
+const root = scriptRoot();
+const outputPath = resolvePath(root, 'src/lib/generated/documentation.ts');
+const schemaPath = resolvePath(root, '../sdk/longlink/.static/xsd/schema.xsd');
+const typesPath = resolvePath(root, '../sdk/longlink/.static/xsd/types.xsd');
 const parser = new XMLParser({
     attributeNamePrefix: '',
     ignoreAttributes: false,
@@ -14,29 +44,29 @@ const parser = new XMLParser({
     trimValues: false,
 });
 
-/** Returns an object-shaped XML node. */
+/** Returns an object-shaped XML node. @param {unknown} value @returns {XmlNode | undefined} */
 function record(value) {
     return value != null && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
 }
 
-/** Returns object-shaped child nodes with a given XML name. */
+/** Returns object-shaped child nodes with a given XML name. @param {XmlNode | undefined} value @param {string} name @returns {XmlNode[]} */
 function nodes(value, name) {
     const child = value?.[name];
     const entries = Array.isArray(child) ? child : [child];
 
     return entries.flatMap((entry) => {
         const childRecord = record(entry);
-        return childRecord ? [childRecord] : [];
+        return childRecord !== undefined ? [childRecord] : [];
     });
 }
 
-/** Returns a string-valued XML attribute or an empty string. */
+/** Returns a string-valued XML attribute or an empty string. @param {XmlNode | undefined} value @param {string} name @returns {string} */
 function attribute(value, name) {
     const entry = value?.[name];
     return typeof entry === 'string' ? entry : '';
 }
 
-/** Returns the first object-shaped child node with a given XML name. */
+/** Returns the first object-shaped child node with a given XML name. @param {XmlNode | undefined} value @param {string} name @returns {XmlNode | undefined} */
 function firstNode(value, name) {
     const child = value?.[name];
     if (!Array.isArray(child)) {
@@ -53,45 +83,45 @@ function firstNode(value, name) {
     return undefined;
 }
 
-/** Returns trimmed XML element text. */
+/** Returns trimmed XML element text. @param {unknown} value @returns {string} */
 function text(value) {
     const entry = typeof value === 'string' ? value : record(value)?.['#text'];
     return typeof entry === 'string' ? entry.trim() : '';
 }
 
-/** Returns an element's XSD annotation. */
+/** Returns an element's XSD annotation. @param {XmlNode | undefined} value @returns {XmlNode | undefined} */
 function annotation(value) {
     return firstNode(value, 'xsd:annotation');
 }
 
-/** Returns an element's documentation text. */
+/** Returns an element's documentation text. @param {XmlNode | undefined} value @returns {string} */
 function documentation(value) {
     return text(annotation(value)?.['xsd:documentation']);
 }
 
-/** Returns an element's application metadata. */
+/** Returns an element's application metadata. @param {XmlNode | undefined} value @returns {XmlNode | undefined} */
 function appInfo(value) {
     return firstNode(annotation(value), 'xsd:appinfo');
 }
 
-/** Parses and validates one XSD source document. */
+/** Parses and validates one XSD source document. @param {string} source @param {string} sourcePath @returns {XmlNode} */
 function parseDocument(source, sourcePath) {
     const validation = XMLValidator.validate(source);
     if (validation !== true) {
         throw new Error(`Cannot parse ${sourcePath}: ${validation.err.msg}`);
     }
 
-    const schema = record(record(parser.parse(source))?.['xsd:schema']);
-    if (!schema) {
+    const schema = record(record(parseXml(source))?.['xsd:schema']);
+    if (schema === undefined) {
         throw new Error(`Cannot parse ${sourcePath}: Missing xsd:schema root.`);
     }
 
     return schema;
 }
 
-/** Returns documented attributes, including shared runtime attributes where declared. */
+/** Returns documented attributes, including shared runtime attributes where declared. @param {XmlNode | undefined} type @param {DocumentedAttribute[]} runtimeAttributes @returns {DocumentedAttribute[]} */
 function attributes(type, runtimeAttributes) {
-    if (!type) {
+    if (type === undefined) {
         return [];
     }
 
@@ -106,7 +136,7 @@ function attributes(type, runtimeAttributes) {
     return usesRuntimeAttributes ? [...declared, ...runtimeAttributes] : declared;
 }
 
-/** Returns documentation for one XSD element. */
+/** Returns documentation for one XSD element. @param {XmlNode} element @param {Map<string, XmlNode>} types @param {DocumentedAttribute[]} runtimeAttributes @returns {DocumentedElement} */
 function parseElement(element, types, runtimeAttributes) {
     const inlineType = firstNode(element, 'xsd:complexType');
     const typeName = attribute(element, 'type');
@@ -120,10 +150,10 @@ function parseElement(element, types, runtimeAttributes) {
     };
 }
 
-/** Yields nested element declarations in document order. */
+/** Yields nested element declarations in document order. @param {unknown} value @returns {Generator<XmlNode>} */
 function* collectNestedElements(value) {
     const entry = record(value);
-    if (!entry) {
+    if (entry === undefined) {
         return;
     }
 
@@ -142,7 +172,7 @@ function* collectNestedElements(value) {
     }
 }
 
-/** Returns undocumented elements referenced by a component's documentation. */
+/** Returns undocumented elements referenced by a component's documentation. @param {DocumentedElement} component @param {Map<string, XmlNode>} elements @returns {Set<string>} */
 function companionNames(component, elements) {
     const names = new Set();
     const content = `${component.description}\n${component.example}`;
@@ -158,28 +188,31 @@ function companionNames(component, elements) {
     return names;
 }
 
-/** Generates component documentation from the SDK XSD source contracts. */
+/** Generates component documentation from the SDK XSD source contracts. @returns {Promise<DocumentedComponent[]>} */
 async function componentDocumentation() {
-    const typesSource = await readFile(typesPath, 'utf8');
+    const typesSource = await readText(typesPath);
     const typesDocument = parseDocument(typesSource, 'sdk/longlink/.static/xsd/types.xsd');
     const runtimeGroup = nodes(typesDocument, 'xsd:attributeGroup').find(
         (group) => attribute(group, 'name') === 'XmlRuntimeAttributes'
     );
     const runtimeAttributes = attributes(runtimeGroup, []);
-    const schemaSource = await readFile(schemaPath, 'utf8');
+    const schemaSource = await readText(schemaPath);
     const schemaDocument = parseDocument(schemaSource, 'sdk/longlink/.static/xsd/schema.xsd');
     const filenames = nodes(schemaDocument, 'xsd:include')
         .map((include) => attribute(include, 'schemaLocation'))
         .filter((location) => location.startsWith('adapters/') && location.endsWith('.xsd'))
         .sort();
+    /** @type {XmlNode[]} */
     const documents = [];
 
     for (const filename of filenames) {
-        const source = await readFile(path.join(path.dirname(schemaPath), filename), 'utf8');
+        const source = await readText(path.join(path.dirname(schemaPath), filename));
         documents.push(parseDocument(source, filename));
     }
 
+    /** @type {Map<string, XmlNode>} */
     const elements = new Map();
+    /** @type {Map<string, XmlNode>} */
     const types = new Map();
 
     for (const document of documents) {
@@ -200,7 +233,7 @@ async function componentDocumentation() {
 
     return Array.from(elements.values()).flatMap((element) => {
         const metadata = record(appInfo(element)?.['longlink:docs']);
-        if (!metadata) {
+        if (metadata === undefined) {
             return [];
         }
 
@@ -235,8 +268,8 @@ async function componentDocumentation() {
 
 const components = await componentDocumentation();
 const output = `// Generated by scripts/documentation.mjs from SDK XSD documentation metadata.\nexport type ComponentDocumentation = {\n    attributes: { description: string; name: string }[];\n    description: string;\n    example: string;\n    lastUpdated: string;\n    name: string;\n    nested: { attributes: { description: string; name: string }[]; description: string; example: string; name: string }[];\n    slug: string;\n    source: string;\n};\n\nexport const componentDocumentation: ComponentDocumentation[] = ${JSON.stringify(components, null, 4)};\n`;
-const current = await readFile(outputPath, 'utf8').catch(() => undefined);
+const current = await readText(outputPath).catch(() => undefined);
 
 if (current !== output) {
-    await writeFile(outputPath, output, 'utf8');
+    await writeText(outputPath, output);
 }

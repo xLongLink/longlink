@@ -20,7 +20,7 @@ export default function Solution() {
                     }
                     tabs={tabs}
                 >
-                    <NoIndex title={title ? `${title} | LongLink` : 'LongLink'} />
+                    <NoIndex title={title != null ? `${title} | LongLink` : 'LongLink'} />
                     <PageContainer minHeight="100%" padding={2}>
                         {content}
                     </PageContainer>

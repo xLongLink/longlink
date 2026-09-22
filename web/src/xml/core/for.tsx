@@ -8,8 +8,8 @@ export function For({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 
     // Require the loop alias and source before resolving them.
-    if (!props.as) throw new Error('For requires an "as" parameter');
-    if (!props.each) throw new Error('For requires an "each" parameter');
+    if (props.as == null) throw new Error('For requires an "as" parameter');
+    if (props.each == null) throw new Error('For requires an "each" parameter');
 
     const resolvedAs = resolveXml(props, 'as', ctx);
     const as = typeof resolvedAs === 'string' ? resolvedAs : '';
@@ -18,7 +18,13 @@ export function For({ props, nodes }: Props) {
     // Skip loop rendering when the source is not an array.
     if (!Array.isArray(each)) return null;
 
-    return each.map((item, index) => {
+    const keyCounts = new Map<string, number>();
+
+    return each.map((item: unknown, index) => {
+        const itemKey = JSON.stringify(item) ?? String(item);
+        const occurrence = keyCounts.get(itemKey) ?? 0;
+        keyCounts.set(itemKey, occurrence + 1);
+
         const childCtx = {
             parent: ctx,
             bindings: {
@@ -28,7 +34,7 @@ export function For({ props, nodes }: Props) {
         };
 
         return (
-            <XmlContext.Provider key={index} value={{ services, scope: childCtx }}>
+            <XmlContext.Provider key={`${itemKey}-${occurrence}`} value={{ services, scope: childCtx }}>
                 {renderNode(nodes, childCtx)}
             </XmlContext.Provider>
         );
