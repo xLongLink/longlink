@@ -65,7 +65,7 @@ spec:
                         kubernetes.io/metadata.name: kube-system
                 podSelector:
                     matchLabels:
-                        k8s-app: kube-dns
+                        k8s-app: coredns
           ports:
               - { protocol: UDP, port: 53 }
               - { protocol: TCP, port: 53 }
