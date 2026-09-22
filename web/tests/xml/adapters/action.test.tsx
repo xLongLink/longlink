@@ -273,6 +273,28 @@ describe('Action', () => {
         expect(closeDialog).not.toHaveBeenCalled();
     });
 
+    it('blocks an external Action request URL before transport', async () => {
+        // Arrange
+        const ctx = createContext({ navigate: vi.fn(), requestBaseUrl: '/api/solutions/123/proxy' });
+        const fetchRequest = vi.fn();
+        vi.stubGlobal('fetch', fetchRequest);
+        const button = await renderAction(
+            '<State id="form" value="draft" /><Action><Request url="https://evil.example/orders" method="POST" /><Patch state="form" value="${{value: \'submitted\'}}" /><Link to="/orders">Save</Link></Action>',
+            ctx
+        );
+
+        // Act
+        await act(async () => {
+            button.click();
+            await vi.waitFor(() => expect(toast).toHaveBeenCalledOnce());
+        });
+
+        // Assert
+        expect(fetchRequest).not.toHaveBeenCalled();
+        expect(ctx.scope.bindings.form).toEqual({ value: 'draft' });
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
+    });
+
     it('invalidates declared State through Patch', async () => {
         const ctx = createContext({ navigate: vi.fn() });
         const button = await renderAction(

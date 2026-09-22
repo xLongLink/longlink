@@ -2,8 +2,9 @@ import pytest
 from uuid import uuid4
 from httpx2 import AsyncClient
 from datetime import timedelta
-from factories import queue_operation
+from factories import fail_operation, claim_operation, queue_operation, create_organization
 from src.database.session import session_scope
+from src.database.models.users import User
 from src.database.models.operations import Operation
 
 
@@ -61,6 +62,32 @@ async def test_operations_endpoint_paginates_history(
     assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
     assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]
     assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])
+
+
+async def test_operations_endpoint_serializes_failed_organization_operation(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Expose terminal failure details and the resolved organization name to administrators."""
+
+    # Arrange
+    organization = await create_organization(users[1])
+    operation = await claim_operation()
+    assert operation is not None
+    failed = await fail_operation(operation.id, "Compute provisioning failed")
+    assert failed is not None
+
+    # Act
+    response = await clients[0].get("/api/v1/operations")
+
+    # Assert
+    assert response.status_code == 200
+    item = next(item for item in response.json()["items"] if item["id"] == str(failed.id))
+    assert item["target_id"] == str(organization.id)
+    assert item["resource_name"] == organization.name
+    assert item["status"] == "failed"
+    assert item["failed"] == "Compute provisioning failed"
+    assert item["finished_at"] is not None
 
 
 @pytest.mark.parametrize(

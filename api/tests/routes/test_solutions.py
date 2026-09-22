@@ -573,6 +573,33 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     assert response.json() == {"detail": "Solution logs unavailable"}
 
 
+async def test_app_logs_return_unavailable_when_kubernetes_construction_fails(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Hide Kubernetes client construction details from authorized log readers."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+
+    def unavailable_kubernetes(*_args: object) -> object:
+        """Fail before the Kubernetes client can open its connection."""
+
+        raise RuntimeError("cluster credential unavailable")
+
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", unavailable_kubernetes)
+
+    # Act
+    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/logs")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Solution logs unavailable"}
+    assert "cluster credential unavailable" not in response.text
+
+
 async def test_solution_logs_reject_deleted_solution_before_constructing_kubernetes(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
