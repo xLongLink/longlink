@@ -9,7 +9,7 @@
     />
 
     <Stack gap="8">
-        <Stack>
+        <Stack gap="1">
             <Heading level="1">Solutions</Heading>
             <Text color="secondary">
                 Review all solutions across organizations and deployment states.

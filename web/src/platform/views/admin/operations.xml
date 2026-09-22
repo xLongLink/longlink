@@ -8,7 +8,7 @@
     />
 
     <Stack gap="8">
-        <Stack>
+        <Stack gap="1">
             <Heading level="1">Operations</Heading>
             <Text color="secondary">
                 Track long-running Platform tasks, when they become
