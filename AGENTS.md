@@ -18,7 +18,6 @@
 - Prefer explicit duplication over a local helper when it makes lifecycle code clearer.
 - Keep class constructions in separate, multi-line assignments before invoking their methods.
 - Validate types at the boundary.
-- Avoid `Any` and prefer precise type annotations.
 - Keep the code pytonic, prefer readability over efficiency.
 - Use `datetime.now(UTC)` for current UTC timestamps.
 - Use clear domain names, prefer single-word Python filenames.
