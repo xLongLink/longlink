@@ -696,3 +696,106 @@ async def test_delete_solution_rejects_write_member_without_mutating_solution(
         assert solution is not None
         assert solution.deleted_at is None
         assert operation is None
+
+
+async def test_list_solutions_rejects_anonymous_without_admin_lookup(
+    client: AsyncClient,
+) -> None:
+    """Reject unauthenticated solution listing before administrator checks."""
+
+    # Act
+    response = await client.get("/api/v1/solutions")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
+async def test_create_solution_rejects_overlong_description_without_mutating_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject solution descriptions beyond the 255-character contract."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/solutions",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest", "description": "x" * 256},
+    )
+
+    # Assert
+    assert response.status_code == 422
+    async with session_scope() as session:
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
+
+
+async def test_create_solution_rejects_invalid_min_scale_without_mutating_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject solution scale values outside the supported 0-or-1 contract."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/solutions",
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest", "min_scale": 2},
+    )
+
+    # Assert
+    assert response.status_code == 422
+    async with session_scope() as session:
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
+
+
+async def test_create_solution_rejects_too_long_slug_without_queuing_work(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject valid-schema solution names whose slug exceeds the 63-character limit."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    operation_ids = [operation.id for operation in await fetch_operations()]
+
+    async def inspect_image(_image: Image) -> LongLinkMetadata:
+        """Return valid immutable image metadata."""
+
+        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/organizations/{organization.id}/solutions",
+        json={"name": "a" * 70, "image": "ghcr.io/longlink/dashboard:latest"},
+    )
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Invalid name"}
+    async with session_scope() as session:
+        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
+    assert [operation.id for operation in await fetch_operations()] == operation_ids
+
+
+async def test_list_solutions_rejects_invalid_pagination(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Reject administrator pagination outside the 1-based page contract."""
+
+    # Act
+    response = await clients[0].get("/api/v1/solutions?page=0&page_size=101")
+
+    # Assert
+    assert response.status_code == 422

@@ -1,5 +1,5 @@
 import pytest
-from kr8s import NotFoundError
+from kr8s import ServerError, NotFoundError
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
@@ -8,7 +8,7 @@ from factories import create_compute, create_solution, fetch_operations, create_
 from sqlalchemy import func
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.services import invitations, organizations
@@ -389,6 +389,8 @@ async def test_other_organization_user_cannot_delete_solution(
             id="backend-unavailable",
         ),
         pytest.param(TimeoutError(), 503, None, id="timeout"),
+        pytest.param(ServerError("storage backend failed"), 503, None, id="server-error"),
+        pytest.param(BotoCoreError(), 503, None, id="botocore-error"),
     ],
 )
 async def test_organization_storage_usage_returns_usage_or_unavailable(
@@ -1085,3 +1087,67 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await organizations.invitations(session, organization.id) == []
+
+
+async def test_get_organization_rejects_anonymous_without_membership_lookup(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+) -> None:
+    """Reject unauthenticated organization reads before membership checks."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    response = await client.get(f"/api/v1/organizations/{organization.id}")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
+async def test_deleted_organization_returns_forbidden_to_former_owner(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Hide tombstoned organizations behind access checks instead of not-found."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    delete_response = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+    assert delete_response.status_code == 202
+
+    # Act
+    detail_response = await clients[0].get(f"/api/v1/organizations/{organization.id}")
+    solutions_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
+
+    # Assert
+    assert detail_response.status_code == 403
+    assert detail_response.json() == {"detail": "Access required"}
+    assert solutions_response.status_code == 403
+    assert solutions_response.json() == {"detail": "Access required"}
+
+    # Prove the tombstone still exists so forbidden does not mask a missing row.
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        assert persisted.deleted_at is not None
+
+
+async def test_create_organization_rejects_too_long_slug_without_persisting_state(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+) -> None:
+    """Reject valid-schema names whose slug exceeds the 63-character limit."""
+
+    # Arrange
+    await create_compute()
+
+    # Act
+    response = await clients[0].post("/api/v1/organizations", json={"name": "a" * 70})
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Invalid name"}
+    async with session_scope() as session:
+        assert await session.scalar(select(Organization)) is None
+    assert await fetch_operations() == []
