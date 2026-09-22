@@ -18,8 +18,9 @@ function registryFor(ctx: Scope) {
 /** Renders XML AST nodes using the active runtime context. */
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     const registry = registryFor(ctx);
+    const keyCounts = new Map<string, number>();
 
-    return nodes.map((node, index) => {
+    return nodes.map((node) => {
         // Render parser-generated text directly rather than through a public XML component.
         if (node.name === '$text') {
             const value = resolveXmlValue(node.params, 'value', ctx);
@@ -39,7 +40,11 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
 
         // Render registered XML components directly.
         if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={node.params} nodes={node.children} />;
+            const nodeKey = `${node.name}-${JSON.stringify(node.params)}`;
+            const occurrence = keyCounts.get(nodeKey) ?? 0;
+            keyCounts.set(nodeKey, occurrence + 1);
+
+            return <RegisteredComponent key={`${nodeKey}-${occurrence}`} props={node.params} nodes={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

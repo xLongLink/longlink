@@ -95,7 +95,7 @@ export default function VerifyEmail() {
             await clearSessionQueries(queryClient);
             queryClient.setQueryData(['api', '/api/v1/me'], user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-            navigate('/user/organizations', { replace: true });
+            void navigate('/user/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.status === 400) {

@@ -288,8 +288,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch value must evaluate to an object');
     }
 
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null) {
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) {
         throw new Error('Patch value must evaluate to an object');
     }
 

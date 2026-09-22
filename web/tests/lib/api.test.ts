@@ -97,7 +97,8 @@ describe('api success contract', () => {
         // Assert
         expect(payload).toEqual({ id: 'acme' });
         expect(transport).toHaveBeenCalledOnce();
-        const request = transport.mock.calls[0]?.[0] as Request;
+        const request = transport.mock.calls[0]?.[0];
+        if (request === undefined) throw new Error('Fetch request was not captured');
         expect(request.headers.get('content-type')).toContain('application/json');
         expect(sentBody).toContain('"acme"');
     });

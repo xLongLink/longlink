@@ -16,8 +16,8 @@ export function RadioList({ props, nodes }: Props) {
             size="sm"
             value={binding.value}
         >
-            {resolveOptions(nodes, ctx).map(({ label, value }, index) => (
-                <AstryxRadioListItem key={index} label={label} value={value} />
+            {resolveOptions(nodes, ctx).map(({ label, value }) => (
+                <AstryxRadioListItem key={value} label={label} value={value} />
             ))}
         </AstryxRadioList>
     );

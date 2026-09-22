@@ -55,7 +55,7 @@ export default function Login() {
         onSuccess: async () => {
             // A new login must never reuse data from the previous identity.
             await clearSessionQueries(queryClient);
-            navigate('/user/organizations', { replace: true });
+            void navigate('/user/organizations', { replace: true });
         },
     });
 

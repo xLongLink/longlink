@@ -28,7 +28,7 @@ export function RouterXmlRuntime({
                 const destination = new URL(url, window.location.origin);
 
                 if (destination.origin === window.location.origin) {
-                    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+                    void navigate(`${destination.pathname}${destination.search}${destination.hash}`);
                     return;
                 }
 

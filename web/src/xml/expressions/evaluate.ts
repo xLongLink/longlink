@@ -4,31 +4,35 @@ import { isSafePropertyName, readSafeProperty, resolvePath, resolveValue } from 
 
 type SafeExpressionCall = (...args: unknown[]) => unknown;
 
+/** Narrows an unknown value to a record with unknown values. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
     String,
     hasMissingRequiredValues: (definitions, values) => {
         // Ignore malformed metadata rather than blocking the workflow indefinitely.
-        if (!Array.isArray(definitions) || values == null || typeof values !== 'object' || Array.isArray(values)) {
+        if (!Array.isArray(definitions) || !isRecord(values)) {
             return false;
         }
 
         // Require every definition explicitly marked as required to contain non-blank text.
         return definitions.some((definition) => {
-            if (definition == null || typeof definition !== 'object' || Array.isArray(definition)) return false;
+            if (!isRecord(definition)) return false;
 
-            const name = Object.entries(definition).find(([key]) => key === 'name')?.[1];
-            const required = Object.entries(definition).find(([key]) => key === 'required')?.[1];
-            const value =
-                typeof name === 'string' ? Object.entries(values).find(([key]) => key === name)?.[1] : undefined;
+            const name = definition.name;
+            const required = definition.required;
+            const value = typeof name === 'string' ? values[name] : undefined;
 
             return required === true && (typeof value !== 'string' || value.trim().length === 0);
         });
     },
     nonEmpty: (value) => {
         // Ignore values that cannot contain named text fields.
-        if (value == null || typeof value !== 'object' || Array.isArray(value)) return {};
+        if (!isRecord(value)) return {};
 
         // Preserve only configured fields while omitting blank optional values.
         return Object.fromEntries(
@@ -168,7 +172,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
         }
 
         case 'ObjectExpression': {
-            const result: Record<string, unknown> = Object.create(null);
+            const result = Object.create(null) as Record<string, unknown>;
 
             // Reject spreads before evaluating object properties.
             for (const property of node.properties) {

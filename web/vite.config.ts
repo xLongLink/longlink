@@ -2,7 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 
-const ignoredPaths = ['.react-router/**', 'build/**', 'src/lib/generated/**'];
+const ignoredPaths = ['.react-router/**', 'build/**', 'scripts/**', 'src/lib/generated/**'];
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), 'VITE_');
@@ -60,9 +60,14 @@ export default defineConfig(({ mode }) => {
                 'typescript/await-thenable': 'off',
                 'typescript/no-base-to-string': 'off',
                 'typescript/no-explicit-any': 'error',
-                'typescript/no-floating-promises': 'off',
+                'typescript/no-floating-promises': 'error',
+                'typescript/no-misused-promises': 'error',
+                'typescript/no-non-null-assertion': 'error',
                 'typescript/no-redundant-type-constituents': 'off',
+                'typescript/no-unnecessary-type-assertion': 'error',
+                'typescript/no-unsafe-assignment': 'error',
                 'typescript/unbound-method': 'off',
+                'react/no-array-index-key': 'error',
             },
         },
 

@@ -40,7 +40,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
     const nextPage = documentationPaths[currentPage + 1];
 
     const scrollToArticleTop = () => {
-        requestAnimationFrame(() => {
+        void requestAnimationFrame(() => {
             window.scrollTo({ top: 0 });
         });
     };
@@ -66,7 +66,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
         }
 
         event.preventDefault();
-        navigate(destination);
+        void navigate(destination);
         scrollToArticleTop();
     });
 
