@@ -9,14 +9,17 @@ import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 const textInputPropsSchema = z.object({
     isRequired: z.boolean().default(false),
     label: xmlNonblankStringSchema,
+    property: z.string().optional(),
     placeholder: z.string().optional(),
     type: z.enum(TEXT_INPUT_TYPES).optional(),
 });
 
 export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''));
-    const { isRequired, label, placeholder, type } = resolveXmlProps(props, ctx, textInputPropsSchema, ['label']);
+    const { isRequired, label, property, placeholder, type } = resolveXmlProps(props, ctx, textInputPropsSchema, [
+        'label',
+    ]);
+    const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''), property);
 
     return (
         <AstryxTextInput

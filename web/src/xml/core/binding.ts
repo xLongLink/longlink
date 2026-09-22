@@ -15,9 +15,15 @@ export function coerceXmlBoolean(value: unknown): boolean {
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
-export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, coerce: (value: unknown) => T) {
+export function useBindableValue<T>(
+    props: ASTProps,
+    name: string,
+    ctx: Scope,
+    coerce: (value: unknown) => T,
+    property?: string
+) {
     const value = resolveXmlValue(props, name, ctx);
-    const target = resolveBindableTarget(props[name], value, ctx);
+    const target = resolveBindableTarget(props[name], value, ctx, property);
     const reactiveValue = isReactiveValue(props[name], ctx);
     let currentValue: unknown = '';
 
@@ -27,7 +33,8 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
         currentValue = target.state.value;
     }
 
-    const [localValue, setLocalValue] = useState(() => coerce(value));
+    const initialValue = value != null && typeof value === 'object' ? undefined : value;
+    const [localValue, setLocalValue] = useState(() => coerce(initialValue));
 
     return {
         value: target ? coerce(currentValue) : reactiveValue ? coerce(value) : localValue,
@@ -62,10 +69,15 @@ function isReactiveValue(attribute: ASTProps[string] | undefined, ctx: Scope): b
 function resolveBindableTarget(
     attribute: ASTProps[string] | undefined,
     value: unknown,
-    ctx: Scope
+    ctx: Scope,
+    property?: string
 ): BindingTarget | undefined {
+    if (property != null && !isSafePropertyName(property)) {
+        throw new Error('XML binding property must be a safe identifier');
+    }
+
     // Use resolved proxy values directly.
-    if (isValtioProxy(value)) return { state: value };
+    if (isValtioProxy(value)) return { key: property, state: value };
 
     // Only reference expressions can be written.
     if (attribute?.kind !== 'path' || !attribute.isBinding) return undefined;
@@ -89,7 +101,7 @@ function resolveBindableTarget(
     if (!isValtioProxy(parent)) return undefined;
 
     return {
-        key: parts[parts.length - 1],
+        key: property ?? parts[parts.length - 1],
         state: parent,
     };
 }

@@ -922,6 +922,84 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
+                "description": "Zero-based active step index.",
+                "name": "activeStep"
+            },
+            {
+                "description": "",
+                "name": "orientation"
+            },
+            {
+                "description": "",
+                "name": "indicatorPosition"
+            },
+            {
+                "description": "",
+                "name": "density"
+            },
+            {
+                "description": "Accessible label for the progress sequence.",
+                "name": "label"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "Stepper displays progress through a short sequence of related workflow steps.",
+        "example": "<Stepper activeStep=\"$form.step\" orientation=\"vertical\">\n  <Step step=\"0\" label=\"Details\" />\n  <Step step=\"1\" label=\"Review\" />\n  <Step step=\"2\" label=\"Complete\" />\n</Stepper>",
+        "name": "Stepper",
+        "lastUpdated": "2026-09-22",
+        "nested": [],
+        "slug": "stepper",
+        "source": "adapters/Stepper.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "Zero-based position in the Stepper.",
+                "name": "step"
+            },
+            {
+                "description": "Short visible step label.",
+                "name": "label"
+            },
+            {
+                "description": "Supporting explanation for the step.",
+                "name": "description"
+            },
+            {
+                "description": "",
+                "name": "indicator"
+            },
+            {
+                "description": "",
+                "name": "status"
+            },
+            {
+                "description": "",
+                "name": "isDisabled"
+            },
+            {
+                "description": "",
+                "name": "isOptional"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "Step identifies one logical point in a Stepper and may render its active content.",
+        "example": "<Step step=\"0\" label=\"Details\" description=\"Enter the required information.\" />",
+        "name": "Step",
+        "lastUpdated": "2026-09-22",
+        "nested": [],
+        "slug": "step",
+        "source": "adapters/Stepper.xsd"
+    },
+    {
+        "attributes": [
+            {
                 "description": "Visible field label.",
                 "name": "label"
             },
@@ -1108,6 +1186,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
             {
                 "description": "Text field value.",
                 "name": "value"
+            },
+            {
+                "description": "Property to update when value references an object State.",
+                "name": "property"
             },
             {
                 "description": "Input type: text, password, or email.",
