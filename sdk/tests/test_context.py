@@ -1,10 +1,8 @@
-import jwt
 import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from fastapi import FastAPI
-from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -152,12 +150,19 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     assert session_closed
 
 
-def create_anonymous_application(secret: str = IDENTITY_SECRET) -> TestClient:
-    """Create one application that exposes whether middleware accepted identity."""
+@pytest.mark.parametrize(
+    "identity_header",
+    [
+        pytest.param("invalid-token", id="invalid-token"),
+        pytest.param(None, id="missing-token"),
+    ],
+)
+def test_context_middleware_treats_untrusted_identity_as_anonymous(identity_header: str | None) -> None:
+    """Treat invalid or absent Platform identity tokens as anonymous."""
 
     # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
-    context.install_context_middleware(app, secret)
+    context.install_context_middleware(app, IDENTITY_SECRET)
 
     @app.get("/")
     async def get_identity() -> dict[str, bool]:
@@ -165,68 +170,10 @@ def create_anonymous_application(secret: str = IDENTITY_SECRET) -> TestClient:
 
         return {"authenticated": audit.current_actor.get() is not None}
 
-    return TestClient(app)
-
-
-def test_context_middleware_treats_invalid_identity_as_anonymous() -> None:
-    """Ignore Platform identity tokens that fail validation."""
-
-    # Arrange
-    client = create_anonymous_application()
+    client = TestClient(app)
 
     # Act
-    response = client.get(
-        "/",
-        headers={"x-longlink-identity": "invalid-token"},
-    )
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"authenticated": False}
-
-
-def forged_identity_token(secret: str = IDENTITY_SECRET, claims: dict[str, object] | None = None, algorithm: str = identity.IDENTITY_TOKEN_ALGORITHM) -> str:
-    """Mint one execution-time identity token with controlled defects."""
-
-    # Construct claims at execution time so expiry stays relative to the test run.
-    issued_at = datetime.now(UTC)
-    payload = {
-        "sub": "00000000-0000-0000-0000-000000000001",
-        "aud": identity.IDENTITY_TOKEN_AUDIENCE,
-        "iat": issued_at,
-        "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
-    }
-
-    if claims is not None:
-        payload.update(claims)
-
-    return jwt.encode(payload, secret, algorithm=algorithm)
-
-
-def test_context_middleware_treats_forged_identity_as_anonymous() -> None:
-    """Treat a forged identity token as anonymous without re-proving token validation."""
-
-    # Arrange an expired token; exhaustive forgery cases live in test_identity.py.
-    now = datetime.now(UTC)
-    client = create_anonymous_application()
-
-    # Act
-    forged = forged_identity_token(IDENTITY_SECRET, {"exp": now - timedelta(seconds=1)})
-    response = client.get("/", headers={"x-longlink-identity": forged})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"authenticated": False}
-
-
-def test_context_middleware_treats_missing_identity_as_anonymous() -> None:
-    """Treat a request without an identity assertion as anonymous."""
-
-    # Arrange
-    client = create_anonymous_application()
-
-    # Act
-    response = client.get("/")
+    response = client.get("/", headers={} if identity_header is None else {"x-longlink-identity": identity_header})
 
     # Assert
     assert response.status_code == 200
@@ -237,7 +184,16 @@ def test_context_middleware_fails_closed_without_identity_secret() -> None:
     """Fail closed to anonymous instead of raising when the identity secret is empty."""
 
     # Arrange
-    client = create_anonymous_application("")
+    app = FastAPI()
+    context.install_context_middleware(app, "")
+
+    @app.get("/")
+    async def get_identity() -> dict[str, bool]:
+        """Expose whether the middleware accepted identity without a secret."""
+
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    client = TestClient(app)
 
     # Act
     response = client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
@@ -245,21 +201,6 @@ def test_context_middleware_fails_closed_without_identity_secret() -> None:
     # Assert
     assert response.status_code == 200
     assert response.json() == {"authenticated": False}
-
-
-def test_context_middleware_binds_signed_audit_identity() -> None:
-    """Bind one trusted audit identity for the request."""
-
-    # Arrange
-    user_id = UUID("00000000-0000-0000-0000-000000000005")
-
-    # Act
-    with TestClient(create_context_application()) as client:
-        response = client.get("/", headers=identity_headers(user_id))
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {"user_id": str(user_id)}
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:

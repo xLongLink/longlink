@@ -13,28 +13,25 @@ class EnvironmentSettings(Environments):
 @pytest.mark.parametrize(
     ("dotenv_value", "process_value", "expected"),
     [
-        pytest.param("file", "process", "process", id="process-overrides-dotenv"),
-        pytest.param("file", None, "file", id="dotenv-overrides-sample"),
-        pytest.param(None, None, "sample", id="sample-without-dotenv"),
+        pytest.param("file", "process", "process", id="process-over-dotenv"),
+        pytest.param("file", None, "file", id="dotenv-over-sample"),
+        pytest.param(None, None, "sample", id="sample-only"),
     ],
 )
-def test_environments_resolve_source_precedence(
+def test_environments_prioritizes_configured_sources(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     dotenv_value: str | None,
     process_value: str | None,
     expected: str,
 ) -> None:
-    """Load settings from process variables, dotenv files, or samples by precedence."""
+    """Load the declared setting from the highest-priority configured source."""
 
     # Arrange
     tmp_path.joinpath(".env.sample").write_text("API_KEY=sample\n", encoding="utf-8")
-
     if dotenv_value is not None:
         tmp_path.joinpath(".env").write_text(f"API_KEY={dotenv_value}\n", encoding="utf-8")
-
     monkeypatch.chdir(tmp_path)
-
     if process_value is None:
         monkeypatch.delenv("API_KEY", raising=False)
     else:

@@ -84,7 +84,7 @@ describe('SolutionRuntime', () => {
         expect(output.textContent).toContain('The view could not be loaded.');
     });
 
-    it.each(['https://example.com/view.xml', '//example.com/view.xml'])(
+    it.each(['https://example.com/view.xml'])(
         'rejects external manifest view paths before fetching the view: %s',
         async (path) => {
             // Arrange

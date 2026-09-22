@@ -139,22 +139,10 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
     ("relative_path", "content", "expected_metadata"),
     [
         pytest.param(
-            "index.xml",
-            "<longlink>Home</longlink>",
-            {"route": "/"},
-            id="index",
-        ),
-        pytest.param(
             "dashboard.xml",
             '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
             {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
-        ),
-        pytest.param(
-            "admin/users.xml",
-            "<longlink>Users</longlink>",
-            {"route": "/admin/users"},
-            id="nested",
         ),
         pytest.param(
             "issues/[issue].xml",

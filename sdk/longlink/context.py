@@ -33,7 +33,7 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
 Context = Annotated[_ContextData, Depends(_data)]
 
 
-def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
+def install_context_middleware(app: FastAPI, identity_secret: str | None) -> None:
     """Bind trusted Platform identity for the complete request lifecycle."""
 
     @app.middleware("http")
@@ -41,10 +41,12 @@ def install_context_middleware(app: FastAPI, identity_secret: str) -> None:
         """Attach request identity before Solution routes run."""
 
         # Verify the Platform-signed user assertion before making it available to Solution code.
-        try:
-            user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
-        except jwt.PyJWTError:
-            user_id = None
+        user_id = None
+        if identity_secret:
+            try:
+                user_id = identity.identity_token_user(request.headers.get("x-longlink-identity", ""), identity_secret)
+            except jwt.PyJWTError:
+                pass
 
         # Keep the request identity available to both FastAPI and database audit hooks.
         with audit.actor(user_id):

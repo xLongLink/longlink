@@ -1,9 +1,8 @@
 import pytest
 import asyncio
 import contextlib
-from uuid import UUID
 from pathlib import Path
-from conftest import TEST_PASSWORD, DatabasePostgres, StorageKubernetes, DatabaseKubernetes, create_client
+from conftest import TEST_PASSWORD, create_client
 from sqlmodel import col
 from src.utils import jobs
 from sqlalchemy import func, select
@@ -50,7 +49,7 @@ async def test_local_seed_creates_example_through_api(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     users: tuple[User, User, User],
-    database_runtime: None,
+    seed_runtime: None,
 ) -> None:
     """Keep local seed resources stable across repeated initialization."""
 
@@ -66,54 +65,6 @@ async def test_local_seed_creates_example_through_api(
         return LongLinkMetadata(image=Image("localhost:15000/sample@sha256:resolved"))
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
-
-    async def verify_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
-        """Accept the configured gateway connection."""
-
-    class Solutions:
-        """Accept Solution workload provisioning."""
-
-        async def apply(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the requested workload."""
-
-    class Organizations:
-        """Accept Organization boundary provisioning."""
-
-        async def apply(self, *_args: object, **_kwargs: object) -> None:
-            """Accept the requested Organization boundary."""
-
-    class Kubernetes(DatabaseKubernetes):
-        """Expose every lifecycle provider boundary without external I/O."""
-
-        def __init__(self, *_args: object) -> None:
-            """Initialize the test provider facades."""
-
-            super().__init__()
-            self.solutions = Solutions()
-            self.organizations = Organizations()
-
-        async def cluster_uid(self) -> str:
-            """Return the identity submitted by the test Compute."""
-
-            return "https://kubernetes.example"
-
-    class Postgres(DatabasePostgres):
-        """Provide the Solution schema operation used during deployment."""
-
-        async def solution_schema(self, _organization_id: UUID, solution_id: UUID, _password: str) -> str:
-            """Return the scoped database username for the Solution."""
-
-            return solution_id.hex
-
-    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_gateway)
-    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
-    monkeypatch.setattr("src.operations.databases.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.operations.organizations.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.operations.organizations.Storage", StorageKubernetes)
-    monkeypatch.setattr("src.operations.solutions.Kubernetes", Kubernetes)
-    monkeypatch.setattr("src.operations.solutions.Storage", StorageKubernetes)
-    monkeypatch.setattr("src.operations.databases.postgres.Postgres", Postgres)
 
     # Act
     scheduler = asyncio.create_task(jobs.run_operation_scheduler())

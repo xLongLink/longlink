@@ -16,51 +16,40 @@ describe('Dialog', () => {
         seen.props.length = 0;
     });
 
-    it('requests the fullscreen variant when fullscreen is set', () => {
+    it.each([
+        {
+            expected: 'fullscreen',
+            name: 'requests the fullscreen variant when fullscreen is set',
+            property: 'variant',
+            xml: '<Dialog title="Contract" fullscreen="true">Content</Dialog>',
+        },
+        {
+            expected: undefined,
+            name: 'uses the standard variant by default',
+            property: 'variant',
+            xml: '<Dialog title="Contract">Content</Dialog>',
+        },
+        {
+            expected: '90%',
+            name: 'passes a custom width through to the dialog',
+            property: 'width',
+            xml: '<Dialog title="Contract" width="90%">Content</Dialog>',
+        },
+        {
+            expected: '90vh',
+            name: 'passes a custom height through to the dialog maximum height',
+            property: 'maxHeight',
+            xml: '<Dialog title="Contract" height="90vh">Content</Dialog>',
+        },
+    ])('$name', ({ expected, property, xml }) => {
         // Arrange
         const context = createContext();
 
         // Act
-        renderXmlToMarkup(parseFragment('<Dialog title="Contract" fullscreen="true">Content</Dialog>'), context);
+        renderXmlToMarkup(parseFragment(xml), context);
 
         // Assert
         expect(seen.props).toHaveLength(1);
-        expect(seen.props[0]?.variant).toBe('fullscreen');
-    });
-
-    it('uses the standard variant by default', () => {
-        // Arrange
-        const context = createContext();
-
-        // Act
-        renderXmlToMarkup(parseFragment('<Dialog title="Contract">Content</Dialog>'), context);
-
-        // Assert
-        expect(seen.props).toHaveLength(1);
-        expect(seen.props[0]?.variant).toBeUndefined();
-    });
-
-    it('passes a custom width through to the dialog', () => {
-        // Arrange
-        const context = createContext();
-
-        // Act
-        renderXmlToMarkup(parseFragment('<Dialog title="Contract" width="90%">Content</Dialog>'), context);
-
-        // Assert
-        expect(seen.props).toHaveLength(1);
-        expect(seen.props[0]?.width).toBe('90%');
-    });
-
-    it('passes a custom height through to the dialog maximum height', () => {
-        // Arrange
-        const context = createContext();
-
-        // Act
-        renderXmlToMarkup(parseFragment('<Dialog title="Contract" height="90vh">Content</Dialog>'), context);
-
-        // Assert
-        expect(seen.props).toHaveLength(1);
-        expect(seen.props[0]?.maxHeight).toBe('90vh');
+        expect(seen.props[0]?.[property]).toBe(expected);
     });
 });
