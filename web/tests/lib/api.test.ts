@@ -11,7 +11,10 @@ const FALLBACK_MESSAGE = 'The server could not complete the request. Please try 
 
 /** Stub the fetch transport with a JSON response. */
 function stubJsonFetch(payload: unknown, status: number): void {
-    vi.stubGlobal('fetch', vi.fn(async () => Response.json(payload, { status })));
+    vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json(payload, { status }))
+    );
 }
 
 /** Capture a rejected API promise as a value for assertions. */
