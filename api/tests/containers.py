@@ -21,11 +21,20 @@ def require_docker_daemon() -> None:
 
 
 @contextmanager
+def _running[T: PostgresContainer | MySqlContainer](container: T) -> Iterator[T]:
+    """Start one Testcontainers database and always stop it after startup begins."""
+
+    # Delegate startup readiness and cleanup, including failed startup, to Testcontainers.
+    require_docker_daemon()
+
+    with container:
+        yield container
+
+
+@contextmanager
 def postgres_container(username: str, password: str, database: str) -> Iterator[PostgresContainer]:
     """Provide a ready disposable PostgreSQL container for one integration test."""
 
-    # Verify Docker availability before creating the test database container.
-    require_docker_daemon()
     container = PostgresContainer(
         "postgres:16-alpine",
         username=username,
@@ -34,17 +43,14 @@ def postgres_container(username: str, password: str, database: str) -> Iterator[
         driver="psycopg",
     )
 
-    # Delegate startup readiness and cleanup, including failed startup, to Testcontainers.
-    with container:
-        yield container
+    with _running(container) as running:
+        yield running
 
 
 @contextmanager
 def mysql_container(username: str, password: str, database: str) -> Iterator[MySqlContainer]:
     """Provide a ready disposable MySQL container for one integration test."""
 
-    # Verify Docker availability before creating the test database container.
-    require_docker_daemon()
     container = MySqlContainer(
         "mysql:8.4",
         username=username,
@@ -53,6 +59,5 @@ def mysql_container(username: str, password: str, database: str) -> Iterator[MyS
         dialect="pymysql",
     )
 
-    # Delegate startup readiness and cleanup to Testcontainers.
-    with container:
-        yield container
+    with _running(container) as running:
+        yield running

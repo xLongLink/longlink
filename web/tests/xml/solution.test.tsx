@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { cleanupMountedRoot } from './helpers';
 import { ApiErrorContext } from '@/lib/errors';
+import { createQueryRuntime } from '@/lib/react-query';
 import { SolutionRuntime } from '@/components/Solution';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createTestQueryRuntime, cleanupMountedRoot } from './helpers';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
 describe('SolutionRuntime', () => {
@@ -212,7 +213,9 @@ describe('SolutionRuntime', () => {
     async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
         const container = document.createElement('div');
         root = createRoot(container);
-        const { client, reportError } = createTestQueryRuntime();
+        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+        const { client, reportError } = createQueryRuntime(vi.fn(), false);
+        client.setDefaultOptions({ queries: { retry: false } });
 
         await act(async () => {
             root?.render(

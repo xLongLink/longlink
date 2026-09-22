@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { skipToken, type QueryClient, useQuery } from '@tanstack/react-query';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import {
     zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
     zUserOrganizationMembership,
@@ -49,11 +49,4 @@ export function useOrganizationRoute(organizationSlug: string) {
         isLoading: membershipQuery.isLoading || solutionsQuery.isLoading,
         error,
     };
-}
-
-/** Invalidates cached organization solution collections. */
-export function invalidateOrganizationSolutionQueries(queryClient: QueryClient, organizationId: string) {
-    return queryClient.invalidateQueries({
-        queryKey: organizationSolutionsKey(organizationId),
-    });
 }

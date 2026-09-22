@@ -26,12 +26,20 @@ def build_project(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def docker_build(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
+def chdir_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Run one test from its Solution project directory."""
+
+    # Keep working-directory ownership in one fixture so Docker discovery stays hermetic.
+    monkeypatch.chdir(build_project)
+    return build_project
+
+
+@pytest.fixture
+def docker_build(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
     """Prepare a real project and replace external Docker discovery."""
 
     # Run build-command tests from the project and keep Docker invocations observable.
     commands: list[list[str]] = []
-    monkeypatch.chdir(build_project)
     monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
     return commands
 
@@ -52,12 +60,11 @@ def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> Non
         assert "Docker is required" not in result.output
 
 
-def test_build_reports_missing_docker_after_preparing_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_reports_missing_docker_after_preparing_project(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Require Docker only after the project build context is prepared."""
 
     # Arrange
     runner = CliRunner()
-    monkeypatch.chdir(build_project)
     monkeypatch.setattr(build.shutil, "which", lambda _command: None)
     monkeypatch.setattr(build.subprocess, "run", lambda *_args, **_kwargs: pytest.fail("Docker must not run when unavailable"))
 
@@ -205,10 +212,11 @@ def test_read_env_spec_rejects_invalid_environment_model_configuration(
         build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
 
 
-def test_build_solution_generates_docker_artifacts_from_project_metadata(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_project: Path) -> None:
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
+    build_project = chdir_project
     build_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
         encoding="utf-8",
@@ -227,7 +235,6 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(build_p
     build_project.joinpath("tests").mkdir()
     build_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
 
     # Act
     version, name = build.build_solution(build_context)
@@ -260,17 +267,16 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(build_p
     ],
 )
 def test_build_solution_rejects_invalid_project_metadata_before_generating_artifacts(
-    build_project: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    chdir_project: Path,
     project_data: str,
     message: str,
 ) -> None:
     """Reject incomplete project metadata before creating Docker artifacts."""
 
     # Arrange
+    build_project = chdir_project
     build_project.joinpath("pyproject.toml").write_text(project_data, encoding="utf-8")
     build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
 
     # Act and assert
     with pytest.raises(build.CliError) as error:
@@ -280,14 +286,13 @@ def test_build_solution_rejects_invalid_project_metadata_before_generating_artif
 
 
 def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
-    build_project: Path,
+    chdir_project: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Use a stable SDK version while building directly from an editable source tree."""
 
     # Arrange
-    build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
+    build_context = chdir_project.parent / "context"
 
     def missing_package_version(_package: str) -> str:
         """Emulate an SDK distribution unavailable to package metadata."""
@@ -304,10 +309,11 @@ def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
     assert 'ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK="0.0.0"' in dockerfile
 
 
-def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path) -> None:
     """Preserve allowed in-tree links while excluding unsafe and ignored targets."""
 
     # Arrange
+    build_project = chdir_project
     outside_file = build_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
     build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
@@ -322,7 +328,6 @@ def test_build_solution_filters_symlinks_by_resolved_target(build_project: Path,
     build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
     build_project.joinpath("linked-database").symlink_to("dev.db")
     build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
 
     # Act
     build.build_solution(build_context)
@@ -393,10 +398,11 @@ def test_resolve_docker_paths_rejects_local_dependencies_outside_workspace(build
         build.resolve_docker_paths(build_project, build.read_pyproject(build_project))
 
 
-def test_build_solution_filters_expanded_context(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     """Apply the fixed exclusion policy across an expanded context."""
 
     # Arrange
+    build_project = chdir_project
     dependency = build_project.parent / "shared"
     dependency.mkdir()
     build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
@@ -414,7 +420,6 @@ def test_build_solution_filters_expanded_context(build_project: Path, monkeypatc
     build_project.joinpath("nested", "drop.db").write_text("local database", encoding="utf-8")
     build_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = build_project.parent / "context"
-    monkeypatch.chdir(build_project)
 
     # Act
     build.build_solution(build_context)

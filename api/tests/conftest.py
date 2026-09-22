@@ -167,10 +167,10 @@ class OperationKubernetes(AsyncKubernetes):
         self.organizations = OrganizationsDouble()
 
     async def forward_database(self, organization: UUID) -> int:
-        """Provide the database tunnel owned by the shared fake database client."""
+        """Supply a local transport port without depending on the replaced database facade."""
 
-        # Reuse the single provider-tunnel contract instead of restating it.
-        return await self.databases.forward_database(organization)
+        assert str(organization)
+        return 15432
 
 
 class DatabasePostgres:
@@ -321,11 +321,6 @@ class FakeKubernetes(AsyncKubernetes):
         """Return the identity expected by the installed package fixture."""
 
         return "test-cluster"
-
-    async def forward_database(self, organization: UUID) -> int:
-        """Return a synthetic development gateway port without external I/O."""
-
-        return 18444
 
 
 def kubernetes_client() -> "Kubernetes":

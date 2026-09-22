@@ -1,9 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { parseXML } from '@/xml/core/parser';
-import { createRoot } from 'react-dom/client';
+import type { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createContext, parseFragment, RenderXML, cleanupMountedRoot, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, cleanupMountedRoot, mountXml, renderXmlToMarkup } from '../helpers';
 
 describe('FileViewer', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -25,17 +24,11 @@ describe('FileViewer', () => {
     });
 
     async function renderViewer(xml: string, ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' })) {
-        const ast = parseXML(`<longlink>${xml}</longlink>`);
-        const container = document.createElement('div');
-        document.body.appendChild(container);
-        root = createRoot(container);
-        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+        // Mount through the shared helper so ACT and root lifetime stay in one owner.
+        const mounted = await mountXml(xml, ctx, undefined, true);
+        root = mounted.root;
 
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
-
-        return container;
+        return mounted.container;
     }
 
     function pdfResponse() {

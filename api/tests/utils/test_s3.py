@@ -93,72 +93,62 @@ def make_s3() -> S3:
     return S3("https://s3.example.com", Credentials("access", "secret"))
 
 
-async def test_create_bucket_ignores_existing_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Treat a reconciler retry on an existing bucket as success."""
+@pytest.mark.parametrize(
+    ("error_code", "should_raise"),
+    [
+        pytest.param("BucketAlreadyOwnedByYou", False, id="existing-bucket"),
+        pytest.param("AccessDenied", True, id="unexpected-error"),
+    ],
+)
+async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.MonkeyPatch, error_code: str, should_raise: bool) -> None:
+    """Treat a reconciler retry on an existing bucket as success and surface other failures."""
 
     # Arrange
     client = FakeClient()
-    client.create_error = client_error("BucketAlreadyOwnedByYou")
+    client.create_error = client_error(error_code)
     serve(client, monkeypatch)
 
     # Act
-    await make_s3().create_bucket("org-bucket")
+    if should_raise:
+        with pytest.raises(ClientError):
+            await make_s3().create_bucket("org-bucket")
+    else:
+        await make_s3().create_bucket("org-bucket")
 
     # Assert
     assert client.buckets_created == ["org-bucket"]
 
 
-async def test_create_bucket_reraises_unexpected_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Surface S3 permission failures instead of masking them as success."""
-
-    # Arrange
-    client = FakeClient()
-    client.create_error = client_error("AccessDenied")
-    serve(client, monkeypatch)
-
-    # Act and assert
-    with pytest.raises(ClientError):
-        await make_s3().create_bucket("org-bucket")
-
-
-async def test_delete_prefix_ignores_missing_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Treat cleanup of an already removed bucket as success."""
+@pytest.mark.parametrize(
+    ("error_code", "should_raise"),
+    [
+        pytest.param("NoSuchBucket", False, id="missing-bucket"),
+        pytest.param("AccessDenied", True, id="unexpected-error"),
+    ],
+)
+async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.MonkeyPatch, error_code: str, should_raise: bool) -> None:
+    """Treat cleanup of an already removed bucket as success and surface other failures."""
 
     # Arrange
     client = FakeClient()
     serve(client, monkeypatch)
 
-    async def missing_bucket(self: S3, inner_client: FakeClient, bucket: str, prefix: str) -> None:
-        """Simulate a concurrently deleted bucket."""
+    async def failing_delete(self: S3, inner_client: FakeClient, bucket: str, prefix: str) -> None:
+        """Simulate one failed cleanup request."""
 
-        raise client_error("NoSuchBucket")
+        raise client_error(error_code)
 
-    monkeypatch.setattr(S3, "_delete_prefix", missing_bucket)
+    monkeypatch.setattr(S3, "_delete_prefix", failing_delete)
 
     # Act
-    await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+    if should_raise:
+        with pytest.raises(ClientError):
+            await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+    else:
+        await make_s3().delete_prefix("org-bucket", "solutions/abc/")
 
     # Assert
     assert client.buckets_created == []
-
-
-async def test_delete_prefix_reraises_unexpected_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Surface S3 permission failures during solution cleanup."""
-
-    # Arrange
-    client = FakeClient()
-    serve(client, monkeypatch)
-
-    async def denied(self: S3, inner_client: FakeClient, bucket: str, prefix: str) -> None:
-        """Simulate a denied cleanup request."""
-
-        raise client_error("AccessDenied")
-
-    monkeypatch.setattr(S3, "_delete_prefix", denied)
-
-    # Act and assert
-    with pytest.raises(ClientError):
-        await make_s3().delete_prefix("org-bucket", "solutions/abc/")
 
 
 async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:

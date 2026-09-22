@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { parseXML } from '@/xml/core/parser';
-import { createRoot } from 'react-dom/client';
+import type { createRoot } from 'react-dom/client';
 import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, parseFragment, RenderXML, cleanupMountedRoot, renderXmlToMarkup } from '../helpers';
+import { createContext, parseFragment, cleanupMountedRoot, mountXml, renderXmlToMarkup } from '../helpers';
 
 const toast = vi.fn();
 
@@ -397,18 +396,12 @@ describe('Action', () => {
         ctx: ReturnType<typeof createContext>,
         closeDialog: (() => void) | null = null
     ) {
-        const ast = parseXML(`<longlink>${xml}</longlink>`);
-        const container = document.createElement('div');
-        root = createRoot(container);
-        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-
-        await act(async () => {
-            root?.render(
-                <DialogCloseContext.Provider value={closeDialog}>
-                    <RenderXML ast={ast} ctx={ctx} />
-                </DialogCloseContext.Provider>
-            );
-        });
+        // Mount through the shared helper so ACT and root lifetime stay in one owner.
+        const mounted = await mountXml(xml, ctx, (node) => (
+            <DialogCloseContext.Provider value={closeDialog}>{node}</DialogCloseContext.Provider>
+        ));
+        root = mounted.root;
+        const container = mounted.container;
 
         const button = container.querySelector('button, a');
         if (!button) throw new Error('Action trigger did not render');

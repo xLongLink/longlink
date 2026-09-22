@@ -670,50 +670,35 @@ async def test_list_solutions_rejects_anonymous_without_admin_lookup(
     assert response.json() == {"detail": "Not authenticated"}
 
 
-async def test_create_solution_rejects_overlong_description_without_mutating_state(
+@pytest.mark.parametrize(
+    "invalid_values",
+    [
+        pytest.param({"description": "x" * 256}, id="overlong-description"),
+        pytest.param({"min_scale": 2}, id="invalid-min-scale"),
+    ],
+)
+async def test_create_solution_rejects_invalid_payload_without_mutating_state(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    invalid_values: dict[str, str | int],
 ) -> None:
-    """Reject solution descriptions beyond the 255-character contract."""
+    """Reject malformed creation payloads before persisting Solution state or work."""
 
     # Arrange
     organization = await create_organization(users[0])
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].post(
         f"/api/v1/organizations/{organization.id}/solutions",
-        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest", "description": "x" * 256},
+        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest", **invalid_values},
     )
 
     # Assert
     assert response.status_code == 422
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
-
-
-async def test_create_solution_rejects_invalid_min_scale_without_mutating_state(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject solution scale values outside the supported 0-or-1 contract."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    operation_ids = [operation.id for operation in await fetch_operations()]
-
-    # Act
-    response = await clients[0].post(
-        f"/api/v1/organizations/{organization.id}/solutions",
-        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest", "min_scale": 2},
-    )
-
-    # Assert
-    assert response.status_code == 422
-    async with session_scope() as session:
-        assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_create_solution_rejects_too_long_slug_without_queuing_work(
@@ -725,7 +710,7 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
 
     # Arrange
     organization = await create_organization(users[0])
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     async def inspect_image(_image: Image) -> LongLinkMetadata:
         """Return valid immutable image metadata."""
@@ -745,7 +730,7 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     assert response.json() == {"detail": "Invalid name"}
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_list_solutions_rejects_invalid_pagination(

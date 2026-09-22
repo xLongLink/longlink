@@ -43,13 +43,12 @@ class S3:
 
         # Private CA verification follows the same lifetime as the client session.
         with ExitStack() as stack:
-            verify: bool | str = True
-            if self._certificate is not None:
-                verify = stack.enter_context(tls.certificate_file(self._certificate))
+            certificate = stack.enter_context(tls.verified_location(self._certificate))
+            verify: bool | str = certificate if certificate is not None else True
 
             # Bound path-style requests through the operator-configured endpoint.
             config = AioConfig(
-                s3={"addressing_style": "path"},
+                s3=tls.path_style_options(),
                 connect_timeout=10,
                 read_timeout=30,
                 http_session_cls=tls.Session,

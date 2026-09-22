@@ -1,9 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { parseXML } from '@/xml/core/parser';
-import { createRoot } from 'react-dom/client';
+import type { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, RenderXML, cleanupMountedRoot } from '../helpers';
+import { createContext, cleanupMountedRoot, mountXml } from '../helpers';
 
 describe('Button', () => {
     let root: ReturnType<typeof createRoot> | undefined;
@@ -19,15 +18,11 @@ describe('Button', () => {
             navigate: vi.fn(),
             navigationBaseUrl: '/orgs/acme/solutions/tracker',
         });
-        const container = document.createElement('div');
-        root = createRoot(container);
-        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 
-        await act(async () => {
-            root?.render(
-                <RenderXML ast={parseXML('<longlink><Button to="/issues/123">Issue</Button></longlink>')} ctx={ctx} />
-            );
-        });
+        // Mount through the shared helper so ACT and root lifetime stay in one owner.
+        const mounted = await mountXml('<Button to="/issues/123">Issue</Button>', ctx);
+        root = mounted.root;
+        const container = mounted.container;
 
         const button = container.querySelector('button');
         if (!button) throw new Error('Button did not render');

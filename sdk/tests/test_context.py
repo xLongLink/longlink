@@ -160,7 +160,7 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
 def test_context_middleware_treats_untrusted_identity_as_anonymous(identity_header: str | None) -> None:
     """Treat invalid or absent Platform identity tokens as anonymous."""
 
-    # Arrange
+    # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
     context.install_context_middleware(app, IDENTITY_SECRET)
 

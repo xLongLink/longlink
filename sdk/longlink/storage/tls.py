@@ -18,6 +18,25 @@ def certificate_file(pem: str) -> Iterator[str]:
         yield certificate.name
 
 
+@contextmanager
+def verified_location(pem: str | None) -> Iterator[str | None]:
+    """Yield a CA filename for private endpoints while keeping public trust as None."""
+
+    # Keep the no-certificate path explicit so callers can distinguish default trust.
+    if pem is None:
+        yield None
+        return
+
+    with certificate_file(pem) as filename:
+        yield filename
+
+
+def path_style_options() -> dict[str, str]:
+    """Return S3 path-style addressing shared by every platform object-storage client."""
+
+    return {"addressing_style": "path"}
+
+
 class Session(AIOHTTPSession):
     """Require hostname checks as well as CA checks on asynchronous S3 connections."""
 
