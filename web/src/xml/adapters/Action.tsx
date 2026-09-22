@@ -172,20 +172,17 @@ function validateActionValue(props: ASTProps, ctx: Scope): void {
     const value = evaluate(readXmlProp(props, 'value') ?? { kind: 'text', value: '' }, ctx);
     const rules = evaluate(readXmlProp(props, 'rules') ?? { kind: 'text', value: '' }, ctx);
 
-    if (
-        value == null ||
-        typeof value !== 'object' ||
-        Array.isArray(value) ||
-        rules == null ||
-        typeof rules !== 'object'
-    ) {
+    if (!isRecord(value) || !isRecord(rules)) {
         throw new Error('Validate requires object value and rules');
     }
 
     for (const [key, rawRule] of Object.entries(rules)) {
-        const rule = rawRule as Record<string, unknown>;
-        const record = value as Record<string, unknown>;
-        let entry = record[key];
+        if (!isRecord(rawRule)) {
+            throw new Error(`${key} requires an object rule`);
+        }
+
+        const rule = rawRule;
+        let entry = value[key];
 
         if (rule.type === 'string') {
             if (typeof entry !== 'string') throw new Error(`${key} must be text`);
@@ -214,7 +211,7 @@ function validateActionValue(props: ASTProps, ctx: Scope): void {
                     }
                 }
             }
-            record[key] = entry;
+            value[key] = entry;
             continue;
         }
 
@@ -274,7 +271,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error(`Patch state "${state}" does not reference a declared State or Query`);
     }
 
-    if (invalidate) {
+    if (invalidate === true) {
         await services.invalidate(state);
         return;
     }
@@ -300,6 +297,11 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
 
         target[key] = entry;
     }
+}
+
+/** Returns whether a value can be safely treated as an object with unknown property values. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /** Builds multipart form data from an XML request form expression. */

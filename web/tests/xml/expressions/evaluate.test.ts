@@ -110,10 +110,13 @@ describe('evaluate', () => {
         const result = evaluate(
             compileAttribute('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}'),
             ctx
-        ) as Record<string, unknown>;
+        );
+        if (result === null || typeof result !== 'object') {
+            throw new Error('Object expression did not produce an object');
+        }
 
-        expect(result.safe).toBe(1);
-        expect(result.constructor).toBeUndefined();
-        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+        expect(Object.getOwnPropertyDescriptor(result, 'safe')?.value).toBe(1);
+        expect(Object.getOwnPropertyDescriptor(result, 'constructor')).toBeUndefined();
+        expect(Object.getOwnPropertyDescriptor(Object.prototype, 'polluted')).toBeUndefined();
     });
 });

@@ -89,7 +89,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     }, [ast, ctx, setup]);
 
     // Show setup failures before rendering XML nodes.
-    if (setup.error || setupError) {
+    if (setup.error !== null || setupError !== null) {
         return <Banner status="error" title="Unable to initialize this view" />;
     }
 

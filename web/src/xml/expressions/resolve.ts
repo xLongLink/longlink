@@ -9,9 +9,11 @@ export function isSafePropertyName(key: string): boolean {
 export function readSafeProperty<T extends Record<string, unknown>>(value: T, key: string): T[string] | undefined;
 export function readSafeProperty(value: unknown, key: string): unknown;
 export function readSafeProperty(value: unknown, key: string): unknown {
-    return isSafePropertyName(key) && value != null && Object.hasOwn(value, key)
-        ? (value as Record<string, unknown>)[key]
-        : undefined;
+    if (!isSafePropertyName(key) || value === null || value === undefined || !Object.hasOwn(value, key)) {
+        return undefined;
+    }
+
+    return Reflect.get(value, key);
 }
 
 /** Resolves a value from the current XML runtime scope chain. */

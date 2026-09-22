@@ -19,7 +19,7 @@ function registryFor(ctx: Scope) {
 export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
     const registry = registryFor(ctx);
 
-    return nodes.map((node, index) => {
+    return nodes.map((node) => {
         // Render parser-generated text directly rather than through a public XML component.
         if (node.name === '$text') {
             const value = resolveXmlValue(node.params, 'value', ctx);
@@ -38,8 +38,8 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
         const RegisteredComponent = registry[node.name];
 
         // Render registered XML components directly.
-        if (RegisteredComponent) {
-            return <RegisteredComponent key={index} props={node.params} nodes={node.children} />;
+        if (RegisteredComponent !== undefined) {
+            return <RegisteredComponent key={node.key} props={node.params} nodes={node.children} />;
         }
 
         throw new Error(`Unknown component "${node.name}"`);

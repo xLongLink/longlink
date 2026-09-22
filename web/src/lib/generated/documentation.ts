@@ -358,12 +358,16 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "as"
             },
             {
+                "description": "Expression that resolves to a stable, unique string or number for each array item.",
+                "name": "key"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
         ],
-        "description": "Use For to turn a collection, such as a list of orders, into repeated content in a View.",
-        "example": "<For each=\"$orders.items\" as=\"order\">\n  <Card>\n    $order.number\n  </Card>\n</For>",
+        "description": "Use For to turn a collection, such as a list of orders, into repeated content in a View. Supply a stable unique key for each item.",
+        "example": "<For each=\"$orders.items\" as=\"order\" key=\"$order.id\">\n  <Card>\n    $order.number\n  </Card>\n</For>",
         "name": "For",
         "lastUpdated": "2026-07-21",
         "nested": [],

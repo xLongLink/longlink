@@ -25,6 +25,8 @@ export function Dialog({
     width = 640,
     ...props
 }: DialogProps) {
+    const hasSubtitle = subtitle !== undefined && subtitle.length > 0;
+
     return (
         <AstryxDialog
             {...props}
@@ -43,9 +45,9 @@ export function Dialog({
                     paddingBlock={2}
                     paddingInline={4}
                 >
-                    <Stack gap={subtitle ? 1 : 0}>
+                    <Stack gap={hasSubtitle ? 1 : 0}>
                         <Heading level={2}>{title}</Heading>
-                        {subtitle ? (
+                        {hasSubtitle ? (
                             <Text color="secondary" size="sm" type="body">
                                 {subtitle}
                             </Text>

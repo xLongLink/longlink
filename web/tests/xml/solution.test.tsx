@@ -18,7 +18,7 @@ describe('SolutionRuntime', () => {
         vi.unstubAllGlobals();
 
         // Restore direct location-method replacements made by navigation tests.
-        if (locationAssignDescriptor) {
+        if (locationAssignDescriptor !== undefined) {
             Object.defineProperty(window.location, 'assign', locationAssignDescriptor);
         } else {
             Reflect.deleteProperty(window.location, 'assign');

@@ -88,7 +88,7 @@ export function getSetupNodes(nodes: ASTNode[]): SetupDeclaration[] {
 function validateSetupNode(node: ASTNode): SetupDeclaration {
     // Setup declarations require a static safe key.
     const idAttribute = node.params.id;
-    if (!idAttribute) throw new Error(`${node.name} requires a string id`);
+    if (idAttribute === undefined) throw new Error(`${node.name} requires a string id`);
 
     if (idAttribute.kind !== 'text') throw new Error(`${node.name} id must be literal text`);
 
@@ -114,7 +114,7 @@ function validateSetupNode(node: ASTNode): SetupDeclaration {
     }
 
     // Require a query source path.
-    if (!node.params.path) throw new Error('Query requires a string path');
+    if (node.params.path === undefined) throw new Error('Query requires a string path');
 
     // Keep Query declarations leaf-only.
     if (node.children.length > 0) throw new Error('Query cannot have children');

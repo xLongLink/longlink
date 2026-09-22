@@ -38,7 +38,7 @@ export function parseFragment(fragment: string): ASTNode[] {
 /** Unmounts a test root created with createRoot. */
 export async function cleanupMountedRoot(root: ReturnType<typeof createRoot> | undefined): Promise<void> {
     // Keep mounted-root lifetime in one owner so suites only handle their own globals.
-    if (root) {
+    if (root !== undefined) {
         const mountedRoot = root;
         await act(async () => mountedRoot.unmount());
     }
@@ -57,5 +57,7 @@ export function RenderXML(props: { ast: ASTNode; ctx: XmlRuntime }) {
 
 /** Renders XML AST to static markup. */
 export function renderXmlToMarkup(ast: ASTNode[], ctx: XmlRuntime = createContext()): string {
-    return renderToStaticMarkup(<RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={ctx} />);
+    return renderToStaticMarkup(
+        <RenderXML ast={{ children: ast, key: 'longlink', name: 'longlink', params: {} }} ctx={ctx} />
+    );
 }

@@ -17,7 +17,8 @@ describe('resolve', () => {
     });
 
     it('does not resolve inherited scope values', () => {
-        const bindings = Object.create({ hidden: 'prototype-value' }) as Record<string, unknown>;
+        const bindings: Record<string, unknown> = {};
+        Object.setPrototypeOf(bindings, { hidden: 'prototype-value' });
         const ctx: Scope = { bindings };
 
         expect(resolveValue(ctx, 'hidden')).toBeUndefined();

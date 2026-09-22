@@ -9,7 +9,12 @@ export function compileAttribute(value: string): ASTAttribute {
     // Store reference paths for deferred scope lookup and writable bindings.
     const reference = /^(\$)?[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.exec(input);
     if (reference && (reference[1] || input.includes('.'))) {
-        const parts = input.slice(reference[1] ? 1 : 0).split('.') as [string, ...string[]];
+        const [firstPart, ...remainingParts] = input.slice(reference[1] ? 1 : 0).split('.');
+
+        if (firstPart === undefined) {
+            throw new Error('XML reference path must not be empty');
+        }
+        const parts: [string, ...string[]] = [firstPart, ...remainingParts];
 
         return reference[1] ? { kind: 'path', parts, isBinding: true } : { kind: 'path', parts };
     }

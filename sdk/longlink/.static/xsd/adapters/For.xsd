@@ -14,14 +14,19 @@
         <xsd:documentation>Name for each array item.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="key" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Expression that resolves to a stable, unique string or number for each array item.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="For" type="ForType">
     <xsd:annotation>
-      <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content in a View.</xsd:documentation>
+      <xsd:documentation>Use For to turn a collection, such as a list of orders, into repeated content in a View. Supply a stable unique key for each item.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="for" category="State" lastUpdated="2026-07-21" source="adapters/For.xsd"/>
-        <longlink:example>&lt;For each="$orders.items" as="order"&gt;
+        <longlink:example>&lt;For each="$orders.items" as="order" key="$order.id"&gt;
   &lt;Card&gt;
     $order.number
   &lt;/Card&gt;

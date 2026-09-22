@@ -21,9 +21,9 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
     const reactiveValue = isReactiveValue(props[name], ctx);
     let currentValue: unknown = '';
 
-    if (target?.key) {
+    if (target?.key !== undefined) {
         currentValue = target.state[target.key];
-    } else if (target && 'value' in target.state) {
+    } else if (target !== undefined && 'value' in target.state) {
         currentValue = target.state.value;
     }
 
@@ -32,13 +32,13 @@ export function useBindableValue<T>(props: ASTProps, name: string, ctx: Scope, c
     return {
         value: target ? coerce(currentValue) : reactiveValue ? coerce(value) : localValue,
         setValue: (nextValue: T) => {
-            if (!target) {
+            if (target === undefined) {
                 setLocalValue(nextValue);
                 return;
             }
 
             // Write named properties or the direct binding value.
-            if (target.key || 'value' in target.state) {
+            if (target.key !== undefined || 'value' in target.state) {
                 target.state[target.key ?? 'value'] = nextValue;
                 return;
             }

@@ -7,7 +7,7 @@ import {
 
 /** Builds the cached solutions collection key for one organization. */
 export function organizationSolutionsKey(organizationId: string | undefined) {
-    return ['api', organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null] as const;
+    return ['api', organizationId === undefined ? null : `/api/v1/organizations/${organizationId}/solutions`] as const;
 }
 
 /** Fetches membership and solutions for one organization route. */
@@ -30,14 +30,15 @@ export function useOrganizationRoute(organizationSlug: string) {
     const solutionsPath = solutionsKey[1];
     const solutionsQuery = useQuery({
         queryKey: solutionsKey,
-        queryFn: solutionsPath
-            ? async ({ signal }) =>
-                  zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
-                      await api(solutionsPath, { signal }).json()
-                  )
-            : skipToken,
+        queryFn:
+            solutionsPath === null
+                ? skipToken
+                : async ({ signal }) =>
+                      zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
+                          await api(solutionsPath, { signal }).json()
+                      ),
         refetchInterval: (query) =>
-            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending) === true
                 ? 5000
                 : false,
         meta: { polling: true },

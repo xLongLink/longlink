@@ -35,7 +35,7 @@ export function parseXML(xml: string): ASTNode {
     }
 
     // Compile all nodes before validating the document root to preserve attribute error precedence.
-    const ast = toNodes(parser.parse(xml));
+    const ast = toNodes(parser.parse(xml), { nextKey: 0 });
     const [root] = ast;
 
     if (ast.length !== 1 || root?.name !== 'longlink') {
@@ -46,23 +46,32 @@ export function parseXML(xml: string): ASTNode {
 }
 
 /** Converts parser output into XML AST nodes. */
-function toNodes(input: unknown): ASTNode[] {
+function toNodes(input: unknown, keys: { nextKey: number }): ASTNode[] {
     // Flatten preserve-order arrays into sibling nodes.
     if (Array.isArray(input)) {
-        return input.flatMap(toNodes);
+        return input.flatMap((entry) => toNodes(entry, keys));
     }
 
     // Compile visible text into private AST nodes so XML elements can use natural text children.
     if (typeof input === 'string') {
         const value = input.trim();
 
-        return value ? [{ name: '$text', params: { value: compileAttribute(value) }, children: [] }] : [];
+        return value === ''
+            ? []
+            : [
+                  {
+                      children: [],
+                      key: String(keys.nextKey++),
+                      name: '$text',
+                      params: { value: compileAttribute(value) },
+                  },
+              ];
     }
 
     // Treat empty or unsupported parser output as no nodes.
-    if (!input || typeof input !== 'object') return [];
+    if (input === null || input === undefined || typeof input !== 'object') return [];
 
-    const record = input as Record<string, unknown>;
+    const record = Object.fromEntries(Object.entries(input));
     const params = collectParams(record[':@']);
 
     // Preserve sibling order while stripping parser metadata.
@@ -74,14 +83,15 @@ function toNodes(input: unknown): ASTNode[] {
 
         // Reprocess text wrappers through the same rules.
         if (key === '#text') {
-            return toNodes(value);
+            return toNodes(value, keys);
         }
 
         return [
             {
+                key: String(keys.nextKey++),
                 name: key,
                 params,
-                children: toNodes(value),
+                children: toNodes(value, keys),
             },
         ];
     });
@@ -90,11 +100,13 @@ function toNodes(input: unknown): ASTNode[] {
 /** Validates parser attribute names and compiles them into XML params. */
 function collectParams(input: unknown): ASTProps {
     // Ignore malformed attribute containers.
-    if (!input || typeof input !== 'object') {
+    if (input === null || input === undefined || typeof input !== 'object') {
         return {};
     }
 
-    const record = input as Record<string, string>;
+    const record = Object.fromEntries(
+        Object.entries(input).filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+    );
 
     const params: ASTProps = {};
 

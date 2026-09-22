@@ -10,7 +10,19 @@ describe('core/context', () => {
         const ast = parseFragment('<State id="filter" value="day" score="10" list="[]" />');
 
         await setupContext(getSetupNodes(ast), ctx);
-        const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
+        const filter = ctx.scope.bindings.filter;
+        if (
+            typeof filter !== 'object' ||
+            filter === null ||
+            !('value' in filter) ||
+            !('score' in filter) ||
+            !('list' in filter) ||
+            typeof filter.value !== 'string' ||
+            typeof filter.score !== 'string' ||
+            typeof filter.list !== 'string'
+        ) {
+            throw new Error('Filter State is missing its string values');
+        }
         expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
         await setupContext(getSetupNodes(ast), ctx);

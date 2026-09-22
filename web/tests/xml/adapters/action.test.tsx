@@ -8,6 +8,21 @@ import { createContext, parseFragment, RenderXML, cleanupMountedRoot, renderXmlT
 
 const toast = vi.fn();
 
+/** Returns a State binding with the string value used by this suite. */
+function formState(bindings: Record<string, unknown>): { value: string } {
+    const form = bindings.form;
+    if (!hasStringValue(form)) {
+        throw new Error('Form State is missing its string value');
+    }
+
+    return form;
+}
+
+/** Narrows an unknown State binding to the mutable string shape used by this suite. */
+function hasStringValue(value: unknown): value is { value: string } {
+    return typeof value === 'object' && value !== null && 'value' in value && typeof value.value === 'string';
+}
+
 vi.mock('@astryxdesign/core/Toast', async (importOriginal) => ({
     ...(await importOriginal()),
     useToast: () => toast,
@@ -43,7 +58,7 @@ describe('Action', () => {
         let requestBody = '';
         let requestMethod = '';
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-            const request = input as Request;
+            const request = input instanceof Request ? input : new Request(input);
             requestBody = await request.clone().text();
             requestMethod = request.method;
             events.push('request-complete');
@@ -96,7 +111,7 @@ describe('Action', () => {
         expect(ctx.services.navigate).not.toHaveBeenCalled();
 
         const resolveRequest = completeRequest;
-        if (!resolveRequest) throw new Error('Request did not start');
+        if (resolveRequest === undefined) throw new Error('Request did not start');
 
         await act(async () => resolveRequest());
 
@@ -105,10 +120,11 @@ describe('Action', () => {
 
     it('serializes Request form values as multipart entries', async () => {
         const ctx = createContext();
-        let formEntries: [string, string][] = [];
+        let formEntries: [string, FormDataEntryValue][] = [];
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-            const formData = await (input as Request).formData();
-            formEntries = Array.from(formData.entries()) as [string, string][];
+            const request = input instanceof Request ? input : new Request(input);
+            const formData = await request.formData();
+            formEntries = Array.from(formData.entries());
 
             return new Response('{}', { status: 201 });
         });
@@ -279,11 +295,11 @@ describe('Action', () => {
             '<State id="form" value="draft" /><Action><Patch state="form" invalidate="true" /><Button>Reset</Button></Action>',
             ctx
         );
-        (ctx.scope.bindings.form as { value: string }).value = 'changed';
+        formState(ctx.scope.bindings).value = 'changed';
 
         await act(async () => {
             button.click();
-            await vi.waitFor(() => expect((ctx.scope.bindings.form as { value: string }).value).toBe('draft'));
+            await vi.waitFor(() => expect(formState(ctx.scope.bindings).value).toBe('draft'));
         });
 
         expect(ctx.services.navigate).not.toHaveBeenCalled();
@@ -388,9 +404,9 @@ describe('Action', () => {
             );
         });
 
-        const button = container.querySelector('button, a');
-        if (!button) throw new Error('Action trigger did not render');
+        const button = container.querySelector<HTMLButtonElement | HTMLAnchorElement>('button, a');
+        if (button === null) throw new Error('Action trigger did not render');
 
-        return button as HTMLButtonElement;
+        return button;
     }
 });

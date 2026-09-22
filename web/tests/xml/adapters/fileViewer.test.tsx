@@ -48,7 +48,8 @@ describe('FileViewer', () => {
     it('renders PDF bytes in a sandboxed iframe and releases the preview on unmount', async () => {
         let requestUrl = '';
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-            requestUrl = (input as Request).url;
+            const request = input instanceof Request ? input : new Request(input);
+            requestUrl = request.url;
 
             return pdfResponse();
         });
@@ -88,9 +89,20 @@ describe('FileViewer', () => {
 
         expect(fetchRequest).not.toHaveBeenCalled();
 
-        await act(async () =>
-            observe?.([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver)
-        );
+        const callback = observe;
+        if (callback === undefined) throw new Error('Intersection observer did not initialize');
+        const entry: IntersectionObserverEntry = {
+            boundingClientRect: new DOMRect(),
+            intersectionRatio: 1,
+            intersectionRect: new DOMRect(),
+            isIntersecting: true,
+            rootBounds: null,
+            target: document.createElement('div'),
+            time: performance.now(),
+        };
+        const observer = new IntersectionObserver(() => {});
+
+        await act(async () => callback([entry], observer));
         await vi.waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
         expect(fetchRequest).toHaveBeenCalledOnce();
     });
@@ -161,7 +173,8 @@ describe('FileViewer', () => {
         vi.stubGlobal(
             'fetch',
             vi.fn(async (input: RequestInfo | URL) => {
-                const url = (input as Request).url;
+                const request = input instanceof Request ? input : new Request(input);
+                const url = request.url;
 
                 if (url.endsWith('/attachments')) {
                     return Response.json([{ id: 'a-report.pdf', name: 'Report' }]);

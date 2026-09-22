@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
-const seen = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
+const seen = vi.hoisted((): { props: Record<string, unknown>[] } => ({ props: [] }));
 
 vi.mock('@/components/ui/Dialog', () => ({
     Dialog: (props: Record<string, unknown>) => {

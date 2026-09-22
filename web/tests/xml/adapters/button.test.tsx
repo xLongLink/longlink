@@ -30,7 +30,7 @@ describe('Button', () => {
         });
 
         const button = container.querySelector('button');
-        if (!button) throw new Error('Button did not render');
+        if (button === null) throw new Error('Button did not render');
 
         await act(async () => button.click());
 

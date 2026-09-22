@@ -6,6 +6,21 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, RenderXML, cleanupMountedRoot } from '../helpers';
 
+/** Returns a State binding with the string value used by this suite. */
+function formState(bindings: Record<string, unknown>): { value: string } {
+    const form = bindings.form;
+    if (!hasStringValue(form)) {
+        throw new Error('Form State is missing its string value');
+    }
+
+    return form;
+}
+
+/** Narrows an unknown State binding to the mutable string shape used by this suite. */
+function hasStringValue(value: unknown): value is { value: string } {
+    return typeof value === 'object' && value !== null && 'value' in value && typeof value.value === 'string';
+}
+
 describe('useBindableValue', () => {
     let container: HTMLDivElement | undefined;
     let root: ReturnType<typeof createRoot> | undefined;
@@ -34,7 +49,7 @@ describe('useBindableValue', () => {
         expect(input?.value).toBe('first');
 
         await act(async () => {
-            (ctx.scope.bindings.form as { value: string }).value = 'second';
+            formState(ctx.scope.bindings).value = 'second';
         });
 
         expect(input?.value).toBe('second');
@@ -61,7 +76,7 @@ describe('useBindableValue', () => {
         });
 
         const input = container.querySelector('input');
-        if (!input) throw new Error('TextInput did not render');
+        if (input === null) throw new Error('TextInput did not render');
 
         const user = userEvent.setup();
 
@@ -71,7 +86,7 @@ describe('useBindableValue', () => {
             await act(async () => user.keyboard(character));
         }
 
-        expect((ctx.scope.bindings.form as { value: string }).value).toBe('second');
+        expect(formState(ctx.scope.bindings).value).toBe('second');
         expect(input.value).toBe('second');
     });
 

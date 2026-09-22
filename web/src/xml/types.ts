@@ -12,6 +12,8 @@ export type ASTAttribute =
 
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {
+    /** Stable parsed-node identifier used for React reconciliation. */
+    key: string;
     name: string;
     params: ASTProps;
     children: ASTNode[];

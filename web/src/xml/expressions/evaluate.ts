@@ -51,7 +51,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             // Apply only allowed binary operators.
             switch (node.operator) {
                 case '+':
-                    return (left as number) + (right as number);
+                    return addValues(left, right);
 
                 case '-':
                     return Number(left) - Number(right);
@@ -75,16 +75,16 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
                     return left !== right;
 
                 case '<':
-                    return (left as number) < (right as number);
+                    return compareValues(left, right, '<');
 
                 case '<=':
-                    return (left as number) <= (right as number);
+                    return compareValues(left, right, '<=');
 
                 case '>':
-                    return (left as number) > (right as number);
+                    return compareValues(left, right, '>');
 
                 case '>=':
-                    return (left as number) >= (right as number);
+                    return compareValues(left, right, '>=');
 
                 default:
                     throw new Error('Operator not allowed');
@@ -95,10 +95,14 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             const left = evaluateNode(node.left, ctx);
 
             // Evaluate logical AND lazily.
-            if (node.operator === '&&') return left && evaluateNode(node.right, ctx);
+            if (node.operator === '&&') {
+                return isTruthy(left) ? evaluateNode(node.right, ctx) : left;
+            }
 
             // Evaluate logical OR lazily.
-            if (node.operator === '||') return left || evaluateNode(node.right, ctx);
+            if (node.operator === '||') {
+                return isTruthy(left) ? left : evaluateNode(node.right, ctx);
+            }
 
             // Evaluate nullish coalescing lazily.
             if (node.operator === '??') return left ?? evaluateNode(node.right, ctx);
@@ -108,7 +112,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
 
         case 'ConditionalExpression':
             // Evaluate only the selected branch, matching JavaScript conditional semantics.
-            return evaluateNode(node.test, ctx)
+            return isTruthy(evaluateNode(node.test, ctx))
                 ? evaluateNode(node.consequent, ctx)
                 : evaluateNode(node.alternate, ctx);
 
@@ -116,7 +120,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             const value = evaluateNode(node.argument, ctx);
 
             // Negate truthiness for bang expressions.
-            if (node.operator === '!') return !value;
+            if (node.operator === '!') return !isTruthy(value);
 
             // Coerce unary plus to a number.
             if (node.operator === '+') return Number(value);
@@ -133,7 +137,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
                 node.callee.type === 'Identifier'
                     ? readSafeProperty(SAFE_IDENTIFIER_CALLS, node.callee.name)
                     : undefined;
-            if (!callback) {
+            if (callback === undefined) {
                 throw new Error('Function call not allowed');
             }
 
@@ -184,6 +188,54 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
 
         default:
             throw new Error(`Unsupported node: ${node.type}`);
+    }
+}
+
+/** Applies JavaScript truthiness to values from the untyped XML expression environment. */
+function isTruthy(value: unknown): boolean {
+    return Boolean(value);
+}
+
+/** Applies JavaScript's supported addition behavior to XML expression values. */
+function addValues(left: unknown, right: unknown): number | string | bigint {
+    if (typeof left === 'bigint' && typeof right === 'bigint') {
+        return left + right;
+    }
+
+    if (typeof left === 'string' || typeof right === 'string') {
+        return String(left) + String(right);
+    }
+
+    return Number(left) + Number(right);
+}
+
+/** Compares XML expression values using JavaScript's string and numeric comparison rules. */
+function compareValues(left: unknown, right: unknown, operator: '<' | '<=' | '>' | '>='): boolean {
+    if (typeof left === 'string' && typeof right === 'string') {
+        switch (operator) {
+            case '<':
+                return left < right;
+            case '<=':
+                return left <= right;
+            case '>':
+                return left > right;
+            case '>=':
+                return left >= right;
+        }
+    }
+
+    const numericLeft = Number(left);
+    const numericRight = Number(right);
+
+    switch (operator) {
+        case '<':
+            return numericLeft < numericRight;
+        case '<=':
+            return numericLeft <= numericRight;
+        case '>':
+            return numericLeft > numericRight;
+        case '>=':
+            return numericLeft >= numericRight;
     }
 }
 

@@ -19,7 +19,7 @@ describe('renderNode', () => {
     });
 
     it('throws on unknown component', () => {
-        expect(() => renderXmlToMarkup([{ name: 'Unknown', params: {}, children: [] }])).toThrow(
+        expect(() => renderXmlToMarkup([{ children: [], key: 'unknown', name: 'Unknown', params: {} }])).toThrow(
             'Unknown component "Unknown"'
         );
     });
@@ -29,14 +29,16 @@ describe('renderNode', () => {
         const container = document.createElement('div');
         const context = createContext();
         const invalidAst: ASTNode = {
+            children: [{ children: [], key: 'unknown', name: 'Unknown', params: {} }],
+            key: 'invalid-document',
             name: 'longlink',
             params: {},
-            children: [{ name: 'Unknown', params: {}, children: [] }],
         };
         const validAst: ASTNode = {
+            children: parseFragment('<Heading level="1">Recovered</Heading>'),
+            key: 'valid-document',
             name: 'longlink',
             params: {},
-            children: parseFragment('<Heading level="1">Recovered</Heading>'),
         };
         root = createRoot(container);
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);

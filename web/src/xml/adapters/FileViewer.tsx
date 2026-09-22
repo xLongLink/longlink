@@ -105,7 +105,7 @@ export function FileViewer({ props, nodes }: Props) {
             cancelled = true;
             controller.abort();
 
-            if (previewUrl) {
+            if (previewUrl !== null && previewUrl !== '') {
                 URL.revokeObjectURL(previewUrl);
             }
         };
@@ -113,18 +113,18 @@ export function FileViewer({ props, nodes }: Props) {
 
     return (
         <Stack ref={frameRef} gap={3} height="65vh">
-            {status === 'ready' && objectUrl && media === 'pdf' ? (
+            {status === 'ready' && objectUrl !== null && objectUrl !== '' && media === 'pdf' ? (
                 // Chromium blocks PDF rendering inside sandboxed frames, so sandbox must stay off here.
                 <iframe title={title} src={objectUrl} className="h-full w-full rounded-lg" />
-            ) : status === 'ready' && objectUrl && media === 'image' ? (
+            ) : status === 'ready' && objectUrl !== null && objectUrl !== '' && media === 'image' ? (
                 <Center minHeight={192} width="100%">
                     <img alt={title} src={objectUrl} className="max-h-full max-w-full rounded-lg object-contain" />
                 </Center>
-            ) : status === 'ready' && objectUrl && media === 'video' ? (
+            ) : status === 'ready' && objectUrl !== null && objectUrl !== '' && media === 'video' ? (
                 <Center minHeight={192} width="100%">
                     <video aria-label={title} src={objectUrl} controls className="max-h-full w-full rounded-lg" />
                 </Center>
-            ) : status === 'ready' && objectUrl && media === 'audio' ? (
+            ) : status === 'ready' && objectUrl !== null && objectUrl !== '' && media === 'audio' ? (
                 <audio aria-label={title} src={objectUrl} controls className="w-full" />
             ) : status === 'fallback' ? (
                 <Stack gap={2}>

@@ -4,8 +4,6 @@ import { evaluate } from '../expressions/evaluate';
 import type { ASTNode, ASTProps, Scope } from '../types';
 import { stoneIconComponents, type StoneIconName } from '@/components/ui/Icon';
 
-type XmlSpacing = (typeof SPACING_VALUES)[number];
-
 export const xmlNonblankStringSchema = z
     .union([z.string(), z.number(), z.boolean()])
     .transform(String)
@@ -21,8 +19,16 @@ export const xmlPositiveNumberSchema = z.number().positive('must be a positive n
 export const xmlPositiveIntegerSchema = z.number().int('must be an integer').positive('must be positive');
 export const xmlSpacingSchema = z
     .number()
-    .refine((value) => SPACING_VALUES.includes(value as XmlSpacing), 'must use the spacing scale')
-    .transform((value) => value as XmlSpacing);
+    .refine((value) => SPACING_VALUES.some((spacing) => spacing === value), 'must use the spacing scale')
+    .transform((value) => {
+        const spacing = SPACING_VALUES.find((candidate) => candidate === value);
+
+        if (spacing === undefined) {
+            throw new Error('XML spacing must use the spacing scale');
+        }
+
+        return spacing;
+    });
 export const xmlIconSchema = z
     .string()
     .refine(

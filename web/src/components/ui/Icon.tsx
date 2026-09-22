@@ -1,6 +1,6 @@
-import { createElement, type ComponentProps } from 'react';
 import type { IconRegistry } from '@astryxdesign/core/Icon';
 import { Icon as AstryxIcon } from '@astryxdesign/core/Icon';
+import { createElement, type ComponentProps, type ReactNode } from 'react';
 import {
     X,
     AlertTriangle,
@@ -82,12 +82,44 @@ export const stoneIconComponents = {
 
 export type StoneIconName = keyof typeof stoneIconComponents;
 
-export const stoneIconRegistry = Object.fromEntries(
-    Object.entries(stoneIconComponents).map(([name, IconComponent]) => [
-        name,
-        createElement(IconComponent, { 'aria-hidden': true, size: '1em' }),
-    ])
-) as IconRegistry;
+export const stoneIconRegistry: IconRegistry & Record<StoneIconName, ReactNode> = {
+    close: createElement(X, { 'aria-hidden': true, size: '1em' }),
+    chevronDown: createElement(ChevronDown, { 'aria-hidden': true, size: '1em' }),
+    chevronLeft: createElement(ChevronLeft, { 'aria-hidden': true, size: '1em' }),
+    chevronRight: createElement(ChevronRight, { 'aria-hidden': true, size: '1em' }),
+    chevronsLeft: createElement(ChevronsLeft, { 'aria-hidden': true, size: '1em' }),
+    chevronsRight: createElement(ChevronsRight, { 'aria-hidden': true, size: '1em' }),
+    check: createElement(Check, { 'aria-hidden': true, size: '1em' }),
+    success: createElement(CheckCircle, { 'aria-hidden': true, size: '1em' }),
+    error: createElement(XCircle, { 'aria-hidden': true, size: '1em' }),
+    warning: createElement(AlertTriangle, { 'aria-hidden': true, size: '1em' }),
+    info: createElement(Info, { 'aria-hidden': true, size: '1em' }),
+    calendar: createElement(Calendar, { 'aria-hidden': true, size: '1em' }),
+    clock: createElement(Clock, { 'aria-hidden': true, size: '1em' }),
+    externalLink: createElement(ExternalLink, { 'aria-hidden': true, size: '1em' }),
+    menu: createElement(Menu, { 'aria-hidden': true, size: '1em' }),
+    moreHorizontal: createElement(MoreHorizontal, { 'aria-hidden': true, size: '1em' }),
+    search: createElement(Search, { 'aria-hidden': true, size: '1em' }),
+    arrowUp: createElement(ArrowUp, { 'aria-hidden': true, size: '1em' }),
+    arrowDown: createElement(ArrowDown, { 'aria-hidden': true, size: '1em' }),
+    arrowsUpDown: createElement(ArrowUpDown, { 'aria-hidden': true, size: '1em' }),
+    boxes: createElement(Boxes, { 'aria-hidden': true, size: '1em' }),
+    building2: createElement(Building2, { 'aria-hidden': true, size: '1em' }),
+    database: createElement(Database, { 'aria-hidden': true, size: '1em' }),
+    funnel: createElement(Filter, { 'aria-hidden': true, size: '1em' }),
+    eyeSlash: createElement(EyeOff, { 'aria-hidden': true, size: '1em' }),
+    viewColumns: createElement(Columns, { 'aria-hidden': true, size: '1em' }),
+    copy: createElement(Copy, { 'aria-hidden': true, size: '1em' }),
+    checkDouble: createElement(CheckCheck, { 'aria-hidden': true, size: '1em' }),
+    wrench: createElement(Wrench, { 'aria-hidden': true, size: '1em' }),
+    stop: createElement(Square, { 'aria-hidden': true, size: '1em' }),
+    microphone: createElement(Mic, { 'aria-hidden': true, size: '1em' }),
+    logs: createElement(ScrollText, { 'aria-hidden': true, size: '1em' }),
+    trash: createElement(Trash2, { 'aria-hidden': true, size: '1em' }),
+    hardDrive: createElement(HardDrive, { 'aria-hidden': true, size: '1em' }),
+    userRound: createElement(UserRound, { 'aria-hidden': true, size: '1em' }),
+    users: createElement(Users, { 'aria-hidden': true, size: '1em' }),
+};
 
 /** Renders a registered Lucide icon at the requested Astryx size. */
 export function Icon({ icon, size }: { icon: StoneIconName; size: ComponentProps<typeof AstryxIcon>['size'] }) {

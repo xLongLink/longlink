@@ -5,6 +5,7 @@ describe('For', () => {
     it.each([
         ['as', '<For each="$items">$item</For>', 'For requires an "as" parameter'],
         ['each', '<For as="item">$item</For>', 'For requires an "each" parameter'],
+        ['key', '<For each="$items" as="item">$item</For>', 'For requires a "key" parameter'],
     ])('requires an %s parameter', (_, xml, error) => {
         expect(() => renderXmlToMarkup(parseFragment(xml))).toThrow(error);
     });
@@ -13,9 +14,9 @@ describe('For', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = { name: 'Alpha' };
 
-        expect(renderXmlToMarkup(parseFragment('<For each="$items" as="item">Rendered</For>'), ctx)).not.toContain(
-            'Rendered'
-        );
+        expect(
+            renderXmlToMarkup(parseFragment('<For each="$items" as="item" key="$item.name">Rendered</For>'), ctx)
+        ).not.toContain('Rendered');
     });
 
     it('preserves parent bindings while nested aliases and indexes shadow', () => {
@@ -30,7 +31,7 @@ describe('For', () => {
         // Act
         const output = renderXmlToMarkup(
             parseFragment(
-                '<For each="$groups" as="item"><For each="$item.items" as="item">${title + \' #\' + params.issue + \' \' + item.name + \' \' + index}</For></For>'
+                '<For each="$groups" as="item" key="${index}"><For each="$item.items" as="item" key="$item.name">${title + \' #\' + params.issue + \' \' + item.name + \' \' + index}</For></For>'
             ),
             ctx
         );

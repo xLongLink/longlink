@@ -16,7 +16,7 @@ const solution = {
     id: '00000000-0000-4000-8000-000000000002',
     name: 'Sample',
     slug: 'sample',
-    status: 'running' as const,
+    status: 'running',
     desired_revision_id: revisionId,
     deployment_pending: false,
 };
@@ -79,7 +79,7 @@ describe('Solution source update dialog', () => {
     /** Find the actual named action without replacing UI components. */
     function button(label: string) {
         const found = [...document.querySelectorAll('button')].find((item) => item.textContent === label);
-        if (!found) throw new Error(`Button not found: ${label}`);
+        if (found === undefined) throw new Error(`Button not found: ${label}`);
         return found;
     }
 
@@ -121,7 +121,7 @@ describe('Solution source update dialog', () => {
         await act(async () => vi.waitFor(() => expect(button('Update').disabled).toBe(false)));
         await act(async () => button('Update').click());
         const required = document.querySelector<HTMLInputElement>('input[name="envs.NEW"]');
-        if (!required) throw new Error('Required field missing');
+        if (required === null) throw new Error('Required field missing');
         const user = userEvent.setup();
         await act(async () => user.type(required, 'new-secret'));
         await act(async () => button('Remove DROP').click());
@@ -136,7 +136,7 @@ describe('Solution source update dialog', () => {
         await act(async () => button('Undo DROP change').click());
         const drop = document.querySelector<HTMLInputElement>('input[name="envs.DROP"]');
         const keep = document.querySelector<HTMLInputElement>('input[name="envs.KEEP"]');
-        if (!drop || !keep) throw new Error('Configured field missing');
+        if (drop === null || keep === null) throw new Error('Configured field missing');
         await act(async () => user.type(keep, 'replacement'));
         await act(async () => user.clear(keep));
         expect(button('Update solution').disabled).toBe(true);
@@ -217,7 +217,7 @@ describe('Solution source update dialog', () => {
         await act(async () => button('Update').click());
         expect(button('Update solution').disabled).toBe(false);
         const alwaysOn = document.querySelector<HTMLInputElement>('input[name="alwaysOn"]');
-        if (!alwaysOn) throw new Error('Always-on field missing');
+        if (alwaysOn === null) throw new Error('Always-on field missing');
         expect(alwaysOn.checked).toBe(true);
         await act(async () => alwaysOn.click());
         await act(async () => button('Update solution').click());

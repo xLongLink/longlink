@@ -53,7 +53,7 @@ describe('Table', () => {
 
         const output = renderXmlToMarkup(
             parseFragment(
-                '<Table data="$items"><TableColumn field="tags"><For each="$row.tags" as="tag">${prefix + \' \' + tag.name + \' \' + index}</For></TableColumn></Table>'
+                '<Table data="$items"><TableColumn field="tags"><For each="$row.tags" as="tag" key="$tag.name">${prefix + \' \' + tag.name + \' \' + index}</For></TableColumn></Table>'
             ),
             ctx
         );

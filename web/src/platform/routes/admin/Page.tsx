@@ -20,7 +20,7 @@ export default function AdminPage() {
     const route = useMatches().at(-1);
     const page = pages[route?.id ?? ''];
 
-    if (!page) throw new Error('No administrator page matches the current route.');
+    if (page === undefined) throw new Error('No administrator page matches the current route.');
 
     return (
         <>

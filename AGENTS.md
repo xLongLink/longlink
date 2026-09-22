@@ -23,7 +23,6 @@
 - Use clear domain names, prefer single-word Python filenames.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Use blank lines in functions, sparingly, to indicate logical sections.
-- Method definitions inside a class are surrounded by a single blank line.
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.
 - Use exceptions for genuine error conditions, avoid unnecessary `try`/`except` blocks.
@@ -40,8 +39,7 @@
 
 - Do not use browsers or browser automation to inspect or verify changes; inspect source and run code-level checks only.
 - Validate inputs at system boundaries.
-- Avoid any; prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries.
-- Avoid unsafe assertions and truthiness checks when 0, false, or empty strings are valid.
+- Prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries.
 - Structure and simplicity: Keep logic inline unless extraction improves reuse, readability, or separation of concerns.
 - Avoid single-use helpers, unnecessary abstractions, duplicated state, dead code, and clever hacks.
 - Keep changes small and follow existing project conventions.
@@ -53,8 +51,8 @@
 - Avoid renaming imports unless it improves clarity.
 - Inline simple single-use prop types and className expressions. Keep named prop types when shared or complex.
 - Extract components only for meaningful UI boundaries.
-- Avoid unnecessary cards, duplicated derived state, index-based keys, and effects that do not synchronize with external systems.
-- Async and state: Prefer explicit async/await, handle every promise, use concurrency only when operations are independent, and clean up timers, listeners, subscriptions, and observers. Avoid global runtime-state changes unless unavoidable.
+- Avoid unnecessary cards, duplicated derived state, and effects that do not synchronize with external systems.
+- Async and state: Prefer explicit async/await, use concurrency only when operations are independent, and clean up timers, listeners, subscriptions, and observers. Avoid global runtime-state changes unless unavoidable.
 - Prefer established libraries for validation, routing, forms, dates, URLs, parsing, and internationalization when they simplify the implementation.
 - Declare route response schemas and return raw domain objects or primitive values without reconstructing response models solely for validation.
 - Do not add tests unless explicitly requested. Test the real implementation, avoid mocks where practical, and never duplicate production logic in tests.

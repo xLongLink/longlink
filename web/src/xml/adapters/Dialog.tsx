@@ -37,7 +37,9 @@ export function Dialog({ props, nodes }: Props) {
 
     return (
         <DialogCloseContext.Provider value={() => binding.setValue(false)}>
-            {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
+            {triggerLabel !== undefined && triggerLabel !== '' && (
+                <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />
+            )}
             <AstryxDialog
                 gap={gap}
                 isOpen={binding.value}

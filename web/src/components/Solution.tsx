@@ -139,7 +139,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         (view) =>
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
-                icon: view.icon ? iconComponents[view.icon] : undefined,
+                icon: view.icon != null && view.icon.length > 0 ? iconComponents[view.icon] : undefined,
                 label: view.name ?? routeLabel(view.route),
             }) satisfies NavigationTab
     );
@@ -147,7 +147,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     let content: ReactNode;
 
     // The browser never requests the solution server root, so mirror its redirect client-side.
-    if (!routePath && firstTabView) {
+    if (!routePath && firstTabView !== undefined) {
         return <Navigate replace to={tabs[0].href} />;
     }
 

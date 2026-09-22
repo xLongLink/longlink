@@ -26,7 +26,7 @@ function nodes(value, name) {
 
     return entries.flatMap((entry) => {
         const childRecord = record(entry);
-        return childRecord ? [childRecord] : [];
+        return childRecord === undefined ? [] : [childRecord];
     });
 }
 
@@ -82,7 +82,7 @@ function parseDocument(source, sourcePath) {
     }
 
     const schema = record(record(parser.parse(source))?.['xsd:schema']);
-    if (!schema) {
+    if (schema === undefined) {
         throw new Error(`Cannot parse ${sourcePath}: Missing xsd:schema root.`);
     }
 
@@ -91,7 +91,7 @@ function parseDocument(source, sourcePath) {
 
 /** Returns documented attributes, including shared runtime attributes where declared. */
 function attributes(type, runtimeAttributes) {
-    if (!type) {
+    if (type === undefined) {
         return [];
     }
 
@@ -111,19 +111,20 @@ function parseElement(element, types, runtimeAttributes) {
     const inlineType = firstNode(element, 'xsd:complexType');
     const typeName = attribute(element, 'type');
     const info = appInfo(element);
+    const name = attribute(element, 'name');
 
     return {
         attributes: attributes(inlineType ?? types.get(typeName), runtimeAttributes),
         description: documentation(element),
         example: text(info?.['longlink:example']),
-        name: attribute(element, 'name') || attribute(element, 'ref'),
+        name: name === '' ? attribute(element, 'ref') : name,
     };
 }
 
 /** Yields nested element declarations in document order. */
 function* collectNestedElements(value) {
     const entry = record(value);
-    if (!entry) {
+    if (entry === undefined) {
         return;
     }
 
@@ -185,14 +186,14 @@ async function componentDocumentation() {
     for (const document of documents) {
         for (const element of nodes(document, 'xsd:element')) {
             const name = attribute(element, 'name');
-            if (name) {
+            if (name !== '') {
                 elements.set(name, element);
             }
         }
 
         for (const type of nodes(document, 'xsd:complexType')) {
             const name = attribute(type, 'name');
-            if (name) {
+            if (name !== '') {
                 types.set(name, type);
             }
         }
@@ -200,7 +201,7 @@ async function componentDocumentation() {
 
     return Array.from(elements.values()).flatMap((element) => {
         const metadata = record(appInfo(element)?.['longlink:docs']);
-        if (!metadata) {
+        if (metadata === undefined) {
             return [];
         }
 
@@ -210,7 +211,7 @@ async function componentDocumentation() {
 
         for (const nestedElement of collectNestedElements(type)) {
             const name = attribute(nestedElement, 'name');
-            if (name && name !== component.name) {
+            if (name !== '' && name !== component.name) {
                 nestedNames.add(name);
                 if (!elements.has(name)) {
                     elements.set(name, nestedElement);

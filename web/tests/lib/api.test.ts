@@ -9,6 +9,18 @@ afterEach(() => {
 // Single owner for the unusable-detail fallback message.
 const FALLBACK_MESSAGE = 'The server could not complete the request. Please try again.';
 
+/** Returns the expected mapped API error or preserves unexpected failures. */
+async function apiFailure(request: PromiseLike<unknown>): Promise<ApiError> {
+    try {
+        await request;
+    } catch (error: unknown) {
+        if (error instanceof ApiError) return error;
+        throw error;
+    }
+
+    throw new Error('Expected request to fail');
+}
+
 describe('api error mapping', () => {
     it('returns the server detail message with status and url', async () => {
         // Arrange
@@ -18,13 +30,12 @@ describe('api error mapping', () => {
         );
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await apiFailure(api.get('https://api.example/organizations'));
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('Name too short');
-        expect((failure as ApiError).status).toBe(422);
-        expect((failure as ApiError).url).toBe('https://api.example/organizations');
+        expect(failure.message).toBe('Name too short');
+        expect(failure.status).toBe(422);
+        expect(failure.url).toBe('https://api.example/organizations');
     });
 
     it.each([
@@ -39,12 +50,11 @@ describe('api error mapping', () => {
         );
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await apiFailure(api.get('https://api.example/organizations'));
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
-        expect((failure as ApiError).status).toBe(status);
+        expect(failure.message).toBe(FALLBACK_MESSAGE);
+        expect(failure.status).toBe(status);
     });
 
     it('passes network failures through without mapping', async () => {
@@ -83,8 +93,9 @@ describe('api success contract', () => {
     it('sends JSON bodies with the JSON content type', async () => {
         // Arrange
         let sentBody = '';
-        const transport = vi.fn(async (input: Request) => {
-            sentBody = await input.clone().text();
+        const transport = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+            const request = input instanceof Request ? input : new Request(input, init);
+            sentBody = await request.clone().text();
             return Response.json({ id: 'acme' }, { status: 201 });
         });
         vi.stubGlobal('fetch', transport);
@@ -97,7 +108,10 @@ describe('api success contract', () => {
         // Assert
         expect(payload).toEqual({ id: 'acme' });
         expect(transport).toHaveBeenCalledOnce();
-        const request = transport.mock.calls[0]?.[0] as Request;
+        const call = transport.mock.calls[0];
+        if (call === undefined) throw new Error('Request was not sent');
+        const [input, init] = call;
+        const request = input instanceof Request ? input : new Request(input, init);
         expect(request.headers.get('content-type')).toContain('application/json');
         expect(sentBody).toContain('"acme"');
     });
@@ -110,11 +124,10 @@ describe('api success contract', () => {
         );
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await apiFailure(api.get('https://api.example/organizations'));
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
-        expect((failure as ApiError).status).toBe(500);
+        expect(failure.message).toBe(FALLBACK_MESSAGE);
+        expect(failure.status).toBe(500);
     });
 });
