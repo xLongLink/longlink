@@ -25,7 +25,8 @@ dev = [
 ]
 
 [tool.ruff.lint]
-select = ["I"]
+preview = true
+select = ["I", "E302", "E305"]
 
 [tool.ruff.lint.isort]
 no-sections = true

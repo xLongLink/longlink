@@ -170,9 +170,7 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
         await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-async def test_gateway_accepts_version_skew(
-    monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]
-) -> None:
+async def test_gateway_accepts_version_skew(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
     """Accept version-skewed Compute packages without failing validation."""
 
     # Exercise the contract gate against a Compute package newer than the Platform.
@@ -193,9 +191,7 @@ async def test_gateway_accepts_version_skew(
     await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-async def test_gateway_rejects_contract_mismatch(
-    monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]
-) -> None:
+async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
     """Reject Compute packages on an unsupported release contract."""
 
     # Exercise the contract gate against an incompatible Compute package.

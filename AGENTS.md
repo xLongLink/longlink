@@ -24,7 +24,6 @@
 - Use clear domain names, prefer single-word Python filenames.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Use blank lines in functions, sparingly, to indicate logical sections.
-- Surround top-level function and class definitions with two blank lines.
 - Method definitions inside a class are surrounded by a single blank line.
 - Represent application state with typed models, enums, or structured objects.
 - Prefer namespaced module APIs, over directly importing many related functions.

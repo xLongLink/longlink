@@ -60,11 +60,7 @@ def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:
     # Assert
     statements = policy["Statement"]
     assert isinstance(statements, list)
-    listing = next(
-        statement
-        for statement in statements
-        if statement["Effect"] == "Allow" and "s3:ListBucket" in statement["Action"]
-    )
+    listing = next(statement for statement in statements if statement["Effect"] == "Allow" and "s3:ListBucket" in statement["Action"])
     assert listing["Condition"] == {"StringLike": {"s3:prefix": ["shared/*", f"solutions/{solution.hex}/*"]}}
 
 

@@ -84,7 +84,9 @@ async def start_oauth_login(provider: oauth.OAuthProvider):
     response = RedirectResponse(oauth.authorization_url(provider, state, verifier), status_code=302)
 
     # Store callback proof outside browser-readable storage and restrict it to OAuth endpoints.
-    cookies.set_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, credential, "/api/v1/auth/oauth", token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(
+        response, cookies.OAUTH_STATE_COOKIE, credential, "/api/v1/auth/oauth", token.OAUTH_STATE_TOKEN_LIFETIME_SECONDS
+    )
     return response
 
 
@@ -287,7 +289,9 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
 
 
 @router.get("/auth/register/setup", response_model=EmailPayload)
-async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE)):
+async def get_registration_setup(
+    response: Response, registration_token: str | None = Cookie(default=None, alias=cookies.REGISTRATION_COOKIE)
+):
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.

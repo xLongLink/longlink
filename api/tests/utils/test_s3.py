@@ -182,9 +182,7 @@ async def test_delete_prefix_raises_on_partial_failures(monkeypatch: pytest.Monk
 
     # Arrange
     client = FakeClient()
-    client.paginators["list_object_versions"] = [
-        {"Versions": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "DeleteMarkers": []}
-    ]
+    client.paginators["list_object_versions"] = [{"Versions": [{"Key": "solutions/abc/file", "VersionId": "v1"}], "DeleteMarkers": []}]
     serve(client, monkeypatch)
 
     async def partial(self: FakeClient, Bucket: str, Delete: dict[str, object]) -> dict[str, object]:

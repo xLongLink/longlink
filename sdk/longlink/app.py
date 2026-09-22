@@ -97,7 +97,9 @@ class LongLink(FastAPI):
             )
 
         # Make the browser root URL resolve to the first navigable View.
-        first_tab_view = next((definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None)
+        first_tab_view = next(
+            (definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None
+        )
         if first_tab_view is not None:
 
             @self.get("/", include_in_schema=False)

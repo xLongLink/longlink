@@ -382,10 +382,7 @@ async def create_default(
         select(func.count(col(Organization.id))).where(col(Organization.compute_id) == col(ComputeRegistry.id)).scalar_subquery()
     )
     compute_id = await session.scalar(
-        select(col(ComputeRegistry.id))
-        .order_by(compute_assignments, col(ComputeRegistry.name))
-        .limit(1)
-        .with_for_update()
+        select(col(ComputeRegistry.id)).order_by(compute_assignments, col(ComputeRegistry.name)).limit(1).with_for_update()
     )
     if compute_id is None:
         raise UnavailableError("No ready compute registry available")

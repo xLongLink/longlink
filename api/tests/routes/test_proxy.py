@@ -252,8 +252,8 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
     [
         pytest.param(b'{"detail":"   "}', id="whitespace-detail"),
         pytest.param(b'{"detail":123}', id="non-string-detail"),
-        pytest.param(b'[1,2]', id="non-object-payload"),
-        pytest.param(b'not-json', id="invalid-json"),
+        pytest.param(b"[1,2]", id="non-object-payload"),
+        pytest.param(b"not-json", id="invalid-json"),
     ],
 )
 async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
@@ -617,9 +617,7 @@ def patch_runtime_access_once(monkeypatch: pytest.MonkeyPatch, mutate: Callable[
     real_access = proxy_routes.organizations.solution_runtime_access
     admitted = False
 
-    async def access(
-        session: AsyncSession, user_id: UUID, solution_id: UUID
-    ) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
+    async def access(session: AsyncSession, user_id: UUID, solution_id: UUID) -> tuple[Solution, OrganizationRoles, ComputeRegistry] | None:
         """Revoke runtime state once, then resolve access as the handler observes it."""
 
         nonlocal admitted

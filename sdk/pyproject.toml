@@ -99,7 +99,8 @@ line-length = 140
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["F", "UP", "D300", "I"]
+preview = true
+select = ["F", "UP", "D300", "I", "E302", "E305"]
 
 [tool.ruff.lint.isort]
 no-sections = true
