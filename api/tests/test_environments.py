@@ -11,7 +11,6 @@ ENVIRONMENT_SETTINGS = {
     "GOOGLE_OAUTH_CLIENT_ID": None,
     "GITHUB_OAUTH_CLIENT_SECRET": None,
     "GOOGLE_OAUTH_CLIENT_SECRET": None,
-    "ADMIN_NAME": "Test Administrator",
     "ADMIN_EMAIL": "test-administrator@example.com",
     "ADMIN_PASSWORD": "longlink-test-password",
     "ENCRYPTION_KEY": "longlink-test-encryption-key-that-is-long-enough",
