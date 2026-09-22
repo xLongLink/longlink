@@ -201,7 +201,7 @@ def test_frontend_middleware_applies_default_cache_policy(
     app = FastAPI()
 
     @app.get("/{resource:path}")
-    def get_resource() -> Response:
+    def get_resource(resource: str) -> Response:
         """Return a frontend resource without an explicit cache policy."""
 
         return Response("content", media_type=media_type, status_code=status_code)
