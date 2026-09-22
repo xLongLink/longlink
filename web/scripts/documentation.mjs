@@ -8,27 +8,27 @@ import { XMLParser, XMLValidator } from 'fast-xml-parser';
 /** @typedef {{ attributes: DocumentedAttribute[], description: string, example: string, name: string }} DocumentedElement */
 /** @typedef {DocumentedElement & { lastUpdated: string, nested: DocumentedElement[], slug: string, source: string }} DocumentedComponent */
 
-/** Resolves a filesystem path from string segments. @param {...string} segments @returns {string} */
+/** Resolves a filesystem path from string segments. */
 function resolvePath(...segments) {
     return path.resolve(...segments);
 }
 
-/** Returns the directory containing this documentation generator. @returns {string} */
+/** Returns the directory containing this documentation generator. */
 function scriptRoot() {
     return resolvePath(path.dirname(fileURLToPath(import.meta.url)), '..');
 }
 
-/** Reads a UTF-8 text file. @param {string} filePath @returns {Promise<string>} */
+/** Reads a UTF-8 text file. */
 async function readText(filePath) {
     return readFile(filePath, 'utf8');
 }
 
-/** Writes a UTF-8 text file. @param {string} filePath @param {string} content @returns {Promise<void>} */
+/** Writes a UTF-8 text file. */
 async function writeText(filePath, content) {
     await writeFile(filePath, content, 'utf8');
 }
 
-/** Parses XML while retaining unknown output until it is structurally validated. @param {string} source @returns {unknown} */
+/** Parses XML while retaining unknown output until it is structurally validated. */
 function parseXml(source) {
     return parser.parse(source);
 }
@@ -44,12 +44,12 @@ const parser = new XMLParser({
     trimValues: false,
 });
 
-/** Returns an object-shaped XML node. @param {unknown} value @returns {XmlNode | undefined} */
+/** Returns an object-shaped XML node. */
 function record(value) {
     return value != null && typeof value === 'object' && !Array.isArray(value) ? value : undefined;
 }
 
-/** Returns object-shaped child nodes with a given XML name. @param {XmlNode | undefined} value @param {string} name @returns {XmlNode[]} */
+/** Returns object-shaped child nodes with a given XML name. */
 function nodes(value, name) {
     const child = value?.[name];
     const entries = Array.isArray(child) ? child : [child];
@@ -60,13 +60,13 @@ function nodes(value, name) {
     });
 }
 
-/** Returns a string-valued XML attribute or an empty string. @param {XmlNode | undefined} value @param {string} name @returns {string} */
+/** Returns a string-valued XML attribute or an empty string. */
 function attribute(value, name) {
     const entry = value?.[name];
     return typeof entry === 'string' ? entry : '';
 }
 
-/** Returns the first object-shaped child node with a given XML name. @param {XmlNode | undefined} value @param {string} name @returns {XmlNode | undefined} */
+/** Returns the first object-shaped child node with a given XML name. */
 function firstNode(value, name) {
     const child = value?.[name];
     if (!Array.isArray(child)) {
@@ -83,28 +83,28 @@ function firstNode(value, name) {
     return undefined;
 }
 
-/** Returns trimmed XML element text. @param {unknown} value @returns {string} */
+/** Returns trimmed XML element text. */
 function text(value) {
     const entry = typeof value === 'string' ? value : record(value)?.['#text'];
     return typeof entry === 'string' ? entry.trim() : '';
 }
 
-/** Returns an element's XSD annotation. @param {XmlNode | undefined} value @returns {XmlNode | undefined} */
+/** Returns an element's XSD annotation. */
 function annotation(value) {
     return firstNode(value, 'xsd:annotation');
 }
 
-/** Returns an element's documentation text. @param {XmlNode | undefined} value @returns {string} */
+/** Returns an element's documentation text. */
 function documentation(value) {
     return text(annotation(value)?.['xsd:documentation']);
 }
 
-/** Returns an element's application metadata. @param {XmlNode | undefined} value @returns {XmlNode | undefined} */
+/** Returns an element's application metadata. */
 function appInfo(value) {
     return firstNode(annotation(value), 'xsd:appinfo');
 }
 
-/** Parses and validates one XSD source document. @param {string} source @param {string} sourcePath @returns {XmlNode} */
+/** Parses and validates one XSD source document. */
 function parseDocument(source, sourcePath) {
     const validation = XMLValidator.validate(source);
     if (validation !== true) {
@@ -119,7 +119,7 @@ function parseDocument(source, sourcePath) {
     return schema;
 }
 
-/** Returns documented attributes, including shared runtime attributes where declared. @param {XmlNode | undefined} type @param {DocumentedAttribute[]} runtimeAttributes @returns {DocumentedAttribute[]} */
+/** Returns documented attributes, including shared runtime attributes where declared. */
 function attributes(type, runtimeAttributes) {
     if (type === undefined) {
         return [];
@@ -136,7 +136,7 @@ function attributes(type, runtimeAttributes) {
     return usesRuntimeAttributes ? [...declared, ...runtimeAttributes] : declared;
 }
 
-/** Returns documentation for one XSD element. @param {XmlNode} element @param {Map<string, XmlNode>} types @param {DocumentedAttribute[]} runtimeAttributes @returns {DocumentedElement} */
+/** Returns documentation for one XSD element. */
 function parseElement(element, types, runtimeAttributes) {
     const inlineType = firstNode(element, 'xsd:complexType');
     const typeName = attribute(element, 'type');
@@ -150,7 +150,7 @@ function parseElement(element, types, runtimeAttributes) {
     };
 }
 
-/** Yields nested element declarations in document order. @param {unknown} value @returns {Generator<XmlNode>} */
+/** Yields nested element declarations in document order. */
 function* collectNestedElements(value) {
     const entry = record(value);
     if (entry === undefined) {
@@ -172,7 +172,7 @@ function* collectNestedElements(value) {
     }
 }
 
-/** Returns undocumented elements referenced by a component's documentation. @param {DocumentedElement} component @param {Map<string, XmlNode>} elements @returns {Set<string>} */
+/** Returns undocumented elements referenced by a component's documentation. */
 function companionNames(component, elements) {
     const names = new Set();
     const content = `${component.description}\n${component.example}`;
@@ -188,7 +188,7 @@ function companionNames(component, elements) {
     return names;
 }
 
-/** Generates component documentation from the SDK XSD source contracts. @returns {Promise<DocumentedComponent[]>} */
+/** Generates component documentation from the SDK XSD source contracts. */
 async function componentDocumentation() {
     const typesSource = await readText(typesPath);
     const typesDocument = parseDocument(typesSource, 'sdk/longlink/.static/xsd/types.xsd');
