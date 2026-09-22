@@ -19,7 +19,6 @@
 - Keep class constructions in separate, multi-line assignments before invoking their methods.
 - Validate types at the boundary.
 - Keep the code pytonic, prefer readability over efficiency.
-- Use `datetime.now(UTC)` for current UTC timestamps.
 - Use clear domain names, prefer single-word Python filenames.
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Use blank lines in functions, sparingly, to indicate logical sections.

@@ -12,7 +12,11 @@ from sqlalchemy.engine.default import DefaultDialect
             datetime(2026, 8, 22, 10, tzinfo=UTC),
             id="aware-value",
         ),
-        pytest.param(datetime(2026, 8, 22, 10), datetime(2026, 8, 22, 10, tzinfo=UTC), id="naive-value"),
+        pytest.param(
+            datetime(2026, 8, 22, 10, tzinfo=UTC).replace(tzinfo=None),
+            datetime(2026, 8, 22, 10, tzinfo=UTC),
+            id="naive-value",
+        ),
         pytest.param(None, None, id="null-value"),
     ],
 )
@@ -47,7 +51,7 @@ def test_utc_datetime_rejects_naive_values_before_writing() -> None:
     """Reject ambiguous Solution timestamps before database storage."""
 
     # Arrange
-    value = datetime(2026, 8, 22, 10)
+    value = datetime(2026, 8, 22, 10, tzinfo=UTC).replace(tzinfo=None)
 
     # Act and assert
     with pytest.raises(ValueError, match="LongLink timestamps must include a timezone"):
