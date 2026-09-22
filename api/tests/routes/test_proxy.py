@@ -4,6 +4,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from httpx2 import AsyncClient
+from conftest import UNTRUSTED_ORIGINS, assert_origin_rejected, untrusted_origin_headers
 from longlink import identity
 from factories import create_compute, create_solution, create_organization
 from src.routes.v1 import proxy as proxy_routes
@@ -440,7 +441,7 @@ async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
     assert response.headers["content-type"] == "application/json"
 
 
-@pytest.mark.parametrize("origin", [None, "", "https://attacker.example"])
+@pytest.mark.parametrize("origin", UNTRUSTED_ORIGINS)
 async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -458,20 +459,16 @@ async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
         raise AssertionError("Gateway client must not be constructed")
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
-
-    # Remove the client's trusted default header for the missing-Origin case.
-    if origin is None:
-        clients[0].headers.pop("origin")
+    headers = untrusted_origin_headers(clients[0], origin)
 
     # Act
     response = await clients[0].post(
         f"/api/v1/solutions/{solution.id}/proxy/tasks",
-        headers={} if origin is None else {"origin": origin},
+        headers=headers,
     )
 
     # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Origin required"}
+    assert_origin_rejected(response)
 
 
 async def test_solution_proxy_streams_response_without_upstream_content_type(

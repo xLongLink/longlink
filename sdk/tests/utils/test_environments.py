@@ -10,48 +10,35 @@ class EnvironmentSettings(Environments):
     api_key: str = Field(default="", validation_alias="API_KEY")
 
 
-def test_environments_prioritizes_process_variables_over_dotenv_files(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("dotenv_value", "process_value", "expected"),
+    [
+        pytest.param("file", "process", "process", id="process-over-dotenv"),
+        pytest.param("file", None, "file", id="dotenv-over-sample"),
+        pytest.param(None, None, "sample", id="sample-only"),
+    ],
+)
+def test_environments_prioritizes_configured_sources(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    dotenv_value: str | None,
+    process_value: str | None,
+    expected: str,
+) -> None:
     """Load the declared setting from the highest-priority configured source."""
 
     # Arrange
     tmp_path.joinpath(".env.sample").write_text("API_KEY=sample\n", encoding="utf-8")
-    tmp_path.joinpath(".env").write_text("API_KEY=file\n", encoding="utf-8")
+    if dotenv_value is not None:
+        tmp_path.joinpath(".env").write_text(f"API_KEY={dotenv_value}\n", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv("API_KEY", "process")
+    if process_value is None:
+        monkeypatch.delenv("API_KEY", raising=False)
+    else:
+        monkeypatch.setenv("API_KEY", process_value)
 
     # Act
     environments = EnvironmentSettings()
 
     # Assert
-    assert environments.api_key == "process"
-
-
-def test_environments_prioritizes_dotenv_over_sample_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Load dotenv values from the Solution file instead of its sample."""
-
-    # Arrange
-    tmp_path.joinpath(".env.sample").write_text("API_KEY=sample\n", encoding="utf-8")
-    tmp_path.joinpath(".env").write_text("API_KEY=file\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("API_KEY", raising=False)
-
-    # Act
-    environments = EnvironmentSettings()
-
-    # Assert
-    assert environments.api_key == "file"
-
-
-def test_environments_loads_sample_file_without_solution_dotenv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Load declared defaults from the sample dotenv file."""
-
-    # Arrange
-    tmp_path.joinpath(".env.sample").write_text("API_KEY=sample\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("API_KEY", raising=False)
-
-    # Act
-    environments = EnvironmentSettings()
-
-    # Assert
-    assert environments.api_key == "sample"
+    assert environments.api_key == expected

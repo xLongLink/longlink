@@ -43,15 +43,26 @@ def test_color_formatter_restores_info_record_level_name() -> None:
     assert record.levelname == "INFO"
 
 
-def test_configure_logger_reuses_existing_handler(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture
+def resettable_logger(monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> tuple[logging.Logger, list[logging.Handler]]:
+    """Provide one isolated logger with the requested initial handlers."""
+
+    # Reset shared logger state so each policy case starts unconfigured.
+    logger = logging.getLogger(f"longlink.tests.{request.param}")
+    handlers: list[logging.Handler] = [logging.StreamHandler()] if request.param == "existing-handler" else []
+    monkeypatch.setattr(logger, "handlers", handlers)
+    monkeypatch.setattr(logger, "level", logging.NOTSET)
+    monkeypatch.setattr(logger, "propagate", True)
+    return logger, handlers
+
+
+@pytest.mark.parametrize("resettable_logger", ["existing-handler"], indirect=True)
+def test_configure_logger_reuses_existing_handler(resettable_logger: tuple[logging.Logger, list[logging.Handler]]) -> None:
     """Apply logger policy without adding a duplicate existing handler."""
 
     # Arrange
-    logger = logging.getLogger("longlink.tests.existing-handler")
-    handler = logging.StreamHandler()
-    monkeypatch.setattr(logger, "handlers", [handler])
-    monkeypatch.setattr(logger, "level", logging.NOTSET)
-    monkeypatch.setattr(logger, "propagate", True)
+    logger, handlers = resettable_logger
+    handler = handlers[0]
 
     # Act
     configured_logger = configure_logger(logger.name)
@@ -63,14 +74,14 @@ def test_configure_logger_reuses_existing_handler(monkeypatch: pytest.MonkeyPatc
     assert logger.propagate is False
 
 
-def test_configure_logger_adds_configured_handler_when_logger_has_none(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("resettable_logger", ["missing-handler"], indirect=True)
+def test_configure_logger_adds_configured_handler_when_logger_has_none(
+    resettable_logger: tuple[logging.Logger, list[logging.Handler]],
+) -> None:
     """Install one formatted stream handler for an otherwise unconfigured logger."""
 
     # Arrange
-    logger = logging.getLogger("longlink.tests.missing-handler")
-    monkeypatch.setattr(logger, "handlers", [])
-    monkeypatch.setattr(logger, "level", logging.NOTSET)
-    monkeypatch.setattr(logger, "propagate", True)
+    logger, _handlers = resettable_logger
 
     # Act
     configured_logger = configure_logger(logger.name)

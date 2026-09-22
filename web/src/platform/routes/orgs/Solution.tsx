@@ -49,34 +49,30 @@ export default function OrganizationSolution() {
     const action = <ProfileMenu user={user} />;
     const breadcrumb = <PageBreadcrumb solutionName={solutionAccess.name} />;
 
-    // Show a standalone notice while the solution is still deploying.
-    if (solutionAccess.status === 'creating') {
-        return (
-            <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
-                <NoIndex title={`${solutionAccess.name} | LongLink`} />
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <EmptyState
-                        description="Please try again in a moment."
-                        headingLevel={1}
-                        role="alert"
-                        title="Solution is being deployed"
-                    />
-                </Center>
-            </Platform>
-        );
-    }
+    const deploymentNotice =
+        solutionAccess.status === 'creating'
+            ? {
+                  description: 'Please try again in a moment.',
+                  title: 'Solution is being deployed',
+              }
+            : solutionAccess.status === 'failed'
+              ? {
+                    description: 'Review the failed operation in the Platform administration area.',
+                    title: 'Solution deployment failed',
+                }
+              : null;
 
-    // Show a standalone notice when the solution deployment has failed.
-    if (solutionAccess.status === 'failed') {
+    // Show one standalone notice for unavailable solution deployments.
+    if (deploymentNotice) {
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <NoIndex title={`${solutionAccess.name} | LongLink`} />
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <EmptyState
-                        description="Review the failed operation in the Platform administration area."
+                        description={deploymentNotice.description}
                         headingLevel={1}
                         role="alert"
-                        title="Solution deployment failed"
+                        title={deploymentNotice.title}
                     />
                 </Center>
             </Platform>

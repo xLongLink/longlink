@@ -76,7 +76,7 @@ class LongLink(FastAPI):
         self.include_router(router(view_definitions))
 
         # Bind Platform request identity across downstream request handling.
-        install_context_middleware(self, settings.IDENTITY_SECRET or "")
+        install_context_middleware(self, settings.IDENTITY_SECRET)
 
         self.state.longlink = RuntimeState(storage=storage, database=database)
         self.router.add_event_handler("shutdown", database.dispose)

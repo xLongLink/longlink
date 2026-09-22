@@ -36,6 +36,26 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
 
 
+@pytest.fixture
+def production_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
+    """Configure production storage with a capturing remote filesystem double."""
+
+    # Configure the shared production scope before replacing remote I/O.
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
+    captured: dict[str, object] = {"filesystem": LocalFileSystem()}
+
+    def fake_filesystem_factory(_protocol: str, **kwargs: object) -> LocalFileSystem:
+        """Capture the remote filesystem configuration without contacting remote storage."""
+
+        captured["kwargs"] = kwargs
+        filesystem = captured["filesystem"]
+        assert isinstance(filesystem, LocalFileSystem)
+        return filesystem
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
+    return captured
+
+
 @pytest.mark.parametrize(
     ("bucket", "prefix", "message"),
     [
@@ -59,19 +79,8 @@ def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.Monke
         storage_base.create_fs(Envs())
 
 
-def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_storage: dict[str, object]) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
-
-    # Arrange
-    backing_filesystem = LocalFileSystem()
-
-    def fake_filesystem_factory(protocol: str, **kwargs: object) -> LocalFileSystem:
-        """Return the backing filesystem without contacting remote storage."""
-
-        return backing_filesystem
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard/")
 
     # Act
     scoped_filesystem = storage_base.create_fs(Envs())
@@ -79,14 +88,16 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     # Assert
     assert isinstance(scoped_filesystem, DirFileSystem)
     assert scoped_filesystem.path == (Path.cwd() / "acme/solutions/dashboard").as_posix()
-    assert scoped_filesystem.fs is backing_filesystem
+    assert scoped_filesystem.fs is production_storage["filesystem"]
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_storage_passes_configured_ca_to_s3_client(
+    monkeypatch: pytest.MonkeyPatch, production_storage: dict[str, object]
+) -> None:
     """Use the Platform storage CA to verify the remote S3 endpoint."""
 
     # Arrange
-    captured: dict[str, object] = {}
+    captured = production_storage
 
     @contextmanager
     def certificate_file(pem: str):
@@ -95,15 +106,7 @@ def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytes
         captured["pem"] = pem
         yield "/tmp/storage-ca.crt"
 
-    def fake_filesystem_factory(_protocol: str, **kwargs: object) -> LocalFileSystem:
-        """Capture the remote filesystem configuration."""
-
-        captured["kwargs"] = kwargs
-        return LocalFileSystem()
-
     monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
     monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
 
     # Act

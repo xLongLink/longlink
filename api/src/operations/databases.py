@@ -125,7 +125,7 @@ class Lease:
                     await session.commit()
 
 
-async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bool = False) -> Lease | None:
+async def _claim(session: AsyncSession, organization_id: UUID) -> Lease | None:
     """Insert an activity after the caller has locked its Organization."""
 
     # The Organization UUID reserves one lease slot for exclusive database transitions.
@@ -136,11 +136,10 @@ async def _claim(session: AsyncSession, organization_id: UUID, *, transition: bo
             col(OrganizationActivity.expires_at) <= now,
         )
     )
-    if transition and await session.get(OrganizationActivity, organization_id) is not None:
+    if await session.get(OrganizationActivity, organization_id) is not None:
         return None
     row = OrganizationActivity(organization_id=organization_id, expires_at=now.replace(microsecond=0) + timedelta(seconds=LEASE_SECONDS))
-    if transition:
-        row.id = organization_id
+    row.id = organization_id
     session.add(row)
     await session.flush()
     return Lease(row.id, organization_id, row.expires_at)
@@ -165,7 +164,7 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
                 )
                 .limit(1)
             )
-            lease = None if active is not None else await _claim(session, organization_id, transition=True)
+            lease = None if active is not None else await _claim(session, organization_id)
             await session.commit()
         if lease is not None:
             async with lease.maintain():
@@ -189,7 +188,7 @@ async def ready(organization_id: UUID) -> bool:
                 transition is None or transition.expires_at <= datetime.now(UTC)
             ):
                 return True
-            lease = await _claim(session, organization_id, transition=True)
+            lease = await _claim(session, organization_id)
             await session.commit()
         if lease is None:
             await asyncio.sleep(0.5)
