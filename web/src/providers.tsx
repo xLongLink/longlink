@@ -25,9 +25,27 @@ export function RootProvider({ children }: { children: ReactNode }) {
 /** Connects cache and direct-request failures to the shared notification layer. */
 export function ApiProvider({ children }: { children: ReactNode }) {
     const toast = useToast();
-    const [runtime] = useState(() =>
-        createQueryRuntime((body) => toast({ body, type: 'error', isAutoHide: true }), import.meta.env.MODE !== 'sdk')
-    );
+    const [runtime] = useState(() => {
+        return createQueryRuntime(
+            (body) => {
+                toast({ body, type: 'error', isAutoHide: true });
+
+                // Re-promote the shared viewport after React renders the toast so it remains above an open dialog.
+                requestAnimationFrame(() => {
+                    for (const viewport of document.querySelectorAll<HTMLElement>('[popover="manual"]')) {
+                        if (!viewport.querySelector('[data-toast-id]')) continue;
+                        if (typeof viewport.hidePopover !== 'function' || typeof viewport.showPopover !== 'function')
+                            return;
+
+                        if (viewport.matches(':popover-open')) viewport.hidePopover();
+                        viewport.showPopover();
+                        return;
+                    }
+                });
+            },
+            import.meta.env.MODE !== 'sdk'
+        );
+    });
 
     return (
         <ApiErrorContext value={runtime.reportError}>
