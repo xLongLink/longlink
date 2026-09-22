@@ -24,7 +24,7 @@ export function DevelopmentNotice() {
             status="warning"
             title={
                 <Text type="supporting">
-                    LongLink is still in development. Data may be reset between deployments.{' '}
+                    Beta: not yet for production-critical workloads.{' '}
                     <Link
                         as="a"
                         href="https://github.com/xLongLink/longlink"
