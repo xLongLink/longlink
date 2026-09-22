@@ -99,7 +99,7 @@ async def ensure_administrator(session: AsyncSession) -> User:
         user = await session.scalar(statement)
     if user is None:
         user = User(
-            name=env.ADMIN_NAME,
+            name="Administrator",
             email=env.ADMIN_EMAIL,
             password=PASSWORD_HASH.hash(env.ADMIN_PASSWORD),
             administrator=True,
@@ -120,7 +120,7 @@ async def ensure_administrator(session: AsyncSession) -> User:
     # Reconcile the configured account, including one created concurrently by another replica.
     if not PASSWORD_HASH.verify(env.ADMIN_PASSWORD, user.password):
         user.password = PASSWORD_HASH.hash(env.ADMIN_PASSWORD)
-    user.name = env.ADMIN_NAME
+    user.name = "Administrator"
     user.email = env.ADMIN_EMAIL
     user.administrator = True
     user.deleted_at = None

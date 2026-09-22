@@ -20,7 +20,6 @@ os.environ["SMTP_HOST"] = "smtp.example.com"
 os.environ["PUBLIC_URL"] = "http://localhost:5173"
 os.environ["SESSION_KEY"] = "test-session-key-that-is-long-enough"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./dev.db"
-os.environ["ADMIN_NAME"] = "Test Administrator"
 os.environ["ADMIN_EMAIL"] = "test-administrator@example.com"
 os.environ["ADMIN_PASSWORD"] = TEST_PASSWORD
 os.environ["ENCRYPTION_KEY"] = "longlink-test-encryption-key-that-is-long-enough"

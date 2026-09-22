@@ -21,7 +21,6 @@ class Env(BaseSettings):
     GOOGLE_OAUTH_CLIENT_SECRET: str | None = Field(default=None, min_length=1)
 
     # Initial Platform administrator
-    ADMIN_NAME: str = Field(min_length=1)
     ADMIN_EMAIL: Email
     ADMIN_PASSWORD: str = Field(min_length=1)
 

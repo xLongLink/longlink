@@ -154,7 +154,6 @@ jobs:
                   docker run --detach --name "$container" --publish 127.0.0.1:18000:8000 \
                       --env SMTP_HOST=smtp.example.com \
                       --env SESSION_KEY=ci-session-key-with-at-least-32-characters \
-                      --env ADMIN_NAME=Administrator \
                       --env ADMIN_EMAIL=administrator@example.com \
                       --env ADMIN_PASSWORD=ci-password \
                       --env ENCRYPTION_KEY=ci-encryption-key-with-at-least-32-characters \

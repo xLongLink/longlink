@@ -27,7 +27,7 @@ async def test_ensure_administrator_creates_absent_configured_user() -> None:
     async with session_scope() as session:
         result = await session.scalars(select(User).where(col(User.administrator).is_(True)))
         administrator = result.one()
-    assert administrator.name == env.ADMIN_NAME
+    assert administrator.name == "Administrator"
     assert administrator.email == env.ADMIN_EMAIL
     assert password_hash.verify(env.ADMIN_PASSWORD, administrator.password)
     assert administrator.deleted_at is None
@@ -73,7 +73,7 @@ async def test_ensure_administrator_restores_soft_deleted_configured_user(passwo
     async with session_scope() as session:
         restored_user = await session.get(User, deleted_user_id)
     assert restored_user is not None
-    assert restored_user.name == env.ADMIN_NAME
+    assert restored_user.name == "Administrator"
     assert restored_user.email == env.ADMIN_EMAIL
     assert restored_user.administrator is True
     assert restored_user.deleted_at is None
@@ -87,7 +87,7 @@ async def test_ensure_administrator_replaces_stale_configured_password() -> None
     stale_password = password_hash.hash("stale-password")
     async with session_scope() as session:
         administrator = User(
-            name=env.ADMIN_NAME,
+            name="Administrator",
             email=env.ADMIN_EMAIL,
             password=stale_password,
             administrator=True,
@@ -134,7 +134,7 @@ async def test_ensure_administrator_reconciles_preexisting_configured_email() ->
     async with session_scope() as session:
         persisted = await session.get(User, reconciled_id)
     assert persisted is not None
-    assert persisted.name == env.ADMIN_NAME
+    assert persisted.name == "Administrator"
     assert persisted.email == env.ADMIN_EMAIL
     assert persisted.administrator is True
 
