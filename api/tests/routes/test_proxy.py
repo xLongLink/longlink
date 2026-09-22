@@ -475,45 +475,12 @@ async def test_solution_proxy_closes_gateway_response_when_upstream_stream_fails
     assert close_count == 1
 
 
-async def test_solution_proxy_rejects_oversized_request_body(
+async def test_solution_proxy_forwards_streamed_request_body(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Reject individually permitted chunks whose total exceeds the configured proxy limit."""
-
-    # Arrange a running Solution and consume its guarded request stream at the gateway boundary.
-    solution, _infrastructure = await create_running_solution(users[0])
-
-    async def request(_transport: object, upstream: httpx2.Request) -> None:
-        """Consume the request body so the route's size guard executes."""
-
-        await upstream.aread()
-        raise AssertionError("oversized request must not reach the gateway")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", request)
-    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
-
-    async def content() -> AsyncIterator[bytes]:
-        """Stream individually permitted chunks totaling one byte over the limit."""
-
-        yield b"x" * 512
-        yield b"x" * 513
-
-    # Act
-    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=content())
-
-    # Assert
-    assert response.status_code == 413
-    assert response.json() == {"detail": "Solution proxy request body is too large"}
-
-
-async def test_solution_proxy_forwards_request_body_at_configured_limit(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Forward individually permitted chunks totaling exactly the configured proxy byte limit."""
+    """Forward a streamed request body without applying a Platform byte limit."""
 
     # Arrange
     solution, _infrastructure = await create_running_solution(users[0])
@@ -526,13 +493,12 @@ async def test_solution_proxy_forwards_request_body_at_configured_limit(
         return httpx2.Response(200, text="uploaded")
 
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
-    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
 
     async def content() -> AsyncIterator[bytes]:
-        """Stream two individually permitted chunks totaling the exact limit."""
+        """Stream request chunks without a Platform byte limit."""
 
         yield b"x" * 512
-        yield b"x" * 512
+        yield b"x" * 513
 
     # Act
     response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/upload", content=content())
@@ -540,7 +506,7 @@ async def test_solution_proxy_forwards_request_body_at_configured_limit(
     # Assert
     assert response.status_code == 200
     assert response.text == "uploaded"
-    assert captured == [b"x" * 1024]
+    assert captured == [b"x" * 1025]
 
 
 async def test_solution_proxy_allows_organization_read_members(

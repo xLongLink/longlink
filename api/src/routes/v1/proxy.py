@@ -19,7 +19,6 @@ from src.database.models.users import User
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
-PROXY_REQUEST_MAX_BYTES = 100 * 1024 * 1024
 PROXY_REQUEST_TIMEOUT_SECONDS = 120
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 PROXY_ERROR_MAX_BYTES = 64 * 1024
@@ -80,14 +79,9 @@ async def proxy_solution_request(
         raise HTTPException(status_code=503, detail="Solution gateway is not ready")
 
     async def request_content() -> AsyncIterator[bytes]:
-        """Stream one bounded request body to the solution gateway."""
+        """Stream one request body to the solution gateway."""
 
-        # Count streamed bytes before forwarding each request chunk.
-        size = 0
         async for chunk in request.stream():
-            size += len(chunk)
-            if size > PROXY_REQUEST_MAX_BYTES:
-                raise HTTPException(status_code=413, detail="Solution proxy request body is too large")
             yield chunk
 
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
