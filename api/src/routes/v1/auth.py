@@ -20,7 +20,7 @@ from src.database.models.users import User
 router = APIRouter(tags=["auth"])
 
 INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Request a new link to continue."
-INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."
+INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."  # noqa: S105
 
 
 def set_auth_session(response: Response, credential: str) -> None:

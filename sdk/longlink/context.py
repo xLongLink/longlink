@@ -27,7 +27,7 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
     async with request.app.state.longlink.database.session() as database:
         user_id = audit.current_actor.get()
         user = await database.get(Audit, user_id) if user_id is not None else None
-        yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)
+        yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)  # noqa: ASYNC119
 
 
 Context = Annotated[_ContextData, Depends(_data)]

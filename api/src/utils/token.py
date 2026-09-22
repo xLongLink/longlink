@@ -11,10 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 JWT_ALGORITHM = "HS256"
-AUTH_TOKEN_AUDIENCE = "longlink:auth"
-REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
-PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"
-OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"
+AUTH_TOKEN_AUDIENCE = "longlink:auth"  # noqa: S105
+REGISTRATION_TOKEN_AUDIENCE = "longlink:register"  # noqa: S105
+PASSWORD_RESET_TOKEN_AUDIENCE = "longlink:reset-password"  # noqa: S105
+OAUTH_STATE_TOKEN_AUDIENCE = "longlink:oauth"  # noqa: S105
 EMAIL_TOKEN_LIFETIME_SECONDS = 3600
 OAUTH_STATE_TOKEN_LIFETIME_SECONDS = 600
 

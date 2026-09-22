@@ -599,7 +599,7 @@ async def test_registration_verification_is_stateless(
 
     # Request a stateless email link without creating a pending user.
     register_response = await client.post("/api/v1/auth/register", json={"email": email})
-    Session = get_session()
+    session_factory = get_session()
 
     assert register_response.status_code == 202
     assert captured_mail[0][0] == email
@@ -612,7 +612,7 @@ async def test_registration_verification_is_stateless(
 
     # Verify email ownership without creating a user or browser session.
     verify_response = await client.post("/api/v1/auth/verify", json={"token": verification_token})
-    async with Session() as session:
+    async with session_factory() as session:
         verified_pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
 
     assert verify_response.status_code == 200

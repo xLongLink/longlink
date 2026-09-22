@@ -2,7 +2,7 @@ import json
 import yaml
 from uuid import UUID
 from typing import Annotated, cast
-from pydantic import Field, HttpUrl, BaseModel, ConfigDict, ValidationInfo, BeforeValidator, field_validator
+from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
 from urllib.parse import urlsplit
 
 HTTPS_PORT = 443
@@ -88,7 +88,7 @@ class ComputeRegistryCreate(BaseModel):
 
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
-    def validate_endpoint(cls, value: str, info: ValidationInfo) -> str:
+    def validate_endpoint(cls, value: str) -> str:
         """Normalize and validate one credential-free HTTPS endpoint origin."""
 
         # Supply HTTPS when an administrator enters only a host and optional port.

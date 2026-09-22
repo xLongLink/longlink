@@ -11,10 +11,10 @@ if TYPE_CHECKING:
     from src.database.models.computes import ComputeRegistry
 
 
-RUSTFS_SECRET_NAMESPACE = "rustfs"
-RUSTFS_SECRET_NAME = "longlink-rustfs"
-TLS_SECRET_NAMESPACE = "rustfs"
-TLS_SECRET_NAME = "longlink-storage-tls"
+RUSTFS_SECRET_NAMESPACE = "rustfs"  # noqa: S105
+RUSTFS_SECRET_NAME = "longlink-rustfs"  # noqa: S105
+TLS_SECRET_NAMESPACE = "rustfs"  # noqa: S105
+TLS_SECRET_NAME = "longlink-storage-tls"  # noqa: S105
 
 
 class Storage:

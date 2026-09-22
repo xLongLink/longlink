@@ -2,8 +2,8 @@ import jwt
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
 
-IDENTITY_TOKEN_ALGORITHM = "HS256"
-IDENTITY_TOKEN_AUDIENCE = "longlink:identity"
+IDENTITY_TOKEN_ALGORITHM = "HS256"  # noqa: S105
+IDENTITY_TOKEN_AUDIENCE = "longlink:identity"  # noqa: S105
 IDENTITY_TOKEN_LIFETIME_SECONDS = 300
 
 

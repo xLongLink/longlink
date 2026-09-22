@@ -82,7 +82,7 @@ async def _stop_migrations(api: Api, namespace: str, solution_id: UUID, resume_j
         # Controller acknowledgement precedes checking for remaining migration Pods.
         await job.patch({"spec": {"suspend": True}})
         await _wait_for_job_condition(job, {"Suspended"})
-        while await _has_active_pods(api, namespace, {"job-name": job.name}):
+        while await _has_active_pods(api, namespace, {"job-name": job.name}):  # noqa: ASYNC110
             await asyncio.sleep(5)
 
 

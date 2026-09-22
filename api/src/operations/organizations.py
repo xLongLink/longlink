@@ -103,3 +103,6 @@ async def delete(organization_id: UUID) -> str | None:
         async with session_scope() as session:
             await session.execute(sql_delete(Organization).where(col(Organization.id) == organization.id))
             await session.commit()
+
+        # Successful cleanup returns no error message.
+        return None
