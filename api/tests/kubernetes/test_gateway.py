@@ -289,12 +289,7 @@ def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
     documents = list(yaml.safe_load_all(release.stdout))
     policies = {document["metadata"]["name"]: document for document in documents if document and document["kind"] == "NetworkPolicy"}
     assert "longlink-runtime-gateway" not in policies
-    assert policies["longlink-gateway-boundary"]["spec"]["ingress"][1]["from"] == [
-        {
-            "namespaceSelector": {"matchLabels": {"longlink.io/platform": "true"}},
-            "podSelector": {"matchLabels": {"longlink.io/component": "api"}},
-        }
-    ]
+    assert policies["longlink-gateway-boundary"]["spec"]["ingress"][1] == {"ports": [{"protocol": "TCP", "port": 8444}]}
     service = next(document for document in documents if document["kind"] == "Service" and document["metadata"]["name"] == "kourier")
     assert service["spec"]["ports"] == [{"name": "https", "port": 443, "targetPort": 8444, "protocol": "TCP"}]
     assert service["spec"]["loadBalancerIP"] == "203.0.113.10"

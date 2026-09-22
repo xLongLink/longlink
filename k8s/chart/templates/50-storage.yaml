@@ -69,7 +69,7 @@ metadata:
 {{- end }}
 spec:
     type: {{ .Values.storage.service.type }}
-    externalTrafficPolicy: Local
+    externalTrafficPolicy: Cluster
 {{- if eq .Values.storage.service.type "LoadBalancer" }}
     loadBalancerIP: {{ .Values.storage.address }}
 {{- end }}
