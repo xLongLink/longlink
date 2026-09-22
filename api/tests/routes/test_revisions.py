@@ -265,8 +265,10 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
     success = await clients[0].post(url, json={"envs": {"NEW": "new-value", "DROP": None}})
 
     # Assert
-    assert missing.status_code == 422 and "NEW" in missing.text
-    assert invalid.status_code == 422 and "private-value" not in invalid.text
+    assert missing.status_code == 422
+    assert "NEW" in missing.text
+    assert invalid.status_code == 422
+    assert "private-value" not in invalid.text
     assert keep_removed.status_code == 422
     assert success.status_code == 204
     async with session_scope() as session:
@@ -278,7 +280,8 @@ async def test_update_reresolves_moved_tag_and_enforces_required_envs(
         assert current.desired_revision.envs == {"KEEP": "private-value", "NEW": "new-value"}
         assert current.deployment_pending
         prior = await session.get(Revision, solution.desired_revision_id)
-        assert prior is not None and prior.envs == {"KEEP": "private-value", "DROP": "old-value"}
+        assert prior is not None
+        assert prior.envs == {"KEEP": "private-value", "DROP": "old-value"}
     assert inspected[-1] == source
 
 
@@ -387,7 +390,8 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
     assert response.status_code == 409
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
-        assert current is not None and current.desired_revision_id == replacement_id
+        assert current is not None
+        assert current.desired_revision_id == replacement_id
         assert current.desired_revision.envs == {"OTHER": "concurrent-secret"}
 
 
@@ -411,13 +415,16 @@ async def test_environment_patch_validates_merged_limits(
     assert (await clients[0].post(url, json={"envs": {"NEW": "", "KEY_0": None}})).status_code == 204
     async with session_scope() as session:
         current = await session.get(Solution, solution.id)
-        assert current is not None and len(current.desired_revision.envs) == 100
-        assert current.desired_revision.envs["NEW"] == "" and "KEY_0" not in current.desired_revision.envs
+        assert current is not None
+        assert len(current.desired_revision.envs) == 100
+        assert current.desired_revision.envs["NEW"] == ""
+        assert "KEY_0" not in current.desired_revision.envs
 
     # Individually valid patches must also respect the byte limit after merging retained values.
     large = await create_solution(organization, name="large", secrets={f"KEY_{index}": "x" * 32768 for index in range(15)})
     response = await clients[0].post(f"/api/v1/solutions/{large.id}/update", json={"envs": {"NEW": "x" * 32768}})
-    assert response.status_code == 422 and "too large" in response.text
+    assert response.status_code == 422
+    assert "too large" in response.text
 
 
 async def test_simultaneous_source_updates_create_only_one_revision(
@@ -483,7 +490,8 @@ async def test_local_registry_release_roundtrip(
     )
     assert response.status_code == 204
     listing = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
-    assert listing.status_code == 200 and listing.json()[0]["deployment_pending"]
+    assert listing.status_code == 200
+    assert listing.json()[0]["deployment_pending"]
     solution_id = UUID(listing.json()[0]["id"])
     url = f"/api/v1/solutions/{solution_id}/update"
     check = await clients[0].get(url)

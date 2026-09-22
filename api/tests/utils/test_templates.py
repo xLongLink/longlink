@@ -20,7 +20,7 @@ def test_readyml_list_rejects_invalid_rendered_documents(tmp_path: Path, content
     template_path.write_text(content, encoding="utf-8")
 
     # Act
-    with pytest.raises(ValueError) as error:
+    with pytest.raises(ValueError, match=message) as error:
         templates.readyml_list(template_path)
 
     # Assert

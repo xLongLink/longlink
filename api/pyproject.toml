@@ -74,7 +74,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 preview = true
-select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN401", "B006", "E302", "E305", "FAST003", "PGH003", "RUF100", "S324", "S506"]
+select = ["F", "UP", "D", "DTZ", "I", "ICN", "PIE", "RET", "ARG", "N", "PERF", "PTH", "A", "S", "ASYNC", "ANN401", "B006", "E302", "E305", "FAST003", "PGH003", "PT", "RUF100", "S324", "S506"]
 ignore = ["D100", "D104", "D202"]
 
 [tool.ruff.lint.per-file-ignores]

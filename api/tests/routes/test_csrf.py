@@ -1,7 +1,7 @@
 import pytest
 from httpx2 import AsyncClient
 from sqlmodel import select
-from factories import create_compute, create_solution, fetch_operations, create_organization
+from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
@@ -23,7 +23,7 @@ async def test_authenticated_solution_update_rejects_untrusted_origin_before_ins
     # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     async def unexpected_metadata(*_args: object) -> object:
         """Fail if a rejected browser request reaches registry inspection."""
@@ -46,7 +46,7 @@ async def test_authenticated_solution_update_rejects_untrusted_origin_before_ins
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.desired_revision_id == solution.desired_revision_id
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_authenticated_solution_deletion_rejects_untrusted_origin_without_mutation(
@@ -58,7 +58,7 @@ async def test_authenticated_solution_deletion_rejects_untrusted_origin_without_
     # Arrange
     organization = await create_organization(users[0])
     solution = await create_solution(organization)
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].delete(
@@ -73,7 +73,7 @@ async def test_authenticated_solution_deletion_rejects_untrusted_origin_without_
         persisted = await session.get(Solution, solution.id)
     assert persisted is not None
     assert persisted.deleted_at is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_authenticated_organization_deletion_rejects_untrusted_origin_without_mutation(
@@ -84,7 +84,7 @@ async def test_authenticated_organization_deletion_rejects_untrusted_origin_with
 
     # Arrange
     organization = await create_organization(users[0])
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].delete(
@@ -99,7 +99,7 @@ async def test_authenticated_organization_deletion_rejects_untrusted_origin_with
         persisted = await session.get(Organization, organization.id)
     assert persisted is not None
     assert persisted.deleted_at is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_authenticated_invitation_creation_rejects_untrusted_origin_before_persistence(

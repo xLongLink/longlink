@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from src.environments import env
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from src.database.models.users import User
 from src.database.models.solutions import Revision, Solution
 
@@ -62,13 +62,18 @@ async def test_revision_ownership_constraints_and_cleanup(monkeypatch: pytest.Mo
                     assert revision.envs == {"KEEP": "postgres-secret"}
 
             # The actual migrated schema independently enforces same-Solution pointers.
+            async def point_revision_at_other_solution(session: AsyncSession, reference: str) -> None:
+                """Point one Solution reference at another Solution's revision."""
+
+                await session.execute(
+                    update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id})
+                )
+                await session.commit()
+
             for reference in ("desired_revision_id", "deployed_revision_id"):
                 async with session_factory() as session:
                     with pytest.raises(IntegrityError):
-                        await session.execute(
-                            update(Solution).where(col(Solution.id) == first.id).values({reference: second.desired_revision_id})
-                        )
-                        await session.commit()
+                        await point_revision_at_other_solution(session, reference)
 
             # PostgreSQL cascades parent deletion through only its owned snapshots.
             async with session_factory() as session:

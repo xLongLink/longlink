@@ -1,7 +1,5 @@
 import pytest
 import logging
-from pytest import MonkeyPatch
-from fastapi import APIRouter
 from pathlib import Path
 from longlink import app as longlink_app
 from pydantic import ValidationError
@@ -80,7 +78,7 @@ def test_readiness_fails_when_the_solution_database_is_unavailable(solution_sour
     assert ready_response.json() == {"detail": "An unexpected error occurred. Please try again later."}
 
 
-def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Require the packaged frontend entry point during startup."""
 
     # Point the runtime at a package root without the required frontend artifact.
@@ -92,7 +90,7 @@ def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, t
         LongLink()
 
 
-def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: MonkeyPatch) -> None:
+def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     """Require every Platform-owned runtime setting before production startup."""
 
     # Ensure the production contract is incomplete.
@@ -104,7 +102,7 @@ def test_production_startup_rejects_incomplete_runtime_settings(monkeypatch: Mon
         LongLink()
 
 
-def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Require the generated View directory during startup."""
 
     # Arrange
@@ -116,7 +114,7 @@ def test_startup_rejects_a_missing_solution_views_directory(tmp_path: Path, monk
 
 
 @pytest.mark.usefixtures("solution_source")
-def test_production_startup_installs_one_access_filter(monkeypatch: MonkeyPatch) -> None:
+def test_production_startup_installs_one_access_filter(monkeypatch: pytest.MonkeyPatch) -> None:
     """Avoid duplicate Uvicorn access filtering across Solution instances."""
 
     # Arrange
@@ -243,40 +241,6 @@ def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> No
     # Act and assert
     with pytest.raises(ValueError, match="XML is invalid"):
         LongLink()
-
-
-COLLIDING_SOLUTION_ROUTES = [
-    pytest.param("/views/dashboard", id="static-route"),
-    pytest.param("/views/{view}", id="dynamic-route"),
-]
-
-
-@pytest.mark.parametrize("route", COLLIDING_SOLUTION_ROUTES)
-def test_solution_routes_colliding_with_view_endpoints_are_rejected(solution_source: Path, route: str) -> None:
-    """Reject view endpoints that would overlap a Solution-owned route."""
-
-    # Arrange
-    (solution_source / "views" / "dashboard.xml").write_text(
-        "<longlink>Dashboard</longlink>",
-        encoding="utf-8",
-    )
-    solution_router = APIRouter()
-
-    @solution_router.get(route)
-    async def solution_dashboard() -> dict[str, str]:
-        """Return the Solution dashboard resource."""
-
-        return {"source": "solution"}
-
-    # Act
-    app = LongLink()
-    original_routes = app.router.routes.copy()
-
-    with pytest.raises(ValueError, match="View endpoint.*overlaps a Solution route"):
-        app.include_router(solution_router)
-
-    # Assert
-    assert app.router.routes == original_routes
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,7 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from conftest import AsyncKubernetes
 from sqlmodel import col
-from factories import create_solution, fetch_operations, create_organization
+from factories import add_member, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import select
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
@@ -14,7 +14,6 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
-from src.database.models.association import UserOrganization
 
 
 class FakeCompute(AsyncKubernetes):
@@ -35,6 +34,20 @@ class FakeCompute(AsyncKubernetes):
         if isinstance(self.outcome, RuntimeError):
             raise self.outcome
         return self.outcome
+
+
+def mock_image_metadata(monkeypatch: pytest.MonkeyPatch, metadata: LongLinkMetadata | None = None) -> None:
+    """Patch image inspection with deterministic test metadata."""
+
+    # Share one fake for the registry boundary; callers pass only meaningful variants.
+    resolved = metadata if metadata is not None else LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
+
+    async def inspect_image(_image: object) -> LongLinkMetadata:
+        """Return the configured metadata response."""
+
+        return resolved
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
 
 
 async def test_list_apps_returns_requested_page_for_admin(
@@ -93,16 +106,13 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     # Arrange
     user = users[0]
     organization = await create_organization(user)
-
-    async def inspect_image(_image: str) -> LongLinkMetadata:
-        """Return immutable metadata with one required user environment value."""
-
-        return LongLinkMetadata(
+    mock_image_metadata(
+        monkeypatch,
+        LongLinkMetadata(
             image=Image("ghcr.io/longlink/dashboard@sha256:test"),
             environments=[EnvironmentMetadata(name="API_KEY", required=True)],
-        )
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+        ),
+    )
 
     # Act
     response = await clients[0].post(
@@ -150,13 +160,7 @@ async def test_create_app_enforces_the_per_organization_beta_limit(
 
     # Arrange one Organization with image metadata available for every creation request.
     organization = await create_organization(users[0])
-
-    async def inspect_image(_image: Image) -> LongLinkMetadata:
-        """Return valid deployable image metadata without a registry request."""
-
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    mock_image_metadata(monkeypatch)
 
     # Act
     responses = [
@@ -210,7 +214,7 @@ async def test_create_app_rejects_invalid_image_metadata(
         return metadata
 
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].post(
@@ -223,7 +227,7 @@ async def test_create_app_rejects_invalid_image_metadata(
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_create_app_validates_payload_before_checking_organization_access(
@@ -267,7 +271,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
 
     # Arrange
     organization = await create_organization(users[0])
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[1].post(
@@ -280,7 +284,7 @@ async def test_create_app_rejects_non_member_without_creating_state(
     assert response.json() == {"detail": "Access required"}
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_create_app_rejects_duplicate_organization_slug_without_queuing_work(
@@ -293,13 +297,8 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
     # Arrange
     organization = await create_organization(users[0])
     await create_solution(organization, name="Dashboard")
-    operation_ids = [operation.id for operation in await fetch_operations()]
-
-    async def inspect_image(_image: Image) -> LongLinkMetadata:
-        """Return valid immutable image metadata."""
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"))
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    mock_image_metadata(monkeypatch)
+    previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].post(
@@ -314,7 +313,7 @@ async def test_create_app_rejects_duplicate_organization_slug_without_queuing_wo
         result = await session.scalars(select(Solution).where(col(Solution.organization_id) == organization.id))
         solutions = result.all()
     assert len(solutions) == 1
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_solution_responses_do_not_expose_environment_secrets(
@@ -359,7 +358,8 @@ async def test_solution_responses_do_not_expose_environment_secrets(
     assert check_response.status_code == 200
     check_payload = check_response.json()
     assert check_payload["configured_envs"] == ["API_KEY"]
-    assert "secrets" not in check_payload and "envs" not in check_payload
+    assert "secrets" not in check_payload
+    assert "envs" not in check_payload
     assert "runtime-secret" not in check_response.text
 
 
@@ -374,17 +374,8 @@ async def test_create_app_returns_403_for_regular_member(
     owner = users[0]
     regular_member = users[1]
     organization = await create_organization(owner)
-
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=regular_member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        await session.commit()
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    await add_member(user=regular_member, organization=organization, role=OrganizationRoles.write)
+    previous_operations = await fetch_operations()
 
     async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
         """Fail if denied creation reaches remote image inspection."""
@@ -404,7 +395,7 @@ async def test_create_app_returns_403_for_regular_member(
     assert response.json() == {"detail": "Permission required"}
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 async def test_create_app_allows_maintainer_and_queues_reconciliation(
@@ -417,22 +408,8 @@ async def test_create_app_allows_maintainer_and_queues_reconciliation(
     # Arrange
     owner, maintainer = users[0], users[1]
     organization = await create_organization(owner)
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=maintainer.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.maintain,
-            )
-        )
-        await session.commit()
-
-    async def inspect_image(_image: Image) -> LongLinkMetadata:
-        """Return deployable image metadata without a registry request."""
-
-        return LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test"), environments=[])
-
-    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", inspect_image)
+    await add_member(user=maintainer, organization=organization, role=OrganizationRoles.maintain)
+    mock_image_metadata(monkeypatch)
 
     # Act
     response = await clients[1].post(
@@ -500,9 +477,7 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     organization = await create_organization(owner)
     app = await create_solution(organization)
     if role is not None:
-        async with session_scope() as session:
-            session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=role))
-            await session.commit()
+        await add_member(user=member, organization=organization, role=role)
 
     def unexpected_kubernetes(*_args: object) -> object:
         """Fail if authorization reaches the external cluster boundary."""
@@ -530,15 +505,7 @@ async def test_app_logs_return_pod_logs_for_maintain_member(
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     app = await create_solution(organization)
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.maintain,
-            )
-        )
-        await session.commit()
+    await add_member(user=member, organization=organization, role=OrganizationRoles.maintain)
     captured: dict[str, UUID | str] = {}
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1"], captured))
 
@@ -669,15 +636,7 @@ async def test_delete_solution_rejects_write_member_without_mutating_solution(
     owner, member = users[0], users[1]
     organization = await create_organization(owner)
     app = await create_solution(organization)
-    async with session_scope() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        await session.commit()
+    await add_member(user=member, organization=organization, role=OrganizationRoles.write)
 
     # Act
     response = await clients[1].delete(f"/api/v1/solutions/{app.id}")

@@ -458,7 +458,9 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
     def respond(request: httpx2.Request) -> httpx2.Response:
         """Serve an index containing an arm64 entry before the intended amd64 manifest."""
 
-        assert request.url.scheme == "http" and request.url.host == "localhost" and request.url.port == 15000
+        assert request.url.scheme == "http"
+        assert request.url.host == "localhost"
+        assert request.url.port == 15000
         assert "Authorization" not in request.headers
         paths.append(request.url.path)
         if request.url.path.endswith("/dev"):
@@ -487,7 +489,8 @@ async def test_local_registry_selects_amd64_child_without_authentication(monkeyp
 
     mock_async_client(monkeypatch, respond)
     result = await images.metadata(Image("localhost:15000/sample:dev"))
-    assert result is not None and result.image == "localhost:15000/sample@sha256:amd"
+    assert result is not None
+    assert result.image == "localhost:15000/sample@sha256:amd"
     assert result.environments == [EnvironmentMetadata(name="NEW", required=True)]
     assert paths == ["/v2/sample/manifests/dev", "/v2/sample/manifests/sha256:amd", "/v2/sample/blobs/sha256:config"]
 

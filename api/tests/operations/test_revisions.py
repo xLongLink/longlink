@@ -83,7 +83,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert result.failed is not None
         async with session_scope() as session:
             current = await session.get(Solution, solution.id)
-            assert current is not None and current.status == Status.failed
+            assert current is not None
+            assert current.status == Status.failed
             assert current.deployed_revision_id is None
             assert current.desired_revision.failed
         drained = await drain_operations()
@@ -101,17 +102,20 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         desired_id = current.desired_revision_id
     failing = True
     update = await claim_operation()
-    assert update is not None and update.target_id == desired_id
+    assert update is not None
+    assert update.target_id == desired_id
 
     # Shutdown is resumable, not a failed deployment or recovery request.
     if failure == "shutdown":
         with pytest.raises(asyncio.CancelledError):
             await execute(update)
         resumed = await claim_operation()
-        assert resumed is not None and resumed.id == update.id
+        assert resumed is not None
+        assert resumed.id == update.id
         async with session_scope() as session:
             revision = await session.get(Revision, desired_id)
-            assert revision is not None and not revision.failed
+            assert revision is not None
+            assert not revision.failed
         return
 
     # Act: limit the timeout override to the failing attempt, not recovery work.
@@ -137,16 +141,19 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
                 await solutions.delete(session, solution.id, owner.id)
                 await session.commit()
             recovery = await claim_operation()
-            assert recovery is not None and recovery.kind == OperationKind.solution_deploy
+            assert recovery is not None
+            assert recovery.kind == OperationKind.solution_deploy
             assert (await execute(recovery)).failed is None
         deletion = await claim_operation()
-        assert deletion is not None and deletion.kind == OperationKind.solution_delete
+        assert deletion is not None
+        assert deletion.kind == OperationKind.solution_delete
         await complete_operation(deletion.id)
         assert await claim_operation() is None
         assert len(calls) == 2
         async with session_scope() as session:
             current = await session.get(Solution, solution.id)
-            assert current is not None and current.deleted_at is not None
+            assert current is not None
+            assert current.deleted_at is not None
             assert current.deployed_revision_id == good_id
             assert current.desired_revision_id == desired_id
             assert current.desired_revision.failed
@@ -166,7 +173,8 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
         assert current.deployed_revision_id == good_id
         assert current.desired_revision.failed
         good = await session.get(Revision, good_id)
-        assert good is not None and not good.failed
+        assert good is not None
+        assert not good.failed
         assert current.status == (Status.failed if failure == "restoration" else Status.running)
         assert current.secrets == {
             **solution.secrets,
@@ -253,10 +261,12 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
         assert current.deployed_revision_id == initial.target_id
         assert current.desired_revision_id == second_id
     second_operation = await claim_operation()
-    assert second_operation is not None and second_operation.target_id == second_id
+    assert second_operation is not None
+    assert second_operation.target_id == second_id
     assert (await execute(second_operation)).failed is None
     third_operation = await claim_operation()
-    assert third_operation is not None and third_operation.target_id == third_id
+    assert third_operation is not None
+    assert third_operation.target_id == third_id
     assert (await execute(third_operation)).failed is None
     assert applied == ["first", "second", "third"]
     assert await claim_operation() is None

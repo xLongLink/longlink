@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from sqlalchemy import select
 from collections.abc import Sequence
+from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.session import session_scope
@@ -11,6 +12,7 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
 from src.database.models.operations import Operation
+from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
@@ -68,6 +70,29 @@ async def drain_operations() -> Sequence[Operation]:
         await complete_operation(scheduled.id)
         drained.append(scheduled)
     return drained
+
+
+async def assert_no_new_operations(previous: Sequence[Operation]) -> None:
+    """Assert no Operations were queued since the previous snapshot."""
+
+    # Compare stable identifiers so ordering changes cannot mask queued work.
+    current = await fetch_operations()
+    assert [operation.id for operation in current] == [operation.id for operation in previous]
+
+
+async def add_member(*, user: User, organization: Organization, role: OrganizationRoles) -> None:
+    """Persist one Organization membership in a committed test transaction."""
+
+    # Keep membership construction in one owner.
+    membership = UserOrganization(
+        user_id=user.id,
+        organization_id=organization.id,
+        role=role,
+    )
+
+    async with session_scope() as session:
+        session.add(membership)
+        await session.commit()
 
 
 async def create_compute() -> ComputeRegistry:
