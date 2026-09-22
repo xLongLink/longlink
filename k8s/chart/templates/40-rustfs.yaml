@@ -23,7 +23,6 @@ spec:
     ports:
         - name: endpoint
           port: 9000
-          targetPort: endpoint
     selector:
         app.kubernetes.io/name: rustfs
         app.kubernetes.io/instance: {{ .Release.Name }}

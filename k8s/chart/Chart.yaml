@@ -3,7 +3,6 @@ name: longlink
 description: Shared LongLink Compute infrastructure.
 type: application
 version: 0.1.0
-appVersion: v0.0.0
 dependencies:
     - name: cloudnative-pg
       version: 0.28.1

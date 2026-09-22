@@ -21,7 +21,6 @@ spec:
     ports:
         - name: https
           port: 443
-          protocol: TCP
           targetPort: 8444
 {{- with .Values.gateway.service.nodePort }}
           nodePort: {{ . }}

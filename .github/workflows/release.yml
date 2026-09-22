@@ -131,7 +131,7 @@ jobs:
 
                   version="${GITHUB_REF_NAME#v}"
                   archive="longlink-${version}.tgz"
-                  helm package k8s/chart --version "$version" --app-version "$GITHUB_REF_NAME" --destination .
+                  helm package k8s/chart --version "$version" --destination .
                   sha256sum "$archive" > "${archive}.sha256"
 
                   {
