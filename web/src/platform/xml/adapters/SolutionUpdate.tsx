@@ -7,7 +7,7 @@ import { resolveXmlProps } from '@/xml/core/props';
 import { Button } from '@astryxdesign/core/Button';
 import UpdateSolution from '@/components/dialogs/UpdateSolution';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { invalidateOrganizationSolutionQueries } from '@/lib/hooks/use-organization';
+import { organizationSolutionsKey } from '@/lib/hooks/use-organization';
 import { zOrganizationSolutionSummary, zSolutionUpdateCheck } from '@/lib/generated/platform-api-v1/zod.gen';
 
 const solutionUpdatePropsSchema = z.object({ organizationId: z.string().uuid(), solution: z.unknown() });
@@ -46,7 +46,7 @@ export function SolutionUpdate({ props }: Props) {
     async function resetReview() {
         setIsOpen(false);
         await queryClient.resetQueries({ queryKey, exact: true });
-        await invalidateOrganizationSolutionQueries(queryClient, organizationId);
+        await queryClient.invalidateQueries({ queryKey: organizationSolutionsKey(organizationId) });
     }
 
     return (

@@ -4,6 +4,7 @@ from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes, r
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
 from src.operations import organizations as organization_operations
+from collections.abc import Sequence
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -13,14 +14,73 @@ from src.database.models.organizations import Organization
 pytestmark = pytest.mark.usefixtures("database_runtime")
 
 
+def install_recording_delete(
+    monkeypatch: pytest.MonkeyPatch,
+    organization_id: UUID,
+    solution_ids: Sequence[UUID] = (),
+    *,
+    fail_namespace: bool = False,
+) -> list[str]:
+    """Install recording delete doubles for one tombstoned Organization."""
+
+    # Keep the delete-path provider double in one owner; tests assert on the returned calls.
+    calls: list[str] = []
+
+    class Database:
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
+
+        async def delete(self, target_organization_id: UUID) -> None:
+            """Record Organization database and scoped runtime-role deletion."""
+
+            assert target_organization_id == organization_id
+            calls.append("database")
+
+    class Storage:
+        def __init__(self, *args: object) -> None:
+            """Accept registry connection settings."""
+
+        async def delete(self, target_organization_id: UUID, solutions: Sequence[UUID]) -> None:
+            """Record Organization bucket and identity deletion."""
+
+            assert target_organization_id == organization_id
+            assert list(solutions) == list(solution_ids)
+            calls.append("bucket")
+
+    class Organizations:
+        """Record Organization boundary deletion."""
+
+        async def delete(self, target_organization_id: UUID) -> None:
+            """Record namespace deletion or fail it when requested."""
+
+            if fail_namespace:
+                raise RuntimeError("namespace deletion failed")
+
+            assert target_organization_id == organization_id
+            calls.append("namespace")
+
+    class Kubernetes(OperationKubernetes):
+        """Expose the recording Organization delete operations."""
+
+        def __init__(self, *args: object) -> None:
+            """Expose the recording Organization database operations."""
+
+            super().__init__(*args)
+            self.databases = Database()
+            self.organizations = Organizations()
+
+    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    return calls
+
+
 async def test_reconcile_prepares_providers_namespace_and_publishes_organization(
     users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Reconcile every Organization boundary before publishing the Organization."""
 
     # Arrange an unpublished Organization with ready immutable infrastructure.
-    compute = await create_compute()
-    organization = await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
     calls: list[str] = []
 
     class Database(DatabasePostgres):
@@ -90,8 +150,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
     """Keep an Organization unpublished when its storage boundary fails."""
 
     # Arrange
-    compute = await create_compute()
-    organization = await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
     calls: list[str] = []
 
     class Storage(StorageKubernetes):
@@ -140,8 +199,7 @@ async def test_reconcile_skips_deleted_organization_without_constructing_provide
     """Avoid provider work after an Organization has been tombstoned."""
 
     # Arrange
-    compute = await create_compute()
-    organization = await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
     async with session_scope() as session:
         persisted = await session.get(Organization, organization.id)
         assert persisted is not None
@@ -163,8 +221,7 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
     """Reject cleanup for an active Organization before constructing providers."""
 
     # Arrange
-    compute = await create_compute()
-    organization = await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
     reject_provider_construction(
         monkeypatch,
         (organization_operations.databases.postgres, "Postgres"),
@@ -196,52 +253,13 @@ async def test_delete_stops_when_namespace_deletion_fails(users: tuple[User, Use
     """Keep provider data intact when Kubernetes namespace deletion fails."""
 
     # Arrange a tombstoned Organization whose namespace cannot terminate.
-    compute = await create_compute()
-    organization = await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
     async with session_scope() as session:
         row = await session.get(Organization, organization.id)
         assert row is not None
         row.deleted_at = datetime.now(UTC)
         await session.commit()
-    calls: list[str] = []
-
-    class Database:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def delete(self, organization_id: UUID) -> None:
-            """Record unexpected database deletion."""
-
-            calls.append("database")
-
-    class Storage:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def delete(self, bucket: str) -> None:
-            """Record unexpected bucket deletion."""
-
-            calls.append("bucket")
-
-    class Organizations:
-        """Fail Organization boundary deletion."""
-
-        async def delete(self, _organization_id: UUID) -> None:
-            """Fail namespace deletion."""
-
-            raise RuntimeError("namespace deletion failed")
-
-    class Kubernetes(OperationKubernetes):
-        """Expose the failing Organization Kubernetes operations."""
-
-        def __init__(self, *args: object) -> None:
-            """Expose the failing Organization database operations."""
-
-            super().__init__(*args)
-            self.databases = Database()
-            self.organizations = Organizations()
-
-    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    calls = install_recording_delete(monkeypatch, organization.id, fail_namespace=True)
 
     # Namespace failure must prevent destructive provider cleanup.
     with pytest.raises(RuntimeError, match="namespace deletion failed"):
@@ -263,50 +281,7 @@ async def test_delete_tears_down_organization_boundaries_in_order(users: tuple[U
         assert row is not None
         row.deleted_at = datetime.now(UTC)
         await session.commit()
-    calls: list[str] = []
-
-    class Database:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def delete(self, organization_id: UUID) -> None:
-            """Record Organization database and scoped runtime-role deletion."""
-
-            assert organization_id == organization.id
-            calls.append("database")
-
-    class Storage:
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
-        async def delete(self, organization_id: UUID, solutions: list[UUID]) -> None:
-            """Record Organization bucket and identity deletion."""
-
-            assert organization_id == organization.id
-            assert solutions == [solution.id]
-            calls.append("bucket")
-
-    class Organizations:
-        """Record Organization boundary deletion."""
-
-        async def delete(self, organization_id: UUID) -> None:
-            """Record namespace deletion."""
-
-            assert organization_id == organization.id
-            calls.append("namespace")
-
-    class Kubernetes(OperationKubernetes):
-        """Expose Organization Kubernetes operations."""
-
-        def __init__(self, *args: object) -> None:
-            """Expose the Organization database operations."""
-
-            super().__init__(*args)
-            self.databases = Database()
-            self.organizations = Organizations()
-
-    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
-    monkeypatch.setattr(organization_operations, "Storage", Storage)
+    calls = install_recording_delete(monkeypatch, organization.id, [solution.id])
 
     # Complete cleanup and inspect irreversible resource deletion order.
     assert await organization_operations.delete(organization.id) is None

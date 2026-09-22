@@ -28,16 +28,14 @@ def create_fs(settings: Envs) -> AbstractFileSystem:
     if settings.ENV == "production":
         # s3fs connects lazily, so transfer CA cleanup only after constructing its owning filesystem.
         with ExitStack() as files:
-            certificate = None
-            if settings.STORAGE_CERTIFICATE is not None:
-                certificate = files.enter_context(tls.certificate_file(settings.STORAGE_CERTIFICATE))
+            certificate = files.enter_context(tls.verified_location(settings.STORAGE_CERTIFICATE))
             filesystem = fsspec.filesystem(
                 "s3",
                 endpoint_url=settings.STORAGE_ENDPOINT_URL,
                 key=settings.STORAGE_USERNAME,
                 secret=settings.STORAGE_PASSWORD,
                 client_kwargs={"region_name": settings.STORAGE_REGION, **({"verify": certificate} if certificate is not None else {})},
-                config_kwargs={"s3": {"addressing_style": "path"}, "http_session_cls": tls.Session},
+                config_kwargs={"s3": tls.path_style_options(), "http_session_cls": tls.Session},
                 skip_instance_cache=True,
             )
             if certificate is not None:

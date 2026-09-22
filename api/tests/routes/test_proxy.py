@@ -88,6 +88,18 @@ def fake_gateway_request(response: FakeGatewayResponse) -> Callable[..., Awaitab
     return request
 
 
+def reject_gateway_access(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail the test if a rejected request reaches the gateway boundary."""
+
+    # Rejected requests must return before opening the compute transport.
+    def unexpected_gateway(*_args: object, **_kwargs: object) -> object:
+        """Fail if a rejected request reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client must not be constructed")
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+
+
 async def create_running_solution(user: User) -> tuple[Solution, ComputeRegistry]:
     """Create one Solution with the running state required for gateway tests."""
 
@@ -392,13 +404,7 @@ async def test_solution_proxy_rejects_anonymous_without_gateway_access(
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
-
-    def unexpected_gateway(*_args: object, **_kwargs: object) -> object:
-        """Fail if an unauthenticated request reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client was constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Act
     response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -451,13 +457,7 @@ async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
 
     # Arrange a running Solution and fail if CSRF protection is bypassed.
     solution, _ = await create_running_solution(users[0])
-
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail when an untrusted browser request reaches the compute boundary."""
-
-        raise AssertionError("Gateway client must not be constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Remove the client's trusted default header for the missing-Origin case.
     if origin is None:
@@ -722,13 +722,7 @@ async def test_solution_proxy_rejects_cross_organization_access(
     owner = users[0]
     organization = await create_organization(owner)
     solution = await create_solution(organization, image="ghcr.io/xlonglink/sample:latest")
-
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if an unauthorized request reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client was constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Request the other Organization's runtime through an authenticated session.
     response = await clients[1].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
@@ -753,13 +747,8 @@ def patch_runtime_access_once(monkeypatch: pytest.MonkeyPatch, mutate: Callable[
             await mutate()
         return await real_access(session, user_id, solution_id)
 
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if revoked access reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client was constructed")
-
     monkeypatch.setattr(proxy_routes.organizations, "solution_runtime_access", access)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
 
 async def test_solution_proxy_rechecks_access_after_runtime_admission(
@@ -887,13 +876,7 @@ async def test_solution_proxy_enforces_method_role(
         await session.commit()
 
     client = clients[0]
-
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if an unauthorized request reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client must not be constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Attempt a mutating Solution proxy request.
     response = await client.request(method, f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
@@ -946,12 +929,7 @@ async def test_solution_proxy_delete_rejects_write_member(
         organization_membership.role = OrganizationRoles.write
         await session.commit()
 
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail if an unauthorized delete reaches the gateway boundary."""
-
-        raise AssertionError("Gateway client must not be constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Act
     response = await clients[0].request("DELETE", f"/api/v1/solutions/{solution.id}/proxy/api/tasks")
@@ -1026,12 +1004,7 @@ async def test_solution_proxy_returns_unavailable_when_gateway_requirement_is_mi
         persisted_solution.secrets = {}
         await session.commit()
 
-    def unexpected_gateway(*_args: object) -> object:
-        """Fail when incomplete gateway configuration reaches the network boundary."""
-
-        raise AssertionError("Gateway client must not be constructed")
-
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+    reject_gateway_access(monkeypatch)
 
     # Act
     response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy/views.json")

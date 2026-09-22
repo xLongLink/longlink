@@ -25,35 +25,29 @@ class TestKubernetes:
         return object()
 
 
-async def test_resolve_selects_only_storage_class(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Select the sole StorageClass without requiring a default annotation."""
+@pytest.mark.parametrize(
+    ("classes", "expected"),
+    [
+        pytest.param([StorageClass("local-path")], "local-path", id="sole-class"),
+        pytest.param([StorageClass("retain"), StorageClass("delete", default=True)], "delete", id="default-class"),
+    ],
+)
+async def test_resolve_selects_unique_storage_class(
+    monkeypatch: pytest.MonkeyPatch, classes: list[StorageClass], expected: str
+) -> None:
+    """Select the sole class or the default class from an unambiguous cluster."""
 
     # Arrange
     async def listed_classes(**_kwargs: object):
         """Yield the available cluster StorageClasses."""
 
-        yield StorageClass("local-path")
+        for storage_class in classes:
+            yield storage_class
 
     monkeypatch.setattr(storageclasses.StorageClassResource, "list", listed_classes)
 
     # Act and assert
-    assert await storageclasses.resolve(cast(Kubernetes, TestKubernetes())) == "local-path"
-
-
-async def test_resolve_selects_default_storage_class(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Select the Kubernetes default when the cluster has multiple StorageClasses."""
-
-    # Arrange
-    async def listed_classes(**_kwargs: object):
-        """Yield the available cluster StorageClasses."""
-
-        yield StorageClass("retain")
-        yield StorageClass("delete", default=True)
-
-    monkeypatch.setattr(storageclasses.StorageClassResource, "list", listed_classes)
-
-    # Act and assert
-    assert await storageclasses.resolve(cast(Kubernetes, TestKubernetes())) == "delete"
+    assert await storageclasses.resolve(cast(Kubernetes, TestKubernetes())) == expected
 
 
 @pytest.mark.parametrize(

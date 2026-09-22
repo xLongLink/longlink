@@ -36,16 +36,17 @@ def test_solution_create_rejects_invalid_environment_variables(envs: dict[str, s
         SolutionCreate.model_validate({"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "envs": envs})
 
 
+@pytest.mark.parametrize("model", [SolutionCreate, SolutionPatch])
 @pytest.mark.parametrize("idle_seconds", INVALID_IDLE_SECONDS)
-def test_solution_create_rejects_invalid_idle_seconds(idle_seconds: int) -> None:
+def test_solution_models_reject_invalid_idle_seconds(model: type[SolutionCreate] | type[SolutionPatch], idle_seconds: int) -> None:
     """Reject scale-to-zero timeouts outside the never-sleep zero or 30-3600 contract."""
 
-    # Arrange
+    # Both models share the idle-seconds validator at the API model boundary.
     payload = {"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "idle_seconds": idle_seconds}
 
     # Act and assert
     with pytest.raises(ValidationError):
-        SolutionCreate.model_validate(payload)
+        model.model_validate(payload)
 
 
 @pytest.mark.parametrize("idle_seconds", VALID_IDLE_SECONDS)
@@ -59,12 +60,3 @@ def test_solution_create_accepts_idle_seconds_boundaries(idle_seconds: int) -> N
 
     # Assert
     assert solution.idle_seconds == idle_seconds
-
-
-@pytest.mark.parametrize("idle_seconds", INVALID_IDLE_SECONDS)
-def test_solution_patch_rejects_invalid_idle_seconds(idle_seconds: int) -> None:
-    """Reject patch scale-to-zero timeouts outside the never-sleep zero or 30-3600 contract."""
-
-    # Act and assert
-    with pytest.raises(ValidationError):
-        SolutionPatch.model_validate({"idle_seconds": idle_seconds})

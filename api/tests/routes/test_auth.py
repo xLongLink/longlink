@@ -33,15 +33,22 @@ UNVERIFIED_OAUTH_RESPONSES = (
 )
 
 
+def configure_oauth_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Configure local OAuth credentials for every provider."""
+
+    # Keep provider credential setup in one owner instead of repeating it per test.
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_ID", "github-client")
+    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_SECRET", "github-secret")
+
+
 @pytest.fixture
 def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, User]) -> dict[str, object]:
     """Supply provider HTTP responses while retaining real identity verification."""
 
     # Arrange local credentials and verified control responses.
-    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
-    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
-    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_ID", "github-client")
-    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_SECRET", "github-secret")
+    configure_oauth_env(monkeypatch)
     responses: dict[str, object] = {
         oauth.GOOGLE_TOKEN_URL: {"access_token": "private-provider-token"},
         oauth.GITHUB_TOKEN_URL: {"access_token": "private-provider-token"},
@@ -130,10 +137,7 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     """Start configured OAuth login with browser-bound state and PKCE proof."""
 
     # Arrange
-    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
-    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
-    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_ID", "github-client")
-    monkeypatch.setattr(env, "GITHUB_OAUTH_CLIENT_SECRET", "github-secret")
+    configure_oauth_env(monkeypatch)
 
     # Act
     response = await client.get(f"/api/v1/auth/oauth/{provider}", follow_redirects=False)

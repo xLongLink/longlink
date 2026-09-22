@@ -152,12 +152,12 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     assert session_closed
 
 
-def test_context_middleware_treats_invalid_identity_as_anonymous() -> None:
-    """Ignore Platform identity tokens that fail validation."""
+def create_anonymous_application(secret: str = IDENTITY_SECRET) -> TestClient:
+    """Create one application that exposes whether middleware accepted identity."""
 
-    # Arrange
+    # Install the real context middleware around the shared anonymous probe route.
     app = FastAPI()
-    context.install_context_middleware(app, IDENTITY_SECRET)
+    context.install_context_middleware(app, secret)
 
     @app.get("/")
     async def get_identity() -> dict[str, bool]:
@@ -165,7 +165,14 @@ def test_context_middleware_treats_invalid_identity_as_anonymous() -> None:
 
         return {"authenticated": audit.current_actor.get() is not None}
 
-    client = TestClient(app)
+    return TestClient(app)
+
+
+def test_context_middleware_treats_invalid_identity_as_anonymous() -> None:
+    """Ignore Platform identity tokens that fail validation."""
+
+    # Arrange
+    client = create_anonymous_application()
 
     # Act
     response = client.get(
@@ -196,39 +203,16 @@ def forged_identity_token(secret: str = IDENTITY_SECRET, claims: dict[str, objec
     return jwt.encode(payload, secret, algorithm=algorithm)
 
 
-@pytest.mark.parametrize("case", ["expired", "wrong-audience", "wrong-secret", "unapproved-algorithm"])
-def test_context_middleware_treats_forged_identity_as_anonymous(case: str) -> None:
-    """Treat expired, wrong-audience, wrong-secret, and unapproved-algorithm tokens as anonymous."""
+def test_context_middleware_treats_forged_identity_as_anonymous() -> None:
+    """Treat a forged identity token as anonymous without re-proving token validation."""
 
-    # Arrange
+    # Arrange an expired token; exhaustive forgery cases live in test_identity.py.
     now = datetime.now(UTC)
-    claims: dict[str, object] = {}
-    secret = IDENTITY_SECRET
-    algorithm = identity.IDENTITY_TOKEN_ALGORITHM
-
-    if case == "expired":
-        claims = {"exp": now - timedelta(seconds=1)}
-    elif case == "wrong-audience":
-        claims = {"aud": "other-audience"}
-    elif case == "wrong-secret":
-        secret = "other-identity-secret-01234567890"
-    else:
-        secret = IDENTITY_SECRET * 2
-        algorithm = "HS384"
-
-    app = FastAPI()
-    context.install_context_middleware(app, IDENTITY_SECRET)
-
-    @app.get("/")
-    async def get_identity() -> dict[str, bool]:
-        """Expose whether the middleware accepted the supplied identity."""
-
-        return {"authenticated": audit.current_actor.get() is not None}
-
-    client = TestClient(app)
+    client = create_anonymous_application()
 
     # Act
-    response = client.get("/", headers={"x-longlink-identity": forged_identity_token(secret, claims, algorithm)})
+    forged = forged_identity_token(IDENTITY_SECRET, {"exp": now - timedelta(seconds=1)})
+    response = client.get("/", headers={"x-longlink-identity": forged})
 
     # Assert
     assert response.status_code == 200
@@ -239,16 +223,7 @@ def test_context_middleware_treats_missing_identity_as_anonymous() -> None:
     """Treat a request without an identity assertion as anonymous."""
 
     # Arrange
-    app = FastAPI()
-    context.install_context_middleware(app, IDENTITY_SECRET)
-
-    @app.get("/")
-    async def get_identity() -> dict[str, bool]:
-        """Expose whether the middleware accepted the missing identity."""
-
-        return {"authenticated": audit.current_actor.get() is not None}
-
-    client = TestClient(app)
+    client = create_anonymous_application()
 
     # Act
     response = client.get("/")
@@ -262,16 +237,7 @@ def test_context_middleware_fails_closed_without_identity_secret() -> None:
     """Fail closed to anonymous instead of raising when the identity secret is empty."""
 
     # Arrange
-    app = FastAPI()
-    context.install_context_middleware(app, "")
-
-    @app.get("/")
-    async def get_identity() -> dict[str, bool]:
-        """Expose whether the middleware accepted identity without a secret."""
-
-        return {"authenticated": audit.current_actor.get() is not None}
-
-    client = TestClient(app)
+    client = create_anonymous_application("")
 
     # Act
     response = client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
