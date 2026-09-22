@@ -38,8 +38,8 @@ class Postgres:
             sslmode: PostgreSQL SSL mode.
             certificate: PEM CA certificate; when supplied, require certificate and hostname verification.
             hostaddr: Optional transport IP; host remains the PostgreSQL TLS identity.
-        """
 
+        """
         # Store organization cluster connection settings.
         self._host = host
         self._port = port

@@ -7,7 +7,7 @@ import shutil
 import tomllib
 import tempfile
 import importlib
-import subprocess
+import subprocess  # noqa: S404
 from typing import Annotated
 from fnmatch import fnmatch
 from pathlib import Path
@@ -326,7 +326,7 @@ def build_solution(build_context: Path) -> tuple[str, str]:
                     continue
 
                 relative_path = path.relative_to(source_root)
-                relocated_target = Path(os.path.abspath(context_root / relative_path.parent / link_target))
+                relocated_target = (context_root / relative_path.parent / link_target).resolve()
                 if not relocated_target.is_relative_to(context_root):
                     ignored.add(name)
                     continue
@@ -438,7 +438,7 @@ def build_command(
 
         # Run the Docker build and optional push.
         try:
-            subprocess.run(
+            subprocess.run(  # noqa: S603
                 [
                     docker_command,
                     "build",
@@ -455,7 +455,7 @@ def build_command(
 
             # Push the tag only when requested.
             if push:
-                subprocess.run([docker_command, "push", image_tag], check=True)
+                subprocess.run([docker_command, "push", image_tag], check=True)  # noqa: S603
         except subprocess.CalledProcessError as error:
             raise CliError(f"Docker command failed with exit code {error.returncode}") from error
 

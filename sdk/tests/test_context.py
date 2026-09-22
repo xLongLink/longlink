@@ -1,8 +1,10 @@
+import jwt
 import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from fastapi import FastAPI
+from datetime import UTC, datetime, timedelta
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -170,6 +172,109 @@ def test_context_middleware_treats_invalid_identity_as_anonymous() -> None:
         "/",
         headers={"x-longlink-identity": "invalid-token"},
     )
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False}
+
+
+def forged_identity_token(secret: str = IDENTITY_SECRET, claims: dict[str, object] | None = None, algorithm: str = identity.IDENTITY_TOKEN_ALGORITHM) -> str:
+    """Mint one execution-time identity token with controlled defects."""
+
+    # Construct claims at execution time so expiry stays relative to the test run.
+    issued_at = datetime.now(UTC)
+    payload = {
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "aud": identity.IDENTITY_TOKEN_AUDIENCE,
+        "iat": issued_at,
+        "exp": issued_at + timedelta(seconds=identity.IDENTITY_TOKEN_LIFETIME_SECONDS),
+    }
+
+    if claims is not None:
+        payload.update(claims)
+
+    return jwt.encode(payload, secret, algorithm=algorithm)
+
+
+@pytest.mark.parametrize("case", ["expired", "wrong-audience", "wrong-secret", "unapproved-algorithm"])
+def test_context_middleware_treats_forged_identity_as_anonymous(case: str) -> None:
+    """Treat expired, wrong-audience, wrong-secret, and unapproved-algorithm tokens as anonymous."""
+
+    # Arrange
+    now = datetime.now(UTC)
+    claims: dict[str, object] = {}
+    secret = IDENTITY_SECRET
+    algorithm = identity.IDENTITY_TOKEN_ALGORITHM
+
+    if case == "expired":
+        claims = {"exp": now - timedelta(seconds=1)}
+    elif case == "wrong-audience":
+        claims = {"aud": "other-audience"}
+    elif case == "wrong-secret":
+        secret = "other-identity-secret-01234567890"
+    else:
+        secret = IDENTITY_SECRET * 2
+        algorithm = "HS384"
+
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def get_identity() -> dict[str, bool]:
+        """Expose whether the middleware accepted the supplied identity."""
+
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    client = TestClient(app)
+
+    # Act
+    response = client.get("/", headers={"x-longlink-identity": forged_identity_token(secret, claims, algorithm)})
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False}
+
+
+def test_context_middleware_treats_missing_identity_as_anonymous() -> None:
+    """Treat a request without an identity assertion as anonymous."""
+
+    # Arrange
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET)
+
+    @app.get("/")
+    async def get_identity() -> dict[str, bool]:
+        """Expose whether the middleware accepted the missing identity."""
+
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    client = TestClient(app)
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"authenticated": False}
+
+
+def test_context_middleware_fails_closed_without_identity_secret() -> None:
+    """Fail closed to anonymous instead of raising when the identity secret is empty."""
+
+    # Arrange
+    app = FastAPI()
+    context.install_context_middleware(app, "")
+
+    @app.get("/")
+    async def get_identity() -> dict[str, bool]:
+        """Expose whether the middleware accepted identity without a secret."""
+
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    client = TestClient(app)
+
+    # Act
+    response = client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
 
     # Assert
     assert response.status_code == 200

@@ -46,8 +46,8 @@ def make_migrations() -> bool:
 
     Returns:
         bool: True when a new migration file is created, otherwise False.
-    """
 
+    """
     # Load Solution models before comparing their metadata with the database.
     load_solution_models()
 

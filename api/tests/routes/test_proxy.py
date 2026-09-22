@@ -1,3 +1,4 @@
+import ssl
 import httpx2
 import pytest
 import asyncio
@@ -179,6 +180,141 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("content_type") == "text/plain"
 
 
+async def test_solution_proxy_forwards_request_without_content_type(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Forward an authenticated request without inventing an upstream content type."""
+
+    # Arrange
+    user = users[0]
+    solution, _ = await create_running_solution(user)
+    captured: dict[str, object] = {}
+
+    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+        """Record upstream headers and prove identity signing without a content type."""
+
+        captured["has_content_type"] = "content-type" in request.headers
+        captured["user_id"] = str(identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890"))
+
+        def close() -> None:
+            """Record upstream response cleanup."""
+
+            captured["close_count"] = 1
+
+        return make_upstream(200, {"content-type": "text/plain"}, b"proxied", on_close=close)
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
+
+    # Act
+    response = await clients[0].post(f"/api/v1/solutions/{solution.id}/proxy/anything", content=b"payload")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.text == "proxied"
+    assert captured.get("has_content_type") is False
+    assert captured.get("user_id") == str(user.id)
+    assert captured.get("close_count") == 1
+
+
+async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep browser credentials out of tenant workloads and pin gateway TLS."""
+
+    # Arrange a running Solution with a deterministic gateway certificate.
+    user = users[0]
+    solution, compute = await create_running_solution(user)
+
+    async with session_scope() as session:
+        persisted_compute = await session.get(ComputeRegistry, compute.id)
+        assert persisted_compute is not None
+        persisted_compute.gateway_certificate = "test-gateway-ca"
+        await session.commit()
+
+    captured: dict[str, object] = {}
+    real_create_context = ssl.create_default_context
+    real_client = httpx2.AsyncClient
+
+    def record_context(
+        purpose: ssl.Purpose = ssl.Purpose.SERVER_AUTH,
+        *,
+        cafile: str | None = None,
+        capath: str | None = None,
+        cadata: str | None = None,
+    ) -> ssl.SSLContext:
+        """Record the CA bundle used for gateway verification."""
+
+        captured["cadata"] = cadata
+
+        return real_create_context()
+
+    def record_client(*args: object, **kwargs: object) -> httpx2.AsyncClient:
+        """Record client trust configuration while delegating to the real client."""
+
+        follow_redirects = kwargs.get("follow_redirects")
+        trust_env = kwargs.get("trust_env")
+        timeout = kwargs.get("timeout")
+        verify = kwargs.get("verify")
+
+        assert not args
+        assert isinstance(follow_redirects, bool)
+        assert isinstance(trust_env, bool)
+        assert isinstance(timeout, float)
+        assert isinstance(verify, ssl.SSLContext)
+        captured["follow_redirects"] = follow_redirects
+        captured["trust_env"] = trust_env
+        captured["has_verify"] = True
+
+        return real_client(
+            follow_redirects=follow_redirects,
+            trust_env=trust_env,
+            timeout=timeout,
+            verify=verify,
+        )
+
+    async def send(_transport: object, request: httpx2.Request) -> httpx2.Response:
+        """Record the exact headers crossing into the tenant workload."""
+
+        captured["upstream_headers"] = {key.lower(): value for key, value in request.headers.items()}
+
+        return make_upstream(200, {"content-type": "text/plain"}, b"proxied")
+
+    monkeypatch.setattr(ssl, "create_default_context", record_context)
+    monkeypatch.setattr(httpx2, "AsyncClient", record_client)
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", send)
+
+    # Act
+    response = await clients[0].post(
+        f"/api/v1/solutions/{solution.id}/proxy/anything",
+        content=b"payload",
+        headers={
+            "content-type": "text/plain",
+            "authorization": "Bearer browser-session",
+            "x-forwarded-for": "203.0.113.7",
+            "x-forwarded-host": "attacker.example",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    upstream_headers = captured.get("upstream_headers")
+    assert isinstance(upstream_headers, dict)
+    assert upstream_headers["content-type"] == "text/plain"
+    assert "x-longlink-identity" in upstream_headers
+    assert "authorization" not in upstream_headers
+    assert "cookie" not in upstream_headers
+    assert "x-forwarded-for" not in upstream_headers
+    assert "x-forwarded-host" not in upstream_headers
+    assert captured.get("cadata") == "test-gateway-ca"
+    assert captured.get("follow_redirects") is False
+    assert captured.get("trust_env") is False
+    assert captured.get("has_verify") is True
+
+
 async def test_solution_proxy_sanitizes_json_upstream_error(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -245,6 +381,31 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
     assert response.headers["retry-after"] == "23"
     assert "set-cookie" not in response.headers
     assert "x-debug" not in response.headers
+
+
+async def test_solution_proxy_rejects_anonymous_without_gateway_access(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject unauthenticated proxy requests before solution access checks."""
+
+    # Arrange
+    solution, _ = await create_running_solution(users[0])
+
+    def unexpected_gateway(*_args: object, **_kwargs: object) -> object:
+        """Fail if an unauthenticated request reaches the gateway boundary."""
+
+        raise AssertionError("Gateway client was constructed")
+
+    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", unexpected_gateway)
+
+    # Act
+    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
 
 
 @pytest.mark.parametrize(

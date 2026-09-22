@@ -10,7 +10,7 @@ class Pagination(BaseModel):
 
     @property
     def offset(self) -> int:
-        """Return the zero-based offset for this page."""
+        """Zero-based offset for this page."""
 
         return (self.page - 1) * self.page_size
 

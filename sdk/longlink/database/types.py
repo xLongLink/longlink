@@ -10,7 +10,7 @@ class UTCDateTime(TypeDecorator[datetime]):
     impl = DateTime(timezone=True)
     cache_ok = True
 
-    def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:
+    def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:  # noqa: ARG002
         """Normalize outbound datetime values before writing them."""
 
         # Preserve NULL timestamp values.
@@ -23,7 +23,7 @@ class UTCDateTime(TypeDecorator[datetime]):
 
         return value.astimezone(UTC)
 
-    def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:
+    def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:  # noqa: ARG002
         """Normalize inbound database timestamp values after loading them."""
 
         # Preserve NULL timestamp values.

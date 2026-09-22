@@ -1,6 +1,5 @@
 # LongLink Agent Guide
 
-- Project is in _MVP mode - No need for backwards compatibility - Collapse migrations_
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 - Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.

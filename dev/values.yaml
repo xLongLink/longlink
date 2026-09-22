@@ -15,8 +15,6 @@ storage:
         type: NodePort
 
 rustfs:
-    mode: standalone
     storage:
         name: local-path
         dataStorageSize: 1Gi
-        logStorageSize: 1Gi

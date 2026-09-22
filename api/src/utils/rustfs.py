@@ -63,15 +63,15 @@ class RustFS:
         ]
 
         # Prevent upload-time ACL grants without relying on unsupported bucket-policy principals.
-        for header in ("read", "write", "read-acp", "write-acp", "full-control"):
-            statements.append(
-                {
-                    "Effect": "Deny",
-                    "Action": ["s3:PutObject"],
-                    "Resource": [f"{arn}/*"],
-                    "Condition": {"StringLike": {f"s3:x-amz-grant-{header}": "?*"}},
-                }
-            )
+        statements.extend(
+            {
+                "Effect": "Deny",
+                "Action": ["s3:PutObject"],
+                "Resource": [f"{arn}/*"],
+                "Condition": {"StringLike": {f"s3:x-amz-grant-{header}": "?*"}},
+            }
+            for header in ("read", "write", "read-acp", "write-acp", "full-control")
+        )
         return {"Version": "2012-10-17", "Statement": statements}
 
     async def _request(self, method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
@@ -133,11 +133,11 @@ class RustFS:
             if error.status_code != 404 and "service account not exist" not in str(error):
                 raise
 
-    async def quota(self, bucket: str, bytes: int) -> None:
+    async def quota(self, bucket: str, quota_bytes: int) -> None:
         """Apply and acknowledge the Organization's hard byte quota."""
 
         # RustFS fails closed while its durable usage ledger initializes, so wait for an acknowledged value.
-        await self._request("PUT", f"/rustfs/admin/v3/quota/{bucket}", {"quota": bytes, "quota_type": "HARD"})
+        await self._request("PUT", f"/rustfs/admin/v3/quota/{bucket}", {"quota": quota_bytes, "quota_type": "HARD"})
         async with asyncio.timeout(300):
             while True:
                 try:
@@ -147,6 +147,6 @@ class RustFS:
                         raise
                     await asyncio.sleep(2)
                     continue
-                if current.get("quota") == bytes:
+                if current.get("quota") == quota_bytes:
                     return
                 await asyncio.sleep(2)

@@ -122,6 +122,39 @@ async def test_update_rejects_unauthorized_and_stale_revision(
     assert inspected == []
 
 
+async def test_update_rejects_solution_without_desired_revision(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reject update inspection when the Solution has no desired revision snapshot."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
+    url = f"/api/v1/solutions/{solution.id}/update"
+    async with session_scope() as session:
+        current = await session.get(Solution, solution.id)
+        assert current is not None
+        current.desired_revision_id = None
+        await session.commit()
+
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if a revision-less candidate reaches image resolution."""
+
+        raise AssertionError("revision-less update must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
+
+    # Act
+    get_response = await clients[0].get(url)
+    post_response = await clients[0].post(url, json={})
+
+    # Assert
+    assert get_response.status_code == 409
+    assert get_response.json() == {"detail": "Solution has no desired revision"}
+    assert post_response.status_code == 409
+    assert post_response.json() == {"detail": "Solution has no desired revision"}
+
+
 async def test_update_check_exposes_names_without_secrets(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
