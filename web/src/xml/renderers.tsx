@@ -18,7 +18,7 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
 
     componentDidUpdate(previousProps: Readonly<{ ast: ASTNode; children: ReactNode }>) {
         // A new document must render independently from a previous document's failure.
-        if (this.props.ast !== previousProps.ast && this.state.error != null) {
+        if (this.props.ast !== previousProps.ast && this.state.error) {
             this.setState({ error: null });
         }
     }
@@ -26,7 +26,7 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
     /** Renders the XML error message or the protected XML subtree. */
     render() {
         // Render the captured XML error instead of children.
-        if (this.state.error != null) {
+        if (this.state.error) {
             return <Banner status="error" title={this.state.error.message || 'XML rendering failed'} />;
         }
 
@@ -55,7 +55,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
     useEffect(() => {
         // Do not initialize an invalid document.
-        if (setup.error != null) {
+        if (setup.error) {
             reportSetupError(setup.error);
             return;
         }
@@ -89,12 +89,12 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     }, [ast, ctx, setup]);
 
     // Show setup failures before rendering XML nodes.
-    if (setup.error != null || setupError != null) {
+    if (setup.error || setupError) {
         return <Banner status="error" title="Unable to initialize this view" />;
     }
 
     // Wait for setup before rendering dependent nodes.
-    if (setup.nodes.length > 0 && initializedAst !== ast) return null;
+    if (setup.nodes.length && initializedAst !== ast) return null;
 
     return (
         <XmlErrorBoundary ast={ast}>

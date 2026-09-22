@@ -156,7 +156,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                             <Text type="supporting">
                                                 {`Last updated: ${dateFormatter.format(new Date(page.lastUpdated))}`}
                                             </Text>
-                                            {page.editUrl != null && page.editUrl !== '' ? (
+                                            {page.editUrl ? (
                                                 <Link href={page.editUrl} hasUnderline isExternalLink type="supporting">
                                                     Edit this page
                                                 </Link>
@@ -165,7 +165,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                     </Stack>
                                 </article>
                             </PageContainer>
-                            {page.toc != null && page.toc.length > 0 ? (
+                            {page.toc?.length ? (
                                 <Stack
                                     as="aside"
                                     aria-label="On this page"

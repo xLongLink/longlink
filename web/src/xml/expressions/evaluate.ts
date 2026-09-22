@@ -9,11 +9,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return value != null && typeof value === 'object' && !Array.isArray(value);
 }
 
-/** Applies JavaScript truthiness to an unknown expression value. */
-function isTruthy(value: unknown): boolean {
-    return Boolean(value);
-}
-
 const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
     Boolean,
     Number,
@@ -131,10 +126,10 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             const left = evaluateNode(node.left, ctx);
 
             // Evaluate logical AND lazily.
-            if (node.operator === '&&') return isTruthy(left) ? evaluateNode(node.right, ctx) : left;
+            if (node.operator === '&&') return left && evaluateNode(node.right, ctx);
 
             // Evaluate logical OR lazily.
-            if (node.operator === '||') return isTruthy(left) ? left : evaluateNode(node.right, ctx);
+            if (node.operator === '||') return left || evaluateNode(node.right, ctx);
 
             // Evaluate nullish coalescing lazily.
             if (node.operator === '??') return left ?? evaluateNode(node.right, ctx);
@@ -144,7 +139,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
 
         case 'ConditionalExpression':
             // Evaluate only the selected branch, matching JavaScript conditional semantics.
-            return isTruthy(evaluateNode(node.test, ctx))
+            return evaluateNode(node.test, ctx)
                 ? evaluateNode(node.consequent, ctx)
                 : evaluateNode(node.alternate, ctx);
 
@@ -152,7 +147,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
             const value = evaluateNode(node.argument, ctx);
 
             // Negate truthiness for bang expressions.
-            if (node.operator === '!') return !isTruthy(value);
+            if (node.operator === '!') return !value;
 
             // Coerce unary plus to a number.
             if (node.operator === '+') return Number(value);
@@ -169,7 +164,7 @@ function evaluateNode(node: AnyNode, ctx: Scope): unknown {
                 node.callee.type === 'Identifier'
                     ? readSafeProperty(SAFE_IDENTIFIER_CALLS, node.callee.name)
                     : undefined;
-            if (callback == null) {
+            if (!callback) {
                 throw new Error('Function call not allowed');
             }
 

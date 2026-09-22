@@ -119,7 +119,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
 
     // Let dynamic detail views share a tab with their matching list view.
     const activeView = !routePath ? firstTabView : match?.route.view;
-    const activeViewTitle = activeView !== undefined ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
+    const activeViewTitle = activeView ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
     const { data: activeViewAst, error: activeViewError } = useQuery({
         enabled: routePath.length > 0 && activeView !== undefined,
@@ -139,7 +139,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
         (view) =>
             ({
                 href: resolveNavigationUrl(navigationBaseUrl, view.route),
-                icon: view.icon != null ? iconComponents[view.icon] : undefined,
+                icon: view.icon ? iconComponents[view.icon] : undefined,
                 label: view.name ?? routeLabel(view.route),
             }) satisfies NavigationTab
     );
@@ -147,7 +147,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     let content: ReactNode;
 
     // The browser never requests the solution server root, so mirror its redirect client-side.
-    if (routePath === '' && firstTabView !== undefined) {
+    if (!routePath && firstTabView) {
         return <Navigate replace to={tabs[0].href} />;
     }
 
@@ -163,7 +163,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
                 title="Unable to load this solution"
             />
         );
-    } else if (activeViewAst !== undefined && activeView !== undefined && match !== undefined) {
+    } else if (activeViewAst && activeView && match) {
         content = (
             <RouterXmlRuntime
                 ast={activeViewAst}
@@ -175,7 +175,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
                 requestBaseUrl={requestBaseUrl}
             />
         );
-    } else if (registeredViews !== undefined && activeView === undefined) {
+    } else if (registeredViews && !activeView) {
         content = (
             <PageError
                 description="The solution did not expose any views to render."

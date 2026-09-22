@@ -39,7 +39,7 @@ export function renderNode(nodes: ASTNode[], ctx: Scope): ReactNode {
         const RegisteredComponent = registry[node.name];
 
         // Render registered XML components directly.
-        if (RegisteredComponent !== undefined) {
+        if (RegisteredComponent) {
             const nodeKey = `${node.name}-${JSON.stringify(node.params)}`;
             const occurrence = keyCounts.get(nodeKey) ?? 0;
             keyCounts.set(nodeKey, occurrence + 1);

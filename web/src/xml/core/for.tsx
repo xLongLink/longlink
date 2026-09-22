@@ -8,8 +8,8 @@ export function For({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
 
     // Require the loop alias and source before resolving them.
-    if (props.as == null) throw new Error('For requires an "as" parameter');
-    if (props.each == null) throw new Error('For requires an "each" parameter');
+    if (!props.as) throw new Error('For requires an "as" parameter');
+    if (!props.each) throw new Error('For requires an "each" parameter');
 
     const resolvedAs = resolveXml(props, 'as', ctx);
     const as = typeof resolvedAs === 'string' ? resolvedAs : '';

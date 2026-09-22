@@ -274,7 +274,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error(`Patch state "${state}" does not reference a declared State or Query`);
     }
 
-    if (invalidate === true) {
+    if (invalidate) {
         await services.invalidate(state);
         return;
     }

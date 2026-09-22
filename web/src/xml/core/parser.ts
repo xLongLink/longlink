@@ -60,7 +60,7 @@ function toNodes(input: unknown): ASTNode[] {
     }
 
     // Treat empty or unsupported parser output as no nodes.
-    if (input == null || typeof input !== 'object') return [];
+    if (!input || typeof input !== 'object') return [];
 
     const record = input as Record<string, unknown>;
     const params = collectParams(record[':@']);
@@ -90,7 +90,7 @@ function toNodes(input: unknown): ASTNode[] {
 /** Validates parser attribute names and compiles them into XML params. */
 function collectParams(input: unknown): ASTProps {
     // Ignore malformed attribute containers.
-    if (input == null || typeof input !== 'object') {
+    if (!input || typeof input !== 'object') {
         return {};
     }
 

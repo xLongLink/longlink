@@ -39,17 +39,17 @@ export default function Login() {
     const { data: oauthAvailability } = useQuery({
         queryKey: ['api', '/api/v1/auth/oauth'],
         queryFn: async ({ signal }) => zOAuthAvailability.parse(await api('/api/v1/auth/oauth', { signal }).json()),
-        enabled: user === undefined,
+        enabled: !user,
         staleTime: Infinity,
     });
-    const hasOAuthProvider = oauthAvailability?.github === true || oauthAvailability?.google === true;
+    const hasOAuthProvider = oauthAvailability?.github || oauthAvailability?.google;
     const form = useForm<LoginValues>({
         defaultValues: { email: searchParams.get('email') ?? '', password: '' },
         resolver: zodResolver(loginSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' });
     const trimmedEmail = email.trim();
-    const registerSearch = trimmedEmail !== '' ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
+    const registerSearch = trimmedEmail ? `?${new URLSearchParams({ email: trimmedEmail })}` : '';
     const login = useMutation({
         mutationFn: (payload: LoginValues) => api('/api/v1/auth/password/login', { json: payload, method: 'POST' }),
         onSuccess: async () => {
@@ -70,7 +70,7 @@ export default function Login() {
     }, [oauthError, reportApiError]);
 
     // Keep authenticated users out of the sign-in page.
-    if (user !== undefined) {
+    if (user) {
         return (
             <>
                 <NoIndex title="LongLink" />

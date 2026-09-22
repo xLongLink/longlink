@@ -26,7 +26,7 @@ export function Table({ props, nodes }: Props) {
     const idKeyParts = idKey?.split('.');
 
     // Keep identifier paths constrained to safe static object keys.
-    if (idKeyParts?.some((part) => part === '' || /\s/.test(part) || !isSafePropertyName(part)) === true) {
+    if (idKeyParts?.some((part) => !part || /\s/.test(part) || !isSafePropertyName(part))) {
         throw new Error('Table idKey requires a usable field path');
     }
 
