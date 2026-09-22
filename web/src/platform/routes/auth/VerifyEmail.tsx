@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { useNavigate } from 'react-router';
@@ -7,7 +8,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { AuthForm, AuthLayout } from './AuthLayout';
 import { Divider } from '@astryxdesign/core/Divider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -165,7 +165,13 @@ export default function VerifyEmail() {
         <AuthLayout title={<WelcomeTitle />} description={<Divider label="Email verified. Complete your profile." />}>
             {pageMetadata}
             <Stack gap={4}>
-                <AuthForm gap={3} onSubmit={(event) => form.handleSubmit(handleComplete)(event)}>
+                <Stack
+                    as="form"
+                    gap={3}
+                    onSubmit={(event) => {
+                        void form.handleSubmit(handleComplete)(event);
+                    }}
+                >
                     <Controller
                         control={form.control}
                         name="name"
@@ -208,7 +214,7 @@ export default function VerifyEmail() {
                         )}
                     />
                     <Button isLoading={completion.isPending} label="Create account" type="submit" variant="primary" />
-                </AuthForm>
+                </Stack>
                 <Divider />
                 <Text as="p" justify="center" type="supporting">
                     By continuing, you agree to our <br />

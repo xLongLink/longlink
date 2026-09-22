@@ -1,11 +1,11 @@
 import { api } from '@/lib/api';
+import { AuthLayout } from './AuthLayout';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -38,7 +38,13 @@ export default function ForgotPassword() {
                 </Stack>
             ) : (
                 <>
-                    <AuthForm gap={4} onSubmit={form.handleSubmit((value) => requestReset.mutate(value))}>
+                    <Stack
+                        as="form"
+                        gap={4}
+                        onSubmit={(event) => {
+                            void form.handleSubmit((value) => requestReset.mutate(value))(event);
+                        }}
+                    >
                         <Controller
                             control={form.control}
                             name="email"
@@ -68,7 +74,7 @@ export default function ForgotPassword() {
                             type="submit"
                             variant="primary"
                         />
-                    </AuthForm>
+                    </Stack>
                     <Text as="p" justify="center" type="supporting">
                         <Link href="/login" type="inherit" weight="medium">
                             Back to sign in
