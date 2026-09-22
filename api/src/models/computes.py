@@ -79,8 +79,8 @@ def kubeconfig_mapping(value: object) -> dict[str, object]:
     return value
 
 
-class ComputeRegistryEndpoints(BaseModel):
-    """Validate the externally reachable endpoints of one registered Compute."""
+class ComputeRegistryCreate(BaseModel):
+    """Validate one compute registry creation payload."""
 
     # External endpoints
     gateway_url: str = Field(max_length=512)
@@ -111,10 +111,6 @@ class ComputeRegistryEndpoints(BaseModel):
         ):
             raise ValueError("Endpoint must be an HTTPS origin without credentials, path, query, or fragment")
         return f"https://{url.host}:{port}"
-
-
-class ComputeRegistryCreate(ComputeRegistryEndpoints):
-    """Validate one compute registry creation payload."""
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)

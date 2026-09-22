@@ -1,13 +1,8 @@
 gateway:
-    address: ''
     service:
         type: LoadBalancer
 
-gatewayAllowedSourceCidr: ''
-
 storage:
-    address: ''
-    dnsNames: []
     service:
         type: LoadBalancer
 
