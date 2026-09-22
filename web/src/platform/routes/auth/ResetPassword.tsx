@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { passwordSchema } from './validation';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { AuthForm, AuthLayout } from './AuthLayout';
 import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -125,12 +125,15 @@ export default function ResetPassword() {
                     <Button href="/login" label="Back to sign in" variant="primary" />
                 </Stack>
             ) : (
-                <AuthForm
+                <Stack
+                    as="form"
                     gap={4}
-                    onSubmit={form.handleSubmit(async (payload) => {
-                        // Await completion while the mutation cache reports failures.
-                        await resetPassword.mutateAsync(payload).catch(() => {});
-                    })}
+                    onSubmit={(event) => {
+                        void form.handleSubmit(async (payload) => {
+                            // Await completion while the mutation cache reports failures.
+                            await resetPassword.mutateAsync(payload).catch(() => {});
+                        })(event);
+                    }}
                 >
                     <Controller
                         control={form.control}
@@ -158,7 +161,7 @@ export default function ResetPassword() {
                         type="submit"
                         variant="primary"
                     />
-                </AuthForm>
+                </Stack>
             )}
         </AuthLayout>
     );

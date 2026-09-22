@@ -1,10 +1,10 @@
 import { api } from '@/lib/api';
+import { AuthLayout } from './AuthLayout';
 import { NoIndex } from '@/components/Seo';
 import { Link } from '@astryxdesign/core/Link';
 import { useSearchParams } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { AuthForm, AuthLayout } from './AuthLayout';
 import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -34,7 +34,13 @@ export default function Register() {
         <AuthLayout description={<Divider label="Please enter your email" />} title={<WelcomeTitle />}>
             <NoIndex title="Create Account | LongLink" />
             <Stack gap={3}>
-                <AuthForm gap={3} onSubmit={form.handleSubmit((value) => registration.mutate(value))}>
+                <Stack
+                    as="form"
+                    gap={3}
+                    onSubmit={(event) => {
+                        void form.handleSubmit((value) => registration.mutate(value))(event);
+                    }}
+                >
                     <Controller
                         control={form.control}
                         name="email"
@@ -62,7 +68,7 @@ export default function Register() {
                         type="submit"
                         variant="primary"
                     />
-                </AuthForm>
+                </Stack>
                 <Divider
                     label={
                         <>

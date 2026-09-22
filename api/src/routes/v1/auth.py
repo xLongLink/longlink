@@ -23,11 +23,17 @@ INVALID_REGISTRATION_LINK = "This registration link is invalid or expired. Reque
 INVALID_PASSWORD_RESET_LINK = "This password reset link is invalid or has expired. Please request a new one."  # noqa: S105
 
 
-def set_auth_session(response: Response, credential: str) -> None:
-    """Apply the browser response policy for one signed authentication credential."""
+def set_auth_session(response: Response, user: User) -> None:
+    """Create and publish one browser session for an authenticated user."""
 
     # Publish authentication as a private, browser-only session.
-    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, credential, "/", env.AUTH_SESSION_LIFETIME_SECONDS)
+    cookies.set_browser_cookie(
+        response,
+        cookies.AUTH_COOKIE,
+        token.create_auth_token(user),
+        "/",
+        env.AUTH_SESSION_LIFETIME_SECONDS,
+    )
 
 
 def oauth_failure_response() -> RedirectResponse:
@@ -144,10 +150,9 @@ async def complete_oauth_login(
 
     # Publish the signed browser credential only after durable projection demand commits.
     response = RedirectResponse(f"{env.PUBLIC_URL}/user/organizations", status_code=302)
-    credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent OAuth login effects commit.
-    set_auth_session(response, credential)
+    set_auth_session(response, user)
     cookies.delete_browser_cookie(response, cookies.OAUTH_STATE_COOKIE, "/api/v1/auth/oauth")
     return response
 
@@ -172,10 +177,9 @@ async def password_login(payload: PasswordLogin, response: Response, session: As
     with audit.actor(user.id):
         await invitations.accept(session, user)
         await session.commit()
-    credential = token.create_auth_token(user)
 
     # Publish authentication only after all persistent login effects commit.
-    set_auth_session(response, credential)
+    set_auth_session(response, user)
 
 
 @router.post("/auth/logout", status_code=204, include_in_schema=False)
@@ -324,9 +328,7 @@ async def complete_registration(
             detail="An account with this email already exists. Sign in or reset your password to continue.",
         ) from exc
 
-    credential = token.create_auth_token(user)
-
     # Publish browser authentication only after both persistent records commit.
-    set_auth_session(response, credential)
+    set_auth_session(response, user)
     cookies.delete_browser_cookie(response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
     return user
