@@ -248,7 +248,8 @@ jobs:
                   kubectl wait --namespace knative-serving --for=condition=Available --timeout=5m deployment/controller deployment/webhook deployment/net-kourier-controller
                   kubectl wait --namespace kourier-system --for=condition=Available --timeout=5m deployment/3scale-kourier-gateway
                   kubectl wait --namespace cnpg-system --for=condition=Available --timeout=5m deployment/cnpg-controller-manager
-                  kubectl wait --namespace rustfs --for=condition=Available --timeout=5m deployment/rustfs deployment/longlink-storage
+                  kubectl rollout status --namespace rustfs --timeout=5m statefulset/rustfs
+                  kubectl wait --namespace rustfs --for=condition=Available --timeout=5m deployment/longlink-storage
                   test "$(kubectl get configmap compute-release --namespace longlink-system --output jsonpath='{.data.contract}')" = 1
 
             - name: Verify Compute HTTPS endpoints

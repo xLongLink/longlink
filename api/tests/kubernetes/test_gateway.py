@@ -192,8 +192,8 @@ async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch
         await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
-    """Validate the actual external package's network boundary and TLS-only listener."""
+def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries() -> None:
+    """Validate the actual external package's fixed infrastructure boundaries."""
 
     # Render the production chart rather than reproducing its fixed-IP resources.
     chart = Path(__file__).resolve().parents[3] / "k8s/chart"
@@ -227,3 +227,36 @@ def test_compute_package_keeps_gateway_tls_and_ingress_boundaries() -> None:
     assert service["spec"]["ports"] == [{"name": "https", "port": 443, "targetPort": 8444}]
     assert service["spec"]["loadBalancerIP"] == "203.0.113.10"
     assert any(document["kind"] == "Secret" and document["metadata"]["name"] == "longlink-gateway-tls" for document in documents)
+
+    rustfs = next(document for document in documents if document["kind"] == "StatefulSet" and document["metadata"]["name"] == "rustfs")
+    assert rustfs["spec"]["selector"] == {"matchLabels": {"app.kubernetes.io/name": "rustfs"}}
+    assert rustfs["spec"]["volumeClaimTemplates"] == [
+        {
+            "metadata": {"name": "data"},
+            "spec": {
+                "accessModes": ["ReadWriteOnce"],
+                "resources": {"requests": {"storage": "100Gi"}},
+                "storageClassName": "block-storage",
+            },
+        }
+    ]
+    assert not any(
+        document and document["kind"] == "ConfigMap" and document["metadata"]["name"] == "rustfs-config" for document in documents
+    )
+
+    container = rustfs["spec"]["template"]["spec"]["containers"][0]
+    assert {environment["name"] for environment in container["env"]} == {
+        "RUSTFS_ADDRESS",
+        "RUSTFS_OBS_LOG_DIRECTORY",
+        "RUSTFS_OBS_LOGGER_LEVEL",
+        "RUSTFS_OBS_ENVIRONMENT",
+        "RUSTFS_VOLUMES",
+        "RUSTFS_CHART_POD_NAME",
+        "RUSTFS_LOCAL_ENDPOINT_HOST",
+    }
+    assert container["envFrom"] == [{"secretRef": {"name": "longlink-rustfs"}}]
+    assert container["volumeMounts"] == [{"name": "data", "mountPath": "/data"}, {"name": "logs", "mountPath": "/logs"}]
+    assert rustfs["spec"]["template"]["spec"]["volumes"] == [{"name": "logs", "emptyDir": {}}]
+
+    secret = next(document for document in documents if document["kind"] == "Secret" and document["metadata"]["name"] == "longlink-rustfs")
+    assert set(secret["stringData"]) == {"RUSTFS_ACCESS_KEY", "RUSTFS_SECRET_KEY"}
