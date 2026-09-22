@@ -16,54 +16,54 @@ def validate_idle_seconds(value: int) -> int:
     return value
 
 
-class EnvironmentValues(BaseModel):
-    """Validate a complete environment snapshot."""
+def validate_environment_variables(envs: dict[str, str]) -> dict[str, str]:
+    """Validate solution environment names, ownership, and bounded value sizes."""
 
-    # Configuration
-    envs: dict[str, str] = Field(default_factory=dict)
+    # Limit the number of environment values accepted per solution.
+    if len(envs) > 100:
+        raise ValueError("Solution environment contains too many variables")
 
-    @field_validator("envs")
-    @classmethod
-    def validate_environment_variables(cls, envs: dict[str, str]) -> dict[str, str]:
-        """Validate solution environment names, ownership, and bounded value sizes."""
+    # Validate each environment name and value independently.
+    for name, value in envs.items():
+        # Bound environment variable names to the supported label size.
+        if len(name) > 253:
+            raise ValueError(f"Environment variable '{name}' is too long")
 
-        # Limit the number of environment values accepted per solution.
-        if len(envs) > 100:
-            raise ValueError("Solution environment contains too many variables")
+        # Environment names must be shell-compatible identifiers.
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+            raise ValueError(f"Environment variable '{name}' is invalid")
 
-        # Validate each environment name and value independently.
-        for name, value in envs.items():
-            # Bound environment variable names to the supported label size.
-            if len(name) > 253:
-                raise ValueError(f"Environment variable '{name}' is too long")
+        # Reserve Platform-managed runtime variables for reconciliation.
+        if name.startswith("LONGLINK_"):
+            raise ValueError(f"Environment variable '{name}' is reserved for the LongLink Platform")
 
-            # Environment names must be shell-compatible identifiers.
-            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
-                raise ValueError(f"Environment variable '{name}' is invalid")
+        # Bound environment values to avoid oversized runtime secrets.
+        if len(value) > 32768:
+            raise ValueError(f"Environment variable '{name}' value is too long")
 
-            # Reserve Platform-managed runtime variables for reconciliation.
-            if name.startswith("LONGLINK_"):
-                raise ValueError(f"Environment variable '{name}' is reserved for the LongLink Platform")
+    # Leave room for base64 expansion and Kubernetes Secret metadata.
+    if sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items()) > 512 * 1024:
+        raise ValueError("Solution environment is too large")
 
-            # Bound environment values to avoid oversized runtime secrets.
-            if len(value) > 32768:
-                raise ValueError(f"Environment variable '{name}' value is too long")
-
-        # Leave room for base64 expansion and Kubernetes Secret metadata.
-        if sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items()) > 512 * 1024:
-            raise ValueError("Solution environment is too large")
-
-        return envs
+    return envs
 
 
-class SolutionCreate(EnvironmentValues):
+class SolutionCreate(BaseModel):
     """Validate solution creation metadata and release configuration."""
 
+    envs: dict[str, str] = Field(default_factory=dict)
     image: Image
     name: str = Field(min_length=1, max_length=100)
     min_scale: MinScale = 0
     idle_seconds: int = Field(default=60, ge=0, le=3600)
     description: str | None = Field(default=None, max_length=255)
+
+    @field_validator("envs")
+    @classmethod
+    def validate_envs(cls, envs: dict[str, str]) -> dict[str, str]:
+        """Validate solution environment names, ownership, and bounded value sizes."""
+
+        return validate_environment_variables(envs)
 
     @field_validator("idle_seconds")
     @classmethod
@@ -93,7 +93,7 @@ class SolutionPatch(BaseModel):
     def validate_patch(cls, envs: dict[str, str | None]) -> dict[str, str | None]:
         """Validate names and supplied values, including removal names."""
 
-        EnvironmentValues.validate_environment_variables({name: value or "" for name, value in envs.items()})
+        validate_environment_variables({name: value or "" for name, value in envs.items()})
         return envs
 
 

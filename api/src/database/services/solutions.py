@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from src.models.roles import OrganizationRoles
 from src.models.types import Image, MinScale
 from src.models.metadata import LongLinkMetadata
-from src.models.solutions import SolutionCreate, EnvironmentValues, validate_idle_seconds
+from src.models.solutions import SolutionCreate, validate_idle_seconds, validate_environment_variables
 from src.database.services import operations
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
@@ -177,7 +177,7 @@ async def deploy(
         else:
             merged[name] = value
     try:
-        EnvironmentValues.validate_environment_variables(merged)
+        validate_environment_variables(merged)
     except ValueError as exc:
         raise InvalidError(str(exc)) from exc
     missing = images.missing_envs(metadata, merged)

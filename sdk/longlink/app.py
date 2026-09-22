@@ -50,7 +50,7 @@ class LongLink(FastAPI):
             raise ValueError(f"Solution source directory is required: {views_directory}")
 
         # Validate the complete catalog before installing runtime services.
-        discovered_views = self._discover_views(views_directory, self.routes)
+        discovered_views = self._discover_views(views_directory)
         view_definitions = [definition for definition, _ in discovered_views]
 
         # Initialize Solution storage and database connections.
@@ -152,7 +152,7 @@ class LongLink(FastAPI):
                 raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
 
     @staticmethod
-    def _discover_views(views_directory: Path, solution_routes: list[BaseRoute]) -> list[tuple[ViewDefinition, str]]:
+    def _discover_views(views_directory: Path) -> list[tuple[ViewDefinition, str]]:
         """Discover and validate all XML views before registering any route."""
 
         registered_route_keys: set[str] = set()
@@ -163,8 +163,6 @@ class LongLink(FastAPI):
             path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".xml")
 
             view_path = f"views/{path_without_suffix}"
-            registered_path = f"/{view_path}"
-
             # Validate XML views and extract optional display metadata.
             content = view_file.read_text(encoding="utf-8")
             view_root = validate_xml(content)
@@ -178,11 +176,6 @@ class LongLink(FastAPI):
             # View endpoints and browser routes must remain unique across all directories.
             if route_key in registered_route_keys:
                 raise ValueError(f"Browser route '{view_route}' is already registered")
-
-            # Solution routes take precedence, so ambiguous view endpoints are rejected.
-            scope = {"type": "http", "method": "GET", "path": registered_path}
-            if any(solution_route.matches(scope)[0] is Match.FULL for solution_route in solution_routes):
-                raise ValueError(f"View endpoint '{registered_path}' overlaps a Solution route")
 
             discovered_views.append(
                 (

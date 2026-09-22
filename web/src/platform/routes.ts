@@ -1,3 +1,4 @@
+import { adminPages } from './navigation';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
@@ -58,13 +59,10 @@ export default [
             ]),
         ]),
         ...prefix('admin', [
-            layout('./layouts/Admin.tsx', [
-                route('users', './routes/admin/Page.tsx', { id: 'admin-users' }),
-                route('solutions', './routes/admin/Page.tsx', { id: 'admin-solutions' }),
-                route('organizations', './routes/admin/Page.tsx', { id: 'admin-organizations' }),
-                route('compute', './routes/admin/Page.tsx', { id: 'admin-compute' }),
-                route('operations', './routes/admin/Page.tsx', { id: 'admin-operations' }),
-            ]),
+            layout(
+                './layouts/Admin.tsx',
+                adminPages.map(({ id, path }) => route(path, './routes/admin/Page.tsx', { id }))
+            ),
         ]),
         ...prefix('orgs/:organization', [
             layout('./layouts/Organization.tsx', [
