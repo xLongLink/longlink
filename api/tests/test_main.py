@@ -58,6 +58,11 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
 
         events.append("administrator")
 
+    async def dispose_engine() -> None:
+        """Record shared database engine disposal."""
+
+        events.append("dispose")
+
     def run_scheduler(name: str) -> Callable[[], Awaitable[None]]:
         """Return one scheduler that records its startup and lifespan-shutdown cancellation."""
 
@@ -76,6 +81,7 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
     monkeypatch.setattr(main, "session_scope", session_scope)
     monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
     monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_scheduler("scheduler"))
+    monkeypatch.setattr(main, "dispose_engine", dispose_engine)
 
     # Act
     async with main.lifespan(main.app):
@@ -89,6 +95,7 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
         "scheduler start",
         "serving",
         "scheduler cancel",
+        "dispose",
     ]
 
 

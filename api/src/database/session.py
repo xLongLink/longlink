@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from src.database.models.base import AuditTable
 
 Session: async_sessionmaker[AsyncSession] | None = None
+Engine: AsyncEngine | None = None
 
 
 class SQLiteConnection(Protocol):
@@ -33,7 +34,7 @@ def enable_sqlite_foreign_keys(engine: AsyncEngine) -> None:
 
 def get_session() -> async_sessionmaker[AsyncSession]:
     """Return a SQLAlchemy sessionmaker instance."""
-    global Session
+    global Engine, Session
 
     # Reuse the initialized session factory.
     if Session is not None:
@@ -59,9 +60,23 @@ def get_session() -> async_sessionmaker[AsyncSession]:
     if connection.url.drivername.startswith("sqlite+"):
         enable_sqlite_foreign_keys(engine)
 
+    Engine = engine
     Session = async_sessionmaker(engine, expire_on_commit=False)
 
     return Session
+
+
+async def dispose_engine() -> None:
+    """Release the shared Platform database engine during shutdown."""
+    global Engine, Session
+
+    # Detach state before disposal so a later application startup creates a new engine.
+    engine = Engine
+    Engine = None
+    Session = None
+
+    if engine is not None:
+        await engine.dispose()
 
 
 @contextlib.asynccontextmanager

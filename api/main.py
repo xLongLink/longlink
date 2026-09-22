@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
 from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
-from src.database.session import session_scope
+from src.database.session import session_scope, dispose_engine
 from starlette.exceptions import HTTPException
 from src.database.services import users as user_service
 
@@ -26,23 +26,28 @@ logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Run this API replica's Operation background jobs."""
 
-    # Reconcile the configured Platform administrator before serving authenticated traffic.
-    async with session_scope() as session:
-        await user_service.ensure_administrator(session)
-        await session.commit()
+    tasks: tuple[asyncio.Task[None], ...] = ()
 
-    # Start this replica's scheduler.
-    tasks = (asyncio.create_task(jobs.run_operation_scheduler()),)
-
-    # Always stop background Operation work when the application lifespan exits.
     try:
+        # Reconcile the configured Platform administrator before serving authenticated traffic.
+        async with session_scope() as session:
+            await user_service.ensure_administrator(session)
+            await session.commit()
+
+        # Start this replica's scheduler.
+        tasks = (asyncio.create_task(jobs.run_operation_scheduler()),)
+
         yield
     finally:
-        for task in tasks:
-            task.cancel()
-        for task in tasks:
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+        try:
+            # Always stop background Operation work before releasing its shared database pool.
+            for task in tasks:
+                task.cancel()
+            for task in tasks:
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        finally:
+            await dispose_engine()
 
 
 app = FastAPI(
