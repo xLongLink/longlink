@@ -41,7 +41,7 @@ def get_logo(theme: Literal["dark", "light", "system"] = "system") -> Response:
     """Return a randomized LongLink logo SVG."""
 
     # The accent side varies by request, while the LINK side follows the viewer theme.
-    accent_color = random.choice(ACCENT_COLOR_VALUES)
+    accent_color = random.choice(ACCENT_COLOR_VALUES)  # noqa: S311
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="384" height="96" viewBox="0 0 384 96" role="img" aria-labelledby="logo-title logo-description">
     <title id="logo-title">LongLink</title>
     <desc id="logo-description">LongLink logo with a randomized theme accent.</desc>

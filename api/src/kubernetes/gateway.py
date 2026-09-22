@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
 
 
-TLS_SECRET_NAMESPACE = "knative-serving"
-TLS_SECRET_NAME = "longlink-gateway-tls"
+TLS_SECRET_NAMESPACE = "knative-serving"  # noqa: S105
+TLS_SECRET_NAME = "longlink-gateway-tls"  # noqa: S105
 
 
 async def certificate(client: "Kubernetes") -> str:

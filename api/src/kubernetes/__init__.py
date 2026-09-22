@@ -1,4 +1,5 @@
-"""
+"""Describe the Kubernetes resource hierarchy.
+
 Platform API
 └── Registered Compute
     └── Organization

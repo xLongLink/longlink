@@ -29,7 +29,7 @@ async def runtime_scope() -> AsyncIterator[AsyncExitStack]:
     """Keep runtime activity alive until FastAPI finishes sending the response."""
 
     async with AsyncExitStack() as stack:
-        yield stack
+        yield stack  # noqa: ASYNC119
 
 
 @router.api_route("/solutions/{solution_id}/proxy", methods=list(SOLUTION_PROXY_METHOD_ROLES), include_in_schema=False)
@@ -167,6 +167,6 @@ async def proxy_solution_request(
         # The request-scoped exit stack owns upstream resources through completion or disconnect.
         async with asyncio.timeout(PROXY_RESPONSE_TIMEOUT_SECONDS):
             async for chunk in upstream.aiter_bytes():
-                yield chunk
+                yield chunk  # noqa: ASYNC119
 
     return StreamingResponse(response_content(), status_code=upstream.status_code, headers=response_headers)
