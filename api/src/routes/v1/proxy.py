@@ -19,7 +19,7 @@ from src.database.models.users import User
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
-PROXY_REQUEST_MAX_BYTES = 16 * 1024 * 1024
+PROXY_REQUEST_MAX_BYTES = 100 * 1024 * 1024
 PROXY_REQUEST_TIMEOUT_SECONDS = 120
 PROXY_RESPONSE_TIMEOUT_SECONDS = 30
 PROXY_ERROR_MAX_BYTES = 64 * 1024
