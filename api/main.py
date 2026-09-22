@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import contextlib
 from src import errors
 from fastapi import FastAPI, Request, Response
@@ -7,6 +8,7 @@ from longlink import errors as solution_errors
 from src.utils import jobs
 from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
+from longlink.logger import ApiAccessFilter
 from src.environments import env
 from fastapi.responses import FileResponse, JSONResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
@@ -15,6 +17,9 @@ from longlink.middleware import FrontendMiddleware
 from src.database.session import session_scope
 from starlette.exceptions import HTTPException
 from src.database.services import users as user_service
+
+# Keep successful Kubernetes probes out of the Platform API access log.
+logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
 
 
 @contextlib.asynccontextmanager
