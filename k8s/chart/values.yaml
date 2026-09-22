@@ -10,11 +10,6 @@ rustfs:
     image:
         repository: rustfs/rustfs
         tag: 1.0.0-rc.6@sha256:97171b3d72cd47dc81000f92ea84de25608bfc35a94c965501afaeb5d99f6035
-    mode: distributed
-    secret:
-        accessKey: ''
-        secretKey: ''
     storage:
         name: block-storage
         dataStorageSize: 100Gi
-        logStorageSize: 1Gi
