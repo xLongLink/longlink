@@ -24,10 +24,25 @@
         logsOpen="${false}"
         deleteOpen="${false}"
     />
+    <State
+        id="createSolution"
+        description=""
+        envs="${{}}"
+        image=""
+        inspecting="${false}"
+        name=""
+        open="${false}"
+        step="${0}"
+    />
     <Query
         id="solutionLogs"
         if="$solutionMenu.logsOpen"
         path="/api/v1/solutions/${solutionMenu.item.id}/logs"
+    />
+    <Query
+        id="createSolutionMetadata"
+        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
+        path="/api/v1/image?image=${createSolution.image}"
     />
 
     <Stack gap="8">
@@ -240,10 +255,10 @@
                                     Manage the solutions attached to this organization.
                                 </Text>
                             </Stack>
-                            <CreateSolution
-                                if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
-                                organizationId="$membership.organization.id"
-                            />
+                            <Action if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}">
+                                <Patch state="createSolution" value="${{ description: '', envs: {}, image: '', inspecting: false, name: '', open: true, step: 0 }}" />
+                                <Button>New Solution</Button>
+                            </Action>
                         </Stack>
                         <Divider />
                         <Table data="$solutions" idKey="id" hasHover="true">
@@ -321,6 +336,100 @@
                 </Action>
             </Stack>
         </Stack>
+    </Dialog>
+    <Dialog title="Create solution" isOpen="$createSolution.open" purpose="form" height="calc(100dvh - 2rem)">
+        <Stepper activeStep="$createSolution.step" indicatorPosition="on-track" label="Solution creation" orientation="vertical">
+            <Step step="0" label="Image" description="Inspect the solution image.">
+                <Stack if="${createSolution.step === 0}" gap="3">
+                    <TextInput
+                        label="Image"
+                        value="$createSolution.image"
+                        placeholder="ghcr.io/longlink/dashboard:latest"
+                        isRequired="true"
+                    />
+                    <Stack direction="horizontal" gap="2" justify="end">
+                        <Action>
+                            <Patch state="createSolution" value="${{ open: false }}" />
+                            <Button variant="ghost">Cancel</Button>
+                        </Action>
+                        <Action>
+                            <Validate value="$createSolution" rules="${{ image: { type: 'string', trim: true, minLength: 1 } }}" />
+                            <Patch state="createSolution" value="${{ inspecting: true }}" />
+                            <Patch state="createSolutionMetadata" invalidate="true" />
+                            <Patch state="createSolution" value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}" />
+                            <Button variant="primary">Inspect image</Button>
+                        </Action>
+                    </Stack>
+                </Stack>
+            </Step>
+            <Step step="1" label="Metadata" description="Name and describe the solution.">
+                <Stack if="${createSolution.step === 1}" gap="3">
+                    <TextInput label="Name" value="$createSolution.name" isRequired="true" />
+                    <TextInput
+                        label="Description"
+                        value="$createSolution.description"
+                        placeholder="Dashboard solution"
+                    />
+                    <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
+                        <Action>
+                            <Patch state="createSolution" value="${{ step: 0 }}" />
+                            <Button variant="ghost">Back</Button>
+                        </Action>
+                        <Stack direction="horizontal" gap="2">
+                            <Action>
+                                <Patch state="createSolution" value="${{ open: false }}" />
+                                <Button variant="ghost">Cancel</Button>
+                            </Action>
+                            <Action>
+                                <Validate value="$createSolution" rules="${{ name: { type: 'string', trim: true, minLength: 1 } }}" />
+                                <Patch state="createSolution" value="${{ step: 2 }}" />
+                                <Button variant="primary">Next</Button>
+                            </Action>
+                        </Stack>
+                    </Stack>
+                </Stack>
+            </Step>
+            <Step step="2" label="Environment" description="Configure environment values.">
+                <Stack if="${createSolution.step === 2}" gap="3">
+                    <For each="$createSolutionMetadata.environments" as="environment">
+                        <TextInput
+                            label="$environment.name"
+                            value="$createSolution.envs"
+                            property="$environment.name"
+                            placeholder="$environment.description"
+                            isRequired="$environment.required"
+                        />
+                    </For>
+                    <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
+                        <Action>
+                            <Patch state="createSolution" value="${{ step: 1 }}" />
+                            <Button variant="ghost">Back</Button>
+                        </Action>
+                        <Stack direction="horizontal" gap="2">
+                            <Action>
+                                <Patch state="createSolution" value="${{ open: false }}" />
+                                <Button variant="ghost">Cancel</Button>
+                            </Action>
+                            <Action>
+                                <Request
+                                    url="/api/v1/organizations/${membership.organization.id}/solutions"
+                                    method="POST"
+                                    closeDialog="true"
+                                    json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
+                                />
+                                <Patch state="solutions" invalidate="true" />
+                                <Button
+                                    variant="primary"
+                                    disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}"
+                                >
+                                    Create
+                                </Button>
+                            </Action>
+                        </Stack>
+                    </Stack>
+                </Stack>
+            </Step>
+        </Stepper>
     </Dialog>
     <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen">
         <Invalidate query="solutionLogs" if="$solutionMenu.logsOpen" />

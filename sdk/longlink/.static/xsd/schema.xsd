@@ -38,4 +38,5 @@
   <xsd:include schemaLocation="adapters/CodeBlock.xsd" />
   <xsd:include schemaLocation="adapters/StatusBadge.xsd" />
   <xsd:include schemaLocation="adapters/ProgressBar.xsd" />
+  <xsd:include schemaLocation="adapters/Stepper.xsd" />
 </xsd:schema>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="StepperType" mixed="true">
+    <xsd:sequence>
+      <xsd:element ref="Step" minOccurs="1" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="activeStep" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Zero-based active step index.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="orientation" default="horizontal">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="horizontal" />
+          <xsd:enumeration value="vertical" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="indicatorPosition" default="separated">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="separated" />
+          <xsd:enumeration value="on-track" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="density">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="compact" />
+          <xsd:enumeration value="balanced" />
+          <xsd:enumeration value="spacious" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType">
+      <xsd:annotation>
+        <xsd:documentation>Accessible label for the progress sequence.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+  </xsd:complexType>
+  <xsd:complexType name="StepType" mixed="true">
+    <xsd:sequence>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
+    </xsd:sequence>
+    <xsd:attribute name="step" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Zero-based position in the Stepper.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="label" type="NonBlankStringType" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Short visible step label.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="description" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Supporting explanation for the step.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="indicator" default="auto">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="auto" />
+          <xsd:enumeration value="number" />
+          <xsd:enumeration value="none" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="status">
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="accent" />
+          <xsd:enumeration value="success" />
+          <xsd:enumeration value="warning" />
+          <xsd:enumeration value="error" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attribute name="isDisabled" type="xsd:boolean" default="false" />
+    <xsd:attribute name="isOptional" type="xsd:boolean" default="false" />
+    <xsd:attributeGroup ref="XmlRuntimeAttributes" />
+  </xsd:complexType>
+  <xsd:element name="Stepper" type="StepperType">
+    <xsd:annotation>
+      <xsd:documentation>Stepper displays progress through a short sequence of related workflow steps.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="stepper" category="Navigation" lastUpdated="2026-09-22" source="adapters/Stepper.xsd" />
+        <longlink:example>&lt;Stepper activeStep="$form.step" orientation="vertical"&gt;
+  &lt;Step step="0" label="Details" /&gt;
+  &lt;Step step="1" label="Review" /&gt;
+  &lt;Step step="2" label="Complete" /&gt;
+&lt;/Stepper&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+  <xsd:element name="Step" type="StepType">
+    <xsd:annotation>
+      <xsd:documentation>Step identifies one logical point in a Stepper and may render its active content.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="step" category="Navigation" lastUpdated="2026-09-22" source="adapters/Stepper.xsd" />
+        <longlink:example>&lt;Step step="0" label="Details" description="Enter the required information." /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

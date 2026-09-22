@@ -26,6 +26,7 @@ import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
 import { FileViewer } from '../adapters/FileViewer';
+import { Step, Stepper } from '../adapters/Stepper';
 import type { XmlComponentRegistry } from '../types';
 import { NumberInput } from '../adapters/NumberInput';
 import { ProgressBar } from '../adapters/ProgressBar';
@@ -64,6 +65,8 @@ export const sdkXmlComponentRegistry: XmlComponentRegistry = {
     Stack,
     StackItem,
     StatusBadge,
+    Step,
+    Stepper,
     Switch,
     Tabs,
     Table,
