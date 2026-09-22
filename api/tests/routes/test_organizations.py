@@ -189,6 +189,76 @@ async def test_get_organization_returns_member_payload(
     assert solutions_payload[0]["id"] == str(solution.id)
 
 
+async def test_get_organization_solutions_rejects_another_organization_owner(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Keep solution metadata isolated between organization owners."""
+
+    # Arrange
+    target = await create_organization(users[0], name="target")
+    await create_solution(target)
+    await create_organization(users[1], name="requester")
+
+    # Act
+    response = await clients[1].get(f"/api/v1/organizations/{target.id}/solutions")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
+
+
+async def test_get_organization_quotas_requires_platform_administrator(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return stored quotas only to platform administrators without membership."""
+
+    # Arrange
+    organization = await create_organization(users[1])
+    async with session_scope() as session:
+        persisted = await session.get(Organization, organization.id)
+        assert persisted is not None
+        persisted.database_size_mib = 512
+        persisted.database_instances = 2
+        persisted.storage_quota_bytes = 4096
+        await session.commit()
+
+    # Act
+    administrator_response = await clients[0].get(f"/api/v1/organizations/{organization.id}/quotas")
+    member_response = await clients[1].get(f"/api/v1/organizations/{organization.id}/quotas")
+
+    # Assert
+    assert administrator_response.status_code == 200
+    assert administrator_response.json() == {
+        "id": str(organization.id),
+        "database_size_mib": 512,
+        "database_instances": 2,
+        "storage_quota_bytes": 4096,
+    }
+    assert member_response.status_code == 403
+    assert member_response.json() == {"detail": "Permission required"}
+
+
+async def test_get_organization_quotas_hides_soft_deleted_organization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return the public missing-organization response for a deleted quota target."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    deletion_response = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+    assert deletion_response.status_code == 202
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/quotas")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
+
+
 @pytest.mark.parametrize("name", [pytest.param("", id="empty"), pytest.param("a" * 129, id="too-long")])
 async def test_create_organization_rejects_invalid_name_without_persisting_state(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],

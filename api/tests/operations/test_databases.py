@@ -1,5 +1,3 @@
-import pytest
-import asyncio
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
@@ -31,50 +29,6 @@ async def persist_activity(organization_id: object, expires_at: datetime) -> Org
         session.add(activity)
         await session.commit()
         return activity
-
-
-@pytest.mark.no_db
-async def test_protect_registers_current_task() -> None:
-    """Track the consuming task so lease loss can interrupt its work."""
-
-    # Arrange
-    lease = make_lease()
-
-    # Act
-    with lease.protect():
-        # Assert
-        task = asyncio.current_task()
-        assert task is not None
-        assert task in lease.consumers
-
-    # Assert
-    assert lease.consumers == set()
-
-
-@pytest.mark.no_db
-async def test_protect_rejects_lost_lease() -> None:
-    """Refuse new work after renewal has marked the lease as lost."""
-
-    # Arrange
-    lease = make_lease(lost=True)
-
-    # Act and assert
-    with pytest.raises(RuntimeError, match="lease was lost"):
-        with lease.protect():
-            raise AssertionError("lost lease must not yield")
-
-
-@pytest.mark.no_db
-async def test_protect_rejects_expired_lease() -> None:
-    """Refuse new work when the committed expiry has already passed."""
-
-    # Arrange
-    lease = make_lease(expires_at=datetime.now(UTC) - timedelta(seconds=1))
-
-    # Act and assert
-    with pytest.raises(RuntimeError, match="lease was lost"):
-        with lease.protect():
-            raise AssertionError("expired lease must not yield")
 
 
 async def test_owned_accepts_matching_unexpired_row(users: tuple[User, User, User]) -> None:

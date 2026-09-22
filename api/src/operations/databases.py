@@ -5,9 +5,9 @@ from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from src.utils import postgres
 from sqlalchemy import text, delete, select, update
-from dataclasses import field, dataclass
+from dataclasses import dataclass
 from src.kubernetes import namespace
-from collections.abc import Iterator, AsyncIterator
+from collections.abc import AsyncIterator
 from src.models.types import DatabaseSSLMode
 from src.models.statuses import Status
 from src.database.session import session_scope
@@ -57,27 +57,7 @@ class Lease:
     id: UUID
     organization_id: UUID
     expires_at: datetime
-    consumers: set[asyncio.Task[object]] = field(default_factory=set)
     lost: bool = False
-
-    @contextlib.contextmanager
-    def protect(self) -> Iterator[None]:
-        """Register the actual consuming task, including Starlette's streaming task."""
-
-        # A response may start in a different task after its admission task has finished.
-        if self.lost or self.expires_at <= datetime.now(UTC):
-            raise RuntimeError("Organization activity lease was lost")
-        task = asyncio.current_task()
-        if task is None:
-            raise RuntimeError("Organization activity requires an asynchronous task")
-        registered = task not in self.consumers
-        if registered:
-            self.consumers.add(task)
-        try:
-            yield
-        finally:
-            if registered:
-                self.consumers.discard(task)
 
     async def owned(self, session: AsyncSession) -> bool:
         """Check ownership after the caller locks the Organization."""
@@ -99,6 +79,13 @@ class Lease:
     async def maintain(self) -> AsyncIterator[None]:
         """Renew a lease and interrupt its work if persistence or ownership is lost."""
 
+        # Associate lease loss with the operation task that owns this maintenance scope.
+        if self.lost or self.expires_at <= datetime.now(UTC):
+            raise RuntimeError("Organization activity lease was lost")
+        task = asyncio.current_task()
+        if task is None:
+            raise RuntimeError("Organization activity requires an asynchronous task")
+
         async def renew() -> None:
             """Extend the lease only while this worker still owns it."""
 
@@ -117,15 +104,13 @@ class Lease:
                         await session.commit()
             except Exception:
                 self.lost = True
-                for consumer in self.consumers:
-                    if not consumer.done():
-                        consumer.cancel()
+                if not task.done():
+                    task.cancel()
                 raise
 
         renewal = asyncio.create_task(renew())
         try:
-            with self.protect():
-                yield
+            yield
         finally:
             try:
                 renewal.cancel()
@@ -190,7 +175,7 @@ async def deleting(organization_id: UUID) -> AsyncIterator[None]:
     yield
 
 
-async def ready(organization_id: UUID) -> None:
+async def ready(organization_id: UUID) -> bool:
     """Provision the database and shared projection behind one persisted transition lease."""
 
     while True:
@@ -198,12 +183,12 @@ async def ready(organization_id: UUID) -> None:
         async with session_scope() as session:
             organization = await lock(session, organization_id)
             if organization is None or organization.deleted_at is not None:
-                raise RuntimeError("Organization is unavailable")
+                return False
             transition = await session.get(OrganizationActivity, organization_id)
             if organization.database_state == DatabaseState.available and (
                 transition is None or transition.expires_at <= datetime.now(UTC)
             ):
-                return
+                return True
             lease = await _claim(session, organization_id, transition=True)
             await session.commit()
         if lease is None:
@@ -258,7 +243,7 @@ async def ready(organization_id: UUID) -> None:
                                 raise RuntimeError("Organization transition lease was lost")
                             organization.database_state = DatabaseState.available
                             await session.commit()
-                            return
+                            return True
             except BaseException:
                 # An interrupted snapshot is retried through the failed state.
                 async with session_scope() as session:

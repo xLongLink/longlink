@@ -59,6 +59,28 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.records).toEqual({ version: 2 });
     });
 
+    it('retains stale Query data and reports a failed invalidation', async () => {
+        // Arrange
+        const ctx = createContext({ requestBaseUrl: 'http://localhost/proxy' });
+        const ast = parseFragment('<Query id="records" path="/records" />');
+        const failure = new Error('Network unavailable');
+        const reportError = vi.fn();
+        const fetchImpl = vi
+            .fn()
+            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
+            .mockRejectedValueOnce(failure);
+        vi.stubGlobal('fetch', fetchImpl);
+        await setupContext(getSetupNodes(ast), ctx, { onError: reportError });
+
+        // Act
+        await ctx.services.invalidate('records');
+
+        // Assert
+        expect(fetchImpl).toHaveBeenCalledTimes(2);
+        expect(ctx.scope.bindings.records).toEqual({ version: 1 });
+        expect(reportError).toHaveBeenCalledWith(failure);
+    });
+
     it.each([
         {
             scenario: 'unsafe',
