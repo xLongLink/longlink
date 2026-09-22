@@ -347,18 +347,24 @@
                         placeholder="ghcr.io/longlink/dashboard:latest"
                         isRequired="true"
                     />
-                    <Stack direction="horizontal" gap="2" justify="end">
+                    <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
                         <Action>
-                            <Patch state="createSolution" value="${{ open: false }}" />
-                            <Button variant="ghost">Cancel</Button>
+                            <Patch state="createSolution" value="${{ image: 'ghcr.io/xlonglink/sample:v2026.9.22' }}" />
+                            <Button variant="ghost">Use sample Image</Button>
                         </Action>
-                        <Action>
-                            <Validate value="$createSolution" rules="${{ image: { type: 'string', trim: true, minLength: 1 } }}" />
-                            <Patch state="createSolution" value="${{ inspecting: true }}" />
-                            <Patch state="createSolutionMetadata" invalidate="true" />
-                            <Patch state="createSolution" value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}" />
-                            <Button variant="primary">Inspect image</Button>
-                        </Action>
+                        <Stack direction="horizontal" gap="2">
+                            <Action>
+                                <Patch state="createSolution" value="${{ open: false }}" />
+                                <Button variant="ghost">Cancel</Button>
+                            </Action>
+                            <Action>
+                                <Validate value="$createSolution" rules="${{ image: { type: 'string', trim: true, minLength: 1 } }}" />
+                                <Patch state="createSolution" value="${{ inspecting: true }}" />
+                                <Patch state="createSolutionMetadata" invalidate="true" />
+                                <Patch state="createSolution" value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}" />
+                                <Button variant="primary">Inspect image</Button>
+                            </Action>
+                        </Stack>
                     </Stack>
                 </Stack>
             </Step>
