@@ -1,4 +1,4 @@
-.PHONY: install apt check format build test up image down api web sdk seed
+.PHONY: install apt check format build test up image down api web sdk seed main
 
 
 # Install host requirements (make, docker, k3d, helm, kubectl, uv) on Ubuntu.
@@ -30,6 +30,16 @@ install:
 	cd api && uv sync --locked --extra dev
 	cd sdk && uv sync --locked --group dev
 	cd web && vp install --frozen-lockfile
+
+
+# Reset local main to origin and remove branches absent from origin.
+main:
+	git fetch origin --prune
+	git switch main
+	git reset --hard origin/main
+	@for branch in $$(git for-each-ref --format='%(refname:short)' refs/heads); do \
+		if [ "$$branch" != main ] && ! git show-ref --verify --quiet "refs/remotes/origin/$$branch"; then git branch -D -- "$$branch"; fi; \
+	done
 
 
 # Run lint, type, and contract checks.
