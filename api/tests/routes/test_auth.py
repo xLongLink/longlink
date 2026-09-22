@@ -1,10 +1,11 @@
+import jwt
 import httpx2
 import pytest
 from src import auth
 from main import app
 from httpx2 import AsyncClient
 from conftest import TEST_PASSWORD, create_client
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from sqlmodel import col, select
 from factories import create_organization
 from src.utils import oauth, token
@@ -159,6 +160,38 @@ async def test_oauth_login_redirects_with_browser_bound_state_and_pkce(
     assert verifier not in response.headers["location"]
 
 
+async def test_oauth_availability_reports_configured_providers(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Report OAuth availability without disclosing confidential client credentials."""
+
+    # Arrange
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_ID", "google-client")
+    monkeypatch.setattr(env, "GOOGLE_OAUTH_CLIENT_SECRET", "google-secret")
+
+    # Act
+    response = await client.get("/api/v1/auth/oauth")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"github": False, "google": True}
+    assert "google-client" not in response.text
+    assert "google-secret" not in response.text
+
+
+async def test_oauth_login_rejects_unconfigured_provider_without_state_cookie(client: AsyncClient) -> None:
+    """Return not-found for an OAuth provider without complete server configuration."""
+
+    # Act
+    response = await client.get("/api/v1/auth/oauth/github", follow_redirects=False)
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "OAuth provider is not configured"}
+    assert client.cookies.get("longlink_oauth") is None
+
+
 @pytest.mark.parametrize(
     ("callback_provider", "state"),
     [
@@ -203,6 +236,102 @@ async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
     assert response.headers["cache-control"] == "no-store"
     assert client.cookies.get("longlink_oauth") is None
     assert client.cookies.get("longlink_auth") is None
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_provider_error_and_missing_code_without_exchange(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject provider-cancelled and code-less callbacks before any code exchange."""
+
+    # Arrange
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    async def unexpected_identity(
+        _provider: oauth.OAuthProvider,
+        _code: str,
+        _verifier: str,
+    ) -> oauth.OAuthIdentity | None:
+        """Fail if a cancelled or code-less callback reaches the external provider."""
+
+        raise AssertionError("cancelled OAuth callback must not reach the provider")
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unexpected_identity)
+
+    # Act
+    cancelled_response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state", "error": "access_denied"},
+        follow_redirects=False,
+    )
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+    missing_code_response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert cancelled_response.status_code == 302
+    assert cancelled_response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert missing_code_response.status_code == 302
+    assert missing_code_response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        persisted_users = result.scalars().all()
+    assert {(user.id, user.google_id, user.github_id) for user in persisted_users} == {(user.id, None, None) for user in users}
+
+
+@pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
+async def test_oauth_callback_rejects_unresolved_identity_without_account_changes(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+    oauth_responses: dict[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+    provider: oauth.OAuthProvider,
+) -> None:
+    """Reject a valid callback when the provider code exchange yields no verified identity."""
+
+    # Arrange
+    credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
+    client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
+
+    async def unresolved_identity(
+        _provider: oauth.OAuthProvider,
+        _code: str,
+        _verifier: str,
+    ) -> oauth.OAuthIdentity | None:
+        """Return no verified identity for a valid callback proof."""
+
+        assert _code == "provider-code"
+        assert _verifier == "pkce-verifier"
+        return None
+
+    monkeypatch.setattr("src.routes.v1.auth.oauth.identity", unresolved_identity)
+
+    # Act
+    response = await client.get(
+        f"/api/v1/auth/oauth/{provider}/callback",
+        params={"code": "provider-code", "state": "expected-state"},
+        follow_redirects=False,
+    )
+
+    # Assert
+    assert response.status_code == 302
+    assert response.headers["location"] == f"{env.PUBLIC_URL}/login?oauth_error=1"
+    assert client.cookies.get("longlink_oauth") is None
+    assert client.cookies.get("longlink_auth") is None
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        persisted_users = result.scalars().all()
+    assert {(user.id, user.google_id, user.github_id) for user in persisted_users} == {(user.id, None, None) for user in users}
 
 
 @pytest.mark.parametrize("provider", OAUTH_PROVIDERS)
@@ -1034,6 +1163,52 @@ async def test_deleted_user_cannot_use_existing_browser_session(
 
     # Act
     response = await clients[0].get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
+async def test_expired_browser_session_is_rejected_at_http(
+    client: AsyncClient,
+    users: tuple[User, User, User],
+) -> None:
+    """Reject an expired session cookie with the stable authentication error."""
+
+    # Arrange
+    user = users[1]
+    expired = jwt.encode(
+        {
+            "sub": str(user.id),
+            "password_fingerprint": token.password_fingerprint(user.password),
+            "aud": token.AUTH_TOKEN_AUDIENCE,
+            "iat": datetime.now(UTC) - timedelta(seconds=env.AUTH_SESSION_LIFETIME_SECONDS + 60),
+            "exp": datetime.now(UTC) - timedelta(seconds=60),
+        },
+        env.SESSION_KEY,
+        algorithm=token.JWT_ALGORITHM,
+    )
+    client.cookies.set("longlink_auth", expired, domain="testserver.local", path="/")
+
+    # Act
+    response = await client.get("/api/v1/me")
+
+    # Assert
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Not authenticated"}
+
+
+async def test_wrong_audience_browser_session_is_rejected_at_http(
+    client: AsyncClient,
+) -> None:
+    """Reject a valid registration token presented as a browser session."""
+
+    # Arrange
+    registration_token = token.create_registration_token("other-purpose@example.com")
+    client.cookies.set("longlink_auth", registration_token, domain="testserver.local", path="/")
+
+    # Act
+    response = await client.get("/api/v1/me")
 
     # Assert
     assert response.status_code == 401
