@@ -3,7 +3,7 @@ import pytest
 import pytest_asyncio
 from uuid import UUID, uuid4
 from types import TracebackType
-from httpx2 import Cookies, AsyncClient, ASGITransport
+from httpx2 import Cookies, Response, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
@@ -203,6 +203,38 @@ class DatabasePostgres:
         """Accept shared schema provisioning."""
 
 
+class SeedSolutions:
+    """Accept Solution workload provisioning for seed lifecycle tests."""
+
+    async def apply(self, *_args: object, **_kwargs: object) -> None:
+        """Accept the requested workload."""
+
+
+class SeedKubernetes(DatabaseKubernetes):
+    """Expose every seed lifecycle provider boundary without external I/O."""
+
+    def __init__(self, *_args: object) -> None:
+        """Share one fake cluster connection with the seed solution and database clients."""
+
+        super().__init__()
+        self.solutions = SeedSolutions()
+        self.organizations = OrganizationsDouble()
+
+    async def cluster_uid(self) -> str:
+        """Return the identity submitted by the test Compute."""
+
+        return "https://kubernetes.example"
+
+
+class SeedPostgres(DatabasePostgres):
+    """Provide the Solution schema operation used during deployment."""
+
+    async def solution_schema(self, _organization_id: UUID, solution_id: UUID, _password: str) -> str:
+        """Return the scoped database username for the Solution."""
+
+        return solution_id.hex
+
+
 @pytest.fixture
 def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace only external CNPG and SQL I/O for request and lifecycle tests."""
@@ -216,6 +248,45 @@ def database_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(databases, "Kubernetes", DatabaseKubernetes)
     monkeypatch.setattr(databases.postgres, "Postgres", DatabasePostgres)
     monkeypatch.setattr(organizations.shared_audit, "sync", sync)
+
+
+@pytest.fixture
+def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None) -> None:
+    """Replace every seed lifecycle provider boundary without external I/O."""
+
+    from src.operations import databases, solutions, organizations
+
+    # Override the Compute registry boundary already installed by the database fixture.
+    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", SeedKubernetes)
+    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
+    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
+    monkeypatch.setattr(databases, "Kubernetes", SeedKubernetes)
+    monkeypatch.setattr(organizations, "Kubernetes", SeedKubernetes)
+    monkeypatch.setattr(organizations, "Storage", StorageKubernetes)
+    monkeypatch.setattr(solutions, "Kubernetes", SeedKubernetes)
+    monkeypatch.setattr(solutions, "Storage", StorageKubernetes)
+    monkeypatch.setattr(databases.postgres, "Postgres", SeedPostgres)
+
+
+UNTRUSTED_ORIGINS: list[str | None] = [None, "", "https://attacker.example"]
+"""Untrusted browser origins rejected before mutation or verification."""
+
+
+def untrusted_origin_headers(client: AsyncClient, origin: str | None) -> dict[str, str]:
+    """Build request headers for one untrusted origin case."""
+
+    # Remove the client's trusted default header for the missing-Origin case.
+    if origin is None:
+        client.headers.pop("origin")
+
+    return {} if origin is None else {"origin": origin}
+
+
+def assert_origin_rejected(response: Response) -> None:
+    """Assert one response was rejected by CSRF protection before mutation."""
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Origin required"}
 
 
 def reject_provider_construction(monkeypatch: pytest.MonkeyPatch, *targets: tuple[object, str]) -> None:

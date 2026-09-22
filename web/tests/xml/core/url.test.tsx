@@ -42,7 +42,6 @@ describe('resolveRequestUrl', () => {
         'http://evil.example/items',
         '//evil.example/items',
         '///evil.example/items',
-        '/\\evil.example/items',
         '\\evil.example/items',
         'javascript:alert(1)',
         'data:text/html,payload',

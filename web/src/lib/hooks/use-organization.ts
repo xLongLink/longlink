@@ -23,7 +23,6 @@ export function useOrganizationRoute(organizationSlug: string) {
     });
     const membership = membershipQuery.data;
     const organizationId = membership?.organization.id;
-    const role = membership?.role ?? null;
 
     // Resolve the collection cache key once so fetching and invalidation share one path template.
     const solutionsKey = organizationSolutionsKey(organizationId);
@@ -46,8 +45,6 @@ export function useOrganizationRoute(organizationSlug: string) {
     const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipQuery.error;
 
     return {
-        organizationId,
-        role,
         solutions: solutionsQuery.data ?? [],
         isLoading: membershipQuery.isLoading || solutionsQuery.isLoading,
         error,

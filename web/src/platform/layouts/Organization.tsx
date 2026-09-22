@@ -2,6 +2,7 @@ import { Outlet, useParams } from 'react-router';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
 import { AppWindow, Settings2 } from 'lucide-react';
+import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 
@@ -19,7 +20,9 @@ export default function OrganizationLayout() {
                 { href: `/orgs/${organization}/settings`, icon: Settings2, label: 'Settings' },
             ]}
         >
-            <Outlet key={organization} />
+            <PageContainer gap={8} padding={2}>
+                <Outlet key={organization} />
+            </PageContainer>
         </Platform>
     );
 }
