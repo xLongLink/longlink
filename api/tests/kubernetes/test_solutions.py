@@ -61,7 +61,8 @@ def test_solution_template_constrains_workloads() -> None:
         assert isinstance(pod_spec, dict)
         assert pod_spec["nodeSelector"] == {"kubernetes.io/os": "linux", "kubernetes.io/arch": "amd64"}
         containers = pod_spec["containers"]
-        assert isinstance(containers, list) and len(containers) == 1
+        assert isinstance(containers, list)
+        assert len(containers) == 1
         container = containers[0]
         assert isinstance(container, dict)
         resources = container["resources"]

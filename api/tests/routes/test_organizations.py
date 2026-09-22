@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
 from sqlmodel import select
-from factories import create_compute, create_solution, fetch_operations, create_organization
+from factories import create_compute, create_solution, fetch_operations, create_organization, assert_no_new_operations
 from sqlalchemy import func
 from urllib.parse import urlencode
 from src.models.roles import OrganizationRoles
@@ -363,7 +363,7 @@ async def test_other_organization_user_cannot_delete_solution(
     target_organization = await create_organization(target_owner)
     await create_organization(other_owner, name="globex")
     target_solution = await create_solution(target_organization)
-    operation_ids = [operation.id for operation in await fetch_operations()]
+    previous_operations = await fetch_operations()
     client = clients[1]
 
     # Attempt Solution deletion with only another organization's access.
@@ -374,7 +374,7 @@ async def test_other_organization_user_cannot_delete_solution(
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
         assert await session.get(Solution, target_solution.id) is not None
-    assert [operation.id for operation in await fetch_operations()] == operation_ids
+    await assert_no_new_operations(previous_operations)
 
 
 @pytest.mark.parametrize(

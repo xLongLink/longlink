@@ -100,7 +100,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 preview = true
-select = ["F", "UP", "D300", "DTZ", "I", "ANN401", "B006", "E302", "E305", "FAST003", "PGH003", "RUF100", "S324", "S506"]
+select = ["F", "UP", "D300", "DTZ", "I", "ICN", "ANN401", "B006", "E302", "E305", "FAST003", "PGH003", "PT", "RUF100", "S324", "S506"]
 
 [tool.ruff.lint.isort]
 no-sections = true

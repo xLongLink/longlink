@@ -110,11 +110,16 @@ async def test_gateway_response_closes_client_when_response_close_fails(
 
     monkeypatch.setattr(proxy.httpx2, "AsyncClient", Client)
 
-    # Exercise disconnect-before-iteration cleanup through the production runtime scope.
-    with pytest.raises(RuntimeError, match="response close failed"):
+    async def exercise_scope() -> None:
+        """Proxy one request and observe no cleanup before scope exit."""
+
         async with asynccontextmanager(proxy.runtime_scope)() as runtime:
             await proxy.proxy_solution_request(**request_scope.kwargs, runtime=runtime)
             assert request_scope.closed == []
+
+    # Exercise disconnect-before-iteration cleanup through the production runtime scope.
+    with pytest.raises(RuntimeError, match="response close failed"):
+        await exercise_scope()
     assert request_scope.closed == ["response", "client"]
 
 

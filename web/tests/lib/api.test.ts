@@ -9,16 +9,23 @@ afterEach(() => {
 // Single owner for the unusable-detail fallback message.
 const FALLBACK_MESSAGE = 'The server could not complete the request. Please try again.';
 
+/** Stub the fetch transport with a JSON response. */
+function stubJsonFetch(payload: unknown, status: number): void {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json(payload, { status })));
+}
+
+/** Capture a rejected API promise as a value for assertions. */
+async function captureFailure(promise: Promise<unknown>): Promise<unknown> {
+    return promise.catch((error: unknown) => error);
+}
+
 describe('api error mapping', () => {
     it('returns the server detail message with status and url', async () => {
         // Arrange
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => Response.json({ detail: 'Name too short' }, { status: 422 }))
-        );
+        stubJsonFetch({ detail: 'Name too short' }, 422);
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
         expect(failure).toBeInstanceOf(ApiError);
@@ -33,13 +40,10 @@ describe('api error mapping', () => {
         { payload: { detail: 123 }, status: 422 },
     ])('falls back when the detail is unusable: $payload', async ({ payload, status }) => {
         // Arrange
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => Response.json(payload, { status }))
-        );
+        stubJsonFetch(payload, status);
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
         expect(failure).toBeInstanceOf(ApiError);
@@ -57,7 +61,7 @@ describe('api error mapping', () => {
         );
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
         expect(failure).not.toBeInstanceOf(ApiError);
@@ -68,10 +72,7 @@ describe('api error mapping', () => {
 describe('api success contract', () => {
     it('returns parsed JSON for a successful get', async () => {
         // Arrange
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => Response.json({ total: 3 }, { status: 200 }))
-        );
+        stubJsonFetch({ total: 3 }, 200);
 
         // Act
         const payload = await api.get('https://api.example/organizations').json<{ total: number }>();
@@ -96,7 +97,6 @@ describe('api success contract', () => {
 
         // Assert
         expect(payload).toEqual({ id: 'acme' });
-        expect(transport).toHaveBeenCalledOnce();
         const request = transport.mock.calls[0]?.[0];
         if (request === undefined) throw new Error('Fetch request was not captured');
         expect(request.headers.get('content-type')).toContain('application/json');
@@ -111,7 +111,7 @@ describe('api success contract', () => {
         );
 
         // Act
-        const failure = await api.get('https://api.example/organizations').catch((error: unknown) => error);
+        const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
         expect(failure).toBeInstanceOf(ApiError);

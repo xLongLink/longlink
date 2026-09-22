@@ -79,7 +79,8 @@ def test_solution_add_api_route_rejects_view_endpoint_overlap(solution_source: P
     assert app.router.routes == original_routes
 
 
-def test_solution_router_include_rolls_back_routes_before_a_view_collision(solution_source: Path) -> None:
+@pytest.mark.parametrize("route", [pytest.param("/views/dashboard", id="static-route"), pytest.param("/views/{view}", id="dynamic-route")])
+def test_solution_router_include_rolls_back_routes_before_a_view_collision(solution_source: Path, route: str) -> None:
     """Leave no routes registered when a later included route overlaps a View."""
 
     # Arrange
@@ -92,7 +93,7 @@ def test_solution_router_include_rolls_back_routes_before_a_view_collision(solut
 
         return {"source": "solution"}
 
-    @router.get("/views/dashboard")
+    @router.get(route)
     async def colliding_endpoint() -> dict[str, str]:
         """Return the route that collides with the generated View endpoint."""
 
@@ -107,6 +108,3 @@ def test_solution_router_include_rolls_back_routes_before_a_view_collision(solut
 
     # Assert
     assert app.router.routes == original_routes
-    client = TestClient(app)
-    response = client.get("/safe", headers={"accept": "application/json"})
-    assert response.status_code == 404

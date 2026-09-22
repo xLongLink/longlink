@@ -1,10 +1,9 @@
 import pytest
-from pytest import MonkeyPatch
 from pathlib import Path
 
 
 @pytest.fixture
-def solution_source(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
+def solution_source(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """Create the minimum generated Solution source layout."""
 
     # Create the source directories required by the runtime.

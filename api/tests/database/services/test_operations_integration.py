@@ -61,17 +61,20 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             # Releasing work remains safe with multiple unfinished rows for the same target.
             async with session_factory() as session:
                 released = await operations.release(session, claimed[0].id)
-                assert released is not None and released.status == OperationStatus.scheduled
+                assert released is not None
+                assert released.status == OperationStatus.scheduled
                 assert released.lease_expires_at is None
                 assert released.finished_at is None
                 await session.commit()
 
             # Complete released work and verify the returned row reflects the guarded update.
             resumed = await claim_operation()
-            assert resumed is not None and resumed.id == claimed[0].id
+            assert resumed is not None
+            assert resumed.id == claimed[0].id
             async with session_factory() as session:
                 completed = await operations.complete(session, resumed.id)
-                assert completed is not None and completed.status == OperationStatus.completed
+                assert completed is not None
+                assert completed.status == OperationStatus.completed
                 assert completed.lease_expires_at is None
                 assert completed.finished_at is not None
                 await session.commit()
@@ -82,7 +85,8 @@ async def test_claim_globally_leases_one_operation_to_one_concurrent_worker(monk
             assert {completed.id, remaining.id} == {first.id, duplicate.id}
             async with session_factory() as session:
                 failed = await operations.fail(session, remaining.id, "worker failed")
-                assert failed is not None and failed.status == OperationStatus.failed
+                assert failed is not None
+                assert failed.status == OperationStatus.failed
                 assert failed.failed == "worker failed"
                 assert failed.lease_expires_at is None
                 assert failed.finished_at is not None

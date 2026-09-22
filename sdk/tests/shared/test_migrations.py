@@ -104,6 +104,17 @@ async def test_empty_shared_audit_sync_does_not_execute_sql() -> None:
     await shared_audit.sync(conn, [])
 
 
+async def sync_audit_in_caller_transaction(conn: AsyncConnection, audit_user: Audit) -> None:
+    """Sync one audit row while asserting the caller transaction stays open on failure."""
+
+    async with conn.begin():
+        try:
+            await shared_audit.sync(conn, [audit_user])
+        finally:
+            assert not conn.closed
+            assert conn.in_transaction()
+
+
 async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: Audit) -> None:
     """Propagate SQL failures while leaving connection and transaction ownership with the caller."""
 
@@ -112,12 +123,7 @@ async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audi
     try:
         async with engine.connect() as conn:
             with pytest.raises(DBAPIError, match="no such table: audit"):
-                async with conn.begin():
-                    try:
-                        await shared_audit.sync(conn, [audit_user])
-                    finally:
-                        assert not conn.closed
-                        assert conn.in_transaction()
+                await sync_audit_in_caller_transaction(conn, audit_user)
 
             # The caller's transaction context rolls back and leaves its connection usable.
             assert not conn.in_transaction()
