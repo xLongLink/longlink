@@ -5,7 +5,9 @@ from fastapi import APIRouter
 from pathlib import Path
 from longlink import app as longlink_app
 from pydantic import ValidationError
+from contextlib import asynccontextmanager
 from longlink.app import LongLink
+from collections.abc import AsyncIterator
 from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
 
@@ -40,6 +42,42 @@ def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
     assert health_response.json() == {"ok": True}
     assert ready_response.status_code == 200
     assert ready_response.json() == {"ok": True}
+
+
+def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path) -> None:
+    """Keep the readiness probe dependent on a live Solution database."""
+
+    # Arrange
+    class UnavailableSession:
+        """Reject the database connectivity probe."""
+
+        async def scalar(self, _statement: object) -> None:
+            """Raise the connection failure observed by the readiness route."""
+
+            raise RuntimeError("database unavailable")
+
+    class UnavailableDatabase:
+        """Provide only the unavailable database session boundary."""
+
+        @asynccontextmanager
+        async def session(self) -> AsyncIterator[UnavailableSession]:
+            """Yield the unavailable database session."""
+
+            yield UnavailableSession()
+
+    app = LongLink()
+    app.state.longlink.database = UnavailableDatabase()
+    client = TestClient(app, raise_server_exceptions=False)
+
+    # Act
+    health_response = client.get("/health")
+    ready_response = client.get("/ready")
+
+    # Assert
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
+    assert ready_response.status_code == 500
+    assert ready_response.json() == {"detail": "An unexpected error occurred. Please try again later."}
 
 
 def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
