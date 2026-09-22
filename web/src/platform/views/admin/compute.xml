@@ -23,7 +23,7 @@
             align="center"
             wrap="wrap"
         >
-            <Stack>
+            <Stack gap="1">
                 <Heading level="1">Compute</Heading>
                 <Text color="secondary">
                     Manage Kubernetes connections and Kourier gateways.

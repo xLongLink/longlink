@@ -9,7 +9,7 @@
     />
 
     <Stack gap="8">
-        <Stack>
+        <Stack gap="1">
             <Heading level="1">Organizations</Heading>
             <Text color="secondary">
                 Review organization lifecycle, ownership, and access boundaries.
