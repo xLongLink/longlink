@@ -2,7 +2,11 @@ import json
 import yaml
 from uuid import UUID
 from typing import Annotated, cast
-from pydantic import Field, HttpUrl, BaseModel, ConfigDict, BeforeValidator, field_validator
+from pydantic import Field, HttpUrl, BaseModel, ConfigDict, ValidationInfo, BeforeValidator, field_validator
+from urllib.parse import urlsplit
+
+GATEWAY_PORT = 443
+STORAGE_PORT = 9443
 
 
 def kubeconfig_mapping(value: object) -> dict[str, object]:
@@ -85,8 +89,17 @@ class ComputeRegistryEndpoints(BaseModel):
 
     @field_validator("gateway_url", "storage_endpoint")
     @classmethod
-    def validate_endpoint(cls, value: str) -> str:
-        """Require a credential-free HTTPS endpoint origin."""
+    def validate_endpoint(cls, value: str, info: ValidationInfo) -> str:
+        """Normalize and validate one credential-free HTTPS endpoint origin."""
+
+        # Supply HTTPS when an administrator enters only a host and optional port.
+        if "://" not in value:
+            value = f"https://{value}"
+
+        # Preserve explicit ports and select the Compute service port when it is omitted.
+        source = urlsplit(value)
+        default_port = STORAGE_PORT if info.field_name == "storage_endpoint" else GATEWAY_PORT
+        port = source.port if source.port is not None else default_port
 
         # Keep proxy paths separate from the registered TLS endpoint.
         url = HttpUrl(value)
@@ -99,7 +112,7 @@ class ComputeRegistryEndpoints(BaseModel):
             or url.fragment is not None
         ):
             raise ValueError("Endpoint must be an HTTPS origin without credentials, path, query, or fragment")
-        return str(url).rstrip("/")
+        return f"https://{url.host}:{port}"
 
 
 class ComputeRegistryCreate(ComputeRegistryEndpoints):
@@ -110,6 +123,7 @@ class ComputeRegistryCreate(ComputeRegistryEndpoints):
 
     # Connection
     kubeconfig: Annotated[dict[str, object], BeforeValidator(kubeconfig_mapping)]
+
 
 class ComputeRegistryResponse(BaseModel):
     """Describe one compute backend without exposing its private connection state or secrets."""
