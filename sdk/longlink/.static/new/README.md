@@ -1,20 +1,25 @@
 <div align="center">
 
-<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-LongLink Solution Scaffold
+# Solution Template
+
+Build a process-specific business application. \
+All the data, logic and configurations are defined as code. \
+Use your favorite AI tool with full context on the solution.
 
 </div>
 
+<br />
+
 ## Getting Started
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) to get started
 
 ```bash
 uv sync
 uv run longlink migrate
 uv run longlink dev
 ```
-
-Commit the generated `uv.lock` before enabling CI or creating a release.
 
 <br />
 
@@ -41,7 +46,6 @@ gh release create v0.1.0 --generate-notes
 <div align="center">
 LongLink 2026
 
-[License](https://github.com/xLongLink/longlink/blob/main/LICENSE) &nbsp; - &nbsp; [Contributing](https://github.com/xLongLink/longlink/blob/main/CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](https://github.com/xLongLink/longlink/blob/main/CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 </div>
 
 ---
