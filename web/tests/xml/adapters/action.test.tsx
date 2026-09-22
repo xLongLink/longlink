@@ -397,11 +397,9 @@ describe('Action', () => {
         closeDialog: (() => void) | null = null
     ) {
         // Mount through the shared helper so ACT and root lifetime stay in one owner.
-        const mounted = await mountXml(
-            xml,
-            ctx,
-            (node) => <DialogCloseContext.Provider value={closeDialog}>{node}</DialogCloseContext.Provider>
-        );
+        const mounted = await mountXml(xml, ctx, (node) => (
+            <DialogCloseContext.Provider value={closeDialog}>{node}</DialogCloseContext.Provider>
+        ));
         root = mounted.root;
         const container = mounted.container;
 

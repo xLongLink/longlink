@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
+import type { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, cleanupMountedRoot, mountXml } from '../helpers';
-import type { createRoot } from 'react-dom/client';
 
 describe('Button', () => {
     let root: ReturnType<typeof createRoot> | undefined;
