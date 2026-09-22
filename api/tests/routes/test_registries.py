@@ -61,9 +61,9 @@ async def test_compute_list_returns_ordered_page_and_total(clients: tuple[AsyncC
     }
     expected_item = {
         "live_version": None,
-        "gateway_url": "https://gateway.example",
+        "gateway_url": "https://gateway.example:443",
         "database_storage_class": "local-path",
-        "storage_endpoint": "https://storage.example",
+        "storage_endpoint": "https://storage.example:9443",
     }
     beta_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Beta Registry"})
     alpha_response = await clients[0].post("/api/v1/computes", json=payload | {"name": "Alpha Registry"})
