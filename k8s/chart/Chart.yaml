@@ -8,6 +8,3 @@ dependencies:
     - name: cloudnative-pg
       version: 0.28.1
       repository: file://charts/cloudnative-pg
-    - name: rustfs
-      version: 1.0.0
-      repository: file://charts/rustfs

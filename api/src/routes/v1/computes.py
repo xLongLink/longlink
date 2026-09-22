@@ -75,33 +75,11 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
 @router.get("/computes", response_model=Page[ComputeRegistryResponse], dependencies=[Depends(authadmin)])
 async def list_compute_registries(
     pagination: Pagination = Depends(), session: AsyncSession = Depends(get_session)
-) -> dict[str, Sequence[ComputeRegistryResponse] | int]:
-    """Return all registered compute backends with live package versions."""
+) -> dict[str, Sequence[ComputeRegistry] | int]:
+    """Return all registered compute backends."""
 
     items, total = await compute.fetch_page(session, pagination)
-
-    # Resolve live versions in parallel; unreachable clusters degrade to a missing version.
-    versions = await asyncio.gather(*(_live_version(registry) for registry in items))
-    return {
-        "items": [
-            ComputeRegistryResponse.model_validate({**registry.model_dump(), "live_version": version})
-            for registry, version in zip(items, versions)
-        ],
-        "total": total,
-    }
-
-
-async def _live_version(registry: ComputeRegistry) -> str | None:
-    """Return the live Compute package version without failing the page."""
-
-    # Unreachable clusters surface as a missing version; the stored overview remains available.
-    cluster = Kubernetes(registry.kubeconfig)
-    try:
-        async with cluster:
-            async with asyncio.timeout(1.0):
-                return await gateway.read_package_version(cluster)
-    except Exception:
-        return None
+    return {"items": items, "total": total}
 
 
 @router.delete("/computes/{registry_id}", status_code=204, dependencies=[Depends(authadmin)])

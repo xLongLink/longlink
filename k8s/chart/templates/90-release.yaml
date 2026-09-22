@@ -5,4 +5,3 @@ metadata:
     namespace: longlink-system
 data:
     contract: '1'
-    platform_version: {{ .Chart.AppVersion | quote }}

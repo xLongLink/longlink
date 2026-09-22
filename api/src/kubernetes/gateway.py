@@ -99,13 +99,3 @@ async def verify(
                     await asyncio.sleep(5)
     except TimeoutError:
         raise RuntimeError("Shared controllers or verified Kourier endpoint did not become ready") from None
-
-
-async def read_package_version(cluster: "Kubernetes") -> str | None:
-    """Return the installed Compute package version without checking readiness."""
-
-    # Overview reads must never fail the caller; unavailability surfaces as a missing version.
-    release = ConfigMap("compute-release", namespace="longlink-system", api=await cluster.api())
-    await release.refresh()
-    version = release.raw.get("data", {}).get("platform_version")
-    return version if isinstance(version, str) and version else None

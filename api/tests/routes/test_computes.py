@@ -1,81 +1,10 @@
 import pytest
 from uuid import uuid4
 from httpx2 import AsyncClient
-from conftest import FakeKubernetes
 from factories import (
     create_compute,
     fetch_operations,
 )
-
-
-async def test_compute_list_reports_live_package_versions(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Resolve live Compute versions in parallel without failing unreachable clusters."""
-
-    # Arrange
-    compute = await create_compute()
-
-    class FakeConfigMap:
-        """Expose one installed package version."""
-
-        def __init__(self, name: str, namespace: str, api: object) -> None:
-            """Ignore the selected release coordinates."""
-
-        async def refresh(self) -> None:
-            """Return the current observation."""
-
-        raw = {"data": {"contract": "1", "platform_version": "v9.9.9"}}
-
-    class ReleaseKubernetes(FakeKubernetes):
-        """Expose the release boundary without opening a cluster connection."""
-
-        def __init__(self, kubeconfig: object) -> None:
-            """Ignore the stored connection settings."""
-
-            super().__init__()
-
-        async def api(self) -> object:
-            """Return the release boundary."""
-
-            return object()
-
-    monkeypatch.setattr("src.routes.v1.computes.Kubernetes", ReleaseKubernetes)
-    monkeypatch.setattr("src.kubernetes.gateway.ConfigMap", FakeConfigMap)
-
-    # Act
-    response = await clients[0].get("/api/v1/computes")
-
-    # Assert
-    assert response.status_code == 200
-    items = [item for item in response.json()["items"] if item["id"] == str(compute.id)]
-    assert len(items) == 1
-    assert items[0]["live_version"] == "v9.9.9"
-
-
-async def test_compute_list_omits_live_version_when_cluster_unreachable(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Return stored Compute overview with a missing version when the cluster is unreachable."""
-
-    # Arrange
-    compute = await create_compute()
-
-    async def unreachable_version(cluster: object) -> str | None:
-        """Report the unreachable release boundary."""
-
-        raise LookupError("release unavailable")
-
-    monkeypatch.setattr("src.routes.v1.computes.gateway.read_package_version", unreachable_version)
-
-    # Act
-    response = await clients[0].get("/api/v1/computes")
-
-    # Assert
-    assert response.status_code == 200
-    items = [item for item in response.json()["items"] if item["id"] == str(compute.id)]
-    assert len(items) == 1
-    assert items[0]["live_version"] is None
 
 
 async def test_compute_registry_creation_does_not_queue_work(
