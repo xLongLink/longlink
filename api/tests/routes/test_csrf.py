@@ -98,9 +98,7 @@ async def test_authenticated_solution_creation_rejects_untrusted_origin_before_p
     assert response.status_code == 403
     assert response.json() == {"detail": "Origin required"}
     async with session_scope() as session:
-        count = await session.scalar(
-            select(func.count()).select_from(Solution).where(Solution.organization_id == organization.id)
-        )
+        count = await session.scalar(select(func.count()).select_from(Solution).where(Solution.organization_id == organization.id))
     assert count == 0
 
 

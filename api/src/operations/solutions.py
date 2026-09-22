@@ -83,11 +83,7 @@ async def deploy(revision_id: UUID) -> None:
             "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
             # Fetch the current CA once for workload rendering on every path.
             "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
-            **(
-                {"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate}
-                if compute.storage_certificate
-                else {}
-            ),
+            **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
         }
 
         # Persist generated credentials when the runtime contract changed.

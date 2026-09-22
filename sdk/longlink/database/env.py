@@ -14,9 +14,7 @@ engine = create_engine(settings)
 version_table_schema = settings.DATABASE_SCHEMA if settings.ENV == "production" else None
 
 
-def _configure_migrations(
-    *, connection: Connection | None = None, url: str | None = None, literal_binds: bool = False
-) -> None:
+def _configure_migrations(*, connection: Connection | None = None, url: str | None = None, literal_binds: bool = False) -> None:
     """Configure shared Solution migration behavior for one Alembic execution mode."""
 
     # Keep online and offline schema comparison behavior aligned.

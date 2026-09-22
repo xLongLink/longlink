@@ -71,9 +71,7 @@ class GatewayClient:
     def __init__(self, **_kwargs: object) -> None:
         """Accept the request client configuration."""
 
-    def build_request(
-        self, method: str, url: str, *, content: AsyncIterator[bytes], headers: dict[str, str]
-    ) -> object:
+    def build_request(self, method: str, url: str, *, content: AsyncIterator[bytes], headers: dict[str, str]) -> object:
         """Build an opaque request accepted by the fake transport."""
 
         return object()

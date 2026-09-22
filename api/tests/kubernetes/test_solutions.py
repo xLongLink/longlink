@@ -551,7 +551,9 @@ async def test_solution_logs_reports_completed_migration_when_solution_pod_is_un
     ],
     ids=["no-pod", "terminal-solution-pod"],
 )
-async def test_solution_logs_reports_unavailable_without_usable_pods(monkeypatch: pytest.MonkeyPatch, pods: list[dict[str, object]]) -> None:
+async def test_solution_logs_reports_unavailable_without_usable_pods(
+    monkeypatch: pytest.MonkeyPatch, pods: list[dict[str, object]]
+) -> None:
     """Report unavailable logs when no running or failed migration Pod exists."""
 
     # Arrange
@@ -579,9 +581,7 @@ async def test_solution_logs_reports_unavailable_without_usable_pods(monkeypatch
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable"):
-        await solutions.Solutions(kubernetes_client()).logs(
-            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
-        )
+        await solutions.Solutions(kubernetes_client()).logs(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
 
 async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -606,9 +606,7 @@ async def test_solution_logs_translates_kubernetes_api_errors(monkeypatch: pytes
 
     # Act and assert
     with pytest.raises(RuntimeError, match="Solution logs unavailable") as error:
-        await solutions.Solutions(kubernetes_client()).logs(
-            ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
-        )
+        await solutions.Solutions(kubernetes_client()).logs(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
     assert isinstance(error.value.__cause__, KubernetesError)
 
 
@@ -806,9 +804,7 @@ async def test_solution_delete_does_not_repeat_deletions_for_terminating_resourc
     monkeypatch.setattr(solutions.asyncio, "sleep", sleep)
 
     # Act
-    await solutions.Solutions(kubernetes_client()).delete(
-        ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001")
-    )
+    await solutions.Solutions(kubernetes_client()).delete(ORGANIZATION_ID, UUID("00000000-0000-4000-8000-000000000001"))
 
     # Assert
     assert deleted == []

@@ -53,7 +53,9 @@ def test_solution_create_accepts_idle_seconds_boundaries(idle_seconds: int) -> N
     """Accept never-sleep zero and the bounded scale-to-zero timeout edges."""
 
     # Act
-    solution = SolutionCreate.model_validate({"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "idle_seconds": idle_seconds})
+    solution = SolutionCreate.model_validate(
+        {"name": "Dashboard", "image": "ghcr.io/longlink/dashboard:latest", "idle_seconds": idle_seconds}
+    )
 
     # Assert
     assert solution.idle_seconds == idle_seconds

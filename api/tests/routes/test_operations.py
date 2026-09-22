@@ -63,7 +63,14 @@ async def test_operations_endpoint_paginates_history(
     assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])
 
 
-@pytest.mark.parametrize("query", [pytest.param("page=0", id="page-below-minimum"), pytest.param("page_size=0", id="page-size-below-minimum"), pytest.param("page_size=101", id="page-size-above-maximum")])
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("page=0", id="page-below-minimum"),
+        pytest.param("page_size=0", id="page-size-below-minimum"),
+        pytest.param("page_size=101", id="page-size-above-maximum"),
+    ],
+)
 async def test_operations_endpoint_rejects_out_of_bounds_pagination(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     query: str,

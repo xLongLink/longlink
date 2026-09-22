@@ -97,7 +97,9 @@ class LongLink(FastAPI):
             )
 
         # Make the browser root URL resolve to the first navigable View.
-        first_tab_view = next((definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None)
+        first_tab_view = next(
+            (definition for definition in view_definitions if definition.route != "/" and ":" not in definition.route), None
+        )
         if first_tab_view is not None:
 
             @self.get("/", include_in_schema=False)
@@ -112,7 +114,8 @@ class LongLink(FastAPI):
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_index.parent)
 
-    def include_router(self, router: APIRouter, **kwargs: Any) -> None:
+    # FastAPI accepts framework-defined router options with heterogeneous values.
+    def include_router(self, router: APIRouter, **kwargs: Any) -> None:  # noqa: ANN401
         """Include Solution routes after validating them against View endpoints."""
 
         # Snapshot routes so a colliding include leaves no partial registration.
@@ -125,7 +128,8 @@ class LongLink(FastAPI):
             del self.router.routes[added:]
             raise
 
-    def add_api_route(self, *args: Any, **kwargs: Any) -> None:
+    # FastAPI accepts framework-defined route arguments with heterogeneous values.
+    def add_api_route(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         """Register a Solution route after validating it against View endpoints."""
 
         # Snapshot routes so a colliding registration leaves no partial registration.
