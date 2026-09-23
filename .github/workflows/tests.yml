@@ -188,7 +188,7 @@ jobs:
 
             - name: Run tests
               working-directory: web
-              run: vp run test
+              run: vp test tests
 
             - name: Run type checks
               working-directory: web

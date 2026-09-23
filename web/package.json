@@ -23,8 +23,7 @@
         "check:platform-api": "vp run generate:platform-api && git diff --exit-code -- ../api/openapi/v1.json src/lib/generated/platform-api-v1",
         "dev": "react-router dev --mode api",
         "dev:sdk": "react-router dev --mode sdk",
-        "routes": "react-router routes",
-        "test": "vp test tests"
+        "routes": "react-router routes"
     },
     "dependencies": {
         "@astryxdesign/core": "0.6.1",
