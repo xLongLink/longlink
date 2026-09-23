@@ -1,8 +1,9 @@
 # LongLink Agent Guide
 
-- Prefer simple, maintainable, conventional solutions over clever hacks.
-- Prefer standard-library or established libraries over handwritten implementations.
 - The direct web `isbot` dependency is intentional and may remain.
+- Prefer simple, maintainable, conventional solutions over clever hacks.
+- When creating a merge request, always return the local to the previous branch
+- Prefer standard-library or established libraries over handwritten implementations.
 
 ## Terminology
 
