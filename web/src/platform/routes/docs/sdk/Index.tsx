@@ -75,8 +75,14 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-project" level={2}>
                     Create a Project
                 </Heading>
-                <CodeBlock code={'uv add longlink\nuv run longlink init --folder my-solution'} language="bash" />
-                <Text as="p">The command creates a project scaffold with everything needed to get started.</Text>
+                <CodeBlock
+                    code={'uvx --from longlink longlink init --folder my-solution\ncd my-solution'}
+                    language="bash"
+                />
+                <Text as="p">
+                    Run these commands from a directory where you want to create the project. The scaffold includes a
+                    pyproject.toml with LongLink as a dependency.
+                </Text>
                 <CodeBlock
                     code={
                         '├── src/\n│   ├── models/       # SQLModel database tables\n│   ├── views/        # View files\n│   ├── routes/       # API routes\n│   ├── schemas/      # Pydantic schemas\n│   └── envs.py       # Environments\n├── tests/            # Project tests\n├── .env.sample       # Environment template\n└── main.py           # Service entry point'
