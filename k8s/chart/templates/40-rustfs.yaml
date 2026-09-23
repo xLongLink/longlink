@@ -31,7 +31,7 @@ metadata:
     namespace: rustfs
 spec:
     serviceName: rustfs-headless
-    replicas: 4
+    replicas: {{ if eq .Values.rustfs.mode "standalone" }}1{{ else }}4{{ end }}
     podManagementPolicy: Parallel
     selector:
         matchLabels:
@@ -81,11 +81,17 @@ spec:
                       - name: RUSTFS_OBS_ENVIRONMENT
                         value: "production"
                       - name: RUSTFS_VOLUMES
+                        {{- if eq .Values.rustfs.mode "standalone" }}
+                        value: "/data"
+                        {{- else }}
                         value: "http://rustfs-{0...3}.rustfs-headless.rustfs.svc.cluster.local:9000/data"
+                        {{- end }}
                       - name: RUSTFS_CHART_POD_NAME
                         valueFrom: {fieldRef: {fieldPath: metadata.name}}
+                      {{- if ne .Values.rustfs.mode "standalone" }}
                       - name: RUSTFS_LOCAL_ENDPOINT_HOST
                         value: "$(RUSTFS_CHART_POD_NAME).rustfs-headless.rustfs.svc.cluster.local"
+                      {{- end }}
                   envFrom:
                       - secretRef:
                             name: longlink-rustfs

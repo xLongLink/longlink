@@ -230,6 +230,7 @@ def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries() -> No
 
     rustfs = next(document for document in documents if document["kind"] == "StatefulSet" and document["metadata"]["name"] == "rustfs")
     assert rustfs["spec"]["selector"] == {"matchLabels": {"app.kubernetes.io/name": "rustfs"}}
+    assert rustfs["spec"]["replicas"] == 1
     assert rustfs["spec"]["volumeClaimTemplates"] == [
         {
             "metadata": {"name": "data"},
@@ -252,8 +253,8 @@ def test_compute_package_keeps_gateway_tls_and_infrastructure_boundaries() -> No
         "RUSTFS_OBS_ENVIRONMENT",
         "RUSTFS_VOLUMES",
         "RUSTFS_CHART_POD_NAME",
-        "RUSTFS_LOCAL_ENDPOINT_HOST",
     }
+    assert next(environment["value"] for environment in container["env"] if environment["name"] == "RUSTFS_VOLUMES") == "/data"
     assert container["envFrom"] == [{"secretRef": {"name": "longlink-rustfs"}}]
     assert container["volumeMounts"] == [{"name": "data", "mountPath": "/data"}, {"name": "logs", "mountPath": "/logs"}]
     assert rustfs["spec"]["template"]["spec"]["volumes"] == [{"name": "logs", "emptyDir": {}}]
