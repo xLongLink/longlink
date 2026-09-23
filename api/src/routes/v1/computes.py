@@ -19,18 +19,17 @@ router = APIRouter()
 
 
 async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> None:
-    """Verify gateway and storage reachability with a short fail-fast budget."""
+    """Verify gateway and storage reachability."""
 
-    # Fail fast when shared infrastructure is still converging; the administrator retries registration.
+    # Report failed checks as unavailable infrastructure; the administrator can retry registration.
     try:
-        async with asyncio.timeout(30):
-            await gateway.verify(
-                cluster,
-                registry.gateway_url,
-                registry.gateway_certificate,
-                timeout_seconds=30,
-            )
-            await Storage(registry).verify()
+        await gateway.verify(
+            cluster,
+            registry.gateway_url,
+            registry.gateway_certificate,
+            timeout_seconds=7,
+        )
+        await Storage(registry).verify()
     except Exception as exc:
         # Any verification failure means unreachable infrastructure.
         logger.warning("Compute infrastructure unavailable: %s", exc)
@@ -41,30 +40,37 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
 
-    # Resolve the physical cluster and read its chart-managed storage credentials before persisting anything.
+    # Bound cluster discovery, verification, and connection cleanup so failures return before the browser times out.
     cluster = Kubernetes(payload.kubeconfig)
-    async with cluster:
-        cluster_uid = await cluster.cluster_uid()
-        try:
-            database_storage_class = await storageclasses.resolve(cluster)
-            credentials = await Storage.controller_credentials(cluster)
-            gateway_certificate = await gateway.certificate(cluster)
-            storage_certificate = await Storage.certificate(cluster)
-        except ValueError as exc:
-            raise InvalidError(str(exc)) from exc
-        except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
-            logger.warning("Compute infrastructure unavailable: %s", exc)
-            raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
-        candidate = ComputeRegistry(
-            **payload.model_dump(),
-            database_storage_class=database_storage_class,
-            gateway_certificate=gateway_certificate,
-            storage_certificate=storage_certificate,
-            storage_access_key=credentials.access_key,
-            storage_secret_key=credentials.secret_key,
-            cluster_uid=cluster_uid,
-        )
-        await _verify_compute(cluster, candidate)
+    try:
+        async with asyncio.timeout(7):
+            async with cluster:
+                cluster_uid = await cluster.cluster_uid()
+                try:
+                    database_storage_class = await storageclasses.resolve(cluster)
+                    credentials = await Storage.controller_credentials(cluster)
+                    gateway_certificate = await gateway.certificate(cluster)
+                    storage_certificate = await Storage.certificate(cluster)
+                except ValueError as exc:
+                    raise InvalidError(str(exc)) from exc
+                except (NotFoundError, ServerError, TimeoutError, OSError) as exc:
+                    logger.warning("Compute infrastructure unavailable: %s", exc)
+                    raise UnavailableError(
+                        "Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
+                    ) from exc
+                candidate = ComputeRegistry(
+                    **payload.model_dump(),
+                    database_storage_class=database_storage_class,
+                    gateway_certificate=gateway_certificate,
+                    storage_certificate=storage_certificate,
+                    storage_access_key=credentials.access_key,
+                    storage_secret_key=credentials.secret_key,
+                    cluster_uid=cluster_uid,
+                )
+                await _verify_compute(cluster, candidate)
+    except TimeoutError as exc:
+        logger.warning("Compute infrastructure unavailable: registration timed out")
+        raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
 
     # Persist the verified connection as immediately assignable.
     registry = await compute.create(session, candidate)
