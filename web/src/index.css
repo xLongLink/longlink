@@ -88,13 +88,13 @@
 }
 
 .homepage-hero-globe {
-    bottom: calc(15svh - max(64.5rem, 86vw));
+    bottom: clamp(-94rem, -74vw, -58rem);
     width: max(84rem, 112vw);
 }
 
 @media (max-width: 40rem) {
     .homepage-hero-globe {
-        bottom: calc(15svh - 52.25rem);
+        bottom: -42rem;
         width: 68rem;
     }
 }
@@ -121,16 +121,6 @@
 .homepage-hero-globe-horizon {
     stroke-opacity: 0.62;
     stroke-width: 1.4;
-}
-
-/* Keep the callout over the Atlantic as the globe scales on wide screens. */
-@media (min-width: 75rem) {
-    .homepage-integration-content {
-        padding-block-start: max(
-            calc(var(--spacing-10) + var(--spacing-10)),
-            calc(25vw - 15svh - var(--spacing-10) - var(--spacing-12))
-        );
-    }
 }
 
 .homepage-integration-section::after {
