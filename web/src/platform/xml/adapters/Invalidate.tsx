@@ -1,25 +1,52 @@
 import { z } from 'zod';
 import { useEffect } from 'react';
 import type { Props } from '@/xml/types';
+import { isValtioProxy } from '@/xml/core/state';
 import { useXmlRuntime } from '@/xml/core/context';
-import { resolveXmlProps, xmlNonblankStringSchema } from '@/xml/core/props';
+import { evaluate } from '@/xml/expressions/evaluate';
+import { isSafePropertyName, resolveValue } from '@/xml/expressions/resolve';
+import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '@/xml/core/props';
 
-const invalidatePropsSchema = z.object({ query: xmlNonblankStringSchema });
+const invalidatePropsSchema = z.object({
+    query: xmlNonblankStringSchema,
+    state: xmlNonblankStringSchema.optional(),
+});
 
-/** Re-fetches a declared Query setup when mounted. */
+/** Re-fetches a declared Query setup and optionally patches State after success. */
 export function Invalidate({ props }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const { query } = resolveXmlProps(props, ctx, invalidatePropsSchema);
+    const { query, state } = resolveXmlProps(props, ctx, invalidatePropsSchema);
+    const value = readXmlProp(props, 'value');
     const known = query in services.setups;
 
     useEffect(() => {
         if (!known) return;
 
-        void services.invalidate(query);
-    }, [known, query, services]);
+        void services.invalidate(query).then((completed) => {
+            // Apply the optional state transition only after a successful refresh.
+            if (!completed || state == null || value == null) return;
+
+            const target = resolveValue(ctx, state);
+            const patch = evaluate(value, ctx);
+            if (!isValtioProxy(target) || patch == null || typeof patch !== 'object' || Array.isArray(patch)) {
+                throw new Error('Invalidate value must target a declared State with an object patch');
+            }
+
+            for (const [key, entry] of Object.entries(patch)) {
+                if (!isSafePropertyName(key) || !Object.hasOwn(target, key)) {
+                    throw new Error(`Invalidate cannot update undeclared State property "${key}"`);
+                }
+
+                target[key] = entry;
+            }
+        });
+    }, [ctx, known, query, services, state, value]);
 
     if (!known) {
         throw new Error(`Invalidate query "${query}" does not reference a declared State or Query`);
+    }
+    if ((state == null) !== (value == null)) {
+        throw new Error('Invalidate requires both state and value for a follow-up patch');
     }
 
     return null;
