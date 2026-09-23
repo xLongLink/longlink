@@ -60,8 +60,10 @@ def create_engine(env: Envs) -> AsyncEngine:
             database=env.DATABASE_NAME,
         )
 
+    # Hide bound values in SQL logging and database exceptions, including runtime credentials.
+    engine_kwargs: dict[str, object] = {"hide_parameters": True}
+
     # Configure connection health checks and reuse only for network databases.
-    engine_kwargs: dict[str, object] = {}
     if dburl.get_backend_name() != "sqlite":
         engine_kwargs["pool_pre_ping"] = True
         engine_kwargs["pool_recycle"] = 20

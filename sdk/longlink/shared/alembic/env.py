@@ -47,6 +47,7 @@ async def run_async_migrations(database_url: str) -> None:
         database_url,
         poolclass=pool.NullPool,
         connect_args=config.attributes["connect_args"],
+        hide_parameters=True,
     )
     try:
         async with connectable.connect() as connection:

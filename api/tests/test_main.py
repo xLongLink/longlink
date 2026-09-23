@@ -108,5 +108,6 @@ async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.Monk
     # Assert
     assert result is session_factory
     kwargs = captured["kwargs"]
+    assert kwargs["hide_parameters"] is True
     assert kwargs["isolation_level"] == "READ COMMITTED"
     assert kwargs["pool_use_lifo"] is True

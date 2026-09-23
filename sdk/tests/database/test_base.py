@@ -203,13 +203,13 @@ def test_connect_args_uses_ca_certificate(monkeypatch: pytest.MonkeyPatch) -> No
         pytest.param(
             Envs(ENV="testing"),
             make_url("sqlite+aiosqlite:///:memory:"),
-            {},
+            {"hide_parameters": True},
             id="testing",
         ),
         pytest.param(
             Envs(ENV="development"),
             make_url("sqlite+aiosqlite:///./dev.db"),
-            {},
+            {"hide_parameters": True},
             id="development",
         ),
         pytest.param(
@@ -239,6 +239,7 @@ def test_connect_args_uses_ca_certificate(monkeypatch: pytest.MonkeyPatch) -> No
                 database="longlink",
             ),
             {
+                "hide_parameters": True,
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
