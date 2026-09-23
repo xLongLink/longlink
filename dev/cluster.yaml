@@ -25,11 +25,19 @@ registries:
             'localhost:15000':
                 endpoint:
                     - 'http://longlink-registry:5000'
+volumes:
+    # systemd-resolved's loopback stub is not reachable from k3d containers.
+    - volume: /run/systemd/resolve:/run/systemd/resolve:ro
+      nodeFilters:
+          - server:0
 options:
     k3d:
         wait: true
     k3s:
         extraArgs:
+            - arg: --resolv-conf=/run/systemd/resolve/resolv.conf
+              nodeFilters:
+                  - server:0
             - arg: --disable=traefik
               nodeFilters:
                   - server:0
