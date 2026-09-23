@@ -1,8 +1,8 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser
+from src.utils import images
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
-from src.routes.v1.solutions import image_metadata
 
 router = APIRouter()
 
@@ -11,5 +11,5 @@ router = APIRouter()
 async def inspect_image(image: Image):
     """Inspect a container image and return its LongLink metadata."""
 
-    # Reuse the shared missing-image response for every image inspection.
-    return await image_metadata(image)
+    # Require declared metadata for every image inspection.
+    return await images.required_metadata(image)

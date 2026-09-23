@@ -2,7 +2,7 @@ import json
 import httpx2
 import asyncio
 from pydantic import TypeAdapter
-from src.errors import ForbiddenError
+from src.errors import NotFoundError, ForbiddenError
 from src.logger import logger
 from collections.abc import Mapping
 from src.models.types import IMAGE_DIGEST_PATTERN, Image
@@ -110,6 +110,16 @@ async def metadata(image: Image) -> LongLinkMetadata | None:
         except (httpx2.HTTPError, TimeoutError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None
+
+
+async def required_metadata(image: Image) -> LongLinkMetadata:
+    """Return image metadata or raise the stable missing-image response."""
+
+    # Require declared metadata before callers mutate durable Solution state.
+    result = await metadata(image)
+    if result is None:
+        raise NotFoundError("Image metadata not found")
+    return result
 
 
 async def inspect(client: httpx2.AsyncClient, image: Image, base: str) -> LongLinkMetadata | None:

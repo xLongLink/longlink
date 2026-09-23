@@ -5,11 +5,6 @@ import {
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Builds the cached solutions collection key for one organization. */
-export function organizationSolutionsKey(organizationId: string | undefined) {
-    return ['api', organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null] as const;
-}
-
 /** Fetches membership and solutions for one organization route. */
 export function useOrganizationRoute(organizationSlug: string) {
     const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
@@ -24,8 +19,7 @@ export function useOrganizationRoute(organizationSlug: string) {
     const membership = membershipQuery.data;
     const organizationId = membership?.organization.id;
 
-    // Resolve the collection cache key once so fetching and invalidation share one path template.
-    const solutionsKey = organizationSolutionsKey(organizationId);
+    const solutionsKey = ['api', organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null] as const;
     const solutionsPath = solutionsKey[1];
     const solutionsQuery = useQuery({
         queryKey: solutionsKey,
