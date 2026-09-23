@@ -2,7 +2,6 @@ import main
 import runpy
 import pytest
 from pathlib import Path
-from contextlib import asynccontextmanager
 from src.database import session as database_session
 from collections.abc import Callable, Awaitable
 from fastapi.testclient import TestClient
@@ -33,41 +32,22 @@ def test_main_skips_static_routes_when_web_bundle_is_absent(monkeypatch: pytest.
     assert all(getattr(route, "path", None) != "/" for route in app.routes)
 
 
-async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile the administrator before starting and cancelling background jobs."""
+async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Start administrator reconciliation and scheduler work without delaying serving."""
 
     # Arrange
     events: list[str] = []
-
-    class Session:
-        """Record lifecycle database work."""
-
-        async def commit(self) -> None:
-            """Record the administrator transaction commit."""
-
-            events.append("commit")
-
-    @asynccontextmanager
-    async def session_scope():
-        """Yield the session used for administrator reconciliation."""
-
-        yield Session()
-
-    async def ensure_administrator(_session: Session) -> None:
-        """Record administrator reconciliation."""
-
-        events.append("administrator")
 
     async def dispose_engine() -> None:
         """Record shared database engine disposal."""
 
         events.append("dispose")
 
-    def run_scheduler(name: str) -> Callable[[], Awaitable[None]]:
-        """Return one scheduler that records its startup and lifespan-shutdown cancellation."""
+    def run_background_task(name: str) -> Callable[[], Awaitable[None]]:
+        """Return one task that records its startup and lifespan-shutdown cancellation."""
 
-        async def scheduler() -> None:
-            """Record scheduler startup and cancellation from lifespan shutdown."""
+        async def background_task() -> None:
+            """Record background task startup and cancellation from lifespan shutdown."""
 
             events.append(f"{name} start")
             try:
@@ -76,11 +56,10 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
                 events.append(f"{name} cancel")
                 raise
 
-        return scheduler
+        return background_task
 
-    monkeypatch.setattr(main, "session_scope", session_scope)
-    monkeypatch.setattr(main.user_service, "ensure_administrator", ensure_administrator)
-    monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_scheduler("scheduler"))
+    monkeypatch.setattr(main.jobs, "run_administrator_reconciler", run_background_task("administrator"))
+    monkeypatch.setattr(main.jobs, "run_operation_scheduler", run_background_task("scheduler"))
     monkeypatch.setattr(main, "dispose_engine", dispose_engine)
 
     # Act
@@ -90,10 +69,10 @@ async def test_lifespan_reconciles_administrator_and_stops_background_jobs(monke
 
     # Assert
     assert events == [
-        "administrator",
-        "commit",
+        "administrator start",
         "scheduler start",
         "serving",
+        "administrator cancel",
         "scheduler cancel",
         "dispose",
     ]

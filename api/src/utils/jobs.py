@@ -7,7 +7,7 @@ from src.operations import handlers
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from src.database.session import session_scope
-from src.database.services import operations
+from src.database.services import users, operations
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.operations import Operation
 
@@ -116,3 +116,20 @@ async def run_operation_scheduler() -> None:
             await execute(operation)
         except Exception:
             logger.exception("Operation scheduler failed for %s", operation.id)
+
+
+async def run_administrator_reconciler() -> None:
+    """Reconcile the Platform administrator after the database becomes available."""
+
+    # Retry database initialization without delaying process startup and static route serving.
+    while True:
+        try:
+            async with session_scope() as session:
+                await users.ensure_administrator(session)
+                await session.commit()
+        except Exception:
+            logger.exception("Administrator reconciliation failed")
+            await asyncio.sleep(1)
+            continue
+
+        return
