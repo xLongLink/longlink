@@ -1,4 +1,4 @@
-FROM ghcr.io/voidzero-dev/vite-plus:0.3.2@sha256:ad19b283b2a5a551493f87c150bd1f20e13440cbf83579ac88bd284293bbd6d6 AS web-builder
+FROM ghcr.io/voidzero-dev/vite-plus:0.3.3@sha256:c25901a17884c55d71e34c1783fa8a77a5eb7e8834735868da775588cd30a1b4 AS web-builder
 
 WORKDIR /repo/web
 COPY --chown=vp:vp web/package.json web/bun.lock ./
