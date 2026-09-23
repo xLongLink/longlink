@@ -17,16 +17,6 @@ from src.database.models.solutions import Revision, Solution
 router = APIRouter()
 
 
-async def image_metadata(image: Image) -> LongLinkMetadata:
-    """Return required image metadata or preserve the public missing-image response."""
-
-    # Resolve the registry image before applying route-specific validation or mutations.
-    metadata = await images.metadata(image)
-    if metadata is None:
-        raise HTTPException(status_code=404, detail="Image metadata not found")
-    return metadata
-
-
 async def update_candidate(
     session: AsyncSession, solution_id: UUID, user_id: UUID, expected_revision_id: UUID | None = None
 ) -> tuple[Solution, Revision, Image, LongLinkMetadata]:
@@ -41,7 +31,7 @@ async def update_candidate(
         raise HTTPException(status_code=409, detail="Solution has no desired revision")
     source, revision_id = Image(revision.source), revision.id
     await session.commit()
-    metadata = await image_metadata(source)
+    metadata = await images.required_metadata(source)
 
     # Revalidate permissions and the source after inspection before returning a candidate.
     solution = await solutions.access(session, solution_id, user_id)
@@ -79,7 +69,7 @@ async def create_solution(
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Resolve immutable image metadata before creating durable Solution state.
-    metadata = await image_metadata(payload.image)
+    metadata = await images.required_metadata(payload.image)
 
     await solutions.create(
         session,

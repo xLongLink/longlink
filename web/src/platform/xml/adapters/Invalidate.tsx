@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { useEffect } from 'react';
 import type { Props } from '@/xml/types';
-import { isValtioProxy } from '@/xml/core/state';
 import { useXmlRuntime } from '@/xml/core/context';
 import { evaluate } from '@/xml/expressions/evaluate';
-import { isSafePropertyName, resolveValue } from '@/xml/expressions/resolve';
+import { resolveValue } from '@/xml/expressions/resolve';
+import { applyDeclaredStatePatch, isValtioProxy } from '@/xml/core/state';
 import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '@/xml/core/props';
 
 const invalidatePropsSchema = z.object({
@@ -32,13 +32,7 @@ export function Invalidate({ props }: Props) {
                 throw new Error('Invalidate value must target a declared State with an object patch');
             }
 
-            for (const [key, entry] of Object.entries(patch)) {
-                if (!isSafePropertyName(key) || !Object.hasOwn(target, key)) {
-                    throw new Error(`Invalidate cannot update undeclared State property "${key}"`);
-                }
-
-                target[key] = entry;
-            }
+            applyDeclaredStatePatch(target, patch, 'Invalidate');
         });
     }, [ctx, known, query, services, state, value]);
 

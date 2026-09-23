@@ -3,13 +3,13 @@ import { api } from '@/lib/api';
 import { renderNode } from '../core/node';
 import { useApiError } from '@/lib/errors';
 import { ACTION_METHODS } from '../constants';
-import { isValtioProxy } from '../core/state';
 import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
 import { createContext, useContext } from 'react';
 import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@astryxdesign/core/Toast';
 import { resolveControlUrl, resolveRequestUrl } from '../core/url';
+import { applyDeclaredStatePatch, isValtioProxy } from '../core/state';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
 import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
@@ -292,13 +292,7 @@ async function executePatch(props: ASTProps, ctx: Scope, services: RuntimeServic
         throw new Error('Patch value must evaluate to an object');
     }
 
-    for (const [key, entry] of Object.entries(value)) {
-        if (!isSafePropertyName(key) || !Object.hasOwn(target, key)) {
-            throw new Error(`Patch cannot update undeclared State property "${key}"`);
-        }
-
-        target[key] = entry;
-    }
+    applyDeclaredStatePatch(target, value, 'Patch');
 }
 
 /** Builds multipart form data from an XML request form expression. */
