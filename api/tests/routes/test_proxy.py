@@ -404,7 +404,8 @@ async def test_solution_proxy_rejects_anonymous_without_gateway_access(
     """Reject unauthenticated proxy requests before solution access checks."""
 
     # Arrange
-    solution, _ = await create_running_solution(users[0])
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
     reject_gateway_access(monkeypatch)
 
     # Act
@@ -456,8 +457,9 @@ async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
 ) -> None:
     """Reject missing, empty, and foreign origins before an authenticated write reaches the gateway."""
 
-    # Arrange a running Solution and fail if CSRF protection is bypassed.
-    solution, _ = await create_running_solution(users[0])
+    # Arrange a persisted Solution and fail if CSRF protection is bypassed.
+    organization = await create_organization(users[0])
+    solution = await create_solution(organization)
     reject_gateway_access(monkeypatch)
     headers = untrusted_origin_headers(clients[0], origin)
 

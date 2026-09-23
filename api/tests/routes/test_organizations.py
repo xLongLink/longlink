@@ -96,12 +96,6 @@ async def test_create_organization_rejects_when_compute_registry_is_unavailable(
 ) -> None:
     """Reject Organization creation when no ready Compute registry is available."""
 
-    # Arrange
-    compute = await create_compute()
-    async with session_scope() as session:
-        await session.delete(compute)
-        await session.commit()
-
     # Act
     response = await clients[0].post("/api/v1/organizations", json={"name": "acme"})
 
@@ -406,7 +400,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Arrange
     owner = users[0]
     client = clients[0]
-    organization = await create_organization(owner, compute=await create_compute())
+    organization = await create_organization(owner)
 
     class FakeStorage:
         """Provide storage usage responses for the Organization resource endpoint."""
@@ -470,13 +464,6 @@ async def test_organization_storage_endpoint_allows_members(
 
     monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
     monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
-    # Resource inspection starts from a ready Organization, not its queued creation state.
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.status = Status.running
-        persisted.database_state = DatabaseState.available
-        await session.commit()
     client = clients[1]
 
     # Act

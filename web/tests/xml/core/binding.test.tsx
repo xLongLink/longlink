@@ -4,7 +4,7 @@ import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, RenderXML, cleanupMountedRoot } from '../helpers';
+import { createContext, RenderXML, cleanupMountedRoot, mountXml } from '../helpers';
 
 describe('useBindableValue', () => {
     let container: HTMLDivElement | undefined;
@@ -20,15 +20,10 @@ describe('useBindableValue', () => {
 
     it('updates unbound values from reactive State', async () => {
         const ctx = createContext();
-        const ast = parseXML(
-            '<longlink><State id="form" value="first" /><TextInput label="Name" value="form.value" /></longlink>'
-        );
-        container = document.createElement('div');
-        root = createRoot(container);
-
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
+        ({ container, root } = await mountXml(
+            '<State id="form" value="first" /><TextInput label="Name" value="form.value" />',
+            ctx
+        ));
 
         const input = container.querySelector('input');
         expect(input?.value).toBe('first');
@@ -48,17 +43,12 @@ describe('useBindableValue', () => {
 
     it('writes TextInput values to bound State', async () => {
         const ctx = createContext();
-        const ast = parseXML(
-            '<longlink><State id="form" value="first" /><TextInput label="Name" value="$form.value" /></longlink>'
-        );
-        container = document.createElement('div');
-        document.body.append(container);
-        root = createRoot(container);
-        vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
+        ({ container, root } = await mountXml(
+            '<State id="form" value="first" /><TextInput label="Name" value="$form.value" />',
+            ctx,
+            undefined,
+            true
+        ));
 
         const input = container.querySelector('input');
         if (!input) throw new Error('TextInput did not render');
@@ -78,16 +68,12 @@ describe('useBindableValue', () => {
     it('rejects unsafe writable binding paths', async () => {
         // Arrange
         const ctx = createContext();
-        const ast = parseXML(
-            '<longlink><State id="form" value="first" /><TextInput label="Name" value="$form.__proto__" /></longlink>'
-        );
-        container = document.createElement('div');
-        root = createRoot(container);
 
         // Act
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
+        ({ container, root } = await mountXml(
+            '<State id="form" value="first" /><TextInput label="Name" value="$form.__proto__" />',
+            ctx
+        ));
 
         // Assert
         expect(container.textContent).toContain('XML binding path must use safe property names');
@@ -95,21 +81,15 @@ describe('useBindableValue', () => {
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {
         const ctx = createContext();
-        const ast = parseXML('<longlink><Query id="records" path="/records" /><Text>Loaded child</Text></longlink>');
-        const output = document.createElement('div');
-        container = output;
-        root = createRoot(output);
         vi.stubGlobal(
             'fetch',
             async () => new Response(JSON.stringify({ detail: 'Records unavailable' }), { status: 503 })
         );
 
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
+        ({ container, root } = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>', ctx));
 
-        expect(output.textContent).toContain('Unable to initialize this view');
-        expect(output.textContent).not.toContain('Loaded child');
+        expect(container.textContent).toContain('Unable to initialize this view');
+        expect(container.textContent).not.toContain('Loaded child');
     });
 
     it('rejects an invalid Query setup before fetching', async () => {

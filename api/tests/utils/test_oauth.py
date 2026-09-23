@@ -27,17 +27,20 @@ def test_google_identity_accepts_verified_profile() -> None:
     assert result.avatar == "https://example.com/avatar.png"
 
 
-@pytest.mark.parametrize("payload", [{"email_verified": False}, {}, [], None])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"sub": "google-subject-1", "email": "user@example.com", "email_verified": False},
+        {"sub": "google-subject-1", "email": "user@example.com"},
+        [],
+        None,
+    ],
+)
 def test_google_identity_rejects_unverified_or_malformed_payload(payload: object) -> None:
     """Reject Google profiles that do not prove email ownership."""
 
-    # Arrange
-    profile = {"sub": "google-subject-1", "email": "user@example.com"}
-    if isinstance(payload, dict):
-        profile = {**profile, **payload}
-
     # Act
-    result = oauth._google_identity(profile if isinstance(payload, dict) else payload)
+    result = oauth._google_identity(payload)
 
     # Assert
     assert result is None

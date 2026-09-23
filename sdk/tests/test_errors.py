@@ -53,7 +53,6 @@ def test_installed_validation_handler_hides_submitted_values() -> None:
     # Assert
     assert response.status_code == 422
     assert response.json() == {"detail": "Invalid request. Please check your input and try again."}
-    assert "secret-value" not in response.text
 
 
 def test_installed_unexpected_handler_hides_exception_details_and_disables_caching() -> None:
@@ -77,7 +76,6 @@ def test_installed_unexpected_handler_hides_exception_details_and_disables_cachi
     assert response.status_code == 500
     assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
     assert response.headers["cache-control"] == "no-store"
-    assert "secret-value" not in response.text
 
 
 def test_installed_handlers_preserve_a_solution_owned_http_handler() -> None:

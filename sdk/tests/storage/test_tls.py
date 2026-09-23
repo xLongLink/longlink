@@ -28,12 +28,9 @@ OEByyXcs3Bef0FLkH/Mp/KriexKxoCEGaBXq
 def test_certificate_file_rejects_invalid_pem_before_creating_file() -> None:
     """Reject an invalid storage CA before publishing its temporary filename."""
 
-    # Arrange
-    invalid_pem = "storage-ca-pem"
-
     # Act and assert
     with pytest.raises(ssl.SSLError):
-        with tls.certificate_file(invalid_pem):
+        with tls.certificate_file("storage-ca-pem"):
             pass
 
 

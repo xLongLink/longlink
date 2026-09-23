@@ -174,7 +174,6 @@ async def test_authenticated_organization_creation_rejects_untrusted_origin_befo
     """Reject unsafe cookie-authenticated writes before the route can persist data."""
 
     # Arrange
-    await create_compute()
     headers = untrusted_origin_headers(clients[0], origin)
 
     # Act
@@ -201,8 +200,6 @@ async def test_authenticated_profile_update_rejects_untrusted_origin_without_mut
     """Reject cookie-authenticated profile writes before the route can persist data."""
 
     # Arrange
-    current = await clients[0].get("/api/v1/me")
-    original_name = current.json()["name"]
     headers = untrusted_origin_headers(clients[0], origin)
 
     # Act
@@ -217,7 +214,7 @@ async def test_authenticated_profile_update_rejects_untrusted_origin_without_mut
     async with session_scope() as session:
         persisted = await session.get(User, users[0].id)
     assert persisted is not None
-    assert persisted.name == original_name
+    assert persisted.name == users[0].name
 
 
 @pytest.mark.parametrize("origin", [None, "https://attacker.example"])

@@ -246,7 +246,6 @@ async def test_oauth_callback_rejects_invalid_state_without_provider_exchange(
 async def test_oauth_callback_rejects_provider_error_and_missing_code_without_exchange(
     client: AsyncClient,
     users: tuple[User, User, User],
-    oauth_responses: dict[str, object],
     monkeypatch: pytest.MonkeyPatch,
     provider: oauth.OAuthProvider,
 ) -> None:
@@ -297,7 +296,6 @@ async def test_oauth_callback_rejects_provider_error_and_missing_code_without_ex
 async def test_oauth_callback_rejects_unresolved_identity_without_account_changes(
     client: AsyncClient,
     users: tuple[User, User, User],
-    oauth_responses: dict[str, object],
     monkeypatch: pytest.MonkeyPatch,
     provider: oauth.OAuthProvider,
 ) -> None:

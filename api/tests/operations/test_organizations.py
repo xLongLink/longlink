@@ -163,10 +163,7 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
             calls.append("storage")
             raise RuntimeError("storage failed")
 
-    class Kubernetes(OperationKubernetes):
-        """Expose Organization Kubernetes operations."""
-
-    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
 
     # Act and assert

@@ -122,9 +122,10 @@ def test_mysql_database_url_builds_required_tls_context() -> None:
     # Assert
     assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
     assert connection.connect_args["init_command"] == "SET time_zone = '+00:00'"
-    assert isinstance(connection.connect_args["ssl"], ssl.SSLContext)
-    assert connection.connect_args["ssl"].check_hostname is False
-    assert connection.connect_args["ssl"].verify_mode == ssl.CERT_NONE
+    context = connection.connect_args["ssl"]
+    assert isinstance(context, ssl.SSLContext)
+    assert context.check_hostname is False
+    assert context.verify_mode == ssl.CERT_NONE
 
 
 def test_mysql_database_url_builds_verifying_ca_tls_context() -> None:

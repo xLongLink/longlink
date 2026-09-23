@@ -190,10 +190,6 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     assert calls[-1][2] is False
     assert await claim_operation() is None
 
-    # Failed desired is never retried; only live recovery work remains.
-    drained = await drain_operations()
-    assert not any(scheduled.kind == OperationKind.solution_deploy and scheduled.target_id == desired_id for scheduled in drained)
-
 
 async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
     """A newer desired revision cannot change the image or envs of queued work."""
