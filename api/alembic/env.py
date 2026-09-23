@@ -67,7 +67,7 @@ def run_migrations_online() -> None:
         """Run Alembic migrations through an async SQLAlchemy engine."""
 
         # Create one unpooled async engine for the migration run.
-        connectable = create_async_engine(database.url, connect_args=database.connect_args, poolclass=pool.NullPool)
+        connectable = create_async_engine(database.url, connect_args=database.connect_args, poolclass=pool.NullPool, hide_parameters=True)
 
         def do_run_migrations(sync_connection: Connection) -> None:
             """Configure Alembic against the synchronous bridge connection."""

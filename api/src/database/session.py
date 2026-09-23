@@ -42,7 +42,8 @@ def get_session() -> async_sessionmaker[AsyncSession]:
 
     connection = urls.database(env.DATABASE_URL)
 
-    engine_kwargs: dict[str, object] = {"connect_args": connection.connect_args}
+    # Prevent database exceptions and SQL logging from exposing bound configuration values.
+    engine_kwargs: dict[str, object] = {"connect_args": connection.connect_args, "hide_parameters": True}
 
     # Keep connection health checks and reuse policies limited to network databases.
     if not connection.url.drivername.startswith("sqlite+"):
