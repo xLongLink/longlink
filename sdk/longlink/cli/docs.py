@@ -123,7 +123,7 @@ def _helpers(
     return list(helpers.values())
 
 
-def ui_command(component: str | None = None) -> None:
+def docs_command(component: str | None = None) -> None:
     """List XML components or show documentation for one component."""
 
     # Build the catalog from top-level elements carrying docs metadata.
@@ -146,7 +146,7 @@ def ui_command(component: str | None = None) -> None:
                 description = _text(element, f"{XSD}annotation/{XSD}documentation")
                 lines.append(f"- {element.get('name')} - {description}")
         lines.append("")
-        lines.append("Run `longlink ui <component>` for attributes and examples.")
+        lines.append("Run `longlink docs --component <component>` for attributes and examples.")
         typer.echo("\n".join(lines))
         return
 
@@ -161,7 +161,7 @@ def ui_command(component: str | None = None) -> None:
         None,
     )
     if match is None:
-        raise CliError(f"Unknown component: {component}. Run `longlink ui` to list available components.")
+        raise CliError(f"Unknown component: {component}. Run `longlink docs` to list available components.")
 
     # Render the component, its helper elements, and its authored example.
     element, metadata = match

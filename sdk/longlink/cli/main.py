@@ -1,8 +1,8 @@
 import typer
 from functools import wraps
 from collections.abc import Callable
-from longlink.cli.ui import ui_command
 from longlink.cli.dev import dev_command
+from longlink.cli.docs import docs_command
 from longlink.cli.init import init_command
 from longlink.cli.build import build_command
 from longlink.cli.errors import CliError
@@ -30,6 +30,6 @@ def handle_errors[**Parameters](command: Callable[Parameters, None]) -> Callable
 main = typer.Typer(help="LongLink command line interface.")
 main.command(name="build")(handle_errors(build_command))
 main.command(name="dev")(handle_errors(dev_command))
-main.command(name="ui")(handle_errors(ui_command))
+main.command(name="docs")(handle_errors(docs_command))
 main.command(name="init")(handle_errors(init_command))
 main.command(name="migrate")(handle_errors(migrate_command))

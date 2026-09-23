@@ -75,7 +75,7 @@ export default function DocsArticleRoute() {
                 <Heading id="create-a-project" level={2}>
                     Create a Project
                 </Heading>
-                <CodeBlock code={'uv add longlink\nuv run longlink init'} language="bash" />
+                <CodeBlock code={'uv add longlink\nuv run longlink init --folder my-solution'} language="bash" />
                 <Text as="p">The command creates a project scaffold with everything needed to get started.</Text>
                 <CodeBlock
                     code={
