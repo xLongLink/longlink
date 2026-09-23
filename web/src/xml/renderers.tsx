@@ -1,11 +1,20 @@
-import { useSnapshot } from 'valtio';
 import { renderNode } from './core/node';
 import { useApiError } from '@/lib/errors';
+import { getVersion, subscribe } from 'valtio';
 import { Stack } from '@astryxdesign/core/Stack';
 import type { ASTNode, XmlRuntime } from './types';
 import { Banner } from '@astryxdesign/core/Banner';
 import { getSetupNodes, setupContext, XmlContext } from './core/context';
-import { Component, type ReactNode, useEffect, useEffectEvent, useMemo, useState } from 'react';
+import {
+    Component,
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useEffectEvent,
+    useMemo,
+    useState,
+    useSyncExternalStore,
+} from 'react';
 
 /** Keeps XML rendering failures scoped to the XML surface. */
 class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, { error: Error | null }> {
@@ -51,7 +60,17 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
     const [initializedAst, setInitializedAst] = useState<ASTNode | null>(null);
     const [setupFailure, setSetupFailure] = useState<{ ast: ASTNode; error: unknown } | null>(null);
     const setupError = setupFailure?.ast === ast ? setupFailure.error : null;
-    useSnapshot(ctx.scope.bindings);
+    const subscribeToBindings = useCallback(
+        (notify: () => void) => subscribe(ctx.scope.bindings, notify),
+        [ctx.scope.bindings]
+    );
+
+    // The renderer must react to dynamically resolved State and Query bindings.
+    useSyncExternalStore(
+        subscribeToBindings,
+        () => getVersion(ctx.scope.bindings),
+        () => getVersion(ctx.scope.bindings)
+    );
 
     useEffect(() => {
         // Do not initialize an invalid document.
