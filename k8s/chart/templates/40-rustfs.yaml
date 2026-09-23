@@ -88,8 +88,10 @@ spec:
                         {{- end }}
                       - name: RUSTFS_CHART_POD_NAME
                         valueFrom: {fieldRef: {fieldPath: metadata.name}}
+                      {{- if ne .Values.rustfs.mode "standalone" }}
                       - name: RUSTFS_LOCAL_ENDPOINT_HOST
                         value: "$(RUSTFS_CHART_POD_NAME).rustfs-headless.rustfs.svc.cluster.local"
+                      {{- end }}
                   envFrom:
                       - secretRef:
                             name: longlink-rustfs
