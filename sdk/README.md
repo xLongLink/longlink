@@ -15,7 +15,7 @@
 ## Getting started
 
 ```bash
-longlink init
+longlink init --folder my-solution
 ```
 
 > See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink Solution.
@@ -23,8 +23,8 @@ longlink init
 Inspect the XML component catalog and individual component references from the CLI:
 
 ```bash
-longlink ui
-longlink ui Button
+longlink docs
+longlink docs --component Button
 ```
 
 <br/>
