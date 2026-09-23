@@ -7,8 +7,11 @@ import { resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
 
 const textInputPropsSchema = z.object({
+    isDisabled: z.boolean().default(false),
+    isOptional: z.boolean().default(false),
     isRequired: z.boolean().default(false),
     label: xmlNonblankStringSchema,
+    labelTooltip: z.string().optional(),
     property: z.string().optional(),
     placeholder: z.string().optional(),
     type: z.enum(TEXT_INPUT_TYPES).optional(),
@@ -16,9 +19,12 @@ const textInputPropsSchema = z.object({
 
 export function TextInput({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { isRequired, label, property, placeholder, type } = resolveXmlProps(props, ctx, textInputPropsSchema, [
-        'label',
-    ]);
+    const { isDisabled, isOptional, isRequired, label, labelTooltip, property, placeholder, type } = resolveXmlProps(
+        props,
+        ctx,
+        textInputPropsSchema,
+        ['label']
+    );
     const binding = useBindableValue(props, 'value', ctx, (value) => String(value ?? ''), property);
 
     return (
@@ -26,7 +32,10 @@ export function TextInput({ props }: Props) {
             type={type}
             label={label}
             value={binding.value}
+            isDisabled={isDisabled}
+            isOptional={isOptional}
             isRequired={isRequired}
+            labelTooltip={labelTooltip}
             placeholder={placeholder}
             onChange={binding.setValue}
         />

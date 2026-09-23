@@ -20,9 +20,13 @@
     <State id="memberMenu" item="${null}" role="read" open="${false}" />
     <State
         id="solutionMenu"
+        envs="${{}}"
         item="${null}"
-        logsOpen="${false}"
         deleteOpen="${false}"
+        logsOpen="${false}"
+        open="${false}"
+        removed="${{}}"
+        reviewing="${false}"
     />
     <State
         id="createSolution"
@@ -43,6 +47,17 @@
         id="createSolutionMetadata"
         if="${createSolution.open &amp;&amp; createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
+    />
+    <Query
+        id="updateCandidate"
+        if="$solutionMenu.reviewing"
+        path="/api/v1/solutions/${solutionMenu.item.id}/update"
+    />
+    <Invalidate
+        if="$solutionMenu.reviewing"
+        query="updateCandidate"
+        state="solutionMenu"
+        value="${{ open: true, reviewing: false }}"
     />
 
     <Stack gap="8">
@@ -283,29 +298,24 @@
                                 header="Actions"
                                 align="end"
                             >
-                                <Stack
-                                    direction="horizontal"
-                                    gap="1"
-                                    align="center"
-                                    justify="end"
-                                >
-                                    <SolutionUpdate
-                                        organizationId="$membership.organization.id"
-                                        solution="$row"
+                                <MoreMenu value="$solutionMenu">
+                                    <Option
+                                        if="${row.desired_revision_id &amp;&amp; !row.deployment_pending &amp;&amp; row.status !== 'creating'}"
+                                        value="${{ envs: {}, item: row, logsOpen: false, deleteOpen: false, open: false, removed: {}, reviewing: true }}"
+                                        label="Update"
+                                        icon="refresh"
                                     />
-                                    <MoreMenu value="$solutionMenu">
-                                        <Option
-                                            value="${{ item: row, logsOpen: true, deleteOpen: false }}"
-                                            label="Logs"
-                                            icon="logs"
-                                        />
-                                        <Option
-                                            value="${{ item: row, logsOpen: false, deleteOpen: true }}"
-                                            label="Delete"
-                                            icon="trash"
-                                        />
-                                    </MoreMenu>
-                                </Stack>
+                                    <Option
+                                        value="${{ item: row, logsOpen: true, deleteOpen: false, open: false, reviewing: false }}"
+                                        label="Logs"
+                                        icon="logs"
+                                    />
+                                    <Option
+                                        value="${{ item: row, logsOpen: false, deleteOpen: true, open: false, reviewing: false }}"
+                                        label="Delete"
+                                        icon="trash"
+                                    />
+                                </MoreMenu>
                             </TableColumn>
                         </Table>
                     </Stack>
@@ -436,6 +446,60 @@
                 </Stack>
             </Step>
         </Stepper>
+    </Dialog>
+    <Dialog title="Update ${solutionMenu.item.name}" isOpen="$solutionMenu.open" purpose="form" height="calc(100dvh - 2rem)">
+        <Stack gap="3">
+            <Stack direction="horizontal" gap="2" align="center" wrap="wrap">
+                <Text type="supporting" color="secondary">
+                    Current ${imageDigest(updateCandidate.current_image)}
+                </Text>
+                <Text type="supporting" color="primary">
+                    New ${imageDigest(updateCandidate.metadata.image)}
+                </Text>
+            </Stack>
+            <For each="$updateCandidate.metadata.environments" as="environment">
+                <Stack gap="2">
+                    <TextInput
+                        label="$environment.name"
+                        labelTooltip="$environment.description"
+                        type="password"
+                        value="$solutionMenu.envs"
+                        property="$environment.name"
+                        isDisabled="${solutionMenu.removed[environment.name] === true}"
+                        isOptional="${!environment.required}"
+                        isRequired="${environment.required &amp;&amp; (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) || solutionMenu.removed[environment.name] === true)}"
+                        placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) ? 'Configured: preserve existing value' : environment.description || 'Enter value'}"
+                    />
+                    <CheckboxInput
+                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) &amp;&amp; !environment.required}"
+                        label="Remove ${environment.name}"
+                        value="$solutionMenu.removed"
+                        property="$environment.name"
+                    />
+                </Stack>
+            </For>
+            <Stack direction="horizontal" gap="2" justify="end" wrap="wrap">
+                <Action>
+                    <Patch state="solutionMenu" value="${{ open: false }}" />
+                    <Button variant="ghost">Cancel</Button>
+                </Action>
+                <Action>
+                    <Request
+                        url="/api/v1/solutions/${solutionMenu.item.id}/update"
+                        method="POST"
+                        closeDialog="true"
+                        json="${{ envs: updateEnvironmentPatch(solutionMenu.envs, solutionMenu.removed), expected_revision_id: updateCandidate.revision_id }}"
+                    />
+                    <Patch state="solutions" invalidate="true" />
+                    <Button
+                        variant="primary"
+                        disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) || !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}"
+                    >
+                        Update solution
+                    </Button>
+                </Action>
+            </Stack>
+        </Stack>
     </Dialog>
     <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen">
         <Invalidate query="solutionLogs" if="$solutionMenu.logsOpen" />

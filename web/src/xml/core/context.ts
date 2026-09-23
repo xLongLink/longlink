@@ -32,7 +32,7 @@ export function createContext(options: CreateContextOptions): XmlRuntime {
     return {
         scope: { bindings: proxy({ params: ref(options.params) }), registry: options.registry },
         services: {
-            invalidate: async () => {},
+            invalidate: async () => false,
             navigate: options.navigate,
             navigationBaseUrl: options.navigationBaseUrl,
             requestCompleted: options.requestCompleted,
@@ -138,22 +138,23 @@ export async function setupContext(
 
     services.invalidate = async (id) => {
         // Ignore invalidations after the rendering scope releases ownership.
-        if (options.isActive && !options.isActive()) return;
+        if (options.isActive && !options.isActive()) return false;
 
         // Keep stale data visible while the refresh runs; restore it if the refresh fails.
         const previous = scope.bindings[id];
         const setup = Object.hasOwn(services.setups, id) ? services.setups[id] : undefined;
-        if (!setup) return;
+        if (!setup) return false;
 
         try {
             await setup();
+            return true;
         } catch (error: unknown) {
-            if (options.isActive && !options.isActive()) return;
+            if (options.isActive && !options.isActive()) return false;
 
             scope.bindings[id] = previous;
             if (options.onError) {
                 options.onError(error);
-                return;
+                return false;
             }
             throw error;
         }

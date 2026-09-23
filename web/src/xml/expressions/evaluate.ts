@@ -39,6 +39,62 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
             Object.entries(value).filter(([, entry]) => typeof entry === 'string' && entry.length > 0)
         );
     },
+    hasConfiguredEnvironment: (configured, name) =>
+        Array.isArray(configured) && typeof name === 'string' && configured.includes(name),
+    hasMissingRequiredUpdateValues: (definitions, configured, values, removed) => {
+        // Preserve configured required values unless the update explicitly removes them.
+        if (!Array.isArray(definitions) || !Array.isArray(configured) || !isRecord(values) || !isRecord(removed)) {
+            return false;
+        }
+
+        return definitions.some((definition) => {
+            if (!isRecord(definition) || definition.required !== true || typeof definition.name !== 'string')
+                return false;
+
+            const name = definition.name;
+            return (
+                removed[name] === true ||
+                (!configured.includes(name) && (typeof values[name] !== 'string' || values[name].trim().length === 0))
+            );
+        });
+    },
+    hasSolutionUpdateChanges: (candidate, values, removed) => {
+        // A new image or any explicit environment replacement or removal permits submission.
+        if (!isRecord(candidate) || !isRecord(values) || !isRecord(removed)) return false;
+
+        const metadata = candidate.metadata;
+        if (isRecord(metadata) && metadata.image !== candidate.current_image) return true;
+
+        return (
+            Object.keys(values).some((name) => isSafePropertyName(name)) ||
+            Object.entries(removed).some(([name, value]) => isSafePropertyName(name) && value === true)
+        );
+    },
+    imageDigest: (image) => {
+        // Keep release comparison concise while retaining tag-only references unchanged.
+        if (typeof image !== 'string') return '';
+
+        const match = image.match(/@(sha256:[a-f0-9]{12})[a-f0-9]*$/);
+        return match?.[1] ?? image;
+    },
+    updateEnvironmentPatch: (values, removed) => {
+        // Send only edited values and explicit removals, leaving configured secrets untouched.
+        const patch: Record<string, string | null> = {};
+
+        if (isRecord(values)) {
+            for (const [name, value] of Object.entries(values)) {
+                if (isSafePropertyName(name) && typeof value === 'string') patch[name] = value;
+            }
+        }
+
+        if (isRecord(removed)) {
+            for (const [name, value] of Object.entries(removed)) {
+                if (isSafePropertyName(name) && value === true) patch[name] = null;
+            }
+        }
+
+        return patch;
+    },
     trim: (value) => String(value ?? '').trim(),
 };
 
