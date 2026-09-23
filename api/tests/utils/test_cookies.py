@@ -3,6 +3,8 @@ from fastapi import Response
 from src.utils import cookies
 from src.environments import env
 
+pytestmark = pytest.mark.no_db
+
 
 def test_set_browser_cookie_marks_secure_only_on_https(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set the Secure attribute only when the public origin uses HTTPS."""

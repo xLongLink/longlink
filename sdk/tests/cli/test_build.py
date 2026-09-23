@@ -514,25 +514,21 @@ def test_resolve_image_tag_rejects_invalid_image_references(
 
 
 @pytest.mark.parametrize(
-    ("arguments", "expected_build_command", "expected_commands", "expected_push_output"),
+    ("arguments", "expected_commands"),
     [
         pytest.param(
             ["--push"],
-            ["/usr/bin/docker", "build"],
             [["/usr/bin/docker", "push", "localhost:15000/demo:dev"]],
-            True,
             id="push",
         ),
-        pytest.param([], ["/usr/bin/docker", "build"], [], False, id="local-only"),
+        pytest.param([], [], id="local-only"),
     ],
 )
 def test_build_command_reports_built_image(
     docker_build: list[list[str]],
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
-    expected_build_command: list[str],
     expected_commands: list[list[str]],
-    expected_push_output: bool,
 ) -> None:
     """Build an image locally and optionally publish it."""
 
@@ -559,7 +555,8 @@ def test_build_command_reports_built_image(
     temporary_context = Path(commands[0][-1])
     assert commands == [
         [
-            *expected_build_command,
+            "/usr/bin/docker",
+            "build",
             "--platform",
             "linux/amd64",
             "-f",
@@ -571,7 +568,7 @@ def test_build_command_reports_built_image(
         *expected_commands,
     ]
     assert "- Built image: localhost:15000/demo:dev" in result.output
-    assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is expected_push_output
+    assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is bool(expected_commands)
 
 
 def test_build_command_reports_docker_build_failure_without_pushing(docker_build: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:

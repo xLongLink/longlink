@@ -22,14 +22,6 @@ def mock_async_client(monkeypatch: pytest.MonkeyPatch, respond: Callable[[httpx2
     monkeypatch.setattr(images.httpx2, "AsyncClient", client)
 
 
-async def test_metadata_rejects_unsupported_registry_hosts() -> None:
-    """Avoid inspecting image metadata through unsupported registry references."""
-
-    # Act
-    with pytest.raises(ForbiddenError, match="not allowed"):
-        await images.metadata(Image("registry.example.com/longlink/dashboard:latest"))
-
-
 @pytest.mark.parametrize(
     "manifest_headers",
     [
@@ -403,22 +395,6 @@ def test_missing_envs_returns_required_unconfigured_values(envs: dict[str, str],
     assert missing == expected_missing
 
 
-def test_missing_envs_rejects_user_values_for_reserved_runtime_names() -> None:
-    """Keep Platform-owned runtime requirements unavailable to user input."""
-
-    # Arrange
-    metadata = LongLinkMetadata(
-        image=Image("ghcr.io/longlink/dashboard:latest"),
-        environments=[EnvironmentMetadata(name="LONGLINK_DATABASE_PASSWORD", required=True)],
-    )
-
-    # Act
-    missing = images.missing_envs(metadata, {"LONGLINK_DATABASE_PASSWORD": "configured"})
-
-    # Assert
-    assert missing == ["LONGLINK_DATABASE_PASSWORD"]
-
-
 def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
     """Return all required unavailable values in deterministic name order."""
 
@@ -439,7 +415,9 @@ def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
     assert missing == ["LONGLINK_TOKEN", "ZEBRA"]
 
 
-@pytest.mark.parametrize("registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO"])
+@pytest.mark.parametrize(
+    "registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO", "registry.example.com"]
+)
 async def test_registry_allowlist_is_exact(registry: str) -> None:
     """Reject alternate spellings and unsupported registries before networking."""
 

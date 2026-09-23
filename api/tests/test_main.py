@@ -78,7 +78,7 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
     ]
 
 
-async def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:
     """Apply transaction and pooling options to the MySQL database driver."""
 
     # Arrange

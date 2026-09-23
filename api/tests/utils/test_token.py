@@ -158,14 +158,14 @@ def test_token_claims_reject_missing_required_fields(claims: dict[str, str], fun
         function(encoded)
 
 
-async def test_password_reset_user_rejects_malformed_subject(users: tuple[User, User, User]) -> None:
+async def test_password_reset_user_rejects_malformed_subject() -> None:
     """Reject password-reset credentials whose subject is not a user UUID."""
 
     # Arrange
     encoded = jwt.encode(
         {
             "sub": "not-a-uuid",
-            "password_fingerprint": token.password_fingerprint(users[0].password),
+            "password_fingerprint": "fingerprint",
             "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
         },
         token.env.SESSION_KEY,
@@ -178,12 +178,12 @@ async def test_password_reset_user_rejects_malformed_subject(users: tuple[User, 
             await token.password_reset_user(session, encoded)
 
 
-async def test_password_reset_user_rejects_missing_fingerprint(users: tuple[User, User, User]) -> None:
+async def test_password_reset_user_rejects_missing_fingerprint() -> None:
     """Reject password-reset credentials that omit their password binding."""
 
     # Arrange
     encoded = jwt.encode(
-        {"sub": str(users[0].id), "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
         token.env.SESSION_KEY,
         algorithm=token.JWT_ALGORITHM,
     )
@@ -194,14 +194,14 @@ async def test_password_reset_user_rejects_missing_fingerprint(users: tuple[User
             await token.password_reset_user(session, encoded)
 
 
-async def test_password_reset_user_rejects_expired_token(users: tuple[User, User, User]) -> None:
+async def test_password_reset_user_rejects_expired_token() -> None:
     """Reject expired recovery credentials before loading an account."""
 
     # Arrange
     encoded = expired_token(
         {
-            "sub": str(users[0].id),
-            "password_fingerprint": token.password_fingerprint(users[0].password),
+            "sub": "00000000-0000-0000-0000-000000000001",
+            "password_fingerprint": "fingerprint",
             "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
         }
     )

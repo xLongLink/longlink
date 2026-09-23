@@ -42,9 +42,13 @@ class FakeClient:
         self.buckets_deleted: list[str] = []
         self.create_error: ClientError | None = None
         self.delete_error: ClientError | None = None
+        self.paginator_error: ClientError | None = None
 
     def get_paginator(self, name: str) -> FakePaginator:
         """Return the configured pages for one listing operation."""
+
+        if self.paginator_error is not None:
+            raise self.paginator_error
 
         return FakePaginator(self.paginators.get(name, []))
 
@@ -131,14 +135,8 @@ async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.M
 
     # Arrange
     client = FakeClient()
+    client.paginator_error = client_error(error_code)
     serve(client, monkeypatch)
-
-    async def failing_delete(self: S3, inner_client: FakeClient, bucket: str, prefix: str) -> None:
-        """Simulate one failed cleanup request."""
-
-        raise client_error(error_code)
-
-    monkeypatch.setattr(S3, "_delete_prefix", failing_delete)
 
     # Act
     if should_raise:

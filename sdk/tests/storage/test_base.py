@@ -96,16 +96,14 @@ def test_production_storage_passes_configured_ca_to_s3_client(
 ) -> None:
     """Use the Platform storage CA to verify the remote S3 endpoint."""
 
-    # Arrange
-    captured = production_storage
-
     @contextmanager
     def certificate_file(pem: str):
         """Capture the configured PEM and yield its temporary filename."""
 
-        captured["pem"] = pem
+        production_storage["pem"] = pem
         yield "/tmp/storage-ca.crt"
 
+    # Arrange
     monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
     monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
 
@@ -113,8 +111,8 @@ def test_production_storage_passes_configured_ca_to_s3_client(
     storage_base.create_fs(Envs())
 
     # Assert
-    assert captured["pem"] == "storage-ca-pem"
-    kwargs = captured["kwargs"]
+    assert production_storage["pem"] == "storage-ca-pem"
+    kwargs = production_storage["kwargs"]
     assert isinstance(kwargs, dict)
     client_kwargs = kwargs["client_kwargs"]
     assert isinstance(client_kwargs, dict)

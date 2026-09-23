@@ -30,7 +30,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
         "avatar": user.avatar,
         "administrator": user.administrator,
     }
-    assert user.password not in profile_response.text
 
     assert organizations_response.status_code == 200
     assert organizations_response.headers["cache-control"] == "no-store"

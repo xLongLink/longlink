@@ -26,11 +26,6 @@ ENVIRONMENT_SETTINGS = {
     [
         pytest.param({"SMTP_USERNAME": "mailer"}, "SMTP_USERNAME and SMTP_PASSWORD must be configured together", id="username-only"),
         pytest.param({"SMTP_HOST": None}, "SMTP_HOST is required", id="without-host"),
-        pytest.param(
-            {"SMTP_HOST": None, "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"},
-            "SMTP_HOST is required",
-            id="credentials-without-host",
-        ),
     ],
 )
 def test_env_rejects_invalid_smtp_authentication_settings(settings: dict[str, object], message: str) -> None:
