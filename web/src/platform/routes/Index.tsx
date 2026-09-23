@@ -76,13 +76,13 @@ function IntegrationScale() {
             paddingBlock={10}
         >
             <Stack
-                className="relative z-10 mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
+                className="homepage-integration-content relative z-10 mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
                 width="100%"
                 maxWidth={1000}
-                gap={6}
+                gap={10}
                 hAlign="center"
             >
-                <Stack gap={3} hAlign="center">
+                <Stack gap={4} hAlign="center">
                     <Heading
                         ref={countRef}
                         level={2}
@@ -94,15 +94,19 @@ function IntegrationScale() {
                     >
                         {count.toLocaleString('en-US').replaceAll(',', "'")}+
                     </Heading>
-                    <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
+                    <Text as="p" color="secondary" type="supporting">
                         Unique Industry x Geography Contexts.
                     </Text>
                 </Stack>
-                <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Regulations, data, and workflows vary.
-                    <br />
-                    Each operating context needs dedicated software.
-                </Text>
+                <Heading
+                    level={3}
+                    type="display-2"
+                    justify="center"
+                    textWrap="balance"
+                    className="max-w-2xl text-3xl tracking-tight sm:text-4xl lg:text-5xl"
+                >
+                    How can we build solutions for all of them?
+                </Heading>
             </Stack>
         </Section>
     );
@@ -218,45 +222,58 @@ export default function Home() {
                 structuredData={structuredData}
                 title="LongLink | Build and Operate business solutions"
             />
-            <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
-                <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
-                    <Globe />
-                </Stack>
-                <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
-                    <Stack gap={5}>
-                        <Heading
-                            className="mx-auto max-w-4xl text-[1.875rem] leading-[1.02] font-medium min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl"
-                            justify="center"
-                            level={1}
-                        >
-                            <Text display="block" textWrap="nowrap" type="inherit">
-                                Just another dashboard
-                            </Text>
-                            <Text className="mt-1" display="block" hasStrikethrough textWrap="nowrap" type="inherit">
-                                Nothing to see here
-                            </Text>
-                        </Heading>
-                        <Text as="p" className="mx-auto text-sm leading-6 sm:text-lg" color="secondary" display="block">
-                            <Text display="block" type="inherit">
-                                The narrative has changed, but you are still buying the old story
-                            </Text>
-                            <Text className="tracking-[-0.012em]" display="block" type="inherit">
-                                The economics have shifted; flexibility now lives in code
-                            </Text>
-                            <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                Build the solution, not the workaround
-                            </Text>
-                            <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                Start from solid foundations
-                            </Text>
-                            <Text display="block" type="inherit">
-                                This is LongLink
-                            </Text>
-                        </Text>
+            <Stack as="section" className="relative overflow-clip" width="100%">
+                <main className="relative -mt-21 flex min-h-screen overflow-x-clip items-center justify-center px-6 pb-10 pt-28">
+                    <Stack aria-hidden="true" className="absolute inset-0 overflow-visible bg-body">
+                        <Globe />
                     </Stack>
-                </section>
-            </main>
-            <IntegrationScale />
+                    <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
+                        <Stack gap={5}>
+                            <Heading
+                                className="mx-auto max-w-4xl text-[1.875rem] leading-[1.02] font-medium min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl"
+                                justify="center"
+                                level={1}
+                            >
+                                <Text display="block" textWrap="nowrap" type="inherit">
+                                    Just another dashboard
+                                </Text>
+                                <Text
+                                    className="mt-1"
+                                    display="block"
+                                    hasStrikethrough
+                                    textWrap="nowrap"
+                                    type="inherit"
+                                >
+                                    Nothing to see here
+                                </Text>
+                            </Heading>
+                            <Text
+                                as="p"
+                                className="mx-auto text-sm leading-6 sm:text-lg"
+                                color="secondary"
+                                display="block"
+                            >
+                                <Text display="block" type="inherit">
+                                    The narrative has changed, but you are still buying the old story
+                                </Text>
+                                <Text className="tracking-[-0.012em]" display="block" type="inherit">
+                                    The economics have shifted; flexibility now lives in code
+                                </Text>
+                                <Text className="tracking-[0.026em]" display="block" type="inherit">
+                                    Build the solution, not the workaround
+                                </Text>
+                                <Text className="tracking-[0.026em]" display="block" type="inherit">
+                                    Start from solid foundations
+                                </Text>
+                                <Text display="block" type="inherit">
+                                    This is LongLink
+                                </Text>
+                            </Text>
+                        </Stack>
+                    </section>
+                </main>
+                <IntegrationScale />
+            </Stack>
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
