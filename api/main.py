@@ -14,9 +14,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
 from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
-from src.database.session import session_scope, dispose_engine
+from src.database.session import dispose_engine
 from starlette.exceptions import HTTPException
-from src.database.services import users as user_service
 
 # Keep successful Kubernetes probes out of the Platform API access log.
 logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
@@ -24,23 +23,21 @@ logging.getLogger("uvicorn.access").addFilter(ApiAccessFilter())
 
 @contextlib.asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
-    """Run this API replica's Operation background jobs."""
+    """Run this API replica's background jobs."""
 
     tasks: tuple[asyncio.Task[None], ...] = ()
 
     try:
-        # Reconcile the configured Platform administrator before serving authenticated traffic.
-        async with session_scope() as session:
-            await user_service.ensure_administrator(session)
-            await session.commit()
-
-        # Start this replica's scheduler.
-        tasks = (asyncio.create_task(jobs.run_operation_scheduler()),)
+        # Start database work independently so static routes remain available during database outages.
+        tasks = (
+            asyncio.create_task(jobs.run_administrator_reconciler()),
+            asyncio.create_task(jobs.run_operation_scheduler()),
+        )
 
         yield
     finally:
         try:
-            # Always stop background Operation work before releasing its shared database pool.
+            # Always stop database work before releasing its shared database pool.
             for task in tasks:
                 task.cancel()
             for task in tasks:
