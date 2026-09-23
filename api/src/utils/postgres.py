@@ -106,6 +106,7 @@ class Postgres:
         with self.url(database, search_path=search_path) as url:
             engine = create_async_engine(
                 url,
+                hide_parameters=True,
                 **({"isolation_level": "AUTOCOMMIT"} if autocommit else {}),
             )
 
