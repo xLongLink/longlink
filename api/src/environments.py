@@ -8,7 +8,7 @@ class Env(BaseSettings):
     """Define startup-validated settings for one LongLink Platform API replica."""
 
     # Runtime scheduling
-    OPERATION_TIMEOUT_SECONDS: int = Field(default=600, ge=60, le=1740)
+    OPERATION_TIMEOUT_SECONDS: int = Field(default=60, ge=60, le=1740)
     VERSION: str = Field(default="v0.0.0", pattern=r"^v[0-9]+\.[0-9]+\.[0-9]+(?:-.+)?$")
 
     # Authentication
