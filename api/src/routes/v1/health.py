@@ -12,7 +12,7 @@ async def healthz() -> dict[str, bool]:
     return {"alive": True}
 
 
-@router.get("/readyz", response_model=dict[str, bool])
+@router.api_route("/readyz", methods=["GET", "HEAD"], response_model=dict[str, bool])
 async def readyz() -> dict[str, bool]:
     """Return readiness after verifying Platform database connectivity."""
 
