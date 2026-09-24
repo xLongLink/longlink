@@ -1,4 +1,5 @@
 import { Seo } from '@/components/Seo';
+import type { ReactNode } from 'react';
 import { Globe } from '@/components/Globe';
 import { siteName, siteUrl } from '@/site';
 import { Card } from '@astryxdesign/core/Card';
@@ -11,102 +12,10 @@ import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { ArrowRight, Code2, Minimize2, ServerCog, ShieldCheck, Split } from 'lucide-react';
 
-const integrationContextCount = 336_000_000;
 const homeDescription =
     'LongLink is the open-source foundation for building, deploying, and operating dedicated business software in Python.';
-
-/** Renders the integration-scale callout and counts up when it enters the viewport. */
-function IntegrationScale() {
-    const [count, setCount] = useState(0);
-    const countRef = useRef<HTMLHeadingElement>(null);
-
-    useEffect(() => {
-        // Observe the number so the count remains at zero until users can see it.
-        const target = countRef.current;
-        if (!target) return;
-        let frame: number | undefined;
-
-        // Show the final value without movement when reduced motion is requested.
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            frame = requestAnimationFrame(() => setCount(integrationContextCount));
-            return;
-        }
-
-        // Count up once using the design system's slow motion duration.
-        const duration =
-            Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-slow-max')) * 2;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (!entry?.isIntersecting) return;
-
-                observer.disconnect();
-                const startedAt = performance.now();
-
-                const animate = (time: number) => {
-                    const progress = Math.min((time - startedAt) / duration, 1);
-                    const easedProgress = 1 - Math.pow(1 - progress, 3);
-
-                    setCount(Math.round(integrationContextCount * easedProgress));
-                    if (progress < 1) frame = requestAnimationFrame(animate);
-                };
-
-                frame = requestAnimationFrame(animate);
-            },
-            { threshold: 0.4 }
-        );
-
-        observer.observe(target);
-
-        return () => {
-            observer.disconnect();
-            if (frame !== undefined) {
-                cancelAnimationFrame(frame);
-            }
-        };
-    }, []);
-
-    return (
-        <Section
-            className="homepage-integration-section relative z-10"
-            variant="transparent"
-            padding={6}
-            paddingBlock={10}
-        >
-            <Stack
-                className="relative z-10 mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
-                width="100%"
-                maxWidth={1000}
-                gap={6}
-                hAlign="center"
-            >
-                <Stack gap={3} hAlign="center">
-                    <Heading
-                        ref={countRef}
-                        level={2}
-                        type="display-1"
-                        color="accent"
-                        textWrap="nowrap"
-                        justify="center"
-                        className="text-4xl tracking-tight sm:text-5xl lg:text-6xl"
-                    >
-                        {count.toLocaleString('en-US').replaceAll(',', "'")}+
-                    </Heading>
-                    <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
-                        Unique Industry x Geography Contexts.
-                    </Text>
-                </Stack>
-                <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Regulations, data, and workflows vary.
-                    <br />
-                    Each operating context needs dedicated software.
-                </Text>
-            </Stack>
-        </Section>
-    );
-}
 
 /** Renders a navigation card for one solution path. */
 function PathCard({
@@ -225,18 +134,21 @@ export default function Home() {
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <Stack gap={5}>
                         <Heading
-                            className="mx-auto max-w-4xl text-[1.875rem] leading-[1.02] font-medium min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl"
+                            className="mx-auto max-w-4xl text-5xl uppercase lg:text-6xl"
                             justify="center"
                             level={1}
+                            textWrap="balance"
+                            type="display-1"
+                            weight="semibold"
                         >
-                            <Text display="block" textWrap="nowrap" type="inherit">
-                                Build business software{' '}
-                            </Text>
-                            <Text className="mt-1" display="block" textWrap="nowrap" type="inherit">
-                                with LongLink
-                            </Text>
+                            Build what you need
                         </Heading>
-                        <Text as="p" className="mx-auto text-sm leading-6 sm:text-lg" color="secondary" display="block">
+                        <Text
+                            as="p"
+                            className="mx-auto text-base leading-normal sm:text-xl"
+                            color="secondary"
+                            display="block"
+                        >
                             <Text display="block" type="inherit">
                                 The narrative has changed, but you are still buying the old story
                             </Text>
@@ -256,33 +168,39 @@ export default function Home() {
                     </Stack>
                 </section>
             </main>
-            <IntegrationScale />
+            <Section
+                aria-hidden="true"
+                className="homepage-integration-section relative z-10 min-h-80 sm:min-h-96"
+                padding={6}
+                paddingBlock={10}
+                variant="transparent"
+            />
             <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
-                        description="Build complete solutions as code using your favorite developer tools."
+                        description="Build complete solutions using python and your favorite developer tools"
                         icon={Code2}
                         title="Build"
                     />
                     <CapabilityCard
-                        description="We manage authentication, permissions, deployment, storage, routing, and logging."
+                        description="We manage authentication, permissions, deployment, storage, routing, and logging"
                         icon={ServerCog}
                         title="Operate"
                     />
                 </Grid>
                 <Grid className="mx-auto" columns={{ minWidth: 240, max: 3 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
-                        description="Processes are clear, easy to operate, and cheap to maintain."
+                        description="Processes are clear, easy to operate, and cheap to maintain"
                         icon={Minimize2}
                         title="Keep it simple"
                     />
                     <CapabilityCard
-                        description="Compliance, accountability and a solution that fit the needs."
+                        description="Compliance, accountability and a solution that fit the needs"
                         icon={ShieldCheck}
                         title="Own the process"
                     />
                     <CapabilityCard
-                        description="Clear distinction between a machine and a human task."
+                        description="Clear distinction between a machine and a human task"
                         icon={Split}
                         title="Separate responsibilities"
                     />
@@ -378,14 +296,9 @@ export default function Home() {
                     <Text aria-hidden="true" className="text-xl leading-none">
                         🇨🇭
                     </Text>
-                    <Stack gap={2} hAlign="center">
-                        <Heading level={2} textWrap="balance" type="display-2" justify="center">
-                            Built and deployed in Switzerland.
-                        </Heading>
-                        <Text as="p" color="secondary">
-                            And it's open source.
-                        </Text>
-                    </Stack>
+                    <Heading level={2} textWrap="balance" type="display-2" justify="center">
+                        Built and hosted in Switzerland.
+                    </Heading>
                     <Stack className="flex-wrap" direction="horizontal" gap={3} hAlign="center" vAlign="center">
                         <Button
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
