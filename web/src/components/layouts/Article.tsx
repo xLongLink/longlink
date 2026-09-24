@@ -116,7 +116,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                 content={
                     <LayoutContent isScrollable={false} padding={6}>
                         <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
-                            <PageContainer className="min-w-0" maxWidth={768}>
+                            <PageContainer className="min-w-0" maxWidth={isDocumentation ? 720 : 768}>
                                 <article className="article-content space-y-7 text-justify">
                                     {children}
                                     <Stack as="footer" gap={3}>
