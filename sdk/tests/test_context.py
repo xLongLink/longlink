@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 from longlink.database import audit
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 IDENTITY_SECRET = "test-identity-secret-01234567890"
 
@@ -164,6 +165,50 @@ def test_context_middleware_treats_untrusted_identity_as_anonymous(secret: str, 
     # Assert
     assert response.status_code == 200
     assert response.json() == {"authenticated": False}
+
+
+def test_production_context_requires_signed_identity_except_for_probes() -> None:
+    """Reject direct anonymous Solution traffic while allowing Platform requests and Kubernetes probes."""
+
+    # Install the same production identity boundary used by the Solution application.
+    app = FastAPI()
+    context.install_context_middleware(app, IDENTITY_SECRET, require_identity=True)
+
+    @app.get("/views.json")
+    async def views() -> dict[str, bool]:
+        """Expose whether the request carried a verified user."""
+
+        return {"authenticated": audit.current_actor.get() is not None}
+
+    @app.get("/health")
+    async def health() -> dict[str, bool]:
+        """Provide an anonymous liveness probe."""
+
+        return {"ok": True}
+
+    @app.get("/ready")
+    async def ready() -> dict[str, bool]:
+        """Provide an anonymous readiness probe."""
+
+        return {"ok": True}
+
+    @app.websocket("/events")
+    async def events() -> None:
+        """Expose a route that must not bypass the HTTP identity boundary."""
+
+    client = TestClient(app)
+
+    # Direct gateway requests have no valid Platform assertion; proxy requests do.
+    assert client.get("/views.json").status_code == 401
+    assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
+    authorized = client.get("/views.json", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
+    assert authorized.status_code == 200
+    assert authorized.json() == {"authenticated": True}
+    assert client.get("/health").status_code == 200
+    assert client.get("/ready").status_code == 200
+    with pytest.raises(WebSocketDisconnect):
+        with client.websocket_connect("/events"):
+            pass
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
