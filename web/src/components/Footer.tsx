@@ -88,13 +88,13 @@ export function Footer() {
                                 <Link href="/" color="secondary" type="supporting" weight="medium">
                                     Home
                                 </Link>
-                                <Link href="/blog" color="secondary" type="supporting" weight="medium">
+                                <Link href="/blog/" color="secondary" type="supporting" weight="medium">
                                     Blog
                                 </Link>
-                                <Link href="/docs" color="secondary" type="supporting" weight="medium">
+                                <Link href="/docs/" color="secondary" type="supporting" weight="medium">
                                     Documentation
                                 </Link>
-                                <Link href="/pricing" color="secondary" type="supporting" weight="medium">
+                                <Link href="/pricing/" color="secondary" type="supporting" weight="medium">
                                     Pricing
                                 </Link>
                             </Stack>
@@ -105,13 +105,13 @@ export function Footer() {
                         <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
                             <Text type="supporting">LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link href="/impressum" color="secondary" type="supporting" weight="medium">
+                                <Link href="/impressum/" color="secondary" type="supporting" weight="medium">
                                     Impressum
                                 </Link>
-                                <Link href="/terms" color="secondary" type="supporting" weight="medium">
+                                <Link href="/terms/" color="secondary" type="supporting" weight="medium">
                                     Terms
                                 </Link>
-                                <Link href="/privacy" color="secondary" type="supporting" weight="medium">
+                                <Link href="/privacy/" color="secondary" type="supporting" weight="medium">
                                     Privacy
                                 </Link>
                             </Stack>

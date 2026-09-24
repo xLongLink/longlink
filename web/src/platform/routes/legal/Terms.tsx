@@ -246,7 +246,7 @@ function TermsContent() {
                     We do not routinely monitor Customer Content. We may investigate and restrict or remove content,
                     access, or resources where reasonably necessary to address suspected abuse, security risks, or legal
                     violations. We handle personal data as described in our{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
                     .
@@ -312,7 +312,7 @@ function TermsContent() {
                 <Text as="p">
                     We act as controller for account, organization, billing, support, security, and operational data, as
                     explained in our{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
                     .

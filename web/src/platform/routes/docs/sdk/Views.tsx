@@ -144,7 +144,7 @@ export default function DocsArticleRoute() {
                             </Stack>
                         </SummaryCard>
                         <SummaryCard name="Link">
-                            <Link href="/docs/sdk/views/link" type="inherit" hasUnderline>
+                            <Link href="/docs/sdk/views/link/" type="inherit" hasUnderline>
                                 Docs
                             </Link>
                         </SummaryCard>

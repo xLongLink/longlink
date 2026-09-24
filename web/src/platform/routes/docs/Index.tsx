@@ -5,7 +5,7 @@ import { Article } from '@/components/layouts/Article';
 
 const article = {
     description: 'Learn how to build, deploy, and operate business software with LongLink.',
-    toc: [{ id: 'introduction', label: 'Introduction', level: 1 }],
+    toc: [{ id: 'introduction', label: 'LongLink Documentation', level: 1 }],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/Index.tsx',
     title: 'Documentation | LongLink',
@@ -16,7 +16,7 @@ export default function DocsArticleRoute() {
         <Article page={article}>
             <Stack gap={5}>
                 <Heading id="introduction" level={1}>
-                    Introduction
+                    LongLink Documentation
                 </Heading>
                 <Text as="p">
                     Across industries and geographies, businesses operate within distinct regulatory, organizational,

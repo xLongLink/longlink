@@ -30,7 +30,7 @@ export default function Blog() {
                         <Grid columns={{ minWidth: 300, max: 2 }} gap={0}>
                             <ClickableCard
                                 className="group -mb-px -mr-px overflow-hidden rounded-none bg-transparent"
-                                href="/blog/introducing-longlink"
+                                href="/blog/introducing-longlink/"
                                 label="Read Introducing LongLink"
                                 padding={0}
                             >

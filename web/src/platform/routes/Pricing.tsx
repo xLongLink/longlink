@@ -19,6 +19,9 @@ export default function Pricing() {
             <main>
                 <Section variant="transparent" padding={6}>
                     <Stack className="mx-auto" width="100%" maxWidth={1120} gap={10} align="center">
+                        <Heading level={1} justify="center">
+                            LongLink Pricing
+                        </Heading>
                         <Grid className="pt-8" columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={0} width="100%">
                             <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={640}>
                                 <Stack gap={4}>
