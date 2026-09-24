@@ -5,10 +5,10 @@ import {
     zUserOrganizationMembership,
 } from '@/lib/generated/platform-api-v1/zod.gen';
 
-/** Fetches membership and solutions for one organization route. */
-export function useOrganizationRoute(organizationSlug: string) {
+/** Fetches membership for one organization route. */
+export function useOrganizationMembership(organizationSlug: string) {
     const membershipPath = `/api/v1/organizations/slug/${organizationSlug}`;
-    const membershipQuery = useQuery({
+    return useQuery({
         queryKey: ['api', '/api/v1/organizations/slug', organizationSlug],
         queryFn:
             organizationSlug === ''
@@ -16,6 +16,11 @@ export function useOrganizationRoute(organizationSlug: string) {
                 : async ({ signal }) => zUserOrganizationMembership.parse(await api(membershipPath, { signal }).json()),
         retry: false,
     });
+}
+
+/** Fetches membership and solutions for one organization route. */
+export function useOrganizationRoute(organizationSlug: string) {
+    const membershipQuery = useOrganizationMembership(organizationSlug);
     const membership = membershipQuery.data;
     const organizationId = membership?.organization.id;
 
