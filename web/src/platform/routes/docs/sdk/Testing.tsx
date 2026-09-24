@@ -5,6 +5,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 
 const article = {
     description: 'Test LongLink projects and their Views.',
@@ -12,7 +13,7 @@ const article = {
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-09-24',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Testing.tsx',
     title: 'Testing | LongLink Documentation',
 };
@@ -46,6 +47,13 @@ export default function DocsArticleRoute() {
                     services, so no environment setup is needed. Keep the client import above the application import so
                     the environment applies when the app is created.
                 </Text>
+                <Collapsible
+                    chevronPosition="start"
+                    defaultIsOpen={false}
+                    trigger={<Text weight="semibold">Why?</Text>}
+                >
+                    <Text as="p">TODO</Text>
+                </Collapsible>
                 <CodeBlock
                     code={`uv run pytest
 uv run pytest tests/test_app.py -q`}
