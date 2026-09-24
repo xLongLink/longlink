@@ -23,6 +23,9 @@ apt:
 	sudo apt-get install -y make docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin helm kubectl
 	@if ! command -v k3d >/dev/null 2>&1; then curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash; fi
 	@if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
+	@if ! id -nG | grep -qw docker; then \
+		printf '\nTo use Docker without sudo (grants root-level access), run:\n  sudo usermod -aG docker "$$USER"\nThen log out and back in before running make up.\n'; \
+	fi
 
 # Install all development dependencies.
 install:
