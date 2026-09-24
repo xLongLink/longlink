@@ -66,7 +66,7 @@ jobs:
                   fi
 
                   for attempt in 1 2 3 4 5; do
-                      if uv lock --project "$RUNNER_TEMP/sample"; then
+                      if uv lock --project "$RUNNER_TEMP/sample" --refresh-package longlink; then
                           break
                       fi
                       if [ "$attempt" = 5 ]; then
