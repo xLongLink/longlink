@@ -4,6 +4,7 @@ export type DocumentationIcon =
     | 'appWindow'
     | 'bookOpen'
     | 'building'
+    | 'cpu'
     | 'database'
     | 'fileCode'
     | 'flask'
@@ -44,6 +45,13 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
             { path: '/docs/sdk/views', label: 'Views', icon: 'fileCode' },
             { path: '/docs/sdk/testing', label: 'Testing', icon: 'flask' },
             { path: '/docs/sdk/building', label: 'Building', icon: 'rocket' },
+        ],
+    },
+    {
+        title: 'Self-hosted',
+        pages: [
+            { path: '/docs/self-hosted/release', label: 'Release', icon: 'rocket' },
+            { path: '/docs/self-hosted/compute', label: 'Compute', icon: 'cpu' },
         ],
     },
 ];

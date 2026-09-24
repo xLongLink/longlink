@@ -33,6 +33,10 @@ export default [
                     route(':component', './routes/docs/sdk/views/Component.tsx'),
                 ]),
             ]),
+            ...prefix('self-hosted', [
+                route('release', './routes/docs/self-hosted/Release.tsx'),
+                route('compute', './routes/docs/self-hosted/Compute.tsx'),
+            ]),
             route('*', '../components/layouts/NotFound.tsx', { id: 'docs-not-found' }),
         ]),
     ]),

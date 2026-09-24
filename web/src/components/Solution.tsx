@@ -52,6 +52,8 @@ type SolutionRuntimeProps = {
 };
 
 const EMPTY_VIEWS = [] as const;
+// Allow the Platform's 120-second Solution proxy request timeout to finish, including cold starts.
+const SOLUTION_REQUEST_TIMEOUT_MS = 130_000;
 
 /** Maps Solution manifest icon names to their Lucide components. */
 const iconComponents: Record<string, LucideIcon> = {
@@ -103,7 +105,8 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const requestBaseUrl = viewsUrl.startsWith('/') ? requestBaseLocation.pathname : requestBaseLocation.toString();
     const { data: registeredViews, error: viewsError } = useQuery({
         queryKey: ['api', viewsUrl],
-        queryFn: async ({ signal }) => viewsSchema.parse(await api(viewsUrl, { signal }).json()),
+        queryFn: async ({ signal }) =>
+            viewsSchema.parse(await api(viewsUrl, { signal, timeout: SOLUTION_REQUEST_TIMEOUT_MS }).json()),
     });
     const views = registeredViews ?? EMPTY_VIEWS;
     const match = matchRoutes(
@@ -128,7 +131,11 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
             if (!activeView) throw new Error('No active View');
 
             const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
-            const content = await api(viewUrl, { headers: { Accept: 'application/xml' }, signal }).text();
+            const content = await api(viewUrl, {
+                headers: { Accept: 'application/xml' },
+                signal,
+                timeout: SOLUTION_REQUEST_TIMEOUT_MS,
+            }).text();
 
             return parseXML(content);
         },
