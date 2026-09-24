@@ -501,7 +501,7 @@
             </Stack>
         </Stack>
     </Dialog>
-    <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen">
+    <Dialog title="Pod logs" isOpen="$solutionMenu.logsOpen" width="1280">
         <Invalidate query="solutionLogs" if="$solutionMenu.logsOpen" />
         <Stack height="60vh">
             <StackItem size="static">
