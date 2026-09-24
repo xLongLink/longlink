@@ -24,7 +24,7 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ## Getting Started
 
-Create a new project using:
+Requirements: `Python 3.12` or newer.
 
 ```bash
 uvx longlink init --folder <folder>
