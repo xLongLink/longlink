@@ -99,7 +99,10 @@ export default function DocsArticleRoute() {
                 <Heading id="local-development" level={2}>
                     Local Development
                 </Heading>
-                <CodeBlock code={'uv sync --group dev\nuv run longlink migrate\nuv run longlink dev'} language="bash" />
+                <CodeBlock code={'uv sync --group dev\nuv run longlink dev'} language="bash" />
+                <Text as="p">
+                    The project includes an initial migration, which the development server applies on startup.
+                </Text>
                 <Text as="p">
                     Navigate to{' '}
                     <Link href="http://127.0.0.1:1707" hasUnderline isExternalLink type="inherit">
