@@ -43,6 +43,14 @@ through the provided kubeconfig, so they never leave the cluster. The chart
 generates strong random credentials on first install and keeps them across
 upgrades and uninstalls.
 
+Set `gatewayAllowedSourceCidr` to the trusted Platform API egress CIDR, not a
+general user or cluster network. The gateway LoadBalancer enforces this range;
+its pod NetworkPolicy cannot reliably filter the original source IP after the
+load balancer or CNI translates it. Direct gateway access from an allowed
+source bypasses the Platform's Solution authorization checks. The local k3d
+configuration uses its cluster subnet for development only; do not reuse that
+setting for a shared Compute cluster.
+
 Solution workloads always reach object storage through the cluster-local proxy at `https://longlink-storage.rustfs.svc:443`. The registered storage endpoint is the Platform controller endpoint used from outside the cluster.
 
 <br />
