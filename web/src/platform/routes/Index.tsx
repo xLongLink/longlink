@@ -82,13 +82,13 @@ function PathCard({
 }
 
 /** Renders a platform capability card. */
-function CapabilityCard({ title, description, icon }: { title: string; description: string; icon: typeof Code2 }) {
+function CapabilityCard({ title, description, icon }: { title: string; description: ReactNode; icon: typeof Code2 }) {
     return (
         <Card className="-mb-px -mr-px rounded-none bg-transparent" minHeight={240} padding={6}>
             <Stack height="100%" justify="between">
                 <Icon color="tertiary" icon={icon} size="lg" />
                 <Stack gap={3}>
-                    <Heading className="text-base" level={2}>
+                    <Heading className="text-2xl" level={2}>
                         {title}
                     </Heading>
                     <Text as="p" color="secondary" textWrap="pretty">
@@ -159,7 +159,7 @@ export default function Home() {
                                 Build the solution, not the workaround
                             </Text>
                             <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                Start from solid foundations
+                                Use the right technologies
                             </Text>
                             <Text display="block" type="inherit">
                                 This is LongLink
@@ -170,20 +170,26 @@ export default function Home() {
             </main>
             <Section
                 aria-hidden="true"
-                className="homepage-integration-section relative z-10 min-h-80 sm:min-h-96"
+                className="homepage-integration-section relative z-10 min-h-48 sm:min-h-64"
                 padding={6}
                 paddingBlock={10}
                 variant="transparent"
             />
-            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
+            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={6}>
                 <Grid className="mx-auto" columns={{ minWidth: 320, max: 2 }} gap={0} maxWidth={1000}>
                     <CapabilityCard
-                        description="Build complete solutions using python and your favorite developer tools"
+                        description="Complete solutions using python and your favorite developer tools"
                         icon={Code2}
                         title="Build"
                     />
                     <CapabilityCard
-                        description="We manage authentication, permissions, deployment, storage, routing, and logging"
+                        description={
+                            <>
+                                All your solutions in one place,
+                                <br />
+                                with clear boundaries and a complete overview.
+                            </>
+                        }
                         icon={ServerCog}
                         title="Operate"
                     />
@@ -192,22 +198,22 @@ export default function Home() {
                     <CapabilityCard
                         description="Processes are clear, easy to operate, and cheap to maintain"
                         icon={Minimize2}
-                        title="Keep it simple"
+                        title="Keep it Simple"
                     />
                     <CapabilityCard
-                        description="Compliance, accountability and a solution that fit the needs"
+                        description="Full transparency over the process and its data"
                         icon={ShieldCheck}
-                        title="Own the process"
+                        title="Own the Process"
                     />
                     <CapabilityCard
-                        description="Clear distinction between a machine and a human task"
+                        description="Clear distinction between a human decision and a machine task"
                         icon={Split}
-                        title="Separate responsibilities"
+                        title="Clear Boundaries"
                     />
                 </Grid>
             </Section>
             <Section className="relative z-20 bg-body" padding={6} paddingBlock={10} variant="transparent">
-                <Stack className="mx-auto py-16 text-center" gap={6} hAlign="center" maxWidth={1000} width="100%">
+                <Stack className="mx-auto py-44 text-center" gap={6} hAlign="center" maxWidth={1000} width="100%">
                     <Stack gap={2} hAlign="center">
                         <Heading justify="center" level={2} textWrap="balance" type="display-2">
                             Design
@@ -227,12 +233,12 @@ export default function Home() {
                             />
                             Improve
                         </Heading>
-                        <Text as="p" color="secondary" textWrap="pretty">
+                        <Text as="p" className="pb-6 pt-1 text-lg sm:text-xl" color="secondary" textWrap="pretty">
                             <Text display="block" type="inherit">
                                 The complete business process lifecycle, defined as code
                             </Text>
                             <Text display="block" type="inherit">
-                                Designed to be inspected, reviewed and improved.
+                                One source of truth for how work gets done
                             </Text>
                         </Text>
                     </Stack>
