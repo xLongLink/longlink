@@ -21,6 +21,7 @@ def test_dev_command_warns_only_for_public_hosts(
     # Arrange
     calls: list[tuple[str, dict[str, object]]] = []
     warnings: list[tuple[str, str]] = []
+    migrations: list[str] = []
 
     def run(application: str, **kwargs: object) -> None:
         """Capture the Uvicorn launch configuration."""
@@ -34,6 +35,7 @@ def test_dev_command_warns_only_for_public_hosts(
 
     monkeypatch.setattr(dev.uvicorn, "run", run)
     monkeypatch.setattr(dev.logger, "warning", warning)
+    monkeypatch.setattr(dev, "apply_migrations", lambda: migrations.append("applied"))
 
     # Act
     result = CliRunner().invoke(main, ["dev", "--host", host])
@@ -41,6 +43,7 @@ def test_dev_command_warns_only_for_public_hosts(
     # Assert
     assert result.exit_code == 0
     assert warnings == expected_warnings
+    assert migrations == ["applied"]
     assert calls == [
         (
             "main:app",

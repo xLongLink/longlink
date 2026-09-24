@@ -17,13 +17,14 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) to get sta
 
 ```bash
 uv sync
-uv run longlink migrate
 uv run longlink dev
 ```
 
 <br />
 
 ## Migrate changes
+
+After changing database models, generate and apply a new migration:
 
 ```bash
 uv run longlink migrate

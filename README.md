@@ -30,7 +30,6 @@ Requirements: `Python 3.12` or newer.
 uvx longlink init --folder <folder>
 cd <folder>
 uv sync
-uv run longlink migrate
 uv run longlink dev
 ```
 
@@ -44,7 +43,6 @@ cd <folder>
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-longlink migrate
 longlink dev
 ```
 

@@ -3,6 +3,7 @@ import uvicorn
 from typing import Annotated
 from pathlib import Path
 from longlink.logger import logger, log_config
+from longlink.database.migrations import apply_migrations
 
 
 def dev_command(
@@ -13,6 +14,9 @@ def dev_command(
     # Make network exposure visible when the caller opts out of the loopback default.
     if host not in {"127.0.0.1", "::1", "localhost"}:
         logger.warning("Development server is exposed on host %s", host)
+
+    # Apply committed Solution migrations before serving requests locally.
+    apply_migrations()
 
     # Delegate process supervision and file watching to Uvicorn.
     uvicorn.run(
