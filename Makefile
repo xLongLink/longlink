@@ -1,7 +1,9 @@
 .PHONY: install apt check format build test up image down api web sdk seed main
 
+# Keep the user-installed Vite+ CLI available across separate make invocations.
+export PATH := $(HOME)/.vite-plus/bin:$(PATH)
 
-# Install host requirements (make, docker, k3d, helm, kubectl, uv) on Ubuntu.
+# Install host requirements (make, docker, k3d, helm, kubectl, uv, vp) on Ubuntu.
 apt:
 	sudo apt-get update
 	sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
@@ -23,6 +25,8 @@ apt:
 	sudo apt-get install -y make docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin helm kubectl
 	@if ! command -v k3d >/dev/null 2>&1; then curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash; fi
 	@if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
+	@if ! command -v vp >/dev/null 2>&1; then bash -o pipefail -c 'curl -fsSL https://vite.plus | VP_HOME="$$HOME/.vite-plus" VP_NODE_MANAGER=yes bash'; fi
+	@command -v vp >/dev/null || { echo "ERROR: Vite+ was not installed on PATH" >&2; exit 1; }
 	@if ! id -nG | grep -qw docker; then \
 		printf '\nTo use Docker without sudo (grants root-level access), run:\n  sudo usermod -aG docker "$$USER"\nThen log out and back in before running make up.\n'; \
 	fi
