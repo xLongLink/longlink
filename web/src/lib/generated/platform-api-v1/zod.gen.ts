@@ -3,6 +3,20 @@
 import * as z from 'zod';
 
 /**
+ * AdminUserSummary
+ *
+ * Represent a user with its creation time for platform administrators.
+ */
+export const zAdminUserSummary = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    email: z.email(),
+    avatar: z.string(),
+    administrator: z.boolean(),
+    created_at: z.iso.datetime()
+});
+
+/**
  * Body_request_password_reset_api_v1_auth_forgot_password_post
  */
 export const zBodyRequestPasswordResetApiV1AuthForgotPasswordPost = z.object({
@@ -204,6 +218,14 @@ export const zOrganizationMemberUpdate = z.object({
 export const zOrganizationStorageUsageResponse = z.object({
     space_used: z.int().gte(0),
     quota_bytes: z.int().gte(0)
+});
+
+/**
+ * Page[AdminUserSummary]
+ */
+export const zPageAdminUserSummary = z.object({
+    items: z.array(zAdminUserSummary),
+    total: z.int().gte(0)
 });
 
 /**
@@ -427,14 +449,6 @@ export const zUserSummary = z.object({
     email: z.email(),
     avatar: z.string(),
     administrator: z.boolean()
-});
-
-/**
- * Page[UserSummary]
- */
-export const zPageUserSummary = z.object({
-    items: z.array(zUserSummary),
-    total: z.int().gte(0)
 });
 
 /**
@@ -756,4 +770,4 @@ export const zListUsersApiV1UsersGetQuery = z.object({
 /**
  * Successful Response
  */
-export const zListUsersApiV1UsersGetResponse = zPageUserSummary;
+export const zListUsersApiV1UsersGetResponse = zPageAdminUserSummary;

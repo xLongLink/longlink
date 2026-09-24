@@ -41,6 +41,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
                 User.email,
                 User.avatar,
                 User.administrator,
+                User.created_at,
             )
         )
         .order_by(col(User.name), col(User.id))

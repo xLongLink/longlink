@@ -25,6 +25,7 @@ import { FileInput } from '../adapters/FileInput';
 import { RadioList } from '../adapters/RadioList';
 import { StackItem } from '../adapters/StackItem';
 import { TextInput } from '../adapters/TextInput';
+import { Timestamp } from '../adapters/Timestamp';
 import { FileViewer } from '../adapters/FileViewer';
 import { Step, Stepper } from '../adapters/Stepper';
 import type { XmlComponentRegistry } from '../types';
@@ -73,4 +74,5 @@ export const sdkXmlComponentRegistry: XmlComponentRegistry = {
     TextArea,
     Text,
     TextInput,
+    Timestamp,
 };

@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.roles import OrganizationRoles
 from src.models.resources import OrganizationIdentity
@@ -44,3 +45,10 @@ class UserSummary(UserIdentity):
 
     # State
     administrator: bool
+
+
+class AdminUserSummary(UserSummary):
+    """Represent a user with its creation time for platform administrators."""
+
+    # Timestamps
+    created_at: datetime
