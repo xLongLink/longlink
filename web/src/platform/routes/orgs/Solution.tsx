@@ -1,16 +1,23 @@
+import { api } from '@/lib/api';
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
 import { ProfileMenu } from '@/components/Profile';
 import Platform from '@/platform/layouts/Platform';
 import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
 import { SolutionRuntime } from '@/components/Solution';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import NotFoundLayout from '@/components/layouts/NotFound';
 import { PageContainer } from '@/components/PageContainer';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
+import { skipToken, useQuery } from '@tanstack/react-query';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
 import { useOrganizationRoute } from '@/lib/hooks/use-organization';
+import { zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
@@ -19,6 +26,17 @@ export default function OrganizationSolution() {
     const { solutions, isLoading, error } = useOrganizationRoute(organization);
 
     const solutionAccess = solutions.find((item) => item.slug === solution);
+
+    // Fetch pod logs only for a failed deployment, including failed migration output.
+    const logsPath = solutionAccess?.status === 'failed' ? `/api/v1/solutions/${solutionAccess.id}/logs` : null;
+    const logsQuery = useQuery({
+        queryKey: ['api', logsPath],
+        queryFn: logsPath
+            ? async ({ signal }) =>
+                  zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse.parse(await api(logsPath, { signal }).json())
+            : skipToken,
+        retry: false,
+    });
 
     if (isLoading) {
         return (
@@ -62,18 +80,46 @@ export default function OrganizationSolution() {
                 }
               : null;
 
-    // Show one standalone notice for unavailable solution deployments.
+    // Show pod logs for accessible failed deployments and the notice otherwise.
     if (deploymentNotice) {
         return (
             <Platform action={action} breadcrumb={breadcrumb} tabs={[]}>
                 <NoIndex title={`${solutionAccess.name} | LongLink`} />
-                <Center minHeight="calc(100vh - 14rem)" width="100%">
-                    <EmptyState
-                        description={deploymentNotice.description}
-                        headingLevel={1}
-                        role="alert"
-                        title={deploymentNotice.title}
-                    />
+                <Center
+                    axis={solutionAccess.status === 'failed' ? 'horizontal' : 'both'}
+                    minHeight="calc(100vh - 14rem)"
+                    padding={6}
+                    width="100%"
+                >
+                    <Stack gap={6} maxWidth={1200} width="100%">
+                        {(solutionAccess.status !== 'failed' || logsQuery.isError) && (
+                            <EmptyState
+                                description={deploymentNotice.description}
+                                headingLevel={1}
+                                role="alert"
+                                title={deploymentNotice.title}
+                            />
+                        )}
+                        {solutionAccess.status === 'failed' && !logsQuery.isError && (
+                            <Stack gap={2}>
+                                <Heading level={1}>Solution deployment has failed</Heading>
+                                {logsQuery.data?.length ? (
+                                    <CodeBlock
+                                        code={logsQuery.data.join('\n')}
+                                        hasLineNumbers
+                                        maxHeight="60vh"
+                                        width="100%"
+                                    />
+                                ) : (
+                                    <Text color="secondary">
+                                        {logsQuery.isPending
+                                            ? 'Loading pod logs…'
+                                            : 'No pod logs are available for this deployment.'}
+                                    </Text>
+                                )}
+                            </Stack>
+                        )}
+                    </Stack>
                 </Center>
             </Platform>
         );
