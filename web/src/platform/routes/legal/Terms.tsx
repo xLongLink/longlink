@@ -32,59 +32,49 @@ const article = {
         { id: 'acceptable-use', label: '5. Acceptable use', level: 2 },
         {
             id: 'plans-fees-and-managed-services',
-            label: '6. Plans, fees and managed services',
-            level: 2,
-        },
-        {
-            id: 'refunds-and-consumer-cancellation-rights',
-            label: '7. Refunds and consumer cancellation rights',
+            label: '6. Plans and payments',
             level: 2,
         },
         {
             id: 'content-privacy-and-data-processing',
-            label: '8. Content, privacy and data processing',
+            label: '7. Content and privacy',
             level: 2,
         },
         {
             id: 'our-technology-and-feedback',
-            label: '9. Our technology and feedback',
+            label: '8. Our technology and feedback',
             level: 2,
         },
-        {
-            id: 'availability-and-third-party-services',
-            label: '10. Availability and third-party services',
-            level: 2,
-        },
-        { id: 'warranties', label: '11. Warranties', level: 2 },
+        { id: 'warranties', label: '9. Warranties', level: 2 },
         {
             id: 'limitation-of-liability',
-            label: '12. Limitation of liability',
+            label: '10. Limitation of liability',
             level: 2,
         },
         {
             id: 'indemnity-for-business-users',
-            label: '13. Indemnity for business users',
+            label: '11. Indemnity for business users',
             level: 2,
         },
         {
             id: 'suspension-deletion-and-termination',
-            label: '14. Suspension, deletion and termination',
+            label: '12. Suspension and termination',
             level: 2,
         },
         {
             id: 'changes-to-these-terms',
-            label: '15. Changes to these Terms',
+            label: '13. Changes to these Terms',
             level: 2,
         },
-        { id: 'force-majeure', label: '16. Force majeure', level: 2 },
+        { id: 'force-majeure', label: '14. Force majeure', level: 2 },
         {
             id: 'general-and-governing-law',
-            label: '17. General and governing law',
+            label: '15. General and governing law',
             level: 2,
         },
-        { id: 'contact', label: '18. Contact', level: 2 },
+        { id: 'contact', label: '16. Contact', level: 2 },
     ],
-    lastUpdated: '2026-06-20',
+    lastUpdated: '2026-09-23',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/legal/Terms.tsx',
     title: 'Terms of Service | LongLink',
 };
@@ -119,20 +109,17 @@ function TermsContent() {
                     .
                 </Text>
                 <Text as="p">
-                    These Terms form a binding agreement between you and LongLink SAGL. You accept them when you create
-                    an account, create or join an organization, deploy or access a Solution, connect infrastructure, use
-                    the SDK, CLI, hosted platform, Solution runtime, documentation, support channels, or otherwise use
-                    the Service.
+                    These Terms apply when you create an account or use our hosted platform, including connecting
+                    infrastructure or deploying a Solution through it. By doing so, you agree to these Terms. They do
+                    not govern independent use of open-source software or merely reading our public website.
                 </Text>
                 <Text as="p">
-                    You must be at least 18 years old and legally capable of entering into this agreement. If you use
-                    the Service for an organization, you confirm that you have authority to bind it. The Service is not
-                    directed to minors.
+                    You must be at least 18 and legally capable of entering this agreement. If you use the Service for
+                    an organization, you confirm that you have authority to bind it.
                 </Text>
                 <Text as="p">
-                    A "consumer" is an individual using the Service mainly for personal or household purposes. A
-                    "business user" is anyone using it mainly for professional or commercial purposes. Provisions that
-                    expressly apply to business users do not apply to consumers.
+                    A "consumer" uses the Service mainly for personal purposes; a "business user" uses it mainly for
+                    professional or commercial purposes.
                 </Text>
             </Stack>
 
@@ -141,25 +128,23 @@ function TermsContent() {
                     2. Definitions and contract documents
                 </Heading>
                 <Text as="p">
-                    "Service" means the LongLink website, hosted platform, SDK, CLI, Solution runtime, APIs, proxying,
-                    deployment tooling, documentation, templates, and related support. "Solution" means a LongLink
-                    solution or workload that is built, registered, deployed, proxied, rendered, tested, or operated
-                    through the Service.
+                    "Service" means the LongLink hosted platform, its APIs, deployment tooling, and related support,
+                    including the SDK and runtime when connected to our platform. "Solution" means a workload registered
+                    or operated through the Service. "Organization" means a workspace in LongLink.
                 </Text>
                 <Text as="p">
-                    "Organization" means a workspace or tenant boundary in LongLink. "Connected Infrastructure" means
-                    compute, database, storage, identity, registry, routing, DNS, monitoring, email, or other
-                    infrastructure connected to or managed through LongLink. "Customer Content" means data, code,
-                    configuration, environment values, credentials, files, objects, database records, logs, Solution
-                    View definitions, API responses, and other material that you or your users upload, create, connect,
-                    deploy, store, proxy, or process through the Service.
+                    "Customer Content" means data, code, configurations, credentials, and other material that you or
+                    your users submit, connect, store, or process through the Service, including Solution data.
                 </Text>
                 <Text as="p">
-                    The applicable order, pricing shown when you start a paid plan or managed service, and any written
-                    order form, data processing agreement, service-level agreement, security addendum, or other
-                    agreement signed by both parties are part of the agreement. A signed document prevails over these
-                    Terms only for a direct conflict. These Terms prevail over inconsistent marketing material or
+                    Any accepted order and written agreement signed by both parties also apply. A signed agreement
+                    prevails over these Terms where they conflict; these Terms prevail over marketing material and
                     documentation.
+                </Text>
+                <Text as="p">
+                    Open-source licenses govern use, copying, modification, and distribution of the software they cover.
+                    These Terms do not restrict those rights. If you operate LongLink yourself, you are responsible for
+                    the service you provide to your users.
                 </Text>
             </Stack>
 
@@ -168,26 +153,20 @@ function TermsContent() {
                     3. Service and beta status
                 </Heading>
                 <Text as="p">
-                    The Service provides tools for building, deploying, routing, operating, and observing custom
-                    business software. Features, APIs, SDK behavior, platform screens, XML components, templates,
-                    infrastructure adapters, and deployment behavior may change over time.
+                    The Service is in beta. Features and APIs may change, and defects, interruptions, or data loss may
+                    occur. No uptime or service-level commitment applies unless agreed in writing.
                 </Text>
                 <Text as="p">
-                    The Service is in active development and may be provided as alpha, beta, preview, self-hosted,
-                    local, or managed software depending on your use. Defects, interruptions, incompatibilities,
-                    migration work, and data loss may occur. No service-level commitment applies unless we agree to one
-                    in writing.
+                    We may change or discontinue features for security, legal, technical, or product reasons. We will
+                    give reasonable advance notice of a material reduction to an active paid service where practicable.
                 </Text>
                 <Text as="p">
-                    We may modify, replace, or discontinue features where reasonably necessary for security, legal,
-                    technical, product, or commercial reasons. We will provide reasonable advance notice of a material
-                    reduction affecting an active paid managed service where practicable.
+                    Do not use the Service where a failure could reasonably cause death, personal injury, or substantial
+                    physical or environmental damage.
                 </Text>
                 <Text as="p">
-                    The Service is not for high-risk use. You must not use the Service for life support, emergency
-                    services, critical infrastructure, autonomous weapons, safety-critical control, or any activity
-                    where failure could reasonably cause death, personal injury, or substantial physical or
-                    environmental damage.
+                    Third-party providers and customer-connected infrastructure may change or become unavailable. You
+                    are responsible for choosing and maintaining infrastructure and third-party services you connect.
                 </Text>
             </Stack>
 
@@ -196,25 +175,20 @@ function TermsContent() {
                     4. Accounts, organizations and security
                 </Heading>
                 <Text as="p">
-                    You must provide accurate account and organization information and keep it current. You are
-                    responsible for activity through your account, organizations, Solutions, credentials, infrastructure
-                    registries, and users whom you authorize.
+                    Keep account and organization information accurate. You are responsible for activity by users you
+                    authorize and for securing your accounts, Solutions, credentials, and connected infrastructure.
                 </Text>
                 <Text as="p">
-                    You must protect passwords, API credentials, deployment secrets, kubeconfigs, database credentials,
-                    object-storage keys, Solution environment values, SSH keys, and other access materials. You must use
-                    reasonable access controls and notify{' '}
+                    Use reasonable access controls and notify{' '}
                     <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
                         info@longlink.dev
                     </Link>{' '}
-                    promptly if you suspect compromise.
+                    promptly if you suspect unauthorized access or a credential compromise.
                 </Text>
                 <Text as="p">
-                    You are responsible for configuring and hardening Solutions, applying updates, managing encryption
-                    and keys, restricting network access, checking software licenses, validating deployments, and
-                    maintaining independent backups. We may isolate a Solution, revoke credentials, stop proxying,
-                    disable access, or suspend an organization where reasonably necessary to contain a security incident
-                    or protect the Service.
+                    You are responsible for configuring and updating your Solutions, protecting secrets, controlling
+                    access, and maintaining independent backups. We may restrict access or isolate resources where
+                    reasonably necessary to contain a security incident or protect the Service.
                 </Text>
             </Stack>
 
@@ -222,94 +196,56 @@ function TermsContent() {
                 <Heading id="acceptable-use" level={2}>
                     5. Acceptable use
                 </Heading>
-                <Text as="p">
-                    You must use the Service lawfully and within the technical, organizational, and plan limits shown to
-                    you.
-                </Text>
-                <Text as="p">You must not:</Text>
+                <Text as="p">Use the Service lawfully and within the limits of your plan. You must not:</Text>
                 <List listStyle="disc">
                     <ListItem
                         label={
                             <Text>
-                                resell, sublicense, sublease, or provide the hosted Service to third parties without our
-                                prior written approval;
+                                resell our hosted platform without our written approval (this does not prevent you from
+                                giving your users access to your Solutions);
                             </Text>
                         }
                     />
                     <ListItem
                         label={
                             <Text>
-                                deploy malware, botnets, phishing, spam, denial-of-service attacks, credential theft,
-                                intrusion, unauthorized scanning, or other harmful or deceptive activity;
+                                use the Service for malware, phishing, spam, denial-of-service attacks, unauthorized
+                                scanning, or other harmful activity;
+                            </Text>
+                        }
+                    />
+                    <ListItem
+                        label={<Text>access or interfere with systems, accounts, or data without authorization;</Text>}
+                    />
+                    <ListItem
+                        label={<Text>process unlawful content or content that infringes another person's rights;</Text>}
+                    />
+                    <ListItem
+                        label={
+                            <Text>
+                                bypass access controls, tenant isolation, rate limits, or other security measures;
                             </Text>
                         }
                     />
                     <ListItem
                         label={
                             <Text>
-                                access or interfere with another person's systems, data, accounts, applications, or
-                                infrastructure without lawful, documented authorization;
+                                run destructive tests or workloads that disrupt shared infrastructure without our
+                                written approval; or
                             </Text>
                         }
                     />
-                    <ListItem
-                        label={
-                            <Text>
-                                upload, generate, process, proxy, store, or distribute unlawful Customer Content, child
-                                sexual abuse material, stolen data, or content that infringes privacy, intellectual
-                                property, or other rights;
-                            </Text>
-                        }
-                    />
-                    <ListItem
-                        label={
-                            <Text>
-                                bypass or interfere with authentication, authorization, organization isolation, Solution
-                                isolation, security controls, logging, metering, rate limits, image verification,
-                                deployment checks, proxy controls, or platform protections;
-                            </Text>
-                        }
-                    />
-                    <ListItem
-                        label={
-                            <Text>
-                                conduct destructive stress tests, sustained resource-abuse workloads, cryptocurrency
-                                mining, or activity that harms shared or connected infrastructure without our prior
-                                written approval;
-                            </Text>
-                        }
-                    />
-                    <ListItem
-                        label={
-                            <Text>
-                                use anonymization, proxy, VPN, Tor, or similar tools to facilitate unlawful activity,
-                                evade abuse controls, or conceal the source of attacks; or
-                            </Text>
-                        }
-                    />
-                    <ListItem
-                        label={
-                            <Text>
-                                violate applicable sanctions, export-control rules, or restrictions on prohibited users,
-                                territories, or end uses.
-                            </Text>
-                        }
-                    />
+                    <ListItem label={<Text>violate applicable sanctions or export-control laws.</Text>} />
                 </List>
                 <Text as="p">
-                    You may not reverse engineer or circumvent the Service except to the limited extent that applicable
-                    law expressly permits and does not allow that right to be waived. You are responsible for obtaining
-                    all rights and licenses required for your Customer Content, software, datasets, models,
-                    dependencies, container images, and integrations, and for reviewing outputs before relying on or
-                    distributing them.
+                    You are responsible for having the rights needed to submit Customer Content and use your software,
+                    images, and integrations. Do not reverse engineer or circumvent the hosted platform except as
+                    permitted by law or an applicable open-source license.
                 </Text>
                 <Text as="p">
-                    We have no general obligation to monitor Customer Content. We may review technical metadata and
-                    investigate, preserve, quarantine, restrict, disable, or remove Customer Content, Solutions,
-                    organizations, accounts, or infrastructure connections where reasonably and proportionately
-                    necessary to address suspected abuse, fraud, security threats, or legal violations, protect users or
-                    infrastructure, or comply with a binding legal request. Our handling of personal data is described
-                    in the{' '}
+                    We do not routinely monitor Customer Content. We may investigate and restrict or remove content,
+                    access, or resources where reasonably necessary to address suspected abuse, security risks, or legal
+                    violations. We handle personal data as described in our{' '}
                     <Link href="/privacy" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
@@ -319,106 +255,59 @@ function TermsContent() {
 
             <Stack as="section" gap={3}>
                 <Heading id="plans-fees-and-managed-services" level={2}>
-                    6. Plans, fees and managed services
+                    6. Plans and payments
                 </Heading>
                 <Text as="p">
-                    Some LongLink software may be available without charge, while hosted platform access, managed
-                    deployments, support, consulting, custom development, infrastructure operations, or other services
-                    may be paid. Prices are in Swiss francs (CHF) unless stated otherwise.
+                    The currently advertised Free plan has no subscription fee. If you order a paid service, the price,
+                    limits, billing period, and any usage charges disclosed before you order apply. Prices are in Swiss
+                    francs (CHF) unless stated otherwise, with taxes identified as required by law.
                 </Text>
                 <Text as="p">
-                    The plan, rate, scope, resource limits, included support, and billing period displayed when you
-                    order or confirmed in a written order form apply to that paid service. Usage-based, seat-based,
-                    infrastructure, support, installation, migration, storage, database, compute, bandwidth, or other
-                    clearly identified charges may be charged separately if disclosed before the charge is incurred.
+                    You owe valid charges incurred through your account or order. Contact us promptly about billing
+                    errors so we can investigate. This does not limit any non-waivable rights.
                 </Text>
                 <Text as="p">
-                    Prices include or identify applicable taxes and mandatory charges as required by law. If a payment
-                    provider is used, you authorize that provider and its supported payment methods to charge the
-                    amounts you approve. You remain liable for valid charges incurred through your account,
-                    organization, or order.
-                </Text>
-                <Text as="p">
-                    Our transaction, usage, operation, support, and account records determine charges unless there is a
-                    manifest error. You must report a suspected billing error within 30 days after it appears in your
-                    account or invoice, with enough information for us to investigate. This deadline does not limit
-                    rights that cannot lawfully be waived. Overdue amounts accrue default interest at 5% per year, and
-                    business users must reimburse reasonable recovery costs to the extent permitted by law.
-                </Text>
-            </Stack>
-
-            <Stack as="section" gap={3}>
-                <Heading id="refunds-and-consumer-cancellation-rights" level={2}>
-                    7. Refunds and consumer cancellation rights
-                </Heading>
-                <Text as="p">
-                    Except where these Terms or mandatory law provide otherwise, completed setup work, delivered
-                    support, consumed usage, managed-service periods already provided, and properly charged fees are
-                    non-refundable. We may issue service credits at our discretion, but doing so does not create a
-                    continuing obligation. Any refund is reduced by valid charges and amounts you owe and is normally
-                    returned to the original payment method.
-                </Text>
-                <Text as="p">
-                    Promotional credits, discounts, trial periods, or free allowances may be subject to stated expiry
-                    dates, scope limits, and abuse controls, and may be withdrawn if obtained through error, fraud, or
-                    abuse.
-                </Text>
-                <Text as="p">
-                    Nothing in these Terms excludes a consumer's mandatory cancellation, refund, price-reduction, or
-                    other statutory rights. If mandatory law gives you a withdrawal period, by requesting immediate
-                    setup, deployment, support, or use of a paid managed service during that period you expressly
-                    request immediate performance. To the extent permitted by that law, you must pay for the proportion
-                    of Service supplied before withdrawal and may lose the withdrawal right once the requested Service
-                    has been fully performed.
+                    Except where mandatory law or your order provides otherwise, fees for delivered work or service
+                    periods already used are non-refundable. If we end a paid service for convenience, we will refund
+                    prepaid fees for the unused period after deducting valid charges. Mandatory consumer cancellation
+                    and refund rights remain unaffected.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="content-privacy-and-data-processing" level={2}>
-                    8. Content, privacy and data processing
+                    7. Content and privacy
                 </Heading>
                 <Text as="p">
-                    As between you and us, you retain your rights in Customer Content. You grant us a non-exclusive,
-                    worldwide, royalty-free license to host, copy, transmit, route, access, inspect, transform, deploy,
-                    render, back up, and otherwise process Customer Content only as needed to provide, secure, support,
-                    operate, improve, and enforce the Service and comply with law. You confirm that you have the rights
-                    and lawful basis needed for Customer Content and these instructions.
+                    You retain your rights in Customer Content. You grant us a non-exclusive, worldwide, royalty-free
+                    license to host, copy, transmit, and otherwise process it only as needed to provide, secure, and
+                    support the Service, enforce these Terms, and comply with law. You confirm you have the rights to
+                    give us that permission.
                 </Text>
                 <Text as="p">
-                    For personal data contained in Customer Content, you are the controller and we act as your processor
-                    when we operate the hosted Service for you, unless the law assigns different roles. These Terms are
-                    your instruction for us to process that data to provide, secure, support, and operate the Service.
-                    The subject matter, data types, and data subjects are determined by Customer Content and your use.
-                    You are responsible for notices, legal bases, data-subject requests, retention decisions, and
-                    assessing whether the Service is suitable for your processing.
+                    When we operate the hosted Service for you, you generally control personal data in Customer Content
+                    and we process it on your behalf to provide, secure, and support the Service. You are responsible
+                    for the required notices, legal bases, and instructions. Any signed data processing agreement also
+                    applies.
                 </Text>
                 <Text as="p">
-                    We will require personnel with access to Customer Content to protect its confidentiality, apply
-                    appropriate technical and organizational security measures, notify you without undue delay after
-                    becoming aware of a personal-data breach affecting Customer Content, and reasonably assist with
-                    legally required data-subject requests, security assessments, and breach obligations. Assistance
-                    beyond standard Service functionality may be charged at a reasonable rate.
+                    We will apply appropriate security measures, restrict personnel access to those who need it, and
+                    notify you without undue delay after becoming aware of a personal-data breach affecting Customer
+                    Content. We will reasonably assist you with legally required data-subject and breach obligations.
                 </Text>
                 <Text as="p">
-                    You generally authorize the subprocessors needed to operate the Service. We remain responsible for
-                    their processing to the extent required by law and will impose materially equivalent data-protection
-                    duties. We will give reasonable notice of a material new subprocessor where required, allowing you
-                    to object on documented data-protection grounds. If the parties cannot resolve the objection, you
-                    may stop the affected use. Cross-border transfers will use safeguards required by applicable law.
+                    We may use providers needed to operate the Service, subject to applicable data-protection law and
+                    any signed data processing agreement. We remain responsible for their processing as required by law.
+                    Cross-border transfers will use legally required safeguards.
                 </Text>
                 <Text as="p">
-                    Do not process health data, special-category or highly sensitive personal data, regulated secrets,
-                    payment-card data, or data subject to sector-specific localization or retention duties unless we
-                    have expressly agreed in a signed data processing agreement or order. You must encrypt sensitive
-                    Customer Content where appropriate and must not rely on the Service as your only copy.
+                    Do not process health data, other highly sensitive personal data, or payment-card data through the
+                    Service without our prior written agreement. Encrypt sensitive Customer Content where appropriate.
                 </Text>
                 <Text as="p">
-                    LongLink storage, databases, deployments, local development environments, and connected
-                    infrastructure are not backup services unless a written agreement expressly says so. Deleting,
-                    reinstalling, replacing, suspending, or terminating a Solution, schema, bucket, organization,
-                    runtime, or infrastructure resource may erase Customer Content without a recovery period. You are
-                    responsible for exporting Customer Content and, where possible, securely deleting it before deleting
-                    or releasing resources.
+                    The Service is not a backup service unless agreed in writing. Deleting or replacing a Solution,
+                    organization, or connected resource may permanently erase Customer Content. Keep independent backups
+                    and export your data before deleting resources or closing your account.
                 </Text>
                 <Text as="p">
                     We act as controller for account, organization, billing, support, security, and operational data, as
@@ -432,59 +321,37 @@ function TermsContent() {
 
             <Stack as="section" gap={3}>
                 <Heading id="our-technology-and-feedback" level={2}>
-                    9. Our technology and feedback
+                    8. Our technology and feedback
                 </Heading>
                 <Text as="p">
-                    We and our licensors retain all rights in the Service, documentation, branding, templates, SDK,
-                    platform software, Solution runtime, XML renderer, infrastructure adapters, and underlying
-                    technology. These Terms grant only the limited right to use the Service during the agreement.
+                    We and our licensors retain rights in the Service and our branding, subject to applicable
+                    open-source licenses. You may use the hosted Service while these Terms apply. Open-source licenses
+                    govern the corresponding software; third-party products remain subject to their own terms.
                 </Text>
                 <Text as="p">
-                    If you voluntarily provide feedback, we may use it without restriction or payment, provided we do
-                    not identify you publicly without permission. Third-party software, dependencies, images, templates,
-                    and services remain subject to their own licenses and terms.
-                </Text>
-            </Stack>
-
-            <Stack as="section" gap={3}>
-                <Heading id="availability-and-third-party-services" level={2}>
-                    10. Availability and third-party services
-                </Heading>
-                <Text as="p">
-                    We may perform maintenance, restart services, rotate secrets, change network routes, migrate
-                    workloads, stop deployments, remove stale resources, or isolate Solutions, organizations, or
-                    infrastructure connections to protect the Service, users, or connected infrastructure.
-                </Text>
-                <Text as="p">
-                    Identity providers, payment providers, container registries, cloud providers, Kubernetes clusters,
-                    database servers, storage providers, email providers, network carriers, template publishers, package
-                    registries, and other third parties are outside our control and may change or discontinue their
-                    services. You are responsible for verifying that third-party software, templates, infrastructure,
-                    and providers are suitable and properly licensed for your use.
+                    We may use feedback you voluntarily provide without payment, but will not identify you publicly
+                    without permission.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="warranties" level={2}>
-                    11. Warranties
+                    9. Warranties
                 </Heading>
                 <Text as="p">
-                    To the fullest extent permitted by law, the Service is provided "as is" and "as available",
-                    especially where it is beta, preview, local, self-hosted, open-source, or development software. We
-                    do not warrant uninterrupted, error-free, or secure operation, any particular performance,
-                    compatibility, migration outcome, deployment result, business result, or that Customer Content will
-                    be preserved.
+                    To the fullest extent permitted by law, the Service is provided "as is" and "as available". We do
+                    not guarantee uninterrupted operation, a particular result, or preservation of Customer Content.
+                    Separately licensed software is subject to the warranty terms of its license.
                 </Text>
                 <Text as="p">
-                    For business users, we disclaim implied warranties of merchantability, satisfactory quality, fitness
-                    for purpose, and non-infringement to the fullest extent permitted by law. Mandatory consumer
-                    warranties remain unaffected.
+                    For business users, implied warranties are excluded to the extent permitted by law. Mandatory
+                    consumer rights remain unaffected.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="limitation-of-liability" level={2}>
-                    12. Limitation of liability
+                    10. Limitation of liability
                 </Heading>
                 <Text as="p">
                     Nothing in these Terms excludes or limits liability for wilful misconduct or gross negligence under
@@ -492,121 +359,102 @@ function TermsContent() {
                     excluded or limited.
                 </Text>
                 <Text as="p">
-                    For business users, to the fullest extent permitted by law: (a) we are not liable for indirect,
-                    incidental, special, consequential, or punitive loss, or for lost profit, revenue, business,
-                    opportunity, goodwill, anticipated savings, data, Customer Content, credentials, or Solutions; and
-                    (b) our total aggregate liability arising from or related to the Service is limited to the fees paid
-                    or payable for the affected Service in the three months immediately before the event giving rise to
-                    the claim, capped at CHF 1,000. Liability for auxiliaries is excluded to the extent permitted by
-                    Article 101(2) of the Swiss Code of Obligations.
+                    For business users, to the fullest extent permitted by law, we are not liable for indirect or
+                    consequential loss, lost profits, or lost data. Our total liability related to the Service is
+                    limited to the fees paid or payable for the affected Service in the three months before the claim
+                    arose, capped at CHF 1,000. Liability for auxiliaries is excluded to the extent permitted by Article
+                    101(2) of the Swiss Code of Obligations.
                 </Text>
                 <Text as="p">
-                    For consumers, exclusions and limits apply only to the extent permitted by mandatory law and do not
-                    restrict mandatory remedies. In all cases, you must take reasonable steps to avoid and reduce loss,
-                    including maintaining backups, securing credentials, and promptly responding to security,
-                    operational, and billing notices.
+                    For consumers, limits apply only where permitted by mandatory law. You must take reasonable steps to
+                    prevent and reduce loss, including maintaining backups and securing credentials.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="indemnity-for-business-users" level={2}>
-                    13. Indemnity for business users
+                    11. Indemnity for business users
                 </Heading>
                 <Text as="p">
-                    If you are a business user, you will defend, indemnify, and hold harmless LongLink SAGL and its
-                    personnel from third-party claims, damages, penalties, and reasonable legal costs arising from
-                    Customer Content, your Solutions, your users, your connected infrastructure, your breach of these
-                    Terms, or your infringement of law or third-party rights. This does not apply to the extent the
-                    claim was caused by our wilful misconduct or gross negligence.
+                    If you are a business user, you will defend and indemnify LongLink SAGL against third-party claims
+                    and reasonable costs arising from your Customer Content, your breach of these Terms, or your
+                    infringement of others' rights, except to the extent caused by our wilful misconduct or gross
+                    negligence.
                 </Text>
                 <Text as="p">
-                    We will notify you reasonably promptly, allow you to control the defense and settlement, and provide
-                    reasonable cooperation at your cost. You may not settle a claim in a way that admits liability for
-                    us or imposes obligations on us without our written consent.
+                    We will notify you reasonably promptly and let you control the defense, with our reasonable
+                    cooperation at your cost. You may not agree to obligations on our behalf without our written
+                    consent.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="suspension-deletion-and-termination" level={2}>
-                    14. Suspension, deletion and termination
+                    12. Suspension and termination
                 </Heading>
                 <Text as="p">
-                    You may stop using the Service at any time and may request account closure. Deleting a Solution,
-                    organization, schema, bucket, runtime, deployment, registry, or infrastructure connection may be
-                    irreversible and may immediately erase Customer Content. You remain responsible for charges incurred
-                    before deletion or termination and any outstanding balance.
+                    You may stop using the Service or request account closure at any time. Export your Customer Content
+                    first; deletion may be irreversible. You remain responsible for charges incurred before closure.
                 </Text>
                 <Text as="p">
-                    We may immediately suspend access, stop proxying, disable or delete a Solution, remove Customer
-                    Content, revoke credentials, suspend an organization, or terminate the agreement if you materially
-                    breach these Terms, fail to pay, create a security or legal risk, use the Service fraudulently or
-                    abusively, or if required by law. Where the issue is reasonably capable of cure and does not require
-                    urgent action, we will ordinarily give notice and a reasonable opportunity to cure.
+                    We may suspend access or remove affected resources immediately for a material breach, nonpayment,
+                    abuse, security risk, or legal requirement. We may terminate the Service for these reasons. Where
+                    the issue can be fixed without urgent action, we will give notice and a reasonable opportunity to
+                    remedy it.
                 </Text>
                 <Text as="p">
-                    We may also terminate a paid managed Service for convenience on at least 30 days' notice. If we
-                    terminate for convenience, we will refund prepaid unused fees after deducting valid charges. If we
-                    terminate for your breach, unused prepaid fees will be handled as required by mandatory law after
-                    deducting amounts you owe. Sections that by their nature should survive termination do so, including
-                    payment obligations, intellectual property, privacy and data processing, liability, indemnity, and
-                    governing law.
+                    We may end a paid service for convenience on at least 30 days' notice. Terms concerning payment,
+                    intellectual property, privacy, liability, indemnity, and governing law survive termination where
+                    relevant.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="changes-to-these-terms" level={2}>
-                    15. Changes to these Terms
+                    13. Changes to these Terms
                 </Heading>
                 <Text as="p">
-                    We may update these Terms for legal, security, technical, product, or commercial reasons. We will
-                    give at least 30 days' notice of a material adverse change by email or through the Service where
-                    practicable. Changes needed urgently for law or security may take effect sooner, with notice as soon
-                    as reasonably practicable. Changes apply from their effective date and do not retroactively change
-                    completed usage.
+                    We may update these Terms as the Service or law changes. We will give at least 30 days' notice of
+                    material adverse changes by email or through the Service, except where an urgent legal or security
+                    change requires earlier effect. We will notify you of urgent changes as soon as practicable.
                 </Text>
                 <Text as="p">
-                    If you do not agree to a material change, you must stop using the Service before it takes effect and
-                    may request closure and a refund of prepaid unused fees after valid charges are deducted where
-                    applicable. Continued use after the effective date constitutes acceptance where permitted by law.
+                    Changes take effect prospectively. If you disagree, stop using the Service before they take effect;
+                    you may request closure and a refund of unused prepaid fees, less valid charges. Continued use after
+                    the effective date constitutes acceptance where permitted by law.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="force-majeure" level={2}>
-                    16. Force majeure
+                    14. Force majeure
                 </Heading>
                 <Text as="p">
-                    Neither party is liable for delay or failure caused by events beyond its reasonable control,
-                    including power, carrier or internet failures, supplier outages, cloud-provider outages,
-                    identity-provider outages, natural disasters, labor disputes, war, cyberattacks, sanctions, or
-                    government action. This does not excuse your obligation to pay charges already incurred. The
-                    affected party will take reasonable steps to reduce the impact.
+                    Neither party is liable for delays caused by events beyond its reasonable control, including
+                    supplier outages, natural disasters, and government action. This does not excuse payment for charges
+                    already incurred. The affected party will take reasonable steps to reduce the impact.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="general-and-governing-law" level={2}>
-                    17. General and governing law
+                    15. General and governing law
                 </Heading>
                 <Text as="p">
-                    These Terms and the incorporated documents are the entire agreement about the Service and replace
-                    prior statements on that subject. If a provision is invalid or unenforceable, it will be enforced to
-                    the maximum lawful extent and the remaining provisions remain effective. A failure to enforce a
-                    right is not a waiver. You may not assign this agreement without our written consent. We may assign
-                    it as part of a merger, reorganization, financing, or transfer of the relevant business, provided
-                    this does not reduce mandatory consumer rights.
+                    These Terms and any applicable signed agreement are the entire agreement about the Service. If a
+                    provision is unenforceable, the rest remains effective. A failure to enforce a right is not a
+                    waiver. You may not assign this agreement without our written consent; we may assign it with a
+                    transfer of our business, subject to mandatory consumer rights.
                 </Text>
                 <Text as="p">
-                    Swiss substantive law governs, excluding its conflict-of-law rules. For business users, the
-                    competent Swiss courts have exclusive jurisdiction. For consumers, this choice of law and forum does
-                    not deprive you of mandatory protections or access to any court available under applicable consumer
-                    or jurisdiction law.
+                    Swiss law governs. For business users, the competent Swiss courts have exclusive jurisdiction. For
+                    consumers, mandatory protections and available courts under applicable law remain unaffected.
                 </Text>
             </Stack>
 
             <Stack as="section" gap={3}>
                 <Heading id="contact" level={2}>
-                    18. Contact
+                    16. Contact
                 </Heading>
                 <Text as="p">
                     Legal enquiries:{' '}
