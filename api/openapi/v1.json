@@ -2397,7 +2397,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page_UserSummary_"
+                  "$ref": "#/components/schemas/Page_AdminUserSummary_"
                 }
               }
             }
@@ -2428,6 +2428,48 @@
   },
   "components": {
     "schemas": {
+      "AdminUserSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "avatar": {
+            "type": "string",
+            "title": "Avatar"
+          },
+          "administrator": {
+            "type": "boolean",
+            "title": "Administrator"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "avatar",
+          "administrator",
+          "created_at"
+        ],
+        "title": "AdminUserSummary",
+        "description": "Represent a user with its creation time for platform administrators."
+      },
       "Body_request_password_reset_api_v1_auth_forgot_password_post": {
         "properties": {
           "email": {
@@ -3003,6 +3045,28 @@
         "title": "OrganizationStorageUsageResponse",
         "description": "Report current logical object usage and quota for one Organization bucket."
       },
+      "Page_AdminUserSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminUserSummary"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "Page[AdminUserSummary]"
+      },
       "Page_ComputeRegistryResponse_": {
         "properties": {
           "items": {
@@ -3090,28 +3154,6 @@
           "total"
         ],
         "title": "Page[SolutionResponse]"
-      },
-      "Page_UserSummary_": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/UserSummary"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "total": {
-            "type": "integer",
-            "minimum": 0.0,
-            "title": "Total"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "total"
-        ],
-        "title": "Page[UserSummary]"
       },
       "PasswordLogin": {
         "properties": {

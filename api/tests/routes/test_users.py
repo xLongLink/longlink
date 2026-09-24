@@ -84,7 +84,7 @@ async def test_list_users_returns_administrator_page_and_total(
     assert len(payload["items"]) == 1
     assert payload["items"][0]["name"] == "Platform Administrator"
     assert payload["total"] == 3
-    assert set(payload["items"][0]) == {"id", "name", "email", "avatar", "administrator"}
+    assert set(payload["items"][0]) == {"id", "name", "email", "avatar", "administrator", "created_at"}
     assert users[0].password not in response.text
 
 

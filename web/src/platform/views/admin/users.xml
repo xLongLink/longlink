@@ -1,7 +1,6 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Users" icon="users">
     <State id="pages" value="${1}" />
-    <State id="metadata" item="${null}" open="${false}" />
     <Query
         id="users"
         path="/api/v1/users?page=${pages.value}&amp;page_size=25"
@@ -29,14 +28,11 @@
                     </Stack>
                 </Stack>
             </TableColumn>
-            <TableColumn field="id" header="Actions" align="end">
-                <MoreMenu value="$metadata">
-                    <Option
-                        value="${{ item: row, open: true }}"
-                        label="Metadata"
-                        icon="info"
-                    />
-                </MoreMenu>
+            <TableColumn field="id" header="Metadata">
+                <Stack align="start">
+                    <Text>Created: <Timestamp value="$row.created_at" /></Text>
+                    <Text type="supporting">${'ID: ' + row.id}</Text>
+                </Stack>
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
@@ -54,21 +50,4 @@
             </Action>
         </Stack>
     </Stack>
-
-    <Dialog title="User metadata" isOpen="$metadata.open">
-        <Stack gap="2">
-            <Text>
-                <b>Email</b>
-                $metadata.item.email
-            </Text>
-            <Text>
-                <b>Access</b>
-                ${metadata.item.administrator ? 'Administrator' : 'User'}
-            </Text>
-            <Text>
-                <b>ID</b>
-                $metadata.item.id
-            </Text>
-        </Stack>
-    </Dialog>
 </longlink>
