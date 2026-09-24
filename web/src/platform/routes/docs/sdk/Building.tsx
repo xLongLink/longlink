@@ -4,6 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const article = {
@@ -12,7 +13,7 @@ const article = {
         { id: 'building', label: 'Building', level: 1 },
         { id: 'metadata', label: 'Metadata', level: 2 },
     ],
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-09-24',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Building.tsx',
     title: 'Building Projects | LongLink Documentation',
 };
@@ -27,6 +28,13 @@ export default function DocsArticleRoute() {
                 <Text as="p">
                     The build command packages a project into an image, which can be pushed to a registry.
                 </Text>
+                <Collapsible
+                    chevronPosition="start"
+                    defaultIsOpen={false}
+                    trigger={<Text weight="semibold">Why?</Text>}
+                >
+                    <Text as="p">TODO</Text>
+                </Collapsible>
                 <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
                 <Stack gap={2}>
                     <Heading id="metadata" level={2}>

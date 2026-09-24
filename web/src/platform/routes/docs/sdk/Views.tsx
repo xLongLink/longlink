@@ -26,6 +26,7 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { componentDocumentation } from '@/lib/generated/documentation';
@@ -83,7 +84,7 @@ const article = {
         { id: 'form', label: 'Form', level: 2 },
         { id: 'layout', label: 'Layout', level: 2 },
     ],
-    lastUpdated: '2026-07-21',
+    lastUpdated: '2026-09-24',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Views.tsx',
     title: 'Views | LongLink Documentation',
 };
@@ -105,6 +106,13 @@ export default function DocsArticleRoute() {
                     </Link>
                     components and LongLink state elements. Use this page as the component map.
                 </Text>
+                <Collapsible
+                    chevronPosition="start"
+                    defaultIsOpen={false}
+                    trigger={<Text weight="semibold">Why?</Text>}
+                >
+                    <Text as="p">TODO</Text>
+                </Collapsible>
                 <CodeBlock code={'<longlink>\n  Welcome\n</longlink>'} language="xml" />
                 <Stack gap={3}>
                     <Heading id="longlink-runtime-concepts" level={2}>
