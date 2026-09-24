@@ -14,7 +14,7 @@ export default function Solution() {
             {({ content, tabs, title }) => (
                 <Platform
                     action={
-                        <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
+                        <Link as="a" href="https://www.longlink.dev/docs/" isExternalLink isStandalone>
                             Documentation
                         </Link>
                     }

@@ -310,7 +310,7 @@ function TermsContent() {
                     necessary to address suspected abuse, fraud, security threats, or legal violations, protect users or
                     infrastructure, or comply with a binding legal request. Our handling of personal data is described
                     in the{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
                     .
@@ -423,7 +423,7 @@ function TermsContent() {
                 <Text as="p">
                     We act as controller for account, organization, billing, support, security, and operational data, as
                     explained in our{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
                     .

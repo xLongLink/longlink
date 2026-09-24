@@ -66,7 +66,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
         }
 
         event.preventDefault();
-        void navigate(destination);
+        void navigate(`${destination}/`);
         scrollToArticleTop();
     });
 
@@ -129,7 +129,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                             >
                                                 <Button
                                                     aria-keyshortcuts="ArrowLeft"
-                                                    href={previousPage}
+                                                    href={previousPage ? `${previousPage}/` : undefined}
                                                     icon={<ArrowLeft aria-hidden size={16} />}
                                                     isDisabled={previousPage === undefined}
                                                     label="Previous"
@@ -138,7 +138,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                                 <Button
                                                     aria-keyshortcuts="ArrowRight"
                                                     endContent={<ArrowRight aria-hidden size={16} />}
-                                                    href={nextPage}
+                                                    href={nextPage ? `${nextPage}/` : undefined}
                                                     isDisabled={nextPage === undefined}
                                                     label="Next"
                                                     onClick={scrollToArticleTop}

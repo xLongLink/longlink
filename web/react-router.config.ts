@@ -12,7 +12,7 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
-const publicPagePaths = [
+const prerenderPaths = [
     '/',
     '/blog',
     '/blog/introducing-longlink',
@@ -23,6 +23,7 @@ const publicPagePaths = [
     '/privacy',
     ...documentationPaths,
 ];
+const publicPagePaths = prerenderPaths.filter((pagePath) => pagePath !== '/login');
 
 /** Sitemap priorities signal the important pages to search engines. */
 const publicPagePriorities: Record<string, number> = {
@@ -30,7 +31,6 @@ const publicPagePriorities: Record<string, number> = {
     '/blog/introducing-longlink': 0.9,
     '/blog': 0.8,
     '/docs': 0.8,
-    '/login': 0.7,
     '/pricing': 0.6,
 };
 
@@ -58,7 +58,7 @@ export default {
     appDirectory: isSolution ? 'src/solution' : 'src/platform',
     buildDirectory: path.resolve(import.meta.dirname, 'build', isSolution ? 'sdk' : 'api'),
     ssr: false,
-    prerender: isSolution ? undefined : publicPagePaths.map((pagePath) => (pagePath === '/' ? '/' : `${pagePath}/`)),
+    prerender: isSolution ? undefined : prerenderPaths.map((pagePath) => (pagePath === '/' ? '/' : `${pagePath}/`)),
 
     /** Adapts Framework Mode's output to the embedded FastAPI frontend contract. */
     async buildEnd({ reactRouterConfig }) {

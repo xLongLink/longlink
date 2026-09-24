@@ -1,7 +1,7 @@
 export const siteName = 'LongLink';
 
 /** Validates and normalizes the configured public site origin. */
-function siteOrigin(value = 'https://longlink.dev'): string {
+function siteOrigin(value = 'https://www.longlink.dev'): string {
     const url = new URL(value);
 
     if (

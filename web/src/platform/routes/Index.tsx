@@ -127,7 +127,7 @@ function PathCard({
             </Stack>
             <ClickableCard
                 className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
-                href="/docs"
+                href="/docs/"
                 label={action}
                 padding={6}
             >
@@ -230,10 +230,10 @@ export default function Home() {
                             level={1}
                         >
                             <Text display="block" textWrap="nowrap" type="inherit">
-                                Just another dashboard
+                                Build business software{' '}
                             </Text>
-                            <Text className="mt-1" display="block" hasStrikethrough textWrap="nowrap" type="inherit">
-                                Nothing to see here
+                            <Text className="mt-1" display="block" textWrap="nowrap" type="inherit">
+                                with LongLink
                             </Text>
                         </Heading>
                         <Text as="p" className="mx-auto text-sm leading-6 sm:text-lg" color="secondary" display="block">
@@ -389,7 +389,7 @@ export default function Home() {
                     <Stack className="flex-wrap" direction="horizontal" gap={3} hAlign="center" vAlign="center">
                         <Button
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="/blog/introducing-longlink"
+                            href="/blog/introducing-longlink/"
                             label="Introducing LongLink"
                             variant="secondary"
                         />

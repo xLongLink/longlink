@@ -21,7 +21,7 @@ export function PathBreadcrumb({
             {root}
             {segments.map((segment, index) => {
                 const isLast = index === segments.length - 1;
-                const href = `/${segments.slice(0, index + 1).join('/')}`;
+                const href = `/${segments.slice(0, index + 1).join('/')}/`;
 
                 return (
                     <BreadcrumbItem key={href} href={isLast ? undefined : href} isCurrent={isLast}>

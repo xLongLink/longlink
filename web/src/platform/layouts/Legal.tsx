@@ -15,9 +15,9 @@ export default function Legal() {
                 <SideNav header={<SideNavHeader />}>
                     <Stack paddingInline={2}>
                         <SideNavSection title="Legal">
-                            <SideNavItem href="/terms" isSelected={pagePath === '/terms'} label="Terms" />
-                            <SideNavItem href="/impressum" isSelected={pagePath === '/impressum'} label="Impressum" />
-                            <SideNavItem href="/privacy" isSelected={pagePath === '/privacy'} label="Privacy" />
+                            <SideNavItem href="/terms/" isSelected={pagePath === '/terms'} label="Terms" />
+                            <SideNavItem href="/impressum/" isSelected={pagePath === '/impressum'} label="Impressum" />
+                            <SideNavItem href="/privacy/" isSelected={pagePath === '/privacy'} label="Privacy" />
                         </SideNavSection>
                     </Stack>
                 </SideNav>

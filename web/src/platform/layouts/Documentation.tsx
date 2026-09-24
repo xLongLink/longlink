@@ -53,7 +53,7 @@ export default function Documentation() {
                                     return (
                                         <SideNavItem
                                             key={page.path}
-                                            href={page.path}
+                                            href={`${page.path}/`}
                                             icon={<Icon aria-hidden size={16} />}
                                             isSelected={pagePath === page.path}
                                             label={page.label}

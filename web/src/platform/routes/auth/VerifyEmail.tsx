@@ -218,11 +218,11 @@ export default function VerifyEmail() {
                 <Divider />
                 <Text as="p" justify="center" type="supporting">
                     By continuing, you agree to our <br />
-                    <Link href="/terms" hasUnderline type="inherit">
+                    <Link href="/terms/" hasUnderline type="inherit">
                         Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" hasUnderline type="inherit">
+                    <Link href="/privacy/" hasUnderline type="inherit">
                         Privacy Policy
                     </Link>
                     .

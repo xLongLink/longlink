@@ -24,13 +24,13 @@ export function Navbar() {
                         label="Main navigation"
                         centerContent={
                             <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
-                                <Link href="/docs" color="secondary" isStandalone weight="medium">
-                                    Docs
+                                <Link href="/docs/" color="secondary" isStandalone weight="medium">
+                                    Documentation
                                 </Link>
-                                <Link href="/blog" color="secondary" isStandalone weight="medium">
+                                <Link href="/blog/" color="secondary" isStandalone weight="medium">
                                     Blog
                                 </Link>
-                                <Link href="/pricing" color="secondary" isStandalone weight="medium">
+                                <Link href="/pricing/" color="secondary" isStandalone weight="medium">
                                     Pricing
                                 </Link>
                                 <Link

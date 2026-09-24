@@ -7,7 +7,7 @@ COPY --chown=vp:vp web/ ./
 COPY --chown=vp:vp sdk/ /repo/sdk/
 ARG VERSION=v0.0.0
 ENV VERSION=${VERSION}
-ARG VITE_SITE_URL=https://longlink.dev
+ARG VITE_SITE_URL=https://www.longlink.dev
 ENV VITE_SITE_URL=${VITE_SITE_URL}
 RUN vp run build:api:container
 
