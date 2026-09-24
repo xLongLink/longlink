@@ -10,7 +10,7 @@ from src.routes import v1, branding
 from collections.abc import Callable, Awaitable, AsyncGenerator
 from longlink.logger import ApiAccessFilter
 from src.environments import env
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from src.utils.cookies import AUTH_COOKIE, OAUTH_STATE_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE
 from fastapi.exceptions import RequestValidationError
 from longlink.middleware import FrontendMiddleware
@@ -117,10 +117,17 @@ app.include_router(branding.router)
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
     # Serve the prerendered home document before registering the generic SPA fallback.
-    @app.get("/", include_in_schema=False)
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     def frontend_root():
         """Return the prerendered LongLink home page."""
 
         return FileResponse(static_dir / "__root.html")
+
+    @app.api_route("/index.html", methods=["GET", "HEAD"], include_in_schema=False)
+    def redirect_frontend_index(request: Request) -> RedirectResponse:
+        """Redirect the generic frontend fallback document to the prerendered home page."""
+
+        query = f"?{request.url.query}" if request.url.query else ""
+        return RedirectResponse(f"/{query}", status_code=308)
 
     app.frontend("/", directory=static_dir)
