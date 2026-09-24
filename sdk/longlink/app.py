@@ -75,8 +75,8 @@ class LongLink(FastAPI):
         # Mount SDK-managed routes before user-facing assets.
         self.include_router(router(view_definitions))
 
-        # Bind Platform request identity across downstream request handling.
-        install_context_middleware(self, settings.IDENTITY_SECRET)
+        # Only production requests with a valid Platform identity may reach Solution routes.
+        install_context_middleware(self, settings.IDENTITY_SECRET, require_identity=settings.ENV == "production")
 
         self.state.longlink = RuntimeState(storage=storage, database=database)
         self.router.add_event_handler("shutdown", database.dispose)
