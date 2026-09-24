@@ -37,7 +37,7 @@ async def reconcile(organization_id: UUID) -> None:
         compute.kubeconfig,
     )
     async with cluster:
-        storage = Storage(compute)
+        storage = Storage(compute, cluster)
         await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
         await cluster.organizations.apply(organization.id)
 
@@ -95,7 +95,7 @@ async def delete(organization_id: UUID) -> str | None:
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
-            storage = Storage(compute)
+            storage = Storage(compute, cluster)
             await storage.delete(organization.id, solution_ids)
 
         # Purge the tombstone only after all external resources are absent.

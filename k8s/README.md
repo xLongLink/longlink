@@ -1,55 +1,12 @@
-<div align="center">
+# LongLink Compute
 
-<img src="../banner.png" alt="LongLink banner" />
+This Helm chart installs shared Knative, Kourier, CloudNativePG, and RustFS infrastructure.
+Install it before registering a Compute in the Platform. Registration requires a
+kubeconfig with cluster access and the gateway and storage addresses.
 
-</div>
+## Install
 
-## LongLink Compute package
-
-The chart installs Knative, Kourier, CloudNativePG, and RustFS. The Platform
-validates its matching release version and manages tenant resources; it never installs
-shared infrastructure.
-
-<br />
-
-## Architecture
-
-Scope: Operator installs and operates shared Compute infrastructure.
-
-```text
-Compute cluster
-├── cnpg-system
-│   └── CloudNativePG controller
-├── knative-serving
-│   ├── Knative Serving controller, webhook, and activator
-│   └── Kourier network controller
-    ├── kourier-system
-    │   └── Kourier gateway
-    ├── longlink-system
-    │   ├── Helm release: longlink-compute
-    │   └── Compute release contract
-└── rustfs
-    ├── RustFS
-    └── TLS storage proxy
-```
-
-<br />
-
-## Requirements
-
-The chart creates the RustFS namespace and administrator Secret
-(`rustfs/longlink-rustfs`). Compute registration reads those credentials
-through the provided kubeconfig, so they never leave the cluster. The chart
-generates strong random credentials on first install and keeps them across
-upgrades and uninstalls.
-
-Solution workloads always reach object storage through the cluster-local proxy at `https://longlink-storage.rustfs.svc:443`. The registered storage endpoint is the Platform controller endpoint used from outside the cluster.
-
-<br />
-
-## Setup
-
-Install the shared Compute infrastructure from source:
+From source:
 
 ```bash
 helm upgrade --install longlink-compute k8s/chart \
@@ -60,8 +17,7 @@ helm upgrade --install longlink-compute k8s/chart \
   --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
 
-Install from a release image instead, which embeds its matching chart at
-`app/compute/`:
+Or from a release image:
 
 ```bash
 version=<release-version>
@@ -75,18 +31,14 @@ helm upgrade --install longlink-compute longlink-chart.tgz \
   --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
 
-<br />
-
 ## Update
 
 > [!WARNING]
-> RustFS now runs as a StatefulSet with fixed selectors. Kubernetes cannot
-> change workload kinds or selectors in place. Before upgrading an older
-> Compute package, plan a RustFS data migration and replace the workload during
-> a maintenance window. The chart does not move data or delete retained legacy
-> data and log volumes.
+> Upgrading an older installation to the RustFS StatefulSet requires a planned
+> data migration and maintenance window. Kubernetes cannot convert the old
+> workload in place; the chart does not migrate or delete its data.
 
-Update the gateway source allowlist while preserving the installed values:
+To change the gateway source allowlist without replacing other installed values:
 
 ```bash
 helm upgrade longlink-compute k8s/chart \
@@ -95,25 +47,8 @@ helm upgrade longlink-compute k8s/chart \
   --set gatewayAllowedSourceCidr=<gateway-allowed-source-cidr>
 ```
 
-<br />
-
-## Cleanup
-
-Remove the Compute Helm release:
+## Uninstall
 
 ```bash
 helm uninstall longlink-compute --namespace <release-namespace>
 ```
-
-<br />
-
----
-
-<div align="center">
-LongLink 2026
-
-[License](../LICENSE) &nbsp; - &nbsp; [Contributing](../CONTRIBUTING.md) &nbsp; - &nbsp; [Code of Conduct](../CODE_OF_CONDUCT.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
-
-</div>
-
----

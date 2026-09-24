@@ -1,4 +1,5 @@
 import base64
+import httpx2
 from uuid import UUID
 from typing import TYPE_CHECKING
 from src.utils import s3, rustfs
@@ -20,13 +21,23 @@ TLS_SECRET_NAME = "longlink-storage-tls"  # noqa: S105
 class Storage:
     """Verify RustFS and reconcile Organization buckets with Solution service accounts."""
 
-    def __init__(self, compute: "ComputeRegistry") -> None:
+    def __init__(self, compute: "ComputeRegistry", cluster: "Kubernetes | None" = None) -> None:
         """Bind controller connections without opening a transport."""
 
         # The controller identity owns bucket lifecycle and service-account administration.
         credentials = s3.Credentials(compute.storage_access_key, compute.storage_secret_key)
         self._storage = s3.S3(compute.storage_endpoint, credentials, compute.storage_certificate)
-        self._admin = rustfs.RustFS(compute.storage_endpoint, credentials, compute.storage_certificate)
+        self._credentials = credentials
+        self._cluster = cluster
+
+    async def _admin(self) -> rustfs.RustFS:
+        """Connect administrator operations only through the authenticated cluster tunnel."""
+
+        # Read-only storage usage does not require Kubernetes; every admin operation does.
+        if self._cluster is None:
+            raise RuntimeError("RustFS administration requires a Kubernetes connection")
+        port = await self._cluster.forward_storage()
+        return rustfs.RustFS(f"http://127.0.0.1:{port}", self._credentials)
 
     @staticmethod
     async def controller_credentials(cluster: "Kubernetes") -> s3.Credentials:
@@ -62,6 +73,17 @@ class Storage:
         async with self._storage.client() as client:
             await client.list_buckets()
 
+    async def verify_admin(self) -> None:
+        """Confirm the Kubernetes tunnel reaches a ready RustFS Pod."""
+
+        # kr8s starts the remote port-forward only when a request enters its local listener.
+        if self._cluster is None:
+            raise RuntimeError("RustFS administration requires a Kubernetes connection")
+        port = await self._cluster.forward_storage()
+        async with httpx2.AsyncClient(trust_env=False, timeout=5.0, follow_redirects=False) as client:
+            response = await client.get(f"http://127.0.0.1:{port}/health/ready")
+            response.raise_for_status()
+
     @staticmethod
     def bucket_name(organization: UUID) -> str:
         """Resolve an Organization bucket name without provisioning it."""
@@ -71,12 +93,14 @@ class Storage:
     async def service_account(self, organization: UUID, solution: UUID) -> s3.Credentials:
         """Create one Solution-scoped service account in the Organization bucket."""
 
-        return await self._admin.service_account(self.bucket_name(organization), solution)
+        admin = await self._admin()
+        return await admin.service_account(self.bucket_name(organization), solution)
 
     async def revoke(self, solution: UUID) -> None:
         """Revoke one Solution service account."""
 
-        await self._admin.revoke(solution)
+        admin = await self._admin()
+        await admin.revoke(solution)
 
     async def delete_prefix(self, organization: UUID, prefix: str) -> None:
         """Remove one Solution prefix from the Organization bucket."""
@@ -104,13 +128,15 @@ class Storage:
                     "RestrictPublicBuckets": True,
                 },
             )
-        await self._admin.quota(name, quota_bytes)
+        admin = await self._admin()
+        await admin.quota(name, quota_bytes)
 
     async def delete(self, organization: UUID, solutions: Sequence[UUID]) -> None:
         """Revoke all scoped credentials and remove an Organization bucket's complete contents."""
 
         # Revoke every known account before data removal, including tombstoned Solutions.
         name = self.bucket_name(organization)
+        admin = await self._admin()
         for solution in solutions:
-            await self._admin.revoke(solution)
+            await admin.revoke(solution)
         await self._storage.delete(name)

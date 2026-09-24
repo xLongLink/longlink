@@ -42,7 +42,7 @@ async def deploy(revision_id: UUID) -> None:
         compute.kubeconfig,
     )
     async with cluster:
-        storage = Storage(compute)
+        storage = Storage(compute, cluster)
         bucket_name = storage.bucket_name(organization.id)
 
         # Reuse generated credentials after an interrupted creation attempt.
@@ -156,7 +156,7 @@ async def delete(solution_id: UUID) -> None:
         await db.delete_solution_schema(organization.id, solution.id)
 
         # Revoke the service account before owner credentials remove its private objects.
-        storage = Storage(compute)
+        storage = Storage(compute, cluster)
         await storage.revoke(solution.id)
         await storage.delete_prefix(organization.id, f"solutions/{solution.id.hex}/")
 

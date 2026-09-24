@@ -72,7 +72,7 @@ class AsyncKubernetes:
 class StorageKubernetes:
     """Supply the external storage boundary for Platform lifecycle tests."""
 
-    def __init__(self, compute: object | None = None) -> None:
+    def __init__(self, compute: object | None = None, cluster: object | None = None) -> None:
         """Accept the bound Compute registry without opening connections."""
 
     @staticmethod
@@ -89,6 +89,9 @@ class StorageKubernetes:
 
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
+
+    async def verify_admin(self) -> None:
+        """Accept readiness verification on the private admin tunnel."""
 
     async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
         """Accept provisioning."""

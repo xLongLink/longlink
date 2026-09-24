@@ -29,7 +29,9 @@ async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> Non
             registry.gateway_certificate,
             timeout_seconds=7,
         )
-        await Storage(registry).verify()
+        storage = Storage(registry, cluster)
+        await storage.verify()
+        await storage.verify_admin()
     except Exception as exc:
         # Any verification failure means unreachable infrastructure.
         logger.warning("Compute infrastructure unavailable: %s", exc)

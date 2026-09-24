@@ -81,3 +81,11 @@ class Kubernetes:
         service = Service("database-rw", namespace=namespace.database(organization_id), api=await self.api())
         await service.refresh()
         return await self._connections.enter_async_context(service.portforward(5432, local_port="auto"))
+
+    async def forward_storage(self) -> int:
+        """Keep the private RustFS administration tunnel alive until this client closes."""
+
+        # Forward the cluster service directly so administrator requests never traverse the public storage proxy.
+        service = Service("rustfs-svc", namespace="rustfs", api=await self.api())
+        await service.refresh()
+        return await self._connections.enter_async_context(service.portforward(9000, local_port="auto"))
