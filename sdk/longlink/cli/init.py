@@ -8,7 +8,9 @@ from longlink.cli.errors import CliError
 
 
 def init_command(
-    folder: Annotated[str, typer.Option(prompt="Enter folder name", help="Folder to initialize")],
+    folder: Annotated[
+        str, typer.Option(prompt="Enter folder name", help="Folder to initialize. Press Enter for the current directory")
+    ] = ".",
     project_name: Annotated[str | None, typer.Option("--name", help="Project name. Defaults to the folder name")] = None,
     ci_provider: Annotated[
         Literal["github"] | None,
@@ -19,21 +21,28 @@ def init_command(
 
     # Resolve the requested target directory.
     target = Path(folder)
-    project_name = project_name or target.name
+    project_name = project_name or target.resolve().name
 
     # Keep generated package metadata compatible with Python package conventions.
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", project_name):
         raise CliError(f"Invalid project name: {project_name}")
 
-    # Scaffold generation never merges into an existing target.
+    # Reject conflicting scaffold paths before copying into an existing directory.
+    if target.is_symlink() or (target.exists() and not target.is_dir()):
+        raise CliError(f"Target is not a directory: {target}")
     if target.exists():
-        raise CliError(f"Target already exists: {target}")
+        scaffold = ROOT / ".static" / "new"
+        for source in scaffold.rglob("*"):
+            destination = target / source.relative_to(scaffold)
+            if destination.is_symlink() or (destination.exists() and (source.is_file() or not destination.is_dir())):
+                raise CliError(f"Target already exists: {destination}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
     shutil.copytree(
         ROOT / ".static" / "new",
         target,
         ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", ".ruff_cache", ".venv"),
+        dirs_exist_ok=True,
     )
 
     # Set the generated project metadata before resolving its dependencies.

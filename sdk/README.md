@@ -15,8 +15,11 @@
 ## Getting started
 
 ```bash
-longlink init --folder my-solution
+mkdir my-solution && cd my-solution
+uvx --from longlink longlink init
 ```
+
+`init` prompts for a folder; press Enter to use the current directory. Use `--folder my-solution` to create a new directory, or `--folder .` to target the current one without a prompt. Existing files are preserved; initialization stops if a scaffold file would conflict.
 
 > See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink Solution.
 
