@@ -9,6 +9,16 @@ from longlink.utils.settings import Envs
 CURRENT_FILE = Path(__file__).resolve()
 
 
+def migration_config(migrations_path: Path) -> Config:
+    """Configure Alembic to use the packaged environment and Solution revisions."""
+
+    # Point Alembic at the SDK environment and the Solution-owned revision directory.
+    config = Config()
+    config.set_main_option("script_location", str(CURRENT_FILE.parent))
+    config.set_main_option("version_locations", str(migrations_path))
+    return config
+
+
 def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
     """Return whether Alembic should manage one metadata object."""
 
@@ -38,7 +48,11 @@ def load_solution_models() -> None:
         # Execute the Solution model module to populate database metadata.
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
-        spec.loader.exec_module(module)
+        try:
+            spec.loader.exec_module(module)
+        except BaseException:
+            del sys.modules[module_name]
+            raise
 
 
 def make_migrations() -> bool:
@@ -56,9 +70,7 @@ def make_migrations() -> bool:
     migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to generate revisions in the Solution directory.
-    cfg = Config()
-    cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
-    cfg.set_main_option("version_locations", str(migrations_path))
+    cfg = migration_config(migrations_path)
 
     def _skip_empty_revision(_context: object, _revision: object, directives: list[MigrationScript]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
@@ -86,9 +98,7 @@ def apply_migrations() -> None:
     migrations_path.mkdir(exist_ok=True)
 
     # Configure Alembic to apply revisions from the Solution directory.
-    cfg = Config()
-    cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
-    cfg.set_main_option("version_locations", str(migrations_path))
+    cfg = migration_config(migrations_path)
 
     command.upgrade(cfg, "head")
 

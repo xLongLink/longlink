@@ -128,7 +128,15 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     if not envs_path.is_file():
         raise CliError(f"Environment model not found: {envs_path}")
 
-    # Import the configured model from the Solution root.
+    # Temporarily replace cached packages with the Solution's own modules.
+    top_level_name = module_parts[0]
+    previous_modules = {
+        name: module for name, module in sys.modules.items() if name == top_level_name or name.startswith(f"{top_level_name}.")
+    }
+    for name in previous_modules:
+        del sys.modules[name]
+
+    # Import the configured model from the Solution root without retaining imported Solution modules.
     sys.path.insert(0, str(root))
     try:
         importlib.invalidate_caches()
@@ -137,7 +145,15 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
         raise CliError(f"Unable to import environment model {environment_import}: {error}") from error
     finally:
         sys.path.pop(0)
-        sys.modules.pop(module_name, None)
+        for name, imported in list(sys.modules.items()):
+            file = getattr(imported, "__file__", None)
+            if (
+                name == top_level_name
+                or name.startswith(f"{top_level_name}.")
+                or (isinstance(file, str) and Path(file).resolve().is_relative_to(root.resolve()))
+            ):
+                sys.modules.pop(name, None)
+        sys.modules.update(previous_modules)
 
     environment_model = getattr(module, class_name, None)
     if environment_model is None:
@@ -178,6 +194,26 @@ def read_pyproject(root: Path) -> dict[str, object]:
         return tomllib.loads(pyproject.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as error:
         raise CliError(f"Invalid project file {pyproject}: {error}") from error
+
+
+def read_project_metadata(pyproject_data: Mapping[str, object]) -> tuple[str, str, str | None]:
+    """Validate the Solution name, version, and optional description."""
+
+    # Require the image metadata before creating any build artifacts.
+    project_data = pyproject_data.get("project")
+    if not isinstance(project_data, dict):
+        raise CliError("[project] metadata is required")
+    project_name = project_data.get("name")
+    project_version = project_data.get("version")
+    project_description = project_data.get("description")
+    if not isinstance(project_name, str) or not project_name.strip():
+        raise CliError("[project].name is required")
+    if not isinstance(project_version, str) or not project_version.strip():
+        raise CliError("[project].version is required")
+    if project_description is not None and not isinstance(project_description, str):
+        raise CliError("[project].description must be a string")
+
+    return project_name, project_version, project_description
 
 
 def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tuple[Path, str, list[Path]]:
@@ -265,25 +301,15 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
-def build_solution(build_context: Path) -> tuple[str, str]:
+def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] | None = None) -> tuple[str, str]:
     """Create Docker build artifacts for the current Solution."""
 
     # Resolve build paths and collect project metadata for the image.
     root = Path.cwd().resolve()
-    pyproject_data = read_pyproject(root)
+    if pyproject_data is None:
+        pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
-    project_data = pyproject_data.get("project")
-    if not isinstance(project_data, dict):
-        raise CliError("[project] metadata is required")
-    project_name = project_data.get("name")
-    project_version = project_data.get("version")
-    project_description = project_data.get("description")
-    if not isinstance(project_name, str) or not project_name.strip():
-        raise CliError("[project].name is required")
-    if not isinstance(project_version, str) or not project_version.strip():
-        raise CliError("[project].version is required")
-    if project_description is not None and not isinstance(project_description, str):
-        raise CliError("[project].description must be a string")
+    project_name, project_version, project_description = read_project_metadata(pyproject_data)
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -301,6 +327,7 @@ def build_solution(build_context: Path) -> tuple[str, str]:
 
     # Apply a fixed context policy without interpreting project-specific ignore syntax.
     context_root = build_context.resolve()
+    selected_paths = (root, *local_source_paths)
 
     def ignore_context_paths(directory: str, contents: list[str]) -> set[str]:
         """Return ignored paths and unsafe or ignored symlinks."""
@@ -339,6 +366,7 @@ def build_solution(build_context: Path) -> tuple[str, str]:
                     continue
                 if (
                     not target.is_relative_to(source_root)
+                    or not any(target.is_relative_to(selected) for selected in selected_paths)
                     or (target.is_dir() and target in path.parents)
                     or any(fnmatch(part, pattern) for part in target.relative_to(source_root).parts for pattern in CONTEXT_IGNORE_PATTERNS)
                 ):
@@ -346,14 +374,22 @@ def build_solution(build_context: Path) -> tuple[str, str]:
 
         return ignored
 
-    # Copy the source tree into a throwaway Docker build context.
-    shutil.copytree(
-        source_root,
-        build_context,
-        dirs_exist_ok=True,
-        symlinks=True,
-        ignore=ignore_context_paths,
-    )
+    # Copy only the Solution and its local dependencies, keeping workspace-relative paths.
+    for selected in selected_paths:
+        shutil.copytree(
+            selected,
+            build_context / selected.relative_to(source_root),
+            dirs_exist_ok=True,
+            symlinks=True,
+            ignore=ignore_context_paths,
+        )
+
+    # Keep workspace discovery and lockfile resolution available to uv.
+    if source_root not in selected_paths:
+        for filename in ("pyproject.toml", "uv.lock"):
+            manifest = source_root / filename
+            if manifest.is_file():
+                shutil.copy2(manifest, build_context / filename)
 
     # Keep Docker's final filter conservative because physical pruning is authoritative.
     build_context.joinpath(".dockerignore").write_text(f"{'\n'.join(DOCKER_CONTEXT_IGNORE_RULES)}\n", encoding="utf-8")
@@ -422,19 +458,18 @@ def build_command(
 ) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
+    # Validate the project and Docker prerequisites before copying source files.
+    pyproject_data = read_pyproject(Path.cwd())
+    solution_name, project_version, _ = read_project_metadata(pyproject_data)
+    image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
+    docker_command = shutil.which("docker")
+    if docker_command is None:
+        raise CliError("Docker is required to build images")
+
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        project_version, solution_name = build_solution(build_context)
-
-        # Resolve and validate the final image tag.
-        version = tag or project_version
-        image_tag = resolve_image_tag(solution_name, version, registry)
-
-        # Require a Docker client on PATH.
-        docker_command = shutil.which("docker")
-        if docker_command is None:
-            raise CliError("Docker is required to build images")
+        build_solution(build_context, pyproject_data=pyproject_data)
 
         # Run the Docker build and optional push.
         try:
