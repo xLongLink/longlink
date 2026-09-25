@@ -67,6 +67,14 @@
         opacity: 0.9;
     }
 
+    .documentation-content {
+        --text-body-size: var(--font-size-lg);
+    }
+
+    .documentation-content :is(h2, h3, h4, h5, h6) {
+        margin-block-start: calc(var(--spacing-9) * 2);
+    }
+
     .handwritten-diagram {
         --font-family-body: Kalam, 'Segoe Print', 'Bradley Hand', cursive;
         --font-family-heading: Kalam, 'Segoe Print', 'Bradley Hand', cursive;

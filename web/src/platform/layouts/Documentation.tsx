@@ -6,7 +6,6 @@ import { documentationSections, type DocumentationIcon } from '@/platform/docs';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import {
     AppWindow,
-    BookOpen,
     Building2,
     Cpu,
     Database,
@@ -23,7 +22,6 @@ import {
 
 const icons: Record<DocumentationIcon, LucideIcon> = {
     appWindow: AppWindow,
-    bookOpen: BookOpen,
     building: Building2,
     cpu: Cpu,
     database: Database,

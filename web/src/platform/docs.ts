@@ -2,7 +2,6 @@ import { componentDocumentation } from '../lib/generated/documentation';
 
 export type DocumentationIcon =
     | 'appWindow'
-    | 'bookOpen'
     | 'building'
     | 'cpu'
     | 'database'
@@ -23,18 +22,6 @@ type DocumentationPage = {
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
     {
-        title: 'Overview',
-        pages: [{ path: '/docs', label: 'Introduction', icon: 'bookOpen' }],
-    },
-    {
-        title: 'Platform',
-        pages: [
-            { path: '/docs/api', label: 'Overview', icon: 'shield' },
-            { path: '/docs/api/organizations', label: 'Organizations', icon: 'building' },
-            { path: '/docs/api/solutions', label: 'Solutions', icon: 'appWindow' },
-        ],
-    },
-    {
         title: 'Solutions',
         pages: [
             { path: '/docs/sdk', label: 'Overview', icon: 'package' },
@@ -45,6 +32,14 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
             { path: '/docs/sdk/views', label: 'Views', icon: 'fileCode' },
             { path: '/docs/sdk/testing', label: 'Testing', icon: 'flask' },
             { path: '/docs/sdk/building', label: 'Building', icon: 'rocket' },
+        ],
+    },
+    {
+        title: 'Platform',
+        pages: [
+            { path: '/docs/api', label: 'Overview', icon: 'shield' },
+            { path: '/docs/api/organizations', label: 'Organizations', icon: 'building' },
+            { path: '/docs/api/solutions', label: 'Solutions', icon: 'appWindow' },
         ],
     },
     {
