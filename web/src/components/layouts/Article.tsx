@@ -117,7 +117,9 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                     <LayoutContent isScrollable={false} padding={6}>
                         <Stack className="mx-auto" direction="horizontal" gap={6} maxWidth={1016} width="100%">
                             <PageContainer className="min-w-0" maxWidth={720}>
-                                <article className="article-content space-y-7 text-justify">
+                                <article
+                                    className={`article-content space-y-7${isDocumentation ? ' documentation-content' : ''}`}
+                                >
                                     {children}
                                     <Stack as="footer" gap={3}>
                                         {currentPage >= 0 ? (
@@ -125,6 +127,7 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                                                 aria-label="Documentation page navigation"
                                                 direction="horizontal"
                                                 hAlign="between"
+                                                paddingBlockStart={8}
                                                 width="100%"
                                             >
                                                 <Button

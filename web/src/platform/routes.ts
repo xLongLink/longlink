@@ -13,11 +13,6 @@ export default [
     ...prefix('docs', [
         layout('./layouts/Documentation.tsx', [
             index('./routes/docs/Index.tsx'),
-            ...prefix('api', [
-                index('./routes/docs/api/Index.tsx'),
-                route('solutions', './routes/docs/api/Solutions.tsx'),
-                route('organizations', './routes/docs/api/Organizations.tsx'),
-            ]),
             ...prefix('sdk', [
                 index('./routes/docs/sdk/Index.tsx'),
                 route('building', './routes/docs/sdk/Building.tsx'),
@@ -32,6 +27,11 @@ export default [
                     route('expressions', './routes/docs/sdk/views/Expressions.tsx'),
                     route(':component', './routes/docs/sdk/views/Component.tsx'),
                 ]),
+            ]),
+            ...prefix('api', [
+                index('./routes/docs/api/Index.tsx'),
+                route('solutions', './routes/docs/api/Solutions.tsx'),
+                route('organizations', './routes/docs/api/Organizations.tsx'),
             ]),
             ...prefix('self-hosted', [
                 route('release', './routes/docs/self-hosted/Release.tsx'),
