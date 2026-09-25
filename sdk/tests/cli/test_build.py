@@ -60,8 +60,8 @@ def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> Non
         assert "Docker is required" not in result.output
 
 
-def test_build_reports_missing_docker_after_preparing_project(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Require Docker only after the project build context is prepared."""
+def test_build_reports_missing_docker_after_validating_project(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Require Docker after validating project metadata but before preparing the context."""
 
     # Arrange
     runner = CliRunner()
@@ -406,7 +406,11 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     dependency = build_project.parent / "shared"
     dependency.mkdir()
     build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
+    build_project.parent.joinpath("uv.lock").write_text("workspace lock", encoding="utf-8")
     dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
+    unrelated = build_project.parent / "unrelated"
+    unrelated.mkdir()
+    unrelated.joinpath("private.txt").write_text("unrelated content", encoding="utf-8")
     dependency.joinpath("nested").mkdir()
     dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
@@ -430,6 +434,9 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     assert not build_context.joinpath("solution", "nested", "drop.db").exists()
     assert build_context.joinpath("solution", "nested", "source.py").is_file()
     assert not build_context.joinpath("shared", "nested", ".env").exists()
+    assert not build_context.joinpath("unrelated").exists()
+    assert build_context.joinpath("pyproject.toml").is_file()
+    assert build_context.joinpath("uv.lock").is_file()
     assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8").splitlines() == list(build.DOCKER_CONTEXT_IGNORE_RULES)
 
 
