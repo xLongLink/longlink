@@ -67,8 +67,8 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
         assert not (target / "uv.lock").exists()
 
 
-def test_init_refuses_existing_folder(tmp_path: Path) -> None:
-    """Avoid silently replacing an existing project folder."""
+def test_init_refuses_conflicting_folder(tmp_path: Path) -> None:
+    """Avoid replacing existing scaffold files in a project folder."""
 
     # Arrange
     runner = CliRunner()
@@ -76,6 +76,7 @@ def test_init_refuses_existing_folder(tmp_path: Path) -> None:
     with chdir(tmp_path):
         target = Path.cwd() / "sample-solution"
         target.mkdir()
+        (target / "pyproject.toml").write_text("existing project", encoding="utf-8")
 
         # Act
         result = runner.invoke(main, ["init", "--folder", "sample-solution"])
@@ -83,6 +84,8 @@ def test_init_refuses_existing_folder(tmp_path: Path) -> None:
         # Assert
         assert result.exit_code == 1
         assert "Target already exists" in result.output
+        assert (target / "pyproject.toml").read_text(encoding="utf-8") == "existing project"
+        assert not (target / "main.py").exists()
 
 
 def test_init_rejects_invalid_project_name_without_creating_folder(tmp_path: Path) -> None:
