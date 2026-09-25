@@ -6,9 +6,9 @@
     <State id="organizationDraft" name="" />
 
     <Stack gap="8">
-        <Stack direction="horizontal" gap="3" align="center">
+        <Stack direction="horizontal" gap="3" align="start">
             <Avatar name="$profile.name" src="$params.userAvatar" />
-            <Stack>
+            <Stack gap="1">
                 <Heading level="4" accessibilityLevel="1">
                     $profile.name
                 </Heading>

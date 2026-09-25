@@ -91,6 +91,8 @@ up:
 	# Start supporting services and install the shared compute infrastructure.
 	docker compose -f dev/compose.yml up --detach --wait mail
 	@k3d cluster list compute >/dev/null 2>&1 || k3d cluster create --config dev/cluster.yaml
+	# Docker's resolver must reach public registries and the local image registry from the k3d node.
+	@docker exec k3d-compute-server-0 nslookup gcr.io. >/dev/null 2>&1 && docker exec k3d-compute-server-0 nslookup longlink-registry. >/dev/null 2>&1 || { echo 'k3d node DNS cannot resolve public or local image registries. Check host/VPN DNS and the Docker network before deploying.' >&2; exit 1; }
 	@umask 077; k3d kubeconfig get compute > dev/kubeconfig.yaml
 	helm --kubeconfig dev/kubeconfig.yaml upgrade --install longlink-compute k8s/chart --namespace longlink-system --create-namespace --values dev/values.yaml --wait=legacy --timeout 15m
 	
