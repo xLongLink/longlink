@@ -90,13 +90,22 @@ export function Article({ children, page }: { children: ReactNode; page: Article
                         <Stack>
                             <Stack className="relative" height={64} width="100%">
                                 <PageContainer height="100%" justify="center" maxWidth={1064} paddingInline={6}>
-                                    <PathBreadcrumb
-                                        className="min-w-0 overflow-hidden"
-                                        labels={isDocumentation ? documentationRouteLabels : undefined}
-                                        root={
-                                            isDocumentation ? undefined : <BreadcrumbItem href="/">Home</BreadcrumbItem>
-                                        }
-                                    />
+                                    <Stack direction="horizontal" gap={6} width="100%">
+                                        <PageContainer className="min-w-0" maxWidth={720}>
+                                            <PathBreadcrumb
+                                                className="min-w-0 overflow-hidden"
+                                                labels={isDocumentation ? documentationRouteLabels : undefined}
+                                                root={
+                                                    isDocumentation ? undefined : (
+                                                        <BreadcrumbItem href="/">Home</BreadcrumbItem>
+                                                    )
+                                                }
+                                            />
+                                        </PageContainer>
+                                        {page.toc?.length ? (
+                                            <Stack className="hidden shrink-0 lg:flex" width={224} />
+                                        ) : null}
+                                    </Stack>
                                 </PageContainer>
                                 <Center className="absolute end-0 top-0" height={64} paddingInline={4}>
                                     <Button
