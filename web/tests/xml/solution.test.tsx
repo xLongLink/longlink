@@ -84,29 +84,25 @@ describe('SolutionRuntime', () => {
         expect(output.textContent).toContain('The view could not be loaded.');
     });
 
-    it.each(['https://example.com/view.xml'])(
-        'rejects external manifest view paths before fetching the view: %s',
-        async (path) => {
-            // Arrange
-            const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
-                const url = input instanceof Request ? input.url : String(input);
+    it('rejects an external manifest view path before fetching the view', async () => {
+        // Arrange
+        const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
+            const url = input instanceof Request ? input.url : String(input);
 
-                if (url.endsWith('/views.json')) return Response.json([view('home', '/home', path)]);
-                throw new Error('View fetch must not occur');
-            });
-            vi.stubGlobal('fetch', fetchRequest);
+            if (url.endsWith('/views.json'))
+                return Response.json([view('home', '/home', 'https://example.com/view.xml')]);
+            throw new Error('View fetch must not occur');
+        });
+        vi.stubGlobal('fetch', fetchRequest);
 
-            // Act
-            const output = await renderRuntime('/home');
+        // Act
+        const output = await renderRuntime('/home');
 
-            // Assert
-            await act(async () =>
-                vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution'))
-            );
-            expect(output.textContent).toContain('The solution definition could not be loaded.');
-            expect(fetchRequest).toHaveBeenCalledOnce();
-        }
-    );
+        // Assert
+        await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
+        expect(output.textContent).toContain('The solution definition could not be loaded.');
+        expect(fetchRequest).toHaveBeenCalledOnce();
+    });
 
     it('renders dynamic route parameters', async () => {
         // Arrange

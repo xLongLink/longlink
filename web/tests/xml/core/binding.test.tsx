@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { parseXML } from '@/xml/core/parser';
 import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createContext, RenderXML, cleanupMountedRoot, mountXml } from '../helpers';
+import { createContext, cleanupMountedRoot, mountXml } from '../helpers';
 
 describe('useBindableValue', () => {
     let container: HTMLDivElement | undefined;
@@ -95,16 +94,11 @@ describe('useBindableValue', () => {
     it('rejects an invalid Query setup before fetching', async () => {
         // Arrange
         const ctx = createContext();
-        const ast = parseXML('<longlink><Query id="records" /></longlink>');
         const fetchImpl = vi.fn();
-        container = document.createElement('div');
-        root = createRoot(container);
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
-        await act(async () => {
-            root?.render(<RenderXML ast={ast} ctx={ctx} />);
-        });
+        ({ container, root } = await mountXml('<Query id="records" />', ctx));
 
         // Assert
         expect(container.textContent).toContain('Unable to initialize this view');

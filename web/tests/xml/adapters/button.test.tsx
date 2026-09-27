@@ -31,4 +31,20 @@ describe('Button', () => {
 
         expect(ctx.services.navigate).toHaveBeenCalledWith('/orgs/acme/solutions/tracker/issues/123');
     });
+
+    it('does not navigate to an unsafe expression-backed destination', async () => {
+        // Arrange
+        const ctx = createContext({ navigate: vi.fn(), navigationBaseUrl: '/orgs/acme/solutions/tracker' });
+        ctx.scope.bindings.destination = 'javascript:alert(1)';
+        const mounted = await mountXml('<Button to="$destination">Unsafe</Button>', ctx);
+        root = mounted.root;
+        const button = mounted.container.querySelector('button');
+        if (!button) throw new Error('Button did not render');
+
+        // Act
+        await act(async () => button.click());
+
+        // Assert
+        expect(ctx.services.navigate).not.toHaveBeenCalled();
+    });
 });

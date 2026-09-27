@@ -219,6 +219,24 @@ def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -
     assert root_response.headers["location"] == "/admin/alpha"
 
 
+def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
+    """Redirect to a navigable static view rather than an unresolved parameter route."""
+
+    # Arrange
+    issues_directory = solution_source / "views" / "issues"
+    issues_directory.mkdir()
+    (issues_directory / "[issue].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    (solution_source / "views" / "overview.xml").write_text("<longlink>Overview</longlink>", encoding="utf-8")
+    client = create_runtime_client()
+
+    # Act
+    response = client.get("/", follow_redirects=False)
+
+    # Assert
+    assert response.status_code == 307
+    assert response.headers["location"] == "/overview"
+
+
 def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> None:
     """Validate SDK XML views against the bundled schema before registering routes."""
 

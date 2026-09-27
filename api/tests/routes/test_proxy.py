@@ -337,6 +337,13 @@ async def test_solution_proxy_sanitizes_json_upstream_error(
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
+    close_count = 0
+
+    def close() -> None:
+        """Record upstream response cleanup on the error path."""
+
+        nonlocal close_count
+        close_count += 1
 
     gateway_response = make_upstream(
         429,
@@ -347,6 +354,7 @@ async def test_solution_proxy_sanitizes_json_upstream_error(
             "x-debug": "private-json-diagnostics",
         },
         b'{"detail":"Please retry shortly.","diagnostics":"private-json-diagnostics"}',
+        on_close=close,
     )
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
@@ -360,6 +368,7 @@ async def test_solution_proxy_sanitizes_json_upstream_error(
     assert response.headers["retry-after"] == "17"
     assert "set-cookie" not in response.headers
     assert "x-debug" not in response.headers
+    assert close_count == 1
 
 
 async def test_solution_proxy_sanitizes_html_upstream_error(

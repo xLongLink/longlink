@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Table', () => {
+    it('rejects unsafe row identifier paths', () => {
+        // Arrange
+        const ctx = createContext();
+        ctx.scope.bindings.items = [];
+
+        // Act and assert
+        expect(() =>
+            renderXmlToMarkup(
+                parseFragment('<Table data="$items" idKey="__proto__"><TableColumn field="name" /></Table>'),
+                ctx
+            )
+        ).toThrow('Table idKey requires a usable field path');
+    });
+
     it.each([
         '<Table data="$items"><TableColumn /></Table>',
         '<Table data="$items"><TableColumn field="created by" /></Table>',

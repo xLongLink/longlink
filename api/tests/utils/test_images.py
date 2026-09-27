@@ -80,7 +80,6 @@ async def test_metadata_fetches_digest_image_references(
     image_metadata = await images.metadata(Image(image))
 
     # Assert
-    assert image_metadata is not None
     assert image_metadata == expected_metadata
     assert captured == {
         "token": {

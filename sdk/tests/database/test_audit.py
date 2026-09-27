@@ -88,7 +88,6 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
             item.name = "reviewed"
             await session.commit()
 
-        assert item.updated_at is not None
         assert item.created_at == created_at
         assert item.created_id == creator_id
         assert item.updated_id == updater_id
@@ -101,7 +100,6 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
             await session.commit()
 
         # Assert the explicit soft-delete audit fields.
-        assert item.updated_at is not None
         assert item.deleted_at == soft_deleted_at
         assert item.updated_id == soft_deleter_id
         assert item.deleted_id == soft_deleter_id

@@ -6,6 +6,7 @@ import { createContext, parseFragment, cleanupMountedRoot, mountXml, renderXmlTo
 
 describe('FileViewer', () => {
     let root: ReturnType<typeof createRoot> | undefined;
+    let mountedContainer: HTMLElement | undefined;
 
     beforeEach(() => {
         // Force the immediate loading path unless a test provides its own observer.
@@ -20,13 +21,15 @@ describe('FileViewer', () => {
 
         await cleanupMountedRoot(root);
         root = undefined;
-        document.body.innerHTML = '';
+        mountedContainer?.remove();
+        mountedContainer = undefined;
     });
 
     async function renderViewer(xml: string, ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' })) {
         // Mount through the shared helper so ACT and root lifetime stay in one owner.
         const mounted = await mountXml(xml, ctx, undefined, true);
         root = mounted.root;
+        mountedContainer = mounted.container;
 
         return mounted.container;
     }
@@ -96,7 +99,7 @@ describe('FileViewer', () => {
         // Arrange
         vi.stubGlobal(
             'fetch',
-            vi.fn(async () => new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': type } }))
+            async () => new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': type } })
         );
         const container = await renderViewer('<FileViewer src="/api/items/1/attachments/media.bin" title="Media" />');
 
@@ -111,10 +114,7 @@ describe('FileViewer', () => {
     });
 
     it('falls back to a new-tab link for non-PDF files', async () => {
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => new Response('hello', { headers: { 'content-type': 'text/plain' } }))
-        );
+        vi.stubGlobal('fetch', async () => new Response('hello', { headers: { 'content-type': 'text/plain' } }));
         const container = await renderViewer('<FileViewer src="/api/items/1/attachments/notes.txt" title="Notes" />');
 
         await vi.waitFor(() => expect(container.querySelector('a')).not.toBeNull());
@@ -125,10 +125,7 @@ describe('FileViewer', () => {
     });
 
     it('reports an error when the download fails', async () => {
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async () => Promise.reject(new Error('Network unavailable')))
-        );
+        vi.stubGlobal('fetch', async () => Promise.reject(new Error('Network unavailable')));
         const container = await renderViewer('<FileViewer src="/api/items/1/attachments/a.pdf" title="Contract" />');
 
         await vi.waitFor(() => expect(container.textContent).toContain('Preview unavailable'));

@@ -64,3 +64,7 @@ def test_delete_browser_cookie_mirrors_registration_path(monkeypatch: pytest.Mon
     assert "Path=/api/v1/auth/register" in set_response.headers["set-cookie"]
     assert "Path=/api/v1/auth/register" in delete_response.headers["set-cookie"]
     assert "Max-Age=0" in delete_response.headers["set-cookie"]
+    assert delete_response.headers["set-cookie"].startswith(f"{cookies.REGISTRATION_COOKIE}=")
+    assert "Secure" in delete_response.headers["set-cookie"]
+    assert "HttpOnly" in delete_response.headers["set-cookie"]
+    assert "SameSite=lax" in delete_response.headers["set-cookie"]

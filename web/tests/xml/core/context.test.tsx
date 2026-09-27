@@ -59,6 +59,31 @@ describe('core/context', () => {
         expect(ctx.scope.bindings.records).toEqual({ version: 2 });
     });
 
+    it('fetches a deferred Query after its condition becomes true', async () => {
+        // Arrange
+        const ctx = createContext({ requestBaseUrl: 'http://localhost/proxy' });
+        const ast = parseFragment(
+            '<State id="enabled" value="${false}" /><Query id="records" path="/records" if="$enabled.value" />'
+        );
+        const fetchImpl = vi.fn(async () => Response.json([{ id: 'first' }]));
+        vi.stubGlobal('fetch', fetchImpl);
+
+        // Act
+        await setupContext(getSetupNodes(ast), ctx);
+
+        // Assert
+        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(ctx.scope.bindings.records).toEqual([]);
+
+        // Act
+        (ctx.scope.bindings.enabled as { value: boolean }).value = true;
+        await ctx.services.invalidate('records');
+
+        // Assert
+        expect(fetchImpl).toHaveBeenCalledTimes(1);
+        expect(ctx.scope.bindings.records).toEqual([{ id: 'first' }]);
+    });
+
     it('retains stale Query data and reports a failed invalidation', async () => {
         // Arrange
         const ctx = createContext({ requestBaseUrl: 'http://localhost/proxy' });

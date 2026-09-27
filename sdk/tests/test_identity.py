@@ -45,6 +45,11 @@ def test_identity_token_user_returns_identity_from_created_token() -> None:
 
     # Assert
     assert result == user_id
+    claims = jwt.decode(token, IDENTITY_SECRET, algorithms=["HS256"], audience="longlink:identity")
+    assert claims["sub"] == str(user_id)
+    assert claims["aud"] == "longlink:identity"
+    assert claims["exp"] - claims["iat"] == 300
+    assert jwt.get_unverified_header(token)["alg"] == "HS256"
 
 
 def test_identity_token_user_rejects_empty_identity_secret() -> None:

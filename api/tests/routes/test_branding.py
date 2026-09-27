@@ -15,6 +15,8 @@ async def test_logo_svg_returns_public_no_store_response(client: AsyncClient) ->
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     assert "image/svg+xml" in response.headers["content-type"]
+    assert ".logo-theme { fill: #fafafa; }" in response.text
+    assert ".logo-theme { fill: #171717; }" not in response.text
 
 
 async def test_system_logo_svg_uses_system_theme_and_selected_accent(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:

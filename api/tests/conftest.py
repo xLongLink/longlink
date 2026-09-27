@@ -139,7 +139,6 @@ class DatabaseKubernetes(AsyncKubernetes):
     async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port consumed only by the SQL fake."""
 
-        assert str(organization)
         return 15432
 
     async def certificate(self, organization: UUID) -> str:
@@ -171,7 +170,6 @@ class OperationKubernetes(AsyncKubernetes):
     async def forward_database(self, organization: UUID) -> int:
         """Supply a local transport port without depending on the replaced database facade."""
 
-        assert str(organization)
         return 15432
 
 
