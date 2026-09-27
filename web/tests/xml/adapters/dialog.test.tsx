@@ -1,5 +1,5 @@
+import { parseFragment, renderXmlToMarkup } from '../helpers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
 const seen = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
 
@@ -42,11 +42,8 @@ describe('Dialog', () => {
             xml: '<Dialog title="Contract" height="90vh">Content</Dialog>',
         },
     ])('$name', ({ expected, property, xml }) => {
-        // Arrange
-        const context = createContext();
-
         // Act
-        renderXmlToMarkup(parseFragment(xml), context);
+        renderXmlToMarkup(parseFragment(xml));
 
         // Assert
         expect(seen.props).toHaveLength(1);

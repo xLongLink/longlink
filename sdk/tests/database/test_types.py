@@ -43,7 +43,7 @@ def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
 
     # Assert
     assert result == datetime(2026, 8, 22, 10, tzinfo=UTC)
-    assert result is not None
+    assert isinstance(result, datetime)
     assert result.tzinfo is UTC
 
 

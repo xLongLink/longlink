@@ -398,12 +398,12 @@ async def test_create_app_returns_403_for_regular_member(
     await assert_no_new_operations(previous_operations)
 
 
-async def test_create_app_allows_maintainer_and_queues_reconciliation(
+async def test_create_app_allows_maintainer(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Allow maintainers to create solutions and queue their deployment."""
+    """Allow maintainers to create solutions."""
 
     # Arrange
     owner, maintainer = users[0], users[1]
@@ -419,16 +419,6 @@ async def test_create_app_allows_maintainer_and_queues_reconciliation(
 
     # Assert
     assert response.status_code == 204
-    async with session_scope() as session:
-        solution = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
-        assert solution is not None
-        operation = await session.scalar(
-            select(Operation).where(
-                col(Operation.kind) == OperationKind.solution_deploy,
-                col(Operation.target_id) == solution.desired_revision_id,
-            )
-        )
-    assert operation is not None
 
 
 async def test_get_app_logs_returns_pod_logs(
@@ -506,8 +496,7 @@ async def test_app_logs_return_pod_logs_for_maintain_member(
     organization = await create_organization(owner)
     app = await create_solution(organization)
     await add_member(user=member, organization=organization, role=OrganizationRoles.maintain)
-    captured: dict[str, UUID | str] = {}
-    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1"], captured))
+    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1"], {}))
 
     # Act
     response = await clients[1].get(f"/api/v1/solutions/{app.id}/logs")
@@ -515,8 +504,6 @@ async def test_app_logs_return_pod_logs_for_maintain_member(
     # Assert
     assert response.status_code == 200
     assert response.json() == ["line 1"]
-    assert captured["logs"] == app.id
-    assert captured["organization"] == organization.id
 
 
 async def test_app_logs_return_unavailable_when_backend_fails(

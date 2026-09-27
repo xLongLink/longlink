@@ -33,13 +33,13 @@ describe('Solution source update dialog', () => {
     });
 
     it('uses the native XML dialog to review and submit a source update', async () => {
-        const submissions: unknown[] = [];
+        const submissions: { method: string; path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
             const path = new URL(request.url).pathname;
 
             if (request.method === 'POST') {
-                submissions.push(await request.json());
+                submissions.push({ method: request.method, path, body: await request.json() });
                 return new Response(null, { status: 204 });
             }
 
@@ -88,13 +88,19 @@ describe('Solution source update dialog', () => {
         await act(async () => vi.waitFor(() => expect(menuItem('Update')).not.toBeNull()));
         await act(async () => menuItem('Update')?.click());
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
-        await act(async () => button('Update solution').click());
-        await act(async () => vi.waitFor(() => expect(submissions).toHaveLength(1)));
-
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
         expect(document.body.textContent).not.toContain('Always on');
-        expect(submissions).toEqual([{ envs: {}, expected_revision_id: revisionId }]);
+        await act(async () => button('Update solution').click());
+        await act(async () => vi.waitFor(() => expect(submissions).toHaveLength(1)));
+
+        expect(submissions).toEqual([
+            {
+                method: 'POST',
+                path: `/api/v1/solutions/${solutionId}/update`,
+                body: { envs: {}, expected_revision_id: revisionId },
+            },
+        ]);
     });
 
     /** Find the named native XML action without replacing UI components. */

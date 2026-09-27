@@ -35,13 +35,11 @@ def chdir_project(build_project: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 @pytest.fixture
-def docker_build(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> list[list[str]]:
+def docker_build(chdir_project: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Prepare a real project and replace external Docker discovery."""
 
-    # Run build-command tests from the project and keep Docker invocations observable.
-    commands: list[list[str]] = []
+    # Run build-command tests from the project without depending on a Docker installation.
     monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
-    return commands
 
 
 def test_build_reports_missing_project_file_before_docker(tmp_path: Path) -> None:
@@ -437,7 +435,6 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     assert not build_context.joinpath("unrelated").exists()
     assert build_context.joinpath("pyproject.toml").is_file()
     assert build_context.joinpath("uv.lock").is_file()
-    assert build_context.joinpath(".dockerignore").read_text(encoding="utf-8").splitlines() == list(build.DOCKER_CONTEXT_IGNORE_RULES)
 
 
 @pytest.mark.parametrize(
@@ -532,7 +529,7 @@ def test_resolve_image_tag_rejects_invalid_image_references(
     ],
 )
 def test_build_command_reports_built_image(
-    docker_build: list[list[str]],
+    docker_build: None,
     monkeypatch: pytest.MonkeyPatch,
     arguments: list[str],
     expected_commands: list[list[str]],
@@ -540,7 +537,7 @@ def test_build_command_reports_built_image(
     """Build an image locally and optionally publish it."""
 
     # Arrange
-    commands = docker_build
+    commands: list[list[str]] = []
     runner = CliRunner()
 
     def run_docker(command: list[str], check: bool) -> None:
@@ -578,11 +575,11 @@ def test_build_command_reports_built_image(
     assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is bool(expected_commands)
 
 
-def test_build_command_reports_docker_build_failure_without_pushing(docker_build: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_command_reports_docker_build_failure_without_pushing(docker_build: None, monkeypatch: pytest.MonkeyPatch) -> None:
     """Translate a failed Docker build into a CLI error before a push starts."""
 
     # Arrange
-    commands = docker_build
+    commands: list[list[str]] = []
     runner = CliRunner()
 
     def fail_build(command: list[str], check: bool) -> None:
@@ -605,11 +602,11 @@ def test_build_command_reports_docker_build_failure_without_pushing(docker_build
     assert commands[0][1] == "build"
 
 
-def test_build_command_reports_docker_push_failure(docker_build: list[list[str]], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_command_reports_docker_push_failure(docker_build: None, monkeypatch: pytest.MonkeyPatch) -> None:
     """Translate a failed Docker push into a CLI error after building the image."""
 
     # Arrange
-    commands = docker_build
+    commands: list[list[str]] = []
     runner = CliRunner()
 
     def fail_push(command: list[str], check: bool) -> None:

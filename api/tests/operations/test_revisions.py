@@ -234,6 +234,7 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
             nonlocal second_id, third_id
             applied.append(secrets["KEY"])
             assert image == expected_images[secrets["KEY"]]
+            assert revision_id == {"first": initial.target_id, "second": second_id, "third": third_id}[secrets["KEY"]]
             if second_id is None:
                 # A newer request during an active rollout must not change its captured target.
                 async with session_scope() as session:

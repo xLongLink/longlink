@@ -18,6 +18,7 @@ def expired_token(claims: dict[str, str]) -> str:
     )
 
 
+@pytest.mark.no_db
 def test_registration_claims_reject_auth_token_audience() -> None:
     """Keep registration proof separate from browser session credentials."""
 
@@ -30,6 +31,7 @@ def test_registration_claims_reject_auth_token_audience() -> None:
         token.registration_claims(authentication)
 
 
+@pytest.mark.no_db
 def test_auth_token_claims_reject_password_reset_token_audience() -> None:
     """Keep browser session credentials separate from reset credentials."""
 
@@ -54,6 +56,7 @@ async def test_password_reset_user_rejects_registration_token_audience() -> None
             await token.password_reset_user(session, registration)
 
 
+@pytest.mark.no_db
 def test_auth_token_claims_reject_malformed_user_identity() -> None:
     """Reject browser credentials whose subject is not a UUID."""
 
@@ -73,6 +76,7 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
         token.auth_token_claims(invalid_token)
 
 
+@pytest.mark.no_db
 def test_registration_claims_reject_expired_token() -> None:
     """Reject expired email-ownership proof before registration."""
 
@@ -84,6 +88,7 @@ def test_registration_claims_reject_expired_token() -> None:
         token.registration_claims(encoded)
 
 
+@pytest.mark.no_db
 def test_auth_token_claims_reject_expired_token() -> None:
     """Reject expired browser credentials before authentication."""
 
@@ -101,6 +106,7 @@ def test_auth_token_claims_reject_expired_token() -> None:
         token.auth_token_claims(encoded)
 
 
+@pytest.mark.no_db
 def test_oauth_state_claims_rejects_cross_provider_token() -> None:
     """Reject OAuth browser credentials reused on another provider."""
 
@@ -112,6 +118,7 @@ def test_oauth_state_claims_rejects_cross_provider_token() -> None:
         token.oauth_state_claims(credential, "github")
 
 
+@pytest.mark.no_db
 def test_oauth_state_claims_reject_expired_token() -> None:
     """Reject expired OAuth browser credentials before exchanging an authorization code."""
 
@@ -130,6 +137,7 @@ def test_oauth_state_claims_reject_expired_token() -> None:
         token.oauth_state_claims(encoded, "google")
 
 
+@pytest.mark.no_db
 @pytest.mark.parametrize(
     ("claims", "function", "message"),
     [

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { compileAttribute } from '@/xml/expressions/compile';
 
 describe('compileAttribute', () => {
-    it.each(['${name'])('rejects unclosed expression interpolation: %s', (value) => {
-        expect(() => compileAttribute(value)).toThrow('Unclosed XML expression interpolation');
+    it('rejects unclosed expression interpolation', () => {
+        expect(() => compileAttribute('${name')).toThrow('Unclosed XML expression interpolation');
     });
 
     it('classifies a dollar-prefixed dotted path as a writable binding', () => {
@@ -69,12 +69,9 @@ describe('compileAttribute', () => {
         const attribute = compileAttribute(value);
 
         // Assert
-        expect(attribute.kind).toBe('interpolation');
-
-        if (attribute.kind === 'interpolation') {
-            expect(attribute.segments).toHaveLength(2);
-            expect(attribute.segments[0]).toEqual({ kind: 'text', value: 'Hello ' });
-            expect(attribute.segments[1].kind).toBe('expression');
-        }
+        expect(attribute).toMatchObject({
+            kind: 'interpolation',
+            segments: [{ kind: 'text', value: 'Hello ' }, { kind: 'expression' }],
+        });
     });
 });

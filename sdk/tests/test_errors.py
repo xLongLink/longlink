@@ -28,6 +28,29 @@ def test_installed_http_handler_preserves_bodyless_status_and_headers() -> None:
     assert response.headers["x-operation-id"] == "operation-123"
 
 
+def test_installed_http_handler_falls_back_for_blank_detail_and_preserves_headers() -> None:
+    """Replace a blank HTTP error detail without discarding its status or headers."""
+
+    # Arrange
+    app = FastAPI()
+
+    @app.get("/resource")
+    async def get_resource() -> None:
+        """Return an HTTP error without a useful detail."""
+
+        raise HTTPException(status_code=403, detail="   ", headers={"x-operation-id": "operation-123"})
+
+    install_error_handlers(app)
+
+    # Act
+    response = TestClient(app).get("/resource")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "The request could not be completed."}
+    assert response.headers["x-operation-id"] == "operation-123"
+
+
 def test_installed_validation_handler_hides_submitted_values() -> None:
     """Return the stable public validation message without echoed input."""
 

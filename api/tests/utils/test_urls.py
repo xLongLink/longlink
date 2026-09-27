@@ -67,6 +67,7 @@ def test_mysql_database_url_removes_tls_query_parameters_and_preserves_options()
 
     # TLS values are consumed by the adapter and non-TLS query options remain in the URL.
     assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink?charset=utf8mb4"
+    assert connection.connect_args == {"init_command": "SET time_zone = '+00:00'"}
 
 
 @pytest.mark.parametrize(

@@ -150,6 +150,25 @@ async def test_get_organization_by_slug_hides_cross_tenant_organization(
     assert response.json() == {"detail": "Organization not found"}
 
 
+async def test_get_organization_by_slug_hides_deleted_organization(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Hide deleted organization slugs even from their former owner."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    deletion = await clients[0].delete(f"/api/v1/organizations/{organization.id}")
+    assert deletion.status_code == 202
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization not found"}
+
+
 async def test_get_organization_returns_member_payload(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -181,6 +200,30 @@ async def test_get_organization_returns_member_payload(
     solutions_payload = solutions_response.json()
     assert len(solutions_payload) == 1
     assert solutions_payload[0]["id"] == str(solution.id)
+
+
+async def test_get_organization_solutions_omits_deleted_solutions(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """List active solutions without exposing an organization's deleted solutions."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    active = await create_solution(organization, name="active")
+    deleted = await create_solution(organization, name="deleted")
+    async with session_scope() as session:
+        persisted = await session.get(Solution, deleted.id)
+        assert persisted is not None
+        persisted.deleted_at = datetime.now(UTC)
+        await session.commit()
+
+    # Act
+    response = await clients[0].get(f"/api/v1/organizations/{organization.id}/solutions")
+
+    # Assert
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(active.id)]
 
 
 async def test_get_organization_solutions_rejects_another_organization_owner(
@@ -579,6 +622,26 @@ async def test_list_organizations_returns_stable_page_and_active_total(
     }
 
 
+@pytest.mark.parametrize("path", ["/api/v1/users", "/api/v1/organizations", "/api/v1/solutions"])
+async def test_platform_listings_reject_authenticated_non_administrators(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    path: str,
+) -> None:
+    """Keep platform-wide user, organization, and solution listings administrator-only."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    await create_solution(organization)
+
+    # Act
+    response = await clients[1].get(path)
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 async def test_delete_organization_returns_not_found_for_unknown_identifier(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
@@ -657,6 +720,29 @@ async def test_organization_member_creates_organization_invitation(
     assert captured_mail[0][0] == invitee.email
     assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in captured_mail[0][2]
     assert captured_mail[0][3] is not None
+
+
+@pytest.mark.parametrize("payload", [{"email": "not-an-email", "role": "write"}, {"email": "invitee@example.com", "role": "unknown"}])
+async def test_organization_invitation_rejects_invalid_payload_without_side_effects(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
+    payload: dict[str, str],
+) -> None:
+    """Reject malformed invitation fields before persisting or delivering an invitation."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+
+    # Act
+    response = await clients[0].post(f"/api/v1/organizations/{organization.id}/invitations", json=payload)
+
+    # Assert
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid request. Please check your input and try again."}
+    async with session_scope() as session:
+        assert await organizations.invitations(session, organization.id) == []
+    assert captured_mail == []
 
 
 async def test_reinviting_email_replaces_pending_organization_role(
@@ -927,6 +1013,36 @@ async def test_update_organization_member_returns_not_found_for_non_member(
         assert [membership.user_id for membership in await organizations.members(session, organization.id)] == [users[0].id]
 
 
+async def test_update_organization_member_cannot_change_another_organizations_member(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Scope member updates to the organization named in the request."""
+
+    # Arrange
+    requested_organization = await create_organization(users[0], name="requested")
+    other_organization = await create_organization(users[1], name="other")
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=users[2].id, organization_id=other_organization.id, role=OrganizationRoles.write))
+        await session.commit()
+    async with session_scope() as session:
+        other_members = await organizations.members(session, other_organization.id)
+    assert next(member for member in other_members if member.user_id == users[2].id).role == OrganizationRoles.write
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{requested_organization.id}/members/{users[2].id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Organization member not found"}
+    async with session_scope() as session:
+        other_members = await organizations.members(session, other_organization.id)
+    assert next(member for member in other_members if member.user_id == users[2].id).role == OrganizationRoles.write
+
+
 async def test_update_organization_member_rejects_demoting_last_owner(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
@@ -949,6 +1065,34 @@ async def test_update_organization_member_rejects_demoting_last_owner(
     async with session_scope() as session:
         membership = next(item for item in await organizations.members(session, organization.id) if item.user_id == owner.id)
     assert membership.role == OrganizationRoles.owner
+
+
+async def test_update_organization_member_allows_demoting_owner_when_another_remains(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Permit owner demotion when another owner keeps the organization accessible."""
+
+    # Arrange
+    organization = await create_organization(users[0])
+    async with session_scope() as session:
+        session.add(UserOrganization(user_id=users[1].id, organization_id=organization.id, role=OrganizationRoles.owner))
+        await session.commit()
+
+    # Act
+    response = await clients[0].patch(
+        f"/api/v1/organizations/{organization.id}/members/{users[0].id}",
+        json={"role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 204
+    async with session_scope() as session:
+        memberships = await organizations.members(session, organization.id)
+    assert {member.user_id: member.role for member in memberships} == {
+        users[0].id: OrganizationRoles.admin,
+        users[1].id: OrganizationRoles.owner,
+    }
 
 
 async def test_update_organization_member_rejects_owner_escalation_from_admin(

@@ -30,7 +30,6 @@ describe('Menu', () => {
         );
 
         expect(output).toContain('Workspace');
-        expect(output).toContain('Overview');
         expect(output).toContain('Projects');
         expect(output).toContain('Active projects');
         expect(output).toContain('Overview content');

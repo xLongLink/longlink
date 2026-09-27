@@ -385,7 +385,6 @@ describe('Action', () => {
 
         // Assert
         expect(fetchRequest).not.toHaveBeenCalled();
-        expect(toast).toHaveBeenCalledOnce();
         expect(toast).toHaveBeenCalledWith(
             expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );

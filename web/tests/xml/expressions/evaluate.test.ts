@@ -63,10 +63,10 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute("${administrator ? 'Administrator' : unknown()}"), ctx)).toBe('Administrator');
     });
 
-    it.each(['${[value]}'])('rejects unsupported expression nodes: %s', (value) => {
+    it('rejects unsupported expression nodes', () => {
         const ctx: Scope = { bindings: { value: 1 } };
 
-        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Unsupported node');
+        expect(() => evaluate(compileAttribute('${[value]}'), ctx)).toThrow('Unsupported node');
     });
 
     it('rejects object spread expressions', () => {

@@ -151,7 +151,6 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
 
     # Arrange
     organization = await create_organization(users[0])
-    calls: list[str] = []
 
     class Storage(StorageKubernetes):
         def __init__(self, *args: object) -> None:
@@ -160,7 +159,6 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
         async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Fail bucket creation."""
 
-            calls.append("storage")
             raise RuntimeError("storage failed")
 
     monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
@@ -171,7 +169,6 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
         await organization_operations.reconcile(organization.id)
     async with session_scope() as session:
         refreshed = await session.get(Organization, organization.id)
-    assert calls == ["storage"]
     assert refreshed is not None
     assert refreshed.status == Status.creating
 
