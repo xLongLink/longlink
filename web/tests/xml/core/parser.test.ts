@@ -84,4 +84,12 @@ describe('parseXML', () => {
     ])('rejects unsupported XML attribute: %s', (name, expected) => {
         expect(() => parseXML(`<Button ${name}="value" />`)).toThrow(expected);
     });
+
+    it('rejects uppercase event handlers inside a valid view', () => {
+        // Arrange
+        const xml = '<longlink><Button ONCLICK="value">Save</Button></longlink>';
+
+        // Act and assert
+        expect(() => parseXML(xml)).toThrow('Event handler attribute "ONCLICK" is not supported in XML');
+    });
 });

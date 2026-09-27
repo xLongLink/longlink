@@ -157,6 +157,42 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     assert transitions == [(operation.id, "workload deployment failed")]
 
 
+async def test_execute_fails_operation_when_handler_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cancel a stalled handler and persist its terminal timeout failure."""
+
+    # Arrange
+    operation = leased_operation()
+    cancelled = asyncio.Event()
+    monkeypatch.setattr(operation_worker.env, "OPERATION_TIMEOUT_SECONDS", 0.01)
+
+    async def stalled_handler(target_id: UUID) -> None:
+        """Wait for the worker deadline to interrupt a real pending handler."""
+
+        assert target_id == operation.target_id
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled.set()
+
+    async def unexpected_complete(_session: object, _operation_id: UUID) -> Operation:
+        """Reject a success transition after the handler times out."""
+
+        raise AssertionError("Timed-out operations must not complete")
+
+    monkeypatch.setitem(operation_worker.handlers, operation.kind, stalled_handler)
+    monkeypatch.setattr(operation_worker.operations, "fail", failed_transition(operation))
+    monkeypatch.setattr(operation_worker.operations, "complete", unexpected_complete)
+
+    # Act
+    async with asyncio.timeout(1):
+        result = await operation_worker.execute(operation)
+
+    # Assert
+    assert cancelled.is_set()
+    assert result.status == OperationStatus.failed
+    assert result.failed == "Operation timed out after 0.01 seconds"
+
+
 async def test_execute_persists_unexpected_handler_error_as_terminal_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Contain an unexpected handler exception and release its Operation lease."""
 

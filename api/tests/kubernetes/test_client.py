@@ -32,6 +32,37 @@ async def test_kubernetes_api_is_lazy_and_cached(monkeypatch: pytest.MonkeyPatch
     assert created == [{"kubeconfig": kubeconfig, "serviceaccount": ""}]
 
 
+@pytest.mark.parametrize("metadata", [None, {"uid": ""}, {"uid": 123}])
+async def test_cluster_uid_rejects_unavailable_namespace_identity(monkeypatch: pytest.MonkeyPatch, metadata: object) -> None:
+    """Reject a cluster whose system Namespace has no usable stable UID."""
+
+    # Arrange
+    class SystemNamespace:
+        """Provide a namespace with the configured API metadata."""
+
+        def __init__(self, name: str, api: object) -> None:
+            """Validate that the cluster identity comes from kube-system."""
+
+            assert name == "kube-system"
+            self.raw = {"metadata": metadata}
+
+        async def refresh(self) -> None:
+            """Return the configured namespace metadata."""
+
+    async def api() -> object:
+        """Provide a local Kubernetes API boundary."""
+
+        return object()
+
+    kubernetes = kubernetes_client.Kubernetes({"apiVersion": "v1"})
+    monkeypatch.setattr(kubernetes, "api", api)
+    monkeypatch.setattr(kubernetes_client, "Namespace", SystemNamespace)
+
+    # Act and assert
+    with pytest.raises(RuntimeError, match="Kubernetes cluster identity is unavailable"):
+        await kubernetes.cluster_uid()
+
+
 async def test_kubernetes_client_closes_its_cached_http_session(monkeypatch: pytest.MonkeyPatch) -> None:
     """Close tunnels before their cached HTTP session exactly once across repeated closes."""
 

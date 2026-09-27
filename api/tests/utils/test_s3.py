@@ -150,19 +150,22 @@ async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.M
 
 
 async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Split large version listings into batches of at most one thousand."""
+    """Abort pending uploads and delete every version and marker in bounded batches."""
 
     # Arrange
     client = FakeClient()
     versions = [{"Key": f"solutions/abc/{index}", "VersionId": f"v{index}"} for index in range(1001)]
-    client.paginators["list_object_versions"] = [{"Versions": versions, "DeleteMarkers": []}]
+    marker = {"Key": "solutions/abc/deleted", "VersionId": "marker-1"}
+    client.paginators["list_multipart_uploads"] = [{"Uploads": [{"Key": "solutions/abc/upload", "UploadId": "upload-1"}]}]
+    client.paginators["list_object_versions"] = [{"Versions": versions, "DeleteMarkers": [marker]}]
     serve(client, monkeypatch)
 
     # Act
     await make_s3().delete_prefix("org-bucket", "solutions/abc/")
 
     # Assert
-    assert [len(batch) for batch in client.deleted] == [1000, 1]
+    assert client.aborted == [("solutions/abc/upload", "upload-1")]
+    assert client.deleted == [versions[:1000], [versions[1000], marker]]
 
 
 async def test_delete_prefix_raises_on_partial_failures(monkeypatch: pytest.MonkeyPatch) -> None:
