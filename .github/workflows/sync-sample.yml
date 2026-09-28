@@ -3,9 +3,6 @@ name: Sync Sample
 on:
     workflow_call:
         inputs:
-            channel:
-                required: true
-                type: string
             version:
                 required: true
                 type: string
@@ -14,14 +11,8 @@ on:
                 required: true
     workflow_dispatch:
         inputs:
-            channel:
-                description: Sample branch to replace
-                required: true
-                default: main
-                type: choice
-                options: [main, nightly]
             version:
-                description: Sample release version
+                description: Published stable release tag (for example v0.4.0)
                 required: true
                 type: string
 
@@ -29,7 +20,7 @@ permissions:
     contents: read
 
 concurrency:
-    group: sync-sample-${{ inputs.channel }}
+    group: sync-sample-main
     cancel-in-progress: false
 
 jobs:
@@ -38,10 +29,9 @@ jobs:
         timeout-minutes: 20
 
         environment:
-            name: ${{ inputs.channel == 'main' && 'release' || 'nightly' }}
+            name: release
 
         env:
-            SYNC_CHANNEL: ${{ inputs.channel }}
             SAMPLE_VERSION: ${{ inputs.version }}
 
         steps:
@@ -56,14 +46,17 @@ jobs:
             - name: Generate scaffold
               run: |
                   set -euo pipefail
+                  if [[ ! "$SAMPLE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                      printf 'Sample sync requires a stable release tag.\n' >&2
+                      exit 1
+                  fi
+
                   uv sync --locked --project sdk
                   uv run --locked --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
                   perl -0pi -e 's/^version = "0\.0\.0"$/version = "$ENV{SAMPLE_VERSION}"/m' "$RUNNER_TEMP/sample/pyproject.toml"
 
-                  if [ "$SYNC_CHANNEL" = main ]; then
-                      sdk_version="${SAMPLE_VERSION#v}"
-                      SDK_VERSION="$sdk_version" perl -0pi -e 's/"longlink"/"longlink==$ENV{SDK_VERSION}"/' "$RUNNER_TEMP/sample/pyproject.toml"
-                  fi
+                  sdk_version="${SAMPLE_VERSION#v}"
+                  SDK_VERSION="$sdk_version" perl -0pi -e 's/"longlink"/"longlink==$ENV{SDK_VERSION}"/' "$RUNNER_TEMP/sample/pyproject.toml"
 
                   for attempt in 1 2 3 4 5; do
                       if uv lock --project "$RUNNER_TEMP/sample" --refresh-package longlink; then
@@ -95,14 +88,6 @@ jobs:
                   set -euo pipefail
                   : "${GH_TOKEN:?Set the SAMPLE_REPOSITORY_TOKEN repository secret.}"
 
-                  case "$SYNC_CHANNEL" in
-                      main|nightly) sample_branch="$SYNC_CHANNEL" ;;
-                      *)
-                          printf 'Unsupported sample branch: %s\n' "$SYNC_CHANNEL" >&2
-                          exit 1
-                          ;;
-                  esac
-
                   gh auth setup-git
                   git clone --depth 1 https://github.com/xlongLink/sample.git sample
                   cd sample
@@ -111,5 +96,5 @@ jobs:
                   cp -a "$RUNNER_TEMP/sample/." .
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
-                  git push --force origin "HEAD:${sample_branch}"
+                  git push --force origin HEAD:main
                   git push --force origin "HEAD:refs/tags/${SAMPLE_VERSION}"
