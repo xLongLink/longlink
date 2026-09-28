@@ -9,6 +9,7 @@ from longlink.app import LongLink
 from collections.abc import AsyncIterator
 from longlink.logger import ApiAccessFilter
 from fastapi.testclient import TestClient
+from longlink.testclient import TestClient as SolutionTestClient
 
 
 def create_runtime_client() -> TestClient:
@@ -21,7 +22,7 @@ def create_runtime_client() -> TestClient:
 
 @pytest.mark.usefixtures("solution_source")
 def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Serve SDK routes and a local user in development and testing."""
+    """Serve SDK routes with local users and app-local testing services."""
 
     # Exercise both local environments with real request context and storage.
     for environment, name in (("development", "Development user"), ("testing", "Testing user")):
@@ -54,6 +55,26 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
         assert ready_response.json() == {"ok": True}
         assert user_response.status_code == 200
         assert user_response.json() == name
+
+    # Create an app in development, then select in-memory services only for that app.
+    monkeypatch.setenv("LONGLINK_ENV", "development")
+    app = LongLink()
+    assert "file" in app.state.longlink.storage.protocol
+
+    @app.get("/api/me", response_model=str)
+    async def testing_user(value: Context) -> str:
+        """Return the user selected by the testing client."""
+
+        return value.user.name
+
+    client = SolutionTestClient(app)
+    with client:
+        user_response = client.get("/api/me")
+
+    assert user_response.status_code == 200
+    assert user_response.json() == "Testing user"
+    assert app.state.longlink.storage.protocol == "memory"
+    assert app.state.longlink.database._env.ENV == "testing"
 
 
 def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path) -> None:

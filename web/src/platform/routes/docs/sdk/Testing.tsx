@@ -5,7 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 
 const article = {
     description: 'Test LongLink projects and their Views.',
@@ -13,7 +12,7 @@ const article = {
         { id: 'testing', label: 'Testing', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
-    lastUpdated: '2026-09-24',
+    lastUpdated: '2026-09-28',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Testing.tsx',
     title: 'Testing | LongLink Documentation',
 };
@@ -26,45 +25,28 @@ export default function DocsArticleRoute() {
                     Testing
                 </Heading>
                 <Text as="p">
-                    Test your project with standard{' '}
+                    Test your application with standard{' '}
                     <Link href="https://docs.pytest.org/en/stable/" hasUnderline isExternalLink type="inherit">
                         pytest
                     </Link>{' '}
-                    and{' '}
-                    <Link
-                        href="https://pytest-asyncio.readthedocs.io/en/stable/"
-                        hasUnderline
-                        isExternalLink
-                        type="inherit"
-                    >
-                        pytest-asyncio
-                    </Link>{' '}
-                    workflows.
+                    workflows. Use <Code>TestClient</Code> to run the application with isolated in-memory services,
+                    without configuring a separate test environment.
                 </Text>
-                <Text as="p">
-                    Import <Code>TestClient</Code> from <Code>longlink.testclient</Code> instead of{' '}
-                    <Code>fastapi.testclient</Code>. The import selects the testing environment with isolated in-memory
-                    services, so no environment setup is needed. Keep the client import above the application import so
-                    the environment applies when the app is created.
-                </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                </Collapsible>
-                <CodeBlock
-                    code={`uv run pytest
-uv run pytest tests/test_app.py -q`}
-                    language="bash"
-                />
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        Tests stay fast, isolated, and reproducible while using the same application code as development
+                        and production. The database and storage are created in memory for each test run, so tests do
+                        not depend on external services or local setup.
+                    </Text>
+                </Stack>
+                <CodeBlock code="uv run pytest <filename>" language="bash" />
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={`from longlink.testclient import TestClient
-from main import app
+                    code={`from main import app
+from longlink.testclient import TestClient
 
 
 client = TestClient(app)
