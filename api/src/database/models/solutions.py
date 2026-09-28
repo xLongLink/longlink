@@ -9,7 +9,6 @@ from src.models.types import MinScale
 from sqlalchemy.engine import Connection
 from src.database.types import EncryptedType
 from src.models.statuses import Status
-from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable
 
 # Import relationship targets only during type checking.
@@ -108,7 +107,7 @@ class Revision(AuditTable, table=True):
     envs: dict[str, str] = Field(sa_column=Column(EncryptedType(env.ENCRYPTION_KEY), nullable=False))
     # Observed state does not modify the snapshot.
     failed: bool = Field(default=False)
-    deployed_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    deployed_at: datetime | None = Field(default=None)
 
     @property
     def configured_envs(self) -> list[str]:

@@ -4,7 +4,6 @@ from datetime import datetime
 from pydantic import EmailStr, AfterValidator
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Uuid, Column, String
-from longlink.database.types import UTCDateTime
 
 Email = Annotated[EmailStr, AfterValidator(str.lower)]
 
@@ -25,6 +24,6 @@ class Audit(SQLModel, table=True):
     avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False))
 
     # Platform-controlled audit timestamps are supplied during audit synchronization.
-    created_at: datetime = Field(sa_type=UTCDateTime)
-    updated_at: datetime = Field(sa_type=UTCDateTime)
-    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = Field(default=None)

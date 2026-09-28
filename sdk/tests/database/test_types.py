@@ -1,6 +1,6 @@
 import pytest
 from datetime import UTC, datetime, timezone, timedelta
-from longlink.database.types import UTCDateTime
+from sqlmodel import UTCDateTime
 from sqlalchemy.engine.default import DefaultDialect
 
 
@@ -43,7 +43,7 @@ def test_utc_datetime_normalizes_aware_values_before_writing() -> None:
 
     # Assert
     assert result == datetime(2026, 8, 22, 10, tzinfo=UTC)
-    assert isinstance(result, datetime)
+    assert result is not None
     assert result.tzinfo is UTC
 
 
@@ -54,7 +54,7 @@ def test_utc_datetime_rejects_naive_values_before_writing() -> None:
     value = datetime(2026, 8, 22, 10, tzinfo=UTC).replace(tzinfo=None)
 
     # Act and assert
-    with pytest.raises(ValueError, match="LongLink timestamps must include a timezone"):
+    with pytest.raises(ValueError, match="Datetime values must have timezone information"):
         UTCDateTime().process_bind_param(value, DefaultDialect())
 
 

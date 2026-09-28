@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-import longlink.database.types
+import sqlmodel.sql.sqltypes
 from alembic import op
 
 revision = "20260713_0001"
@@ -14,9 +14,9 @@ def upgrade() -> None:
     # Create the Solution-owned item table.
     op.create_table(
         "item",
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
+        sa.Column("created_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=True),
+        sa.Column("updated_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=True),
+        sa.Column("deleted_at", sqlmodel.sql.sqltypes.UTCDateTime(), nullable=True),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
