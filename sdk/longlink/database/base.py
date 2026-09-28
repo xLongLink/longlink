@@ -1,6 +1,6 @@
 import asyncio
 from uuid import UUID
-from datetime import datetime
+from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlmodel import Session as SyncSession
 from contextlib import asynccontextmanager
@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+LOCAL_USER_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
 class AuditTable(SQLModel):
@@ -103,9 +105,29 @@ class Database:
                         if self._env.ENV == "testing" and engine.url.get_backend_name() == "sqlite":
                             async with engine.begin() as conn:
                                 await conn.run_sync(SQLModel.metadata.create_all)
+                        elif self._env.ENV == "development":
+                            async with engine.begin() as conn:
+                                await conn.run_sync(SQLModel.metadata.tables["audit"].create, checkfirst=True)
                         else:
                             async with engine.connect():
                                 pass
+
+                        # Keep a local audit user available for development and test requests.
+                        if self._env.ENV != "production" and engine.url.get_backend_name() == "sqlite":
+                            async with AsyncSession(engine) as session:
+                                if await session.get(Audit, LOCAL_USER_ID) is None:
+                                    now = datetime.now(UTC)
+                                    name = "Development user" if self._env.ENV == "development" else "Testing user"
+                                    session.add(
+                                        Audit(
+                                            id=LOCAL_USER_ID,
+                                            name=name,
+                                            email="local@example.com",
+                                            created_at=now,
+                                            updated_at=now,
+                                        )
+                                    )
+                                    await session.commit()
                     except BaseException:
                         await engine.dispose()
                         raise

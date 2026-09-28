@@ -5,7 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 
 const article = {
     description: 'Define API routes in a LongLink project.',
@@ -13,7 +12,7 @@ const article = {
         { id: 'routes', label: 'Routes', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
-    lastUpdated: '2026-09-24',
+    lastUpdated: '2026-09-28',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Routes.tsx',
     title: 'Routes | LongLink Documentation',
 };
@@ -26,38 +25,38 @@ export default function DocsArticleRoute() {
                     Routes
                 </Heading>
                 <Text as="p">
-                    LongLink projects use standard{' '}
+                    Implement your application logic using standard{' '}
                     <Link href="https://fastapi.tiangolo.com/tutorial/" hasUnderline isExternalLink type="inherit">
-                        FastAPI
+                        FastAPI routes
                     </Link>
-                    . Define routes directly on the <Code>LongLink</Code> application in <Code>main.py</Code>. Type a
-                    route parameter as <Code>Context</Code> to receive the request-scoped database session, storage
-                    filesystem, and signed-in user.
+                    . LongLink provides the current user and common services such as the database and storage through{' '}
+                    <Code>Context</Code>, so you can use them directly without additional configuration.
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                </Collapsible>
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        FastAPI is widely used, documented, and well represented in AI training data, making it easier
+                        for AI models to understand, navigate, and modify the code. The logic is built as a headless
+                        API, allowing the same endpoints to be accessed by the interface, external applications, and AI
+                        agents.
+                    </Text>
+                </Stack>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
                 <CodeBlock
-                    code={`from sqlmodel import select
-from src.models.items import Item
-from longlink import Context, LongLink
+                    code={`from longlink import Context, LongLink
 
 
 app = LongLink()
 
 
-@app.get("/api/items", response_model=list[Item])
-async def list_items(ctx: Context) -> list[Item]:
-    """Return catalog items."""
-    result = await ctx.database.exec(select(Item).order_by("id"))
-    return result.all()`}
+@app.get("/api/me", response_model=str)
+async def current_user_name(ctx: Context) -> str:
+    """Return the current user's name."""
+
+    # Read the user supplied by LongLink for this request.
+    return ctx.user.name`}
                     language="python"
                     title="main.py"
                 />

@@ -1,6 +1,7 @@
 import pytest
 import logging
 from pathlib import Path
+from longlink import Context
 from longlink import app as longlink_app
 from pydantic import ValidationError
 from contextlib import asynccontextmanager
@@ -19,27 +20,40 @@ def create_runtime_client() -> TestClient:
 
 
 @pytest.mark.usefixtures("solution_source")
-def test_longlink_solution_serves_runtime_routes_and_frontend() -> None:
-    """Serve SDK runtime endpoints and the embedded frontend."""
+def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Serve SDK routes and a local user in development and testing."""
 
-    # Initialize the development runtime and its in-process client.
-    client = create_runtime_client()
+    # Exercise both local environments with real request context and storage.
+    for environment, name in (("development", "Development user"), ("testing", "Testing user")):
+        monkeypatch.setenv("LONGLINK_ENV", environment)
+        app = LongLink()
 
-    # Exercise runtime metadata and frontend fallback routes.
-    with client:
-        frontend_response = client.get("/")
-        frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
-        health_response = client.get("/health")
-        ready_response = client.get("/ready")
-    # Verify each runtime route.
-    assert frontend_response.status_code == 200
-    assert "text/html" in frontend_response.headers["content-type"]
-    assert frontend_route_response.status_code == 200
-    assert "text/html" in frontend_route_response.headers["content-type"]
-    assert health_response.status_code == 200
-    assert health_response.json() == {"ok": True}
-    assert ready_response.status_code == 200
-    assert ready_response.json() == {"ok": True}
+        @app.get("/api/me", response_model=str)
+        async def current_user(value: Context) -> str:
+            """Return the locally seeded user name."""
+
+            return value.user.name
+
+        # Exercise runtime metadata, the frontend fallback, and the current user route.
+        client = TestClient(app)
+        with client:
+            frontend_response = client.get("/")
+            frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
+            health_response = client.get("/health")
+            ready_response = client.get("/ready")
+            user_response = client.get("/api/me")
+
+        # Verify each runtime route and the seeded user.
+        assert frontend_response.status_code == 200
+        assert "text/html" in frontend_response.headers["content-type"]
+        assert frontend_route_response.status_code == 200
+        assert "text/html" in frontend_route_response.headers["content-type"]
+        assert health_response.status_code == 200
+        assert health_response.json() == {"ok": True}
+        assert ready_response.status_code == 200
+        assert ready_response.json() == {"ok": True}
+        assert user_response.status_code == 200
+        assert user_response.json() == name
 
 
 def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path) -> None:
