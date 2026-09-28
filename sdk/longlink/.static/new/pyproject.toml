@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.longlink]
-environment = "src.envs:Env"
+environments = "src.envs:Env"
 
 [dependency-groups]
 dev = [

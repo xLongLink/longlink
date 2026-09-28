@@ -113,15 +113,15 @@ def read_env_spec(root: Path, pyproject_data: Mapping[str, object]) -> list[dict
     # Require the project configuration that selects the environment model.
     tool_data = pyproject_data.get("tool")
     longlink_data = tool_data.get("longlink") if isinstance(tool_data, dict) else None
-    environment_import = longlink_data.get("environment") if isinstance(longlink_data, dict) else None
+    environment_import = longlink_data.get("environments") if isinstance(longlink_data, dict) else None
     if not isinstance(environment_import, str):
-        raise CliError("[tool.longlink].environment must be a module:Class import string")
+        raise CliError("[tool.longlink].environments must be a module:Class import string")
 
     # Parse the configured module and class names without importing Solution code.
     module_name, separator, class_name = environment_import.strip().partition(":")
     module_parts = module_name.split(".")
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
-        raise CliError("[tool.longlink].environment must be a module:Class import string")
+        raise CliError("[tool.longlink].environments must be a module:Class import string")
 
     # Resolve the configured environment module before importing Solution code.
     envs_path = root.joinpath(*module_parts).with_suffix(".py")

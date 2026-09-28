@@ -4,7 +4,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const article = {
@@ -26,15 +25,17 @@ export default function DocsArticleRoute() {
                     Building
                 </Heading>
                 <Text as="p">
-                    The build command packages a project into an image, which can be pushed to a registry.
+                    Package your solution into a standard container image. LongLink builds the solution together with
+                    its locked dependencies, configuration requirements, and metadata.
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                </Collapsible>
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        Get the deployment model used by modern software teams, reproducible, versioned container
+                        images, without setting up and maintaining the build infrastructure yourself. Each update
+                        becomes a consistent, self-contained artifact that can be deployed with a single click.
+                    </Text>
+                </Stack>
                 <CodeBlock code="longlink build [--tag dev] [--registry localhost:15000] [--push]" language="bash" />
                 <Stack gap={2}>
                     <Heading id="metadata" level={2}>
@@ -47,7 +48,7 @@ version = "1.2.0"
 description = "Order workflow service"
 
 [tool.longlink]
-environment = "src.envs:Env"
+environments = "src.envs:Env"
 `}
                         hasLanguageLabel={false}
                         language="toml"
@@ -71,7 +72,7 @@ environment = "src.envs:Env"
                             </TableRow>
                             <TableRow>
                                 <TableCell>
-                                    <Code>environment</Code>
+                                    <Code>environments</Code>
                                 </TableCell>
                                 <TableCell>
                                     <Code>longlink.environments</Code>
