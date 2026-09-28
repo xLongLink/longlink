@@ -1,9 +1,9 @@
-name: Release
+name: Publish Beta
 
 on:
     push:
         tags:
-            - 'v[0-9]+.[0-9]+.[0-9]+'
+            - 'v*.*.*-beta.*'
 
 permissions: {}
 
@@ -25,14 +25,19 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Verify release commit
+            - name: Verify beta tag and commit
               env:
                   DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
               run: |
                   set -euo pipefail
 
+                  if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-beta\.[1-9][0-9]*$ ]]; then
+                      printf 'Expected a tag such as v0.5.0-beta.1.\n' >&2
+                      exit 1
+                  fi
+
                   if ! git merge-base --is-ancestor "${GITHUB_SHA}^{commit}" "origin/${DEFAULT_BRANCH}"; then
-                      printf 'Release tag must point to a commit on %s.\n' "$DEFAULT_BRANCH" >&2
+                      printf 'Beta tag must point to a commit on %s.\n' "$DEFAULT_BRANCH" >&2
                       exit 1
                   fi
 
@@ -42,71 +47,10 @@ jobs:
             contents: read
         uses: ./.github/workflows/tests.yml
 
-    # The SDK is published to PyPI.
-    publish-sdk:
-        needs: tests
-        runs-on: ubuntu-24.04
-        timeout-minutes: 20
-
-        environment:
-            name: release
-
-        permissions:
-            id-token: write
-            contents: read
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-              with:
-                  fetch-depth: 1
-                  fetch-tags: true
-
-            - name: Setup Python
-              uses: ./.github/actions/setup-python
-              with:
-                  cache-dependency-glob: sdk/uv.lock
-
-            - name: Setup Vite+
-              uses: ./.github/actions/setup-vite
-
-            - name: Build web assets for SDK
-              working-directory: web
-              run: vp run build:sdk:bundle --logLevel warn
-              env:
-                  VERSION: ${{ github.ref_name }}
-
-            - name: Build SDK distribution
-              working-directory: sdk
-              run: uv build
-
-            - name: Publish to PyPI
-              working-directory: sdk
-              run: uv publish --trusted-publishing automatic
-
-            - name: Wait for SDK on PyPI
-              run: |
-                  set -euo pipefail
-
-                  version="${GITHUB_REF_NAME#v}"
-                  for attempt in $(seq 1 30); do
-                      if curl --fail --silent --show-error "https://pypi.org/pypi/longlink/${version}/json" >/dev/null; then
-                          exit 0
-                      fi
-                      sleep 10
-                  done
-
-                  printf 'longlink %s was not available on PyPI within five minutes.\n' "$version" >&2
-                  exit 1
-
-    # Publish the matching Compute chart both as an OCI artifact and inside the API image.
-    publish-api-image:
+    publish-artifacts:
         needs: tests
         runs-on: ubuntu-24.04
         timeout-minutes: 30
-
-        outputs:
-            image: ghcr.io/xlonglink/longlink@${{ steps.image.outputs.digest }}
 
         environment:
             name: release
@@ -124,7 +68,7 @@ jobs:
               with:
                   version: v4.3.0
 
-            - name: Package Compute chart
+            - name: Package beta Compute chart
               id: compute
               run: |
                   set -euo pipefail
@@ -132,12 +76,12 @@ jobs:
                   version="${GITHUB_REF_NAME#v}"
                   archive="longlink-${version}.tgz"
                   helm package k8s/chart --version "$version" --destination .
-                  sha256sum "$archive" > "${archive}.sha256"
+                  checksum="$(sha256sum "$archive" | cut -d ' ' -f 1)"
 
                   {
                       echo "version=$version"
                       echo "archive=$archive"
-                      echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
+                      echo "sha256=$checksum"
                   } >> "$GITHUB_OUTPUT"
 
             - name: Setup Docker Buildx
@@ -150,8 +94,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build and push API image
-              id: image
+            - name: Build and push beta API image
               uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
               with:
                   context: .
@@ -169,14 +112,11 @@ jobs:
                       longlink.dev/release-version=${{ github.ref_name }}
                       longlink.dev/release-compute-version=${{ steps.compute.outputs.version }}
                       longlink.dev/release-compute-sha256=${{ steps.compute.outputs.sha256 }}
-                      longlink.dev/release-sdk-version=${{ github.ref_name }}
-                  tags: |
-                      ghcr.io/xlonglink/longlink:${{ github.ref_name }}
-                      ghcr.io/xlonglink/longlink:latest
+                  tags: ghcr.io/xlonglink/longlink:${{ github.ref_name }}
                   cache-from: type=gha,scope=api
                   cache-to: type=gha,mode=max,scope=api
 
-            - name: Push Compute chart to GHCR
+            - name: Push beta Compute chart to GHCR
               env:
                   GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
@@ -185,19 +125,8 @@ jobs:
                   printf '%s' "$GHCR_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
                   helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink
 
-    sync-sample:
-        needs: [publish-sdk, publish-api-image]
-        permissions:
-            contents: read
-        uses: ./.github/workflows/sync-sample.yml
-        with:
-            channel: main
-            version: ${{ github.ref_name }}
-        secrets:
-            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
-
     publish-github-release:
-        needs: [publish-sdk, publish-api-image, sync-sample]
+        needs: publish-artifacts
         runs-on: ubuntu-24.04
         timeout-minutes: 10
 
@@ -208,9 +137,11 @@ jobs:
             contents: write
 
         steps:
-            - name: Create GitHub release
+            - name: Create GitHub pre-release
               uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
               with:
                   tag_name: ${{ github.ref_name }}
                   name: ${{ github.ref_name }}
+                  prerelease: true
+                  make_latest: false
                   generate_release_notes: true
