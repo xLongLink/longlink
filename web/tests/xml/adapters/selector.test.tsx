@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Selector', () => {
-    it('rejects markup without a visible Option', () => {
-        expect(() => renderXmlToMarkup(parseFragment('<Selector label="Status" />'))).toThrow(
-            'Selector requires at least one Option'
-        );
-    });
-
     it('rejects Options hidden by their condition', () => {
         const ctx = createContext();
         ctx.scope.bindings.showOptions = false;

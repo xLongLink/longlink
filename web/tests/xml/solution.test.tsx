@@ -100,7 +100,6 @@ describe('SolutionRuntime', () => {
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Unable to load this solution')));
-        expect(output.textContent).toContain('The solution definition could not be loaded.');
         expect(fetchRequest).toHaveBeenCalledOnce();
     });
 

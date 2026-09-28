@@ -4,6 +4,7 @@ from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from src.utils import token
 from src.database.session import session_scope
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 
@@ -44,6 +45,7 @@ def test_auth_token_claims_reject_password_reset_token_audience() -> None:
         token.auth_token_claims(password_reset)
 
 
+@pytest.mark.no_db
 async def test_password_reset_user_rejects_registration_token_audience() -> None:
     """Keep recovery credentials separate from registration proof."""
 
@@ -51,7 +53,7 @@ async def test_password_reset_user_rejects_registration_token_audience() -> None
     registration = token.create_registration_token("member@example.com")
 
     # Act and assert
-    async with session_scope() as session:
+    async with AsyncSession() as session:
         with pytest.raises(jwt.InvalidTokenError):
             await token.password_reset_user(session, registration)
 
@@ -166,6 +168,7 @@ def test_token_claims_reject_missing_required_fields(claims: dict[str, str], fun
         function(encoded)
 
 
+@pytest.mark.no_db
 async def test_password_reset_user_rejects_malformed_subject() -> None:
     """Reject password-reset credentials whose subject is not a user UUID."""
 
@@ -181,11 +184,12 @@ async def test_password_reset_user_rejects_malformed_subject() -> None:
     )
 
     # Act and assert
-    async with session_scope() as session:
+    async with AsyncSession() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset user"):
             await token.password_reset_user(session, encoded)
 
 
+@pytest.mark.no_db
 async def test_password_reset_user_rejects_missing_fingerprint() -> None:
     """Reject password-reset credentials that omit their password binding."""
 
@@ -197,11 +201,12 @@ async def test_password_reset_user_rejects_missing_fingerprint() -> None:
     )
 
     # Act and assert
-    async with session_scope() as session:
+    async with AsyncSession() as session:
         with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token claims"):
             await token.password_reset_user(session, encoded)
 
 
+@pytest.mark.no_db
 async def test_password_reset_user_rejects_expired_token() -> None:
     """Reject expired recovery credentials before loading an account."""
 
@@ -215,7 +220,7 @@ async def test_password_reset_user_rejects_expired_token() -> None:
     )
 
     # Act and assert
-    async with session_scope() as session:
+    async with AsyncSession() as session:
         with pytest.raises(jwt.InvalidTokenError):
             await token.password_reset_user(session, encoded)
 

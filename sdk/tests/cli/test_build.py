@@ -243,7 +243,7 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")
-    assert dockerignore.splitlines() == list(build.DOCKER_CONTEXT_IGNORE_RULES)
+    assert dockerignore.splitlines() == [".git", ".hg", ".svn", "Dockerfile", ".dockerignore"]
     assert not build_context.joinpath(".env").exists()
     assert not build_context.joinpath("dev.db").exists()
     assert not build_context.joinpath(".pytest_cache").exists()
@@ -575,55 +575,42 @@ def test_build_command_reports_built_image(
     assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is bool(expected_commands)
 
 
-def test_build_command_reports_docker_build_failure_without_pushing(docker_build: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Translate a failed Docker build into a CLI error before a push starts."""
+@pytest.mark.parametrize(
+    ("failed_command", "exit_code", "expected_commands"),
+    [
+        pytest.param("build", 23, ["build"], id="build"),
+        pytest.param("push", 24, ["build", "push"], id="push"),
+    ],
+)
+def test_build_command_reports_docker_failure(
+    docker_build: None,
+    monkeypatch: pytest.MonkeyPatch,
+    failed_command: str,
+    exit_code: int,
+    expected_commands: list[str],
+) -> None:
+    """Translate Docker build and push failures into CLI errors in command order."""
 
     # Arrange
     commands: list[list[str]] = []
     runner = CliRunner()
 
-    def fail_build(command: list[str], check: bool) -> None:
-        """Record and fail the Docker build command."""
+    def run_docker(command: list[str], check: bool) -> None:
+        """Record Docker commands and fail the selected one."""
 
-        # Verify the generated artifact before simulating a failed build.
+        # Verify the live build artifact before simulating a command failure.
         commands.append(command)
-        assert Path(command[-1], "Dockerfile").is_file()
-        raise subprocess.CalledProcessError(23, command)
+        if command[1] != "push":
+            assert Path(command[-1], "Dockerfile").is_file()
+        if command[1] == failed_command:
+            raise subprocess.CalledProcessError(exit_code, command)
 
-    monkeypatch.setattr(build.subprocess, "run", fail_build)
+    monkeypatch.setattr(build.subprocess, "run", run_docker)
 
     # Act
     result = runner.invoke(main, ["build", "--push"])
 
     # Assert
     assert result.exit_code == 1
-    assert "Docker command failed with exit code 23" in result.output
-    assert len(commands) == 1
-    assert commands[0][1] == "build"
-
-
-def test_build_command_reports_docker_push_failure(docker_build: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Translate a failed Docker push into a CLI error after building the image."""
-
-    # Arrange
-    commands: list[list[str]] = []
-    runner = CliRunner()
-
-    def fail_push(command: list[str], check: bool) -> None:
-        """Record Docker commands and fail only the push command."""
-
-        # Fail the push after verifying the live build artifact.
-        commands.append(command)
-        if command[1] == "push":
-            raise subprocess.CalledProcessError(24, command)
-        assert Path(command[-1], "Dockerfile").is_file()
-
-    monkeypatch.setattr(build.subprocess, "run", fail_push)
-
-    # Act
-    result = runner.invoke(main, ["build", "--push"])
-
-    # Assert
-    assert result.exit_code == 1
-    assert "Docker command failed with exit code 24" in result.output
-    assert [command[1] for command in commands] == ["build", "push"]
+    assert f"Docker command failed with exit code {exit_code}" in result.output
+    assert [command[1] for command in commands] == expected_commands

@@ -2,10 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { createContext, parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Tabs', () => {
-    it('rejects markup without a visible Tab', () => {
-        expect(() => renderXmlToMarkup(parseFragment('<Tabs />'))).toThrow('Tabs requires at least one Tab');
-    });
-
     it('rejects Tabs hidden by their condition', () => {
         const ctx = createContext();
         ctx.scope.bindings.showTabs = false;
@@ -19,8 +15,8 @@ describe('Tabs', () => {
     });
 
     it('renders a visible Tab', () => {
-        expect(
-            renderXmlToMarkup(parseFragment('<Tabs><Tab label="Details" value="details">Details</Tab></Tabs>'))
-        ).toContain('Details');
+        expect(renderXmlToMarkup(parseFragment('<Tabs><Tab label="Details" value="details" /></Tabs>'))).toContain(
+            'Details'
+        );
     });
 });

@@ -63,9 +63,13 @@ def test_env_rejects_invalid_authentication_settings(settings: dict[str, object]
 def test_env_accepts_complete_smtp_authentication_settings() -> None:
     """Accept one complete SMTP authentication configuration."""
 
+    # Act
+    settings = ENVIRONMENT_SETTINGS | {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
+    environment = Env.model_validate(settings)
+
     # Assert
-    settings = ENVIRONMENT_SETTINGS | {"SMTP_HOST": "smtp.example.com", "SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
-    assert Env.model_validate(settings).SMTP_HOST == "smtp.example.com"
+    assert environment.SMTP_USERNAME == "mailer"
+    assert environment.SMTP_PASSWORD == "secret"
 
 
 @pytest.mark.parametrize("transport", ["plain", "starttls", "tls"])

@@ -3,6 +3,6 @@ import { parseFragment, renderXmlToMarkup } from '../helpers';
 
 describe('Stack', () => {
     it('rejects invalid spacing', () => {
-        expect(() => renderXmlToMarkup(parseFragment('<Stack gap="7">Content</Stack>'))).toThrow('Invalid XML props');
+        expect(() => renderXmlToMarkup(parseFragment('<Stack gap="7" />'))).toThrow('Invalid XML props');
     });
 });

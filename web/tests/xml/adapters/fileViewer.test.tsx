@@ -41,7 +41,7 @@ describe('FileViewer', () => {
         });
     }
 
-    it('renders PDF bytes in a sandboxed iframe and releases the preview on unmount', async () => {
+    it('renders PDF bytes in an unsandboxed iframe and releases the preview on unmount', async () => {
         let requestUrl = '';
         const fetchRequest = vi.fn(async (input: RequestInfo | URL) => {
             requestUrl = (input as Request).url;
@@ -162,10 +162,7 @@ describe('FileViewer', () => {
                 return pdfResponse();
             })
         );
-        const ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' });
-
-        // Route params survive renderer setup like production navigation.
-        Object.assign(ctx.scope.bindings, { params: { item: '1' } });
+        const ctx = createContext({ params: { item: '1' }, requestBaseUrl: '/api/v1/solutions/demo/proxy' });
 
         // Act
         const container = await renderViewer(

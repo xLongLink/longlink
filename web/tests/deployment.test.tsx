@@ -92,15 +92,17 @@ describe('Solution source update dialog', () => {
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
         expect(document.body.textContent).not.toContain('Always on');
         await act(async () => button('Update solution').click());
-        await act(async () => vi.waitFor(() => expect(submissions).toHaveLength(1)));
-
-        expect(submissions).toEqual([
-            {
-                method: 'POST',
-                path: `/api/v1/solutions/${solutionId}/update`,
-                body: { envs: {}, expected_revision_id: revisionId },
-            },
-        ]);
+        await act(async () =>
+            vi.waitFor(() =>
+                expect(submissions).toEqual([
+                    {
+                        method: 'POST',
+                        path: `/api/v1/solutions/${solutionId}/update`,
+                        body: { envs: {}, expected_revision_id: revisionId },
+                    },
+                ])
+            )
+        );
     });
 
     /** Find the named native XML action without replacing UI components. */

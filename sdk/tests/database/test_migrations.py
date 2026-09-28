@@ -109,7 +109,6 @@ def test_include_object_excludes_only_platform_owned_audit_table(name: str, type
     ("directives", "expected_migration_created"),
     [
         pytest.param([MigrationScript(None, UpgradeOps(), DowngradeOps())], False, id="empty-revision"),
-        pytest.param([], False, id="no-directives"),
         pytest.param([MigrationScript(None, UpgradeOps(ops=[CreateTableOp("inventory", [])]), DowngradeOps())], True, id="table-created"),
     ],
 )

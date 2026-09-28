@@ -100,7 +100,6 @@ def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(database_session, "Session", None)
     monkeypatch.setattr(database_session, "create_async_engine", create_async_engine)
     monkeypatch.setattr(database_session, "async_sessionmaker", async_sessionmaker)
-    monkeypatch.setattr(database_session, "enable_sqlite_foreign_keys", lambda _engine: None)
 
     # Act
     result = database_session.get_session()

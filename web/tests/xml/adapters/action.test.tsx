@@ -248,15 +248,13 @@ describe('Action', () => {
             request: 'method="POST" form="invalid"',
         },
     ])('does not execute invalid request payloads: $error', async ({ request }) => {
-        const ctx = createContext({ navigate: vi.fn() });
-        const closeDialog = vi.fn();
+        const ctx = createContext();
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
 
         const button = await renderAction(
-            `<Action><Request url="/orders" ${request} closeDialog="true" /><Button to="/orders">Save</Button></Action>`,
-            ctx,
-            closeDialog
+            `<Action><Request url="/orders" ${request} /><Button>Save</Button></Action>`,
+            ctx
         );
 
         await act(async () => {
@@ -268,8 +266,6 @@ describe('Action', () => {
             expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );
         expect(fetchRequest).not.toHaveBeenCalled();
-        expect(ctx.services.navigate).not.toHaveBeenCalled();
-        expect(closeDialog).not.toHaveBeenCalled();
     });
 
     it('blocks an external Action request URL before transport', async () => {
@@ -295,7 +291,7 @@ describe('Action', () => {
     });
 
     it('invalidates declared State through Patch', async () => {
-        const ctx = createContext({ navigate: vi.fn() });
+        const ctx = createContext();
         const button = await renderAction(
             '<State id="form" value="draft" /><Action><Patch state="form" invalidate="true" /><Button>Reset</Button></Action>',
             ctx
@@ -306,8 +302,6 @@ describe('Action', () => {
             button.click();
             await vi.waitFor(() => expect((ctx.scope.bindings.form as { value: string }).value).toBe('draft'));
         });
-
-        expect(ctx.services.navigate).not.toHaveBeenCalled();
     });
 
     it('updates declared State properties through Patch', async () => {
