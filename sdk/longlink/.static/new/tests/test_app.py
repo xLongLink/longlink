@@ -1,6 +1,5 @@
-# TestClient must stay first so the testing environment applies when the app is created.
-from longlink.testclient import TestClient  # noqa: I001
 from main import app
+from longlink.testclient import TestClient
 
 
 client = TestClient(app)

@@ -84,7 +84,13 @@ class LongLink(FastAPI):
         )
 
         self.state.longlink = RuntimeState(storage=storage, database=database)
-        self.router.add_event_handler("shutdown", database.dispose)
+
+        async def close_database() -> None:
+            """Dispose the active database when the application shuts down."""
+
+            await self.state.longlink.database.dispose()
+
+        self.router.add_event_handler("shutdown", close_database)
 
         # Views are registered once before the frontend mount is installed.
         for definition, content in discovered_views:
@@ -118,6 +124,15 @@ class LongLink(FastAPI):
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_index.parent)
+
+    def use_testing_environment(self) -> None:
+        """Replace this application's services with isolated testing services."""
+
+        # Select testing services for this app without changing process environment variables.
+        settings = Envs(ENV="testing", STORAGE_BUCKET=None, STORAGE_PREFIX=None)
+        storage = create_fs(settings)
+        database = Database(settings)
+        self.state.longlink = RuntimeState(storage=storage, database=database)
 
     # FastAPI accepts framework-defined router options with heterogeneous values.
     def include_router(self, router: APIRouter, **kwargs: Any) -> None:  # noqa: ANN401
