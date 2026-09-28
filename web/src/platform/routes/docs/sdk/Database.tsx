@@ -5,9 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
-import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const article = {
     description: 'Use database services in a LongLink project.',
@@ -30,86 +27,32 @@ export default function DocsArticleRoute() {
                     Database
                 </Heading>
                 <Text as="p">
-                    LongLink projects use standard{' '}
+                    Define your data with standard{' '}
                     <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
                         SQLModel
                     </Link>{' '}
-                    tables. Routes receive a Solution-scoped async{' '}
-                    <Link href="https://www.sqlalchemy.org/" hasUnderline isExternalLink type="inherit">
-                        SQLAlchemy
-                    </Link>{' '}
-                    database session as <Code>ctx.database</Code> by typing a route parameter as <Code>Context</Code>.
-                    Migrations are based on{' '}
-                    <Link href="https://alembic.sqlalchemy.org/en/latest/" hasUnderline isExternalLink type="inherit">
-                        Alembic
-                    </Link>
-                    .
+                    models. The database session and connection are already available through <Code>ctx.database</Code>,
+                    so you can work directly with your data without additional setup.
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Environment</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <CheckCheck aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Testing</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>memory</Code> SQLite database for isolated test runs.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <Wrench aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Development</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>dev.db</Code> SQLite database for local development.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <CheckCircle aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Production</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>PostgreSQL</Code> database using a schema scoped to the Solution.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </Collapsible>
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        The interface stays the same in every environment: an in-memory SQLite database for isolated
+                        tests, a local dev.db file during development, and a solution-scoped schema in the
+                        organization&apos;s database when deployed on the LongLink platform.
+                    </Text>
+                </Stack>
                 <Heading id="basic-usage" level={2}>
                     Basic usage
                 </Heading>
                 <CodeBlock
-                    code={`from longlink import Context
+                    code={`from uuid import UUID, uuid4
 from sqlmodel import Field, SQLModel
+from longlink import Context
 
 
 class Project(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str
 
 
@@ -122,18 +65,17 @@ async def create_project(ctx: Context) -> None:
                     Timezone
                 </Heading>
                 <Text as="p">
-                    Use LongLink&apos;s <Code>UTCDateTime</Code> type for datetime fields defined by your project. It
-                    requires a timezone-aware value and stores it in UTC.
+                    SQLModel stores <Code>datetime</Code> fields in UTC. Use timezone-aware values when writing or
+                    querying them.
                 </Text>
                 <CodeBlock
                     code={`from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
-from longlink.database.types import UTCDateTime
 
 
 class Event(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    starts_at: datetime = Field(sa_type=UTCDateTime)
+    starts_at: datetime
 
 
 event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}

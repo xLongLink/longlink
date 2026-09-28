@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 from sqlmodel import Field
 from sqlalchemy import Enum, Index, Column
 from src.models.operations import OperationKind, OperationStatus
-from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable
 
 
@@ -43,10 +42,10 @@ class Operation(AuditTable, table=True):
     failed: str | None = Field(default=None, min_length=1, max_length=500)
 
     # Lock
-    lease_expires_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    lease_expires_at: datetime | None = Field(default=None)
 
     # Timestamps
-    finished_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    finished_at: datetime | None = Field(default=None)
 
     @property
     def status(self) -> OperationStatus:

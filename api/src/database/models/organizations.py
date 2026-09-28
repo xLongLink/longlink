@@ -7,7 +7,6 @@ from sqlalchemy import Enum, Column, BigInteger
 from src.environments import env
 from src.database.types import EncryptedType
 from src.models.statuses import Status
-from longlink.database.types import UTCDateTime
 from src.database.models.base import AuditTable, PlatformModel
 from src.models.organizations import DatabaseState
 
@@ -64,4 +63,4 @@ class OrganizationActivity(PlatformModel, table=True):
 
     # Lease
     organization_id: UUID = Field(foreign_key="organizations.id", ondelete="CASCADE", index=True)
-    expires_at: datetime = Field(sa_type=UTCDateTime)
+    expires_at: datetime

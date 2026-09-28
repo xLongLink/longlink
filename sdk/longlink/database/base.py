@@ -10,7 +10,6 @@ from longlink.database import urls
 from sqlalchemy.engine import URL, make_url
 from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -22,9 +21,9 @@ class AuditTable(SQLModel):
     model_config["ignored_types"] = (declared_attr,)
 
     # Audit timestamps
-    created_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
-    updated_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
-    deleted_at: datetime | None = Field(default=None, sa_type=UTCDateTime)
+    created_at: datetime | None = Field(default=None)
+    updated_at: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None)
 
     # Audit user identifiers
     created_id: UUID | None = Field(default=None, foreign_key="audit.id")
