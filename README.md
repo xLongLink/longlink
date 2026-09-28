@@ -15,7 +15,7 @@
 
 LongLink is a code-first platform for building and operating process-specific business software with Python.
 
-Build your Solution as a standard FastAPI application. Define your data with SQLModel, validation with Pydantic. LongLink provides the common runtime and services around the application: user management, permissions, database, storage, deployment, and logging.
+Build your Solution as a standard FastAPI application. Define your data with SQLModel and validation with Pydantic. LongLink provides the common runtime and services around the application: user management, permissions, database, storage, deployment, and logging.
 
 The result is software you can develop, test, version, review, and change using normal engineering tools.
 
@@ -36,7 +36,7 @@ uv sync --group dev
 uv run longlink dev
 ```
 
-Open http://127.0.0.1:1707 to preview your Solution.
+Open `http://127.0.0.1:1707` to preview your Solution.
 
 > [!NOTE]
 > See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
@@ -74,7 +74,7 @@ src/
 main.py           # Application entry point
 ```
 
-LongLink() is a FastAPI application with the common runtime services already installed. Your routes remain standard FastAPI routes, while Context provides access to the current user, database session, and storage without requiring each Solution to configure those services independently.
+`LongLink()` is a FastAPI application with the common runtime services already installed. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database session, and storage without requiring each Solution to configure those services independently.
 
 The same application code runs across testing, development, and production. Local services are used while developing and testing, while the corresponding managed services are provided when running on the LongLink Platform.
 
@@ -87,7 +87,7 @@ LongLink is not a no-code workflow builder or a replacement for FastAPI. The Sol
 ## Why LongLink
 
 
-AI has made custom software faster and cheaper to create. As the cost of building applications falls, more business processes can be expressed directly in software. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time
+AI has made custom software faster and cheaper to create. As the cost of building applications falls, more business processes can be expressed directly in software. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
 
 
 LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
@@ -116,7 +116,7 @@ These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.
 The repository contains the LongLink SDK and runtime in `sdk/`, the Platform API in `api/`, and the shared Platform and Solution frontend in `web/`.
 
 
-On linux install the requirements using:
+On Linux, install the development requirements with:
 
 ```bash
 make apt   # Ubuntu, Debian, ...
@@ -137,7 +137,7 @@ Work on the LongLink SDK runtime:
 make sdk
 ```
 
-Cleanup
+Clean up:
 
 ```bash
 make down  # Stop local services and the cluster
