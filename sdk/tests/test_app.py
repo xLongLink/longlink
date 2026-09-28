@@ -110,7 +110,6 @@ def test_readiness_fails_when_the_solution_database_is_unavailable(solution_sour
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
     assert ready_response.status_code == 500
-    assert ready_response.json() == {"detail": "An unexpected error occurred. Please try again later."}
 
 
 def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

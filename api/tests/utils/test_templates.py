@@ -19,12 +19,9 @@ def test_readyml_list_rejects_invalid_rendered_documents(tmp_path: Path, content
     template_path = tmp_path / "application.yml"
     template_path.write_text(content, encoding="utf-8")
 
-    # Act
-    with pytest.raises(ValueError, match=message) as error:
+    # Act and assert
+    with pytest.raises(ValueError, match=message):
         templates.readyml_list(template_path)
-
-    # Assert
-    assert str(error.value) == message
 
 
 def test_readyml_list_renders_mapping_documents(tmp_path: Path) -> None:

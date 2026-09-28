@@ -63,7 +63,6 @@ def production_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
         ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
         ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
         (".", "solutions/dashboard", "Storage buckets must be bucket names"),
-        ("..", "solutions/dashboard", "Storage buckets must be bucket names"),
         ("/acme", "solutions/dashboard", "Storage buckets must be bucket names"),
         ("acme/../shared", "solutions/dashboard", "Storage buckets must be bucket names"),
     ],

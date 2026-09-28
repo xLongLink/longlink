@@ -1018,22 +1018,6 @@ async def test_password_requests_do_not_send_mail_to_deleted_account(
     assert captured_mail == []
 
 
-async def test_authenticated_logout_rejects_cross_origin_request(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Prevent a foreign origin from clearing an authenticated browser session."""
-
-    # Send a credentialed logout request initiated by an untrusted origin.
-    client = clients[0]
-    response = await client.post("/api/v1/auth/logout", headers={"origin": "https://attacker.example"})
-    profile_response = await client.get("/api/v1/me")
-
-    # Reject CSRF logout attempts without expiring the caller's authenticated session.
-    assert response.status_code == 403
-    assert "set-cookie" not in response.headers
-    assert profile_response.status_code == 200
-
-
 async def test_logout_rejects_untrusted_origin_without_browser_session(client: AsyncClient) -> None:
     """Reject an uncredentialed logout request from an untrusted origin."""
 
@@ -1049,20 +1033,22 @@ async def test_logout_rejects_untrusted_origin_without_browser_session(client: A
 @pytest.mark.parametrize(
     ("public_origin", "origin"),
     [
+        pytest.param(None, "https://attacker.example", id="cross-origin"),
         pytest.param("http://localhost:5173", "http://127.0.0.1:5173", id="localhost-public"),
         pytest.param("http://127.0.0.1:5173", "http://localhost:5173", id="loopback-public"),
     ],
 )
-async def test_authenticated_logout_rejects_alternate_local_origin(
+async def test_authenticated_logout_rejects_untrusted_origin(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch: pytest.MonkeyPatch,
-    public_origin: str,
+    public_origin: str | None,
     origin: str,
 ) -> None:
-    """Reject local development origins when production permits only its public origin."""
+    """Reject untrusted origins without clearing an authenticated browser session."""
 
     # Arrange
-    monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
+    if public_origin is not None:
+        monkeypatch.setattr(env, "PUBLIC_URL", public_origin)
     client = clients[0]
 
     # Act

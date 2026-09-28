@@ -40,11 +40,8 @@ describe('compileAttribute', () => {
     });
 
     it.each(['$', '$1bad', '1bad.value'])('keeps an invalid reference as plain text: %s', (value) => {
-        // Arrange
-        const input = value;
-
         // Act
-        const attribute = compileAttribute(input);
+        const attribute = compileAttribute(value);
 
         // Assert
         expect(attribute).toEqual({ kind: 'text', value });

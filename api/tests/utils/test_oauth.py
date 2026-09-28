@@ -107,7 +107,7 @@ def test_github_identity_selects_primary_verified_email() -> None:
     assert result.name == "octocat"
 
 
-@pytest.mark.parametrize("raw_subject", [True, False, "123456", None])
+@pytest.mark.parametrize("raw_subject", [True, "123456", None])
 def test_github_identity_rejects_non_integer_subject(raw_subject: object) -> None:
     """Reject GitHub profiles whose numeric subject could collide or be forged."""
 

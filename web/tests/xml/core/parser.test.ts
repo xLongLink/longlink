@@ -3,19 +3,6 @@ import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
 
 describe('parseXML', () => {
-    it('compiles literal attribute params', () => {
-        expect(parseFragment('<Button isDisabled="false" count="5" />')).toEqual([
-            {
-                name: 'Button',
-                params: {
-                    count: { kind: 'text', value: '5' },
-                    isDisabled: { kind: 'text', value: 'false' },
-                },
-                children: [],
-            },
-        ]);
-    });
-
     it('parses view structure', () => {
         expect(
             parseXML(

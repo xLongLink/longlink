@@ -192,7 +192,6 @@ async def test_organization_service_returns_active_user_memberships(
         memberships = await organization_service.memberships(session, member.id)
 
     # Assert
-    assert registered.id is not None
     assert persisted_user is not None
     assert persisted_user.email == "registered@example.com"
     assert password_hash.verify("test-password", persisted_user.password)

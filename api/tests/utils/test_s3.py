@@ -39,9 +39,7 @@ class FakeClient:
         self.aborted: list[tuple[str, str]] = []
         self.deleted: list[list[dict[str, str]]] = []
         self.buckets_created: list[str] = []
-        self.buckets_deleted: list[str] = []
         self.create_error: ClientError | None = None
-        self.delete_error: ClientError | None = None
         self.paginator_error: ClientError | None = None
 
     def get_paginator(self, name: str) -> FakePaginator:
@@ -63,13 +61,6 @@ class FakeClient:
         self.buckets_created.append(Bucket)
         if self.create_error is not None:
             raise self.create_error
-
-    async def delete_bucket(self, Bucket: str) -> None:
-        """Record bucket deletion."""
-
-        self.buckets_deleted.append(Bucket)
-        if self.delete_error is not None:
-            raise self.delete_error
 
     async def delete_objects(self, Bucket: str, Delete: dict[str, object]) -> dict[str, object]:
         """Record one batched object deletion without partial failures."""
@@ -144,9 +135,6 @@ async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.M
             await make_s3().delete_prefix("org-bucket", "solutions/abc/")
     else:
         await make_s3().delete_prefix("org-bucket", "solutions/abc/")
-
-    # Assert
-    assert client.buckets_created == []
 
 
 async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:

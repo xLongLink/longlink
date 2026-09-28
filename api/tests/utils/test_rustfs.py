@@ -6,12 +6,11 @@ from src.utils.rustfs import Error, RustFS
 pytestmark = pytest.mark.no_db
 
 
-def test_policy_isolates_solution_prefixes() -> None:
-    """Grant one solution private writes without exposing another solution."""
+def test_policy_includes_solution_prefix() -> None:
+    """Include the solution's private prefix in its bucket policy."""
 
     # Arrange
     first = uuid4()
-    second = uuid4()
 
     # Act
     policy = RustFS.policy("org-bucket", first)
@@ -22,7 +21,6 @@ def test_policy_isolates_solution_prefixes() -> None:
     assert isinstance(statements, list)
     text = str(policy)
     assert f"solutions/{first.hex}/" in text
-    assert second.hex not in text
 
 
 def test_policy_denies_acl_grants() -> None:

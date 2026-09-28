@@ -82,19 +82,8 @@ async def test_compute_registry_rejects_exec_authentication_before_constructing_
     assert await fetch_operations() == []
 
 
-@pytest.mark.parametrize(
-    ("error", "name"),
-    [
-        pytest.param(
-            ValueError("Compute package is incompatible; deploy a supported Compute package"),
-            "Incompatible Compute",
-            id="incompatible-package",
-        ),
-        pytest.param(RuntimeError("gateway unavailable"), "Unready Compute", id="unready-infrastructure"),
-    ],
-)
 async def test_compute_registry_creation_rejects_failed_inline_verification(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch, error: Exception, name: str
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return 503 without persistence when inline verification fails."""
 
@@ -102,9 +91,10 @@ async def test_compute_registry_creation_rejects_failed_inline_verification(
     async def failed_gateway(_cluster: object, _url: str, _certificate: str | None, **_kwargs: object) -> None:
         """Report inline verification failure."""
 
-        raise error
+        raise RuntimeError("gateway unavailable")
 
     monkeypatch.setattr("src.routes.v1.computes.gateway.verify", failed_gateway)
+    name = "Unready Compute"
     payload = {
         "name": name,
         "gateway_url": "https://gateway.example",

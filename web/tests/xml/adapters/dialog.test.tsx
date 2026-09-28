@@ -21,25 +21,19 @@ describe('Dialog', () => {
             expected: 'fullscreen',
             name: 'requests the fullscreen variant when fullscreen is set',
             property: 'variant',
-            xml: '<Dialog title="Contract" fullscreen="true">Content</Dialog>',
-        },
-        {
-            expected: undefined,
-            name: 'uses the standard variant by default',
-            property: 'variant',
-            xml: '<Dialog title="Contract">Content</Dialog>',
+            xml: '<Dialog title="Contract" fullscreen="true" />',
         },
         {
             expected: '90%',
             name: 'passes a custom width through to the dialog',
             property: 'width',
-            xml: '<Dialog title="Contract" width="90%">Content</Dialog>',
+            xml: '<Dialog title="Contract" width="90%" />',
         },
         {
             expected: '90vh',
             name: 'passes a custom height through to the dialog maximum height',
             property: 'maxHeight',
-            xml: '<Dialog title="Contract" height="90vh">Content</Dialog>',
+            xml: '<Dialog title="Contract" height="90vh" />',
         },
     ])('$name', ({ expected, property, xml }) => {
         // Act

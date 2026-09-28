@@ -247,26 +247,22 @@ async def test_execute_releases_operation_when_handler_is_cancelled(monkeypatch:
     assert operation.failed is None
 
 
-async def test_execute_rejects_operation_without_a_worker_lease() -> None:
-    """Reject an Operation before it reaches its handler without a live lease."""
+@pytest.mark.parametrize(
+    "lease_expires_at",
+    [
+        pytest.param(None, id="missing"),
+        pytest.param(datetime(2020, 1, 1, tzinfo=UTC), id="expired"),
+    ],
+)
+async def test_execute_rejects_operation_without_a_live_worker_lease(lease_expires_at: datetime | None) -> None:
+    """Reject Operations with missing or expired leases before reaching a handler."""
 
     # Arrange
     operation = Operation(
         kind=OperationKind.organization_create,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
+        lease_expires_at=lease_expires_at,
     )
-
-    # Act and assert
-    with pytest.raises(ValueError, match="Operation must be claimed before execution"):
-        await operation_worker.execute(operation)
-
-
-async def test_execute_rejects_operation_with_an_expired_worker_lease() -> None:
-    """Reject an Operation whose claim lease has already expired."""
-
-    # Arrange
-    operation = leased_operation()
-    operation.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
 
     # Act and assert
     with pytest.raises(ValueError, match="Operation must be claimed before execution"):
