@@ -1,8 +1,6 @@
 import { componentDocumentation } from '../lib/generated/documentation';
 
 export type DocumentationIcon =
-    | 'appWindow'
-    | 'building'
     | 'cpu'
     | 'database'
     | 'fileCode'
@@ -36,11 +34,7 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
     },
     {
         title: 'Platform',
-        pages: [
-            { path: '/docs/api', label: 'Overview', icon: 'shield' },
-            { path: '/docs/api/organizations', label: 'Organizations', icon: 'building' },
-            { path: '/docs/api/solutions', label: 'Solutions', icon: 'appWindow' },
-        ],
+        pages: [{ path: '/docs/api', label: 'Overview', icon: 'shield' }],
     },
     {
         title: 'Self-hosted',

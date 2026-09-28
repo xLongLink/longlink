@@ -5,8 +5,6 @@ import { SideNavHeader } from '@/components/layouts/SideNavHeader';
 import { documentationSections, type DocumentationIcon } from '@/platform/docs';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import {
-    AppWindow,
-    Building2,
     Cpu,
     Database,
     FileCode2,
@@ -21,8 +19,6 @@ import {
 } from 'lucide-react';
 
 const icons: Record<DocumentationIcon, LucideIcon> = {
-    appWindow: AppWindow,
-    building: Building2,
     cpu: Cpu,
     database: Database,
     fileCode: FileCode2,
