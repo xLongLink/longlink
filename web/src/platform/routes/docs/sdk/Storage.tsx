@@ -5,9 +5,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
-import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const article = {
     description: 'Store and manage files in a LongLink project.',
@@ -29,74 +26,21 @@ export default function DocsArticleRoute() {
                     Storage
                 </Heading>
                 <Text as="p">
-                    The SDK provides a solution-scoped <Code>ctx.storage</Code> filesystem backed by{' '}
-                    <Link
-                        href="https://filesystem-spec.readthedocs.io/en/latest/"
-                        hasUnderline
-                        isExternalLink
-                        type="inherit"
-                    >
+                    Use <Code>ctx.storage</Code> as a standardized, universal interface to read and write files without
+                    worrying about the underlying storage system. It is backed by{' '}
+                    <Link href="https://github.com/fsspec/filesystem_spec" hasUnderline isExternalLink type="inherit">
                         fsspec
                     </Link>
-                    . Project source uses the same filesystem interface in local development, tests, and production.
-                    Type a route parameter as <Code>Context</Code> to receive it.
+                    .
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHeaderCell>Environment</TableHeaderCell>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <CheckCheck aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Testing</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>memory</Code> backend for isolated in-memory test files.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <Wrench aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Development</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>file</Code> backend for inspectable local files.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow>
-                                <TableCell>
-                                    <Stack gap={1}>
-                                        <Stack direction="horizontal" gap={2} align="center">
-                                            <CheckCircle aria-hidden="true" className="text-accent" size={16} />
-                                            <Text weight="semibold">Production</Text>
-                                        </Stack>
-                                        <Text type="supporting">
-                                            <Code>s3</Code> backend using solution and shared prefixes in one
-                                            Organization bucket.
-                                        </Text>
-                                    </Stack>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </Collapsible>
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        The interface stays the same in every environment: in-memory storage for isolated tests, local
+                        files during development for easy inspection, and an S3 storage space when deployed on the
+                        LongLink platform.
+                    </Text>
+                </Stack>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
