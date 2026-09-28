@@ -63,7 +63,7 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
         pyproject = (target / "pyproject.toml").read_text(encoding="utf-8")
         assert f'name = "{project_name}"' in pyproject
         assert "[tool.longlink]" in pyproject
-        assert 'environment = "src.envs:Env"' in pyproject
+        assert 'environments = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
 
 

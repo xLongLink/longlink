@@ -16,7 +16,7 @@ def build_project(tmp_path: Path) -> Path:
     root = tmp_path / "solution"
     root.mkdir()
     root.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
     )
     envs_path = root / "src" / "envs.py"
@@ -90,7 +90,7 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
     [
         pytest.param(
             "settings/envs.py",
-            '[tool.longlink]\nenvironment = "settings.envs:Env"\n',
+            '[tool.longlink]\nenvironments = "settings.envs:Env"\n',
             "from pydantic import BaseModel, Field\n\n"
             "class Env(BaseModel):\n"
             "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
@@ -105,7 +105,7 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
         ),
         pytest.param(
             "src/envs.py",
-            '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+            '[tool.longlink]\nenvironments = "src.envs:Env"\n',
             "from pydantic import BaseModel, Field\n\n"
             "class Env(BaseModel):\n"
             "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
@@ -157,7 +157,7 @@ def test_read_env_spec_uses_resolved_field_metadata(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     (tmp_path / "pyproject.toml").write_text(
-        '[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        '[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
     )
 
@@ -171,17 +171,17 @@ def test_read_env_spec_uses_resolved_field_metadata(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("project_config", "module_path", "module_source", "message"),
     [
-        pytest.param("", None, None, r"\[tool\.longlink\]\.environment", id="missing-config"),
+        pytest.param("", None, None, r"\[tool\.longlink\]\.environments", id="missing-config"),
         pytest.param(
-            '[tool.longlink]\nenvironment = "invalid"\n',
+            '[tool.longlink]\nenvironments = "invalid"\n',
             None,
             None,
-            r"\[tool\.longlink\]\.environment",
+            r"\[tool\.longlink\]\.environments",
             id="invalid-import",
         ),
-        pytest.param('[tool.longlink]\nenvironment = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
+        pytest.param('[tool.longlink]\nenvironments = "src.envs:Env"\n', None, None, "Environment model not found", id="missing-module"),
         pytest.param(
-            '[tool.longlink]\nenvironment = "src.envs:Settings"\n',
+            '[tool.longlink]\nenvironments = "src.envs:Settings"\n',
             "src/envs.py",
             "class Other:\n    pass\n",
             "Environment model must define Settings",
@@ -216,7 +216,7 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     # Arrange
     build_project = chdir_project
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n',
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
     )
     build_project.joinpath("src", "envs.py").write_text(
@@ -412,7 +412,7 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     dependency.joinpath("nested").mkdir()
     dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
     build_project.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironment = "src.envs:Env"\n\n'
+        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n\n'
         '[tool.uv.sources]\nshared = { path = "../shared" }\n',
         encoding="utf-8",
     )

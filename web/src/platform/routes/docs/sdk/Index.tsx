@@ -48,11 +48,19 @@ export default function DocsArticleRoute() {
                     </Text>
                 </Stack>
                 <Text as="p">
-                    Build dedicated tools to close this gap, using standard{' '}
+                    Build dedicated tools with established Python libraries: use{' '}
                     <Link href="https://github.com/fastapi/fastapi" hasUnderline isExternalLink type="inherit">
                         FastAPI
                     </Link>{' '}
-                    to structure your processes, data, rules, and workflows.
+                    for routes,{' '}
+                    <Link href="https://sqlmodel.tiangolo.com/" hasUnderline isExternalLink type="inherit">
+                        SQLModel
+                    </Link>{' '}
+                    for data, and{' '}
+                    <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink type="inherit">
+                        Pydantic
+                    </Link>{' '}
+                    for validation. Define your processes, rules, and workflows in Python.
                     <br />
                     Focus on the core logic while LongLink handles the infrastructure.
                 </Text>
