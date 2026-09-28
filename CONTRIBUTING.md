@@ -51,6 +51,36 @@ make image    # Build and push the local sample image
 make sdk            # Build the SDK web bundle and run the generated SDK service
 ```
 
+## Publish a beta release
+
+After the changes are merged into `main`, choose a new tag for the intended
+next stable version, for example `v0.4.1-beta.2` if the next stable release
+will be `v0.4.1` and `v0.4.1-beta.1` has already been published. Use
+`vMAJOR.MINOR.PATCH-beta.NUMBER` (with a hyphen before `beta`), not
+`v0.4.1.beta1`. From this repository, replacing the example with an unused tag:
+
+```bash
+git fetch origin main
+git tag v0.4.1-beta.2 origin/main
+git push origin v0.4.1-beta.2
+```
+
+Pushing the tag starts the [Publish Beta workflow](.github/workflows/beta.yml).
+It verifies that the tag points to a commit on the default branch, runs the
+tests, publishes the API image and matching Compute OCI chart to GHCR, and
+then creates the GitHub **pre-release**. Check the workflow run and the
+resulting release before using its artifacts. Do not create the pre-release
+manually in the GitHub UI to start this process; that alone does not trigger
+the tag-push workflow. Use a new beta number for another attempt rather than
+moving a published tag.
+
+A beta release does not update `latest`, publish the SDK to PyPI, sync the
+sample repository, or deploy anything. To test it in the managed environment,
+pin its chart version and API image digest in a separate
+[LinkLong](https://github.com/xLongLink/linklong) Terraform change. See the
+[Compute release instructions](k8s/README.md#beta-releases) for artifact names
+and promotion guidance.
+
 ## Theme
 
 Use the Astryx theme primitives rather than custom color or spacing values:
