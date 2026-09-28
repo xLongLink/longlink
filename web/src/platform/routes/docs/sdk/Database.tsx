@@ -10,8 +10,7 @@ const article = {
     description: 'Use database services in a LongLink project.',
     toc: [
         { id: 'database', label: 'Database', level: 1 },
-        { id: 'basic-usage', label: 'Basic usage', level: 2 },
-        { id: 'timezone', label: 'Timezone', level: 2 },
+        { id: 'usage', label: 'Usage', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
     ],
     lastUpdated: '2026-09-24',
@@ -42,8 +41,8 @@ export default function DocsArticleRoute() {
                         organization&apos;s database when deployed on the LongLink platform.
                     </Text>
                 </Stack>
-                <Heading id="basic-usage" level={2}>
-                    Basic usage
+                <Heading id="usage" level={2}>
+                    Usage
                 </Heading>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4
@@ -59,26 +58,6 @@ class Project(SQLModel, table=True):
 async def create_project(ctx: Context) -> None:
     ctx.database.add(Project(name="Launch"))
     await ctx.database.commit()`}
-                    language="python"
-                />
-                <Heading id="timezone" level={2}>
-                    Timezone
-                </Heading>
-                <Text as="p">
-                    SQLModel stores <Code>datetime</Code> fields in UTC. Use timezone-aware values when writing or
-                    querying them.
-                </Text>
-                <CodeBlock
-                    code={`from datetime import UTC, datetime
-from sqlmodel import Field, SQLModel
-
-
-class Event(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    starts_at: datetime
-
-
-event = Event(starts_at=datetime(2026, 8, 3, 9, 0, tzinfo=UTC))`}
                     language="python"
                 />
                 <Heading id="audit-table" level={2}>
