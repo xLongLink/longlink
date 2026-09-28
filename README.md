@@ -2,27 +2,33 @@
 
 <img src="banner.png" alt="LongLink banner" />
 
-</div>
-
 <br />
 
-> [!WARNING]
-> LongLink is currently in development. \
-> APIs, features, license and documentation may change as the project evolves.
+<a href="https://www.longlink.dev/">Website</a> &nbsp; · &nbsp; <a href="https://www.longlink.dev/docs/">Documentation</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/sample">Sample</a> &nbsp; · &nbsp; <a href="https://pypi.org/project/longlink/">PyPI</a> &nbsp; · &nbsp; <a href="https://github.com/xLongLink/longlink/issues">Issues</a>
+
+</div>
+
+> [!WARNING] \
+> LongLink is under active development. APIs may change before 1.0.
+
 
 <br />
 
 ## Introduction
 
-AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
+LongLink is a code-first platform for building and operating custom business software with Python.
 
-LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
+Build your Solution as a standard FastAPI application using familiar tools such as SQLModel and Pydantic. Define your data, rules, workflows, API routes, and interfaces as code, while LongLink provides the common infrastructure around the application: user management, permissions, storage, deployment, logging.
 
-Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
+The result is software you can develop, test, version, review, and change using normal engineering tools.
+
 
 <br />
 
-## Getting Started
+## Create a Solution
+
+> [!NOTE] \
+> See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
 
 Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
 
@@ -46,6 +52,32 @@ longlink dev
 
 </details>
 
+
+
+<br />
+
+## Why LongLink
+
+AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
+
+LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
+
+Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
+
+<br />
+
+
+## How it works
+
+TODO
+
+<br />
+
+## What LongLink is not
+
+
+TODO
+
 <br />
 
 ## Goals
@@ -58,7 +90,7 @@ LongLink aims to bring software-development principles to the way organisations 
 
 <br />
 
-## Development
+## Developing LongLink
 
 On linux install the requirements using:
 
