@@ -81,20 +81,6 @@
     }
 }
 
-@keyframes path-navigation-cue {
-    0% {
-        opacity: 0;
-        transform: scaleX(0);
-    }
-    15% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 1;
-        transform: scaleX(1);
-    }
-}
-
 .homepage-hero-globe {
     bottom: clamp(-94rem, -74vw, -58rem);
     width: max(84rem, 112vw);
@@ -139,10 +125,4 @@
     background: linear-gradient(to bottom, transparent, var(--color-background-body));
     content: '';
     pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .group:hover .path-navigation-cue {
-        animation: path-navigation-cue calc(var(--duration-slow-max) + var(--duration-slow-max)) var(--ease-standard) 1;
-    }
 }

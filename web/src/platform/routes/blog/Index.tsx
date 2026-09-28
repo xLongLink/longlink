@@ -16,14 +16,14 @@ export default function Blog() {
         <>
             <Seo description={blogDescription} title="Blog | LongLink" />
             <Stack as="main">
-                <Section padding={6} paddingBlock={10} variant="transparent">
+                <Section padding={6} variant="transparent">
                     <Stack className="mx-auto" gap={10} maxWidth={1000} width="100%">
-                        <Stack className="text-center" gap={3} hAlign="center" paddingBlock={8} width="100%">
-                            <Heading justify="center" level={1} textWrap="balance" type="display-1">
+                        <Stack className="text-center" gap={3} hAlign="center" width="100%">
+                            <Heading justify="center" level={1} textWrap="balance" type="display-2">
                                 The latest news
                             </Heading>
-                            <Text as="p" color="secondary" textWrap="pretty">
-                                Follow our journey as we build LongLink.
+                            <Text as="p" className="text-lg sm:text-xl" color="secondary" textWrap="pretty">
+                                Follow our journey as we build LongLink
                             </Text>
                         </Stack>
 
