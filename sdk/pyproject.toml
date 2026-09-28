@@ -31,7 +31,7 @@ authors = [
 ]
 description = "Python SDK for building and packaging LongLink Solutions."
 readme = "README.md"
-license = "MIT"
+license = "Apache-2.0"
 license-files = ["LICENSE*"]
 keywords = ["longlink", "sdk", "fastapi", "sqlalchemy", "pydantic", "alembic"]
 classifiers = [
