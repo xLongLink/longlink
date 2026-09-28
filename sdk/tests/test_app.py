@@ -26,15 +26,16 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
     # Exercise both local environments with real request context and storage.
     for environment, name in (("development", "Development user"), ("testing", "Testing user")):
         monkeypatch.setenv("LONGLINK_ENV", environment)
-        client = create_runtime_client()
+        app = LongLink()
 
-        @client.app.get("/api/me", response_model=str)
+        @app.get("/api/me", response_model=str)
         async def current_user(value: Context) -> str:
             """Return the locally seeded user name."""
 
             return value.user.name
 
         # Exercise runtime metadata, the frontend fallback, and the current user route.
+        client = TestClient(app)
         with client:
             frontend_response = client.get("/")
             frontend_route_response = client.get("/settings", headers={"accept": "text/html"})
