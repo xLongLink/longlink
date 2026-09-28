@@ -59,13 +59,11 @@ helm upgrade --install longlink-compute oci://ghcr.io/xlonglink/longlink \
 ```
 
 For the managed deployment in [LinkLong](https://github.com/xLongLink/linklong),
-open a PR changing the nightly release in `infra/compute.tf` from its vendored
-chart archive to the GHCR OCI chart and pin its beta version. Pin the
-corresponding API **image digest** in `infra/platform.tf` for nightly (the
-`beta.longlink.dev` environment). Review the Terraform plan, coordinate the
-Compute and Platform rollouts, then test the deployment. Promote exactly the
-tested chart version and API image digest to production in a separate reviewed
-change.
+open a PR pinning the beta chart version in `infra/compute.tf` and the matching
+API **image digest** in `infra/platform.tf` for nightly (the `beta.longlink.dev`
+environment). Review the Terraform plan, coordinate the Compute and Platform
+rollouts, then test the deployment. Promote exactly the tested chart version
+and API image digest to production in a separate reviewed change.
 
 If a clean stable version is required instead, publish new stable artifacts
 from the tested commit and verify them before deploying: changing the GitHub

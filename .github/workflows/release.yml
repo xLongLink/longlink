@@ -191,7 +191,6 @@ jobs:
             contents: read
         uses: ./.github/workflows/sync-sample.yml
         with:
-            channel: main
             version: ${{ github.ref_name }}
         secrets:
             SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
