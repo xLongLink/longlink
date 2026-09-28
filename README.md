@@ -8,7 +8,7 @@
 
 </div>
 
-> [!WARNING] \
+> [!WARNING]
 > LongLink is under active development. APIs may change before 1.0.
 
 
@@ -27,7 +27,7 @@ The result is software you can develop, test, version, review, and change using 
 
 ## Create a Solution
 
-> [!NOTE] \
+> [!NOTE]
 > See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
 
 Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
