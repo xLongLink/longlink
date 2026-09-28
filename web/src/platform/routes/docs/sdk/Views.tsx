@@ -26,7 +26,6 @@ import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { componentDocumentation } from '@/lib/generated/documentation';
@@ -99,21 +98,22 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    A View is an XML interface definition associated with a browser route and rendered inside the
-                    LongLink Solution shell. Store views in <Code>src/views</Code> and compose them from{' '}
-                    <Link href="https://astryx.atmeta.com/" hasUnderline isExternalLink type="inherit">
-                        Astryx
-                    </Link>
-                    components and LongLink state elements. Use this page as the component map.
+                    Create each interface as a single View file. Use components, state, queries, and actions to define
+                    what the user sees, how data is displayed, and what happens when they interact with it.
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                </Collapsible>
-                <CodeBlock code={'<longlink>\n  Welcome\n</longlink>'} language="xml" />
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        One file represents one interface, making the frontend easier to understand, generate, and
+                        maintain. The runtime handles rendering and common UI behavior, so the View can stay focused on
+                        the interface and how it works.
+                    </Text>
+                </Stack>
+                <CodeBlock
+                    code={'<longlink name="Welcome" icon="layout-dashboard">\n  <Text>Welcome</Text>\n</longlink>'}
+                    language="xml"
+                    title="welcome.xml"
+                />
                 <Stack gap={3}>
                     <Heading id="longlink-runtime-concepts" level={2}>
                         Runtime
