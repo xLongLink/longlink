@@ -24,12 +24,11 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ## Getting Started
 
-Requirements: `Python 3.12` or newer.
+Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
 
 ```bash
-uvx longlink init --folder <folder>
-cd <folder>
-uv sync
+uvx --from longlink longlink init --folder .
+uv sync --group dev
 uv run longlink dev
 ```
 
@@ -38,8 +37,7 @@ uv run longlink dev
 
 ```bash
 python -m pip install longlink
-longlink init --folder <folder>
-cd <folder>
+longlink init --folder .
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
@@ -81,12 +79,6 @@ Work on the LongLink SDK runtime:
 
 ```bash
 make sdk
-```
-
-To test a local Solution update, edit the generated project under `sdk/dev`, then run:
-
-```bash
-make image  # Build and push localhost:15000/sample:dev
 ```
 
 Cleanup
