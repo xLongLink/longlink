@@ -62,6 +62,8 @@ longlink dev
 
 ## How it works
 
+
+
 A Solution keeps the application-specific parts of your software explicit and together:
 
 ```
@@ -80,7 +82,8 @@ The same application code runs across testing, development, and production. Loca
 
 When a Solution is ready to deploy, LongLink packages it with its locked dependencies, configuration requirements, and metadata into a standard container image.
 
-LongLink is not a no-code workflow builder or a replacement for FastAPI. The Solution remains a Python application; LongLink standardizes the environment around it.
+> [!NOTE]
+> LongLink introduces as little new surface area as possible. It brings established tools and standards together into a consistent environment, reducing the setup and integration work normally required for each application.
 
 <br />
 
