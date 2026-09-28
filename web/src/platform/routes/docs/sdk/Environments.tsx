@@ -4,7 +4,6 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 
 const article = {
     description: 'Configure environments for local development and deployed LongLink services.',
@@ -12,7 +11,7 @@ const article = {
         { id: 'environments', label: 'Environments', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
     ],
-    lastUpdated: '2026-09-24',
+    lastUpdated: '2026-09-26',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Environments.tsx',
     title: 'Environments | LongLink Documentation',
 };
@@ -25,24 +24,25 @@ export default function DocsArticleRoute() {
                     Environments
                 </Heading>
                 <Text as="p">
-                    LongLink uses{' '}
+                    Use{' '}
                     <Link
-                        href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/"
+                        href="https://github.com/pydantic/pydantic-settings"
                         hasUnderline
                         isExternalLink
                         type="inherit"
                     >
                         Pydantic Settings
                     </Link>{' '}
-                    to define and manage project configuration.
+                    to define project configuration as typed, validated Python. Extend Environments with the values your
+                    solution needs; they are loaded from .env.sample, .env, or process environment variables.
                 </Text>
-                <Collapsible
-                    chevronPosition="start"
-                    defaultIsOpen={false}
-                    trigger={<Text weight="semibold">Why?</Text>}
-                >
-                    <Text as="p">TODO</Text>
-                </Collapsible>
+                <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
+                    <Text weight="semibold">Why?</Text>
+                    <Text as="p">
+                        A clear schema helps both developers and AI understand what the application expects, while early
+                        validation catches missing or invalid values before the application starts running.
+                    </Text>
+                </Stack>
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>
