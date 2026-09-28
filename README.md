@@ -8,27 +8,25 @@
 
 </div>
 
+
+<br />
+
+## Introduction
+
+LongLink is a code-first platform for building and operating process-specific business software with Python.
+
+Build your Solution as a standard FastAPI application. Define your data with SQLModel, validation with Pydantic. LongLink provides the common runtime and services around the application: user management, permissions, database, storage, deployment, and logging.
+
+The result is software you can develop, test, version, review, and change using normal engineering tools.
+
 > [!WARNING]
 > LongLink is under active development. APIs may change before 1.0.
 
 
 <br />
 
-## Introduction
-
-LongLink is a code-first platform for building and operating custom business software with Python.
-
-Build your Solution as a standard FastAPI application using familiar tools such as SQLModel and Pydantic. Define your data, rules, workflows, API routes, and interfaces as code, while LongLink provides the common infrastructure around the application: user management, permissions, storage, deployment, logging.
-
-The result is software you can develop, test, version, review, and change using normal engineering tools.
-
-
-<br />
-
 ## Create a Solution
 
-> [!NOTE]
-> See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
 
 Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
 
@@ -37,6 +35,12 @@ uvx --from longlink longlink init --folder .
 uv sync --group dev
 uv run longlink dev
 ```
+
+Open http://127.0.0.1:1707 to preview your Solution.
+
+> [!NOTE]
+> See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
+
 
 <details>
 <summary>What about classic pip?</summary>
@@ -56,41 +60,61 @@ longlink dev
 
 <br />
 
+## How it works
+
+A Solution keeps the application-specific parts of your software explicit and together:
+
+```
+src/
+├── models/       # SQLModel data models
+├── routes/       # FastAPI application logic
+├── schemas/      # Pydantic schemas
+├── views/        # User interfaces
+└── envs.py       # Environment configuration
+main.py           # Application entry point
+```
+
+LongLink() is a FastAPI application with the common runtime services already installed. Your routes remain standard FastAPI routes, while Context provides access to the current user, database session, and storage without requiring each Solution to configure those services independently.
+
+The same application code runs across testing, development, and production. Local services are used while developing and testing, while the corresponding managed services are provided when running on the LongLink Platform.
+
+When a Solution is ready to deploy, LongLink packages it with its locked dependencies, configuration requirements, and metadata into a standard container image.
+
+LongLink is not a no-code workflow builder or a replacement for FastAPI. The Solution remains a Python application; LongLink standardizes the environment around it.
+
+<br />
+
 ## Why LongLink
 
-AI has changed the economics and cost structure of software creation. As business software becomes faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
+
+AI has made custom software faster and cheaper to create. As the cost of building applications falls, more business processes can be expressed directly in software. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time
+
 
 LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
 
 Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
 
-<br />
-
-
-## How it works
-
-TODO
-
-<br />
-
-## What LongLink is not
-
-
-TODO
 
 <br />
 
 ## Goals
 
 - **Keep it simple**: Processes are clear, easy to operate and cheap to maintain.
-- **Own the process**: Retain control, accountability and software that fits the work.
-- **Separate responsibilities**: Clear distinction between a machine and a human task.
+- **Own the process**: Keep control and transparency over the process, its rules, and its data.
+- **Separate responsibilities**: Clear distinction between a human decision and a machine task.
 
-LongLink aims to bring software-development principles to the way organisations design and operate their processes by creating a clear boundary between what is a computer task and what requires a human decision. This approach aligns with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and supports organisations working towards relevant ISO certifications and guidance, including [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 31000](https://www.iso.org/standard/65694.html), [ISO 37301](https://www.iso.org/standard/75080.html), and [ISO 37000](https://www.iso.org/standard/65036.html).
+### Standards and governance
+
+LongLink is designed around clear processes, accountability, traceability, and explicit separation between automated tasks and human decisions.
+
+These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organisations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 31000](https://www.iso.org/standard/65694.html), [ISO 37301](https://www.iso.org/standard/75080.html), and [ISO 37000](https://www.iso.org/standard/65036.html).
 
 <br />
 
 ## Developing LongLink
+
+The repository contains the LongLink SDK and runtime in `sdk/`, the Platform API in `api/`, and the shared Platform and Solution frontend in `web/`.
+
 
 On linux install the requirements using:
 
