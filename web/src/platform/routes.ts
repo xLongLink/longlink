@@ -28,11 +28,7 @@ export default [
                     route(':component', './routes/docs/sdk/views/Component.tsx'),
                 ]),
             ]),
-            ...prefix('api', [
-                index('./routes/docs/api/Index.tsx'),
-                route('solutions', './routes/docs/api/Solutions.tsx'),
-                route('organizations', './routes/docs/api/Organizations.tsx'),
-            ]),
+            ...prefix('api', [index('./routes/docs/api/Index.tsx')]),
             ...prefix('self-hosted', [
                 route('release', './routes/docs/self-hosted/Release.tsx'),
                 route('compute', './routes/docs/self-hosted/Compute.tsx'),
