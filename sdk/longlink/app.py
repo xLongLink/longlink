@@ -15,7 +15,7 @@ from longlink.constants import ROOT
 from longlink.utils.xml import validate_xml
 from longlink.middleware import FrontendMiddleware
 from longlink.storage.base import create_fs
-from longlink.database.base import Database
+from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
 
 
@@ -76,7 +76,12 @@ class LongLink(FastAPI):
         self.include_router(router(view_definitions))
 
         # Only production requests with a valid Platform identity may reach Solution routes.
-        install_context_middleware(self, settings.IDENTITY_SECRET, require_identity=settings.ENV == "production")
+        install_context_middleware(
+            self,
+            settings.IDENTITY_SECRET,
+            require_identity=settings.ENV == "production",
+            local_user_id=LOCAL_USER_ID if settings.ENV != "production" else None,
+        )
 
         self.state.longlink = RuntimeState(storage=storage, database=database)
         self.router.add_event_handler("shutdown", database.dispose)

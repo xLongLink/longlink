@@ -32,7 +32,7 @@ def test_data_resolves_request_services(
     identity: UUID | None,
     user: object | None,
 ) -> None:
-    """Yield request services and look up an audit user only for authenticated requests."""
+    """Yield request services only when an identity resolves to a user."""
 
     # Arrange
     storage = object()
@@ -83,8 +83,11 @@ def test_data_resolves_request_services(
     response = client.get("/", headers={} if identity is None else identity_headers(identity))
 
     # Assert
-    assert response.status_code == 200
-    assert response.json() == {"user_matches": True, "storage_matches": True}
+    if user is None:
+        assert response.status_code == 401
+    else:
+        assert response.status_code == 200
+        assert response.json() == {"user_matches": True, "storage_matches": True}
     assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
     assert session_closed
 
@@ -98,8 +101,10 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
     class Database:
         """Provide the minimal lookup behavior required by the dependency."""
 
-        async def get(self, _model: object, _user_id: UUID) -> None:
-            """Return no shared audit user."""
+        async def get(self, _model: object, _user_id: UUID) -> object:
+            """Return the shared audit user needed to enter the endpoint."""
+
+            return object()
 
     class DatabaseService:
         """Open the configured request database session."""

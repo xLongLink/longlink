@@ -1,6 +1,7 @@
 import jwt
+from uuid import UUID
 from typing import Annotated
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, HTTPException
 from longlink import identity
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
@@ -16,7 +17,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class _ContextData:
     """Hold Platform data and services for one Solution request."""
 
-    user: Audit | None
+    user: Audit
     storage: AbstractFileSystem
     database: AsyncSession
 
@@ -24,10 +25,16 @@ class _ContextData:
 async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
     """Yield the request context for a FastAPI dependency."""
 
-    # Open one Solution-owned database session and resolve the authenticated shared user for this request.
+    # Resolve a real user record before exposing request services to a Solution route.
     async with request.app.state.longlink.database.session() as database:
         user_id = audit.current_actor.get()
-        user = await database.get(Audit, user_id) if user_id is not None else None
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Authentication required")
+
+        user = await database.get(Audit, user_id)
+        if user is None:
+            raise HTTPException(status_code=401, detail="User not found")
+
         yield _ContextData(user=user, storage=request.app.state.longlink.storage, database=database)  # noqa: ASYNC119
 
 
@@ -51,7 +58,13 @@ class _RejectWebSockets:
         await self.app(scope, receive, send)
 
 
-def install_context_middleware(app: FastAPI, identity_secret: str | None, *, require_identity: bool = False) -> None:
+def install_context_middleware(
+    app: FastAPI,
+    identity_secret: str | None,
+    *,
+    require_identity: bool = False,
+    local_user_id: UUID | None = None,
+) -> None:
     """Bind trusted Platform identity for the complete request lifecycle."""
 
     if require_identity and not identity_secret:
@@ -76,6 +89,10 @@ def install_context_middleware(app: FastAPI, identity_secret: str | None, *, req
         # Only Kubernetes liveness and readiness probes are anonymous in production.
         if require_identity and user_id is None and request.url.path not in {"/health", "/ready"}:
             return JSONResponse({"detail": "Authentication required"}, status_code=401)
+
+        # Use the seeded local user when no signed Platform identity was supplied.
+        if user_id is None:
+            user_id = local_user_id
 
         # Keep the request identity available to both FastAPI and database audit hooks.
         with audit.actor(user_id):
