@@ -47,6 +47,63 @@ jobs:
             contents: read
         uses: ./.github/workflows/tests.yml
 
+    publish-sdk:
+        needs: tests
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+
+        environment:
+            name: release
+
+        permissions:
+            id-token: write
+            contents: read
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 1
+                  fetch-tags: true
+
+            - name: Setup Python
+              uses: ./.github/actions/setup-python
+              with:
+                  cache-dependency-glob: sdk/uv.lock
+
+            - name: Setup Vite+
+              uses: ./.github/actions/setup-vite
+
+            - name: Build web assets for SDK
+              working-directory: web
+              run: vp run build:sdk:bundle --logLevel warn
+              env:
+                  VERSION: ${{ github.ref_name }}
+
+            - name: Build SDK distribution
+              working-directory: sdk
+              run: uv build
+
+            - name: Publish beta SDK to PyPI
+              working-directory: sdk
+              run: uv publish --trusted-publishing automatic
+
+            - name: Wait for beta SDK on PyPI
+              run: |
+                  set -euo pipefail
+
+                  version="${GITHUB_REF_NAME#v}"
+                  version="${version/-beta./b}"
+                  for attempt in $(seq 1 30); do
+                      if curl --fail --silent --show-error "https://pypi.org/pypi/longlink/${version}/json" >/dev/null; then
+                          exit 0
+                      fi
+                      sleep 10
+                  done
+
+                  printf 'longlink %s was not available on PyPI within five minutes.\n' "$version" >&2
+                  exit 1
+
     publish-artifacts:
         needs: tests
         runs-on: ubuntu-24.04
@@ -125,8 +182,19 @@ jobs:
                   printf '%s' "$GHCR_TOKEN" | helm registry login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
                   helm push "${{ steps.compute.outputs.archive }}" oci://ghcr.io/xlonglink
 
+    sync-sample:
+        needs: [publish-sdk, publish-artifacts]
+        permissions:
+            contents: read
+        uses: ./.github/workflows/sync-sample.yml
+        with:
+            channel: beta
+            version: ${{ github.ref_name }}
+        secrets:
+            SAMPLE_REPOSITORY_TOKEN: ${{ secrets.SAMPLE_REPOSITORY_TOKEN }}
+
     publish-github-release:
-        needs: publish-artifacts
+        needs: [publish-sdk, publish-artifacts, sync-sample]
         runs-on: ubuntu-24.04
         timeout-minutes: 10
 

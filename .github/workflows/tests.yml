@@ -93,7 +93,9 @@ jobs:
 
             - name: Lint SDK
               working-directory: sdk
-              run: uv run --locked ruff check .
+              run: |
+                  uv run --locked ruff check .
+                  uv run --locked ruff check --config longlink/.static/new/pyproject.toml longlink/.static/new
 
             - name: Verify Docker daemon
               run: docker info
