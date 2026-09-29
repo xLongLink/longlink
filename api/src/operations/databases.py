@@ -221,11 +221,6 @@ async def ready(organization_id: UUID) -> bool:
                         await database.prepare_organization_database(organization_id)
 
                     # Verify ownership before taking the snapshot; the publish gate rechecks shared state.
-                    async with session_scope() as session:
-                        organization = await lock(session, organization_id)
-                        if organization is None or organization.deleted_at is not None or not await lease.owned(session):
-                            raise RuntimeError("Organization transition lease was lost")
-                        await session.commit()
                     await lease.check()
                     async with session_scope() as session:
                         await organizations.project_users(session, organization_id, database)

@@ -26,45 +26,15 @@ const stepPropsSchema = z.object({
 /** Renders an Astryx progress stepper from XML children. */
 export function Stepper({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { activeStep, density, indicatorPosition, label, orientation } = resolveXmlProps(
-        props,
-        ctx,
-        stepperPropsSchema
-    );
+    const stepperProps = resolveXmlProps(props, ctx, stepperPropsSchema);
 
-    return (
-        <AstryxStepper
-            activeStep={activeStep}
-            density={density}
-            indicatorPosition={indicatorPosition}
-            label={label}
-            orientation={orientation}
-        >
-            {renderNode(nodes, ctx)}
-        </AstryxStepper>
-    );
+    return <AstryxStepper {...stepperProps}>{renderNode(nodes, ctx)}</AstryxStepper>;
 }
 
 /** Renders one named step with optional XML content. */
 export function Step({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
-    const { description, indicator, isDisabled, isOptional, label, status, step } = resolveXmlProps(
-        props,
-        ctx,
-        stepPropsSchema
-    );
+    const stepProps = resolveXmlProps(props, ctx, stepPropsSchema);
 
-    return (
-        <AstryxStep
-            description={description}
-            indicator={indicator}
-            isDisabled={isDisabled}
-            isOptional={isOptional}
-            label={label}
-            status={status}
-            step={step}
-        >
-            {renderNode(nodes, ctx)}
-        </AstryxStep>
-    );
+    return <AstryxStep {...stepProps}>{renderNode(nodes, ctx)}</AstryxStep>;
 }

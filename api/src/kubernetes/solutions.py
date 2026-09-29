@@ -304,26 +304,18 @@ class Solutions:
         while await namespace_resource.exists():
             remaining = False
 
-            if await _delete_resources(
+            # Delete the Service, retained migration Jobs, and revision secrets in order.
+            for resources in (
                 KnativeServiceResource.list(
                     api=api,
                     namespace=compute_namespace,
                     field_selector={"metadata.name": f"solution-{solution_id}"},
-                )
+                ),
+                Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
+                Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)}),
             ):
-                remaining = True
-
-            # Delete retained migration Jobs only when their Solution is being removed.
-            if await _delete_resources(
-                Job.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)})
-            ):
-                remaining = True
-
-            # Retain revision secrets until the Solution itself is deleted.
-            if await _delete_resources(
-                Secret.list(api=api, namespace=compute_namespace, label_selector={SOLUTION_ID_LABEL: str(solution_id)})
-            ):
-                remaining = True
+                if await _delete_resources(resources):
+                    remaining = True
 
             # Provider cleanup must not race a remaining Pod that can still use runtime credentials.
             if not remaining and not await _has_active_pods(api, compute_namespace, {SOLUTION_ID_LABEL: str(solution_id)}):
