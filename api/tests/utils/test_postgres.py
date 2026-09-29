@@ -1,6 +1,5 @@
 import pytest
 from uuid import UUID
-from datetime import UTC, datetime
 from src.utils import postgres
 from containers import postgres_container
 from contextlib import ExitStack
@@ -9,7 +8,7 @@ from sqlalchemy.exc import DBAPIError
 from collections.abc import Iterator
 from longlink.shared import audit as shared_audit
 from src.models.types import DatabaseSSLMode
-from longlink.shared.models import Audit
+from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db
@@ -42,14 +41,11 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
 
     # Arrange
     adapter, organization_id, solution_id = postgres_database
-    active_user = Audit(
+    active_user = User(
         id=UUID("11111111-1111-1111-1111-111111111111"),
         name="Owner User",
         email="owner@example.com",
         avatar="",
-        role="owner",
-        created_at=datetime(2026, 7, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 7, 1, tzinfo=UTC),
     )
     urls = ExitStack()
     request.addfinalizer(urls.close)
@@ -84,7 +80,7 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
             shared_user = (
                 (
                     await connection.execute(
-                        text("SELECT email, role FROM shared.audit WHERE id = :user_id"),
+                        text("SELECT email FROM shared.audit WHERE id = :user_id"),
                         {"user_id": active_user.id},
                     )
                 )
@@ -97,8 +93,8 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
                 await connection.execute(
                     text(
                         """
-                        INSERT INTO shared.audit (id, name, email, avatar, role, created_at, updated_at)
-                        VALUES (:id, 'Bad User', 'bad@example.com', '', 'owner', now(), now())
+                        INSERT INTO shared.audit (id, name, email, avatar)
+                        VALUES (:id, 'Bad User', 'bad@example.com', '')
                         """
                     ),
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
@@ -120,16 +116,15 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     finally:
         await sibling_engine.dispose()
 
-    inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
-    inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
+    updated_user = active_user.model_copy(update={"name": "Updated User"})
     async with adapter.connection(organization_id.hex, search_path="shared") as conn:
-        await shared_audit.sync(conn, [inactive_user])
+        await shared_audit.sync(conn, [updated_user])
     maintenance_engine = create_async_engine(urls.enter_context(adapter.url(organization_id.hex)))
     try:
         async with maintenance_engine.begin() as connection:
-            deleted_at = (
+            updated_name = (
                 await connection.execute(
-                    text("SELECT deleted_at FROM shared.audit WHERE id = :user_id"),
+                    text("SELECT name FROM shared.audit WHERE id = :user_id"),
                     {"user_id": active_user.id},
                 )
             ).scalar_one()
@@ -145,8 +140,8 @@ async def test_postgres_creates_idempotent_runtime_schema_with_readonly_audit_ac
     assert retried_runtime_username == runtime_username
     assert runtime_username.startswith("longlink_")
     assert len(runtime_username) <= 63
-    assert shared_user == {"email": "owner@example.com", "role": "owner"}
-    assert deleted_at == inactive_at
+    assert shared_user == {"email": "owner@example.com"}
+    assert updated_name == "Updated User"
 
 
 @pytest.mark.integration

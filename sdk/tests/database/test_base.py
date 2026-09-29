@@ -112,7 +112,7 @@ def test_user_table_adds_audit_soft_delete_and_user_relationships() -> None:
     """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
 
     # Define an isolated mapped table with inherited audit fields.
-    class FeatureAuditItem(database_base.AuditTable, table=True):
+    class FeatureAuditItem(database_base.Audit, table=True):
         """Temporary SDK table used to inspect inherited database fields."""
 
         # Table metadata

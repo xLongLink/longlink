@@ -5,6 +5,7 @@ from sqlmodel import col
 from factories import create_compute, create_solution, fetch_operations, create_organization
 from sqlalchemy import update
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
@@ -13,7 +14,6 @@ from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
 from src.database.services import solutions, invitations, organizations
 from src.models.pagination import Pagination
-from longlink.shared.models import Audit
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.solutions import Solution
@@ -170,9 +170,9 @@ async def test_sync_users_projects_active_organization_members(
 
     # Arrange
     organization = await create_organization(users[0])
-    synchronized: list[tuple[DatabasePostgres, list[Audit]]] = []
+    synchronized: list[tuple[DatabasePostgres, list[shared_models.User]]] = []
 
-    async def capture_sync(conn: DatabasePostgres, rows: list[Audit]) -> None:
+    async def capture_sync(conn: DatabasePostgres, rows: list[shared_models.User]) -> None:
         """Capture the shared-database projection without opening a connection."""
 
         synchronized.append((conn, rows))
@@ -196,8 +196,7 @@ async def test_sync_users_projects_active_organization_members(
     assert row.id == users[0].id
     assert row.name == users[0].name
     assert row.email == users[0].email
-    assert row.role == OrganizationRoles.owner.value
-    assert row.deleted_at is None
+    assert row.avatar == users[0].avatar
 
 
 async def test_update_member_role_rejects_missing_member(users: tuple[User, User, User]) -> None:

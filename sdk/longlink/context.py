@@ -9,7 +9,7 @@ from collections.abc import Callable, Awaitable, AsyncGenerator
 from starlette.types import Send, Scope, ASGIApp, Receive
 from longlink.database import audit
 from starlette.responses import Response, JSONResponse
-from longlink.shared.models import Audit
+from longlink.shared.models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 
@@ -17,7 +17,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class _ContextData:
     """Hold Platform data and services for one Solution request."""
 
-    user: Audit
+    user: User
     storage: AbstractFileSystem
     database: AsyncSession
 
@@ -31,7 +31,7 @@ async def _data(request: Request) -> AsyncGenerator[_ContextData, None]:
         if user_id is None:
             raise HTTPException(status_code=401, detail="Authentication required")
 
-        user = await database.get(Audit, user_id)
+        user = await database.get(User, user_id)
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
 

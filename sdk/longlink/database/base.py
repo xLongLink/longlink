@@ -1,6 +1,6 @@
 import asyncio
 from uuid import UUID
-from datetime import UTC, datetime
+from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlmodel import Session as SyncSession
 from contextlib import asynccontextmanager
@@ -8,15 +8,16 @@ from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncGenerator
 from longlink.database import urls
 from sqlalchemy.engine import URL, make_url
-from longlink.shared.models import Audit
+from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from longlink.utils.settings import Envs
+from longlink.database.relations import Model
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 LOCAL_USER_ID = UUID("00000000-0000-0000-0000-000000000001")
 
 
-class AuditTable(SQLModel):
+class Audit(Model):
     """Base SQLModel for Solution tables that track Platform users."""
 
     model_config = SQLModel.model_config.copy()
@@ -33,9 +34,9 @@ class AuditTable(SQLModel):
     deleted_id: UUID | None = Field(default=None, foreign_key="audit.id")
 
     # Audit user relationships
-    created_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.created_id], lazy="selectin"))
-    updated_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.updated_id], lazy="selectin"))
-    deleted_by = declared_attr(lambda cls: relationship(Audit, foreign_keys=[cls.deleted_id], lazy="selectin"))
+    created_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.created_id], lazy="selectin"))
+    updated_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.updated_id], lazy="selectin"))
+    deleted_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
 def create_engine(env: Envs) -> AsyncEngine:
@@ -111,19 +112,16 @@ class Database:
                             async with engine.connect():
                                 pass
 
-                        # Keep a local audit user available for development and test requests.
+                        # Keep a local shared user available for development and test requests.
                         if self._env.ENV != "production" and engine.url.get_backend_name() == "sqlite":
                             async with AsyncSession(engine) as session:
-                                if await session.get(Audit, LOCAL_USER_ID) is None:
-                                    now = datetime.now(UTC)
+                                if await session.get(User, LOCAL_USER_ID) is None:
                                     name = "Development user" if self._env.ENV == "development" else "Testing user"
                                     session.add(
-                                        Audit(
+                                        User(
                                             id=LOCAL_USER_ID,
                                             name=name,
                                             email="local@example.com",
-                                            created_at=now,
-                                            updated_at=now,
                                         )
                                     )
                                     await session.commit()
@@ -161,7 +159,7 @@ class Database:
             await engine.dispose()
 
 
-# Register shared audit listeners after AuditTable is fully defined.
+# Register shared audit listeners after Audit is fully defined.
 from longlink.database import audit
 
-audit.install_listener(SyncSession, AuditTable)
+audit.install_listener(SyncSession, Audit)
