@@ -51,7 +51,7 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 <Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Dialog>, <Divider>, <FileInput>, <FileViewer>, <Grid>, <GridSpan>, <Heading>, <Icon>, <Link>, <NumberInput>, <Option>, <RadioList>, <Selector>, <Slider>, <Stack>, <StackItem>, <Switch>, <Tab>, <Tabs>, <Table>, <TableColumn>, <Text>, <TextArea>, <TextInput>
 ```
 
-Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
+Runtime tags are `<longlink>`, `<State>`, `<Query>`, and `<For>`. Buttons and Links with a `label` can contain ordered `Validate`, `Request`, and `Patch` effects.
 
 ## XML
 

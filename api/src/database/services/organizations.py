@@ -9,12 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer, load_only, raiseload, joinedload, contains_eager
 from collections.abc import Sequence
 from longlink.shared import audit as shared_audit
+from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.database.services import operations
 from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
-from longlink.shared.models import Audit
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -236,30 +236,21 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
     # Load every authoritative membership for the Organization database snapshot.
     memberships_statement = (
         select(UserOrganization)
-        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar, User.updated_at, User.deleted_at))
+        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
         .where(col(UserOrganization.organization_id) == organization_id)
     )
     memberships_result = await session.scalars(memberships_statement)
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
-    rows: list[Audit] = []
-    for membership in memberships_result:
-        # Account tombstones and membership changes determine projection recency.
-        deleted_at = membership.user.deleted_at
-        updated_at = max(value for value in (membership.user.updated_at, membership.updated_at, deleted_at) if value is not None)
-
-        rows.append(
-            Audit(
-                id=membership.user.id,
-                name=membership.user.name,
-                email=membership.user.email,
-                avatar=membership.user.avatar,
-                role=membership.role.value,
-                created_at=membership.created_at,
-                deleted_at=deleted_at,
-                updated_at=updated_at,
-            )
+    rows = [
+        shared_models.User(
+            id=membership.user.id,
+            name=membership.user.name,
+            email=membership.user.email,
+            avatar=membership.user.avatar,
         )
+        for membership in memberships_result
+    ]
 
     # Empty snapshots must not open an Organization database connection.
     if not rows:

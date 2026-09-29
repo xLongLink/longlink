@@ -6,7 +6,7 @@ from src.models.roles import OrganizationRoles
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
-    from src.database.models.users import User
+    from src.database.models import users
     from src.database.models.organizations import Organization
 
 from src.database.models.base import AuditTable
@@ -27,7 +27,7 @@ class UserOrganization(AuditTable, table=True):
     )
 
     # Relationships
-    user: "User" = Relationship(
+    user: "users.User" = Relationship(
         sa_relationship_kwargs={"foreign_keys": "UserOrganization.user_id"},
     )
     organization: "Organization" = Relationship(sa_relationship_kwargs={"foreign_keys": "UserOrganization.organization_id"})

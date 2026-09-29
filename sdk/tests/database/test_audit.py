@@ -44,7 +44,7 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
     """Persist audit fields while retaining explicit soft and ordinary hard deletes."""
 
     # Define one isolated mapped table for the real SQLite lifecycle.
-    class AuditLifecycleItem(database_base.AuditTable, table=True):
+    class AuditLifecycleItem(database_base.Audit, table=True):
         """Temporary SDK table used to verify the complete audit lifecycle."""
 
         # Table metadata
@@ -125,7 +125,7 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
     """Keep caller-provided audit fields when an unchanged row is committed."""
 
     # Arrange
-    class ExplicitAuditItem(database_base.AuditTable, table=True):
+    class ExplicitAuditItem(database_base.Audit, table=True):
         """Temporary SDK table used to verify explicit audit values."""
 
         # Table metadata

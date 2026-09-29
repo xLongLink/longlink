@@ -88,7 +88,7 @@ def test_data_resolves_request_services(
     else:
         assert response.status_code == 200
         assert response.json() == {"user_matches": True, "storage_matches": True}
-    assert database.lookups == ([] if identity is None else [(context.Audit, identity)])
+    assert database.lookups == ([] if identity is None else [(context.User, identity)])
     assert session_closed
 
 

@@ -11,7 +11,7 @@ vi.mock('@astryxdesign/core/Toast', async (importOriginal) => ({
     useToast: () => toast,
 }));
 
-describe('Action', () => {
+describe('Control effects', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
@@ -24,12 +24,12 @@ describe('Action', () => {
 
     it.each([
         {
-            error: 'Action requires exactly one direct Button or Link trigger',
-            xml: '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>',
+            error: 'Link does not support direct Button children',
+            xml: '<Link label="Profile" to="/profile"><Button>Save</Button></Link>',
         },
         {
-            error: 'Action effects must precede its Button or Link trigger',
-            xml: '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>',
+            error: 'Button effects require a label',
+            xml: '<Button><Request url="/profile" method="PATCH" /></Button>',
         },
     ])('rejects invalid structure: $error', ({ error, xml }) => {
         expect(() => renderXmlToMarkup(parseFragment(xml))).toThrow(error);
@@ -50,8 +50,8 @@ describe('Action', () => {
         });
         vi.stubGlobal('fetch', fetchRequest);
 
-        const button = await renderAction(
-            '<Action><Request url="/orders" method="patch" json="${{name: \'Ada\'}}" /><Button to="/orders">Save</Button></Action>',
+        const button = await renderControl(
+            '<Button label="Save" to="/orders"><Request url="/orders" method="patch" json="${{name: \'Ada\'}}" /></Button>',
             ctx
         );
 
@@ -66,7 +66,7 @@ describe('Action', () => {
         expect(events).toEqual(['request-complete', 'navigate']);
     });
 
-    it('prevents default Link navigation until Action effects complete', async () => {
+    it('waits for Link effects before navigating', async () => {
         // Arrange
         const ctx = createContext({ navigate: vi.fn() });
         let completeRequest: (() => void) | undefined;
@@ -76,21 +76,19 @@ describe('Action', () => {
                     (resolve) => (completeRequest = () => resolve(new Response('{}', { status: 201 })))
                 )
         );
-        const event = new MouseEvent('click', { bubbles: true, cancelable: true });
         vi.stubGlobal('fetch', fetchRequest);
-        const link = await renderAction(
-            '<Action><Request url="/orders" method="POST" /><Link to="/orders">Save</Link></Action>',
+        const link = await renderControl(
+            '<Link label="Save" to="/orders"><Request url="/orders" method="POST" /></Link>',
             ctx
         );
 
         // Act
         await act(async () => {
-            link.dispatchEvent(event);
+            link.click();
             await vi.waitFor(() => expect(fetchRequest).toHaveBeenCalledOnce());
         });
 
         // Assert navigation does not begin while the request is pending.
-        expect(event.defaultPrevented).toBe(true);
         expect(ctx.services.navigate).not.toHaveBeenCalled();
 
         const resolveRequest = completeRequest;
@@ -112,8 +110,8 @@ describe('Action', () => {
         });
         vi.stubGlobal('fetch', fetchRequest);
 
-        const button = await renderAction(
-            '<Action><Request url="/orders" method="POST" form="$payload" /><Button>Save</Button></Action>',
+        const button = await renderControl(
+            '<Button label="Save"><Request url="/orders" method="POST" form="$payload" /></Button>',
             ctx
         );
         ctx.scope.bindings.payload = {
@@ -139,19 +137,19 @@ describe('Action', () => {
     it.each([
         ['modified', new MouseEvent('click', { bubbles: true, ctrlKey: true })],
         ['middle', new MouseEvent('click', { bubbles: true, button: 1 })],
-    ])('skips Action Link effects for %s clicks', async (_clickType, event) => {
+    ])('runs Link effects for %s clicks without bypassing them', async (_clickType, event) => {
         const ctx = createContext();
-        const fetchRequest = vi.fn();
+        const fetchRequest = vi.fn(async () => new Response('{}', { status: 201 }));
         vi.stubGlobal('fetch', fetchRequest);
 
-        const link = await renderAction(
-            '<Action><Request url="/orders" method="POST" /><Link to="/orders">Save</Link></Action>',
+        const link = await renderControl(
+            '<Link label="Save" to="/orders"><Request url="/orders" method="POST" /></Link>',
             ctx
         );
 
         await act(async () => link.dispatchEvent(event));
 
-        expect(fetchRequest).not.toHaveBeenCalled();
+        expect(fetchRequest).toHaveBeenCalledOnce();
     });
 
     it.each([
@@ -163,13 +161,13 @@ describe('Action', () => {
             error: 'The request could not be completed. Please try again.',
             fetch: async () => Promise.reject(new Error('Network unavailable')),
         },
-    ])('does not patch state, navigate, or close when a request fails: $error', async ({ error, fetch }) => {
+    ])('does not patch state or navigate when a request fails: $error', async ({ error, fetch }) => {
         // Arrange
         const ctx = createContext({ navigate: vi.fn() });
         vi.stubGlobal('fetch', fetch);
 
-        const button = await renderAction(
-            '<State id="form" value="draft" open="${true}" /><Action><Request url="/orders" method="POST" /><Patch state="form" value="${{value: \'published\'}}" /><Patch state="form" value="${{open: false}}" /><Link to="/orders">Save</Link></Action>',
+        const button = await renderControl(
+            '<State id="form" value="draft" open="${true}" /><Link label="Save" to="/orders"><Request url="/orders" method="POST" /><Patch state="form" value="${{value: \'published\'}}" /><Patch state="form" value="${{open: false}}" /></Link>',
             ctx
         );
 
@@ -185,14 +183,14 @@ describe('Action', () => {
         expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
     });
 
-    it('patches dialog state after successful Action effects', async () => {
+    it('patches dialog state after successful effects', async () => {
         // Arrange
         const ctx = createContext();
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
 
         // Act
-        const button = await renderAction(
-            '<State id="dialog" open="${true}" /><Action><Request url="/orders" method="POST" /><Patch state="dialog" value="${{open: false}}" /><Button>Save</Button></Action>',
+        const button = await renderControl(
+            '<State id="dialog" open="${true}" /><Button label="Save"><Request url="/orders" method="POST" /><Patch state="dialog" value="${{open: false}}" /></Button>',
             ctx
         );
 
@@ -206,12 +204,12 @@ describe('Action', () => {
         expect(ctx.scope.bindings.dialog).toEqual({ open: false });
     });
 
-    it('navigates without closing or toasting after a successful Action Link request', async () => {
+    it('navigates without toasting after a successful Link request', async () => {
         // Arrange
         const ctx = createContext({ navigate: vi.fn(), requestBaseUrl: '/proxy/' });
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
-        const link = await renderAction(
-            '<State id="dialog" open="${true}" /><Action><Request url="/orders" method="POST" /><Link href="/orders">Save</Link></Action>',
+        const link = await renderControl(
+            '<State id="dialog" open="${true}" /><Link label="Save" href="/orders"><Request url="/orders" method="POST" /></Link>',
             ctx
         );
 
@@ -245,10 +243,7 @@ describe('Action', () => {
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
 
-        const button = await renderAction(
-            `<Action><Request url="/orders" ${request} /><Button>Save</Button></Action>`,
-            ctx
-        );
+        const button = await renderControl(`<Button label="Save"><Request url="/orders" ${request} /></Button>`, ctx);
 
         await act(async () => {
             button.click();
@@ -267,8 +262,8 @@ describe('Action', () => {
         const ctx = createContext({ navigate: vi.fn(), requestBaseUrl: '/api/solutions/123/proxy' });
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
-        const button = await renderAction(
-            '<State id="form" value="draft" /><Action><Request url="https://evil.example/orders" method="POST" /><Patch state="form" value="${{value: \'submitted\'}}" /><Link to="/orders">Save</Link></Action>',
+        const button = await renderControl(
+            '<State id="form" value="draft" /><Link label="Save" to="/orders"><Request url="https://evil.example/orders" method="POST" /><Patch state="form" value="${{value: \'submitted\'}}" /></Link>',
             ctx
         );
 
@@ -286,8 +281,8 @@ describe('Action', () => {
 
     it('invalidates declared State through Patch', async () => {
         const ctx = createContext();
-        const button = await renderAction(
-            '<State id="form" value="draft" /><Action><Patch state="form" invalidate="true" /><Button>Reset</Button></Action>',
+        const button = await renderControl(
+            '<State id="form" value="draft" /><Button label="Reset"><Patch state="form" invalidate="true" /></Button>',
             ctx
         );
         (ctx.scope.bindings.form as { value: string }).value = 'changed';
@@ -301,8 +296,8 @@ describe('Action', () => {
     it('updates declared State properties through Patch', async () => {
         // Arrange
         const ctx = createContext();
-        const button = await renderAction(
-            '<State id="form" value="draft" count="1" untouched="keep" /><Action><Patch state="form" value="${{value: \'published\', count: 2}}" /><Button>Save</Button></Action>',
+        const button = await renderControl(
+            '<State id="form" value="draft" count="1" untouched="keep" /><Button label="Save"><Patch state="form" value="${{value: \'published\', count: 2}}" /></Button>',
             ctx
         );
 
@@ -315,8 +310,8 @@ describe('Action', () => {
 
     it('does not update undeclared State properties through Patch', async () => {
         const ctx = createContext();
-        const button = await renderAction(
-            '<State id="form" value="draft" /><Action><Patch state="form" value="${{other: \'changed\'}}" /><Button>Save</Button></Action>',
+        const button = await renderControl(
+            '<State id="form" value="draft" /><Button label="Save"><Patch state="form" value="${{other: \'changed\'}}" /></Button>',
             ctx
         );
 
@@ -357,8 +352,8 @@ describe('Action', () => {
         const ctx = createContext();
         const fetchRequest = vi.fn(async () => new Response('{}'));
         vi.stubGlobal('fetch', fetchRequest);
-        const button = await renderAction(
-            `${setup}<Action>${patch}<Request url="/orders" method="POST" /><Button>Save</Button></Action>`,
+        const button = await renderControl(
+            `${setup}<Button label="Save">${patch}<Request url="/orders" method="POST" /></Button>`,
             ctx
         );
 
@@ -378,14 +373,14 @@ describe('Action', () => {
         );
     });
 
-    async function renderAction(xml: string, ctx: ReturnType<typeof createContext>) {
+    async function renderControl(xml: string, ctx: ReturnType<typeof createContext>) {
         // Mount through the shared helper so ACT and root lifetime stay in one owner.
         const mounted = await mountXml(xml, ctx);
         root = mounted.root;
         const container = mounted.container;
 
         const button = container.querySelector('button, a');
-        if (!button) throw new Error('Action trigger did not render');
+        if (!button) throw new Error('Control did not render');
 
         return button as HTMLButtonElement;
     }

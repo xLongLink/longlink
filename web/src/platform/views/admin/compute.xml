@@ -29,14 +29,13 @@
                     Manage Kubernetes connections and Kourier gateways.
                 </Text>
             </Stack>
-            <Action>
+            <Button label="Register Compute">
                 <Patch
                     state="registration"
                     value="${{ name: '', kubeconfig: '', gateway_url: '', storage_endpoint: '' }}"
                 />
                 <Patch state="registrationDialog" value="${{ open: true }}" />
-                <Button>Register Compute</Button>
-            </Action>
+            </Button>
         </Stack>
         <Table data="$computes.items" idKey="id" hasHover="true">
             <TableColumn field="name" header="Compute">
@@ -56,18 +55,14 @@
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
-            <Action>
+            <Button label="Previous" disabled="${pages.value === 1}">
                 <Patch state="pages" value="${{ value: pages.value - 1 }}" />
                 <Patch state="computes" invalidate="true" />
-                <Button disabled="${pages.value === 1}">Previous</Button>
-            </Action>
-            <Action>
+            </Button>
+            <Button label="Next" disabled="${computes.total &lt;= pages.value * 25}">
                 <Patch state="pages" value="${{ value: pages.value + 1 }}" />
                 <Patch state="computes" invalidate="true" />
-                <Button disabled="${computes.total &lt;= pages.value * 25}">
-                    Next
-                </Button>
-            </Action>
+            </Button>
         </Stack>
     </Stack>
 
@@ -103,14 +98,13 @@
                 />
             </Stack>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch
                         state="registrationDialog"
                         value="${{ open: false }}"
                     />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Register" variant="primary">
                     <Request
                         url="/api/v1/computes"
                         method="POST"
@@ -118,8 +112,7 @@
                     />
                     <Patch state="computes" invalidate="true" />
                     <Patch state="registrationDialog" value="${{ open: false }}" />
-                    <Button variant="primary">Register</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>
@@ -142,7 +135,7 @@
                 $metadata.item.storage_endpoint
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Delete" variant="destructive">
                     <Patch
                         state="metadata"
                         value="${{ item: metadata.item, open: false }}"
@@ -151,8 +144,7 @@
                         state="deletion"
                         value="${{ item: metadata.item, open: true }}"
                     />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>
@@ -163,22 +155,20 @@
                 Platform? Its Kubernetes resources will remain unchanged.
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch
                         state="deletion"
                         value="${{ item: deletion.item, open: false }}"
                     />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Delete" variant="destructive">
                     <Request
                         url="/api/v1/computes/${deletion.item.id}"
                         method="DELETE"
                     />
                     <Patch state="computes" invalidate="true" />
                     <Patch state="deletion" value="${{ open: false }}" />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>

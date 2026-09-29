@@ -13,7 +13,7 @@
             </Stack>
             <Dialog title="Attachments" triggerLabel="Upload attachment" isOpen="$uploadDialog.open" purpose="form">
                 <FileInput label="Attachment" value="$attachment.file" />
-                <Action>
+                <Button label="Upload attachment" variant="primary">
                     <Request
                         url="/api/items/${params.item}/attachments"
                         method="POST"
@@ -21,8 +21,7 @@
                     />
                     <Patch state="attachments" invalidate="true" />
                     <Patch state="uploadDialog" value="${{ open: false }}" />
-                    <Button variant="primary">Upload attachment</Button>
-                </Action>
+                </Button>
             </Dialog>
         </Stack>
 
