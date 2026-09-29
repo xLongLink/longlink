@@ -36,3 +36,7 @@ build/
 .coverage
 coverage/
 htmlcov/
+
+# Local databases
+*.db
+*.db-*

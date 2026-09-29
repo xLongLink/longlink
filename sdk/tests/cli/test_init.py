@@ -61,6 +61,7 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
         assert "[tool.longlink]" in pyproject
         assert 'environments = "src.envs:Env"' in pyproject
         assert not (target / "uv.lock").exists()
+        assert "*.db\n" in (target / ".gitignore").read_text(encoding="utf-8")
 
 
 def test_init_refuses_conflicting_folder(tmp_path: Path) -> None:
