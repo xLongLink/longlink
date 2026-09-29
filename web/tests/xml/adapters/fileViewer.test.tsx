@@ -59,10 +59,12 @@ describe('FileViewer', () => {
         expect(frame?.getAttribute('src')).toBe('blob:preview');
         expect(frame?.hasAttribute('sandbox')).toBe(false);
         expect(frame?.getAttribute('title')).toBe('Contract');
+        expect(URL.revokeObjectURL).not.toHaveBeenCalled();
 
         await act(async () => root?.unmount());
         root = undefined;
         expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview');
+        expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
     });
 
     it('defers the download until the preview becomes visible', async () => {

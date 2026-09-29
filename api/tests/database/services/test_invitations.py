@@ -6,7 +6,8 @@ from sqlalchemy import Select
 from src.errors import ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
-from src.database.services import invitations
+from src.database.services import invitations, organizations
+from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -24,7 +25,9 @@ async def test_create_stores_canonical_invitation_email(
 
     # Act
     async with session_scope() as session:
-        await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
+        await organizations.create_invitation(
+            session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.write), owner.id
+        )
         await session.commit()
 
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
@@ -45,7 +48,9 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     # Act and assert
     async with session_scope() as session:
         with pytest.raises(ConflictError, match=r"^User is already a member$"):
-            await invitations.create(session, organization.id, owner.email, OrganizationRoles.write)
+            await organizations.create_invitation(
+                session, organization.id, OrganizationInvitationCreate(email=owner.email, role=OrganizationRoles.write), owner.id
+            )
 
 
 async def test_create_replaces_existing_invitation(users: tuple[User, User, User]) -> None:
@@ -55,7 +60,9 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
     owner = users[0]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
+        await organizations.create_invitation(
+            session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.write), owner.id
+        )
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
@@ -65,7 +72,9 @@ async def test_create_replaces_existing_invitation(users: tuple[User, User, User
         await session.commit()
 
         # Act
-        await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.admin)
+        await organizations.create_invitation(
+            session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.admin), owner.id
+        )
         await session.commit()
 
     # Read committed replacement values independently of the original identity map.
@@ -110,7 +119,12 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
             return result
 
         monkeypatch.setattr(session, "scalar", suppress_first_invitation)
-        await invitations.create(session, organization.id, concurrent_invitation.email, OrganizationRoles.admin)
+        await organizations.create_invitation(
+            session,
+            organization.id,
+            OrganizationInvitationCreate(email=concurrent_invitation.email, role=OrganizationRoles.admin),
+            users[0].id,
+        )
         await session.commit()
 
     # Read the committed grant independently of the recovering session's identity map.
@@ -199,11 +213,8 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
-        original_invitation = await session.scalar(
-            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id)
-        )
-        assert original_invitation is not None
+        original_invitation = OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write)
+        session.add(original_invitation)
         invitation_id = original_invitation.id
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None

@@ -118,16 +118,6 @@ class Storage:
         # Organization boundaries are direct deterministic buckets, not Kubernetes claim resources.
         name = self.bucket_name(organization)
         await self._storage.create_bucket(name)
-        async with self._storage.client() as client:
-            await client.put_public_access_block(
-                Bucket=name,
-                PublicAccessBlockConfiguration={
-                    "BlockPublicAcls": True,
-                    "IgnorePublicAcls": True,
-                    "BlockPublicPolicy": True,
-                    "RestrictPublicBuckets": True,
-                },
-            )
         admin = await self._admin()
         await admin.quota(name, quota_bytes)
 

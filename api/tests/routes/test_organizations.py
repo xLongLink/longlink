@@ -1,5 +1,4 @@
 import pytest
-from kr8s import ServerError, NotFoundError
 from uuid import UUID, uuid4
 from httpx2 import AsyncClient
 from datetime import UTC, datetime
@@ -11,7 +10,7 @@ from src.models.roles import OrganizationRoles
 from botocore.exceptions import ClientError, BotoCoreError
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import invitations, organizations
+from src.database.services import organizations
 from src.models.operations import OperationKind
 from src.models.organizations import DatabaseState
 from src.database.models.users import User
@@ -417,7 +416,6 @@ async def test_other_organization_user_cannot_delete_solution(
     ("usage", "expected_status", "expected_usage"),
     [
         pytest.param(4096, 200, 4096, id="available"),
-        pytest.param(NotFoundError("Organization bucket is not provisioned"), 200, None, id="not-provisioned"),
         pytest.param(
             ClientError({"Error": {"Code": "InternalError"}, "ResponseMetadata": {"HTTPStatusCode": 500}}, "ListObjectsV2"),
             503,
@@ -425,7 +423,6 @@ async def test_other_organization_user_cannot_delete_solution(
             id="backend-unavailable",
         ),
         pytest.param(TimeoutError(), 503, None, id="timeout"),
-        pytest.param(ServerError("storage backend failed"), 503, None, id="server-error"),
         pytest.param(BotoCoreError(), 503, None, id="botocore-error"),
     ],
 )
@@ -466,7 +463,7 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     # Assert
     assert response.status_code == expected_status
     if expected_status == 200:
-        expected_payload = None if expected_usage is None else {"space_used": expected_usage, "quota_bytes": 1073741824}
+        expected_payload = {"space_used": expected_usage, "quota_bytes": 1073741824}
     else:
         expected_payload = {"detail": "Storage resources unavailable"}
     assert response.json() == expected_payload
@@ -551,7 +548,7 @@ async def test_get_organization_returns_invitations(
     owner, invitee, regular_member = users
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
         session.add(
             OrganizationInvitation(
                 organization_id=organization.id,
@@ -764,7 +761,7 @@ async def test_organization_owner_revokes_pending_invitation(
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
@@ -789,7 +786,7 @@ async def test_organization_maintainer_cannot_revoke_invitation_above_their_role
     organization = await create_organization(owner)
     async with session_scope() as session:
         session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
-        await invitations.create(session, organization.id, invitee.email, OrganizationRoles.owner)
+        session.add(OrganizationInvitation(organization_id=organization.id, email=invitee.email, role=OrganizationRoles.owner))
         await session.commit()
         invitation = await session.scalar(select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id))
         assert invitation is not None
@@ -815,7 +812,7 @@ async def test_organization_member_cannot_revoke_another_organizations_invitatio
     first_organization = await create_organization(first_owner, name="first")
     second_organization = await create_organization(second_owner, name="second")
     async with session_scope() as session:
-        await invitations.create(session, second_organization.id, invitee.email, OrganizationRoles.write)
+        session.add(OrganizationInvitation(organization_id=second_organization.id, email=invitee.email, role=OrganizationRoles.write))
         await session.commit()
         invitation = await session.scalar(
             select(OrganizationInvitation).where(OrganizationInvitation.organization_id == second_organization.id)

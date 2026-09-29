@@ -1,61 +1,11 @@
-from uuid import UUID
 from datetime import UTC, datetime, timedelta
 from sqlmodel import col
 from sqlalchemy import delete, select
-from src.errors import ConflictError
-from sqlalchemy.exc import IntegrityError
-from src.models.roles import OrganizationRoles
-from longlink.shared.models import Email
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
-
-
-async def create(session: AsyncSession, organization_id: UUID, email: Email, role: OrganizationRoles) -> None:
-    """Create or replace one active email grant for an organization."""
-
-    # Reject emails that already belong to the organization.
-    if (
-        await session.scalar(
-            select(col(User.id))
-            .join(UserOrganization, col(UserOrganization.user_id) == col(User.id))
-            .where(
-                col(UserOrganization.organization_id) == organization_id,
-                col(User.email) == email,
-            )
-        )
-        is not None
-    ):
-        raise ConflictError("User is already a member")
-
-    # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
-    invitation_statement = (
-        select(OrganizationInvitation)
-        .where(
-            col(OrganizationInvitation.organization_id) == organization_id,
-            col(OrganizationInvitation.email) == email,
-        )
-        .with_for_update()
-    )
-    invitation = await session.scalar(invitation_statement)
-
-    # Resolve concurrent re-invites to the one database-enforced active grant.
-    if invitation is None:
-        try:
-            async with session.begin_nested():
-                invitation = OrganizationInvitation(organization_id=organization_id, email=email, role=role)
-                session.add(invitation)
-                await session.flush()
-            return
-        except IntegrityError as exc:
-            invitation = await session.scalar(invitation_statement)
-            if invitation is None:
-                raise ConflictError("Invitation could not be created") from exc
-
-    invitation.role = role
-    invitation.created_at = datetime.now(UTC)
 
 
 async def accept(session: AsyncSession, user: User) -> None:

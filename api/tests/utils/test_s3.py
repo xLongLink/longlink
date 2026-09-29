@@ -39,7 +39,9 @@ class FakeClient:
         self.aborted: list[tuple[str, str]] = []
         self.deleted: list[list[dict[str, str]]] = []
         self.buckets_created: list[str] = []
+        self.public_access_blocks: list[tuple[str, dict[str, bool]]] = []
         self.create_error: ClientError | None = None
+        self.block_error: ClientError | None = None
         self.paginator_error: ClientError | None = None
 
     def get_paginator(self, name: str) -> FakePaginator:
@@ -68,6 +70,14 @@ class FakeClient:
         objects = list(cast("list[dict[str, str]]", Delete["Objects"]))
         self.deleted.append(objects)
         return {}
+
+    async def put_public_access_block(self, Bucket: str, PublicAccessBlockConfiguration: dict[str, bool]) -> None:
+        """Record public-access protection or raise the configured error."""
+
+        # Record configuration attempts even when the service rejects them.
+        self.public_access_blocks.append((Bucket, PublicAccessBlockConfiguration))
+        if self.block_error is not None:
+            raise self.block_error
 
 
 def serve(client: FakeClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -113,6 +123,25 @@ async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.
 
     # Assert
     assert client.buckets_created == ["org-bucket"]
+    configuration = {
+        "BlockPublicAcls": True,
+        "IgnorePublicAcls": True,
+        "BlockPublicPolicy": True,
+        "RestrictPublicBuckets": True,
+    }
+    assert client.public_access_blocks == ([] if should_raise else [("org-bucket", configuration)])
+
+    # Protect newly created buckets too, and never swallow block failures as creation retries.
+    if not should_raise:
+        client.create_error = None
+        await make_s3().create_bucket("org-bucket")
+        assert client.public_access_blocks == [("org-bucket", configuration)] * 2
+        client.create_error = client_error("BucketAlreadyExists")
+        client.block_error = client_error("BucketAlreadyOwnedByYou")
+        with pytest.raises(ClientError) as error:
+            await make_s3().create_bucket("org-bucket")
+        assert error.value is client.block_error
+        assert client.public_access_blocks == [("org-bucket", configuration)] * 3
 
 
 @pytest.mark.parametrize(

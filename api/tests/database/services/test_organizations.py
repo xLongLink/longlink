@@ -12,12 +12,13 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
 from src.database.session import session_scope
 from src.models.solutions import SolutionCreate
-from src.database.services import solutions, invitations, organizations
+from src.database.services import solutions, organizations
 from src.models.pagination import Pagination
-from src.models.organizations import DatabaseState
+from src.models.organizations import DatabaseState, OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.solutions import Solution
 from src.database.models.association import UserOrganization
+from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
@@ -326,8 +327,7 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
         await organizations.create_invitation(
             session,
             organization.id,
-            "owner-invited@example.com",
-            OrganizationRoles.read,
+            OrganizationInvitationCreate(email="owner-invited@example.com", role=OrganizationRoles.read),
             owner.id,
         )
         await session.commit()
@@ -356,8 +356,7 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
             await organizations.create_invitation(
                 create_invitation_session,
                 organization.id,
-                "blocked-invited@example.com",
-                OrganizationRoles.read,
+                OrganizationInvitationCreate(email="blocked-invited@example.com", role=OrganizationRoles.read),
                 administrator.id,
             )
         with pytest.raises(ForbiddenError, match="Permission required"):
@@ -467,7 +466,7 @@ async def test_soft_delete_tombstones_solutions_and_retains_memberships(users: t
             LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:test")),
             user_id=owner.id,
         )
-        await invitations.create(session, organization.id, "invited@example.com", OrganizationRoles.write)
+        session.add(OrganizationInvitation(organization_id=organization.id, email="invited@example.com", role=OrganizationRoles.write))
         session.add(
             UserOrganization(
                 user_id=member.id,

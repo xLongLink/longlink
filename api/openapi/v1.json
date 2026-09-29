@@ -1906,15 +1906,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/OrganizationStorageUsageResponse"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get"
+                  "$ref": "#/components/schemas/OrganizationStorageUsageResponse"
                 }
               }
             }
