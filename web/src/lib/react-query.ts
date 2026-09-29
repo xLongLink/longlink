@@ -73,24 +73,27 @@ export function createQueryRuntime(notify: (message: string) => void, platformSe
         },
     });
 
-    // A focus refresh may discover an account switch performed in another tab.
-    let userId: string | null = null;
-    queryCache.subscribe((event) => {
-        if (
-            !platformSession ||
-            event.type !== 'updated' ||
-            event.action.type !== 'success' ||
-            event.query.queryKey[0] !== 'api' ||
-            event.query.queryKey[1] !== '/api/v1/me'
-        )
-            return;
-        const user: unknown = event.query.state.data;
-        const nextUserId =
-            user !== null && typeof user === 'object' && 'id' in user && typeof user.id === 'string' ? user.id : null;
-        const changedAccount = userId !== null && nextUserId !== null && userId !== nextUserId;
-        userId = nextUserId;
-        if (changedAccount) void clearSessionQueries(client, true).catch(notifyError);
-    });
+    // Only Platform sessions monitor account switches discovered by a focus refresh.
+    if (platformSession) {
+        let userId: string | null = null;
+        queryCache.subscribe((event) => {
+            if (
+                event.type !== 'updated' ||
+                event.action.type !== 'success' ||
+                event.query.queryKey[0] !== 'api' ||
+                event.query.queryKey[1] !== '/api/v1/me'
+            )
+                return;
+            const user: unknown = event.query.state.data;
+            const nextUserId =
+                user !== null && typeof user === 'object' && 'id' in user && typeof user.id === 'string'
+                    ? user.id
+                    : null;
+            const changedAccount = userId !== null && nextUserId !== null && userId !== nextUserId;
+            userId = nextUserId;
+            if (changedAccount) void clearSessionQueries(client, true).catch(notifyError);
+        });
+    }
 
     return { client, reportError };
 }

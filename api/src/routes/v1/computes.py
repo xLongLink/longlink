@@ -18,26 +18,6 @@ from src.database.models.computes import ComputeRegistry
 router = APIRouter()
 
 
-async def _verify_compute(cluster: Kubernetes, registry: ComputeRegistry) -> None:
-    """Verify gateway and storage reachability."""
-
-    # Report failed checks as unavailable infrastructure; the administrator can retry registration.
-    try:
-        await gateway.verify(
-            cluster,
-            registry.gateway_url,
-            registry.gateway_certificate,
-            timeout_seconds=7,
-        )
-        storage = Storage(registry, cluster)
-        await storage.verify()
-        await storage.verify_admin()
-    except Exception as exc:
-        # Any verification failure means unreachable infrastructure.
-        logger.warning("Compute infrastructure unavailable: %s", exc)
-        raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
-
-
 @router.post("/computes", response_model=ComputeRegistryResponse, status_code=201, dependencies=[Depends(authadmin)])
 async def create_compute_registry(payload: ComputeRegistryCreate, session: AsyncSession = Depends(get_session)) -> ComputeRegistry:
     """Register a compute target after verifying its infrastructure inline."""
@@ -69,7 +49,24 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
                     storage_secret_key=credentials.secret_key,
                     cluster_uid=cluster_uid,
                 )
-                await _verify_compute(cluster, candidate)
+
+                # Report failed checks as unavailable infrastructure; the administrator can retry registration.
+                try:
+                    await gateway.verify(
+                        cluster,
+                        candidate.gateway_url,
+                        candidate.gateway_certificate,
+                        timeout_seconds=7,
+                    )
+                    storage = Storage(candidate, cluster)
+                    await storage.verify()
+                    await storage.verify_admin()
+                except Exception as exc:
+                    # Any verification failure means unreachable infrastructure.
+                    logger.warning("Compute infrastructure unavailable: %s", exc)
+                    raise UnavailableError(
+                        "Compute infrastructure is unavailable; verify endpoints, credentials, and certificates"
+                    ) from exc
     except TimeoutError as exc:
         logger.warning("Compute infrastructure unavailable: registration timed out")
         raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
