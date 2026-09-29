@@ -99,7 +99,7 @@ class Databases:
             api=api,
         )
         await cluster.patch({"metadata": {"annotations": {"cnpg.io/hibernation": "off"}}})
-        async with asyncio.timeout(10 * 60):
+        async with asyncio.timeout(2 * 60):
             while True:
                 await cluster.refresh()
                 status = cluster.raw.get("status", {})
@@ -132,7 +132,7 @@ class Databases:
                     else:
                         if ready_pods == cluster.spec["instances"]:
                             return
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
 
     async def certificate(self, organization_id: UUID) -> str:
         """Read the CNPG-generated server CA as PEM text, not a filesystem path."""
