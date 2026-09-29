@@ -42,6 +42,9 @@ class Audit(Model):
 def create_engine(env: Envs) -> AsyncEngine:
     """Create the async SQLModel engine for the current environment."""
 
+    # Hide bound values in SQL logging and database exceptions, including runtime credentials.
+    engine_kwargs: dict[str, object] = {"hide_parameters": True}
+
     # Testing uses an isolated in-memory SQLite database.
     if env.ENV == "testing":
         dburl = make_url("sqlite+aiosqlite:///:memory:")
@@ -62,11 +65,7 @@ def create_engine(env: Envs) -> AsyncEngine:
             database=env.DATABASE_NAME,
         )
 
-    # Hide bound values in SQL logging and database exceptions, including runtime credentials.
-    engine_kwargs: dict[str, object] = {"hide_parameters": True}
-
-    # Configure connection health checks and reuse only for the production database.
-    if env.ENV == "production":
+        # Configure connection health checks and reuse only for the production database.
         engine_kwargs["pool_pre_ping"] = True
         engine_kwargs["pool_recycle"] = 20
         engine_kwargs["pool_use_lifo"] = True

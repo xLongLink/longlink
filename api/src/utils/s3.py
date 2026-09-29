@@ -1,7 +1,7 @@
 import aioboto3
 from typing import TYPE_CHECKING, cast
 from itertools import chain, batched
-from contextlib import ExitStack, asynccontextmanager
+from contextlib import asynccontextmanager
 from dataclasses import field, dataclass
 from collections.abc import Iterable, AsyncIterator
 from longlink.storage import tls
@@ -42,8 +42,7 @@ class S3:
         """Keep the CA file alive for the entire S3 transport lifetime."""
 
         # Private CA verification follows the same lifetime as the client session.
-        with ExitStack() as stack:
-            certificate = stack.enter_context(tls.verified_location(self._certificate))
+        with tls.verified_location(self._certificate) as certificate:
             verify: bool | str = certificate if certificate is not None else True
 
             # Bound path-style requests through the operator-configured endpoint.

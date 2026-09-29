@@ -79,30 +79,28 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
             return;
         }
 
-        let mounted = true;
         const controller = new AbortController();
 
         void setupContext(setup.nodes, ctx, {
-            isActive: () => mounted,
+            isActive: () => !controller.signal.aborted,
             onError: (error) => reportSetupError(error instanceof Error ? error : new Error('XML refresh failed')),
             signal: controller.signal,
         })
             .then(() => {
                 // Do not publish setup completion after cleanup.
-                if (!mounted) return;
+                if (controller.signal.aborted) return;
 
                 setInitializedAst(ast);
             })
             .catch((error: unknown) => {
-                // Report setup failures only while mounted.
-                if (!mounted) return;
+                // Report setup failures only while this effect remains active.
+                if (controller.signal.aborted) return;
 
                 setSetupFailure({ ast, error });
                 reportSetupError(error);
             });
 
         return () => {
-            mounted = false;
             controller.abort();
         };
     }, [ast, ctx, setup]);

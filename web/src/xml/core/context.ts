@@ -140,8 +140,7 @@ export async function setupContext(
         // Ignore invalidations after the rendering scope releases ownership.
         if (options.isActive && !options.isActive()) return false;
 
-        // Keep stale data visible while the refresh runs; restore it if the refresh fails.
-        const previous = scope.bindings[id];
+        // Setups publish only successful results, so failed refreshes leave current data intact.
         const setup = Object.hasOwn(services.setups, id) ? services.setups[id] : undefined;
         if (!setup) return false;
 
@@ -151,7 +150,6 @@ export async function setupContext(
         } catch (error: unknown) {
             if (options.isActive && !options.isActive()) return false;
 
-            scope.bindings[id] = previous;
             if (options.onError) {
                 options.onError(error);
                 return false;
