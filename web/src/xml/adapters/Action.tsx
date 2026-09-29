@@ -11,7 +11,7 @@ import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { applyDeclaredStatePatch, isValtioProxy } from '../core/state';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
 import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
-import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
+import { readXmlProp, resolveXmlProps, resolveXmlValue, xmlNonblankStringSchema } from '../core/props';
 
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
 const VALIDATE_ALLOWED_PROPS = new Set(['rules', 'value']);
@@ -159,8 +159,8 @@ async function executeAction(
 
 /** Validates and normalizes a declarative object before the following request runs. */
 function validateActionValue(props: ASTProps, ctx: Scope): void {
-    const value = evaluate(readXmlProp(props, 'value') ?? { kind: 'text', value: '' }, ctx);
-    const rules = evaluate(readXmlProp(props, 'rules') ?? { kind: 'text', value: '' }, ctx);
+    const value = resolveXmlValue(props, 'value', ctx);
+    const rules = resolveXmlValue(props, 'rules', ctx);
 
     if (
         value == null ||

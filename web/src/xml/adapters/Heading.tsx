@@ -5,11 +5,17 @@ import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
 
+const headingLevelSchema = z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+]);
 const headingPropsSchema = z.object({
-    accessibilityLevel: z
-        .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)])
-        .optional(),
-    level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6)]),
+    accessibilityLevel: headingLevelSchema.optional(),
+    level: headingLevelSchema,
 });
 
 export function Heading({ props, nodes }: Props) {

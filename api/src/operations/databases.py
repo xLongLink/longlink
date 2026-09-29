@@ -220,29 +220,28 @@ async def ready(organization_id: UUID) -> bool:
                         await lease.check()
                         await database.prepare_organization_database(organization_id)
 
-                    while True:
-                        # Verify ownership before taking the snapshot; the publish gate rechecks shared state.
-                        async with session_scope() as session:
-                            organization = await lock(session, organization_id)
-                            if organization is None or organization.deleted_at is not None or not await lease.owned(session):
-                                raise RuntimeError("Organization transition lease was lost")
-                            await session.commit()
-                        await lease.check()
-                        async with session_scope() as session:
-                            await organizations.project_users(session, organization_id, database)
+                    # Verify ownership before taking the snapshot; the publish gate rechecks shared state.
+                    async with session_scope() as session:
+                        organization = await lock(session, organization_id)
+                        if organization is None or organization.deleted_at is not None or not await lease.owned(session):
+                            raise RuntimeError("Organization transition lease was lost")
+                        await session.commit()
+                    await lease.check()
+                    async with session_scope() as session:
+                        await organizations.project_users(session, organization_id, database)
 
-                        # Empty snapshots skip SQL; verify the tenant connection immediately before publication.
-                        async with asyncio.timeout(10), database.connection(organization_id.hex) as sql:
-                            await sql.execute(text("SELECT 1"))
+                    # Empty snapshots skip SQL; verify the tenant connection immediately before publication.
+                    async with asyncio.timeout(10), database.connection(organization_id.hex) as sql:
+                        await sql.execute(text("SELECT 1"))
 
-                        # Publish the provisioned database and its shared projection.
-                        async with session_scope() as session:
-                            organization = await lock(session, organization_id)
-                            if organization is None or organization.deleted_at is not None or not await lease.owned(session):
-                                raise RuntimeError("Organization transition lease was lost")
-                            organization.database_state = DatabaseState.available
-                            await session.commit()
-                            return True
+                    # Publish the provisioned database and its shared projection.
+                    async with session_scope() as session:
+                        organization = await lock(session, organization_id)
+                        if organization is None or organization.deleted_at is not None or not await lease.owned(session):
+                            raise RuntimeError("Organization transition lease was lost")
+                        organization.database_state = DatabaseState.available
+                        await session.commit()
+                        return True
             except BaseException:
                 # An interrupted snapshot is retried through the failed state.
                 async with session_scope() as session:
