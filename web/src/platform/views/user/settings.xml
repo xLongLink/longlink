@@ -33,7 +33,7 @@
                             $params.userEmail
                         </Text>
                         <Stack direction="horizontal" justify="end">
-                            <Action>
+                            <Button label="Save account" variant="primary" disabled="${!trim(profile.name)}">
                                 <Validate
                                     value="$profile"
                                     rules="${{ name: { type: 'string', trim: true, minLength: 1 } }}"
@@ -43,13 +43,7 @@
                                     method="PATCH"
                                     json="${{ name: profile.name }}"
                                 />
-                                <Button
-                                    variant="primary"
-                                    disabled="${!trim(profile.name)}"
-                                >
-                                    Save account
-                                </Button>
-                            </Action>
+                            </Button>
                         </Stack>
                     </Stack>
                 </MenuItem>
@@ -75,7 +69,7 @@
                                         placeholder="Example LongLink"
                                         isRequired="true"
                                     />
-                                    <Action>
+                                    <Button label="Create organization" variant="primary" disabled="${!trim(organizationDraft.name)}">
                                         <Request
                                             url="/api/v1/organizations"
                                             method="POST"
@@ -86,13 +80,7 @@
                                             invalidate="true"
                                         />
                                         <Patch state="createDialog" value="${{ open: false }}" />
-                                        <Button
-                                            variant="primary"
-                                            disabled="${!trim(organizationDraft.name)}"
-                                        >
-                                            Create organization
-                                        </Button>
-                                    </Action>
+                                    </Button>
                                 </Stack>
                             </Dialog>
                         </Stack>
@@ -139,15 +127,12 @@
                                 header="Actions"
                                 align="end"
                             >
-                                <Action if="${row.role === 'owner'}">
+                                <Button label="Delete" if="${row.role === 'owner'}" variant="destructive">
                                     <Patch
                                         state="deletion"
                                         value="${{ item: row, open: true }}"
                                     />
-                                    <Button variant="destructive">
-                                        Delete
-                                    </Button>
-                                </Action>
+                                </Button>
                             </TableColumn>
                         </Table>
                     </Stack>
@@ -162,22 +147,20 @@
                 Delete $deletion.item.organization.name from your account?
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch
                         state="deletion"
                         value="${{ item: null, open: false }}"
                     />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Delete" variant="destructive">
                     <Request
                         url="/api/v1/organizations/${deletion.item.organization.id}"
                         method="DELETE"
                     />
                     <Patch state="memberships" invalidate="true" />
                     <Patch state="deletion" value="${{ open: false }}" />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>

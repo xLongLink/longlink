@@ -78,7 +78,7 @@ const article = {
     toc: [
         { id: 'views', label: 'Views', level: 1 },
         { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
-        { id: 'action', label: 'Action', level: 2 },
+        { id: 'action', label: 'Actions', level: 2 },
         { id: 'content', label: 'Content', level: 2 },
         { id: 'form', label: 'Form', level: 2 },
         { id: 'layout', label: 'Layout', level: 2 },
@@ -131,8 +131,8 @@ export default function DocsArticleRoute() {
                         <SummaryCard name="Query">
                             <Code>{'<Query />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Action">
-                            <Code>{'<Action />'}</Code>
+                        <SummaryCard name="Button effects" path="/docs/sdk/views/button">
+                            <Code>{'<Button label="Save"><Request ... /></Button>'}</Code>
                         </SummaryCard>
                         <SummaryCard name="For">
                             <Code>{'<For />'}</Code>
@@ -141,7 +141,7 @@ export default function DocsArticleRoute() {
                 </Stack>
                 <Stack gap={3}>
                     <Heading id="action" level={2}>
-                        Action
+                        Actions
                     </Heading>
                     <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
                         <SummaryCard name="Button">

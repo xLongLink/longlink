@@ -8,7 +8,6 @@ import { Badge } from '../adapters/Badge';
 import { Stack } from '../adapters/Stack';
 import { Table } from '../adapters/Table';
 import { Tabs } from '../adapters/TabList';
-import { Action } from '../adapters/Action';
 import { Avatar } from '../adapters/Avatar';
 import { Button } from '../adapters/Button';
 import { Dialog } from '../adapters/Dialog';
@@ -37,7 +36,6 @@ import { CheckboxInput } from '../adapters/CheckboxInput';
 
 /** XML tag-to-adapter registry bundled with Solutions. */
 export const sdkXmlComponentRegistry: XmlComponentRegistry = {
-    Action,
     Avatar,
     Badge,
     b: Bold,

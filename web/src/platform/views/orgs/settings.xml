@@ -202,7 +202,7 @@
                                             <Option value="maintain" />
                                             <Option value="admin" />
                                         </Selector>
-                                        <Action>
+                                        <Button label="Invite" variant="primary">
                                             <Validate
                                                 value="$invitation"
                                                 rules="${{ email: { type: 'string', trim: true, minLength: 3 }, role: { type: 'string', trim: true, minLength: 1 } }}"
@@ -217,10 +217,7 @@
                                                 invalidate="true"
                                             />
                                             <Patch state="invitationDialog" value="${{ open: false }}" />
-                                            <Button variant="primary">
-                                                Invite
-                                            </Button>
-                                        </Action>
+                                        </Button>
                                     </Stack>
                                 </Dialog>
                             </Stack>
@@ -240,7 +237,7 @@
                                     header="Actions"
                                     align="end"
                                 >
-                                    <Action>
+                                    <Button label="Revoke" variant="destructive">
                                         <Request
                                             url="/api/v1/organizations/${membership.organization.id}/invitations/${row.id}"
                                             method="DELETE"
@@ -249,10 +246,7 @@
                                             state="details"
                                             invalidate="true"
                                         />
-                                        <Button variant="destructive">
-                                            Revoke
-                                        </Button>
-                                    </Action>
+                                    </Button>
                                 </TableColumn>
                             </Table>
                         </Stack>
@@ -272,10 +266,9 @@
                                     Manage the solutions attached to this organization.
                                 </Text>
                             </Stack>
-                            <Action if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}">
+                            <Button label="New Solution" if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}">
                                 <Patch state="createSolution" value="${{ description: '', envs: {}, image: '', inspecting: false, name: '', open: true, step: 0 }}" />
-                                <Button>New Solution</Button>
-                            </Action>
+                            </Button>
                         </Stack>
                         <Divider />
                         <Table data="$solutions" idKey="id" hasHover="true">
@@ -332,11 +325,10 @@
                 Change ${memberMenu.item.user.name} to ${memberMenu.role}?
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch state="memberMenu" value="${{ open: false }}" />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Confirm" variant="primary">
                     <Request
                         url="/api/v1/organizations/${membership.organization.id}/members/${memberMenu.item.user.id}"
                         method="PATCH"
@@ -344,8 +336,7 @@
                     />
                     <Patch state="details" invalidate="true" />
                     <Patch state="memberMenu" value="${{ open: false }}" />
-                    <Button variant="primary">Confirm</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>
@@ -360,22 +351,19 @@
                         isRequired="true"
                     />
                     <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
-                        <Action>
+                        <Button label="Use sample Image" variant="ghost">
                             <Patch state="createSolution" value="${{ image: 'ghcr.io/xlonglink/sample:v2026.9.22' }}" />
-                            <Button variant="ghost">Use sample Image</Button>
-                        </Action>
+                        </Button>
                         <Stack direction="horizontal" gap="2">
-                            <Action>
+                            <Button label="Cancel" variant="ghost">
                                 <Patch state="createSolution" value="${{ open: false }}" />
-                                <Button variant="ghost">Cancel</Button>
-                            </Action>
-                            <Action>
+                            </Button>
+                            <Button label="Inspect image" variant="primary">
                                 <Validate value="$createSolution" rules="${{ image: { type: 'string', trim: true, minLength: 1 } }}" />
                                 <Patch state="createSolution" value="${{ inspecting: true }}" />
                                 <Patch state="createSolutionMetadata" invalidate="true" />
                                 <Patch state="createSolution" value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}" />
-                                <Button variant="primary">Inspect image</Button>
-                            </Action>
+                            </Button>
                         </Stack>
                     </Stack>
                 </Stack>
@@ -389,20 +377,17 @@
                         placeholder="Dashboard solution"
                     />
                     <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
-                        <Action>
+                        <Button label="Back" variant="ghost">
                             <Patch state="createSolution" value="${{ step: 0 }}" />
-                            <Button variant="ghost">Back</Button>
-                        </Action>
+                        </Button>
                         <Stack direction="horizontal" gap="2">
-                            <Action>
+                            <Button label="Cancel" variant="ghost">
                                 <Patch state="createSolution" value="${{ open: false }}" />
-                                <Button variant="ghost">Cancel</Button>
-                            </Action>
-                            <Action>
+                            </Button>
+                            <Button label="Next" variant="primary">
                                 <Validate value="$createSolution" rules="${{ name: { type: 'string', trim: true, minLength: 1 } }}" />
                                 <Patch state="createSolution" value="${{ step: 2 }}" />
-                                <Button variant="primary">Next</Button>
-                            </Action>
+                            </Button>
                         </Stack>
                     </Stack>
                 </Stack>
@@ -419,16 +404,14 @@
                         />
                     </For>
                     <Stack direction="horizontal" gap="2" justify="between" wrap="wrap">
-                        <Action>
+                        <Button label="Back" variant="ghost">
                             <Patch state="createSolution" value="${{ step: 1 }}" />
-                            <Button variant="ghost">Back</Button>
-                        </Action>
+                        </Button>
                         <Stack direction="horizontal" gap="2">
-                            <Action>
+                            <Button label="Cancel" variant="ghost">
                                 <Patch state="createSolution" value="${{ open: false }}" />
-                                <Button variant="ghost">Cancel</Button>
-                            </Action>
-                            <Action>
+                            </Button>
+                            <Button label="Create" variant="primary" disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}">
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
@@ -436,13 +419,7 @@
                                 />
                                 <Patch state="solutions" invalidate="true" />
                                 <Patch state="createSolution" value="${{ open: false }}" />
-                                <Button
-                                    variant="primary"
-                                    disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}"
-                                >
-                                    Create
-                                </Button>
-                            </Action>
+                            </Button>
                         </Stack>
                     </Stack>
                 </Stack>
@@ -481,11 +458,10 @@
                 </Stack>
             </For>
             <Stack direction="horizontal" gap="2" justify="end" wrap="wrap">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch state="solutionMenu" value="${{ open: false }}" />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Update solution" variant="primary" disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) || !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}">
                     <Request
                         url="/api/v1/solutions/${solutionMenu.item.id}/update"
                         method="POST"
@@ -493,13 +469,7 @@
                     />
                     <Patch state="solutions" invalidate="true" />
                     <Patch state="solutionMenu" value="${{ open: false }}" />
-                    <Button
-                        variant="primary"
-                        disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) || !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}"
-                    >
-                        Update solution
-                    </Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>
@@ -521,22 +491,20 @@
                 Delete solution ${solutionMenu.item.name}?
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch
                         state="solutionMenu"
                         value="${{ deleteOpen: false }}"
                     />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Delete" variant="destructive">
                     <Request
                         url="/api/v1/solutions/${solutionMenu.item.id}"
                         method="DELETE"
                     />
                     <Patch state="solutions" invalidate="true" />
                     <Patch state="solutionMenu" value="${{ deleteOpen: false }}" />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>

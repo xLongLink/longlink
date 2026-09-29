@@ -30,7 +30,7 @@
                         placeholder="Example LongLink"
                         isRequired="true"
                     />
-                    <Action>
+                    <Button label="Create organization" variant="primary" disabled="${!trim(draft.name)}">
                         <Request
                             url="/api/v1/organizations"
                             method="POST"
@@ -38,13 +38,7 @@
                         />
                         <Patch state="memberships" invalidate="true" />
                         <Patch state="createDialog" value="${{ open: false }}" />
-                        <Button
-                            variant="primary"
-                            disabled="${!trim(draft.name)}"
-                        >
-                            Create organization
-                        </Button>
-                    </Action>
+                    </Button>
                 </Stack>
             </Dialog>
         </Stack>

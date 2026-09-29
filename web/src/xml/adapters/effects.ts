@@ -1,16 +1,12 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
-import { createContext } from 'react';
-import { renderNode } from '../core/node';
-import { useApiError } from '@/lib/errors';
 import { ACTION_METHODS } from '../constants';
-import { useXmlRuntime } from '../core/context';
+import { resolveRequestUrl } from '../core/url';
 import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@astryxdesign/core/Toast';
-import { resolveControlUrl, resolveRequestUrl } from '../core/url';
 import { applyDeclaredStatePatch, isValtioProxy } from '../core/state';
 import { isSafePropertyName, resolveValue } from '../expressions/resolve';
-import type { ASTNode, ASTProps, Props, RuntimeServices, Scope } from '../types';
+import type { ASTNode, ASTProps, RuntimeServices, Scope } from '../types';
 import { readXmlProp, resolveXmlProps, xmlNonblankStringSchema } from '../core/props';
 
 const PATCH_ALLOWED_PROPS = new Set(['state', 'value', 'invalidate']);
@@ -29,54 +25,10 @@ const patchPropsSchema = z.object({
     invalidate: z.boolean().optional(),
 });
 
-const navigationPropsSchema = z.object({
-    to: z.string().optional(),
-    href: z.string().optional(),
-});
-
-type ActionPlan = {
-    control: ASTNode;
-    steps: ASTNode[];
-};
-
-export const ActionHandlerContext = createContext<(() => void) | null>(null);
-
-/** Runs ordered effects from any child Button or Link trigger. */
-export function Action({ props, nodes }: Props) {
-    const { scope: ctx, services } = useXmlRuntime();
-    const toast = useToast();
-    const reportError = useApiError();
-    const plan = createActionPlan(props, nodes);
-
-    /** Executes the declared effects and presents unexpected failures. */
-    function handleAction(): void {
-        void executeAction(plan, ctx, services, toast).catch(reportError);
-    }
-
-    return (
-        <ActionHandlerContext.Provider value={handleAction}>
-            {renderNode([plan.control], ctx)}
-        </ActionHandlerContext.Provider>
-    );
-}
-
-/** Validates direct Action children and collects effect nodes in document order. */
-function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
-    // Conditional visibility is already handled by the shared renderer.
-    for (const name of Object.keys(props)) {
-        if (name !== 'if') {
-            throw new Error(`Action does not support ${name}`);
-        }
-    }
-
-    const steps: ASTNode[] = [];
-    let control: ASTNode | undefined;
-
+/** Validates control effect children in document order. */
+export function validateEffects(nodes: ASTNode[], control: 'Button' | 'Link'): void {
     for (const node of nodes) {
         if (node.name === 'Request' || node.name === 'Patch' || node.name === 'Validate') {
-            if (control) {
-                throw new Error('Action effects must precede its Button or Link trigger');
-            }
             if (node.children.length > 0) {
                 throw new Error(`${node.name} cannot have children`);
             }
@@ -92,39 +44,23 @@ function createActionPlan(props: ASTProps, nodes: ASTNode[]): ActionPlan {
                     throw new Error(`${node.name} does not support ${name}`);
                 }
             }
-            steps.push(node);
             continue;
         }
-
-        if (node.name === 'Button' || node.name === 'Link') {
-            if (control) {
-                throw new Error('Action requires exactly one direct Button or Link trigger');
-            }
-
-            control = node;
-            continue;
-        }
-
-        throw new Error(`Action does not support direct ${node.name} children`);
+        throw new Error(`${control} does not support direct ${node.name} children`);
     }
-
-    if (!control) {
-        throw new Error('Action requires exactly one direct Button or Link trigger');
-    }
-
-    return { control, steps };
 }
 
-/** Executes one Action plan in document order. */
-async function executeAction(
-    plan: ActionPlan,
+/** Executes control effects in order, navigating only after all succeed. */
+export async function executeEffects(
+    steps: ASTNode[],
     ctx: Scope,
     services: RuntimeServices,
+    destination: () => string,
     toast: ReturnType<typeof useToast>
 ): Promise<void> {
     let status: number | undefined;
 
-    for (const step of plan.steps) {
+    for (const step of steps) {
         if (step.name === 'Request') {
             const result = await executeRequest(step.params, ctx, services.requestBaseUrl);
             status = result.status;
@@ -140,13 +76,7 @@ async function executeAction(
         validateActionValue(step.params, ctx);
     }
 
-    const { to, href } = resolveXmlProps(plan.control.params, ctx, navigationPropsSchema);
-    const url = resolveControlUrl(
-        services.navigationBaseUrl,
-        services.requestBaseUrl,
-        to ?? '',
-        plan.control.name === 'Link' ? (href ?? '') : ''
-    );
+    const url = destination();
     if (url) {
         services.navigate(url);
         return;
