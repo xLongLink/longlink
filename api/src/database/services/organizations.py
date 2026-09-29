@@ -12,10 +12,10 @@ from longlink.shared import audit as shared_audit
 from longlink.shared import models as shared_models
 from src.models.roles import OrganizationRoles
 from src.database.services import operations
-from src.database.services import invitations as invitation_service
 from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.organizations import OrganizationInvitationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.solutions import Solution
@@ -429,8 +429,7 @@ async def create(
 async def create_invitation(
     session: AsyncSession,
     organization_id: UUID,
-    email: str,
-    role: OrganizationRoles,
+    payload: OrganizationInvitationCreate,
     user_id: UUID,
 ) -> None:
     """Authorize and create one Organization invitation."""
@@ -440,11 +439,49 @@ async def create_invitation(
     if organization is None or organization.deleted_at is not None:
         raise ForbiddenError("Access required")
     membership = await _locked_membership(session, user_id, organization_id, OrganizationRoles.maintain)
-    if not roles.atleast(membership.role, role):
+    if not roles.atleast(membership.role, payload.role):
         raise ForbiddenError("Invitation role permissions required")
 
-    # Persist the email grant after the current role and Organization state have been locked.
-    await invitation_service.create(session, organization_id, email, role)
+    # Reject emails that already belong to the locked Organization.
+    if (
+        await session.scalar(
+            select(col(User.id))
+            .join(UserOrganization, col(UserOrganization.user_id) == col(User.id))
+            .where(
+                col(UserOrganization.organization_id) == organization_id,
+                col(User.email) == payload.email,
+            )
+        )
+        is not None
+    ):
+        raise ConflictError("User is already a member")
+
+    # Re-inviting replaces the existing active grant and refreshes its delivery timestamp.
+    invitation_statement = (
+        select(OrganizationInvitation)
+        .where(
+            col(OrganizationInvitation.organization_id) == organization_id,
+            col(OrganizationInvitation.email) == payload.email,
+        )
+        .with_for_update()
+    )
+    invitation = await session.scalar(invitation_statement)
+
+    # Resolve concurrent re-invites to the one database-enforced active grant.
+    if invitation is None:
+        try:
+            async with session.begin_nested():
+                invitation = OrganizationInvitation(organization_id=organization_id, email=payload.email, role=payload.role)
+                session.add(invitation)
+                await session.flush()
+            return
+        except IntegrityError as exc:
+            invitation = await session.scalar(invitation_statement)
+            if invitation is None:
+                raise ConflictError("Invitation could not be created") from exc
+
+    invitation.role = payload.role
+    invitation.created_at = datetime.now(UTC)
 
 
 async def revoke_invitation(session: AsyncSession, organization_id: UUID, invitation_id: UUID, user_id: UUID) -> None:

@@ -32,6 +32,9 @@ export function FileViewer({ props, nodes }: Props) {
     const [preview, setPreview] = useState<FileViewerState>({ status: url ? 'pending' : 'error' });
     const { status } = preview;
 
+    // Loading and ready share one download lifetime so the live blob URL remains owned.
+    const isPreviewActive = status === 'loading' || status === 'ready';
+
     // Defer the download until the preview scrolls into view, so hidden dialogs don't fetch upfront.
     useEffect(() => {
         if (!url || status !== 'pending') return;
@@ -53,9 +56,9 @@ export function FileViewer({ props, nodes }: Props) {
         return () => observer.disconnect();
     }, [url, status]);
 
-    // Fetch file bytes through the authenticated API client and expose them as a blob URL.
+    // Own the authenticated download and its blob URL until the source changes or the preview unmounts.
     useEffect(() => {
-        if (!url || status !== 'loading') return;
+        if (!url || !isPreviewActive) return;
 
         const controller = new AbortController();
         let previewUrl: string | null = null;
@@ -103,7 +106,7 @@ export function FileViewer({ props, nodes }: Props) {
                 URL.revokeObjectURL(previewUrl);
             }
         };
-    }, [url, status]);
+    }, [url, isPreviewActive]);
 
     return (
         <Stack ref={frameRef} gap={3} height="65vh">

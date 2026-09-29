@@ -704,11 +704,9 @@ export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorage
 });
 
 /**
- * Response Get Organization Storage Usage Api V1 Organizations  Organization Id  Storage Get
- *
  * Successful Response
  */
-export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = zOrganizationStorageUsageResponse.nullable();
+export const zGetOrganizationStorageUsageApiV1OrganizationsOrganizationIdStorageGetResponse = zOrganizationStorageUsageResponse;
 
 export const zCreateOrganizationInvitationApiV1OrganizationsOrganizationIdInvitationsPostBody = zOrganizationInvitationCreate;
 

@@ -75,7 +75,7 @@ class S3:
         return total
 
     async def create_bucket(self, bucket: str) -> None:
-        """Create a deterministic Organization bucket when it does not already exist."""
+        """Create a deterministic Organization bucket and block public access."""
 
         # A reconciler retry owns the same bucket name and must not treat that as a failure.
         async with self.client() as client:
@@ -84,6 +84,17 @@ class S3:
             except ClientError as exc:
                 if exc.response.get("Error", {}).get("Code") not in {"BucketAlreadyOwnedByYou", "BucketAlreadyExists"}:
                     raise
+
+            # Reapply public-access protection on retries without swallowing configuration failures.
+            await client.put_public_access_block(
+                Bucket=bucket,
+                PublicAccessBlockConfiguration={
+                    "BlockPublicAcls": True,
+                    "IgnorePublicAcls": True,
+                    "BlockPublicPolicy": True,
+                    "RestrictPublicBuckets": True,
+                },
+            )
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         """Remove uploads and all object versions after runtime credentials are revoked."""

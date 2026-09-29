@@ -15,7 +15,6 @@ from urllib.parse import parse_qs, urlparse
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session, session_scope
-from src.database.services import invitations
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -740,7 +739,12 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     email = "invited@example.com"
     organization = await create_organization(users[0])
     async with session_scope() as session:
-        await invitations.create(session, organization.id, email, OrganizationRoles.write)
+        invitation = OrganizationInvitation(
+            organization_id=organization.id,
+            email=email,
+            role=OrganizationRoles.write,
+        )
+        session.add(invitation)
         await session.commit()
 
     register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
@@ -785,7 +789,12 @@ async def test_password_login_accepts_pending_organization_invitation(
     owner, invited_user, _ = users
     organization = await create_organization(owner)
     async with session_scope() as session:
-        await invitations.create(session, organization.id, invited_user.email, OrganizationRoles.write)
+        invitation = OrganizationInvitation(
+            organization_id=organization.id,
+            email=invited_user.email,
+            role=OrganizationRoles.write,
+        )
+        session.add(invitation)
         await session.commit()
 
     # Act

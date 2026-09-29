@@ -32,11 +32,6 @@ export function menuItemId(label: string): string {
         .replace(/^-|-$/g, '');
 }
 
-/** Resolves a URL hash to a known item, falling back to the first item. */
-export function resolveMenuItemId(itemIds: readonly string[], hash: string): string | undefined {
-    return itemIds.find((id) => `#${id}` === hash) ?? itemIds[0];
-}
-
 /** Renders a menu icon when one is configured. */
 function renderMenuIcon(icon: StoneIconName | undefined) {
     return icon ? <Icon icon={icon} size="sm" /> : undefined;
@@ -50,11 +45,7 @@ export function Menu({ sections, gap = 3 }: { sections: MenuSection[]; gap?: Com
     const items = sections.flatMap(({ entries }) =>
         entries.flatMap((entry) => (entry.kind === 'subsection' ? entry.items : [entry]))
     );
-    const activeItemId = resolveMenuItemId(
-        items.map((item) => item.id),
-        hash
-    );
-    const activeItem = items.find((item) => item.id === activeItemId);
+    const activeItem = items.find((item) => `#${item.id}` === hash) ?? items[0];
 
     /** Renders direct and nested items with the same navigation and selection behavior. */
     function renderItem(item: MenuItem) {

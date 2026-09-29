@@ -1,4 +1,3 @@
-import ssl
 import json
 import httpx2
 import asyncio
@@ -24,12 +23,11 @@ class Error(RuntimeError):
 class RustFS:
     """Manage RustFS service accounts and hard bucket quotas over its signed admin API."""
 
-    def __init__(self, endpoint: str, credentials: s3.Credentials, certificate: str | None = None) -> None:
+    def __init__(self, endpoint: str, credentials: s3.Credentials) -> None:
         """Store the controller connection without opening a transport."""
 
         self._endpoint = endpoint
         self._credentials = credentials
-        self._certificate = certificate
 
     @staticmethod
     def policy(bucket: str, solution: UUID) -> dict[str, object]:
@@ -88,9 +86,8 @@ class RustFS:
         credentials = AwsCredentials(self._credentials.access_key, self._credentials.secret_key)
         SigV4Auth(credentials, "s3", "us-east-1").add_auth(request)
 
-        # Preserve private-CA verification for the administrative plane as well as S3 requests.
-        context = ssl.create_default_context(cadata=self._certificate)
-        async with httpx2.AsyncClient(verify=context, trust_env=False, timeout=30) as client:
+        # Use default TLS verification without environment proxies for the cluster tunnel.
+        async with httpx2.AsyncClient(trust_env=False, timeout=30) as client:
             response = await client.request(method, str(request.url), content=body, headers=dict(request.headers))
         if response.is_error:
             raise Error(response.status_code, response.text)

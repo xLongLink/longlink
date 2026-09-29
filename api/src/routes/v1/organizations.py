@@ -1,5 +1,4 @@
 import asyncio
-from kr8s import ServerError, NotFoundError
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException, BackgroundTasks
 from src.auth import authuser, authadmin, get_session, organization_access
@@ -103,7 +102,7 @@ async def get_organization_quotas(
 
 @router.get(
     "/organizations/{organization_id}/storage",
-    response_model=OrganizationStorageUsageResponse | None,
+    response_model=OrganizationStorageUsageResponse,
 )
 async def get_organization_storage_usage(
     membership: UserOrganization = Depends(organization_access),
@@ -118,14 +117,12 @@ async def get_organization_storage_usage(
     _, compute = target
     await session.commit()
 
-    # Inspect the complete Organization bucket while distinguishing absent provisioning from backend failures.
+    # Inspect the complete Organization bucket and report storage failures as unavailable.
     try:
         # Bound member-triggered full-bucket scans so slow storage cannot exhaust API request capacity.
         async with asyncio.timeout(STORAGE_USAGE_TIMEOUT_SECONDS):
             usage = await Storage(compute).usage(membership.organization_id)
-    except NotFoundError:
-        return None
-    except (TimeoutError, BotoCoreError, ClientError, ServerError) as exc:
+    except (TimeoutError, BotoCoreError, ClientError) as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
             membership.organization.slug,
@@ -152,8 +149,7 @@ async def create_organization_invitation(
     await organizations.create_invitation(
         session,
         membership.organization_id,
-        payload.email,
-        payload.role,
+        payload,
         user.id,
     )
     await session.commit()
