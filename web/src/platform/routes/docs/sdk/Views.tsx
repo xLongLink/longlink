@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Info } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
 import { Menu } from '@/components/ui/Menu';
@@ -89,8 +88,6 @@ const article = {
 };
 
 export default function DocsArticleRoute() {
-    const [selectedTab, setSelectedTab] = useState('overview');
-
     return (
         <Article page={article}>
             <Stack gap={5}>
@@ -325,7 +322,7 @@ export default function DocsArticleRoute() {
                         </SummaryCard>
                         <SummaryCard name="Tabs">
                             <Stack gap={3}>
-                                <TabList onChange={setSelectedTab} value={selectedTab}>
+                                <TabList onChange={noop} value="overview">
                                     <Tab label="Overview" value="overview" />
                                     <Tab label="Activity" value="activity" />
                                 </TabList>

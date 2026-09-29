@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
+from src.errors import ForbiddenError
 from src.logger import logger
 from src.operations import databases
 from src.models.statuses import Status
@@ -57,7 +58,7 @@ async def reconcile(organization_id: UUID) -> None:
         await session.commit()
 
 
-async def delete(organization_id: UUID) -> str | None:
+async def delete(organization_id: UUID) -> None:
     """Drain runtime activity before destroying the Organization's boundaries."""
 
     # Reject active targets before waiting for their admitted runtime work.
@@ -67,20 +68,20 @@ async def delete(organization_id: UUID) -> str | None:
         )
         target = result.tuples().one_or_none()
     if target is None:
-        return None
+        return
     _, deleted_at = target
     if deleted_at is None:
-        return "Active Organizations cannot be deleted by lifecycle cleanup"
+        raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
             target = await organizations.infrastructure(session, organization_id)
         if target is None:
             logger.info("Organization %s no longer exists; skipping deletion", organization_id)
-            return None
+            return
         organization, compute = target
         if organization.deleted_at is None:
-            return "Active Organizations cannot be deleted by lifecycle cleanup"
+            raise ForbiddenError("Active Organizations cannot be deleted by lifecycle cleanup")
         async with session_scope() as session:
             result = await session.scalars(select(col(Solution.id)).where(col(Solution.organization_id) == organization_id))
             solution_ids = result.all()
@@ -103,6 +104,3 @@ async def delete(organization_id: UUID) -> str | None:
         async with session_scope() as session:
             await session.execute(sql_delete(Organization).where(col(Organization.id) == organization.id))
             await session.commit()
-
-        # Successful cleanup returns no error message.
-        return None

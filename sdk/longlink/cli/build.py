@@ -301,7 +301,7 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
-def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] | None = None) -> tuple[str, str]:
+def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] | None = None) -> None:
     """Create Docker build artifacts for the current Solution."""
 
     # Resolve build paths and collect project metadata for the image.
@@ -309,7 +309,7 @@ def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] 
     if pyproject_data is None:
         pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
-    project_name, project_version, project_description = read_project_metadata(pyproject_data)
+    _, _, project_description = read_project_metadata(pyproject_data)
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -411,8 +411,6 @@ def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] 
         ),
         encoding="utf-8",
     )
-
-    return project_version, project_name
 
 
 def resolve_image_tag(solution_name: str, version: str, registry: str | None = None) -> str:

@@ -234,11 +234,10 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     build_context = chdir_project.parent / "context"
 
     # Act
-    version, name = build.build_solution(build_context)
+    build.build_solution(build_context)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
-    assert (version, name) == ("0.1.0", "demo")
     assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
     assert 'LABEL longlink.environments="[{\\"name\\":\\"API_KEY\\",\\"required\\":true}]"' in dockerfile
     dockerignore = build_context.joinpath(".dockerignore").read_text(encoding="utf-8")

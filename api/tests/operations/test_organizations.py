@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from conftest import DatabasePostgres, StorageKubernetes, OperationKubernetes, reject_provider_construction
 from datetime import UTC, datetime
 from factories import create_compute, create_solution, create_organization
+from src.errors import ForbiddenError
 from src.operations import organizations as organization_operations
 from collections.abc import Sequence
 from src.models.statuses import Status
@@ -217,11 +218,9 @@ async def test_delete_rejects_active_organization_without_external_cleanup(
         (organization_operations, "Kubernetes"),
     )
 
-    # Act
-    reason = await organization_operations.delete(organization.id)
-
-    # Assert
-    assert reason == "Active Organizations cannot be deleted by lifecycle cleanup"
+    # Act and assert
+    with pytest.raises(ForbiddenError, match="Active Organizations cannot be deleted by lifecycle cleanup"):
+        await organization_operations.delete(organization.id)
 
 
 async def test_delete_skips_missing_organization_without_external_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:

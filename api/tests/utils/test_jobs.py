@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from src.utils import jobs as operation_worker
 from contextlib import asynccontextmanager
+from src.errors import ForbiddenError
 from collections.abc import Callable, Awaitable, AsyncIterator
 from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
@@ -59,7 +60,7 @@ async def test_execute_finishes_terminal_transition_when_cancelled(monkeypatch: 
     release = asyncio.Event()
     completed_operation_ids: list[UUID] = []
 
-    async def complete_handler(target_id: UUID) -> str | None:
+    async def complete_handler(target_id: UUID) -> None:
         """Complete one claimed Operation."""
 
         assert target_id == operation.target_id
@@ -130,11 +131,11 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
     operation = leased_operation()
     transitions: list[tuple[UUID, str]] = []
 
-    async def failing_handler(target_id: UUID) -> str | None:
-        """Return one explicit terminal failure."""
+    async def failing_handler(target_id: UUID) -> None:
+        """Raise one expected terminal failure."""
 
         assert target_id == operation.target_id
-        return "workload deployment failed"
+        raise ForbiddenError("workload deployment failed")
 
     async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:
         """Record the terminal failure transition."""
@@ -269,7 +270,7 @@ async def test_execute_rejects_operation_without_a_live_worker_lease(lease_expir
 
 
 async def test_execute_completes_successful_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Complete a claimed Operation when its handler reports no failure reason."""
+    """Complete a claimed Operation when its handler finishes successfully."""
 
     # Arrange
     operation = leased_operation()
