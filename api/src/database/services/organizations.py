@@ -234,12 +234,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
     """Project a Platform snapshot while runtime coordination owns synchronization."""
 
     # Load every authoritative membership for the Organization database snapshot.
-    memberships_statement = (
-        select(UserOrganization)
-        .options(joinedload(UserOrganization.user).load_only(User.id, User.name, User.email, User.avatar))
-        .where(col(UserOrganization.organization_id) == organization_id)
-    )
-    memberships_result = await session.scalars(memberships_statement)
+    memberships = await members(session, organization_id)
 
     # Build the shared-schema user snapshot from Platform-authoritative memberships.
     rows = [
@@ -249,7 +244,7 @@ async def project_users(session: AsyncSession, organization_id: UUID, db: postgr
             email=membership.user.email,
             avatar=membership.user.avatar,
         )
-        for membership in memberships_result
+        for membership in memberships
     ]
 
     # Empty snapshots must not open an Organization database connection.
