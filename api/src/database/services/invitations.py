@@ -94,12 +94,11 @@ async def accept(session: AsyncSession, user: User) -> None:
         )
         .with_for_update()
     )
-    memberships_by_organization_id = {membership.organization_id: membership for membership in result}
+    organization_ids = {membership.organization_id for membership in result}
 
     # Create access without changing existing membership roles.
     for invitation in active_invitations:
-        membership = memberships_by_organization_id.get(invitation.organization_id)
-        if membership is None:
+        if invitation.organization_id not in organization_ids:
             session.add(
                 UserOrganization(
                     user_id=user.id,
