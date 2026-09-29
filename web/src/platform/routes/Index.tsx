@@ -91,7 +91,7 @@ export default function Home() {
                                     The economics have shifted; flexibility now lives in code
                                 </Text>
                                 <Text className="tracking-[0.026em]" display="block" type="inherit">
-                                    Build the solution, not the workaround
+                                    Build your solution, not the workaround
                                 </Text>
                                 <Text className="tracking-[0.026em]" display="block" type="inherit">
                                     Use the right technologies
