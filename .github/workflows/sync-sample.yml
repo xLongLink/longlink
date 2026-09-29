@@ -3,6 +3,9 @@ name: Sync Sample
 on:
     workflow_call:
         inputs:
+            channel:
+                required: true
+                type: string
             version:
                 required: true
                 type: string
@@ -11,8 +14,14 @@ on:
                 required: true
     workflow_dispatch:
         inputs:
+            channel:
+                description: Sample branch to replace
+                required: true
+                default: main
+                type: choice
+                options: [main, beta]
             version:
-                description: Published stable release tag (for example v0.4.0)
+                description: Published release tag (for example v0.4.0 or v0.5.0-beta.1)
                 required: true
                 type: string
 
@@ -20,7 +29,7 @@ permissions:
     contents: read
 
 concurrency:
-    group: sync-sample-main
+    group: sync-sample-${{ inputs.channel }}
     cancel-in-progress: false
 
 jobs:
@@ -32,6 +41,7 @@ jobs:
             name: release
 
         env:
+            SYNC_CHANNEL: ${{ inputs.channel }}
             SAMPLE_VERSION: ${{ inputs.version }}
 
         steps:
@@ -46,10 +56,24 @@ jobs:
             - name: Generate scaffold
               run: |
                   set -euo pipefail
-                  if [[ ! "$SAMPLE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                      printf 'Sample sync requires a stable release tag.\n' >&2
-                      exit 1
-                  fi
+                  case "$SYNC_CHANNEL" in
+                      main)
+                          if [[ ! "$SAMPLE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                              printf 'Main sample sync requires a stable release tag.\n' >&2
+                              exit 1
+                          fi
+                          ;;
+                      beta)
+                          if [[ ! "$SAMPLE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[1-9][0-9]*$ ]]; then
+                              printf 'Beta sample sync requires a beta release tag.\n' >&2
+                              exit 1
+                          fi
+                          ;;
+                      *)
+                          printf 'Unsupported sample branch: %s\n' "$SYNC_CHANNEL" >&2
+                          exit 1
+                          ;;
+                  esac
 
                   uv sync --locked --project sdk
                   uv run --locked --project sdk longlink init --folder "$RUNNER_TEMP/sample" --ci github
@@ -96,5 +120,5 @@ jobs:
                   cp -a "$RUNNER_TEMP/sample/." .
                   git add --all
                   git -c user.name="longlink-bot" -c user.email="bot@longlink.dev" commit -m "chore: sync LongLink scaffold"
-                  git push --force origin HEAD:main
+                  git push --force origin "HEAD:${SYNC_CHANNEL}"
                   git push --force origin "HEAD:refs/tags/${SAMPLE_VERSION}"
