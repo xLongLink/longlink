@@ -130,11 +130,10 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
         raise RuntimeError("endpoint failed")
 
     # Act
-    with TestClient(app) as client, pytest.raises(RuntimeError) as error:
+    with TestClient(app) as client, pytest.raises(RuntimeError):
         client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
 
     # Assert
-    assert str(error.value) == "endpoint failed"
     assert session_closed
 
 

@@ -80,5 +80,6 @@ describe('Link', () => {
 
         // Assert
         expect(output).toContain('href="/api/v1/solutions/tracker/proxy/files/document.pdf"');
+        expect(output).not.toContain('javascript:');
     });
 });

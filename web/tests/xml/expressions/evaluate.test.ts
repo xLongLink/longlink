@@ -51,38 +51,26 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${user["constructor"]}'), ctx)).toBeUndefined();
     });
 
-    it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
-        const ctx: Scope = { bindings: {} };
-
-        expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Operator not allowed');
-    });
-
     it('evaluates only the selected conditional branch', () => {
         const ctx: Scope = { bindings: { administrator: true } };
 
         expect(evaluate(compileAttribute("${administrator ? 'Administrator' : unknown()}"), ctx)).toBe('Administrator');
     });
 
-    it('rejects unsupported expression nodes', () => {
+    it.each([
+        { expression: '${"name" in user}', error: 'Operator not allowed' },
+        { expression: '${1 == "1"}', error: 'Operator not allowed' },
+        { expression: '${1 != "2"}', error: 'Operator not allowed' },
+        { expression: '${[value]}', error: 'Unsupported node' },
+        { expression: '${{ ...value }}', error: 'Object spread not allowed' },
+        { expression: '${unknown?.()}', error: 'Function call not allowed' },
+        { expression: '${Array.isArray(value)}', error: 'Function call not allowed' },
+        { expression: '${Math.floor(value)}', error: 'Function call not allowed' },
+    ])('rejects unsupported expression $expression', ({ expression, error }) => {
         const ctx: Scope = { bindings: { value: 1 } };
 
-        expect(() => evaluate(compileAttribute('${[value]}'), ctx)).toThrow('Unsupported node');
+        expect(() => evaluate(compileAttribute(expression), ctx)).toThrow(error);
     });
-
-    it('rejects object spread expressions', () => {
-        const ctx: Scope = { bindings: { value: 1 } };
-
-        expect(() => evaluate(compileAttribute('${{ ...value }}'), ctx)).toThrow('Object spread not allowed');
-    });
-
-    it.each(['${unknown?.()}', '${Array.isArray(value)}', '${Math.floor(value)}'])(
-        'rejects non-whitelisted calls: %s',
-        (value) => {
-            const ctx: Scope = { bindings: { value: 1 } };
-
-            expect(() => evaluate(compileAttribute(value), ctx)).toThrow('Function call not allowed');
-        }
-    );
 
     it('allows optional calls to whitelisted helpers', () => {
         const ctx: Scope = { bindings: {} };
@@ -114,6 +102,7 @@ describe('evaluate', () => {
 
         expect(result.safe).toBe(1);
         expect(result.constructor).toBeUndefined();
-        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+        expect(Object.hasOwn(result, '__proto__')).toBe(false);
+        expect(result.polluted).toBeUndefined();
     });
 });

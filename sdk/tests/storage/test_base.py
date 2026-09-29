@@ -1,6 +1,6 @@
 import pytest
+from s3fs import S3FileSystem
 from typing import Literal
-from pathlib import Path
 from pydantic import ValidationError
 from contextlib import contextmanager
 from longlink.storage import base as storage_base
@@ -78,16 +78,19 @@ def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.Monke
         storage_base.create_fs(Envs())
 
 
-def test_production_storage_scopes_paths_to_configured_bucket_prefix(production_storage: dict[str, object]) -> None:
+def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     """Scope production storage paths to the configured prefix beneath its bucket."""
+
+    # Configure production storage without replacing its lazily constructed S3 filesystem.
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
 
     # Act
     scoped_filesystem = storage_base.create_fs(Envs())
 
     # Assert
     assert isinstance(scoped_filesystem, DirFileSystem)
-    assert scoped_filesystem.path == (Path.cwd() / "acme/solutions/dashboard").as_posix()
-    assert scoped_filesystem.fs is production_storage["filesystem"]
+    assert scoped_filesystem.path == "acme/solutions/dashboard"
+    assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
 def test_production_storage_passes_configured_ca_to_s3_client(

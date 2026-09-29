@@ -167,12 +167,10 @@ async def test_gateway_translates_readiness_timeout(monkeypatch: pytest.MonkeyPa
         await gateway.verify(kubernetes_client(), "https://gateway.example")
 
 
-async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch, observed_resources: list[tuple[str, str]]) -> None:
+async def test_gateway_rejects_contract_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject Compute packages on an unsupported release contract."""
 
     # Exercise the contract gate against an incompatible Compute package.
-    _ = observed_resources
-
     class ForeignRelease:
         """Expose an unsupported release contract."""
 

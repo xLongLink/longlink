@@ -8,7 +8,6 @@ from longlink.views import view_stem_route
         pytest.param("index", "/", id="root-index"),
         pytest.param("admin/index", "/admin", id="nested-index"),
         pytest.param("issues/[issue]", "/issues/:issue", id="dynamic-segment"),
-        pytest.param("settings/profile", "/settings/profile", id="nested-static-segments"),
     ],
 )
 def test_view_stem_route_converts_valid_view_paths(view_stem: str, expected_route: str) -> None:

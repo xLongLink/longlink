@@ -6,13 +6,13 @@ import { resolveXmlProps, xmlSpacingSchema } from '@/xml/core/props';
 describe('resolveXmlProps', () => {
     it('resolves scalar and raw props with schema defaults', () => {
         const values = resolveXmlProps(
-            parseFragment('<Widget count="2" label="Ready" />')[0].params,
+            parseFragment('<Widget count="2" label="true" />')[0].params,
             createContext().scope,
             z.object({ count: z.number(), gap: xmlSpacingSchema.default(1), label: z.string() }),
             ['label']
         );
 
-        expect(values).toEqual({ count: 2, gap: 1, label: 'Ready' });
+        expect(values).toEqual({ count: 2, gap: 1, label: 'true' });
     });
 
     it('rejects values outside the declared schema', () => {

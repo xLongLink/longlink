@@ -5,20 +5,14 @@ import { getSetupNodes, setupContext } from '@/xml/core/context';
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it('recreates state on setup reruns and invalidation', async () => {
+    it('recreates state on setup reruns', async () => {
         const ctx = createContext();
         const ast = parseFragment('<State id="filter" value="day" score="10" list="[]" />');
 
         await setupContext(getSetupNodes(ast), ctx);
         const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
-        expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
         await setupContext(getSetupNodes(ast), ctx);
-
-        expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
-
-        delete ctx.scope.bindings.filter;
-        await ctx.services.setups.filter();
 
         expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
     });

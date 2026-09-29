@@ -136,6 +136,10 @@ async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.M
     else:
         await make_s3().delete_prefix("org-bucket", "solutions/abc/")
 
+    # Assert
+    assert client.aborted == []
+    assert client.deleted == []
+
 
 async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:
     """Abort pending uploads and delete every version and marker in bounded batches."""

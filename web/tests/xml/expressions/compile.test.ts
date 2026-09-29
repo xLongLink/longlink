@@ -7,36 +7,18 @@ describe('compileAttribute', () => {
     });
 
     it('classifies a dollar-prefixed dotted path as a writable binding', () => {
-        // Arrange
-        const value = '$form.value';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'path', parts: ['form', 'value'], isBinding: true });
+        // Act and assert
+        expect(compileAttribute('$form.value')).toEqual({ kind: 'path', parts: ['form', 'value'], isBinding: true });
     });
 
     it('classifies a dotted path without a dollar prefix as read-only', () => {
-        // Arrange
-        const value = 'form.value';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'path', parts: ['form', 'value'] });
+        // Act and assert
+        expect(compileAttribute('form.value')).toEqual({ kind: 'path', parts: ['form', 'value'] });
     });
 
     it('keeps a single word without a dollar prefix as plain text', () => {
-        // Arrange
-        const value = 'name';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'text', value: 'name' });
+        // Act and assert
+        expect(compileAttribute('name')).toEqual({ kind: 'text', value: 'name' });
     });
 
     it.each(['$', '$1bad', '1bad.value'])('keeps an invalid reference as plain text: %s', (value) => {

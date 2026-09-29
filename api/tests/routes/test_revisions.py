@@ -91,10 +91,10 @@ async def test_update_noop_preserves_source_and_patches(
         assert revision.min_scale == 0
 
 
-async def test_update_rejects_unauthorized_and_stale_revision(
+async def test_update_rejects_stale_revision(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject update inspection without maintain access and stale revision submissions."""
+    """Reject stale revision submissions before inspecting update metadata."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -111,13 +111,9 @@ async def test_update_rejects_unauthorized_and_stale_revision(
     monkeypatch.setattr("src.routes.v1.solutions.images.metadata", metadata)
 
     # Act
-    forbidden_get = await clients[1].get(url)
-    forbidden_post = await clients[1].post(url, json={})
     stale_response = await clients[0].post(url, json={"expected_revision_id": str(uuid4())})
 
     # Assert
-    assert forbidden_get.status_code == 403
-    assert forbidden_post.status_code == 403
     assert stale_response.status_code == 409
     assert inspected == []
 

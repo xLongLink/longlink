@@ -7,20 +7,6 @@ from src.database.models.users import User
 from src.database.models.organizations import OrganizationActivity
 
 
-def make_lease(**overrides: object) -> databases.Lease:
-    """Build one lease with a fresh unexpired ownership token."""
-
-    lease_id = uuid4()
-    organization_id = uuid4()
-    values: dict[str, object] = {
-        "id": lease_id,
-        "organization_id": organization_id,
-        "expires_at": datetime.now(UTC) + timedelta(seconds=180),
-    }
-    values.update(overrides)
-    return databases.Lease(**values)  # type: ignore[arg-type]
-
-
 async def persist_activity(organization_id: object, expires_at: datetime) -> OrganizationActivity:
     """Persist one activity row for the given Organization."""
 
@@ -73,7 +59,11 @@ async def test_owned_rejects_missing_row() -> None:
     """Deny ownership after crash recovery deletes the activity."""
 
     # Arrange
-    lease = make_lease()
+    lease = databases.Lease(
+        id=uuid4(),
+        organization_id=uuid4(),
+        expires_at=datetime.now(UTC) + timedelta(seconds=180),
+    )
 
     # Act
     async with session_scope() as session:

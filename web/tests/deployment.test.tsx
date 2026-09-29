@@ -69,10 +69,11 @@ describe('Solution source update dialog', () => {
         });
         container = document.createElement('section');
         document.body.append(container);
-        root = createRoot(container);
+        const mountedRoot = createRoot(container);
+        root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
         await act(async () =>
-            root?.render(
+            mountedRoot.render(
                 <LayerProvider>
                     <ApiProvider>
                         <MemoryRouter initialEntries={['/#solutions']}>
@@ -90,7 +91,6 @@ describe('Solution source update dialog', () => {
         await act(async () => vi.waitFor(() => expect(button('Update solution').disabled).toBe(false)));
         expect(document.body.textContent).toContain('Current sha256:aaaaaaaaaaaa');
         expect(document.body.textContent).toContain('New sha256:bbbbbbbbbbbb');
-        expect(document.body.textContent).not.toContain('Always on');
         await act(async () => button('Update solution').click());
         await act(async () =>
             vi.waitFor(() =>

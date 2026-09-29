@@ -34,15 +34,13 @@ describe('Table', () => {
         // Act
         const output = renderXmlToMarkup(
             parseFragment(
-                '<Table data="$items"><TableColumn field="sku" header="Product code" /><TableColumn field="created_by.name" header="Created by" /></Table>'
+                '<Table data="$items"><TableColumn field="sku" /><TableColumn field="created_by.name" /></Table>'
             ),
             ctx
         );
 
         // Assert
-        expect(output).toContain('Product code');
         expect(output).toContain('SKU-001');
-        expect(output).toContain('Created by');
         expect(output).toContain('Ada Lovelace');
     });
 

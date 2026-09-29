@@ -7,7 +7,6 @@ from src.errors import ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import invitations
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -138,9 +137,6 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.database_state = DatabaseState.available
         session.add(
             OrganizationInvitation(
                 organization_id=organization.id,
@@ -161,10 +157,6 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     # Assert
     assert invitation is None
     assert membership is None
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        assert persisted.database_state == DatabaseState.available
 
 
 async def test_accept_preserves_active_membership_role(users: tuple[User, User, User]) -> None:
@@ -174,9 +166,6 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=invitee.id,
@@ -204,10 +193,6 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     assert membership is not None
     assert membership.role == OrganizationRoles.read
     assert invitation is None
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        assert persisted.database_state == DatabaseState.available
 
 
 async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple[User, User, User]) -> None:

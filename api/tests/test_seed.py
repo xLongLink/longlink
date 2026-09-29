@@ -69,18 +69,7 @@ async def test_local_seed_creates_example_through_api(
     # Act
     scheduler = asyncio.create_task(jobs.run_operation_scheduler())
     try:
-        async with create_client(administrator) as client:
-            compute_response = await client.post(
-                "/api/v1/computes",
-                json={
-                    "name": "development compute",
-                    "kubeconfig": local_settings.KUBECONFIG.read_text(encoding="utf-8"),
-                    "gateway_url": "https://gateway.example",
-                    "database_storage_class": "local-path",
-                    "storage_endpoint": "https://storage.example",
-                },
-            )
-            assert compute_response.status_code == 201
+        async with create_client() as client:
             await seed(local_settings, client)
             await seed(local_settings, client)
     finally:

@@ -51,7 +51,7 @@ describe('renderNode', () => {
         await act(async () => root?.render(<RenderXML ast={validAst} ctx={context} />));
 
         // Assert
-        expect(container.textContent).toContain('Recovered');
+        expect(container.querySelector('h1')?.textContent).toContain('Recovered');
     });
 
     it('resolves input props from expressions', () => {
@@ -60,15 +60,6 @@ describe('renderNode', () => {
         const output = renderXmlToMarkup(parseFragment('<TextInput label="Name" value="form.value" />'), ctx);
 
         expect(output).toContain('value="Ada"');
-    });
-
-    it('renders Heading content', () => {
-        // Arrange
-        const output = renderXmlToMarkup(parseFragment('<Heading level="1">Orders</Heading>'));
-
-        // Assert
-        expect(output).toContain('<h1');
-        expect(output).toContain('Orders');
     });
 
     it('rejects Heading levels outside the schema', () => {

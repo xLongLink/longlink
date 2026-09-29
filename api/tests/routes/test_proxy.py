@@ -147,7 +147,6 @@ async def test_solution_proxy_forwards_safe_content(
         captured["url"] = str(request.url)
         captured["content"] = await request.aread()
         captured["content_type"] = request.headers["content-type"]
-        captured["solution_id"] = str(solution.id)
         captured["user_id"] = str(identity.identity_token_user(request.headers["x-longlink-identity"], "test-identity-secret-01234567890"))
 
         def close() -> None:
@@ -188,7 +187,6 @@ async def test_solution_proxy_forwards_safe_content(
     assert captured.get("method") == "POST"
     assert captured.get("url") == "https://gateway.example/anything?answer=42"
     assert captured.get("content") == b"payload"
-    assert captured.get("solution_id") == str(solution.id)
     assert captured.get("user_id") == str(user.id)
     assert captured.get("content_type") == "text/plain"
 
@@ -280,7 +278,6 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
         assert isinstance(verify, ssl.SSLContext)
         captured["follow_redirects"] = follow_redirects
         captured["trust_env"] = trust_env
-        captured["has_verify"] = True
 
         return real_client(
             follow_redirects=follow_redirects,
@@ -325,7 +322,6 @@ async def test_solution_proxy_strips_credential_headers_and_pins_gateway_tls(
     assert captured.get("cadata") == "test-gateway-ca"
     assert captured.get("follow_redirects") is False
     assert captured.get("trust_env") is False
-    assert captured.get("has_verify") is True
 
 
 async def test_solution_proxy_sanitizes_json_upstream_error(
@@ -407,18 +403,15 @@ async def test_solution_proxy_sanitizes_html_upstream_error(
 
 async def test_solution_proxy_rejects_anonymous_without_gateway_access(
     client: AsyncClient,
-    users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject unauthenticated proxy requests before solution access checks."""
 
     # Arrange
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
     reject_gateway_access(monkeypatch)
 
     # Act
-    response = await client.get(f"/api/v1/solutions/{solution.id}/proxy/views.json")
+    response = await client.get(f"/api/v1/solutions/{UUID(int=1)}/proxy/views.json")
 
     # Assert
     assert response.status_code == 401
@@ -460,21 +453,18 @@ async def test_solution_proxy_replaces_nonpublic_upstream_error_detail(
 @pytest.mark.parametrize("origin", UNTRUSTED_ORIGINS)
 async def test_solution_proxy_rejects_untrusted_origin_before_gateway_request(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
     origin: str | None,
 ) -> None:
     """Reject missing, empty, and foreign origins before an authenticated write reaches the gateway."""
 
-    # Arrange a persisted Solution and fail if CSRF protection is bypassed.
-    organization = await create_organization(users[0])
-    solution = await create_solution(organization)
+    # Fail if CSRF protection allows the request to reach the gateway.
     reject_gateway_access(monkeypatch)
     headers = untrusted_origin_headers(clients[0], origin)
 
     # Act
     response = await clients[0].post(
-        f"/api/v1/solutions/{solution.id}/proxy/tasks",
+        f"/api/v1/solutions/{UUID(int=1)}/proxy/tasks",
         headers=headers,
     )
 

@@ -1,30 +1,24 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import { createRoot } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, cleanupMountedRoot, mountXml } from '../helpers';
 
 describe('useBindableValue', () => {
-    let container: HTMLDivElement | undefined;
-    let root: ReturnType<typeof createRoot> | undefined;
+    let mounted: Awaited<ReturnType<typeof mountXml>> | undefined;
 
     afterEach(async () => {
-        await cleanupMountedRoot(root);
-        container?.remove();
+        await cleanupMountedRoot(mounted?.root);
+        mounted?.container.remove();
         vi.unstubAllGlobals();
-        container = undefined;
-        root = undefined;
+        mounted = undefined;
     });
 
     it('updates unbound values from reactive State', async () => {
         const ctx = createContext();
-        ({ container, root } = await mountXml(
-            '<State id="form" value="first" /><TextInput label="Name" value="form.value" />',
-            ctx
-        ));
+        mounted = await mountXml('<State id="form" value="first" /><TextInput label="Name" value="form.value" />', ctx);
 
-        const input = container.querySelector('input');
+        const input = mounted.container.querySelector('input');
         expect(input?.value).toBe('first');
 
         await act(async () => {
@@ -42,14 +36,14 @@ describe('useBindableValue', () => {
 
     it('writes TextInput values to bound State', async () => {
         const ctx = createContext();
-        ({ container, root } = await mountXml(
+        mounted = await mountXml(
             '<State id="form" value="first" /><TextInput label="Name" value="$form.value" />',
             ctx,
             undefined,
             true
-        ));
+        );
 
-        const input = container.querySelector('input');
+        const input = mounted.container.querySelector('input');
         if (!input) throw new Error('TextInput did not render');
 
         const user = userEvent.setup();
@@ -69,13 +63,13 @@ describe('useBindableValue', () => {
         const ctx = createContext();
 
         // Act
-        ({ container, root } = await mountXml(
+        mounted = await mountXml(
             '<State id="form" value="first" /><TextInput label="Name" value="$form.__proto__" />',
             ctx
-        ));
+        );
 
         // Assert
-        expect(container.textContent).toContain('XML binding path must use safe property names');
+        expect(mounted.container.textContent).toContain('XML binding path must use safe property names');
     });
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {
@@ -85,10 +79,10 @@ describe('useBindableValue', () => {
             async () => new Response(JSON.stringify({ detail: 'Records unavailable' }), { status: 503 })
         );
 
-        ({ container, root } = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>', ctx));
+        mounted = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>', ctx);
 
-        expect(container.textContent).toContain('Unable to initialize this view');
-        expect(container.textContent).not.toContain('Loaded child');
+        expect(mounted.container.textContent).toContain('Unable to initialize this view');
+        expect(mounted.container.textContent).not.toContain('Loaded child');
     });
 
     it('rejects an invalid Query setup before fetching', async () => {
@@ -98,10 +92,10 @@ describe('useBindableValue', () => {
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
-        ({ container, root } = await mountXml('<Query id="records" />', ctx));
+        mounted = await mountXml('<Query id="records" />', ctx);
 
         // Assert
-        expect(container.textContent).toContain('Unable to initialize this view');
+        expect(mounted.container.textContent).toContain('Unable to initialize this view');
         expect(fetchImpl).not.toHaveBeenCalled();
     });
 });

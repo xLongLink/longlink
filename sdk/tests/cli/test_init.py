@@ -18,20 +18,14 @@ from longlink.database import migrations as database_migrations
             id="default",
         ),
         pytest.param(
-            ["--folder", "sample-solution", "--ci", "github"],
+            ["--folder", "sample-solution", "--ci", "github", "--name", "sample"],
             [
                 ".github/actions/setup-python/action.yml",
                 ".github/workflows/release.yml",
                 ".github/workflows/tests.yml",
             ],
-            "sample-solution",
-            id="github-ci",
-        ),
-        pytest.param(
-            ["--folder", "sample-solution", "--name", "sample"],
-            [],
             "sample",
-            id="name",
+            id="github-ci",
         ),
     ],
 )

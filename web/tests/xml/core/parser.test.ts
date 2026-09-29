@@ -29,20 +29,11 @@ describe('parseXML', () => {
         });
     });
 
-    it('compiles visible text nodes as Text components', () => {
-        expect(parseFragment('<Heading level="1">  Hello, world  </Heading>')).toEqual([
-            {
-                name: 'Heading',
-                params: { level: { kind: 'text', value: '1' } },
-                children: [
-                    {
-                        name: '$text',
-                        params: { value: { kind: 'text', value: 'Hello, world' } },
-                        children: [],
-                    },
-                ],
-            },
-        ]);
+    it('trims visible text nodes', () => {
+        expect(parseFragment('<Heading level="1">  Hello, world  </Heading>')[0]?.children[0]?.params.value).toEqual({
+            kind: 'text',
+            value: 'Hello, world',
+        });
     });
 
     it('rejects malformed XML', () => {

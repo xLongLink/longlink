@@ -16,13 +16,12 @@ describe('FileViewer', () => {
     });
 
     afterEach(async () => {
-        vi.unstubAllGlobals();
-        vi.restoreAllMocks();
-
         await cleanupMountedRoot(root);
         root = undefined;
         mountedContainer?.remove();
         mountedContainer = undefined;
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
     });
 
     async function renderViewer(xml: string, ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' })) {

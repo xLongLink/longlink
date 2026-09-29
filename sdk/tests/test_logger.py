@@ -59,33 +59,29 @@ def test_configure_logger_reuses_existing_handler(resettable_logger: logging.Log
     """Apply logger policy without adding a duplicate existing handler."""
 
     # Arrange
-    logger = resettable_logger
     handler = logging.StreamHandler()
-    logger.addHandler(handler)
+    resettable_logger.addHandler(handler)
 
     # Act
-    configured_logger = configure_logger(logger.name)
+    configured_logger = configure_logger(resettable_logger.name)
 
     # Assert
-    assert configured_logger is logger
-    assert logger.handlers == [handler]
-    assert logger.level == logging.INFO
-    assert logger.propagate is False
+    assert configured_logger is resettable_logger
+    assert resettable_logger.handlers == [handler]
+    assert resettable_logger.level == logging.INFO
+    assert resettable_logger.propagate is False
 
 
 def test_configure_logger_adds_configured_handler_when_logger_has_none(resettable_logger: logging.Logger) -> None:
     """Install one formatted stream handler for an otherwise unconfigured logger."""
 
-    # Arrange
-    logger = resettable_logger
-
     # Act
-    configured_logger = configure_logger(logger.name)
+    configured_logger = configure_logger(resettable_logger.name)
 
     # Assert
-    assert configured_logger is logger
-    assert len(logger.handlers) == 1
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert isinstance(logger.handlers[0].formatter, ColorFormatter)
-    assert logger.level == logging.INFO
-    assert logger.propagate is False
+    assert configured_logger is resettable_logger
+    assert len(resettable_logger.handlers) == 1
+    assert isinstance(resettable_logger.handlers[0], logging.StreamHandler)
+    assert isinstance(resettable_logger.handlers[0].formatter, ColorFormatter)
+    assert resettable_logger.level == logging.INFO
+    assert resettable_logger.propagate is False

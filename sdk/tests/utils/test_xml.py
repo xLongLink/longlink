@@ -7,12 +7,11 @@ VALID_FRAGMENTS = [
         '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button>Save</Button></Action>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
-    ("badge", '<Badge>$item.status<Icon icon="check" /></Badge>'),
+    ("badge", '<Badge>$item.status<Icon icon="check" if="show" /></Badge>'),
     (
         "button",
         '<Button variant="primary" if="${canSave}">Save</Button>',
     ),
-    ("card", "<Card>Card content</Card>"),
     (
         "checkbox-input",
         '<CheckboxInput label="Archive" value="$form.archive" />',
@@ -33,13 +32,12 @@ VALID_FRAGMENTS = [
         "form-layout",
         '<Stack><TextInput label="Name" /><NumberInput label="Quantity" /></Stack>',
     ),
-    ("grid", '<Grid minColumnWidth="240" maxColumns="3"><Card /></Grid>'),
+    ("grid", '<Grid minColumnWidth="240" maxColumns="3"><Card>Card content</Card></Grid>'),
     ("grid-span", '<Grid columns="3"><GridSpan columns="2" rows="2"><Card /></GridSpan></Grid>'),
     (
         "heading",
         '<Heading level="1">Dashboard</Heading>',
     ),
-    ("icon", '<Icon icon="info" if="show" />'),
     ("link", '<Link to="/issues/123">Open issue</Link>'),
     (
         "number-input",

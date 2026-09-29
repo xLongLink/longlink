@@ -96,51 +96,29 @@ def test_mysql_database_url_rejects_invalid_tls_configuration(query: str, messag
         urls.database(database_url)
 
 
-def test_mysql_database_url_defaults_to_identity_verification() -> None:
-    """Authenticate the MySQL server hostname when no TLS mode is specified."""
+@pytest.mark.parametrize(
+    ("query", "check_hostname", "verify_mode"),
+    [
+        pytest.param("", True, ssl.CERT_REQUIRED, id="default-identity-verification"),
+        pytest.param("?ssl-mode=REQUIRED", False, ssl.CERT_NONE, id="required-tls"),
+        pytest.param("?ssl-mode=VERIFY_CA", False, ssl.CERT_REQUIRED, id="verify-ca"),
+    ],
+)
+def test_mysql_database_url_builds_tls_context_for_verification_mode(
+    query: str, check_hostname: bool, verify_mode: ssl.VerifyMode
+) -> None:
+    """Build the configured TLS context without passing mode options to the driver."""
 
     # Act
-    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink")
+    connection = urls.database(f"mysql+aiomysql://control:secret@db:3306/longlink{query}")
 
     # Assert
     context = connection.connect_args["ssl"]
     assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
     assert connection.connect_args["init_command"] == "SET time_zone = '+00:00'"
     assert isinstance(context, ssl.SSLContext)
-    assert context.check_hostname is True
-    assert context.verify_mode == ssl.CERT_REQUIRED
-
-
-def test_mysql_database_url_builds_required_tls_context() -> None:
-    """Build a non-verifying SSL context for MySQL's REQUIRED mode."""
-
-    # Arrange
-    database_url = "mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=REQUIRED"
-
-    # Act
-    connection = urls.database(database_url)
-
-    # Assert
-    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
-    assert connection.connect_args["init_command"] == "SET time_zone = '+00:00'"
-    context = connection.connect_args["ssl"]
-    assert isinstance(context, ssl.SSLContext)
-    assert context.check_hostname is False
-    assert context.verify_mode == ssl.CERT_NONE
-
-
-def test_mysql_database_url_builds_verifying_ca_tls_context() -> None:
-    """Require certificate validation for MySQL VERIFY_CA connections."""
-
-    # Act
-    connection = urls.database("mysql+aiomysql://control:secret@db:3306/longlink?ssl-mode=VERIFY_CA")
-
-    # Assert
-    context = connection.connect_args["ssl"]
-    assert connection.url.render_as_string(hide_password=False) == "mysql+aiomysql://control:secret@db:3306/longlink"
-    assert isinstance(context, ssl.SSLContext)
-    assert context.check_hostname is False
-    assert context.verify_mode == ssl.CERT_REQUIRED
+    assert context.check_hostname is check_hostname
+    assert context.verify_mode == verify_mode
 
 
 def test_mysql_database_url_loads_optional_client_certificate(monkeypatch: pytest.MonkeyPatch) -> None:

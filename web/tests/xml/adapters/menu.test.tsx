@@ -1,5 +1,4 @@
 import { MemoryRouter } from 'react-router';
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createContext, parseFragment, RenderXML, renderXmlToMarkup } from '../helpers';
@@ -20,12 +19,12 @@ describe('Menu', () => {
     });
 
     it('renders sections, items, and subsections', () => {
-        const ast = parseXML(
-            '<longlink><Menu><MenuSection title="Workspace"><MenuItem label="Overview">Overview content</MenuItem><MenuSubSection label="Projects"><MenuItem label="Active projects">Projects content</MenuItem></MenuSubSection></MenuSection></Menu></longlink>'
+        const children = parseFragment(
+            '<Menu><MenuSection title="Workspace"><MenuItem label="Overview">Overview content</MenuItem><MenuSubSection label="Projects"><MenuItem label="Active projects">Current work</MenuItem></MenuSubSection></MenuSection></Menu>'
         );
         const output = renderToStaticMarkup(
             <MemoryRouter>
-                <RenderXML ast={ast} ctx={createContext()} />
+                <RenderXML ast={{ name: 'longlink', params: {}, children }} ctx={createContext()} />
             </MemoryRouter>
         );
 

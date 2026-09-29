@@ -26,6 +26,7 @@ def test_dev_command_warns_only_for_public_hosts(
     def run(application: str, **kwargs: object) -> None:
         """Capture the Uvicorn launch configuration."""
 
+        assert migrations == ["applied"]
         calls.append((application, kwargs))
 
     def warning(message: str, host: str) -> None:
@@ -44,16 +45,18 @@ def test_dev_command_warns_only_for_public_hosts(
     assert result.exit_code == 0
     assert warnings == expected_warnings
     assert migrations == ["applied"]
-    assert calls == [
-        (
-            "main:app",
-            {
-                "host": host,
-                "port": 1707,
-                "reload": True,
-                "reload_includes": ["*.xml"],
-                "app_dir": str(dev.Path.cwd()),
-                "log_config": dev.log_config,
-            },
-        )
-    ]
+    assert len(calls) == 1
+    application, options = calls[0]
+    assert application == "main:app"
+    assert options["host"] == host
+
+    # The public-host case also verifies the full Uvicorn launch contract.
+    if host == "0.0.0.0":
+        assert options == {
+            "host": host,
+            "port": 1707,
+            "reload": True,
+            "reload_includes": ["*.xml"],
+            "app_dir": str(dev.Path.cwd()),
+            "log_config": dev.log_config,
+        }

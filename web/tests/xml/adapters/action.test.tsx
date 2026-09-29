@@ -197,7 +197,7 @@ describe('Action', () => {
 
         // Act
         const button = await renderAction(
-            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button to="javascript:alert(1)">Save</Button></Action>',
+            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button>Save</Button></Action>',
             ctx,
             closeDialog
         );
@@ -236,18 +236,18 @@ describe('Action', () => {
 
     it.each([
         {
-            error: 'Request cannot send both form and json payloads',
+            name: 'both form and json payloads',
             request: 'method="POST" form="${{name: \'Ada\'}}" json="${{name: \'Ada\'}}"',
         },
         {
-            error: 'GET requests cannot send payloads',
+            name: 'a GET payload',
             request: 'method="GET" json="${{name: \'Ada\'}}"',
         },
         {
-            error: 'form must evaluate to an object',
+            name: 'a non-object form',
             request: 'method="POST" form="invalid"',
         },
-    ])('does not execute invalid request payloads: $error', async ({ request }) => {
+    ])('does not execute invalid request payloads: $name', async ({ request }) => {
         const ctx = createContext();
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
@@ -339,26 +339,26 @@ describe('Action', () => {
 
     it.each([
         {
-            error: 'Patch requires exactly one of value or invalidate="true"',
+            name: 'neither value nor invalidate',
             setup: '<State id="form" value="draft" />',
             patch: '<Patch state="form" />',
         },
         {
-            error: 'Patch requires exactly one of value or invalidate="true"',
+            name: 'both value and invalidate',
             setup: '<State id="form" value="draft" />',
             patch: '<Patch state="form" value="${{value: \'published\'}}" invalidate="true" />',
         },
         {
-            error: 'Patch state "missing" does not reference a declared State or Query',
+            name: 'an undeclared state',
             setup: '',
             patch: '<Patch state="missing" invalidate="true" />',
         },
         {
-            error: 'Patch state "records" must reference a declared State',
+            name: 'a Query instead of a State',
             setup: '<Query id="records" path="/records" />',
             patch: '<Patch state="records" value="${{value: \'published\'}}" />',
         },
-    ])('rejects invalid Patch contracts without executing downstream requests: $error', async ({ setup, patch }) => {
+    ])('rejects invalid Patch contracts without executing downstream requests: $name', async ({ setup, patch }) => {
         // Arrange
         const ctx = createContext();
         const fetchRequest = vi.fn(async () => new Response('{}'));

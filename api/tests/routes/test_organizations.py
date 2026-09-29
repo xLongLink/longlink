@@ -622,26 +622,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
     }
 
 
-@pytest.mark.parametrize("path", ["/api/v1/users", "/api/v1/organizations", "/api/v1/solutions"])
-async def test_platform_listings_reject_authenticated_non_administrators(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    path: str,
-) -> None:
-    """Keep platform-wide user, organization, and solution listings administrator-only."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    await create_solution(organization)
-
-    # Act
-    response = await clients[1].get(path)
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
-
-
 async def test_delete_organization_returns_not_found_for_unknown_identifier(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:

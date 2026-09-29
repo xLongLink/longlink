@@ -39,12 +39,13 @@ def test_certificate_file_publishes_validated_pem_for_caller_lifetime() -> None:
 
     # Act
     with tls.certificate_file(TEST_CA_PEM) as filename:
+        certificate_path = Path(filename)
+
         # Assert
-        assert Path(filename).suffix == ".crt"
-        assert Path(filename).read_text() == TEST_CA_PEM
+        assert certificate_path.read_text() == TEST_CA_PEM
 
     # Assert
-    assert not Path(filename).exists()
+    assert not certificate_path.exists()
 
 
 def test_session_restores_hostname_verification() -> None:

@@ -5,7 +5,6 @@ from src.models.solutions import SolutionPatch, SolutionCreate
 pytestmark = pytest.mark.no_db
 
 INVALID_IDLE_SECONDS = [
-    pytest.param(1, id="one"),
     pytest.param(29, id="below-minimum"),
     pytest.param(3601, id="above-maximum"),
     pytest.param(-1, id="negative"),

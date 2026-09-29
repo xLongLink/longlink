@@ -182,6 +182,7 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
 
     async with adapter.connection("postgres") as conn:
         role_before_cleanup = await conn.scalar(text("SELECT rolname FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+    assert role_before_cleanup == runtime_username
 
     # Act
     for _ in range(2):
@@ -193,7 +194,6 @@ async def test_postgres_removes_runtime_identity_and_tolerates_repeated_schema_c
             schema_after_cleanup = await conn.scalar(
                 text("SELECT nspname FROM pg_namespace WHERE nspname = :schema"), {"schema": solution_id.hex}
             )
-        assert role_before_cleanup == runtime_username
         assert role_after_cleanup is None
         assert schema_after_cleanup is None
 

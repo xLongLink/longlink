@@ -99,19 +99,14 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             await super().apply(organization, quota_bytes=quota_bytes)
 
-    async def apply_namespace(organization_id: UUID, **_kwargs: object) -> None:
-        """Record namespace reconciliation."""
-
-        assert organization_id == organization.id
-        calls.append("namespace")
-
     class Organizations:
         """Record Organization boundary reconciliation."""
 
         async def apply(self, organization_id: UUID) -> None:
             """Record namespace reconciliation."""
 
-            await apply_namespace(organization_id)
+            assert organization_id == organization.id
+            calls.append("namespace")
 
     class Kubernetes(OperationKubernetes):
         """Expose Organization Kubernetes operations."""
