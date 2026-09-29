@@ -105,9 +105,9 @@
                     <Request
                         url="/api/v1/organizations/${deletion.item.id}"
                         method="DELETE"
-                        closeDialog="true"
                     />
                     <Patch state="organizations" invalidate="true" />
+                    <Patch state="deletion" value="${{ open: false }}" />
                     <Button variant="destructive">Delete</Button>
                 </Action>
             </Stack>

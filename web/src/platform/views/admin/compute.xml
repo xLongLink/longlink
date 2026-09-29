@@ -115,9 +115,9 @@
                         url="/api/v1/computes"
                         method="POST"
                         json="$registration"
-                        closeDialog="true"
                     />
                     <Patch state="computes" invalidate="true" />
+                    <Patch state="registrationDialog" value="${{ open: false }}" />
                     <Button variant="primary">Register</Button>
                 </Action>
             </Stack>
@@ -174,9 +174,9 @@
                     <Request
                         url="/api/v1/computes/${deletion.item.id}"
                         method="DELETE"
-                        closeDialog="true"
                     />
                     <Patch state="computes" invalidate="true" />
+                    <Patch state="deletion" value="${{ open: false }}" />
                     <Button variant="destructive">Delete</Button>
                 </Action>
             </Stack>

@@ -17,6 +17,7 @@
         path="/api/v1/organizations/${membership.organization.id}/solutions"
     />
     <State id="invitation" email="" role="write" />
+    <State id="invitationDialog" open="${false}" />
     <State id="memberMenu" item="${null}" role="read" open="${false}" />
     <State
         id="solutionMenu"
@@ -182,6 +183,7 @@
                                     title="Invite user"
                                     subtitle="Send an invitation to join this organization."
                                     triggerLabel="Invite"
+                                    isOpen="$invitationDialog.open"
                                     purpose="form"
                                 >
                                     <Stack gap="3">
@@ -208,13 +210,13 @@
                                             <Request
                                                 url="/api/v1/organizations/${membership.organization.id}/invitations"
                                                 method="POST"
-                                                closeDialog="true"
                                                 json="$invitation"
                                             />
                                             <Patch
                                                 state="details"
                                                 invalidate="true"
                                             />
+                                            <Patch state="invitationDialog" value="${{ open: false }}" />
                                             <Button variant="primary">
                                                 Invite
                                             </Button>
@@ -339,9 +341,9 @@
                         url="/api/v1/organizations/${membership.organization.id}/members/${memberMenu.item.user.id}"
                         method="PATCH"
                         json="${{ role: memberMenu.role }}"
-                        closeDialog="true"
                     />
                     <Patch state="details" invalidate="true" />
+                    <Patch state="memberMenu" value="${{ open: false }}" />
                     <Button variant="primary">Confirm</Button>
                 </Action>
             </Stack>
@@ -430,10 +432,10 @@
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
-                                    closeDialog="true"
                                     json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
                                 />
                                 <Patch state="solutions" invalidate="true" />
+                                <Patch state="createSolution" value="${{ open: false }}" />
                                 <Button
                                     variant="primary"
                                     disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}"
@@ -487,10 +489,10 @@
                     <Request
                         url="/api/v1/solutions/${solutionMenu.item.id}/update"
                         method="POST"
-                        closeDialog="true"
                         json="${{ envs: updateEnvironmentPatch(solutionMenu.envs, solutionMenu.removed), expected_revision_id: updateCandidate.revision_id }}"
                     />
                     <Patch state="solutions" invalidate="true" />
+                    <Patch state="solutionMenu" value="${{ open: false }}" />
                     <Button
                         variant="primary"
                         disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) || !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}"
@@ -530,9 +532,9 @@
                     <Request
                         url="/api/v1/solutions/${solutionMenu.item.id}"
                         method="DELETE"
-                        closeDialog="true"
                     />
                     <Patch state="solutions" invalidate="true" />
+                    <Patch state="solutionMenu" value="${{ deleteOpen: false }}" />
                     <Button variant="destructive">Delete</Button>
                 </Action>
             </Stack>

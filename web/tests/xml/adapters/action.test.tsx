@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
 import type { createRoot } from 'react-dom/client';
-import { DialogCloseContext } from '@/xml/adapters/Dialog';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createContext, parseFragment, cleanupMountedRoot, mountXml, renderXmlToMarkup } from '../helpers';
 
@@ -167,13 +166,11 @@ describe('Action', () => {
     ])('does not patch state, navigate, or close when a request fails: $error', async ({ error, fetch }) => {
         // Arrange
         const ctx = createContext({ navigate: vi.fn() });
-        const closeDialog = vi.fn();
         vi.stubGlobal('fetch', fetch);
 
         const button = await renderAction(
-            '<State id="form" value="draft" /><Action><Request url="/orders" method="POST" closeDialog="true" /><Patch state="form" value="${{value: \'published\'}}" /><Link to="/orders">Save</Link></Action>',
-            ctx,
-            closeDialog
+            '<State id="form" value="draft" open="${true}" /><Action><Request url="/orders" method="POST" /><Patch state="form" value="${{value: \'published\'}}" /><Patch state="form" value="${{open: false}}" /><Link to="/orders">Save</Link></Action>',
+            ctx
         );
 
         // Act
@@ -183,23 +180,20 @@ describe('Action', () => {
         });
 
         // Assert
-        expect(ctx.scope.bindings.form).toEqual({ value: 'draft' });
+        expect(ctx.scope.bindings.form).toEqual({ value: 'draft', open: true });
         expect(ctx.services.navigate).not.toHaveBeenCalled();
-        expect(closeDialog).not.toHaveBeenCalled();
         expect(toast).toHaveBeenCalledWith(expect.objectContaining({ body: error, type: 'error' }));
     });
 
-    it('closes the dialog after a successful request', async () => {
+    it('patches dialog state after successful Action effects', async () => {
         // Arrange
         const ctx = createContext();
-        const closeDialog = vi.fn();
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
 
         // Act
         const button = await renderAction(
-            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Button>Save</Button></Action>',
-            ctx,
-            closeDialog
+            '<State id="dialog" open="${true}" /><Action><Request url="/orders" method="POST" /><Patch state="dialog" value="${{open: false}}" /><Button>Save</Button></Action>',
+            ctx
         );
 
         await act(async () => {
@@ -209,18 +203,16 @@ describe('Action', () => {
 
         // Assert
         expect(toast).toHaveBeenCalledWith({ body: 'Request completed with status 201' });
-        expect(closeDialog).toHaveBeenCalledOnce();
+        expect(ctx.scope.bindings.dialog).toEqual({ open: false });
     });
 
-    it('navigates instead of closing or toasting after a successful Action Link request', async () => {
+    it('navigates without closing or toasting after a successful Action Link request', async () => {
         // Arrange
         const ctx = createContext({ navigate: vi.fn(), requestBaseUrl: '/proxy/' });
-        const closeDialog = vi.fn();
         vi.stubGlobal('fetch', async () => new Response('{}', { status: 201 }));
         const link = await renderAction(
-            '<Action><Request url="/orders" method="POST" closeDialog="true" /><Link href="/orders">Save</Link></Action>',
-            ctx,
-            closeDialog
+            '<State id="dialog" open="${true}" /><Action><Request url="/orders" method="POST" /><Link href="/orders">Save</Link></Action>',
+            ctx
         );
 
         // Act
@@ -230,7 +222,7 @@ describe('Action', () => {
         });
 
         // Assert
-        expect(closeDialog).not.toHaveBeenCalled();
+        expect(ctx.scope.bindings.dialog).toEqual({ open: true });
         expect(toast).not.toHaveBeenCalled();
     });
 
@@ -386,15 +378,9 @@ describe('Action', () => {
         );
     });
 
-    async function renderAction(
-        xml: string,
-        ctx: ReturnType<typeof createContext>,
-        closeDialog: (() => void) | null = null
-    ) {
+    async function renderAction(xml: string, ctx: ReturnType<typeof createContext>) {
         // Mount through the shared helper so ACT and root lifetime stay in one owner.
-        const mounted = await mountXml(xml, ctx, (node) => (
-            <DialogCloseContext.Provider value={closeDialog}>{node}</DialogCloseContext.Provider>
-        ));
+        const mounted = await mountXml(xml, ctx);
         root = mounted.root;
         const container = mounted.container;
 

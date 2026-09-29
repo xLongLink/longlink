@@ -147,10 +147,10 @@
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
-                                    closeDialog="true"
                                     json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
                                 />
                                 <Patch state="solutions" invalidate="true" />
+                                <Patch state="createSolution" value="${{ open: false }}" />
                                 <Button
                                     variant="primary"
                                     disabled="${hasMissingRequiredValues(createSolutionMetadata.environments, createSolution.envs)}"

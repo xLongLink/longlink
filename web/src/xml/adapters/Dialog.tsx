@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { Props } from '../types';
-import { createContext } from 'react';
 import { renderNode } from '../core/node';
 import { useXmlRuntime } from '../core/context';
 import { Button } from '@astryxdesign/core/Button';
@@ -19,8 +18,6 @@ const dialogPropsSchema = z.object({
     triggerLabel: xmlNonblankStringSchema.optional(),
 });
 
-export const DialogCloseContext = createContext<(() => void) | null>(null);
-
 export function Dialog({ props, nodes }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const binding = useBindableValue(props, 'isOpen', ctx, coerceXmlBoolean);
@@ -36,7 +33,7 @@ export function Dialog({ props, nodes }: Props) {
     }
 
     return (
-        <DialogCloseContext.Provider value={() => binding.setValue(false)}>
+        <>
             {triggerLabel && <Button clickAction={() => binding.setValue(true)} label={triggerLabel} />}
             <AstryxDialog
                 gap={gap}
@@ -51,6 +48,6 @@ export function Dialog({ props, nodes }: Props) {
             >
                 {renderNode(nodes, ctx)}
             </AstryxDialog>
-        </DialogCloseContext.Provider>
+        </>
     );
 }
