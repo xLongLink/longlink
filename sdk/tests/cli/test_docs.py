@@ -12,7 +12,7 @@ def test_docs_command_lists_documented_component_categories() -> None:
     assert result.exit_code == 0
     assert "LongLink XML components" in result.output
     assert "Action" in result.output
-    assert "- Button - Button triggers an action when clicked." in result.output
+    assert "- Button - Button runs child effects in order when clicked" in result.output
 
 
 def test_docs_command_resolves_a_component_name_case_insensitively() -> None:

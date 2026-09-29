@@ -2,7 +2,53 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="ButtonType" mixed="true">
     <xsd:sequence>
-      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict"/>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="Request">
+          <xsd:complexType>
+            <xsd:attribute name="url" type="xsd:string" use="required">
+              <xsd:annotation>
+                <xsd:documentation>Solution-relative request URL.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="method" type="ActionMethodType" use="required">
+              <xsd:annotation>
+                <xsd:documentation>HTTP request method.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="form" type="xsd:string"/>
+            <xsd:attribute name="json" type="xsd:string"/>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Patch">
+          <xsd:complexType>
+            <xsd:attribute name="state" type="xsd:string" use="required">
+              <xsd:annotation>
+                <xsd:documentation>Literal State identifier to patch, or State/Query identifier to invalidate.</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="value" type="xsd:string">
+              <xsd:annotation>
+                <xsd:documentation>Object expression containing declared State properties to update. Specify exactly one of value or invalidate="true".</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true">
+              <xsd:annotation>
+                <xsd:documentation>Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate="true".</xsd:documentation>
+              </xsd:annotation>
+            </xsd:attribute>
+          </xsd:complexType>
+        </xsd:element>
+        <xsd:element name="Validate">
+          <xsd:complexType>
+            <xsd:attribute name="value" type="xsd:string" use="required">
+              <xsd:annotation><xsd:documentation>Object expression to validate and normalize before a request.</xsd:documentation></xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="rules" type="xsd:string" use="required">
+              <xsd:annotation><xsd:documentation>Declarative field validation rules expression.</xsd:documentation></xsd:annotation>
+            </xsd:attribute>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:choice>
     </xsd:sequence>
     <xsd:attribute name="variant" type="ButtonVariantType" default="secondary">
       <xsd:annotation>
@@ -19,17 +65,21 @@
         <xsd:documentation>Whether the button is unavailable for interaction.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
+    <xsd:attribute name="label" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Button text. Required when the Button contains effects.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
   <xsd:element name="Button" type="ButtonType">
     <xsd:annotation>
-      <xsd:documentation>Button triggers an action when clicked. Use it for form submissions, confirmations, or simple Solution navigation with to.</xsd:documentation>
+      <xsd:documentation>Button runs child effects in order when clicked, then navigates to its to destination after they succeed. Use label for buttons with effects.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="button" category="Action" lastUpdated="2026-07-21" source="adapters/Button.xsd"/>
-        <longlink:example>&lt;Action&gt;
+        <longlink:example>&lt;Button label="Save" variant="primary"&gt;
   &lt;Request url="/api/orders" method="POST" /&gt;
-  &lt;Button variant="primary"&gt;Save&lt;/Button&gt;
-&lt;/Action&gt;
+&lt;/Button&gt;
 &lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

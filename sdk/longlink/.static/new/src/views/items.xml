@@ -13,7 +13,7 @@
             <Dialog title="New item" triggerLabel="New item" isOpen="$createDialog.open" purpose="form">
                 <TextInput label="Name" value="$draft.name" />
                 <NumberInput label="Price" value="$draft.price" min="0" />
-                <Action>
+                <Button label="Create item" variant="primary">
                     <Request
                         url="/api/items"
                         method="POST"
@@ -21,8 +21,7 @@
                     />
                     <Patch state="items" invalidate="true" />
                     <Patch state="createDialog" value="${{ open: false }}" />
-                    <Button variant="primary">Create item</Button>
-                </Action>
+                </Button>
             </Dialog>
         </Stack>
 

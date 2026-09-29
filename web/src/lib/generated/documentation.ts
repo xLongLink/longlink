@@ -14,79 +14,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
-                "description": "Conditional rendering expression.",
-                "name": "if"
-            }
-        ],
-        "description": "Use Action to run requests and state changes in order when someone presses its one terminal Button or Link. A control with to navigates and ends the action.",
-        "example": "",
-        "name": "Action",
-        "lastUpdated": "2026-07-21",
-        "nested": [
-            {
-                "attributes": [
-                    {
-                        "description": "Solution-relative request URL.",
-                        "name": "url"
-                    },
-                    {
-                        "description": "HTTP request method.",
-                        "name": "method"
-                    },
-                    {
-                        "description": "",
-                        "name": "form"
-                    },
-                    {
-                        "description": "",
-                        "name": "json"
-                    }
-                ],
-                "description": "",
-                "example": "",
-                "name": "Request"
-            },
-            {
-                "attributes": [
-                    {
-                        "description": "Literal State identifier to patch, or State/Query identifier to invalidate.",
-                        "name": "state"
-                    },
-                    {
-                        "description": "Object expression containing declared State properties to update. Specify exactly one of value or invalidate=\"true\".",
-                        "name": "value"
-                    },
-                    {
-                        "description": "Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate=\"true\".",
-                        "name": "invalidate"
-                    }
-                ],
-                "description": "",
-                "example": "",
-                "name": "Patch"
-            },
-            {
-                "attributes": [
-                    {
-                        "description": "Object expression to validate and normalize before a request.",
-                        "name": "value"
-                    },
-                    {
-                        "description": "Declarative field validation rules expression.",
-                        "name": "rules"
-                    }
-                ],
-                "description": "",
-                "example": "",
-                "name": "Validate"
-            }
-        ],
-        "slug": "action",
-        "source": "adapters/Action.xsd"
-    },
-    {
-        "attributes": [
-            {
                 "description": "Avatar image URL.",
                 "name": "src"
             },
@@ -149,12 +76,16 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "disabled"
             },
             {
+                "description": "Button text. Required when the Button contains effects.",
+                "name": "label"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
         ],
-        "description": "Button triggers an action when clicked. Use it for form submissions, confirmations, or simple Solution navigation with to.",
-        "example": "<Action>\n  <Request url=\"/api/orders\" method=\"POST\" />\n  <Button variant=\"primary\">Save</Button>\n</Action>\n<Button to=\"/orders\">View orders</Button>",
+        "description": "Button runs child effects in order when clicked, then navigates to its to destination after they succeed. Use label for buttons with effects.",
+        "example": "<Button label=\"Save\" variant=\"primary\">\n  <Request url=\"/api/orders\" method=\"POST\" />\n</Button>\n<Button to=\"/orders\">View orders</Button>",
         "name": "Button",
         "lastUpdated": "2026-07-21",
         "nested": [
@@ -180,6 +111,40 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "description": "",
                 "example": "",
                 "name": "Request"
+            },
+            {
+                "attributes": [
+                    {
+                        "description": "Literal State identifier to patch, or State/Query identifier to invalidate.",
+                        "name": "state"
+                    },
+                    {
+                        "description": "Object expression containing declared State properties to update. Specify exactly one of value or invalidate=\"true\".",
+                        "name": "value"
+                    },
+                    {
+                        "description": "Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate=\"true\".",
+                        "name": "invalidate"
+                    }
+                ],
+                "description": "",
+                "example": "",
+                "name": "Patch"
+            },
+            {
+                "attributes": [
+                    {
+                        "description": "Object expression to validate and normalize before a request.",
+                        "name": "value"
+                    },
+                    {
+                        "description": "Declarative field validation rules expression.",
+                        "name": "rules"
+                    }
+                ],
+                "description": "",
+                "example": "",
+                "name": "Validate"
             }
         ],
         "slug": "button",
@@ -474,12 +439,16 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "to"
             },
             {
+                "description": "Link text. Required when the Link contains effects.",
+                "name": "label"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
         ],
-        "description": "A styled anchor for inline and standalone text navigation. Inside Action, it can follow requests and patches as the terminal navigation step.",
-        "example": "<Link to=\"/orders/${order.id}\">Open order</Link>\n\n<Action>\n  <Request method=\"POST\" url=\"/api/orders\" json=\"${order}\" />\n  <Link to=\"/orders/${order.id}\">Create and open order</Link>\n</Action>",
+        "description": "A styled navigation link. With label and child effects, it runs them in order before navigating and behaves like a link-styled button.",
+        "example": "<Link to=\"/orders/${order.id}\">Open order</Link>\n\n<Link label=\"Create and open order\" to=\"/orders/${order.id}\">\n  <Request method=\"POST\" url=\"/api/orders\" json=\"${order}\" />\n</Link>",
         "name": "Link",
         "lastUpdated": "2026-07-21",
         "nested": [
@@ -505,6 +474,40 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "description": "",
                 "example": "",
                 "name": "Request"
+            },
+            {
+                "attributes": [
+                    {
+                        "description": "Literal State identifier to patch, or State/Query identifier to invalidate.",
+                        "name": "state"
+                    },
+                    {
+                        "description": "Object expression containing declared State properties to update. Specify exactly one of value or invalidate=\"true\".",
+                        "name": "value"
+                    },
+                    {
+                        "description": "Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate=\"true\".",
+                        "name": "invalidate"
+                    }
+                ],
+                "description": "",
+                "example": "",
+                "name": "Patch"
+            },
+            {
+                "attributes": [
+                    {
+                        "description": "Object expression to validate and normalize before a request.",
+                        "name": "value"
+                    },
+                    {
+                        "description": "Declarative field validation rules expression.",
+                        "name": "rules"
+                    }
+                ],
+                "description": "",
+                "example": "",
+                "name": "Validate"
             }
         ],
         "slug": "link",

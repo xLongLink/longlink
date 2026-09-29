@@ -42,20 +42,14 @@
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
-            <Action>
+            <Button label="Previous" disabled="${pages.value === 1}">
                 <Patch state="pages" value="${{ value: pages.value - 1 }}" />
                 <Patch state="organizations" invalidate="true" />
-                <Button disabled="${pages.value === 1}">Previous</Button>
-            </Action>
-            <Action>
+            </Button>
+            <Button label="Next" disabled="${organizations.total &lt;= pages.value * 25}">
                 <Patch state="pages" value="${{ value: pages.value + 1 }}" />
                 <Patch state="organizations" invalidate="true" />
-                <Button
-                    disabled="${organizations.total &lt;= pages.value * 25}"
-                >
-                    Next
-                </Button>
-            </Action>
+            </Button>
         </Stack>
     </Stack>
 
@@ -74,7 +68,7 @@
                 $metadata.item.id
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Delete" variant="destructive">
                     <Patch
                         state="metadata"
                         value="${{ item: metadata.item, open: false }}"
@@ -83,8 +77,7 @@
                         state="deletion"
                         value="${{ item: metadata.item, open: true }}"
                     />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>
@@ -94,22 +87,20 @@
                 Delete organization ${deletion.item.name}?
             </Text>
             <Stack direction="horizontal" gap="2" justify="end">
-                <Action>
+                <Button label="Cancel" variant="ghost">
                     <Patch
                         state="deletion"
                         value="${{ item: deletion.item, open: false }}"
                     />
-                    <Button variant="ghost">Cancel</Button>
-                </Action>
-                <Action>
+                </Button>
+                <Button label="Delete" variant="destructive">
                     <Request
                         url="/api/v1/organizations/${deletion.item.id}"
                         method="DELETE"
                     />
                     <Patch state="organizations" invalidate="true" />
                     <Patch state="deletion" value="${{ open: false }}" />
-                    <Button variant="destructive">Delete</Button>
-                </Action>
+                </Button>
             </Stack>
         </Stack>
     </Dialog>

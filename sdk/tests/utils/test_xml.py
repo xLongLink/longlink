@@ -3,8 +3,8 @@ from longlink.utils.xml import validate_xml
 
 VALID_FRAGMENTS = [
     (
-        "action",
-        '<Action><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /><Button>Save</Button></Action>',
+        "button-effects",
+        '<Button label="Save"><Request url="/profile" method="PATCH" json="${profile}" /><Patch state="profile" value="${profile}" /><Patch state="profile" invalidate="true" /></Button>',
     ),
     ("avatar", '<Avatar src="/ada.png" name="Ada Lovelace" />'),
     ("badge", '<Badge>$item.status<Icon icon="check" if="show" /></Badge>'),
@@ -38,7 +38,7 @@ VALID_FRAGMENTS = [
         "heading",
         '<Heading level="1">Dashboard</Heading>',
     ),
-    ("link", '<Link to="/issues/123">Open issue</Link>'),
+    ("link", '<Link label="Create and open" to="/issues/123"><Request url="/issues" method="POST" /></Link>'),
     (
         "number-input",
         '<NumberInput label="Quantity" value="$order.quantity" min="1" step="1" />',
@@ -77,21 +77,21 @@ VALID_FRAGMENTS = [
 ]
 
 INVALID_FRAGMENTS = [
-    ("invalid-action-effect-order", '<Action><Button>Save</Button><Request url="/profile" method="PATCH" /></Action>', "Request"),
-    ("invalid-action-multiple-controls", '<Action><Button>Save</Button><Link to="/profile">Profile</Link></Action>', "Link"),
+    ("button-request-without-url", '<Button label="Save"><Request method="PATCH" /></Button>', "url"),
+    ("invalid-link-child", '<Link label="Save"><Button>Save</Button></Link>', "Button"),
     ("invalid-heading-type", '<Heading level="1" type="headline" value="Title" />', "type"),
     ("heading-id-attribute", '<Heading level="1" id="dashboard-heading">Dashboard</Heading>', "id"),
     ("icon-unsupported-attribute", '<Icon icon="info" color="violet" />', "color"),
     ("badge-label-attribute", '<Badge label="Active" />', "label"),
     ("slot-attribute", '<Badge slot="icon">Active</Badge>', "slot"),
-    ("button-label-attribute", '<Button label="Save">Save</Button>', "label"),
+    ("button-unsupported-attribute", '<Button label="Save" tone="accent" />', "tone"),
     ("missing-file-viewer-src", '<FileViewer title="Contract" />', "src"),
     ("missing-for-as", '<For each="items" />', "as"),
     ("forbidden-style", '<Button style="color: red">Save</Button>', "style"),
     (
-        "invalid-action-child",
-        '<Action tone="accent"><Button>Save</Button></Action>',
-        "tone",
+        "invalid-button-child",
+        '<Button label="Save"><Link to="/profile">Profile</Link></Button>',
+        "Link",
     ),
     (
         "missing-option-value",

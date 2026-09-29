@@ -36,18 +36,14 @@
             </TableColumn>
         </Table>
         <Stack direction="horizontal" gap="2" justify="end">
-            <Action>
+            <Button label="Previous" disabled="${pages.value === 1}">
                 <Patch state="pages" value="${{ value: pages.value - 1 }}" />
                 <Patch state="users" invalidate="true" />
-                <Button disabled="${pages.value === 1}">Previous</Button>
-            </Action>
-            <Action>
+            </Button>
+            <Button label="Next" disabled="${users.total &lt;= pages.value * 25}">
                 <Patch state="pages" value="${{ value: pages.value + 1 }}" />
                 <Patch state="users" invalidate="true" />
-                <Button disabled="${users.total &lt;= pages.value * 25}">
-                    Next
-                </Button>
-            </Action>
+            </Button>
         </Stack>
     </Stack>
 </longlink>

@@ -11,24 +11,11 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 
 describe('SolutionRuntime', () => {
     let root: ReturnType<typeof createRoot> | undefined;
-    let locationAssignDescriptor: PropertyDescriptor | undefined;
-    let locationAssignReplaced = false;
 
     afterEach(async () => {
         await cleanupMountedRoot(root);
         root = undefined;
         vi.unstubAllGlobals();
-
-        // Restore direct location-method replacements made by navigation tests.
-        if (locationAssignReplaced) {
-            if (locationAssignDescriptor) {
-                Object.defineProperty(window.location, 'assign', locationAssignDescriptor);
-            } else {
-                Reflect.deleteProperty(window.location, 'assign');
-            }
-        }
-        locationAssignDescriptor = undefined;
-        locationAssignReplaced = false;
     });
 
     it('renders a manifest failure', async () => {
@@ -187,27 +174,18 @@ describe('SolutionRuntime', () => {
         );
     });
 
-    it('assigns external XML destinations to the browser location', async () => {
+    it('renders external XML destinations as anchors', async () => {
         // Arrange
-        const assign = vi.fn();
-        locationAssignDescriptor = Object.getOwnPropertyDescriptor(window.location, 'assign');
-        Object.defineProperty(window.location, 'assign', { configurable: true, value: assign });
-        locationAssignReplaced = true;
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
-            return xmlResponse(
-                '<longlink><Action><Link href="https://example.com/next">Continue</Link></Action></longlink>'
-            );
+            return xmlResponse('<longlink><Link href="https://example.com/next">Continue</Link></longlink>');
         });
         const output = await renderRuntime('/home');
 
         await act(async () => vi.waitFor(() => expect(output.querySelector('a')).not.toBeNull()));
 
-        // Act
-        await act(async () => output.querySelector('a')?.click());
-
         // Assert
-        await act(async () => vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://example.com/next')));
+        expect(output.querySelector('a')?.getAttribute('href')).toBe('https://example.com/next');
     });
 
     async function renderRuntime(initialPath = '/', viewsUrl = '/views.json'): Promise<HTMLDivElement> {
