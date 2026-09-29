@@ -86,11 +86,6 @@ export function FileViewer({ props, nodes }: Props) {
 
                 previewUrl = URL.createObjectURL(blob);
 
-                if (cancelled) {
-                    URL.revokeObjectURL(previewUrl);
-                    return;
-                }
-
                 setMedia(mediaType);
                 setObjectUrl(previewUrl);
                 setStatus('ready');

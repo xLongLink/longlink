@@ -231,12 +231,11 @@ async def fail(session: AsyncSession, operation_id: UUID, reason: str) -> Operat
     operation = await session.get_one(Operation, operation_id, populate_existing=True)
 
     # Expose failed creation on its target without changing deletion lifecycle state.
-    model = {
-        OperationKind.organization_create: Organization,
-    }.get(operation.kind)
-    if model is not None:
+    if operation.kind == OperationKind.organization_create:
         await session.execute(
-            update(model).where(col(model.id) == operation.target_id, col(model.status) == Status.creating).values(status=Status.failed)
+            update(Organization)
+            .where(col(Organization.id) == operation.target_id, col(Organization.status) == Status.creating)
+            .values(status=Status.failed)
         )
 
     # Persist recovery alongside failure, including timeout failures from jobs.execute.

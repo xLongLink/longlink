@@ -49,7 +49,7 @@ def view_stem_route(view_stem: str) -> str:
             raise ValueError("Static View route segments cannot contain route parameters or wildcards")
 
         # Static routes must satisfy the web manifest's normalized path grammar.
-        if segment in {"", ".", ".."} or STATIC_ROUTE_SEGMENT_PATTERN.fullmatch(segment) is None:
+        if segment in {".", ".."} or STATIC_ROUTE_SEGMENT_PATTERN.fullmatch(segment) is None:
             raise ValueError("Static View route segments must use URL-safe file names")
 
         route_segments.append(segment)

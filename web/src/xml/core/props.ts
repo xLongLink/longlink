@@ -39,10 +39,7 @@ export function readXmlProp(props: ASTProps, name: string): ASTProps[string] | u
 
 /** Resolves an XML scalar prop. */
 export function resolveXml(props: ASTProps, name: string, ctx: Scope): number | boolean | string | undefined {
-    const attribute = readXmlProp(props, name);
-    if (attribute == null) return undefined;
-
-    const value = evaluate(attribute, ctx);
+    const value = resolveXmlValue(props, name, ctx);
     if (value == null || value === '') return undefined;
     if (typeof value === 'number' || typeof value === 'boolean') return value;
     if (value === 'true') return true;

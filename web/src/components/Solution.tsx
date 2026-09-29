@@ -121,7 +121,7 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
     const firstTabView = tabViews[0];
 
     // Let dynamic detail views share a tab with their matching list view.
-    const activeView = !routePath ? firstTabView : match?.route.view;
+    const activeView = routePath ? match?.route.view : undefined;
     const activeViewTitle = activeView ? (activeView.name ?? routeLabel(activeView.route)) : undefined;
     const isNotFound = registeredViews !== undefined && routePath.length > 0 && match == null;
     const { data: activeViewAst, error: activeViewError } = useQuery({

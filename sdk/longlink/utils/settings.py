@@ -65,7 +65,7 @@ class Envs(BaseSettings):
             raise ValueError(f"Production settings are required: {', '.join(missing_settings)}")
 
         # PostgreSQL identifiers cannot be safely bound as query parameters.
-        if self.DATABASE_SCHEMA is None or not DATABASE_SCHEMA_PATTERN.fullmatch(self.DATABASE_SCHEMA):
+        if not DATABASE_SCHEMA_PATTERN.fullmatch(self.DATABASE_SCHEMA or ""):
             raise ValueError("DATABASE_SCHEMA must be a valid PostgreSQL identifier")
 
         return self
