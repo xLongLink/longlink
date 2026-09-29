@@ -1,19 +1,20 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink name="Items" icon="package">
+<longlink name="Invoices" icon="banknote">
     <Query id="item" path="/api/items/${params.item}" />
     <Query id="attachments" path="/api/items/${params.item}/attachments" />
     <State id="attachment" file="${null}" />
     <State id="uploadDialog" open="${false}" />
+    <State id="preview" open="${false}" file="${null}" name="File" />
 
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
             <Stack gap="1">
-                <Heading level="3">$item.name</Heading>
+                <Heading level="3">${`Invoice ${item.name}`}</Heading>
                 ${`CHF ${item.price}`}
             </Stack>
-            <Dialog title="Attachments" triggerLabel="Upload attachment" isOpen="$uploadDialog.open" purpose="form">
-                <FileInput label="Attachment" value="$attachment.file" />
-                <Button label="Upload attachment" variant="primary">
+            <Dialog title="Upload Invoice Document" triggerLabel="Upload document" isOpen="$uploadDialog.open" purpose="form">
+                <FileInput label="Invoice document" value="$attachment.file" />
+                <Button label="Upload document" variant="primary">
                     <Request
                         url="/api/items/${params.item}/attachments"
                         method="POST"
@@ -27,10 +28,16 @@
 
         <Table data="$attachments" idKey="id">
             <TableColumn field="name" header="File">
-                <Dialog title="$row.name" triggerLabel="$row.name" purpose="info" width="90%" height="90vh">
-                    <FileViewer src="/api/items/${params.item}/attachments/${row.id}" title="$row.name" />
-                </Dialog>
+                <Link label="$row.name">
+                    <Patch state="preview" value="${{ open: true, file: row.id, name: row.name }}" />
+                </Link>
+            </TableColumn>
+            <TableColumn field="size" header="Size" align="end">
+                <Text>${`${row.size} B`}</Text>
             </TableColumn>
         </Table>
+        <Dialog title="$preview.name" isOpen="$preview.open" purpose="info" width="90%" height="90vh">
+            <FileViewer src="/api/items/${params.item}/attachments/${preview.file}" title="$preview.name" />
+        </Dialog>
     </Stack>
 </longlink>

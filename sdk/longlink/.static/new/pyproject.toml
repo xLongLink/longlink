@@ -1,7 +1,7 @@
 [project]
 name = "__PROJECT_NAME__"
 version = "0.0.0"
-description = "Minimal LongLink office operations Solution."
+description = "Minimal LongLink invoice tracking Solution."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

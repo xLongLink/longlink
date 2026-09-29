@@ -1,5 +1,5 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<longlink name="Items" icon="box">
+<longlink name="Invoices" icon="banknote">
     <Query id="items" path="/api/items" />
     <State id="draft" />
     <State id="createDialog" open="${false}" />
@@ -7,13 +7,13 @@
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
             <Stack gap="1">
-                <Heading level="1">Items</Heading>
-                <Text color="secondary">Track catalog items and their supporting files.</Text>
+                <Heading level="1">Invoices</Heading>
+                <Text color="secondary">Track invoices, amounts, and supporting documents.</Text>
             </Stack>
-            <Dialog title="New item" triggerLabel="New item" isOpen="$createDialog.open" purpose="form">
-                <TextInput label="Name" value="$draft.name" />
-                <NumberInput label="Price" value="$draft.price" min="0" />
-                <Button label="Create item" variant="primary">
+            <Dialog title="New Invoice" triggerLabel="New Invoice" isOpen="$createDialog.open" purpose="form">
+                <TextInput label="Invoice number" value="$draft.name" />
+                <NumberInput label="Amount (CHF)" value="$draft.price" min="0" />
+                <Button label="Create Invoice" variant="primary">
                     <Request
                         url="/api/items"
                         method="POST"
@@ -26,13 +26,21 @@
         </Stack>
 
         <Table data="$items" idKey="id">
-            <TableColumn field="name" header="Item">
-                <Stack gap="0">
-                    <Link to="/items/${row.id}">
-                        $row.name
-                    </Link>
-                    <Text color="secondary">${`CHF ${row.price}`}</Text>
+            <TableColumn field="name" header="Invoice">
+                <Link to="/items/${row.id}">$row.name</Link>
+            </TableColumn>
+            <TableColumn field="price" header="Amount" align="end">
+                <Text>${`CHF ${row.price}`}</Text>
+            </TableColumn>
+            <TableColumn field="created_by.name" header="Created by">
+                <Stack direction="horizontal" align="center" gap="3" if="$row.created_by">
+                    <Avatar src="$row.created_by.avatar" name="$row.created_by.name" alt="$row.created_by.name" />
+                    <Stack gap="0">
+                        <Text value="$row.created_by.name" />
+                        <Text color="secondary" value="$row.created_by.email" />
+                    </Stack>
                 </Stack>
+                <Text color="secondary" if="${!row.created_by}">Unknown</Text>
             </TableColumn>
         </Table>
     </Stack>
