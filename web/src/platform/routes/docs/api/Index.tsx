@@ -67,31 +67,6 @@ export default function DocsArticleRoute() {
                     This gives teams a consistent and governed operating model without rebuilding the same foundation
                     for every service.
                 </Text>
-                <Card className="handwritten-diagram relative overflow-hidden" padding={0} variant="transparent">
-                    <img
-                        alt="Core application logic surrounded by services and deployment infrastructure"
-                        className="aspect-video w-full object-contain"
-                        src="/images/platform.png"
-                    />
-                    <Text
-                        className="absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
-                        hasCapsize
-                        textWrap="nowrap"
-                        type="display-3"
-                        weight="semibold"
-                    >
-                        Services
-                    </Text>
-                    <Text
-                        className="absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
-                        hasCapsize
-                        textWrap="nowrap"
-                        type="display-3"
-                        weight="semibold"
-                    >
-                        Deployment
-                    </Text>
-                </Card>
                 <Heading id="organizations" level={2}>
                     Organizations
                 </Heading>

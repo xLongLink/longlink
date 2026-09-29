@@ -1,5 +1,6 @@
 import { Seo } from '@/components/Seo';
 import { siteName, siteUrl } from '@/site';
+import { Card } from '@astryxdesign/core/Card';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -118,6 +119,35 @@ export default function IntroducingLongLink() {
                                     storage, routing, and visibility into status and logs. The SDK connects the
                                     application to those capabilities when it needs them.
                                 </Text>
+                                <Card
+                                    className="handwritten-diagram relative overflow-hidden"
+                                    padding={0}
+                                    variant="transparent"
+                                >
+                                    <img
+                                        alt="Core application logic surrounded by services and deployment infrastructure"
+                                        className="aspect-video w-full object-contain"
+                                        src="/images/platform.png"
+                                    />
+                                    <Text
+                                        className="absolute start-3/10 top-1/5 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                                        hasCapsize
+                                        textWrap="nowrap"
+                                        type="display-3"
+                                        weight="semibold"
+                                    >
+                                        Services
+                                    </Text>
+                                    <Text
+                                        className="absolute bottom-1/5 start-7/10 -translate-x-1/2 text-sm sm:text-xl md:text-2xl"
+                                        hasCapsize
+                                        textWrap="nowrap"
+                                        type="display-3"
+                                        weight="semibold"
+                                    >
+                                        Deployment
+                                    </Text>
+                                </Card>
                                 <Text as="p" className="leading-relaxed" textWrap="pretty">
                                     This separation gives each side a clear responsibility: the Solution defines what
                                     the process does; the Platform provides a consistent way to run it. Teams can build
