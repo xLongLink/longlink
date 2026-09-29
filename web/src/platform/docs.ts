@@ -1,46 +1,47 @@
 import { componentDocumentation } from '../lib/generated/documentation';
-
-export type DocumentationIcon =
-    | 'cpu'
-    | 'database'
-    | 'fileCode'
-    | 'flask'
-    | 'globe'
-    | 'hardDrive'
-    | 'package'
-    | 'rocket'
-    | 'shield'
-    | 'waypoints';
+import {
+    Cpu,
+    Database,
+    FileCode2,
+    FlaskConical,
+    Globe,
+    HardDrive,
+    Package,
+    Rocket,
+    ShieldCheck,
+    Waypoints,
+    type LucideIcon,
+} from 'lucide-react';
 
 type DocumentationPage = {
     path: string;
     label: string;
-    icon: DocumentationIcon;
+    icon: LucideIcon;
 };
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
     {
         title: 'Solutions',
         pages: [
-            { path: '/docs/sdk', label: 'Overview', icon: 'package' },
-            { path: '/docs/sdk/environments', label: 'Environments', icon: 'globe' },
-            { path: '/docs/sdk/routes', label: 'Routes', icon: 'waypoints' },
-            { path: '/docs/sdk/storage', label: 'Storage', icon: 'hardDrive' },
-            { path: '/docs/sdk/database', label: 'Database', icon: 'database' },
-            { path: '/docs/sdk/views', label: 'Views', icon: 'fileCode' },
-            { path: '/docs/sdk/testing', label: 'Testing', icon: 'flask' },
-            { path: '/docs/sdk/building', label: 'Building', icon: 'rocket' },
+            { path: '/docs/sdk', label: 'Overview', icon: Package },
+            { path: '/docs/sdk/environments', label: 'Environments', icon: Globe },
+            { path: '/docs/sdk/routes', label: 'Routes', icon: Waypoints },
+            { path: '/docs/sdk/storage', label: 'Storage', icon: HardDrive },
+            { path: '/docs/sdk/database', label: 'Database', icon: Database },
+            { path: '/docs/sdk/views', label: 'Views', icon: FileCode2 },
+            { path: '/docs/sdk/testing', label: 'Testing', icon: FlaskConical },
+            { path: '/docs/sdk/building', label: 'Building', icon: Rocket },
         ],
     },
     {
         title: 'Platform',
-        pages: [{ path: '/docs/api', label: 'Overview', icon: 'shield' }],
+        pages: [{ path: '/docs/api', label: 'Overview', icon: ShieldCheck }],
     },
     {
         title: 'Self-hosted',
         pages: [
-            { path: '/docs/self-hosted/release', label: 'Release', icon: 'rocket' },
-            { path: '/docs/self-hosted/compute', label: 'Compute', icon: 'cpu' },
+            { path: '/docs/self-hosted/release', label: 'Release', icon: Rocket },
+            { path: '/docs/self-hosted/compute', label: 'Compute', icon: Cpu },
         ],
     },
 ];

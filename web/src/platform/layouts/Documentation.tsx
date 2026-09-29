@@ -1,35 +1,9 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Outlet, useLocation } from 'react-router';
+import { documentationSections } from '@/platform/docs';
 import { SideLayout } from '@/components/layouts/SideLayout';
 import { SideNavHeader } from '@/components/layouts/SideNavHeader';
-import { documentationSections, type DocumentationIcon } from '@/platform/docs';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
-import {
-    Cpu,
-    Database,
-    FileCode2,
-    FlaskConical,
-    Globe,
-    HardDrive,
-    Package,
-    Rocket,
-    ShieldCheck,
-    Waypoints,
-    type LucideIcon,
-} from 'lucide-react';
-
-const icons: Record<DocumentationIcon, LucideIcon> = {
-    cpu: Cpu,
-    database: Database,
-    fileCode: FileCode2,
-    flask: FlaskConical,
-    globe: Globe,
-    hardDrive: HardDrive,
-    package: Package,
-    rocket: Rocket,
-    shield: ShieldCheck,
-    waypoints: Waypoints,
-};
 
 /** Renders documentation content with the fixed documentation navigation. */
 export default function Documentation() {
@@ -44,7 +18,7 @@ export default function Documentation() {
                         {documentationSections.map((section) => (
                             <SideNavSection key={section.title} title={section.title}>
                                 {section.pages.map((page) => {
-                                    const Icon = icons[page.icon];
+                                    const Icon = page.icon;
 
                                     return (
                                         <SideNavItem

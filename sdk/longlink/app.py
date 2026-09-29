@@ -47,7 +47,7 @@ class LongLink(FastAPI):
         """Install runtime services, routes, and the frontend fallback."""
 
         super().__init__()
-        self._view_endpoints: list[str] = []
+        self._views: list[ViewDefinition] = []
 
         # Validate the Platform-provided runtime environment before loading Solution files.
         settings = Envs()
@@ -126,8 +126,8 @@ class LongLink(FastAPI):
 
                 return RedirectResponse(first_tab_view.route)
 
-        # Remember View endpoints so Solution routes added later can be validated against them.
-        self._view_endpoints = [f"/{definition.path}" for definition in view_definitions]
+        # Share the manifest catalog after registering Views so they cannot collide with themselves.
+        self._views = view_definitions
 
         # Serve the embedded frontend as low-priority routes so Solution routes take precedence.
         self.frontend("/", directory=frontend_index.parent)
@@ -173,7 +173,8 @@ class LongLink(FastAPI):
         """Reject routes that would overlap a registered View endpoint."""
 
         # Solution routes added after startup respect the same View endpoint contract.
-        for view_path in self._view_endpoints:
+        for definition in self._views:
+            view_path = f"/{definition.path}"
             scope = {"type": "http", "method": "GET", "path": view_path}
             if any(route.matches(scope)[0] is Match.FULL for route in routes):
                 raise ValueError(f"View endpoint '{view_path}' overlaps a Solution route")
