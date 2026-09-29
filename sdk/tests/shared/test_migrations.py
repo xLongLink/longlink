@@ -8,7 +8,6 @@ from uuid import UUID
 from types import SimpleNamespace
 from typing import cast
 from pathlib import Path
-from datetime import UTC, datetime
 from contextlib import nullcontext
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
@@ -16,7 +15,7 @@ from collections.abc import AsyncIterator
 from longlink.shared import audit as shared_audit
 from longlink.shared import migrations as shared_migrations
 from sqlalchemy.engine import URL
-from longlink.shared.models import Audit
+from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from longlink.shared.migrations import migrate_database, migration_config
 
@@ -37,16 +36,13 @@ def load_shared_migration_environment(monkeypatch: pytest.MonkeyPatch, context: 
 
 
 @pytest.fixture
-def audit_user() -> Audit:
+def audit_user() -> User:
     """Create one representative shared-audit user."""
 
-    return Audit(
+    return User(
         id=UUID("00000000-0000-0000-0000-000000000001"),
         name="Owner User",
         email="owner@example.com",
-        role="owner",
-        created_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
-        updated_at=datetime(2026, 7, 6, 8, tzinfo=UTC),
     )
 
 
@@ -104,7 +100,7 @@ async def test_empty_shared_audit_sync_does_not_execute_sql() -> None:
     await shared_audit.sync(conn, [])
 
 
-async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: Audit) -> None:
+async def test_shared_audit_sync_leaves_cleanup_to_caller_when_upsert_fails(audit_user: User) -> None:
     """Propagate SQL failures while leaving connection and transaction ownership with the caller."""
 
     # Missing shared tables cause a real SQL failure within a caller-owned transaction.
@@ -164,43 +160,37 @@ async def test_shared_migrations_use_postgresql_shared_schema(postgresql_url: UR
 async def test_shared_user_sync_updates_one_postgresql_row(
     postgresql_url: URL,
     postgres_engine: AsyncEngine,
-    audit_user: Audit,
+    audit_user: User,
 ) -> None:
-    """Synchronize active and deactivated users into one shared PostgreSQL row."""
+    """Synchronize changing user profiles into one shared PostgreSQL row."""
 
     # Prepare the shared schema through the public migration entrypoint.
     await migrate_database(postgresql_url)
 
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = audit_user.id
-    created_at = audit_user.created_at
     async with postgres_engine.begin() as connection:
         await connection.execute(text("SET LOCAL search_path TO shared"))
         await shared_audit.sync(connection, [audit_user])
 
-    # Upsert changed mutable fields and an explicit control-plane deactivation.
-    deactivated_at = datetime(2026, 7, 7, 9, tzinfo=UTC)
-    deactivated_user = audit_user.model_copy(
+    # Upsert changed mutable profile fields.
+    updated_user = audit_user.model_copy(
         update={
             "name": "Updated User",
             "email": "updated@example.com",
             "avatar": "https://example.com/avatar.png",
-            "role": "read",
-            "created_at": datetime(2026, 7, 7, 8, tzinfo=UTC),
-            "updated_at": deactivated_at,
-            "deleted_at": deactivated_at,
         }
     )
     async with postgres_engine.begin() as connection:
         await connection.execute(text("SET LOCAL search_path TO shared"))
-        await shared_audit.sync(connection, [deactivated_user])
+        await shared_audit.sync(connection, [updated_user])
 
     # Read the persisted row from its qualified shared table and verify no duplicate was created.
     async with postgres_engine.connect() as connection:
         result = await connection.execute(
             text(
                 """
-                SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
+                SELECT id, name, email, avatar
                 FROM shared.audit
                 WHERE id = :user_id
                 """
@@ -217,10 +207,6 @@ async def test_shared_user_sync_updates_one_postgresql_row(
         "name": "Updated User",
         "email": "updated@example.com",
         "avatar": "https://example.com/avatar.png",
-        "role": "read",
-        "created_at": created_at,
-        "updated_at": deactivated_at,
-        "deleted_at": deactivated_at,
     }
 
 

@@ -4,7 +4,8 @@ You are working on a LongLink Solution project:
 
 - Models and migrations own only this project's schema.
 - The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
-- Use `longlink.database.base.AuditTable` for tables that need Platform-user attribution.
+- Use `longlink.Audit` for tables that need Platform-user attribution.
+- For additional user roles, inherit from `longlink.Model` and declare each as `role: User = UserRelationship()`.
 
 ## Code structure
 

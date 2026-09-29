@@ -11,9 +11,10 @@ const article = {
     toc: [
         { id: 'database', label: 'Database', level: 1 },
         { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'users-management', label: 'Users management', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
     ],
-    lastUpdated: '2026-09-24',
+    lastUpdated: '2026-09-29',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Database.tsx',
     title: 'Database | LongLink Documentation',
 };
@@ -60,28 +61,46 @@ async def create_project(ctx: Context) -> None:
     await ctx.database.commit()`}
                     language="python"
                 />
-                <Heading id="audit-table" level={2}>
-                    Audit table
+                <Heading id="users-management" level={2}>
+                    Users management
                 </Heading>
                 <Text as="p">
-                    Use <Code>AuditTable</Code> only when a database table needs Platform-user attribution. It adds
-                    creation, update, and deletion timestamps; the matching Platform user identifiers; and read-only
-                    user relationships.
+                    The shared <Code>User</Code> has an ID, name, email, and avatar. Use <Code>Audit</Code> for
+                    automatic attribution or <Code>UserRelationship()</Code> to add a named user relationship.
+                </Text>
+                <Text as="p">
+                    <Code>Audit</Code> adds creation, update, and deletion timestamps; matching Platform user IDs; and
+                    relationships to the shared users. Use it only for tables that need this history.
+                </Text>
+                <Text as="p">
+                    <Code>UserRelationship()</Code> gives <Code>owner</Code> its own required foreign key to the shared
+                    user table. Use <Code>Model</Code> instead of <Code>Audit</Code> if you do not need audit history.
                 </Text>
                 <CodeBlock
-                    code={`from sqlmodel import Field
-from longlink.database.base import AuditTable
+                    code={`from uuid import UUID, uuid4
+from sqlmodel import Field
+from longlink import Audit, Context, User, UserRelationship
 
 
-class Approval(AuditTable, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    status: str
+class Project(Audit, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    name: str
+    owner: User = UserRelationship()
 
 
-approval = Approval(status="pending")
-print(approval.status)  # pending
+async def create_project(ctx: Context, owner: User) -> Project:
+    """Create a project owned by an existing shared user."""
 
-# approval.created_by and approval.updated_by are Audit users after persistence.`}
+    project = Project(name="Launch", owner=owner)
+    ctx.database.add(project)
+    await ctx.database.flush()
+    return project
+
+
+# Project structure after flush:
+# id: generated UUID; name: "Launch"
+# owner_id: owner.id; owner: User relationship
+# created_id: request actor's ID; created_by: User relationship when loaded`}
                     language="python"
                 />
                 <Heading id="migrations" level={2}>

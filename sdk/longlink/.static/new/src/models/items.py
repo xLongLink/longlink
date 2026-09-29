@@ -1,8 +1,8 @@
+from longlink import Audit
 from sqlmodel import Field
-from longlink.database.base import AuditTable
 
 
-class Item(AuditTable, table=True):
+class Item(Audit, table=True):
     """Item table owned by this Solution schema."""
 
     # Item fields
