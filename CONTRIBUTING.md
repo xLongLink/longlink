@@ -8,49 +8,6 @@ The SDK owns shared-schema models, migrations, and synchronization helpers along
 
 <br />
 
-## Development
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [Vite+](https://viteplus.dev) before running the development commands:
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-```bash
-curl -fsSL https://vite.plus | bash
-. "$HOME/.vite-plus/env"
-vp env setup
-```
-
-```bash
-sudo snap install helm --classic
-mkdir -p "$HOME/.local/bin"
-curl -fsSL https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz | tar -xzO linux-amd64/helm > "$HOME/.local/bin/helm"
-chmod +x "$HOME/.local/bin/helm"
-```
-
-```bash
-make install  # Install development dependencies
-make check    # Run lint, type, and contract checks
-make format   # Format source and documentation
-make build    # Typecheck and build both web bundles
-make test     # Build required bundles and run all tests
-
-make up       # Initialize local services and cluster
-make down     # Stop local services and cluster; preserve caches and sdk/dev
-make seed     # Seed the Platform test Organization after its sample image is pushed
-make api      # Run the Platform API
-make web      # Run the Web development server
-make sdk      # Run the local sample Solution
-make image    # Build and push the local sample image
-```
-
-## Test the SDK in development
-
-```bash
-make sdk            # Build the SDK web bundle and run the generated SDK service
-```
-
 ## Theme
 
 Use the Astryx theme primitives rather than custom color or spacing values:
@@ -69,4 +26,23 @@ radius      # none | small | medium | large
 <style>
   Minimalist monochrome technical sketch matching the reference. Thin white pencil/chalk lines, slightly rough and grainy, with imperfect hand-drawn contours, sparse construction lines, and very light hatching. Simple geometric forms, strong silhouettes, lots of negative space. Fully transparent background. No color, text, gradients, shadows, photorealism, or dense detail.
 </style>
+```
+
+
+## Release
+
+Beta release:
+
+```bash
+git fetch origin main
+git tag vX.Y.Z-beta.K origin/main
+git push origin vX.Y.Z-beta.K
+```
+
+Release:
+
+```bash
+git fetch origin main
+git tag vX.Y.Z origin/main
+git push origin vX.Y.Z
 ```
