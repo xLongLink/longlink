@@ -118,13 +118,15 @@ image:
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 
 
-# Stop local services and remove generated cluster and API state.
+# Stop local services and remove generated cluster, API, and sample Solution state.
 down:
 	@if k3d cluster list compute >/dev/null 2>&1; then k3d cluster delete compute; fi
 	@k3d registry delete longlink-registry >/dev/null 2>&1 || :
 	docker compose -f dev/compose.yml down --remove-orphans
 	rm -f api/dev.db dev/kubeconfig.yaml
 	rm -rf dev/certificates
+	# Remove the local sample, including any edits; make seed or make sdk recreates it.
+	rm -rf sdk/dev
 	# Reap volumes orphaned by removed containers and superseded image layers.
 	@docker volume ls -qf dangling=true | xargs -r docker volume rm
 	docker image prune -f
