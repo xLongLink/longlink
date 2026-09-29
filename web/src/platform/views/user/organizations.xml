@@ -2,6 +2,7 @@
 <longlink name="Organizations" icon="building2">
     <Query id="memberships" path="/api/v1/me/organizations" />
     <State id="draft" name="" />
+    <State id="createDialog" open="${false}" />
 
     <Stack gap="8">
         <Stack
@@ -19,6 +20,7 @@
             <Dialog
                 title="New organization"
                 triggerLabel="Create Organization"
+                isOpen="$createDialog.open"
                 purpose="form"
             >
                 <Stack gap="3">
@@ -32,10 +34,10 @@
                         <Request
                             url="/api/v1/organizations"
                             method="POST"
-                            closeDialog="true"
                             json="${{ name: trim(draft.name) }}"
                         />
                         <Patch state="memberships" invalidate="true" />
+                        <Patch state="createDialog" value="${{ open: false }}" />
                         <Button
                             variant="primary"
                             disabled="${!trim(draft.name)}"

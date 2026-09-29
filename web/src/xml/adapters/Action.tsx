@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import { api } from '@/lib/api';
+import { createContext } from 'react';
 import { renderNode } from '../core/node';
 import { useApiError } from '@/lib/errors';
 import { ACTION_METHODS } from '../constants';
-import { DialogCloseContext } from './Dialog';
 import { useXmlRuntime } from '../core/context';
-import { createContext, useContext } from 'react';
 import { evaluate } from '../expressions/evaluate';
 import { useToast } from '@astryxdesign/core/Toast';
 import { resolveControlUrl, resolveRequestUrl } from '../core/url';
@@ -22,7 +21,6 @@ const requestPropsSchema = z.object({
     method: xmlNonblankStringSchema.transform((value) => value.toUpperCase()).pipe(z.enum(ACTION_METHODS)),
     form: z.unknown().optional(),
     json: z.unknown().optional(),
-    closeDialog: z.boolean().default(false),
 });
 
 const REQUEST_ALLOWED_PROPS = new Set(Object.keys(requestPropsSchema.shape));
@@ -46,14 +44,13 @@ export const ActionHandlerContext = createContext<(() => void) | null>(null);
 /** Runs ordered effects from any child Button or Link trigger. */
 export function Action({ props, nodes }: Props) {
     const { scope: ctx, services } = useXmlRuntime();
-    const closeDialog = useContext(DialogCloseContext);
     const toast = useToast();
     const reportError = useApiError();
     const plan = createActionPlan(props, nodes);
 
     /** Executes the declared effects and presents unexpected failures. */
     function handleAction(): void {
-        void executeAction(plan, ctx, services, closeDialog, toast).catch(reportError);
+        void executeAction(plan, ctx, services, toast).catch(reportError);
     }
 
     return (
@@ -123,16 +120,13 @@ async function executeAction(
     plan: ActionPlan,
     ctx: Scope,
     services: RuntimeServices,
-    closeDialog: (() => void) | null,
     toast: ReturnType<typeof useToast>
 ): Promise<void> {
-    let closeOnSuccess = false;
     let status: number | undefined;
 
     for (const step of plan.steps) {
         if (step.name === 'Request') {
             const result = await executeRequest(step.params, ctx, services.requestBaseUrl);
-            closeOnSuccess ||= result.closeDialog;
             status = result.status;
             await services.requestCompleted?.(result.url);
             continue;
@@ -156,10 +150,6 @@ async function executeAction(
     if (url) {
         services.navigate(url);
         return;
-    }
-
-    if (closeOnSuccess) {
-        closeDialog?.();
     }
 
     if (status !== undefined) {
@@ -236,8 +226,8 @@ async function executeRequest(
     props: ASTProps,
     ctx: Scope,
     requestBaseUrl: string
-): Promise<{ closeDialog: boolean; status: number; url: string }> {
-    const { url, method, form, json, closeDialog } = resolveXmlProps(props, ctx, requestPropsSchema, ['form', 'json']);
+): Promise<{ status: number; url: string }> {
+    const { url, method, form, json } = resolveXmlProps(props, ctx, requestPropsSchema, ['form', 'json']);
     if (form !== undefined && json !== undefined) {
         throw new Error('Request cannot send both form and json payloads');
     }
@@ -251,7 +241,7 @@ async function executeRequest(
         form !== undefined ? { body: createActionFormData(form), method } : { json, method }
     );
 
-    return { closeDialog, status: response.status, url: requestUrl };
+    return { status: response.status, url: requestUrl };
 }
 
 /** Updates a State value or invalidates one State or Query setup. */

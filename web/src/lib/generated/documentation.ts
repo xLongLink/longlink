@@ -40,10 +40,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "",
                         "name": "json"
-                    },
-                    {
-                        "description": "",
-                        "name": "closeDialog"
                     }
                 ],
                 "description": "",
@@ -179,10 +175,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "",
                         "name": "json"
-                    },
-                    {
-                        "description": "",
-                        "name": "closeDialog"
                     }
                 ],
                 "description": "",
@@ -508,10 +500,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
                     {
                         "description": "",
                         "name": "json"
-                    },
-                    {
-                        "description": "",
-                        "name": "closeDialog"
                     }
                 ],
                 "description": "",

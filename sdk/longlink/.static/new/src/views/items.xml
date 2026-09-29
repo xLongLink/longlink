@@ -2,6 +2,7 @@
 <longlink name="Items" icon="box">
     <Query id="items" path="/api/items" />
     <State id="draft" />
+    <State id="createDialog" open="${false}" />
 
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
@@ -9,17 +10,17 @@
                 <Heading level="1">Items</Heading>
                 <Text color="secondary">Track catalog items and their supporting files.</Text>
             </Stack>
-            <Dialog title="New item" triggerLabel="New item" purpose="form">
+            <Dialog title="New item" triggerLabel="New item" isOpen="$createDialog.open" purpose="form">
                 <TextInput label="Name" value="$draft.name" />
                 <NumberInput label="Price" value="$draft.price" min="0" />
                 <Action>
                     <Request
                         url="/api/items"
                         method="POST"
-                        closeDialog="true"
                         json="${{ name: draft.name, price: draft.price }}"
                     />
                     <Patch state="items" invalidate="true" />
+                    <Patch state="createDialog" value="${{ open: false }}" />
                     <Button variant="primary">Create item</Button>
                 </Action>
             </Dialog>
