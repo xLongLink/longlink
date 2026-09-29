@@ -8,12 +8,12 @@ from urllib.parse import quote
 from collections.abc import Iterator, Sequence
 from src.models.items import Item
 from fastapi.responses import StreamingResponse
-from src.schemas.items import ItemCreate, ItemAttachmentRead
+from src.schemas.items import ItemRead, ItemCreate, ItemAttachmentRead
 
 router = APIRouter(prefix="/api")
 
 
-@router.get("/items", response_model=list[Item])
+@router.get("/items", response_model=list[ItemRead])
 async def items_get_endpoint(ctx: Context) -> Sequence[Item]:
     """Return catalog items."""
 
@@ -59,17 +59,19 @@ async def item_attachments_get_endpoint(
 
     # Treat an item without a storage directory as having no attachments.
     try:
-        entries = ctx.storage.ls(f"{item_id}", detail=False)
+        entries = ctx.storage.ls(f"{item_id}", detail=True)
     except FileNotFoundError:
         return []
 
-    # Derive display names from the generated storage ids.
+    # Derive display names and sizes from stored file metadata.
     return [
         ItemAttachmentRead(
-            id=(attachment_id := PurePosixPath(path).name),
+            id=(attachment_id := PurePosixPath(entry["name"]).name),
             name=attachment_id.split("-", 1)[-1],
+            size=entry["size"],
         )
-        for path in entries
+        for entry in entries
+        if entry["type"] == "file"
     ]
 
 
@@ -150,4 +152,6 @@ async def item_attachments_post_endpoint(
     finally:
         await file.close()
 
-    return ItemAttachmentRead(id=file_id, name=file_name)
+    return ItemAttachmentRead(
+        id=file_id, name=file_name, size=ctx.storage.size(f"{item_id}/{file_id}")
+    )
