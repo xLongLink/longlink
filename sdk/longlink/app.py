@@ -5,6 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from fsspec.spec import AbstractFileSystem
 from longlink.views import ViewDefinition, view_stem_route
+from collections.abc import Callable
 from longlink.errors import install_error_handlers
 from longlink.logger import ApiAccessFilter
 from longlink.routes import router
@@ -25,6 +26,18 @@ class RuntimeState:
 
     storage: AbstractFileSystem
     database: Database
+
+
+def _view_handler(content: str) -> Callable[[], Response]:
+    """Capture static XML without exposing its content as a request parameter."""
+
+    # Bind each document in its own closure before FastAPI inspects the endpoint signature.
+    def view() -> Response:
+        """Return the validated XML captured during application startup."""
+
+        return Response(content, media_type="application/xml")
+
+    return view
 
 
 class LongLink(FastAPI):
@@ -94,15 +107,9 @@ class LongLink(FastAPI):
 
         # Views are registered once before the frontend mount is installed.
         for definition, content in discovered_views:
-
-            def _view(content: str = content) -> Response:
-                """Return one static XML view."""
-
-                return Response(content, media_type="application/xml")
-
             self.add_api_route(
                 f"/{definition.path}",
-                _view,
+                _view_handler(content),
                 methods=["GET"],
                 include_in_schema=False,
             )

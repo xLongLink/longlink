@@ -18,8 +18,10 @@ const fileViewerPropsSchema = z.object({
     title: xmlNonblankStringSchema,
 });
 
-type FileViewerStatus = 'pending' | 'loading' | 'ready' | 'fallback' | 'error';
 type FileViewerMedia = 'pdf' | 'image' | 'video' | 'audio';
+type FileViewerState =
+    | { status: 'pending' | 'loading' | 'fallback' | 'error' }
+    | { status: 'ready'; media: FileViewerMedia; objectUrl: string };
 
 /** Previews PDF documents, images, video, and audio inline with a download fallback for other file types. */
 export function FileViewer({ props, nodes }: Props) {
@@ -27,9 +29,8 @@ export function FileViewer({ props, nodes }: Props) {
     const { src, title } = resolveXmlProps(props, ctx, fileViewerPropsSchema, ['src', 'title']);
     const url = resolveAnchorUrl(services.requestBaseUrl, src);
     const frameRef = useRef<HTMLElement | null>(null);
-    const [objectUrl, setObjectUrl] = useState<string | null>(null);
-    const [media, setMedia] = useState<FileViewerMedia | null>(null);
-    const [status, setStatus] = useState<FileViewerStatus>(url ? 'pending' : 'error');
+    const [preview, setPreview] = useState<FileViewerState>({ status: url ? 'pending' : 'error' });
+    const { status } = preview;
 
     // Defer the download until the preview scrolls into view, so hidden dialogs don't fetch upfront.
     useEffect(() => {
@@ -38,13 +39,13 @@ export function FileViewer({ props, nodes }: Props) {
         const target = frameRef.current;
 
         if (target == null || typeof IntersectionObserver === 'undefined') {
-            setStatus('loading');
+            setPreview({ status: 'loading' });
             return;
         }
 
         const observer = new IntersectionObserver((entries) => {
             if (entries.some((entry) => entry.isIntersecting)) {
-                setStatus('loading');
+                setPreview({ status: 'loading' });
             }
         });
         observer.observe(target);
@@ -80,18 +81,16 @@ export function FileViewer({ props, nodes }: Props) {
                               : null;
 
                 if (mediaType === null) {
-                    setStatus('fallback');
+                    setPreview({ status: 'fallback' });
                     return;
                 }
 
                 previewUrl = URL.createObjectURL(blob);
 
-                setMedia(mediaType);
-                setObjectUrl(previewUrl);
-                setStatus('ready');
+                setPreview({ status: 'ready', media: mediaType, objectUrl: previewUrl });
             } catch {
                 if (!cancelled) {
-                    setStatus('error');
+                    setPreview({ status: 'error' });
                 }
             }
         })();
@@ -108,19 +107,28 @@ export function FileViewer({ props, nodes }: Props) {
 
     return (
         <Stack ref={frameRef} gap={3} height="65vh">
-            {status === 'ready' && objectUrl && media === 'pdf' ? (
+            {preview.status === 'ready' && preview.media === 'pdf' ? (
                 // Chromium blocks PDF rendering inside sandboxed frames, so sandbox must stay off here.
-                <iframe title={title} src={objectUrl} className="h-full w-full rounded-lg" />
-            ) : status === 'ready' && objectUrl && media === 'image' ? (
+                <iframe title={title} src={preview.objectUrl} className="h-full w-full rounded-lg" />
+            ) : preview.status === 'ready' && preview.media === 'image' ? (
                 <Center minHeight={192} width="100%">
-                    <img alt={title} src={objectUrl} className="max-h-full max-w-full rounded-lg object-contain" />
+                    <img
+                        alt={title}
+                        src={preview.objectUrl}
+                        className="max-h-full max-w-full rounded-lg object-contain"
+                    />
                 </Center>
-            ) : status === 'ready' && objectUrl && media === 'video' ? (
+            ) : preview.status === 'ready' && preview.media === 'video' ? (
                 <Center minHeight={192} width="100%">
-                    <video aria-label={title} src={objectUrl} controls className="max-h-full w-full rounded-lg" />
+                    <video
+                        aria-label={title}
+                        src={preview.objectUrl}
+                        controls
+                        className="max-h-full w-full rounded-lg"
+                    />
                 </Center>
-            ) : status === 'ready' && objectUrl && media === 'audio' ? (
-                <audio aria-label={title} src={objectUrl} controls className="w-full" />
+            ) : preview.status === 'ready' && preview.media === 'audio' ? (
+                <audio aria-label={title} src={preview.objectUrl} controls className="w-full" />
             ) : status === 'fallback' ? (
                 <Stack gap={2}>
                     <Text type="supporting">This file type can&apos;t be previewed.</Text>
