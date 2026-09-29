@@ -131,7 +131,7 @@ export default function DocsArticleRoute() {
                         <SummaryCard name="Query">
                             <Code>{'<Query />'}</Code>
                         </SummaryCard>
-                        <SummaryCard name="Button effects">
+                        <SummaryCard name="Button effects" path="/docs/sdk/views/button">
                             <Code>{'<Button label="Save"><Request ... /></Button>'}</Code>
                         </SummaryCard>
                         <SummaryCard name="For">
