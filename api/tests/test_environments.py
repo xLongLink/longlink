@@ -63,11 +63,10 @@ def test_env_rejects_invalid_authentication_settings(settings: dict[str, object]
 def test_env_accepts_complete_smtp_authentication_settings() -> None:
     """Accept one complete SMTP authentication configuration."""
 
-    # Act
+    # Validate both newly supplied credentials.
     settings = ENVIRONMENT_SETTINGS | {"SMTP_USERNAME": "mailer", "SMTP_PASSWORD": "secret"}
     environment = Env.model_validate(settings)
 
-    # Assert
     assert environment.SMTP_USERNAME == "mailer"
     assert environment.SMTP_PASSWORD == "secret"
 

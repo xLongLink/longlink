@@ -15,7 +15,7 @@ describe('renderNode', () => {
     });
 
     it('skips nodes when if condition is false', () => {
-        expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).not.toContain('<button');
+        expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).toBe(renderXmlToMarkup([]));
     });
 
     it('throws on unknown component', () => {
@@ -51,7 +51,7 @@ describe('renderNode', () => {
         await act(async () => root?.render(<RenderXML ast={validAst} ctx={context} />));
 
         // Assert
-        expect(container.textContent).toContain('Recovered');
+        expect(container.querySelector('h1')?.textContent).toContain('Recovered');
     });
 
     it('resolves input props from expressions', () => {
@@ -62,20 +62,11 @@ describe('renderNode', () => {
         expect(output).toContain('value="Ada"');
     });
 
-    it('renders Heading content', () => {
-        // Arrange
-        const output = renderXmlToMarkup(parseFragment('<Heading level="1">Orders</Heading>'));
-
-        // Assert
-        expect(output).toContain('<h1');
-        expect(output).toContain('Orders');
-    });
-
     it('rejects Heading levels outside the schema', () => {
         // Arrange
         const ast = parseFragment('<Heading level="7">Orders</Heading>');
 
         // Act and assert
-        expect(() => renderXmlToMarkup(ast)).toThrow();
+        expect(() => renderXmlToMarkup(ast)).toThrow('Invalid XML props: level:');
     });
 });

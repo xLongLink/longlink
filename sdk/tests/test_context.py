@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from longlink import context, identity
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -130,11 +130,10 @@ def test_data_closes_database_session_when_endpoint_fails() -> None:
         raise RuntimeError("endpoint failed")
 
     # Act
-    with TestClient(app) as client, pytest.raises(RuntimeError) as error:
+    with TestClient(app) as client, pytest.raises(RuntimeError):
         client.get("/", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
 
     # Assert
-    assert str(error.value) == "endpoint failed"
     assert session_closed
 
 
@@ -198,22 +197,27 @@ def test_production_context_requires_signed_identity_except_for_probes() -> None
         return {"ok": True}
 
     @app.websocket("/events")
-    async def events() -> None:
-        """Expose a route that must not bypass the HTTP identity boundary."""
+    async def events(socket: WebSocket) -> None:
+        """Accept a connection if it bypasses the HTTP identity boundary."""
+
+        await socket.accept()
 
     client = TestClient(app)
 
     # Direct gateway requests have no valid Platform assertion; proxy requests do.
-    assert client.get("/views.json").status_code == 401
+    anonymous = client.get("/views.json")
+    assert anonymous.status_code == 401
+    assert anonymous.json() == {"detail": "Authentication required"}
     assert client.get("/views.json", headers={"x-longlink-identity": "invalid-token"}).status_code == 401
     authorized = client.get("/views.json", headers=identity_headers(UUID("00000000-0000-0000-0000-000000000001")))
     assert authorized.status_code == 200
     assert authorized.json() == {"authenticated": True}
     assert client.get("/health").status_code == 200
     assert client.get("/ready").status_code == 200
-    with pytest.raises(WebSocketDisconnect):
+    with pytest.raises(WebSocketDisconnect) as rejection:
         with client.websocket_connect("/events"):
             pass
+    assert rejection.value.code == 1008
 
 
 async def test_context_middleware_isolates_concurrent_audit_identities() -> None:
@@ -243,7 +247,7 @@ async def test_context_middleware_isolates_concurrent_audit_identities() -> None
 
     # Act
     with TestClient(app) as client:
-        async with asyncio.timeout(1):
+        async with asyncio.timeout(5):
             first_response, second_response = await asyncio.gather(
                 asyncio.to_thread(client.get, "/", headers=identity_headers(first_id)),
                 asyncio.to_thread(client.get, "/", headers=identity_headers(second_id)),

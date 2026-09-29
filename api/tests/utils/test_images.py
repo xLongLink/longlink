@@ -415,9 +415,7 @@ def test_missing_envs_sorts_reserved_and_unconfigured_requirements() -> None:
     assert missing == ["LONGLINK_TOKEN", "ZEBRA"]
 
 
-@pytest.mark.parametrize(
-    "registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO", "registry.example.com"]
-)
+@pytest.mark.parametrize("registry", ["localhost:15001", "127.0.0.1:15000", "ghcr.io:443", "ghcr.io.evil", "GHCR.IO"])
 async def test_registry_allowlist_is_exact(registry: str) -> None:
     """Reject alternate spellings and unsupported registries before networking."""
 

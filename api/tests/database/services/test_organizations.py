@@ -372,6 +372,18 @@ async def test_membership_mutation_services_revalidate_demoted_administrator_acc
                 administrator.id,
             )
 
+    # Verify none of the rejected mutations persisted in an independent session.
+    async with session_scope() as session:
+        remaining_invitations = await organizations.invitations(session, organization.id)
+        owner_membership = await session.get(UserOrganization, (owner.id, organization.id))
+        administrator_membership = await session.get(UserOrganization, (administrator.id, organization.id))
+
+    assert [invitation.id for invitation in remaining_invitations] == [invitation_id]
+    assert owner_membership is not None
+    assert owner_membership.role == OrganizationRoles.owner
+    assert administrator_membership is not None
+    assert administrator_membership.role == OrganizationRoles.read
+
 
 async def test_soft_delete_revalidates_demoted_owner_access(users: tuple[User, User, User]) -> None:
     """Reject an organization deletion after the initiating owner has been demoted."""
@@ -428,8 +440,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
     """Reject duplicate Organization names without persisting a second membership."""
 
     # Arrange
-    compute = await create_compute()
-    await create_organization(users[0], compute=compute)
+    organization = await create_organization(users[0])
 
     # Act and assert
     async with session_scope() as session:
@@ -438,7 +449,7 @@ async def test_create_rejects_duplicate_organization_name(users: tuple[User, Use
                 session,
                 "acme",
                 users[0],
-                compute_id=compute.id,
+                compute_id=organization.compute_id,
             )
 
 

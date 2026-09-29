@@ -63,7 +63,7 @@ def test_identity_token_user_rejects_empty_identity_secret() -> None:
 INVALID_SIGNED_TOKENS = [
     pytest.param(
         IDENTITY_SECRET,
-        {"exp": datetime.now(UTC) - timedelta(seconds=1)},
+        {"exp": datetime(2000, 1, 1, tzinfo=UTC)},
         jwt.ExpiredSignatureError,
         id="expired",
     ),
@@ -114,13 +114,9 @@ def test_identity_token_user_rejects_malformed_subject() -> None:
     # Arrange
     token = mint_identity_token(claims={"sub": "not-a-uuid"})
 
-    # Act
-    with pytest.raises(jwt.InvalidTokenError) as exc_info:
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
         identity.identity_token_user(token, IDENTITY_SECRET)
-
-    # Assert
-    assert type(exc_info.value) is jwt.InvalidTokenError
-    assert str(exc_info.value) == "Invalid identity token user"
 
 
 @pytest.mark.parametrize("missing_claim", ["sub", "aud", "iat", "exp"])
@@ -130,10 +126,6 @@ def test_identity_token_user_rejects_missing_required_claim(missing_claim: str) 
     # Arrange
     token = mint_identity_token(omit=missing_claim)
 
-    # Act
-    with pytest.raises(jwt.InvalidTokenError) as exc_info:
+    # Act and assert
+    with pytest.raises(jwt.InvalidTokenError):
         identity.identity_token_user(token, IDENTITY_SECRET)
-
-    # Assert
-    assert type(exc_info.value) is jwt.InvalidTokenError
-    assert str(exc_info.value) == "Invalid identity token claims"

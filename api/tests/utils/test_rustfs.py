@@ -6,21 +6,24 @@ from src.utils.rustfs import Error, RustFS
 pytestmark = pytest.mark.no_db
 
 
-def test_policy_includes_solution_prefix() -> None:
-    """Include the solution's private prefix in its bucket policy."""
+def test_policy_scopes_solution_object_access() -> None:
+    """Grant object reads and writes only under the solution's private prefix."""
 
     # Arrange
-    first = uuid4()
+    solution = uuid4()
 
     # Act
-    policy = RustFS.policy("org-bucket", first)
+    policy = RustFS.policy("org-bucket", solution)
 
     # Assert
     assert policy["Version"] == "2012-10-17"
     statements = policy["Statement"]
     assert isinstance(statements, list)
-    text = str(policy)
-    assert f"solutions/{first.hex}/" in text
+    reads = next(statement for statement in statements if statement["Effect"] == "Allow" and "s3:GetObject" in statement["Action"])
+    writes = next(statement for statement in statements if statement["Effect"] == "Allow" and "s3:PutObject" in statement["Action"])
+    prefix = f"arn:aws:s3:::org-bucket/solutions/{solution.hex}"
+    assert reads["Resource"] == ["arn:aws:s3:::org-bucket/shared", "arn:aws:s3:::org-bucket/shared/*", prefix, f"{prefix}/*"]
+    assert writes["Resource"] == [f"{prefix}/*"]
 
 
 def test_policy_denies_acl_grants() -> None:
@@ -37,13 +40,9 @@ def test_policy_denies_acl_grants() -> None:
     assert isinstance(statements, list)
     denies = [statement for statement in statements if statement["Effect"] == "Deny"]
     assert len(denies) == 5
-    assert {next(iter(statement["Condition"]["StringLike"])) for statement in denies} == {
-        "s3:x-amz-grant-read",
-        "s3:x-amz-grant-write",
-        "s3:x-amz-grant-read-acp",
-        "s3:x-amz-grant-write-acp",
-        "s3:x-amz-grant-full-control",
-    }
+    assert [statement["Condition"]["StringLike"] for statement in denies] == [
+        {f"s3:x-amz-grant-{header}": "?*"} for header in ("read", "write", "read-acp", "write-acp", "full-control")
+    ]
 
 
 def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:
@@ -127,16 +126,22 @@ async def test_revoke_ignores_missing_account() -> None:
 
     # Arrange
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
+    solution = uuid4()
+    requests: list[tuple[str, str]] = []
 
     async def missing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
         """Simulate a concurrently deleted account."""
 
+        requests.append((method, path))
         raise Error(404, "service account not exist")
 
     storage._request = missing_request  # type: ignore[method-assign]
 
     # Act
-    await storage.revoke(uuid4())
+    await storage.revoke(solution)
+
+    # Assert
+    assert requests == [("DELETE", f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}")]
 
 
 async def test_revoke_reraises_unexpected_error() -> None:

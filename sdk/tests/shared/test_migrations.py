@@ -174,14 +174,13 @@ async def test_shared_user_sync_updates_one_postgresql_row(
     # Insert one active control-plane user through the public synchronization entrypoint.
     user_id = audit_user.id
     created_at = audit_user.created_at
-    active_user = audit_user.model_copy(update={"avatar": ""})
     async with postgres_engine.begin() as connection:
         await connection.execute(text("SET LOCAL search_path TO shared"))
-        await shared_audit.sync(connection, [active_user])
+        await shared_audit.sync(connection, [audit_user])
 
     # Upsert changed mutable fields and an explicit control-plane deactivation.
     deactivated_at = datetime(2026, 7, 7, 9, tzinfo=UTC)
-    deactivated_user = active_user.model_copy(
+    deactivated_user = audit_user.model_copy(
         update={
             "name": "Updated User",
             "email": "updated@example.com",
@@ -209,7 +208,10 @@ async def test_shared_user_sync_updates_one_postgresql_row(
             {"user_id": user_id},
         )
         row = result.mappings().one()
+        count_result = await connection.execute(text("SELECT count(*) FROM shared.audit"))
+        row_count = count_result.scalar_one()
 
+    assert row_count == 1
     assert dict(row) == {
         "id": user_id,
         "name": "Updated User",

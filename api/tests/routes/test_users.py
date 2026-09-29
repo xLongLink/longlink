@@ -1,3 +1,4 @@
+import pytest
 from httpx2 import AsyncClient
 from factories import create_organization
 from src.database.session import session_scope
@@ -99,43 +100,28 @@ async def test_list_users_rejects_anonymous_requests(client: AsyncClient) -> Non
     assert response.json() == {"detail": "Not authenticated"}
 
 
-async def test_patch_me_persists_profile_change(
+@pytest.mark.parametrize(
+    "name",
+    [pytest.param("Updated User", id="changed"), pytest.param(None, id="unchanged")],
+)
+async def test_patch_me_persists_profile_name(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    name: str | None,
 ) -> None:
-    """Persist a changed profile."""
+    """Persist both changed and unchanged profile names."""
 
     # Arrange
     user = users[0]
+    expected_name = name if name is not None else user.name
 
     # Act
-    response = await clients[0].patch("/api/v1/me", json={"name": "Updated User"})
+    response = await clients[0].patch("/api/v1/me", json={"name": expected_name})
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["name"] == "Updated User"
+    assert response.json()["name"] == expected_name
     async with session_scope() as session:
         persisted_user = await session.get(User, user.id)
         assert persisted_user is not None
-        assert persisted_user.name == "Updated User"
-
-
-async def test_patch_me_keeps_profile_unchanged(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Keep an unchanged profile intact."""
-
-    # Arrange
-    user = users[0]
-
-    # Act
-    response = await clients[0].patch("/api/v1/me", json={"name": users[0].name})
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json()["name"] == "Platform Administrator"
-    async with session_scope() as session:
-        persisted_user = await session.get(User, user.id)
-        assert persisted_user is not None
-        assert persisted_user.name == "Platform Administrator"
+        assert persisted_user.name == expected_name

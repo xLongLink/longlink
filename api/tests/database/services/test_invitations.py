@@ -7,7 +7,6 @@ from src.errors import ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.database.services import invitations
-from src.models.organizations import DatabaseState
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -112,9 +111,6 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
         monkeypatch.setattr(session, "scalar", suppress_first_invitation)
         await invitations.create(session, organization.id, concurrent_invitation.email, OrganizationRoles.admin)
-
-        # The outer transaction remains usable after the failed insert's savepoint rolls back.
-        assert await session.scalar(select(1)) == 1
         await session.commit()
 
     # Read the committed grant independently of the recovering session's identity map.
@@ -138,9 +134,6 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.database_state = DatabaseState.available
         session.add(
             OrganizationInvitation(
                 organization_id=organization.id,
@@ -161,10 +154,6 @@ async def test_accept_removes_expired_invitation_without_creating_membership(
     # Assert
     assert invitation is None
     assert membership is None
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        assert persisted.database_state == DatabaseState.available
 
 
 async def test_accept_preserves_active_membership_role(users: tuple[User, User, User]) -> None:
@@ -174,9 +163,6 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     owner, invitee = users[0], users[1]
     organization = await create_organization(owner)
     async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        persisted.database_state = DatabaseState.available
         session.add(
             UserOrganization(
                 user_id=invitee.id,
@@ -204,10 +190,6 @@ async def test_accept_preserves_active_membership_role(users: tuple[User, User, 
     assert membership is not None
     assert membership.role == OrganizationRoles.read
     assert invitation is None
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        assert persisted is not None
-        assert persisted.database_state == DatabaseState.available
 
 
 async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -218,6 +200,11 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     organization = await create_organization(owner)
     async with session_scope() as session:
         await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        original_invitation = await session.scalar(
+            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id)
+        )
+        assert original_invitation is not None
+        invitation_id = original_invitation.id
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None
         organization_row.deleted_at = datetime.now(UTC)
@@ -232,3 +219,6 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     # Assert
     assert membership is None
     assert invitation is not None
+    assert invitation.id == invitation_id
+    assert invitation.organization_id == organization.id
+    assert invitation.role == OrganizationRoles.write

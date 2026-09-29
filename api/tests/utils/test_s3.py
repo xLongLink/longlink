@@ -105,8 +105,9 @@ async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.
 
     # Act
     if should_raise:
-        with pytest.raises(ClientError):
+        with pytest.raises(ClientError) as error:
             await make_s3().create_bucket("org-bucket")
+        assert error.value.response["Error"]["Code"] == error_code
     else:
         await make_s3().create_bucket("org-bucket")
 
@@ -135,6 +136,10 @@ async def test_delete_prefix_tolerates_only_missing_bucket(monkeypatch: pytest.M
             await make_s3().delete_prefix("org-bucket", "solutions/abc/")
     else:
         await make_s3().delete_prefix("org-bucket", "solutions/abc/")
+
+    # Assert
+    assert client.aborted == []
+    assert client.deleted == []
 
 
 async def test_delete_prefix_batches_thousand_identifiers(monkeypatch: pytest.MonkeyPatch) -> None:

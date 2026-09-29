@@ -1,46 +1,33 @@
+import { describe, expect, it } from 'vitest';
 import { parseFragment, renderXmlToMarkup } from '../helpers';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const seen = vi.hoisted(() => ({ props: [] as Record<string, unknown>[] }));
-
-vi.mock('@/components/ui/Dialog', () => ({
-    Dialog: (props: Record<string, unknown>) => {
-        seen.props.push(props);
-
-        return null;
-    },
-}));
 
 describe('Dialog', () => {
-    beforeEach(() => {
-        seen.props.length = 0;
-    });
-
     it.each([
         {
-            expected: 'fullscreen',
-            name: 'requests the fullscreen variant when fullscreen is set',
-            property: 'variant',
-            xml: '<Dialog title="Contract" fullscreen="true" />',
+            expected: 'data-variant="fullscreen"',
+            name: 'renders the fullscreen variant when fullscreen is set',
+            xml: '<Dialog title="Contract" fullscreen="true">Content</Dialog>',
         },
         {
-            expected: '90%',
-            name: 'passes a custom width through to the dialog',
-            property: 'width',
-            xml: '<Dialog title="Contract" width="90%" />',
+            expected: 'data-variant="standard"',
+            name: 'renders the standard variant by default',
+            xml: '<Dialog title="Contract">Content</Dialog>',
         },
         {
-            expected: '90vh',
-            name: 'passes a custom height through to the dialog maximum height',
-            property: 'maxHeight',
-            xml: '<Dialog title="Contract" height="90vh" />',
+            expected: '--x-width:90%',
+            name: 'renders a custom width',
+            xml: '<Dialog title="Contract" width="90%">Content</Dialog>',
         },
-    ])('$name', ({ expected, property, xml }) => {
-        // Act
-        renderXmlToMarkup(parseFragment(xml));
+        {
+            expected: '--x-maxHeight:90vh',
+            name: 'renders a custom maximum height',
+            xml: '<Dialog title="Contract" height="90vh">Content</Dialog>',
+        },
+    ])('$name', ({ expected, xml }) => {
+        // Render the XML adapter through the shared dialog rather than replacing it with a prop collector.
+        const markup = renderXmlToMarkup(parseFragment(xml));
 
-        // Assert
-        expect(seen.props).toHaveLength(1);
-        expect(seen.props[0]?.[property]).toBe(expected);
+        expect(markup).toContain('aria-label="Contract"');
+        expect(markup).toContain(expected);
     });
 });

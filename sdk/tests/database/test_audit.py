@@ -4,10 +4,12 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
-from collections.abc import Callable, Iterator, AsyncIterator
+from collections.abc import Iterator, AsyncIterator
 from longlink.database import base as database_base
 from longlink.database import audit
 from longlink.utils.settings import Envs
+
+pytestmark = pytest.mark.usefixtures("audit_model_cleanup")
 
 
 @pytest_asyncio.fixture
@@ -23,20 +25,20 @@ async def audit_engine() -> AsyncIterator[database_base.Database]:
 
 
 @pytest.fixture
-def audit_model_cleanup() -> Iterator[Callable[[str], None]]:
+def audit_model_cleanup() -> Iterator[None]:
     """Remove temporary SQLModel tables after an audit test completes."""
 
-    # Track every temporary table even when the test fails before its assertions.
-    table_names: list[str] = []
-    yield table_names.append
-
+    # Snapshot existing tables before each test creates its temporary model.
     metadata = SQLModel.metadata
-    for table_name in table_names:
+    existing_tables = set(metadata.tables)
+    yield
+
+    # Clean up even if a test fails immediately after declaring a model.
+    for table_name in set(metadata.tables) - existing_tables:
         metadata.remove(metadata.tables[table_name])
 
 
 async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
-    audit_model_cleanup: Callable[[str], None],
     audit_engine: database_base.Database,
 ) -> None:
     """Persist audit fields while retaining explicit soft and ordinary hard deletes."""
@@ -51,8 +53,6 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
         # Item fields
         id: int | None = Field(default=None, primary_key=True)
         name: str
-
-    audit_model_cleanup(AuditLifecycleItem.__tablename__)
 
     # Supply one explicit timestamp for the caller-requested soft delete.
     soft_deleted_at = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
@@ -120,7 +120,6 @@ async def test_audit_hook_persists_fields_and_leaves_deletes_hard(
 
 
 async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
-    audit_model_cleanup: Callable[[str], None],
     audit_engine: database_base.Database,
 ) -> None:
     """Keep caller-provided audit fields when an unchanged row is committed."""
@@ -136,7 +135,6 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
         id: int | None = Field(default=None, primary_key=True)
         name: str
 
-    audit_model_cleanup(ExplicitAuditItem.__tablename__)
     created_at = datetime(2026, 7, 14, 10, 0, tzinfo=UTC)
     updated_at = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
@@ -175,7 +173,6 @@ async def test_audit_hook_preserves_explicit_insert_fields_for_unchanged_rows(
 
 
 async def test_audit_hook_preserves_ordinary_model_lifecycle(
-    audit_model_cleanup: Callable[[str], None],
     audit_engine: database_base.Database,
 ) -> None:
     """Leave ordinary SQLModel inserts, updates, and deletes unchanged."""
@@ -190,8 +187,6 @@ async def test_audit_hook_preserves_ordinary_model_lifecycle(
         # Item fields
         id: int | None = Field(default=None, primary_key=True)
         name: str
-
-    audit_model_cleanup(PlainLifecycleItem.__tablename__)
 
     # Act
     async with audit_engine.session() as session:

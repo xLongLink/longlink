@@ -15,8 +15,11 @@ describe('Tabs', () => {
     });
 
     it('renders a visible Tab', () => {
-        expect(renderXmlToMarkup(parseFragment('<Tabs><Tab label="Details" value="details" /></Tabs>'))).toContain(
-            'Details'
+        const output = renderXmlToMarkup(
+            parseFragment('<Tabs><Tab label="Details" value="details">Tab content</Tab></Tabs>')
         );
+
+        expect(output).toContain('Details');
+        expect(output).toContain('Tab content');
     });
 });

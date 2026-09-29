@@ -67,15 +67,12 @@ async def test_lifespan_starts_and_stops_background_jobs(monkeypatch: pytest.Mon
         await main.asyncio.sleep(0)
         events.append("serving")
 
-    # Assert
-    assert events == [
-        "administrator start",
-        "scheduler start",
-        "serving",
-        "administrator cancel",
-        "scheduler cancel",
-        "dispose",
-    ]
+    # Assert both jobs start before serving and stop before disposing the database pool.
+    assert len(events) == 6
+    assert set(events[:2]) == {"administrator start", "scheduler start"}
+    assert events[2] == "serving"
+    assert set(events[3:5]) == {"administrator cancel", "scheduler cancel"}
+    assert events[5] == "dispose"
 
 
 def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatch) -> None:

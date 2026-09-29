@@ -25,19 +25,11 @@ class TestKubernetes:
         return object()
 
 
-@pytest.mark.parametrize(
-    ("classes", "expected"),
-    [
-        pytest.param([StorageClass("local-path")], "local-path", id="sole-class"),
-        pytest.param([StorageClass("retain"), StorageClass("delete", default=True)], "delete", id="default-class"),
-    ],
-)
-async def test_resolve_selects_unique_storage_class(
-    monkeypatch: pytest.MonkeyPatch, classes: list[StorageClass], expected: str
-) -> None:
-    """Select the sole class or the default class from an unambiguous cluster."""
+@pytest.fixture
+def storage_class_listing(monkeypatch: pytest.MonkeyPatch, classes: list[StorageClass]) -> None:
+    """Supply the selected test case's StorageClasses to the discovery boundary."""
 
-    # Arrange
+    # Preserve asynchronous iteration while replacing only the Kubernetes listing.
     async def listed_classes(**_kwargs: object):
         """Yield the available cluster StorageClasses."""
 
@@ -45,6 +37,18 @@ async def test_resolve_selects_unique_storage_class(
             yield storage_class
 
     monkeypatch.setattr(storageclasses.StorageClassResource, "list", listed_classes)
+
+
+@pytest.mark.parametrize(
+    ("classes", "expected"),
+    [
+        pytest.param([StorageClass("local-path")], "local-path", id="sole-class"),
+        pytest.param([StorageClass("retain"), StorageClass("delete", default=True)], "delete", id="default-class"),
+    ],
+)
+@pytest.mark.usefixtures("storage_class_listing")
+async def test_resolve_selects_unique_storage_class(expected: str) -> None:
+    """Select the sole class or the default class from an unambiguous cluster."""
 
     # Act and assert
     assert await storageclasses.resolve(cast(Kubernetes, TestKubernetes())) == expected
@@ -62,19 +66,9 @@ async def test_resolve_selects_unique_storage_class(
         ),
     ],
 )
-async def test_resolve_rejects_ambiguous_storage_classes(
-    monkeypatch: pytest.MonkeyPatch, classes: list[StorageClass], message: str
-) -> None:
+@pytest.mark.usefixtures("storage_class_listing")
+async def test_resolve_rejects_ambiguous_storage_classes(message: str) -> None:
     """Reject clusters without a unique StorageClass selection."""
-
-    # Arrange
-    async def listed_classes_with_values(**_kwargs: object):
-        """Yield the available cluster StorageClasses."""
-
-        for storage_class in classes:
-            yield storage_class
-
-    monkeypatch.setattr(storageclasses.StorageClassResource, "list", listed_classes_with_values)
 
     # Act and assert
     with pytest.raises(ValueError, match=message):

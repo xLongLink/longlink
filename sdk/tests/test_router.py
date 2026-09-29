@@ -93,11 +93,7 @@ def test_solution_router_include_rolls_back_routes_before_a_view_collision(solut
 
         return {"source": "solution"}
 
-    @router.get(route)
-    async def colliding_endpoint() -> dict[str, str]:
-        """Return the route that collides with the generated View endpoint."""
-
-        return {"source": "solution"}
+    router.add_api_route(route, safe_endpoint, methods=["GET"])
 
     app = LongLink()
     original_routes = app.router.routes.copy()

@@ -77,7 +77,8 @@ def test_longlink_solution_serves_runtime_routes_and_frontend(monkeypatch: pytes
     assert app.state.longlink.database._env.ENV == "testing"
 
 
-def test_readiness_fails_when_the_solution_database_is_unavailable(solution_source: Path) -> None:
+@pytest.mark.usefixtures("solution_source")
+def test_readiness_fails_when_the_solution_database_is_unavailable() -> None:
     """Keep the readiness probe dependent on a live Solution database."""
 
     # Arrange
@@ -110,6 +111,8 @@ def test_readiness_fails_when_the_solution_database_is_unavailable(solution_sour
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
     assert ready_response.status_code == 500
+    assert ready_response.json() == {"detail": "An unexpected error occurred. Please try again later."}
+    assert ready_response.headers["cache-control"] == "no-store"
 
 
 def test_startup_rejects_a_missing_embedded_frontend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

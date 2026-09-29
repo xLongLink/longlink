@@ -7,36 +7,15 @@ describe('compileAttribute', () => {
     });
 
     it('classifies a dollar-prefixed dotted path as a writable binding', () => {
-        // Arrange
-        const value = '$form.value';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'path', parts: ['form', 'value'], isBinding: true });
+        expect(compileAttribute('$form.value')).toEqual({ kind: 'path', parts: ['form', 'value'], isBinding: true });
     });
 
     it('classifies a dotted path without a dollar prefix as read-only', () => {
-        // Arrange
-        const value = 'form.value';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'path', parts: ['form', 'value'] });
+        expect(compileAttribute('form.value')).toEqual({ kind: 'path', parts: ['form', 'value'] });
     });
 
     it('keeps a single word without a dollar prefix as plain text', () => {
-        // Arrange
-        const value = 'name';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toEqual({ kind: 'text', value: 'name' });
+        expect(compileAttribute('name')).toEqual({ kind: 'text', value: 'name' });
     });
 
     it.each(['$', '$1bad', '1bad.value'])('keeps an invalid reference as plain text: %s', (value) => {
@@ -48,27 +27,19 @@ describe('compileAttribute', () => {
     });
 
     it('compiles a whitespace-surrounded interpolation as a single expression', () => {
-        // Arrange
-        const value = '  ${name}  ';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute.kind).toBe('expression');
+        expect(compileAttribute('  ${name}  ')).toMatchObject({
+            kind: 'expression',
+            node: { type: 'Identifier', name: 'name' },
+        });
     });
 
     it('compiles mixed text and expression into interpolation segments', () => {
-        // Arrange
-        const value = 'Hello ${name}';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toMatchObject({
+        expect(compileAttribute('Hello ${name}')).toMatchObject({
             kind: 'interpolation',
-            segments: [{ kind: 'text', value: 'Hello ' }, { kind: 'expression' }],
+            segments: [
+                { kind: 'text', value: 'Hello ' },
+                { kind: 'expression', node: { type: 'Identifier', name: 'name' } },
+            ],
         });
     });
 });

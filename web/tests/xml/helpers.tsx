@@ -74,5 +74,5 @@ export async function mountXml(
         root.render(wrap ? wrap(node) : node);
     });
 
-    return { container, root, ctx };
+    return { container, root };
 }

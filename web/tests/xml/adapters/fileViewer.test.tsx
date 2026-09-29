@@ -16,13 +16,12 @@ describe('FileViewer', () => {
     });
 
     afterEach(async () => {
-        vi.unstubAllGlobals();
-        vi.restoreAllMocks();
-
         await cleanupMountedRoot(root);
         root = undefined;
         mountedContainer?.remove();
         mountedContainer = undefined;
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
     });
 
     async function renderViewer(xml: string, ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' })) {
@@ -54,7 +53,9 @@ describe('FileViewer', () => {
         await vi.waitFor(() => expect(container.querySelector('iframe')).not.toBeNull());
         const frame = container.querySelector('iframe');
         expect(fetchRequest).toHaveBeenCalledOnce();
-        expect(requestUrl).toContain('/api/v1/solutions/demo/proxy/api/items/1/attachments/a.pdf');
+        expect(requestUrl).toBe(
+            new URL('/api/v1/solutions/demo/proxy/api/items/1/attachments/a.pdf', window.location.href).href
+        );
         expect(frame?.getAttribute('src')).toBe('blob:preview');
         expect(frame?.hasAttribute('sandbox')).toBe(false);
         expect(frame?.getAttribute('title')).toBe('Contract');
@@ -125,7 +126,7 @@ describe('FileViewer', () => {
     });
 
     it('reports an error when the download fails', async () => {
-        vi.stubGlobal('fetch', async () => Promise.reject(new Error('Network unavailable')));
+        vi.stubGlobal('fetch', () => Promise.reject(new Error('Network unavailable')));
         const container = await renderViewer('<FileViewer src="/api/items/1/attachments/a.pdf" title="Contract" />');
 
         await vi.waitFor(() => expect(container.textContent).toContain('Preview unavailable'));
@@ -142,7 +143,9 @@ describe('FileViewer', () => {
     });
 
     it('requires a title', () => {
-        expect(() => renderXmlToMarkup(parseFragment('<FileViewer src="/files/a.pdf" />'))).toThrow();
+        expect(() => renderXmlToMarkup(parseFragment('<FileViewer src="/files/a.pdf" />'))).toThrow(
+            'Invalid XML props: title:'
+        );
     });
 
     it('resolves per-row sources inside table dialogs', async () => {

@@ -214,25 +214,24 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     """Generate Docker instructions and ignore rules from project metadata."""
 
     # Arrange
-    build_project = chdir_project
-    build_project.joinpath("pyproject.toml").write_text(
+    chdir_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
     )
-    build_project.joinpath("src", "envs.py").write_text(
+    chdir_project.joinpath("src", "envs.py").write_text(
         "from pydantic import BaseModel\n\nclass Env(BaseModel):\n    API_KEY: str\n",
         encoding="utf-8",
     )
-    build_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
-    build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
-    build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
-    build_project.joinpath(".pytest_cache").mkdir()
-    build_project.joinpath(".pytest_cache", "CACHEDIR.TAG").write_text("cache", encoding="utf-8")
-    build_project.joinpath(".cache").mkdir()
-    build_project.joinpath(".cache", "artifact").write_text("cache", encoding="utf-8")
-    build_project.joinpath("tests").mkdir()
-    build_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
-    build_context = build_project.parent / "context"
+    chdir_project.joinpath(".gitignore").write_text(".env\n*.db\n", encoding="utf-8")
+    chdir_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    chdir_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
+    chdir_project.joinpath(".pytest_cache").mkdir()
+    chdir_project.joinpath(".pytest_cache", "CACHEDIR.TAG").write_text("cache", encoding="utf-8")
+    chdir_project.joinpath(".cache").mkdir()
+    chdir_project.joinpath(".cache", "artifact").write_text("cache", encoding="utf-8")
+    chdir_project.joinpath("tests").mkdir()
+    chdir_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
+    build_context = chdir_project.parent / "context"
 
     # Act
     version, name = build.build_solution(build_context)
@@ -272,9 +271,8 @@ def test_build_solution_rejects_invalid_project_metadata_before_generating_artif
     """Reject incomplete project metadata before creating Docker artifacts."""
 
     # Arrange
-    build_project = chdir_project
-    build_project.joinpath("pyproject.toml").write_text(project_data, encoding="utf-8")
-    build_context = build_project.parent / "context"
+    chdir_project.joinpath("pyproject.toml").write_text(project_data, encoding="utf-8")
+    build_context = chdir_project.parent / "context"
 
     # Act and assert
     with pytest.raises(build.CliError) as error:
@@ -311,21 +309,20 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     """Preserve allowed in-tree links while excluding unsafe and ignored targets."""
 
     # Arrange
-    build_project = chdir_project
-    outside_file = build_project.parent / "outside-secret.txt"
+    outside_file = chdir_project.parent / "outside-secret.txt"
     outside_file.write_text("must not enter the build context", encoding="utf-8")
-    build_project.joinpath("linked-secret.txt").symlink_to(outside_file)
-    build_project.joinpath("linked-envs.py").symlink_to("src/envs.py")
-    build_project.joinpath("absolute-envs.py").symlink_to(build_project / "src" / "envs.py")
-    build_project.joinpath("root-link").symlink_to(".")
-    build_project.joinpath("cycle-a").symlink_to("cycle-b")
-    build_project.joinpath("cycle-b").symlink_to("cycle-a")
-    build_project.joinpath("broken-link").symlink_to("missing.py")
-    build_project.joinpath("src", "parent-link").symlink_to("..")
-    build_project.joinpath("relocated-envs.py").symlink_to("../solution/src/envs.py")
-    build_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
-    build_project.joinpath("linked-database").symlink_to("dev.db")
-    build_context = build_project.parent / "context"
+    chdir_project.joinpath("linked-secret.txt").symlink_to(outside_file)
+    chdir_project.joinpath("linked-envs.py").symlink_to("src/envs.py")
+    chdir_project.joinpath("absolute-envs.py").symlink_to(chdir_project / "src" / "envs.py")
+    chdir_project.joinpath("root-link").symlink_to(".")
+    chdir_project.joinpath("cycle-a").symlink_to("cycle-b")
+    chdir_project.joinpath("cycle-b").symlink_to("cycle-a")
+    chdir_project.joinpath("broken-link").symlink_to("missing.py")
+    chdir_project.joinpath("src", "parent-link").symlink_to("..")
+    chdir_project.joinpath("relocated-envs.py").symlink_to("../solution/src/envs.py")
+    chdir_project.joinpath("dev.db").write_text("local database", encoding="utf-8")
+    chdir_project.joinpath("linked-database").symlink_to("dev.db")
+    build_context = chdir_project.parent / "context"
 
     # Act
     build.build_solution(build_context)
@@ -400,28 +397,27 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     """Apply the fixed exclusion policy across an expanded context."""
 
     # Arrange
-    build_project = chdir_project
-    dependency = build_project.parent / "shared"
+    dependency = chdir_project.parent / "shared"
     dependency.mkdir()
-    build_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
-    build_project.parent.joinpath("uv.lock").write_text("workspace lock", encoding="utf-8")
+    chdir_project.parent.joinpath("pyproject.toml").write_text('[tool.uv.workspace]\nmembers = ["solution", "shared"]\n', encoding="utf-8")
+    chdir_project.parent.joinpath("uv.lock").write_text("workspace lock", encoding="utf-8")
     dependency.joinpath("pyproject.toml").write_text('[project]\nname = "shared"\nversion = "0.1.0"\n', encoding="utf-8")
-    unrelated = build_project.parent / "unrelated"
+    unrelated = chdir_project.parent / "unrelated"
     unrelated.mkdir()
     unrelated.joinpath("private.txt").write_text("unrelated content", encoding="utf-8")
     dependency.joinpath("nested").mkdir()
     dependency.joinpath("nested", ".env").write_text("dependency secret", encoding="utf-8")
-    build_project.joinpath("pyproject.toml").write_text(
+    chdir_project.joinpath("pyproject.toml").write_text(
         '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n\n'
         '[tool.uv.sources]\nshared = { path = "../shared" }\n',
         encoding="utf-8",
     )
-    build_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
-    build_project.joinpath(".env.production").write_text("SECRET=production-value\n", encoding="utf-8")
-    build_project.joinpath("nested").mkdir()
-    build_project.joinpath("nested", "drop.db").write_text("local database", encoding="utf-8")
-    build_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
-    build_context = build_project.parent / "context"
+    chdir_project.joinpath(".env").write_text("SECRET=value\n", encoding="utf-8")
+    chdir_project.joinpath(".env.production").write_text("SECRET=production-value\n", encoding="utf-8")
+    chdir_project.joinpath("nested").mkdir()
+    chdir_project.joinpath("nested", "drop.db").write_text("local database", encoding="utf-8")
+    chdir_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
+    build_context = chdir_project.parent / "context"
 
     # Act
     build.build_solution(build_context)
@@ -544,6 +540,7 @@ def test_build_command_reports_built_image(
         """Record Docker commands and verify the live build artifact."""
 
         # Inspect the generated context before the command cleans it up.
+        assert check is True
         commands.append(command)
         if command[1] != "push":
             assert Path(command[-1], "Dockerfile").is_file()
@@ -599,6 +596,7 @@ def test_build_command_reports_docker_failure(
         """Record Docker commands and fail the selected one."""
 
         # Verify the live build artifact before simulating a command failure.
+        assert check is True
         commands.append(command)
         if command[1] != "push":
             assert Path(command[-1], "Dockerfile").is_file()

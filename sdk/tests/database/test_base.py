@@ -9,6 +9,24 @@ from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
+PRODUCTION_SETTINGS = {
+    "ENV": "production",
+    "IDENTITY_SECRET": "identity-secret",
+    "DATABASE_HOST": "db",
+    "DATABASE_NAME": "longlink",
+    "DATABASE_PORT": 5432,
+    "DATABASE_SCHEMA": "solution",
+    "DATABASE_CERTIFICATE": "database-ca-pem",
+    "DATABASE_PASSWORD": "secret",
+    "DATABASE_USERNAME": "solution",
+    "STORAGE_BUCKET": "organization",
+    "STORAGE_PREFIX": "solutions/solution",
+    "STORAGE_REGION": "region",
+    "STORAGE_PASSWORD": "secret",
+    "STORAGE_USERNAME": "key",
+    "STORAGE_ENDPOINT_URL": "https://storage.example.com",
+}
+
 
 class VerificationEngine:
     """Provide a configurable non-SQLite database verification boundary."""
@@ -83,23 +101,7 @@ def test_production_settings_reject_invalid_database_schema(database_schema: str
     """Reject production database schemas that are not PostgreSQL identifiers."""
 
     # Arrange
-    settings = {
-        "ENV": "production",
-        "IDENTITY_SECRET": "identity-secret",
-        "DATABASE_HOST": "db",
-        "DATABASE_NAME": "longlink",
-        "DATABASE_PORT": 5432,
-        "DATABASE_SCHEMA": database_schema,
-        "DATABASE_CERTIFICATE": "database-ca-pem",
-        "DATABASE_PASSWORD": "secret",
-        "DATABASE_USERNAME": "solution",
-        "STORAGE_BUCKET": "organization",
-        "STORAGE_PREFIX": "solutions/solution",
-        "STORAGE_REGION": "region",
-        "STORAGE_PASSWORD": "secret",
-        "STORAGE_USERNAME": "key",
-        "STORAGE_ENDPOINT_URL": "https://storage.example.com",
-    }
+    settings = PRODUCTION_SETTINGS | {"DATABASE_SCHEMA": database_schema}
 
     # Act and assert
     with pytest.raises(ValueError, match="DATABASE_SCHEMA must be a valid PostgreSQL identifier"):
@@ -213,23 +215,7 @@ def test_connect_args_uses_ca_certificate(monkeypatch: pytest.MonkeyPatch) -> No
             id="development",
         ),
         pytest.param(
-            Envs(
-                ENV="production",
-                IDENTITY_SECRET="identity-secret",
-                DATABASE_HOST="db",
-                DATABASE_NAME="longlink",
-                DATABASE_PORT=5432,
-                DATABASE_SCHEMA="solution",
-                DATABASE_CERTIFICATE="database-ca-pem",
-                DATABASE_PASSWORD="secret",
-                DATABASE_USERNAME="solution",
-                STORAGE_BUCKET="organization",
-                STORAGE_PREFIX="solutions/solution",
-                STORAGE_REGION="region",
-                STORAGE_PASSWORD="secret",
-                STORAGE_USERNAME="key",
-                STORAGE_ENDPOINT_URL="https://storage.example.com",
-            ),
+            Envs.model_validate(PRODUCTION_SETTINGS),
             URL.create(
                 "postgresql+asyncpg",
                 username="solution",
@@ -321,20 +307,19 @@ async def test_session_retries_initialization_after_database_connection_failure(
 
     # Arrange
     engine = VerificationEngine(ConnectionError("database unavailable"))
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: engine)
     database = database_base.Database(Envs(ENV="testing"))
 
     # Act and assert
-    with pytest.raises(ConnectionError, match="database unavailable"):
-        async with database.session():
-            pass
+    with monkeypatch.context() as failing_engine:
+        failing_engine.setattr(database_base, "create_engine", lambda _env: engine)
+        with pytest.raises(ConnectionError, match="database unavailable"):
+            async with database.session():
+                pass
 
     # Assert
     assert engine.disposed
 
-    # Retry initialization with an available database connection.
-    retry_engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    monkeypatch.setattr(database_base, "create_engine", lambda _env: retry_engine)
+    # Retry initialization using the restored SDK engine factory.
     try:
         async with database.session() as database_session:
             assert database_session is not None

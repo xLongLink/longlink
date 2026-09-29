@@ -25,8 +25,16 @@ OEByyXcs3Bef0FLkH/Mp/KriexKxoCEGaBXq
 """
 
 
-def test_certificate_file_rejects_invalid_pem_before_creating_file() -> None:
+def test_certificate_file_rejects_invalid_pem_before_creating_file(monkeypatch: pytest.MonkeyPatch) -> None:
     """Reject an invalid storage CA before publishing its temporary filename."""
+
+    # Arrange
+    def unexpected_file(*_args: object, **_kwargs: object) -> None:
+        """Reject temporary file creation before CA validation."""
+
+        raise AssertionError("Invalid CA must not create a temporary file")
+
+    monkeypatch.setattr(tls.tempfile, "NamedTemporaryFile", unexpected_file)
 
     # Act and assert
     with pytest.raises(ssl.SSLError):
@@ -39,12 +47,13 @@ def test_certificate_file_publishes_validated_pem_for_caller_lifetime() -> None:
 
     # Act
     with tls.certificate_file(TEST_CA_PEM) as filename:
+        certificate_path = Path(filename)
+
         # Assert
-        assert Path(filename).suffix == ".crt"
-        assert Path(filename).read_text() == TEST_CA_PEM
+        assert certificate_path.read_text() == TEST_CA_PEM
 
     # Assert
-    assert not Path(filename).exists()
+    assert not certificate_path.exists()
 
 
 def test_session_restores_hostname_verification() -> None:

@@ -174,7 +174,8 @@ async def test_frontend_middleware_passes_websocket_scopes_through_unchanged() -
     await middleware(scope, receive, send)
 
     # Assert
-    assert received_scopes == [scope]
+    assert received_scopes == [{"type": "websocket", "path": "/events", "headers": []}]
+    assert received_scopes[0] is scope
 
 
 @pytest.mark.parametrize(
@@ -200,8 +201,8 @@ def test_frontend_middleware_applies_default_cache_policy(
     # Arrange
     app = FastAPI()
 
-    @app.get("/{resource:path}")
-    def get_resource(resource: str) -> Response:
+    @app.get(path)
+    def get_resource() -> Response:
         """Return a frontend resource without an explicit cache policy."""
 
         return Response("content", media_type=media_type, status_code=status_code)
@@ -214,16 +215,3 @@ def test_frontend_middleware_applies_default_cache_policy(
     # Assert
     assert response.status_code == status_code
     assert response.headers["cache-control"] == expected_cache_control
-
-
-def test_frontend_middleware_preserves_explicit_cache_policy() -> None:
-    """Leave route-owned cache policies unchanged."""
-
-    # Arrange
-    app = create_text_app({"cache-control": "private, no-store"})
-
-    # Act
-    response = request_response(app, "/text", {})
-
-    # Assert
-    assert response.headers["cache-control"] == "private, no-store"

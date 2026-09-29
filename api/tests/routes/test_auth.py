@@ -79,7 +79,6 @@ def oauth_responses(monkeypatch: pytest.MonkeyPatch, users: tuple[User, User, Us
 def override_oauth_email(
     responses: dict[str, object],
     users: tuple[User, User, User],
-    provider: oauth.OAuthProvider,
     verification: dict[str, bool | str] | list[dict[str, bool]],
 ) -> None:
     """Apply one unverified provider email shape to the fake OAuth responses."""
@@ -387,7 +386,7 @@ async def test_oauth_callback_rejects_unverified_email_without_account_changes(
     """Reject unverified provider emails without leaking details or changing accounts."""
 
     # Arrange
-    override_oauth_email(oauth_responses, users, provider, verification)
+    override_oauth_email(oauth_responses, users, verification)
     credential = token.create_oauth_state_token(provider, "expected-state", "pkce-verifier")
     client.cookies.set("longlink_oauth", credential, domain="testserver.local", path="/api/v1/auth/oauth")
 

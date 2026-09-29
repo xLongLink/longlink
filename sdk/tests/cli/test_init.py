@@ -18,20 +18,14 @@ from longlink.database import migrations as database_migrations
             id="default",
         ),
         pytest.param(
-            ["--folder", "sample-solution", "--ci", "github"],
+            ["--folder", "sample-solution", "--ci", "github", "--name", "sample"],
             [
                 ".github/actions/setup-python/action.yml",
                 ".github/workflows/release.yml",
                 ".github/workflows/tests.yml",
             ],
-            "sample-solution",
-            id="github-ci",
-        ),
-        pytest.param(
-            ["--folder", "sample-solution", "--name", "sample"],
-            [],
             "sample",
-            id="name",
+            id="github-ci",
         ),
     ],
 )
@@ -57,6 +51,8 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             *ci_paths,
         ]:
             assert (target / path).exists()
+        if not ci_paths:
+            assert not (target / ".github").exists()
         main_source = (target / "main.py").read_text(encoding="utf-8")
         assert "app = LongLink()" in main_source
         assert "app.include_router(items.router)" in main_source

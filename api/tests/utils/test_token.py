@@ -3,20 +3,23 @@ import pytest
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from src.utils import token
+from collections.abc import Mapping
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
+
+
+def signed_token(claims: Mapping[str, object]) -> str:
+    """Sign controlled test claims with the configured session key and algorithm."""
+
+    return jwt.encode(dict(claims), token.env.SESSION_KEY, algorithm=token.JWT_ALGORITHM)
 
 
 def expired_token(claims: dict[str, str]) -> str:
     """Encode expired test credentials without repeating the expiry construction."""
 
     # Expire the credential one second before the validating clock reads it.
-    return jwt.encode(
-        {**claims, "exp": datetime.now(UTC) - timedelta(seconds=1)},
-        token.env.SESSION_KEY,
-        algorithm=token.JWT_ALGORITHM,
-    )
+    return signed_token({**claims, "exp": datetime.now(UTC) - timedelta(seconds=1)})
 
 
 @pytest.mark.no_db
@@ -63,14 +66,12 @@ def test_auth_token_claims_reject_malformed_user_identity() -> None:
     """Reject browser credentials whose subject is not a UUID."""
 
     # Arrange
-    invalid_token = jwt.encode(
+    invalid_token = signed_token(
         {
             "sub": "not-a-uuid",
             "password_fingerprint": "fingerprint",
             "aud": token.AUTH_TOKEN_AUDIENCE,
-        },
-        token.env.SESSION_KEY,
-        algorithm=token.JWT_ALGORITHM,
+        }
     )
 
     # Act and assert
@@ -161,7 +162,7 @@ def test_token_claims_reject_missing_required_fields(claims: dict[str, str], fun
     """Reject signed credentials that omit their required identity claims."""
 
     # Arrange
-    encoded = jwt.encode(claims, token.env.SESSION_KEY, algorithm=token.JWT_ALGORITHM)
+    encoded = signed_token(claims)
 
     # Act and assert
     with pytest.raises(jwt.InvalidTokenError, match=message):
@@ -173,14 +174,12 @@ async def test_password_reset_user_rejects_malformed_subject() -> None:
     """Reject password-reset credentials whose subject is not a user UUID."""
 
     # Arrange
-    encoded = jwt.encode(
+    encoded = signed_token(
         {
             "sub": "not-a-uuid",
             "password_fingerprint": "fingerprint",
             "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
-        },
-        token.env.SESSION_KEY,
-        algorithm=token.JWT_ALGORITHM,
+        }
     )
 
     # Act and assert
@@ -194,11 +193,7 @@ async def test_password_reset_user_rejects_missing_fingerprint() -> None:
     """Reject password-reset credentials that omit their password binding."""
 
     # Arrange
-    encoded = jwt.encode(
-        {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
-        token.env.SESSION_KEY,
-        algorithm=token.JWT_ALGORITHM,
-    )
+    encoded = signed_token({"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE})
 
     # Act and assert
     async with AsyncSession() as session:

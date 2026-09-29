@@ -134,7 +134,6 @@ async def test_execute_persists_explicit_handler_failure(monkeypatch: pytest.Mon
         """Return one explicit terminal failure."""
 
         assert target_id == operation.target_id
-        operation_worker.logger.info("Compute reconciliation failed")
         return "workload deployment failed"
 
     async def fake_fail(_session: object, operation_id: UUID, reason: str) -> Operation:

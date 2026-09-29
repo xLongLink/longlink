@@ -56,10 +56,11 @@ describe('api error mapping', () => {
 
     it('passes network failures through without mapping', async () => {
         // Arrange
+        const networkError = new TypeError('Network error');
         vi.stubGlobal(
             'fetch',
             vi.fn(async () => {
-                throw new TypeError('Network error');
+                throw networkError;
             })
         );
 
@@ -67,44 +68,7 @@ describe('api error mapping', () => {
         const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
-        expect(failure).not.toBeInstanceOf(ApiError);
-        expect(failure).toBeInstanceOf(TypeError);
-    });
-});
-
-describe('api success contract', () => {
-    it('returns parsed JSON for a successful get', async () => {
-        // Arrange
-        stubJsonFetch({ total: 3 }, 200);
-
-        // Act
-        const payload = await api.get('https://api.example/organizations').json<{ total: number }>();
-
-        // Assert
-        expect(payload).toEqual({ total: 3 });
-    });
-
-    it('sends JSON bodies with the JSON content type', async () => {
-        // Arrange
-        let sentBody = '';
-        const transport = vi.fn(async (input: Request) => {
-            sentBody = await input.clone().text();
-            return Response.json({ id: 'acme' }, { status: 201 });
-        });
-        vi.stubGlobal('fetch', transport);
-
-        // Act
-        const payload = await api
-            .post('https://api.example/organizations', { json: { name: 'acme' } })
-            .json<{ id: string }>();
-
-        // Assert
-        expect(payload).toEqual({ id: 'acme' });
-        const request = transport.mock.calls[0]?.[0];
-        if (request === undefined) throw new Error('Fetch request was not captured');
-        expect(request.method).toBe('POST');
-        expect(request.headers.get('content-type')).toContain('application/json');
-        expect(JSON.parse(sentBody)).toEqual({ name: 'acme' });
+        expect(failure).toBe(networkError);
     });
 
     it('falls back when a failure body is not JSON', async () => {

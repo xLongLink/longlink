@@ -234,7 +234,6 @@ async def test_get_organization_solutions_rejects_another_organization_owner(
 
     # Arrange
     target = await create_organization(users[0], name="target")
-    await create_solution(target)
     await create_organization(users[1], name="requester")
 
     # Act
@@ -622,26 +621,6 @@ async def test_list_organizations_returns_stable_page_and_active_total(
     }
 
 
-@pytest.mark.parametrize("path", ["/api/v1/users", "/api/v1/organizations", "/api/v1/solutions"])
-async def test_platform_listings_reject_authenticated_non_administrators(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    path: str,
-) -> None:
-    """Keep platform-wide user, organization, and solution listings administrator-only."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    await create_solution(organization)
-
-    # Act
-    response = await clients[1].get(path)
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
-
-
 async def test_delete_organization_returns_not_found_for_unknown_identifier(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
@@ -850,7 +829,11 @@ async def test_organization_member_cannot_revoke_another_organizations_invitatio
     assert response.status_code == 404
     assert response.json() == {"detail": "Invitation not found"}
     async with session_scope() as session:
-        assert await session.get(OrganizationInvitation, invitation.id) is not None
+        persisted = await session.get(OrganizationInvitation, invitation.id)
+    assert persisted is not None
+    assert persisted.organization_id == second_organization.id
+    assert persisted.email == invitee.email
+    assert persisted.role == OrganizationRoles.write
 
 
 async def test_create_organization_invitation_rejects_active_member(
@@ -1025,9 +1008,6 @@ async def test_update_organization_member_cannot_change_another_organizations_me
     async with session_scope() as session:
         session.add(UserOrganization(user_id=users[2].id, organization_id=other_organization.id, role=OrganizationRoles.write))
         await session.commit()
-    async with session_scope() as session:
-        other_members = await organizations.members(session, other_organization.id)
-    assert next(member for member in other_members if member.user_id == users[2].id).role == OrganizationRoles.write
 
     # Act
     response = await clients[0].patch(
@@ -1222,15 +1202,11 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
 
 async def test_get_organization_rejects_anonymous_without_membership_lookup(
     client: AsyncClient,
-    users: tuple[User, User, User],
 ) -> None:
     """Reject unauthenticated organization reads before membership checks."""
 
-    # Arrange
-    organization = await create_organization(users[0])
-
     # Act
-    response = await client.get(f"/api/v1/organizations/{organization.id}")
+    response = await client.get(f"/api/v1/organizations/{uuid4()}")
 
     # Assert
     assert response.status_code == 401

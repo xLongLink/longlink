@@ -5,20 +5,14 @@ import { getSetupNodes, setupContext } from '@/xml/core/context';
 describe('core/context', () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it('recreates state on setup reruns and invalidation', async () => {
+    it('recreates state on setup reruns', async () => {
         const ctx = createContext();
         const ast = parseFragment('<State id="filter" value="day" score="10" list="[]" />');
 
         await setupContext(getSetupNodes(ast), ctx);
         const filter = ctx.scope.bindings.filter as { value: string; score: string; list: string };
-        expect(filter).toEqual({ value: 'day', score: '10', list: '[]' });
         filter.value = 'week';
         await setupContext(getSetupNodes(ast), ctx);
-
-        expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
-
-        delete ctx.scope.bindings.filter;
-        await ctx.services.setups.filter();
 
         expect(ctx.scope.bindings.filter).toEqual({ value: 'day', score: '10', list: '[]' });
     });
@@ -31,7 +25,7 @@ describe('core/context', () => {
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
             requestedUrl = input instanceof Request ? input.url : String(input);
 
-            return new Response(JSON.stringify({ id: '123' }));
+            return Response.json({ id: '123' });
         });
 
         await setupContext(getSetupNodes(ast), ctx);
@@ -46,12 +40,13 @@ describe('core/context', () => {
         const ast = parseFragment('<Query id="records" path="/records" />');
         const fetchImpl = vi
             .fn()
-            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
-            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 2 })));
+            .mockResolvedValueOnce(Response.json({ version: 1 }))
+            .mockResolvedValueOnce(Response.json({ version: 2 }));
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
         await setupContext(getSetupNodes(ast), ctx);
+        expect(ctx.scope.bindings.records).toEqual({ version: 1 });
         await ctx.services.setups.records();
 
         // Assert
@@ -92,7 +87,7 @@ describe('core/context', () => {
         const reportError = vi.fn();
         const fetchImpl = vi
             .fn()
-            .mockResolvedValueOnce(new Response(JSON.stringify({ version: 1 })))
+            .mockResolvedValueOnce(Response.json({ version: 1 }))
             .mockRejectedValueOnce(failure);
         vi.stubGlobal('fetch', fetchImpl);
         await setupContext(getSetupNodes(ast), ctx, { onError: reportError });

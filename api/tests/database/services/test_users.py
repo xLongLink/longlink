@@ -157,7 +157,7 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
         active = await user_service.active(session, active_user.id)
         deleted = await user_service.active(session, deleted_user.id)
         by_email = await user_service.by_email(session, deleted_user.email)
-        page, total = await user_service.fetch_page(session, Pagination(page_size=2))
+        page, total = await user_service.fetch_page(session, Pagination(page_size=3))
 
     # Assert
     assert active is not None
@@ -165,7 +165,8 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
     assert deleted is None
     assert by_email is not None
     assert by_email.id == deleted_user.id
-    assert len(page) == 2
+    assert len(page) == 3
+    assert deleted_user.id in {user.id for user in page}
     assert total == 3
 
 

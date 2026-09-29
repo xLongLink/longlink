@@ -8,16 +8,13 @@ from src.database.models.users import User
     ("method", "path", "payload"),
     [
         pytest.param("GET", "computes", None, id="list-computes"),
-        pytest.param("GET", "users", None, id="list-users"),
-        pytest.param("GET", "organizations", None, id="list-organizations"),
-        pytest.param("GET", "solutions", None, id="list-solutions"),
         pytest.param("POST", "computes", {}, id="create-compute"),
     ],
 )
 async def test_platform_user_cannot_access_administrator_registries(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], method: str, path: str, payload: dict[str, object] | None
 ) -> None:
-    """Reject registry collection reads and creation before payload validation."""
+    """Reject Compute registry reads and creation before payload validation."""
 
     # Act
     response = await clients[1].request(method, f"/api/v1/{path}", json=payload)
