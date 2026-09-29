@@ -7,17 +7,14 @@ describe('compileAttribute', () => {
     });
 
     it('classifies a dollar-prefixed dotted path as a writable binding', () => {
-        // Act and assert
         expect(compileAttribute('$form.value')).toEqual({ kind: 'path', parts: ['form', 'value'], isBinding: true });
     });
 
     it('classifies a dotted path without a dollar prefix as read-only', () => {
-        // Act and assert
         expect(compileAttribute('form.value')).toEqual({ kind: 'path', parts: ['form', 'value'] });
     });
 
     it('keeps a single word without a dollar prefix as plain text', () => {
-        // Act and assert
         expect(compileAttribute('name')).toEqual({ kind: 'text', value: 'name' });
     });
 
@@ -30,27 +27,19 @@ describe('compileAttribute', () => {
     });
 
     it('compiles a whitespace-surrounded interpolation as a single expression', () => {
-        // Arrange
-        const value = '  ${name}  ';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute.kind).toBe('expression');
+        expect(compileAttribute('  ${name}  ')).toMatchObject({
+            kind: 'expression',
+            node: { type: 'Identifier', name: 'name' },
+        });
     });
 
     it('compiles mixed text and expression into interpolation segments', () => {
-        // Arrange
-        const value = 'Hello ${name}';
-
-        // Act
-        const attribute = compileAttribute(value);
-
-        // Assert
-        expect(attribute).toMatchObject({
+        expect(compileAttribute('Hello ${name}')).toMatchObject({
             kind: 'interpolation',
-            segments: [{ kind: 'text', value: 'Hello ' }, { kind: 'expression' }],
+            segments: [
+                { kind: 'text', value: 'Hello ' },
+                { kind: 'expression', node: { type: 'Identifier', name: 'name' } },
+            ],
         });
     });
 });

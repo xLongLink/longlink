@@ -15,7 +15,7 @@ describe('renderNode', () => {
     });
 
     it('skips nodes when if condition is false', () => {
-        expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).not.toContain('<button');
+        expect(renderXmlToMarkup(parseFragment('<Button if="${false}" />'))).toBe(renderXmlToMarkup([]));
     });
 
     it('throws on unknown component', () => {
@@ -67,6 +67,6 @@ describe('renderNode', () => {
         const ast = parseFragment('<Heading level="7">Orders</Heading>');
 
         // Act and assert
-        expect(() => renderXmlToMarkup(ast)).toThrow();
+        expect(() => renderXmlToMarkup(ast)).toThrow('Invalid XML props: level:');
     });
 });

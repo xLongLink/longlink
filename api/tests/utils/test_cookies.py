@@ -1,6 +1,7 @@
 import pytest
 from fastapi import Response
 from src.utils import cookies
+from http.cookies import SimpleCookie
 from src.environments import env
 
 pytestmark = pytest.mark.no_db
@@ -47,8 +48,12 @@ def test_delete_browser_cookie_mirrors_registration_path(monkeypatch: pytest.Mon
     cookies.delete_browser_cookie(delete_response, cookies.REGISTRATION_COOKIE, "/api/v1/auth/register")
 
     # Assert
-    assert "Path=/api/v1/auth/register" in set_response.headers["set-cookie"]
-    assert "Path=/api/v1/auth/register" in delete_response.headers["set-cookie"]
+    set_cookie = SimpleCookie()
+    set_cookie.load(set_response.headers["set-cookie"])
+    delete_cookie = SimpleCookie()
+    delete_cookie.load(delete_response.headers["set-cookie"])
+    assert set_cookie[cookies.REGISTRATION_COOKIE]["path"] == "/api/v1/auth/register"
+    assert delete_cookie[cookies.REGISTRATION_COOKIE]["path"] == "/api/v1/auth/register"
     assert "Max-Age=0" in delete_response.headers["set-cookie"]
     assert delete_response.headers["set-cookie"].startswith(f"{cookies.REGISTRATION_COOKIE}=")
     assert "Secure" in delete_response.headers["set-cookie"]

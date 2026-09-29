@@ -33,13 +33,13 @@ describe('Solution source update dialog', () => {
     });
 
     it('uses the native XML dialog to review and submit a source update', async () => {
-        const submissions: { method: string; path: string; body: unknown }[] = [];
+        const submissions: { path: string; body: unknown }[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
             const request = input instanceof Request ? input : new Request(input, init);
             const path = new URL(request.url).pathname;
 
             if (request.method === 'POST') {
-                submissions.push({ method: request.method, path, body: await request.json() });
+                submissions.push({ path, body: await request.json() });
                 return new Response(null, { status: 204 });
             }
 
@@ -96,7 +96,6 @@ describe('Solution source update dialog', () => {
             vi.waitFor(() =>
                 expect(submissions).toEqual([
                     {
-                        method: 'POST',
                         path: `/api/v1/solutions/${solutionId}/update`,
                         body: { envs: {}, expected_revision_id: revisionId },
                     },

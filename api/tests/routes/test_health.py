@@ -41,12 +41,15 @@ async def test_readyz_returns_internal_error_when_database_query_fails(monkeypat
     """Keep replicas unready when the Platform database cannot be queried."""
 
     # Arrange
+    executed_statements: list[str] = []
+
     class Session:
         """Fail the readiness query without opening a database connection."""
 
-        async def execute(self, _statement: object) -> None:
+        async def execute(self, statement: object) -> None:
             """Simulate an unavailable Platform database."""
 
+            executed_statements.append(str(statement))
             raise RuntimeError("database unavailable")
 
     @asynccontextmanager
@@ -68,3 +71,4 @@ async def test_readyz_returns_internal_error_when_database_query_fails(monkeypat
     assert response.status_code == 500
     assert response.json() == {"detail": "An unexpected error occurred. Please try again later."}
     assert response.headers["cache-control"] == "no-store"
+    assert executed_statements == ["SELECT 1"]

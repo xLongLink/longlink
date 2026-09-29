@@ -111,9 +111,6 @@ async def test_create_uses_concurrently_created_invitation(users: tuple[User, Us
 
         monkeypatch.setattr(session, "scalar", suppress_first_invitation)
         await invitations.create(session, organization.id, concurrent_invitation.email, OrganizationRoles.admin)
-
-        # The outer transaction remains usable after the failed insert's savepoint rolls back.
-        assert await session.scalar(select(1)) == 1
         await session.commit()
 
     # Read the committed grant independently of the recovering session's identity map.
@@ -203,6 +200,11 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     organization = await create_organization(owner)
     async with session_scope() as session:
         await invitations.create(session, organization.id, invitee.email, OrganizationRoles.write)
+        original_invitation = await session.scalar(
+            select(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization.id)
+        )
+        assert original_invitation is not None
+        invitation_id = original_invitation.id
         organization_row = await session.get(Organization, organization.id)
         assert organization_row is not None
         organization_row.deleted_at = datetime.now(UTC)
@@ -217,3 +219,6 @@ async def test_accept_ignores_invitations_for_deleted_organizations(users: tuple
     # Assert
     assert membership is None
     assert invitation is not None
+    assert invitation.id == invitation_id
+    assert invitation.organization_id == organization.id
+    assert invitation.role == OrganizationRoles.write

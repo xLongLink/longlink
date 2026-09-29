@@ -540,6 +540,7 @@ def test_build_command_reports_built_image(
         """Record Docker commands and verify the live build artifact."""
 
         # Inspect the generated context before the command cleans it up.
+        assert check is True
         commands.append(command)
         if command[1] != "push":
             assert Path(command[-1], "Dockerfile").is_file()
@@ -595,6 +596,7 @@ def test_build_command_reports_docker_failure(
         """Record Docker commands and fail the selected one."""
 
         # Verify the live build artifact before simulating a command failure.
+        assert check is True
         commands.append(command)
         if command[1] != "push":
             assert Path(command[-1], "Dockerfile").is_file()

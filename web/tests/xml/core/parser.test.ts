@@ -36,12 +36,11 @@ describe('parseXML', () => {
         });
     });
 
-    it('rejects malformed XML', () => {
-        expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
-    });
-
-    it('rejects an empty document', () => {
-        expect(() => parseXML('')).toThrow('XML is invalid');
+    it.each([
+        { name: 'malformed tags', xml: '<longlink><Button></longlink>' },
+        { name: 'an empty document', xml: '' },
+    ])('rejects $name', ({ xml }) => {
+        expect(() => parseXML(xml)).toThrow('XML is invalid');
     });
 
     it.each(['<longlink /><longlink />', '<Button />'])('rejects a document without one longlink root: %s', (xml) => {

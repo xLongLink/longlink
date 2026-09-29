@@ -34,36 +34,12 @@ def test_google_identity_accepts_verified_profile() -> None:
         {"sub": "google-subject-1", "email": "user@example.com"},
         [],
         None,
+        pytest.param({"email_verified": True, "sub": "google-subject-1", "email": "not-an-email"}, id="invalid-email"),
+        pytest.param({"email_verified": True, "sub": "s" * 256, "email": "user@example.com"}, id="oversized-subject"),
     ],
 )
 def test_google_identity_rejects_unverified_or_malformed_payload(payload: object) -> None:
-    """Reject Google profiles that do not prove email ownership."""
-
-    # Act
-    result = oauth._google_identity(payload)
-
-    # Assert
-    assert result is None
-
-
-def test_google_identity_rejects_invalid_email() -> None:
-    """Reject Google profiles with an unusable email address."""
-
-    # Arrange
-    payload = {"email_verified": True, "sub": "google-subject-1", "email": "not-an-email"}
-
-    # Act
-    result = oauth._google_identity(payload)
-
-    # Assert
-    assert result is None
-
-
-def test_google_identity_rejects_oversized_subject() -> None:
-    """Reject Google subjects that cannot fit the persisted identity."""
-
-    # Arrange
-    payload = {"email_verified": True, "sub": "s" * 256, "email": "user@example.com"}
+    """Reject Google profiles with unverified or unusable identity fields."""
 
     # Act
     result = oauth._google_identity(payload)
@@ -107,41 +83,22 @@ def test_github_identity_selects_primary_verified_email() -> None:
     assert result.name == "octocat"
 
 
-@pytest.mark.parametrize("raw_subject", [True, "123456", None])
-def test_github_identity_rejects_non_integer_subject(raw_subject: object) -> None:
-    """Reject GitHub profiles whose numeric subject could collide or be forged."""
+@pytest.mark.parametrize(
+    ("raw_subject", "primary", "email"),
+    [
+        pytest.param(True, True, "primary@example.com", id="boolean-subject"),
+        pytest.param("123456", True, "primary@example.com", id="string-subject"),
+        pytest.param(None, True, "primary@example.com", id="missing-subject"),
+        pytest.param(123456, False, "secondary@example.com", id="no-primary-verified-email"),
+        pytest.param(123456, True, "not-an-email", id="invalid-primary-email"),
+    ],
+)
+def test_github_identity_rejects_malformed_profile(raw_subject: object, primary: bool, email: str) -> None:
+    """Reject GitHub identities without a valid subject and primary verified email."""
 
     # Arrange
     profile = {"id": raw_subject, "login": "octocat"}
-    emails = [{"email": "primary@example.com", "primary": True, "verified": True}]
-
-    # Act
-    result = oauth._github_identity(profile, emails)
-
-    # Assert
-    assert result is None
-
-
-def test_github_identity_rejects_without_primary_verified_email() -> None:
-    """Reject GitHub responses with no primary verified email address."""
-
-    # Arrange
-    profile = {"id": 123456, "login": "octocat"}
-    emails = [{"email": "secondary@example.com", "primary": False, "verified": True}]
-
-    # Act
-    result = oauth._github_identity(profile, emails)
-
-    # Assert
-    assert result is None
-
-
-def test_github_identity_rejects_invalid_primary_email() -> None:
-    """Reject GitHub email entries that fail canonical email validation."""
-
-    # Arrange
-    profile = {"id": 123456, "login": "octocat"}
-    emails = [{"email": "not-an-email", "primary": True, "verified": True}]
+    emails = [{"email": email, "primary": primary, "verified": True}]
 
     # Act
     result = oauth._github_identity(profile, emails)

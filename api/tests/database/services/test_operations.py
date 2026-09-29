@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from factories import (
@@ -162,6 +163,12 @@ async def test_operations_service_records_bounded_failure_reason() -> None:
     assert failed is not None
     assert failed.failed == ("migration job failed" * 100)[:500]
 
+    # Verify the bounded reason was committed independently of the returned object.
+    async with session_scope() as session:
+        persisted = await session.get(Operation, operation.id)
+    assert persisted is not None
+    assert persisted.failed == failed.failed
+
 
 async def test_operations_service_failed_creation_updates_targets_and_resolves_resource_names() -> None:
     """Expose failed creation work with its concrete failed resource names."""
@@ -253,56 +260,11 @@ async def test_operations_service_coalesces_claimed_work() -> None:
         assert released.lease_expires_at is None
 
 
-async def test_operations_service_complete_reenqueues_stale_effective_revision() -> None:
-    """Requeue the effective revision when an outdated deploy completes."""
+@pytest.fixture
+async def pending_revision_change() -> tuple[Solution, Revision, Revision]:
+    """Persist an older deployment while a newer revision is desired."""
 
-    # Arrange
-    compute_registry = await create_compute()
-    async with session_scope() as session:
-        organization = Organization(name="Acme", slug="acme", compute_id=compute_registry.id)
-        session.add(organization)
-        await session.flush()
-        solution = Solution(organization_id=organization.id, name="Dashboard", slug="dashboard", secrets={})
-        session.add(solution)
-        await session.flush()
-        deployed_revision = Revision(
-            source="ghcr.io/longlink/dashboard:1",
-            solution_id=solution.id,
-            image="ghcr.io/longlink/dashboard@sha256:one",
-            envs={},
-            deployed_at=datetime.now(UTC),
-        )
-        session.add(deployed_revision)
-        await session.flush()
-        effective_revision = Revision(
-            source="ghcr.io/longlink/dashboard:2",
-            solution_id=solution.id,
-            image="ghcr.io/longlink/dashboard@sha256:two",
-            envs={},
-        )
-        session.add(effective_revision)
-        await session.flush()
-        solution.desired_revision_id = effective_revision.id
-        solution.deployed_revision_id = deployed_revision.id
-        await session.commit()
-
-    outdated = await queue(kind=OperationKind.solution_deploy, target_id=deployed_revision.id)
-    assert await claim_operation() is not None
-
-    # Act
-    completed = await complete_operation(outdated.id)
-
-    # Assert
-    assert completed is not None
-    follow_ups = [item for item in await fetch_operations() if item.target_id == effective_revision.id]
-    assert len(follow_ups) == 1
-    assert follow_ups[0].kind == OperationKind.solution_deploy
-
-
-async def test_operations_service_fail_marks_revision_and_enqueues_fallback() -> None:
-    """Mark a failed first deploy and requeue its last deployed revision."""
-
-    # Arrange
+    # Create both revisions in the same Organization before either operation runs.
     compute_registry = await create_compute()
     async with session_scope() as session:
         organization = Organization(name="Acme", slug="acme", compute_id=compute_registry.id)
@@ -332,6 +294,36 @@ async def test_operations_service_fail_marks_revision_and_enqueues_fallback() ->
         solution.deployed_revision_id = deployed_revision.id
         await session.commit()
 
+    return solution, deployed_revision, desired_revision
+
+
+async def test_operations_service_complete_reenqueues_stale_effective_revision(
+    pending_revision_change: tuple[Solution, Revision, Revision],
+) -> None:
+    """Requeue the effective revision when an outdated deploy completes."""
+
+    # Arrange
+    _, deployed_revision, desired_revision = pending_revision_change
+    outdated = await queue(kind=OperationKind.solution_deploy, target_id=deployed_revision.id)
+    assert await claim_operation() is not None
+
+    # Act
+    completed = await complete_operation(outdated.id)
+
+    # Assert
+    assert completed is not None
+    follow_ups = [item for item in await fetch_operations() if item.target_id == desired_revision.id]
+    assert len(follow_ups) == 1
+    assert follow_ups[0].kind == OperationKind.solution_deploy
+
+
+async def test_operations_service_fail_marks_revision_and_enqueues_fallback(
+    pending_revision_change: tuple[Solution, Revision, Revision],
+) -> None:
+    """Mark a failed first deploy and requeue its last deployed revision."""
+
+    # Arrange
+    solution, deployed_revision, desired_revision = pending_revision_change
     deploy = await queue(kind=OperationKind.solution_deploy, target_id=desired_revision.id)
     assert await claim_operation() is not None
 

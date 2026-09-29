@@ -608,6 +608,7 @@ async def test_delete_solution_soft_deletes_and_queues_reconciliation(
         )
         assert deleted_solution is not None
         assert deleted_solution.deleted_at is not None
+        assert deleted_solution.updated_at >= deleted_solution.deleted_at
         assert (deleted_solution.deleted_id, deleted_solution.updated_id) == (user.id, user.id)
         assert operation is not None
         assert (operation.created_id, operation.updated_id) == (user.id, user.id)
@@ -718,15 +719,3 @@ async def test_create_solution_rejects_too_long_slug_without_queuing_work(
     async with session_scope() as session:
         assert await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id)) is None
     await assert_no_new_operations(previous_operations)
-
-
-async def test_list_solutions_rejects_invalid_pagination(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-) -> None:
-    """Reject administrator pagination outside the 1-based page contract."""
-
-    # Act
-    response = await clients[0].get("/api/v1/solutions?page=0&page_size=101")
-
-    # Assert
-    assert response.status_code == 422

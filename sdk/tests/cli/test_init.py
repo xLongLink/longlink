@@ -51,6 +51,8 @@ def test_init_copies_requested_project_scaffold(arguments: list[str], ci_paths: 
             *ci_paths,
         ]:
             assert (target / path).exists()
+        if not ci_paths:
+            assert not (target / ".github").exists()
         main_source = (target / "main.py").read_text(encoding="utf-8")
         assert "app = LongLink()" in main_source
         assert "app.include_router(items.router)" in main_source

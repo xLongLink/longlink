@@ -101,26 +101,6 @@ async def test_create_refreshes_cached_maintainer_access_before_authorizing(user
     assert solution.organization_id == organization.id
 
 
-async def test_delete_records_the_solution_tombstone(users: tuple[User, User, User]) -> None:
-    """Record when a maintainer tombstones a Solution."""
-
-    # Arrange
-    owner = users[0]
-    organization = await create_organization(owner)
-    solution = await create_solution(organization)
-
-    # Act
-    async with session_scope() as session:
-        await solutions.delete(session, solution.id, owner.id)
-        await session.commit()
-        deleted_solution = await session.get(Solution, solution.id)
-
-    # Assert
-    assert deleted_solution is not None
-    assert deleted_solution.deleted_at is not None
-    assert deleted_solution.updated_at >= deleted_solution.deleted_at
-
-
 @pytest.mark.parametrize(
     ("role", "error"),
     [
@@ -149,3 +129,9 @@ async def test_delete_rejects_callers_without_maintain_access(
     async with session_scope() as session:
         with pytest.raises(ForbiddenError, match=error):
             await solutions.delete(session, solution.id, caller.id)
+
+    # Assert the denied deletion left the Solution unchanged in a fresh session.
+    async with session_scope() as session:
+        persisted = await session.get(Solution, solution.id)
+    assert persisted is not None
+    assert persisted.deleted_at is None

@@ -40,13 +40,9 @@ def test_policy_denies_acl_grants() -> None:
     assert isinstance(statements, list)
     denies = [statement for statement in statements if statement["Effect"] == "Deny"]
     assert len(denies) == 5
-    assert {next(iter(statement["Condition"]["StringLike"])) for statement in denies} == {
-        "s3:x-amz-grant-read",
-        "s3:x-amz-grant-write",
-        "s3:x-amz-grant-read-acp",
-        "s3:x-amz-grant-write-acp",
-        "s3:x-amz-grant-full-control",
-    }
+    assert [statement["Condition"]["StringLike"] for statement in denies] == [
+        {f"s3:x-amz-grant-{header}": "?*"} for header in ("read", "write", "read-acp", "write-acp", "full-control")
+    ]
 
 
 def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:

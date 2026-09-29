@@ -13,7 +13,7 @@ describe('setup adapters', () => {
         ['<Query id="user" path="/api/user"><Button>Ready</Button></Query>', 'Query cannot have children'],
         ['<Query id="user" />', 'Query requires a string path'],
         ['<State id="data" value="first" /><Query id="data" path="/api/data" />', 'Duplicate State or Query id "data"'],
-    ])('rejects invalid declarations: %s', (xml, message) => {
-        expect(() => getSetupNodes(parseFragment(xml))).toThrow(message);
+    ])('rejects invalid declarations: %s', (xml, error) => {
+        expect(() => getSetupNodes(parseFragment(xml))).toThrow(error);
     });
 });

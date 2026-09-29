@@ -158,7 +158,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
-            return xmlResponse('<longlink />');
+            throw new Error('View fetch must not occur for an unmatched route');
         });
 
         // Act

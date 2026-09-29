@@ -258,8 +258,6 @@ def seed_runtime(monkeypatch: pytest.MonkeyPatch, database_runtime: None) -> Non
 
     # Override the Compute registry boundary already installed by the database fixture.
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", SeedKubernetes)
-    monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
-    monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
     monkeypatch.setattr(databases, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(organizations, "Kubernetes", SeedKubernetes)
     monkeypatch.setattr(organizations, "Storage", StorageKubernetes)

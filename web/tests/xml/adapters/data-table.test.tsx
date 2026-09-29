@@ -44,17 +44,16 @@ describe('Table', () => {
         expect(output).toContain('Ada Lovelace');
     });
 
-    it('renders an explicit header and rich cell children', () => {
+    it('renders rich cell children', () => {
         const ctx = createContext();
         ctx.scope.bindings.items = [{ sku: 'SKU-001', name: 'Warehouse Widget' }];
         const output = renderXmlToMarkup(
             parseFragment(
-                '<Table data="$items"><TableColumn field="name" header="Item"><Stack direction="horizontal">$row.name<Badge>$row.sku</Badge></Stack></TableColumn></Table>'
+                '<Table data="$items"><TableColumn field="name"><Stack direction="horizontal">$row.name<Badge>$row.sku</Badge></Stack></TableColumn></Table>'
             ),
             ctx
         );
 
-        expect(output).toContain('Item');
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
     });

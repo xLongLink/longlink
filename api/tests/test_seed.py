@@ -1,8 +1,9 @@
 import pytest
 import asyncio
 import contextlib
+from httpx2 import AsyncClient
 from pathlib import Path
-from conftest import TEST_PASSWORD, create_client
+from conftest import TEST_PASSWORD
 from sqlmodel import col
 from src.utils import jobs
 from sqlalchemy import func, select
@@ -50,6 +51,7 @@ async def test_local_seed_creates_example_through_api(
     monkeypatch: pytest.MonkeyPatch,
     users: tuple[User, User, User],
     seed_runtime: None,
+    client: AsyncClient,
 ) -> None:
     """Keep local seed resources stable across repeated initialization."""
 
@@ -69,9 +71,8 @@ async def test_local_seed_creates_example_through_api(
     # Act
     scheduler = asyncio.create_task(jobs.run_operation_scheduler())
     try:
-        async with create_client() as client:
-            await seed(local_settings, client)
-            await seed(local_settings, client)
+        await seed(local_settings, client)
+        await seed(local_settings, client)
     finally:
         scheduler.cancel()
         with contextlib.suppress(asyncio.CancelledError):

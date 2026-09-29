@@ -56,10 +56,11 @@ describe('api error mapping', () => {
 
     it('passes network failures through without mapping', async () => {
         // Arrange
+        const networkError = new TypeError('Network error');
         vi.stubGlobal(
             'fetch',
             vi.fn(async () => {
-                throw new TypeError('Network error');
+                throw networkError;
             })
         );
 
@@ -67,7 +68,7 @@ describe('api error mapping', () => {
         const failure = await captureFailure(api.get('https://api.example/organizations'));
 
         // Assert
-        expect(failure).toBeInstanceOf(TypeError);
+        expect(failure).toBe(networkError);
     });
 
     it('falls back when a failure body is not JSON', async () => {

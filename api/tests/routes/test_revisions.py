@@ -94,7 +94,7 @@ async def test_update_noop_preserves_source_and_patches(
 async def test_update_rejects_stale_revision(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient], users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Reject stale revision submissions before inspecting update metadata."""
+    """Reject stale revision submissions before inspecting image metadata."""
 
     # Arrange
     organization = await create_organization(users[0])
@@ -103,7 +103,7 @@ async def test_update_rejects_stale_revision(
     inspected: list[str] = []
 
     async def metadata(image: Image) -> LongLinkMetadata:
-        """Fail if denied or stale submissions reach image resolution."""
+        """Record whether stale submissions reach image resolution."""
 
         inspected.append(image)
         return LongLinkMetadata(image=image)

@@ -73,6 +73,13 @@ def test_production_storage_requires_safe_bucket_scope(monkeypatch: pytest.Monke
     # Configure unsafe production storage scopes.
     configure_production_environment(monkeypatch, bucket, prefix)
 
+    def unexpected_filesystem(*_args: object, **_kwargs: object) -> None:
+        """Fail if an unsafe scope reaches remote filesystem construction."""
+
+        pytest.fail("Unsafe storage scope must be rejected before filesystem construction")
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", unexpected_filesystem)
+
     # Reject the configured scope before constructing the filesystem.
     with pytest.raises(ValueError, match=message):
         storage_base.create_fs(Envs())

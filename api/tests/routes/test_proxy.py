@@ -1047,44 +1047,26 @@ async def test_solution_proxy_forwards_error_negotiation_headers(
     assert response.headers.get("content-length") in (None, str(len(response.content)))
 
 
-async def test_solution_proxy_replaces_oversized_upstream_error(
+@pytest.mark.parametrize(
+    ("body", "stream_error"),
+    [
+        pytest.param(b'{"detail":"' + b"x" * (64 * 1024) + b'"}', None, id="oversized"),
+        pytest.param([b'{"detail":"partial'], RecursionError("stream aborted"), id="aborted"),
+    ],
+)
+async def test_solution_proxy_replaces_unusable_upstream_error(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch: pytest.MonkeyPatch,
+    body: bytes | list[bytes],
+    stream_error: Exception | None,
 ) -> None:
-    """Replace oversized upstream errors with the public fallback."""
+    """Replace oversized and interrupted upstream errors with the public fallback."""
 
     # Arrange
     solution, _ = await create_running_solution(users[0])
 
-    oversized = b'{"detail":"' + b"x" * (64 * 1024) + b'"}'
-    gateway_response = make_upstream(502, {"content-type": "application/json"}, oversized)
-    monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
-
-    # Act
-    response = await clients[0].get(f"/api/v1/solutions/{solution.id}/proxy")
-
-    # Assert
-    assert response.status_code == 502
-    assert response.json() == {"detail": "The Solution could not complete the request. Please try again later."}
-
-
-async def test_solution_proxy_replaces_aborted_upstream_error(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Replace partially streamed upstream errors with the public fallback."""
-
-    # Arrange
-    solution, _ = await create_running_solution(users[0])
-
-    gateway_response = make_upstream(
-        502,
-        {"content-type": "application/json"},
-        [b'{"detail":"partial'],
-        error=RecursionError("stream aborted"),
-    )
+    gateway_response = make_upstream(502, {"content-type": "application/json"}, body, error=stream_error)
     monkeypatch.setattr(httpx2.AsyncHTTPTransport, "handle_async_request", fake_gateway_request(gateway_response))
 
     # Act

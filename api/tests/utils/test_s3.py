@@ -105,8 +105,9 @@ async def test_create_bucket_tolerates_only_existing_bucket(monkeypatch: pytest.
 
     # Act
     if should_raise:
-        with pytest.raises(ClientError):
+        with pytest.raises(ClientError) as error:
             await make_s3().create_bucket("org-bucket")
+        assert error.value.response["Error"]["Code"] == error_code
     else:
         await make_s3().create_bucket("org-bucket")
 

@@ -50,20 +50,22 @@ async def test_authenticated_solution_update_rejects_untrusted_origin_before_ins
     await assert_no_new_operations(previous_operations)
 
 
-async def test_authenticated_solution_deletion_rejects_untrusted_origin_without_mutation(
+@pytest.mark.parametrize("resource_kind", ["solution", "organization"])
+async def test_authenticated_deletion_rejects_untrusted_origin_without_mutation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    resource_kind: str,
 ) -> None:
-    """Reject cross-origin solution deletion before tombstoning or queueing cleanup."""
+    """Reject cross-origin deletion before tombstoning either resource or queueing cleanup."""
 
     # Arrange
     organization = await create_organization(users[0])
-    solution = await create_solution(organization)
+    resource = await create_solution(organization) if resource_kind == "solution" else organization
     previous_operations = await fetch_operations()
 
     # Act
     response = await clients[0].delete(
-        f"/api/v1/solutions/{solution.id}",
+        f"/api/v1/{resource_kind}s/{resource.id}",
         headers={"origin": "https://attacker.example"},
     )
 
@@ -71,33 +73,7 @@ async def test_authenticated_solution_deletion_rejects_untrusted_origin_without_
     assert response.status_code == 403
     assert response.json() == {"detail": "Origin required"}
     async with session_scope() as session:
-        persisted = await session.get(Solution, solution.id)
-    assert persisted is not None
-    assert persisted.deleted_at is None
-    await assert_no_new_operations(previous_operations)
-
-
-async def test_authenticated_organization_deletion_rejects_untrusted_origin_without_mutation(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject cross-origin organization deletion before tombstoning or queueing cleanup."""
-
-    # Arrange
-    organization = await create_organization(users[0])
-    previous_operations = await fetch_operations()
-
-    # Act
-    response = await clients[0].delete(
-        f"/api/v1/organizations/{organization.id}",
-        headers={"origin": "https://attacker.example"},
-    )
-
-    # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Origin required"}
-    async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
+        persisted = await session.get(type(resource), resource.id)
     assert persisted is not None
     assert persisted.deleted_at is None
     await assert_no_new_operations(previous_operations)

@@ -73,13 +73,12 @@ describe('useBindableValue', () => {
     });
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {
-        const ctx = createContext();
-        vi.stubGlobal(
-            'fetch',
+        const fetchImpl = vi.fn(
             async () => new Response(JSON.stringify({ detail: 'Records unavailable' }), { status: 503 })
         );
+        vi.stubGlobal('fetch', fetchImpl);
 
-        mounted = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>', ctx);
+        mounted = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>');
 
         expect(mounted.container.textContent).toContain('Unable to initialize this view');
         expect(mounted.container.textContent).not.toContain('Loaded child');
@@ -87,12 +86,11 @@ describe('useBindableValue', () => {
 
     it('rejects an invalid Query setup before fetching', async () => {
         // Arrange
-        const ctx = createContext();
         const fetchImpl = vi.fn();
         vi.stubGlobal('fetch', fetchImpl);
 
         // Act
-        mounted = await mountXml('<Query id="records" />', ctx);
+        mounted = await mountXml('<Query id="records" />');
 
         // Assert
         expect(mounted.container.textContent).toContain('Unable to initialize this view');

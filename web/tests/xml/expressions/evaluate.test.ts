@@ -51,6 +51,10 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${user["constructor"]}'), ctx)).toBeUndefined();
     });
 
+    it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
+        expect(() => evaluate(compileAttribute(value), { bindings: {} })).toThrow('Operator not allowed');
+    });
+
     it('evaluates only the selected conditional branch', () => {
         const ctx: Scope = { bindings: { administrator: true } };
 
@@ -83,14 +87,7 @@ describe('evaluate', () => {
         ['${true || unknown()}', true],
         ['${"value" ?? unknown()}', 'value'],
     ])('short-circuits unsafe right operands: %s', (value, expected) => {
-        // Arrange
-        const ctx: Scope = { bindings: {} };
-
-        // Act
-        const result = evaluate(compileAttribute(value), ctx);
-
-        // Assert
-        expect(result).toBe(expected);
+        expect(evaluate(compileAttribute(value), { bindings: {} })).toBe(expected);
     });
 
     it('ignores unsafe object literal keys', () => {
@@ -102,7 +99,7 @@ describe('evaluate', () => {
 
         expect(result.safe).toBe(1);
         expect(result.constructor).toBeUndefined();
-        expect(Object.hasOwn(result, '__proto__')).toBe(false);
-        expect(result.polluted).toBeUndefined();
+        expect(Object.getPrototypeOf(result)).toBeNull();
+        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
     });
 });

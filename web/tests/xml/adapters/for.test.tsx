@@ -36,7 +36,6 @@ describe('For', () => {
         );
 
         // Assert
-        expect(output).toContain('Issue #123 Alpha 0');
-        expect(output).toContain('Issue #123 Beta 1');
+        expect(output.match(/Issue #123 \w+ \d+/g)).toEqual(['Issue #123 Alpha 0', 'Issue #123 Beta 1']);
     });
 });

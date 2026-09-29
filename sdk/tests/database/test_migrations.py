@@ -73,8 +73,8 @@ def test_migration_loader_skips_already_imported_models(
 
     # Arrange
     module_name = "src.models.catalog.inventory"
-    isolated_model("already_loaded_inventory", "")
-    sys.modules[module_name] = ModuleType(module_name)
+    isolated_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
+    monkeypatch.setitem(sys.modules, module_name, ModuleType(module_name))
 
     def unexpected_spec(*_args: object, **_kwargs: object) -> object:
         """Fail if an existing module is loaded again."""

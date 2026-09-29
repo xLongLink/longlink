@@ -34,7 +34,7 @@ describe('Button', () => {
 
     it('does not navigate to an unsafe expression-backed destination', async () => {
         // Arrange
-        const ctx = createContext({ navigate: vi.fn(), navigationBaseUrl: '/orgs/acme/solutions/tracker' });
+        const ctx = createContext({ navigate: vi.fn() });
         ctx.scope.bindings.destination = 'javascript:alert(1)';
         const mounted = await mountXml('<Button to="$destination">Unsafe</Button>', ctx);
         root = mounted.root;

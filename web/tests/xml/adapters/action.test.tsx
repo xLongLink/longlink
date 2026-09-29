@@ -248,7 +248,8 @@ describe('Action', () => {
             request: 'method="POST" form="invalid"',
         },
     ])('does not execute invalid request payloads: $name', async ({ request }) => {
-        const ctx = createContext();
+        const navigate = vi.fn();
+        const ctx = createContext({ navigate });
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
 
@@ -266,6 +267,7 @@ describe('Action', () => {
             expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );
         expect(fetchRequest).not.toHaveBeenCalled();
+        expect(navigate).not.toHaveBeenCalled();
     });
 
     it('blocks an external Action request URL before transport', async () => {

@@ -18,9 +18,11 @@ describe('viewsSchema', () => {
         expect(viewsSchema.safeParse([view({ path })]).success).toBe(false);
     });
 
-    it('rejects duplicate routes and allows distinct static routes', () => {
-        expect(viewsSchema.safeParse([view(), view({ path: 'other.xml' })]).success).toBe(false);
-        expect(viewsSchema.safeParse([view(), view({ route: '/settings' })]).success).toBe(true);
+    it('rejects duplicate routes', () => {
+        expect(viewsSchema.safeParse([view(), view({ path: 'other.xml' })])).toMatchObject({
+            success: false,
+            error: { issues: [{ path: [1, 'route'], message: 'Routes must be unique' }] },
+        });
     });
 
     it('allows a dynamic detail view to share its static list tab', () => {
