@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { AuthLayout } from './AuthLayout';
 import { api, ApiError } from '@/lib/api';
 import { NoIndex } from '@/components/Seo';
 import { useApiError } from '@/lib/errors';
+import { Eye, EyeOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -15,6 +16,7 @@ import { clearSessionQueries } from '@/lib/react-query';
 import { WelcomeTitle } from '@/components/WelcomeTitle';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { emailSchema, passwordSchema } from './validation';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { zOAuthAvailability } from '@/lib/generated/platform-api-v1/zod.gen';
@@ -34,6 +36,7 @@ const oauthProviders = [
 
 /** Renders the standalone account sign-in page. */
 export default function Login() {
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -145,23 +148,38 @@ export default function Login() {
                                 control={form.control}
                                 name="password"
                                 render={({ field, fieldState }) => (
-                                    <TextInput
-                                        ref={field.ref}
-                                        htmlName={field.name}
-                                        isLabelHidden
-                                        isRequired
-                                        label="Password"
-                                        onBlur={field.onBlur}
-                                        onChange={field.onChange}
-                                        status={
-                                            fieldState.error
-                                                ? { type: 'error', message: fieldState.error.message }
-                                                : undefined
-                                        }
-                                        value={field.value}
-                                        width="100%"
-                                        type="password"
-                                    />
+                                    <Stack className="relative">
+                                        <TextInput
+                                            ref={field.ref}
+                                            className="pr-10"
+                                            htmlName={field.name}
+                                            isLabelHidden
+                                            isRequired
+                                            label="Password"
+                                            onBlur={field.onBlur}
+                                            onChange={field.onChange}
+                                            status={
+                                                fieldState.error
+                                                    ? { type: 'error', message: fieldState.error.message }
+                                                    : undefined
+                                            }
+                                            type={isPasswordVisible ? 'text' : 'password'}
+                                            value={field.value}
+                                            width="100%"
+                                        />
+                                        <IconButton
+                                            className="absolute right-0 top-0"
+                                            icon={isPasswordVisible ? <EyeOff /> : <Eye />}
+                                            label={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                            onClick={() => {
+                                                // Toggle visibility without changing the password value.
+                                                setIsPasswordVisible((visible) => !visible);
+                                            }}
+                                            tooltip={isPasswordVisible ? 'Hide password' : 'Show password'}
+                                            type="button"
+                                            variant="ghost"
+                                        />
+                                    </Stack>
                                 )}
                             />
                         </Stack>
