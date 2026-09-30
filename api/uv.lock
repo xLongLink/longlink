@@ -1982,14 +1982,14 @@ wheels = [
 
 [[package]]
 name = "python-slugify"
-version = "9.0.0"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "text-unidecode" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1c/e7/dc2331a18e4b18721d6382468d2ca163fabacba45d2185945557f364ab39/python_slugify-9.0.0.tar.gz", hash = "sha256:1cd20fe7ebf941b11964a92aba9e5319edfe18606276c6e2481b92e737cde44a", size = 60189, upload-time = "2026-09-08T20:56:07.965Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a7/a6/c1c00c174f50edd6e9d244d97c6377191fd1f93fd76841f9e3d46073be2f/python_slugify-9.1.1.tar.gz", hash = "sha256:db48547ed6d43072af59c86c3bc80bfc3c6f4e88c130c99de11775d721a574b8", size = 64108, upload-time = "2026-09-22T15:54:17.041Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/cc/bf2237784cddf5c37f5e4cb25f60670a0c57c3d8ce15d43da16f472c08ef/python_slugify-9.0.0-py3-none-any.whl", hash = "sha256:b1180fb0fd6b3590e7fbd8328b08d56cde9dcac736527a070c0a811480621316", size = 13133, upload-time = "2026-09-08T20:56:06.953Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/86/9a0b95c7e0db6f8ed85c7d726da4bf4853b25f0de244f075e29b91fd167b/python_slugify-9.1.1-py3-none-any.whl", hash = "sha256:6db0d9480b22a8867e2dbd725e0eea28e7893ee1dc00bdae467b345ad0eafafb", size = 15760, upload-time = "2026-09-22T15:54:16.065Z" },
 ]
 
 [[package]]
