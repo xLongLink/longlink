@@ -195,16 +195,24 @@ export default function Home() {
                     <Heading level={2} textWrap="balance" type="display-2" justify="center">
                         Made in Switzerland
                     </Heading>
-                    <Stack className="flex-wrap" direction="horizontal" gap={3} hAlign="center" vAlign="center">
+                    <Grid columns={2} gap={3}>
                         <Button
+                            className="w-full"
+                            endContent={<ArrowRight aria-hidden="true" size={16} />}
+                            href="/blog/introducing-longlink/"
+                            label="Why LongLink"
+                            variant="secondary"
+                        />
+                        <Button
+                            className="w-full"
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
                             href="https://github.com/xLongLink/longlink"
-                            label="Leave a star on GitHub"
+                            label="Get Started"
                             rel="noopener noreferrer"
                             target="_blank"
                             variant="primary"
                         />
-                    </Stack>
+                    </Grid>
                 </Stack>
             </Section>
         </>
