@@ -2,6 +2,7 @@ from uuid import UUID
 from datetime import datetime
 from longlink import User
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.items import ItemStatus
 
 
 class ItemCreate(BaseModel):
@@ -10,6 +11,7 @@ class ItemCreate(BaseModel):
     # Item fields
     name: str = Field(min_length=1, max_length=255)
     price: float = Field(default=0, ge=0)
+    status: ItemStatus = ItemStatus.draft
 
 
 class ItemRead(BaseModel):
@@ -21,6 +23,7 @@ class ItemRead(BaseModel):
     id: int
     name: str
     price: float
+    status: ItemStatus
 
     # Audit timestamps
     created_at: datetime | None

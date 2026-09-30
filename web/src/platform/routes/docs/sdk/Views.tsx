@@ -89,6 +89,7 @@ const previews: Record<string, ReactNode> = {
         </Stack>
     ),
     Timestamp: <Timestamp value="2026-09-30T12:00:00Z" format="date" color="primary" />,
+    Currency: <Text>CHF 1’275.50</Text>,
     ProgressBar: <ProgressBar className="w-full" label="Progress" value={60} hasValueLabel />,
     Divider: <Divider label="Or" />,
     FileViewer: (

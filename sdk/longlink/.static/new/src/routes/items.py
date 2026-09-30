@@ -28,7 +28,7 @@ async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
     """Create a catalog item."""
 
     # Persist the item so it includes its generated id.
-    item = Item(name=payload.name, price=payload.price)
+    item = Item(name=payload.name, price=payload.price, status=payload.status)
     ctx.database.add(item)
     await ctx.database.commit()
     return item

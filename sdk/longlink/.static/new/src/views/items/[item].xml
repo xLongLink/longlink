@@ -9,16 +9,28 @@
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
             <Stack gap="1">
-                <Heading level="3">${`Invoice ${item.name}`}</Heading>
+                <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
+                    <Heading level="3">${`Invoice ${item.name}`}</Heading>
+                    <Badge variant="neutral" if="${item.status === 'draft'}">Draft</Badge>
+                    <Badge variant="warning" if="${item.status === 'pending'}">Pending approval</Badge>
+                    <Badge variant="success" if="${item.status === 'approved'}">Approved</Badge>
+                </Stack>
                 <Stack direction="horizontal" align="center" gap="1">
                     <Text color="secondary" if="$item.created_at">
                         <Timestamp value="$item.created_at" format="date" />
                     </Text>
                     <Text color="secondary" if="$item.created_at">-</Text>
-                    <Text color="secondary">${`CHF ${item.price}`}</Text>
+                    <Text color="secondary">
+                        <Currency value="$item.price" currency="CHF" locale="de-CH" />
+                    </Text>
                 </Stack>
             </Stack>
-            <Dialog title="Upload Invoice Document" triggerLabel="Upload document" isOpen="$uploadDialog.open" purpose="form">
+            <Dialog
+                title="Upload Invoice Document"
+                triggerLabel="Upload document"
+                isOpen="$uploadDialog.open"
+                purpose="form"
+            >
                 <FileInput label="Invoice document" value="$attachment.file" />
                 <Button label="Upload document" variant="primary">
                     <Request

@@ -5,6 +5,7 @@
       <longlink:category name="Runtime"/>
       <longlink:category name="Actions"/>
       <longlink:category name="Content"/>
+      <longlink:category name="Display"/>
       <longlink:category name="Form"/>
       <longlink:category name="Layouts"/>
       <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-09-30">
@@ -29,6 +30,7 @@
   <xsd:include schemaLocation="adapters/Heading.xsd" />
   <xsd:include schemaLocation="adapters/Text.xsd" />
   <xsd:include schemaLocation="adapters/Timestamp.xsd" />
+  <xsd:include schemaLocation="adapters/Currency.xsd" />
   <xsd:include schemaLocation="adapters/Link.xsd" />
   <xsd:include schemaLocation="adapters/Menu.xsd" />
   <xsd:include schemaLocation="adapters/Divider.xsd" />

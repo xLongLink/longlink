@@ -1,7 +1,7 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Invoices" icon="banknote">
     <Query id="items" path="/api/items" />
-    <State id="draft" />
+    <State id="draft" status="draft" />
     <State id="createDialog" open="${false}" />
 
     <Stack gap="8">
@@ -10,11 +10,16 @@
             <Dialog title="New Invoice" triggerLabel="New Invoice" isOpen="$createDialog.open" purpose="form">
                 <TextInput label="Invoice number" value="$draft.name" />
                 <NumberInput label="Amount (CHF)" value="$draft.price" min="0" />
+                <Selector label="Status" value="$draft.status">
+                    <Option value="draft" label="Draft" />
+                    <Option value="pending" label="Pending approval" />
+                    <Option value="approved" label="Approved" />
+                </Selector>
                 <Button label="Create Invoice" variant="primary">
                     <Request
                         url="/api/items"
                         method="POST"
-                        json="${{ name: draft.name, price: draft.price }}"
+                        json="${{ name: draft.name, price: draft.price, status: draft.status }}"
                     />
                     <Patch state="items" invalidate="true" />
                     <Patch state="createDialog" value="${{ open: false }}" />
@@ -25,13 +30,20 @@
         <Table data="$items" idKey="id">
             <TableColumn field="name" header="Invoice">
                 <Stack gap="1">
-                    <Link to="/items/${row.id}">$row.name</Link>
+                    <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
+                        <Link to="/items/${row.id}">$row.name</Link>
+                        <Badge variant="neutral" if="${row.status === 'draft'}">Draft</Badge>
+                        <Badge variant="warning" if="${row.status === 'pending'}">Pending approval</Badge>
+                        <Badge variant="success" if="${row.status === 'approved'}">Approved</Badge>
+                    </Stack>
                     <Stack direction="horizontal" align="center" gap="1">
                         <Text color="secondary" if="$row.created_at">
                             <Timestamp value="$row.created_at" format="date" />
                         </Text>
                         <Text color="secondary" if="$row.created_at">-</Text>
-                        <Text color="secondary">${`CHF ${row.price}`}</Text>
+                        <Text color="secondary">
+                            <Currency value="$row.price" currency="CHF" locale="de-CH" />
+                        </Text>
                     </Stack>
                 </Stack>
             </TableColumn>
