@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
+  <xsd:complexType name="TimestampType">
+    <xsd:attribute name="value" type="xsd:string" use="required">
+      <xsd:annotation>
+        <xsd:documentation>Timestamp string or numeric epoch milliseconds.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="format" default="second">
+      <xsd:annotation>
+        <xsd:documentation>Display precision in the viewer's locale.</xsd:documentation>
+      </xsd:annotation>
+      <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="year"/>
+          <xsd:enumeration value="month"/>
+          <xsd:enumeration value="date"/>
+          <xsd:enumeration value="minute"/>
+          <xsd:enumeration value="second"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:attribute>
+    <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+  </xsd:complexType>
+  <xsd:element name="Timestamp" type="TimestampType">
+    <xsd:annotation>
+      <xsd:documentation>Displays a timestamp in the viewer's locale at the requested precision.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xml-example">
+        <longlink:docs slug="timestamp" category="Content" lastUpdated="2026-09-30"/>
+        <longlink:example>&lt;Timestamp value="$item.created_at" format="second" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
+</xsd:schema>

@@ -1402,5 +1402,29 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "nested": [],
         "slug": "text-input",
         "source": "adapters/TextInput.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "Timestamp string or numeric epoch milliseconds.",
+                "name": "value"
+            },
+            {
+                "description": "Display precision in the viewer's locale.",
+                "name": "format"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "Displays a timestamp in the viewer's locale at the requested precision.",
+        "example": "<Timestamp value=\"$item.created_at\" format=\"second\" />",
+        "name": "Timestamp",
+        "category": "Content",
+        "lastUpdated": "2026-09-30",
+        "nested": [],
+        "slug": "timestamp",
+        "source": "adapters/Timestamp.xsd"
     }
 ];

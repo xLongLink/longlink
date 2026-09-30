@@ -155,7 +155,10 @@ sdk:
 	cd sdk/dev && uv run longlink dev
 
 
-# Seed the local example Organization and Solution after the Platform API starts.
-seed: image
+# Recreate the local sample and seed the example Organization and Solution after the Platform API starts.
+seed:
+	# Remove the generated sample, including any local edits, before rebuilding it.
+	rm -rf sdk/dev
+	$(MAKE) image
 	@umask 077; cp --update=none api/.env.sample api/.env
 	cd api && uv run --locked python ../dev/scripts/seed.py
