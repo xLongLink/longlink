@@ -15,6 +15,7 @@ import { Slider } from '../adapters/Slider';
 import { Switch } from '../adapters/Switch';
 import { Divider } from '../adapters/Divider';
 import { Heading } from '../adapters/Heading';
+import { Currency } from '../adapters/Currency';
 import { GridSpan } from '../adapters/GridSpan';
 import { MoreMenu } from '../adapters/MoreMenu';
 import { Selector } from '../adapters/Selector';
@@ -43,6 +44,7 @@ export const sdkXmlComponentRegistry: XmlComponentRegistry = {
     Card,
     CheckboxInput,
     CodeBlock,
+    Currency,
     Dialog,
     Divider,
     FileInput,

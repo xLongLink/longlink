@@ -26,7 +26,7 @@
     <xsd:annotation>
       <xsd:documentation>Displays a timestamp in the viewer's locale at the requested precision.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="timestamp" category="Content" lastUpdated="2026-09-30"/>
+        <longlink:docs slug="timestamp" category="Display" lastUpdated="2026-09-30"/>
         <longlink:example>&lt;Timestamp value="$item.created_at" format="second" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

@@ -23,6 +23,14 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("price", sa.Float(), nullable=False),
+        sa.Column(
+            "status",
+            sa.Enum(
+                "draft", "pending", "approved", name="invoice_status", native_enum=False
+            ),
+            server_default="draft",
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["created_id"], ["audit.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["audit.id"]),
         sa.ForeignKeyConstraint(["deleted_id"], ["audit.id"]),

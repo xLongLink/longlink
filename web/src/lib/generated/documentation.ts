@@ -22,6 +22,9 @@ export const documentationCategories: { name: string }[] = [
         "name": "Content"
     },
     {
+        "name": "Display"
+    },
+    {
         "name": "Form"
     },
     {
@@ -246,6 +249,34 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "nested": [],
         "slug": "code-block",
         "source": "adapters/CodeBlock.xsd"
+    },
+    {
+        "attributes": [
+            {
+                "description": "Finite numeric amount or an expression resolving to a number.",
+                "name": "value"
+            },
+            {
+                "description": "Three-letter uppercase currency code, such as CHF, EUR, or USD.",
+                "name": "currency"
+            },
+            {
+                "description": "BCP 47 locale identifier, such as de-CH. Defaults to the viewer's locale.",
+                "name": "locale"
+            },
+            {
+                "description": "Conditional rendering expression.",
+                "name": "if"
+            }
+        ],
+        "description": "Displays a numeric amount with its currency code, locale-specific grouping, and standard currency fraction digits. Use locale=\"de-CH\" for Swiss formatting such as CHF 1’275.50. Keep the underlying amount numeric and use Text for surrounding typography.",
+        "example": "<Text color=\"secondary\">\n  <Currency value=\"$item.price\" currency=\"CHF\" locale=\"de-CH\" />\n</Text>",
+        "name": "Currency",
+        "category": "Display",
+        "lastUpdated": "2026-09-30",
+        "nested": [],
+        "slug": "currency",
+        "source": "adapters/Currency.xsd"
     },
     {
         "attributes": [
@@ -1377,7 +1408,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "description": "Displays a timestamp in the viewer's locale at the requested precision.",
         "example": "<Timestamp value=\"$item.created_at\" format=\"second\" />",
         "name": "Timestamp",
-        "category": "Content",
+        "category": "Display",
         "lastUpdated": "2026-09-30",
         "nested": [],
         "slug": "timestamp",
