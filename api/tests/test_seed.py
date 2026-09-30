@@ -83,7 +83,12 @@ async def test_local_seed_creates_example_through_api(
     assert await count(Organization) == 1
     assert await count(Solution) == 1
     async with session_scope() as session:
-        solution = await session.scalar(select(Solution).where(col(Solution.slug) == "sample"))
+        organization = await session.scalar(select(Organization).where(col(Organization.slug) == "acme-ink"))
+        solution = await session.scalar(select(Solution).where(col(Solution.slug) == "invoices"))
+    assert organization is not None
+    assert organization.name == "ACME Ink"
     assert solution is not None
-    assert solution.description == "A sample solution for local development."
+    assert solution.name == "Invoices"
+    assert solution.organization_id == organization.id
+    assert solution.description == "Manage invoices for ACME Ink."
     assert solution.desired_revision.source == "localhost:15000/sample:dev"

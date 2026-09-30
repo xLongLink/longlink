@@ -8,8 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ENVIRONMENT = Path(__file__).resolve().parents[2] / "api" / ".env"
 DEVELOPMENT_COMPUTE = "development compute"
-DEVELOPMENT_ORGANIZATION = "development"
-SAMPLE_SOLUTION = "sample"
+DEVELOPMENT_ORGANIZATION = "acme-ink"
+SAMPLE_SOLUTION = "invoices"
 
 
 class Resource(BaseModel):
@@ -112,7 +112,7 @@ async def create_organization(client: httpx2.AsyncClient) -> Resource:
         return organization
 
     # Disable database hibernation for local development; zero keeps it awake.
-    response = await client.post("/api/v1/organizations", json={"name": "Development", "database_idle_seconds": 0})
+    response = await client.post("/api/v1/organizations", json={"name": "ACME Ink", "database_idle_seconds": 0})
     if response.status_code != 409:
         response.raise_for_status()
         return Resource.model_validate(response.json())
@@ -137,12 +137,12 @@ async def create_sample(client: httpx2.AsyncClient, settings: SeedSettings, orga
         response = await client.post(
             f"/api/v1/organizations/{organization.id}/solutions",
             json={
-                "name": "Sample",
+                "name": "Invoices",
                 "image": "localhost:15000/sample:dev",
                 "envs": settings.SAMPLE_ENVS,
                 "min_scale": 1,
                 "idle_seconds": 0,
-                "description": "A sample solution for local development.",
+                "description": "Manage invoices for ACME Ink.",
             },
         )
         if response.status_code == 404:
