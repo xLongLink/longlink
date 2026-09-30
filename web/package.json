@@ -37,7 +37,7 @@
         "fast-xml-parser": "^5.11.1",
         "isbot": "^5",
         "ky": "^2.1.0",
-        "lucide-react": "^1.41.0",
+        "lucide-react": "^1.48.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
         "react-hook-form": "^7.88.0",
