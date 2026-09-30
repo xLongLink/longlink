@@ -48,5 +48,6 @@ jobs:
               env:
                   RELEASE_TAG: ${{ github.ref_name }}
               run: |
+                  set -euo pipefail
                   registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
-                  uv run --locked longlink build --registry "$registry" --push --tag "$RELEASE_TAG"
+                  uv run --locked longlink build --registry "$registry" --push --tag "$RELEASE_TAG" --latest
