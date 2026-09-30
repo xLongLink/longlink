@@ -80,7 +80,7 @@ test:
 	cd api && uv run --locked --extra dev pytest --cov=main --cov=src --cov-report=term-missing
 	cd web && vp run build:sdk:bundle --logLevel warn
 	cd sdk && uv run --locked --group dev pytest --cov --cov-report=term-missing
-	cd web && vp run test
+	cd web && vp test run
 
 
 # Create or reapply local resources in dependency order.

@@ -3,7 +3,7 @@ import pytest
 import alembic
 import sqlite3
 import importlib.util
-from types import ModuleType, SimpleNamespace
+from types import SimpleNamespace
 from pathlib import Path
 from sqlmodel import SQLModel
 from contextlib import closing, nullcontext
@@ -41,8 +41,8 @@ def isolated_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator
     sys.modules.pop("src.models.catalog.inventory", None)
 
 
-def test_migration_loader_discovers_nested_solution_models(isolated_model: Callable[[str, str], None]) -> None:
-    """Load nested Solution model modules for Alembic metadata."""
+def test_migration_loader_discovers_nested_solution_models_only_once(isolated_model: Callable[[str, str], None]) -> None:
+    """Load nested Solution models without redefining their tables on repeated discovery."""
 
     # Arrange
     table_name = "nested_inventory_items"
@@ -60,31 +60,10 @@ def test_migration_loader_discovers_nested_solution_models(isolated_model: Calla
 
     # Act
     database_migrations.load_solution_models()
+    database_migrations.load_solution_models()
 
     # Assert
     assert table_name in SQLModel.metadata.tables
-
-
-def test_migration_loader_skips_already_imported_models(
-    isolated_model: Callable[[str, str], None],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Avoid executing model modules that the Solution already loaded."""
-
-    # Arrange
-    module_name = "src.models.catalog.inventory"
-    isolated_model("already_loaded_inventory", "table_name = 'already_loaded_inventory'\n")
-    monkeypatch.setitem(sys.modules, module_name, ModuleType(module_name))
-
-    def unexpected_spec(*_args: object, **_kwargs: object) -> object:
-        """Fail if an existing module is loaded again."""
-
-        raise AssertionError("loaded model must not be imported again")
-
-    monkeypatch.setattr(database_migrations.importlib.util, "spec_from_file_location", unexpected_spec)
-
-    # Act
-    database_migrations.load_solution_models()
 
 
 @pytest.mark.parametrize(

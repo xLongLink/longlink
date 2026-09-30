@@ -95,6 +95,7 @@ def test_get_session_applies_mysql_engine_options(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(database_session.env, "DATABASE_URL", "mysql+aiomysql://control:secret@db:3306/longlink")
     monkeypatch.setattr(database_session, "Session", None)
+    monkeypatch.setattr(database_session, "Engine", None)
     monkeypatch.setattr(database_session, "create_async_engine", create_async_engine)
     monkeypatch.setattr(database_session, "async_sessionmaker", async_sessionmaker)
 

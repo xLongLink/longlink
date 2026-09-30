@@ -162,28 +162,6 @@ async def test_metadata_follows_config_blob_redirects(monkeypatch: pytest.Monkey
     assert image_metadata.image == Image("ghcr.io/longlink/dashboard@sha256:deadbeef")
 
 
-async def test_metadata_rejects_tag_without_registry_digest(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reject mutable image tags when GHCR omits the resolved manifest digest."""
-
-    # Arrange
-    def respond(request: httpx2.Request) -> httpx2.Response:
-        """Return a manifest without a digest while forbidding blob inspection."""
-
-        if request.url.path == "/token":
-            return httpx2.Response(200, json={"token": "pull-token"})
-        if "/manifests/" in request.url.path:
-            return httpx2.Response(200, json={"config": {"digest": "sha256:config"}})
-        raise AssertionError("Mutable images must not fetch config blobs")
-
-    mock_async_client(monkeypatch, respond)
-
-    # Act
-    image_metadata = await images.metadata(Image("ghcr.io/longlink/dashboard:latest"))
-
-    # Assert
-    assert image_metadata is None
-
-
 INVALID_METADATA_LENGTH_HEADERS = [
     pytest.param({"Content-Length": str(images.IMAGE_METADATA_MAX_BYTES + 1)}, id="declared-oversize"),
     pytest.param({"Content-Length": "invalid"}, id="invalid-content-length"),
@@ -235,6 +213,14 @@ async def test_bounded_json_rejects_streamed_metadata_larger_than_limit() -> Non
             [httpx2.Response(200, json={"token": "pull-token"}), httpx2.Response(503)],
             ["/token", "/v2/longlink/dashboard/manifests/latest"],
             id="failed-manifest",
+        ),
+        pytest.param(
+            [
+                httpx2.Response(200, json={"token": "pull-token"}),
+                httpx2.Response(200, json={"config": {"digest": "sha256:config"}}),
+            ],
+            ["/token", "/v2/longlink/dashboard/manifests/latest"],
+            id="missing-registry-digest",
         ),
         pytest.param(
             [

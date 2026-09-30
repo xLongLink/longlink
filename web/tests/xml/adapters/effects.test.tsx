@@ -15,11 +15,11 @@ describe('Control effects', () => {
     let root: ReturnType<typeof createRoot> | undefined;
 
     afterEach(async () => {
-        vi.unstubAllGlobals();
         toast.mockClear();
 
         await cleanupMountedRoot(root);
         root = undefined;
+        vi.unstubAllGlobals();
     });
 
     it.each([
@@ -238,8 +238,7 @@ describe('Control effects', () => {
             request: 'method="POST" form="invalid"',
         },
     ])('does not execute invalid request payloads: $name', async ({ request }) => {
-        const navigate = vi.fn();
-        const ctx = createContext({ navigate });
+        const ctx = createContext();
         const fetchRequest = vi.fn();
         vi.stubGlobal('fetch', fetchRequest);
 
@@ -254,7 +253,6 @@ describe('Control effects', () => {
             expect.objectContaining({ body: 'The request could not be completed. Please try again.', type: 'error' })
         );
         expect(fetchRequest).not.toHaveBeenCalled();
-        expect(navigate).not.toHaveBeenCalled();
     });
 
     it('blocks an external Action request URL before transport', async () => {

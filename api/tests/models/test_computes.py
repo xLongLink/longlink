@@ -28,37 +28,6 @@ def test_compute_registry_create_parses_yaml_kubeconfig() -> None:
     assert payload.kubeconfig["current-context"] == "context"
 
 
-def test_compute_registry_create_rejects_exec_authentication() -> None:
-    """Reject kubeconfigs that can execute commands in the API worker."""
-
-    # Act and assert
-    with pytest.raises(ValidationError, match="exec authentication is not allowed"):
-        ComputeRegistryCreate.model_validate(
-            {
-                "name": "Compute",
-                "gateway_url": "https://gateway.example",
-                "storage_endpoint": "https://storage.example",
-                "kubeconfig": {
-                    "apiVersion": "v1",
-                    "clusters": [{"name": "cluster", "cluster": {}}],
-                    "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "worker"}}],
-                    "current-context": "context",
-                    "users": [
-                        {
-                            "name": "worker",
-                            "user": {
-                                "exec": {
-                                    "apiVersion": "client.authentication.k8s.io/v1",
-                                    "command": "untrusted-command",
-                                }
-                            },
-                        }
-                    ],
-                },
-            }
-        )
-
-
 @pytest.mark.parametrize(
     ("kubeconfig", "message"),
     [
@@ -66,6 +35,27 @@ def test_compute_registry_create_rejects_exec_authentication() -> None:
         pytest.param([], "must be a mapping", id="non-mapping"),
         pytest.param({"cluster": object()}, "JSON-compatible", id="non-json-value"),
         pytest.param({}, "requires clusters, contexts, users, and current-context", id="incomplete"),
+        pytest.param(
+            {
+                "apiVersion": "v1",
+                "clusters": [{"name": "cluster", "cluster": {}}],
+                "contexts": [{"name": "context", "context": {"cluster": "cluster", "user": "worker"}}],
+                "current-context": "context",
+                "users": [
+                    {
+                        "name": "worker",
+                        "user": {
+                            "exec": {
+                                "apiVersion": "client.authentication.k8s.io/v1",
+                                "command": "untrusted-command",
+                            }
+                        },
+                    }
+                ],
+            },
+            "exec authentication is not allowed",
+            id="exec-authentication",
+        ),
         pytest.param(
             {
                 "clusters": [{"name": "cluster", "cluster": {}}],

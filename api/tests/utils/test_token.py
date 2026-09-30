@@ -3,7 +3,7 @@ import pytest
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from src.utils import token
-from collections.abc import Mapping
+from collections.abc import Mapping, Callable
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
@@ -169,54 +169,49 @@ def test_token_claims_reject_missing_required_fields(claims: dict[str, str], fun
         function(encoded)
 
 
-@pytest.mark.no_db
-async def test_password_reset_user_rejects_malformed_subject() -> None:
-    """Reject password-reset credentials whose subject is not a user UUID."""
-
-    # Arrange
-    encoded = signed_token(
+INVALID_PASSWORD_RESET_CLAIMS = [
+    pytest.param(
         {
             "sub": "not-a-uuid",
             "password_fingerprint": "fingerprint",
             "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
-        }
-    )
-
-    # Act and assert
-    async with AsyncSession() as session:
-        with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset user"):
-            await token.password_reset_user(session, encoded)
-
-
-@pytest.mark.no_db
-async def test_password_reset_user_rejects_missing_fingerprint() -> None:
-    """Reject password-reset credentials that omit their password binding."""
-
-    # Arrange
-    encoded = signed_token({"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE})
-
-    # Act and assert
-    async with AsyncSession() as session:
-        with pytest.raises(jwt.InvalidTokenError, match="Invalid password reset token claims"):
-            await token.password_reset_user(session, encoded)
-
-
-@pytest.mark.no_db
-async def test_password_reset_user_rejects_expired_token() -> None:
-    """Reject expired recovery credentials before loading an account."""
-
-    # Arrange
-    encoded = expired_token(
+        },
+        signed_token,
+        "Invalid password reset user",
+        id="malformed-subject",
+    ),
+    pytest.param(
+        {"sub": "00000000-0000-0000-0000-000000000001", "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE},
+        signed_token,
+        "Invalid password reset token claims",
+        id="missing-fingerprint",
+    ),
+    pytest.param(
         {
             "sub": "00000000-0000-0000-0000-000000000001",
             "password_fingerprint": "fingerprint",
             "aud": token.PASSWORD_RESET_TOKEN_AUDIENCE,
-        }
-    )
+        },
+        expired_token,
+        None,
+        id="expired-token",
+    ),
+]
+
+
+@pytest.mark.no_db
+@pytest.mark.parametrize(("claims", "encode", "message"), INVALID_PASSWORD_RESET_CLAIMS)
+async def test_password_reset_user_rejects_invalid_claims(
+    claims: dict[str, str], encode: Callable[[dict[str, str]], str], message: str | None
+) -> None:
+    """Reject invalid recovery credentials before loading an account."""
+
+    # Arrange
+    encoded = encode(claims)
 
     # Act and assert
     async with AsyncSession() as session:
-        with pytest.raises(jwt.InvalidTokenError):
+        with pytest.raises(jwt.InvalidTokenError, match=message):
             await token.password_reset_user(session, encoded)
 
 

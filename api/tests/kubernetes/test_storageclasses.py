@@ -1,7 +1,6 @@
 import pytest
-from typing import cast
+from conftest import kubernetes_client
 from src.kubernetes import storageclasses
-from src.kubernetes.client import Kubernetes
 
 pytestmark = pytest.mark.no_db
 
@@ -14,15 +13,6 @@ class StorageClass:
 
         annotations = {storageclasses.DEFAULT_CLASS_ANNOTATION: "true"} if default else {}
         self.metadata = {"name": name, "annotations": annotations}
-
-
-class TestKubernetes:
-    """Provide the API shape required by StorageClass discovery."""
-
-    async def api(self) -> object:
-        """Return the fake Kubernetes API client."""
-
-        return object()
 
 
 @pytest.fixture
@@ -51,7 +41,7 @@ async def test_resolve_selects_unique_storage_class(expected: str) -> None:
     """Select the sole class or the default class from an unambiguous cluster."""
 
     # Act and assert
-    assert await storageclasses.resolve(cast(Kubernetes, TestKubernetes())) == expected
+    assert await storageclasses.resolve(kubernetes_client()) == expected
 
 
 @pytest.mark.parametrize(
@@ -72,4 +62,4 @@ async def test_resolve_rejects_ambiguous_storage_classes(message: str) -> None:
 
     # Act and assert
     with pytest.raises(ValueError, match=message):
-        await storageclasses.resolve(cast(Kubernetes, TestKubernetes()))
+        await storageclasses.resolve(kubernetes_client())

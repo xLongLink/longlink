@@ -1,5 +1,6 @@
 import ssl
 import yaml
+import httpx2
 import pytest
 import subprocess
 from types import SimpleNamespace
@@ -76,36 +77,32 @@ def observed_resources(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]
         async def refresh(self) -> None:
             """Return the current observation."""
 
-    class Client:
-        """Validate the transport settings and return a gateway readiness response."""
+    # Exercise the real HTTP client with only its network transport replaced.
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        """Preserve endpoint TLS authority and Kourier's readiness vhost."""
 
-        def __init__(self, **kwargs: object) -> None:
-            """Require isolated HTTP configuration and certificate validation."""
+        # Inspect the actual request sent to the readiness endpoint.
+        assert request.url == "https://gateway.example/ready"
+        assert request.headers["Host"] == "internalkourier"
+        return httpx2.Response(200)
 
-            assert kwargs["trust_env"] is False
-            assert kwargs["follow_redirects"] is False
-            context = kwargs["verify"]
-            assert isinstance(context, ssl.SSLContext)
-            assert context.verify_mode == ssl.CERT_REQUIRED
+    transport = httpx2.MockTransport(respond)
+    client = httpx2.AsyncClient
 
-        async def __aenter__(self) -> "Client":
-            """Enter the HTTP lifetime."""
+    def local_client(**kwargs: object) -> httpx2.AsyncClient:
+        """Require isolated HTTP configuration and certificate validation."""
 
-            return self
-
-        async def __aexit__(self, *args: object) -> None:
-            """Close the HTTP lifetime."""
-
-        async def get(self, url: str, headers: dict[str, str]) -> gateway.httpx2.Response:
-            """Preserve endpoint TLS authority and Kourier's readiness vhost."""
-
-            assert url == "https://gateway.example/ready"
-            assert headers == {"Host": "internalkourier"}
-            return gateway.httpx2.Response(200)
+        # Retain the verifier's transport-policy assertions before constructing its client.
+        assert kwargs["trust_env"] is False
+        assert kwargs["follow_redirects"] is False
+        context = kwargs["verify"]
+        assert isinstance(context, ssl.SSLContext)
+        assert context.verify_mode == ssl.CERT_REQUIRED
+        return client(transport=transport, **kwargs)
 
     monkeypatch.setattr(gateway, "ConfigMap", Resource)
     monkeypatch.setattr(gateway, "Deployment", Resource)
-    monkeypatch.setattr(gateway.httpx2, "AsyncClient", Client)
+    monkeypatch.setattr(gateway.httpx2, "AsyncClient", local_client)
     return observed
 
 

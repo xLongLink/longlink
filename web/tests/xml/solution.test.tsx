@@ -110,28 +110,25 @@ describe('SolutionRuntime', () => {
 
     it('keeps a custom manifest URL and fetches XML beside it', async () => {
         // Arrange
-        const fetchRequest = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-            const request = input instanceof Request ? input : new Request(input, init);
+        const requests: Request[] = [];
+        vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+            if (!(input instanceof Request)) throw new Error('Expected a Request at the HTTP boundary');
+            requests.push(input);
 
-            if (request.url.endsWith('/proxy/views.json?version=1#manifest')) {
+            if (input.url.endsWith('/proxy/views.json?version=1#manifest')) {
                 return Response.json([view('home', '/home')]);
             }
 
             return xmlResponse('<longlink><Text>Welcome</Text></longlink>');
         });
-        vi.stubGlobal('fetch', fetchRequest);
 
         // Act
         const output = await renderRuntime('/home', '/proxy/views.json?version=1#manifest');
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('Welcome')));
-        expect(fetchRequest).toHaveBeenCalledTimes(2);
-        const [manifestInput, manifestInit] = fetchRequest.mock.calls[0];
-        const [viewInput, viewInit] = fetchRequest.mock.calls[1];
-        const manifestRequest =
-            manifestInput instanceof Request ? manifestInput : new Request(manifestInput, manifestInit);
-        const viewRequest = viewInput instanceof Request ? viewInput : new Request(viewInput, viewInit);
+        expect(requests).toHaveLength(2);
+        const [manifestRequest, viewRequest] = requests;
         const manifestUrl = new URL(manifestRequest.url);
         const viewUrl = new URL(viewRequest.url);
         expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(
@@ -143,16 +140,18 @@ describe('SolutionRuntime', () => {
 
     it('rejects unmatched routes', async () => {
         // Arrange
-        stubFetch((url) => {
+        const response = vi.fn((url: string) => {
             if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
             throw new Error('View fetch must not occur for an unmatched route');
         });
+        stubFetch(response);
 
         // Act
         const output = await renderRuntime('/missing');
 
         // Assert
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain("We can't find that page")));
+        expect(response).toHaveBeenCalledOnce();
     });
 
     it('navigates same-origin XML destinations through the client router', async () => {
@@ -193,7 +192,7 @@ describe('SolutionRuntime', () => {
         const mountedRoot = createRoot(container);
         root = mountedRoot;
         vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
-        const { client, reportError } = createQueryRuntime(vi.fn(), false);
+        const { client, reportError } = createQueryRuntime(() => {}, false);
         client.setDefaultOptions({ queries: { retry: false } });
 
         await act(async () => {

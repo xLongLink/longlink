@@ -739,12 +739,7 @@ async def test_registration_completion_accepts_pending_organization_invitation(
     email = "invited@example.com"
     organization = await create_organization(users[0])
     async with session_scope() as session:
-        invitation = OrganizationInvitation(
-            organization_id=organization.id,
-            email=email,
-            role=OrganizationRoles.write,
-        )
-        session.add(invitation)
+        session.add(OrganizationInvitation(organization_id=organization.id, email=email, role=OrganizationRoles.write))
         await session.commit()
 
     register_response, verify_response, _ = await register_and_verify(client, captured_mail, email)
@@ -789,12 +784,7 @@ async def test_password_login_accepts_pending_organization_invitation(
     owner, invited_user, _ = users
     organization = await create_organization(owner)
     async with session_scope() as session:
-        invitation = OrganizationInvitation(
-            organization_id=organization.id,
-            email=invited_user.email,
-            role=OrganizationRoles.write,
-        )
-        session.add(invitation)
+        session.add(OrganizationInvitation(organization_id=organization.id, email=invited_user.email, role=OrganizationRoles.write))
         await session.commit()
 
     # Act

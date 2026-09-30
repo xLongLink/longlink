@@ -44,44 +44,43 @@ def test_color_formatter_restores_info_record_level_name() -> None:
 
 
 @pytest.fixture
-def resettable_logger(monkeypatch: pytest.MonkeyPatch) -> logging.Logger:
+def isolated_logger(monkeypatch: pytest.MonkeyPatch) -> logging.Logger:
     """Provide an isolated logger with no initial handlers."""
 
-    # Reset shared logger state so each policy case starts unconfigured.
-    logger = logging.getLogger("longlink.tests.configure")
-    monkeypatch.setattr(logger, "handlers", [])
-    monkeypatch.setattr(logger, "level", logging.NOTSET)
-    monkeypatch.setattr(logger, "propagate", True)
+    # Exercise logger policy without registering or resetting shared logger state.
+    logger = logging.Logger("longlink.tests.configure")
+    get_logger = logging.getLogger
+    monkeypatch.setattr(logging, "getLogger", lambda name=None: logger if name == logger.name else get_logger(name))
     return logger
 
 
-def test_configure_logger_reuses_existing_handler(resettable_logger: logging.Logger) -> None:
+def test_configure_logger_reuses_existing_handler(isolated_logger: logging.Logger) -> None:
     """Apply logger policy without adding a duplicate existing handler."""
 
     # Arrange
     handler = logging.StreamHandler()
-    resettable_logger.addHandler(handler)
+    isolated_logger.addHandler(handler)
 
     # Act
-    configured_logger = configure_logger(resettable_logger.name)
+    configured_logger = configure_logger(isolated_logger.name)
 
     # Assert
-    assert configured_logger is resettable_logger
-    assert resettable_logger.handlers == [handler]
-    assert resettable_logger.level == logging.INFO
-    assert resettable_logger.propagate is False
+    assert configured_logger is isolated_logger
+    assert isolated_logger.handlers == [handler]
+    assert isolated_logger.level == logging.INFO
+    assert isolated_logger.propagate is False
 
 
-def test_configure_logger_adds_configured_handler_when_logger_has_none(resettable_logger: logging.Logger) -> None:
+def test_configure_logger_adds_configured_handler_when_logger_has_none(isolated_logger: logging.Logger) -> None:
     """Install one formatted stream handler for an otherwise unconfigured logger."""
 
     # Act
-    configured_logger = configure_logger(resettable_logger.name)
+    configured_logger = configure_logger(isolated_logger.name)
 
     # Assert
-    assert configured_logger is resettable_logger
-    assert len(resettable_logger.handlers) == 1
-    assert isinstance(resettable_logger.handlers[0], logging.StreamHandler)
-    assert isinstance(resettable_logger.handlers[0].formatter, ColorFormatter)
-    assert resettable_logger.level == logging.INFO
-    assert resettable_logger.propagate is False
+    assert configured_logger is isolated_logger
+    assert len(isolated_logger.handlers) == 1
+    assert isinstance(isolated_logger.handlers[0], logging.StreamHandler)
+    assert isinstance(isolated_logger.handlers[0].formatter, ColorFormatter)
+    assert isolated_logger.level == logging.INFO
+    assert isolated_logger.propagate is False

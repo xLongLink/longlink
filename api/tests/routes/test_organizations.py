@@ -382,7 +382,10 @@ async def test_delete_organization_requires_owner_or_platform_admin(
     assert non_owner_response.json() == {"detail": "Permission required"}
     assert platform_admin_response.status_code == 202
     async with session_scope() as session:
+        protected_organization = await session.get(Organization, owned_organization.id)
         deleted_organization = await session.get(Organization, admin_owned_organization.id)
+    assert protected_organization is not None
+    assert protected_organization.deleted_at is None
     assert deleted_organization is not None
     assert deleted_organization.deleted_at is not None
 
@@ -408,7 +411,9 @@ async def test_other_organization_user_cannot_delete_solution(
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
     async with session_scope() as session:
-        assert await session.get(Solution, target_solution.id) is not None
+        persisted = await session.get(Solution, target_solution.id)
+    assert persisted is not None
+    assert persisted.deleted_at is None
     await assert_no_new_operations(previous_operations)
 
 
@@ -441,21 +446,19 @@ async def test_organization_storage_usage_returns_usage_or_unavailable(
     client = clients[0]
     organization = await create_organization(owner)
 
-    class FakeStorage:
-        """Provide storage usage responses for the Organization resource endpoint."""
+    async def storage_usage(_self: object, organization_id: UUID) -> int:
+        """Return usage or raise the configured storage backend failure."""
 
-        async def usage(self, organization_id: UUID) -> int:
-            """Return usage or raise the configured storage backend failure."""
-
-            assert organization_id == organization.id
-            if isinstance(usage, Exception):
-                raise usage
-            return usage
+        # Keep the tenant selection and configured outcome observable at the storage boundary.
+        assert organization_id == organization.id
+        if isinstance(usage, Exception):
+            raise usage
+        return usage
 
     from conftest import StorageKubernetes
 
     monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
-    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
+    monkeypatch.setattr(StorageKubernetes, "usage", storage_usage)
 
     # Act
     response = await client.get(f"/api/v1/organizations/{organization.id}/storage")
@@ -490,19 +493,17 @@ async def test_organization_storage_endpoint_allows_members(
         )
         await session.commit()
 
-    class FakeStorage:
-        """Provide an inspectable Organization storage bucket."""
+    async def storage_usage(_self: object, organization_id: UUID) -> int:
+        """Return the bucket's live usage."""
 
-        async def usage(self, organization_id: UUID) -> int:
-            """Return the bucket's live usage."""
-
-            assert organization_id == organization.id
-            return 0
+        # Verify member access still selects the requested Organization's bucket.
+        assert organization_id == organization.id
+        return 0
 
     from conftest import StorageKubernetes
 
     monkeypatch.setattr("src.routes.v1.organizations.Storage", StorageKubernetes)
-    monkeypatch.setattr(StorageKubernetes, "usage", FakeStorage.usage)
+    monkeypatch.setattr(StorageKubernetes, "usage", storage_usage)
     client = clients[1]
 
     # Act
@@ -864,6 +865,7 @@ async def test_create_organization_invitation_rejects_active_member(
 async def test_create_organization_invitation_rejects_role_above_caller(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
 ) -> None:
     """Reject invitations that grant more access than the caller has."""
 
@@ -886,6 +888,7 @@ async def test_create_organization_invitation_rejects_role_above_caller(
     assert response.json() == {"detail": "Invitation role permissions required"}
     async with session_scope() as session:
         assert await organizations.invitations(session, organization.id) == []
+    assert captured_mail == []
 
 
 async def test_update_organization_member_changes_role(
@@ -1165,6 +1168,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
 async def test_create_organization_invitation_returns_403_without_maintainer_access(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    captured_mail: list[tuple[str, str, str, str | None]],
     caller_role: OrganizationRoles | None,
     expected_detail: str,
 ) -> None:
@@ -1195,6 +1199,7 @@ async def test_create_organization_invitation_returns_403_without_maintainer_acc
     assert response.json() == {"detail": expected_detail}
     async with session_scope() as session:
         assert await organizations.invitations(session, organization.id) == []
+    assert captured_mail == []
 
 
 async def test_get_organization_rejects_anonymous_without_membership_lookup(

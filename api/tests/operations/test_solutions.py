@@ -10,6 +10,7 @@ from factories import (
 from src.utils.s3 import Credentials
 from src.operations import solutions as solution_operations
 from src.utils.jobs import execute
+from collections.abc import Callable, Awaitable
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import Status
@@ -434,10 +435,12 @@ async def test_solution_creation_skips_removed_solution_provider_construction(
     assert result is None
 
 
-async def test_solution_creation_skips_missing_solution_without_constructing_providers(
+@pytest.mark.parametrize("operation", [pytest.param(solution_operations.deploy, id="deployment"), pytest.param(solution_operations.delete, id="deletion")])
+async def test_solution_lifecycle_skips_missing_target_without_constructing_providers(
     monkeypatch: pytest.MonkeyPatch,
+    operation: Callable[[UUID], Awaitable[None]],
 ) -> None:
-    """Treat a missing Solution as an already completed lifecycle target."""
+    """Treat a missing lifecycle target as an already completed operation."""
 
     # Arrange
     reject_provider_construction(
@@ -447,7 +450,7 @@ async def test_solution_creation_skips_missing_solution_without_constructing_pro
     )
 
     # Act and assert
-    assert await solution_operations.deploy(uuid4()) is None
+    assert await operation(uuid4()) is None
 
 
 async def test_solution_creation_skips_deployment_when_deleted_before_credential_persistence(
@@ -482,19 +485,3 @@ async def test_solution_creation_skips_deployment_when_deleted_before_credential
 
     # Assert
     assert result is None
-
-
-async def test_solution_deletion_skips_missing_solution_without_constructing_providers(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Treat a missing Solution tombstone as completed cleanup."""
-
-    # Arrange
-    reject_provider_construction(
-        monkeypatch,
-        (solution_operations.databases.postgres, "Postgres"),
-        (solution_operations, "Kubernetes"),
-    )
-
-    # Act and assert
-    assert await solution_operations.delete(uuid4()) is None

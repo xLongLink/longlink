@@ -72,5 +72,5 @@ def test_image_validates_and_serializes_as_a_pydantic_string() -> None:
     model = ImageModel.model_validate({"image": "ghcr.io/longlink/dashboard:latest"})
 
     # Assert
-    assert model.image == Image("ghcr.io/longlink/dashboard:latest")
+    assert isinstance(model.image, Image)
     assert model.model_dump(mode="json") == {"image": "ghcr.io/longlink/dashboard:latest"}

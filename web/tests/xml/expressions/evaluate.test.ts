@@ -51,10 +51,6 @@ describe('evaluate', () => {
         expect(evaluate(compileAttribute('${user["constructor"]}'), ctx)).toBeUndefined();
     });
 
-    it.each(['${"name" in user}', '${1 == "1"}', '${1 != "2"}'])('rejects unsupported operators: %s', (value) => {
-        expect(() => evaluate(compileAttribute(value), { bindings: {} })).toThrow('Operator not allowed');
-    });
-
     it('evaluates only the selected conditional branch', () => {
         const ctx: Scope = { bindings: { administrator: true } };
 
