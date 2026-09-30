@@ -10,7 +10,7 @@
     <xsd:annotation>
       <xsd:documentation>Displays a lifecycle status using the runtime's status presentation.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xsd-docs">
-        <longlink:docs slug="status-badge" category="Content" lastUpdated="2026-09-30" source="adapters/StatusBadge.xsd"/>
+        <longlink:docs slug="status-badge" category="Content" lastUpdated="2026-09-30"/>
         <longlink:example>&lt;StatusBadge status="${order.status}" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

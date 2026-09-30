@@ -4,7 +4,7 @@ from lxml import etree
 from typing import cast
 from functools import cache
 from collections import deque
-from collections.abc import Iterator
+from collections.abc import Mapping, Iterator, Sequence
 from longlink.constants import ROOT
 from longlink.cli.errors import CliError
 
@@ -34,45 +34,39 @@ def _text(node: etree._Element, path: str) -> str:
     return text.strip() if path.endswith(f"{DOCS}example") else " ".join(text.split())
 
 
-def _complex_type(element: etree._Element, schemas: tuple[etree._Element, ...]) -> etree._Element | None:
+def _complex_type(element: etree._Element, complex_types: Mapping[str, etree._Element]) -> etree._Element | None:
     """Resolve an element's inline or named complex type."""
 
-    # Prefer local types, then scan the small fixed schema collection.
+    # Prefer local types, then resolve the indexed named type.
     inline = element.find(f"{XSD}complexType")
     if inline is not None:
         return inline
     name = element.get("type", "").rsplit(":", 1)[-1]
-    return next((node for schema in schemas for node in schema.iterfind(f"{XSD}complexType") if node.get("name") == name), None)
+    return complex_types.get(name)
 
 
-def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...]) -> list[str]:
+def _element_lines(
+    element: etree._Element,
+    complex_types: Mapping[str, etree._Element],
+    simple_types: Mapping[str, etree._Element],
+    runtime_attributes: Sequence[etree._Element],
+) -> list[str]:
     """Render one component or helper element."""
 
     # Resolve descriptions and inherited runtime attributes.
-    type_node = _complex_type(element, schemas)
+    type_node = _complex_type(element, complex_types)
     description = (
         _text(element, f"{DOCS}description") if element.tag == f"{DOCS}topic" else _text(element, f"{XSD}annotation/{XSD}documentation")
     )
     attributes = type_node.findall(f"{XSD}attribute") if type_node is not None else []
     if type_node is not None and type_node.find(f"{XSD}attributeGroup") is not None:
-        groups = (group for schema in schemas for group in schema.iterfind(f"{XSD}attributeGroup"))
-        runtime = next((group for group in groups if group.get("name") == "XmlRuntimeAttributes"), None)
-        if runtime is not None:
-            attributes.extend(runtime.iterfind(f"{XSD}attribute"))
+        attributes.extend(runtime_attributes)
     lines = [element.get("name", "")]
     if description:
         lines.append(description)
     lines.append("Attributes")
     if not attributes:
         lines.append("- none")
-
-    # Index named simple types in schema order, preserving the first declaration.
-    simple_types: dict[str, etree._Element] = {}
-    for schema in schemas:
-        for node in schema.iterfind(f"{XSD}simpleType"):
-            name = node.get("name")
-            if name is not None:
-                simple_types.setdefault(name, node)
 
     # Render only authoring constraints useful in ordinary component XML.
     for attribute in attributes:
@@ -95,17 +89,37 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
     return lines
 
 
+def _child_elements(type_node: etree._Element | None, groups: Mapping[str, etree._Element]) -> Iterator[etree._Element]:
+    """Yield local child declarations, expanding shared XSD groups in document order."""
+
+    # Missing complex types have no declared children.
+    if type_node is None:
+        return
+
+    # Expand group references without changing the declarations' local scope.
+    for node in type_node.iter(f"{XSD}element", f"{XSD}group"):
+        if node.tag == f"{XSD}element":
+            yield node
+        elif reference := node.get("ref"):
+            name = reference.rsplit(":", 1)[-1]
+            group = groups.get(name)
+            if group is None:
+                raise CliError(f"Unknown XSD group: {name}")
+            yield from _child_elements(group, groups)
+
+
 def _helpers(
     component: etree._Element,
     example: str,
     elements: dict[str, etree._Element],
-    schemas: tuple[etree._Element, ...],
+    complex_types: Mapping[str, etree._Element],
+    groups: Mapping[str, etree._Element],
 ) -> list[etree._Element]:
     """Return helper elements used by a component."""
 
     # Follow declared child references and exact tags from the authored example.
-    type_node = _complex_type(component, schemas)
-    pending = deque(type_node.iter(f"{XSD}element")) if type_node is not None else deque()
+    type_node = _complex_type(component, complex_types)
+    pending = deque(_child_elements(type_node, groups))
     for name in re.findall(r"<\s*/?\s*([A-Za-z_][\w.-]*)", example):
         element = elements.get(name)
         if element is not None and element.find(f"{XSD}annotation/{XSD}appinfo/{DOCS}docs") is None:
@@ -113,14 +127,14 @@ def _helpers(
     helpers: dict[str, etree._Element] = {}
     while pending:
         declaration = pending.popleft()
-        name = declaration.get("ref", "").rsplit(":", 1)[-1] or declaration.get("name", "")
+        reference = declaration.get("ref", "").rsplit(":", 1)[-1]
+        name = reference or declaration.get("name", "")
         if not name or name == component.get("name") or name in helpers:
             continue
-        helper = elements.get(name, declaration)
+        helper = elements[reference] if reference else declaration
         helpers[name] = helper
-        helper_type = _complex_type(helper, schemas)
-        if helper_type is not None:
-            pending.extend(helper_type.iter(f"{XSD}element"))
+        helper_type = _complex_type(helper, complex_types)
+        pending.extend(_child_elements(helper_type, groups))
 
     return list(helpers.values())
 
@@ -185,18 +199,39 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
     if match is None:
         raise CliError(f"Unknown component: {component}. Run `longlink docs` to list available components.")
 
+    # Index immutable schema definitions once, preserving first-declaration lookup precedence.
+    complex_types: dict[str, etree._Element] = {}
+    simple_types: dict[str, etree._Element] = {}
+    groups: dict[str, etree._Element] = {}
+    for schema in schemas:
+        for node in schema.iterfind(f"{XSD}complexType"):
+            name = node.get("name")
+            if name is not None:
+                complex_types.setdefault(name, node)
+        for node in schema.iterfind(f"{XSD}simpleType"):
+            name = node.get("name")
+            if name is not None:
+                simple_types.setdefault(name, node)
+        for node in schema.iterfind(f"{XSD}group"):
+            name = node.get("name")
+            if name is not None:
+                groups.setdefault(name, node)
+    attribute_groups = (group for schema in schemas for group in schema.iterfind(f"{XSD}attributeGroup"))
+    runtime = next((group for group in attribute_groups if group.get("name") == "XmlRuntimeAttributes"), None)
+    runtime_attributes = list(runtime.iterfind(f"{XSD}attribute")) if runtime is not None else []
+
     # Render the component, its helper elements, and its authored example.
     element, metadata = match
     example = (
         _text(element, f"{DOCS}example") if element.tag == f"{DOCS}topic" else _text(element, f"{XSD}annotation/{XSD}appinfo/{DOCS}example")
     )
-    lines = _element_lines(element, schemas)
+    lines = _element_lines(element, complex_types, simple_types, runtime_attributes)
     lines[0] = f"{lines[0]} [{metadata.get('category', '')}]"
-    helpers = _helpers(element, example, elements, schemas)
+    helpers = _helpers(element, example, elements, complex_types, groups)
     for helper in helpers:
         lines.append("")
         lines.append("Related element")
-        lines.extend(_element_lines(helper, schemas))
+        lines.extend(_element_lines(helper, complex_types, simple_types, runtime_attributes))
     lines.append("")
     lines.append("Example")
     lines.append(example or "- none")

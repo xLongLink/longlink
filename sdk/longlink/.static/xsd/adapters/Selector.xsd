@@ -20,7 +20,7 @@
     <xsd:annotation>
       <xsd:documentation>A dropdown selector for choosing a single value from a list of options. Use it in forms and settings when presenting a moderate number of options.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="selector" category="Form" lastUpdated="2026-07-21" source="adapters/Selector.xsd"/>
+        <longlink:docs slug="selector" category="Form" lastUpdated="2026-07-21"/>
         <longlink:example>&lt;Selector label="Status" value="$filters.status"&gt;
   &lt;Option value="open" label="Open" /&gt;
   &lt;Option value="closed" label="Closed" /&gt;

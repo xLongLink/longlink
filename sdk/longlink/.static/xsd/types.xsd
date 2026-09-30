@@ -7,6 +7,68 @@
       </xsd:annotation>
     </xsd:attribute>
   </xsd:attributeGroup>
+  <xsd:group name="ActionEffects">
+    <xsd:choice>
+      <xsd:element name="Request">
+        <xsd:annotation>
+          <xsd:documentation>Sends a solution-relative HTTP request. Use either form for multipart data or json for a JSON payload, never both. GET requests cannot send payloads. A failed request stops the remaining effects and navigation.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+          <xsd:attribute name="url" type="xsd:string" use="required">
+            <xsd:annotation>
+              <xsd:documentation>Solution-relative request URL.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="method" type="ActionMethodType" use="required">
+            <xsd:annotation>
+              <xsd:documentation>HTTP request method.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="form" type="xsd:string">
+            <xsd:annotation><xsd:documentation>Object expression sent as multipart form data, including file uploads.</xsd:documentation></xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="json" type="xsd:string">
+            <xsd:annotation><xsd:documentation>Expression sent as the JSON request body.</xsd:documentation></xsd:annotation>
+          </xsd:attribute>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="Patch">
+        <xsd:annotation>
+          <xsd:documentation>Updates declared State properties or invalidates a State or Query. Use a literal state identifier and specify exactly one of value or invalidate="true".</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+          <xsd:attribute name="state" type="xsd:string" use="required">
+            <xsd:annotation>
+              <xsd:documentation>Literal State identifier to patch, or State/Query identifier to invalidate.</xsd:documentation>
+            </xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="value" type="xsd:string">
+            <xsd:annotation>
+              <xsd:documentation>Object expression containing declared State properties to update. Specify exactly one of value or invalidate="true".</xsd:documentation>
+            </xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="invalidate" type="xsd:boolean" fixed="true">
+            <xsd:annotation>
+              <xsd:documentation>Reinitializes the referenced State or refetches the referenced Query. Specify exactly one of value or invalidate="true".</xsd:documentation>
+            </xsd:annotation>
+          </xsd:attribute>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="Validate">
+        <xsd:annotation>
+          <xsd:documentation>Validates and normalizes an object before the following effects run. Field rules support string and number types; validation failures stop the remaining effects and navigation.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+          <xsd:attribute name="value" type="xsd:string" use="required">
+            <xsd:annotation><xsd:documentation>Object expression to validate and normalize before a request.</xsd:documentation></xsd:annotation>
+          </xsd:attribute>
+          <xsd:attribute name="rules" type="xsd:string" use="required">
+            <xsd:annotation><xsd:documentation>Declarative field validation rules expression.</xsd:documentation></xsd:annotation>
+          </xsd:attribute>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:choice>
+  </xsd:group>
   <xsd:simpleType name="NonBlankStringType">
     <xsd:restriction base="xsd:string">
       <xsd:pattern value=".*[^\s].*"/>

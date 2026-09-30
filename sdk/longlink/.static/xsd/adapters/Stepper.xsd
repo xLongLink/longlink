@@ -87,7 +87,7 @@
     <xsd:annotation>
       <xsd:documentation>Stepper displays progress through a short sequence of related workflow steps.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="stepper" category="Layouts" lastUpdated="2026-09-22" source="adapters/Stepper.xsd" />
+        <longlink:docs slug="stepper" category="Layouts" lastUpdated="2026-09-22" />
         <longlink:example>&lt;Stepper activeStep="$form.step" orientation="vertical"&gt;
   &lt;Step step="0" label="Details" /&gt;
   &lt;Step step="1" label="Review" /&gt;
@@ -100,7 +100,7 @@
     <xsd:annotation>
       <xsd:documentation>Step identifies one logical point in a Stepper and may render its active content.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="step" category="Layouts" lastUpdated="2026-09-22" source="adapters/Stepper.xsd" />
+        <longlink:docs slug="step" category="Layouts" lastUpdated="2026-09-22" />
         <longlink:example>&lt;Step step="0" label="Details" description="Enter the required information." /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

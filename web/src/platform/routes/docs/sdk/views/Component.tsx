@@ -60,7 +60,7 @@ export default function DocsArticleRoute() {
                             {nested.name}
                         </Heading>
                         <Text as="p">{nested.description}</Text>
-                        <AttributeTable attributes={nested.attributes} />
+                        {nested.attributes.length > 0 ? <AttributeTable attributes={nested.attributes} /> : null}
                         {nested.example ? <CodeBlock code={nested.example} language="xml" /> : null}
                     </Stack>
                 ))}
