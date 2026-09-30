@@ -75,6 +75,8 @@ async def create_project(ctx: Context) -> None:
                 <Text as="p">
                     <Code>UserRelationship()</Code> gives <Code>owner</Code> its own required foreign key to the shared
                     user table. Use <Code>Model</Code> instead of <Code>Audit</Code> if you do not need audit history.
+                    Annotate a relationship as <Code>User | None</Code> for an optional role, such as an invoice
+                    approver; its generated foreign key defaults to null.
                 </Text>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4

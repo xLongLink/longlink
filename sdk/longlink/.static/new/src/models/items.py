@@ -1,5 +1,5 @@
 from enum import StrEnum
-from longlink import Audit
+from longlink import User, Audit, UserRelationship
 from sqlmodel import Field
 from sqlalchemy import Enum
 
@@ -23,3 +23,6 @@ class Item(Audit, table=True):
         default=ItemStatus.draft,
         sa_type=Enum(ItemStatus, name="invoice_status", native_enum=False),
     )
+
+    # Approval attribution
+    approved_by: User | None = UserRelationship()
