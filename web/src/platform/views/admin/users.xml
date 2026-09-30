@@ -7,43 +7,56 @@
     />
 
     <Stack gap="8">
+        <Heading level="1">Users</Heading>
         <Stack gap="1">
-            <Heading level="1">Users</Heading>
-            <Text color="secondary">
-                Review account access, elevated users, and admin onboarding.
-            </Text>
-        </Stack>
-        <Table data="$users.items" idKey="id" hasHover="true">
-            <TableColumn field="name" header="User">
-                <Stack direction="horizontal" gap="3" align="center">
-                    <Avatar name="$row.name" src="$row.avatar" />
-                    <Stack align="start">
-                        <Stack direction="horizontal" gap="1" align="center">
-                            <Text>$row.name</Text>
-                            <Badge>
-                                ${row.administrator ? 'Administrator' : 'User'}
-                            </Badge>
+            <Table data="$users.items" idKey="id" hasHover="true">
+                <TableColumn field="name" header="User">
+                    <Stack direction="horizontal" gap="3" align="center">
+                        <Avatar name="$row.name" src="$row.avatar" />
+                        <Stack align="start">
+                            <Stack
+                                direction="horizontal"
+                                gap="1"
+                                align="center"
+                            >
+                                <Text>$row.name</Text>
+                                <Badge>
+                                    ${row.administrator ? 'Administrator' : 'User'}
+                                </Badge>
+                            </Stack>
+                            <Text type="supporting">$row.email</Text>
                         </Stack>
-                        <Text type="supporting">$row.email</Text>
                     </Stack>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="id" header="Metadata">
-                <Stack align="start">
-                    <Text>Created: <Timestamp value="$row.created_at" /></Text>
-                    <Text type="supporting">${'ID: ' + row.id}</Text>
-                </Stack>
-            </TableColumn>
-        </Table>
-        <Stack direction="horizontal" gap="2" justify="end">
-            <Button label="Previous" disabled="${pages.value === 1}">
-                <Patch state="pages" value="${{ value: pages.value - 1 }}" />
-                <Patch state="users" invalidate="true" />
-            </Button>
-            <Button label="Next" disabled="${users.total &lt;= pages.value * 25}">
-                <Patch state="pages" value="${{ value: pages.value + 1 }}" />
-                <Patch state="users" invalidate="true" />
-            </Button>
+                </TableColumn>
+                <TableColumn field="id" header="Metadata">
+                    <Stack align="start">
+                        <Text>
+                            Created:
+                            <Timestamp value="$row.created_at" />
+                        </Text>
+                        <Text type="supporting">${'ID: ' + row.id}</Text>
+                    </Stack>
+                </TableColumn>
+            </Table>
+            <Stack direction="horizontal" gap="2" justify="between">
+                <Button label="Previous" disabled="${pages.value === 1}">
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value - 1 }}"
+                    />
+                    <Patch state="users" invalidate="true" />
+                </Button>
+                <Button
+                    label="Next"
+                    disabled="${users.total &lt;= pages.value * 25}"
+                >
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value + 1 }}"
+                    />
+                    <Patch state="users" invalidate="true" />
+                </Button>
+            </Stack>
         </Stack>
     </Stack>
 </longlink>

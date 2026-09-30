@@ -260,12 +260,7 @@
                             align="center"
                             wrap="wrap"
                         >
-                            <Stack gap="1">
-                                <Heading level="2">Solutions</Heading>
-                                <Text color="secondary">
-                                    Manage the solutions attached to this organization.
-                                </Text>
-                            </Stack>
+                            <Heading level="1">Solutions</Heading>
                             <Button label="New Solution" if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}">
                                 <Patch state="createSolution" value="${{ description: '', envs: {}, image: '', inspecting: false, name: '', open: true, step: 0 }}" />
                             </Button>

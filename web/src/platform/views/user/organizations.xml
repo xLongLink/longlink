@@ -11,12 +11,7 @@
             align="center"
             wrap="wrap"
         >
-            <Stack gap="1">
-                <Heading level="1">Organizations</Heading>
-                <Text color="secondary">
-                    Manage the workspaces connected to your LongLink account.
-                </Text>
-            </Stack>
+            <Heading level="1">Organizations</Heading>
             <Dialog
                 title="New organization"
                 triggerLabel="Create Organization"

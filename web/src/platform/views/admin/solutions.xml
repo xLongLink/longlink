@@ -9,58 +9,61 @@
     />
 
     <Stack gap="8">
+        <Heading level="1">Solutions</Heading>
         <Stack gap="1">
-            <Heading level="1">Solutions</Heading>
-            <Text color="secondary">
-                Review all solutions across organizations and deployment states.
-            </Text>
-        </Stack>
-        <Table data="$solutions.items" idKey="id" hasHover="true">
-            <TableColumn field="name" header="Solution">
-                <Stack align="start">
-                    <Stack direction="horizontal" gap="1" align="center">
-                        <Link
-                            to="/orgs/${row.organization.slug}/solutions/${row.slug}"
-                        >
-                            $row.name
-                        </Link>
-                        <StatusBadge status="$row.status" />
+            <Table data="$solutions.items" idKey="id" hasHover="true">
+                <TableColumn field="name" header="Solution">
+                    <Stack align="start">
+                        <Stack direction="horizontal" gap="1" align="center">
+                            <Link
+                                to="/orgs/${row.organization.slug}/solutions/${row.slug}"
+                            >
+                                $row.name
+                            </Link>
+                            <StatusBadge status="$row.status" />
+                        </Stack>
+                        <Text if="$row.description" type="supporting">
+                            $row.description
+                        </Text>
                     </Stack>
-                    <Text if="$row.description" type="supporting">
-                        $row.description
-                    </Text>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="organization.name" header="Organization">
-                <Stack direction="horizontal" gap="3" align="center">
-                    <Avatar
-                        shape="rounded"
-                        name="$row.organization.name"
+                </TableColumn>
+                <TableColumn field="organization.name" header="Organization">
+                    <Stack direction="horizontal" gap="3" align="center">
+                        <Avatar shape="rounded" name="$row.organization.name" />
+                        <Link to="/orgs/${row.organization.slug}">
+                            $row.organization.name
+                        </Link>
+                    </Stack>
+                </TableColumn>
+                <TableColumn field="id" header="Actions" align="end">
+                    <MoreMenu value="$metadata">
+                        <Option
+                            value="${{ item: row, open: true }}"
+                            label="Metadata"
+                            icon="info"
+                        />
+                    </MoreMenu>
+                </TableColumn>
+            </Table>
+            <Stack direction="horizontal" gap="2" justify="between">
+                <Button label="Previous" disabled="${pages.value === 1}">
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value - 1 }}"
                     />
-                    <Link to="/orgs/${row.organization.slug}">
-                        $row.organization.name
-                    </Link>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="id" header="Actions" align="end">
-                <MoreMenu value="$metadata">
-                    <Option
-                        value="${{ item: row, open: true }}"
-                        label="Metadata"
-                        icon="info"
+                    <Patch state="solutions" invalidate="true" />
+                </Button>
+                <Button
+                    label="Next"
+                    disabled="${solutions.total &lt;= pages.value * 25}"
+                >
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value + 1 }}"
                     />
-                </MoreMenu>
-            </TableColumn>
-        </Table>
-        <Stack direction="horizontal" gap="2" justify="end">
-            <Button label="Previous" disabled="${pages.value === 1}">
-                <Patch state="pages" value="${{ value: pages.value - 1 }}" />
-                <Patch state="solutions" invalidate="true" />
-            </Button>
-            <Button label="Next" disabled="${solutions.total &lt;= pages.value * 25}">
-                <Patch state="pages" value="${{ value: pages.value + 1 }}" />
-                <Patch state="solutions" invalidate="true" />
-            </Button>
+                    <Patch state="solutions" invalidate="true" />
+                </Button>
+            </Stack>
         </Stack>
     </Stack>
 
