@@ -8,51 +8,58 @@
     />
 
     <Stack gap="8">
+        <Heading level="1">Operations</Heading>
         <Stack gap="1">
-            <Heading level="1">Operations</Heading>
-            <Text color="secondary">
-                Track long-running Platform tasks, when they become
-                available, and when they finish.
-            </Text>
-        </Stack>
-        <Table data="$operations.items" idKey="id" hasHover="true">
-            <TableColumn field="kind" header="Operation">
-                <Stack align="start">
-                    <Text
-                        value="${({ 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}"
+            <Table data="$operations.items" idKey="id" hasHover="true">
+                <TableColumn field="kind" header="Operation">
+                    <Stack align="start">
+                        <Text
+                            value="${({ 'solution.deploy': 'Solution deployment', 'solution.delete': 'Solution deletion', 'organization.create': 'Organization creation', 'organization.delete': 'Organization deletion' })[row.kind]}"
+                        />
+                        <Text type="supporting">
+                            ${row.finished_at ? ({ scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' })[row.status] + ' - ' + row.finished_at : 'Started - ' + row.created_at}
+                        </Text>
+                    </Stack>
+                </TableColumn>
+                <TableColumn field="resource_name" header="Resource">
+                    <Stack align="start">
+                        <Text>
+                            ${row.resource_name ?? 'Resource unavailable'}
+                        </Text>
+                        <Text type="supporting">
+                            ${({ 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}
+                        </Text>
+                    </Stack>
+                </TableColumn>
+                <TableColumn field="id" header="Actions" align="end">
+                    <MoreMenu value="$metadata">
+                        <Option
+                            value="${{ item: row, open: true }}"
+                            label="Metadata"
+                            icon="info"
+                        />
+                    </MoreMenu>
+                </TableColumn>
+            </Table>
+            <Stack direction="horizontal" gap="2" justify="between">
+                <Button label="Previous" disabled="${pages.value === 1}">
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value - 1 }}"
                     />
-                    <Text type="supporting">
-                        ${row.finished_at ? ({ scheduled: 'Scheduled', active: 'Active', completed: 'Completed', failed: 'Failed' })[row.status] + ' - ' + row.finished_at : 'Started - ' + row.created_at}
-                    </Text>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="resource_name" header="Resource">
-                <Stack align="start">
-                    <Text>${row.resource_name ?? 'Resource unavailable'}</Text>
-                    <Text type="supporting">
-                        ${({ 'solution.deploy': 'Solution', 'solution.delete': 'Solution', 'organization.create': 'Organization', 'organization.delete': 'Organization' })[row.kind]}
-                    </Text>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="id" header="Actions" align="end">
-                <MoreMenu value="$metadata">
-                    <Option
-                        value="${{ item: row, open: true }}"
-                        label="Metadata"
-                        icon="info"
+                    <Patch state="operations" invalidate="true" />
+                </Button>
+                <Button
+                    label="Next"
+                    disabled="${operations.total &lt;= pages.value * 25}"
+                >
+                    <Patch
+                        state="pages"
+                        value="${{ value: pages.value + 1 }}"
                     />
-                </MoreMenu>
-            </TableColumn>
-        </Table>
-        <Stack direction="horizontal" gap="2" justify="end">
-            <Button label="Previous" disabled="${pages.value === 1}">
-                <Patch state="pages" value="${{ value: pages.value - 1 }}" />
-                <Patch state="operations" invalidate="true" />
-            </Button>
-            <Button label="Next" disabled="${operations.total &lt;= pages.value * 25}">
-                <Patch state="pages" value="${{ value: pages.value + 1 }}" />
-                <Patch state="operations" invalidate="true" />
-            </Button>
+                    <Patch state="operations" invalidate="true" />
+                </Button>
+            </Stack>
         </Stack>
     </Stack>
 
