@@ -8,7 +8,6 @@
 
 </div>
 
-
 <br />
 
 ## Introduction
@@ -19,15 +18,12 @@ Build your Solution as a standard FastAPI application, using SQLModel for data a
 
 The result is software you can develop, test, version, review, and change using normal engineering tools.
 
-
 > [!WARNING]
 > LongLink is under active development. APIs may change before 1.0.
-
 
 <br />
 
 ## Create a Solution
-
 
 Requirements: `Python 3.12` or newer and [`uv`](https://docs.astral.sh/uv/).
 
@@ -42,7 +38,6 @@ Open `http://127.0.0.1:1707` to preview your Solution.
 > [!NOTE]
 > See the [sample Solution](https://github.com/xLongLink/sample) for a complete example.
 
-
 <details>
 <summary>What about classic pip?</summary>
 
@@ -56,8 +51,6 @@ longlink dev
 ```
 
 </details>
-
-
 
 <br />
 
@@ -81,11 +74,8 @@ The same code runs in development, testing, and production. When deployed, LongL
 
 ![Invoice approvals in the sample Solution](sample.png)
 
-
 > [!NOTE]
 > LongLink adds as little new surface area as possible, bringing established tools together into a consistent environment.
-
-
 
 <br />
 
@@ -96,7 +86,6 @@ AI has made custom software faster and cheaper to create. As the cost of buildin
 LongLink provides that foundation. It turns real-world processes into maintainable business software built with Python. Each project becomes a Solution, while the Platform handles common needs: authentication, permissions, deployment, storage, logging, governance, and operational structure. Users define how the work should happen; developers focus on the business logic.
 
 Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to operational processes, making them structured, deployable, reviewable, and economical to maintain over time.
-
 
 <br />
 
@@ -117,7 +106,6 @@ These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.
 ## Developing LongLink
 
 The repository contains the LongLink SDK and runtime in `sdk/`, the Platform API in `api/`, and the shared Platform and Solution frontend in `web/`.
-
 
 On Linux, install the development requirements with:
 

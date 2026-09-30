@@ -25,14 +25,21 @@
                         placeholder="Example LongLink"
                         isRequired="true"
                     />
-                    <Button label="Create organization" variant="primary" disabled="${!trim(draft.name)}">
+                    <Button
+                        label="Create organization"
+                        variant="primary"
+                        disabled="${!trim(draft.name)}"
+                    >
                         <Request
                             url="/api/v1/organizations"
                             method="POST"
                             json="${{ name: trim(draft.name) }}"
                         />
                         <Patch state="memberships" invalidate="true" />
-                        <Patch state="createDialog" value="${{ open: false }}" />
+                        <Patch
+                            state="createDialog"
+                            value="${{ open: false }}"
+                        />
                     </Button>
                 </Stack>
             </Dialog>
@@ -41,10 +48,7 @@
         <Table data="$memberships" idKey="organization.id" hasHover="true">
             <TableColumn field="organization.name" header="Name">
                 <Stack direction="horizontal" gap="3" align="center">
-                    <Avatar
-                        shape="rounded"
-                        name="$row.organization.name"
-                    />
+                    <Avatar shape="rounded" name="$row.organization.name" />
                     <Stack align="start" gap="0">
                         <Link to="/orgs/${row.organization.slug}">
                             $row.organization.name

@@ -13,7 +13,6 @@
 > [!WARNING]
 > LongLink is under active development. APIs may change before 1.0.
 
-
 <br/>
 
 ## Getting started
@@ -36,7 +35,6 @@ Check [LongLink Documentation](https://www.longlink.dev/docs/sdk/) or use the `c
 longlink docs --help
 ```
 
-
 <br/>
 
 ## Development
@@ -55,7 +53,6 @@ make sdk
 uv sync --group dev
 uv run pytest --cov --cov-report=term-missing
 ```
-
 
 <br/>
 <br/>

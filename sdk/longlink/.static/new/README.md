@@ -1,6 +1,5 @@
 <div align="center">
 
-
 # Solution Template
 
 Build a process-specific business application. \

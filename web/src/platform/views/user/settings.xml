@@ -33,7 +33,11 @@
                             $params.userEmail
                         </Text>
                         <Stack direction="horizontal" justify="end">
-                            <Button label="Save account" variant="primary" disabled="${!trim(profile.name)}">
+                            <Button
+                                label="Save account"
+                                variant="primary"
+                                disabled="${!trim(profile.name)}"
+                            >
                                 <Validate
                                     value="$profile"
                                     rules="${{ name: { type: 'string', trim: true, minLength: 1 } }}"
@@ -69,7 +73,11 @@
                                         placeholder="Example LongLink"
                                         isRequired="true"
                                     />
-                                    <Button label="Create organization" variant="primary" disabled="${!trim(organizationDraft.name)}">
+                                    <Button
+                                        label="Create organization"
+                                        variant="primary"
+                                        disabled="${!trim(organizationDraft.name)}"
+                                    >
                                         <Request
                                             url="/api/v1/organizations"
                                             method="POST"
@@ -79,7 +87,10 @@
                                             state="memberships"
                                             invalidate="true"
                                         />
-                                        <Patch state="createDialog" value="${{ open: false }}" />
+                                        <Patch
+                                            state="createDialog"
+                                            value="${{ open: false }}"
+                                        />
                                     </Button>
                                 </Stack>
                             </Dialog>
@@ -127,7 +138,11 @@
                                 header="Actions"
                                 align="end"
                             >
-                                <Button label="Delete" if="${row.role === 'owner'}" variant="destructive">
+                                <Button
+                                    label="Delete"
+                                    if="${row.role === 'owner'}"
+                                    variant="destructive"
+                                >
                                     <Patch
                                         state="deletion"
                                         value="${{ item: row, open: true }}"
