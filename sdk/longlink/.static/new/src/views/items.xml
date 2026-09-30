@@ -6,7 +6,7 @@
 
     <Stack gap="8">
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
-            <Heading level="1">Invoices</Heading>
+            <Heading level="1">Invoice approvals</Heading>
             <Dialog title="New Invoice" triggerLabel="New Invoice" isOpen="$createDialog.open" purpose="form">
                 <TextInput label="Invoice number" value="$draft.name" />
                 <NumberInput label="Amount (CHF)" value="$draft.price" min="0" />
