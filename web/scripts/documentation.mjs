@@ -127,8 +127,8 @@ function parseElement(element, types, runtimeAttributes) {
     };
 }
 
-/** Yields nested element declarations in document order. */
-function* collectNestedElements(value) {
+/** Yields nested element declarations, expanding shared XSD groups in document order. */
+function* collectNestedElements(value, groups) {
     const entry = record(value);
     if (entry === undefined) {
         return;
@@ -139,12 +139,26 @@ function* collectNestedElements(value) {
             yield* nodes(entry, name);
         }
 
+        // Group references contribute the same local declarations as inline particles.
+        if (name === 'xsd:group') {
+            for (const group of nodes(entry, name)) {
+                const reference = attribute(group, 'ref');
+                if (reference) {
+                    const definition = groups.get(reference);
+                    if (definition === undefined) {
+                        throw new Error(`Unknown XSD group: ${reference}`);
+                    }
+                    yield* collectNestedElements(definition, groups);
+                }
+            }
+        }
+
         if (Array.isArray(child)) {
             for (const item of child) {
-                yield* collectNestedElements(item);
+                yield* collectNestedElements(item, groups);
             }
         } else {
-            yield* collectNestedElements(child);
+            yield* collectNestedElements(child, groups);
         }
     }
 }
@@ -154,7 +168,7 @@ function companionNames(component, elements) {
     const names = new Set();
     const content = `${component.description}\n${component.example}`;
 
-    for (const [name, element] of elements) {
+    for (const [name, { element }] of elements) {
         const isDocumentedComponent = record(appInfo(element)?.['longlink:docs']) !== undefined;
 
         if (name !== component.name && !isDocumentedComponent && new RegExp(`\\b${name}\\b`).test(content)) {
@@ -177,53 +191,68 @@ async function componentDocumentation() {
         .map((include) => attribute(include, 'schemaLocation'))
         .filter((location) => location.startsWith('adapters/') && location.endsWith('.xsd'))
         .sort();
-    /** @type {XmlNode[]} */
-    const documents = [];
+    const documents = [{ schema: typesDocument, source: path.basename(typesPath) }];
 
     for (const filename of filenames) {
         const source = await readFile(path.join(path.dirname(schemaPath), filename), 'utf8');
-        documents.push(parseDocument(source, filename));
+        documents.push({ schema: parseDocument(source, filename), source: filename });
     }
 
-    /** @type {Map<string, XmlNode>} */
     const elements = new Map();
-    /** @type {Map<string, XmlNode>} */
     const types = new Map();
+    const groups = new Map();
 
-    for (const document of documents) {
-        for (const element of nodes(document, 'xsd:element')) {
+    for (const { schema, source } of documents) {
+        for (const element of nodes(schema, 'xsd:element')) {
             const name = attribute(element, 'name');
             if (name) {
-                elements.set(name, element);
+                elements.set(name, { element, source });
             }
         }
 
-        for (const type of nodes(document, 'xsd:complexType')) {
+        for (const type of nodes(schema, 'xsd:complexType')) {
             const name = attribute(type, 'name');
             if (name) {
                 types.set(name, type);
             }
         }
+
+        for (const group of nodes(schema, 'xsd:group')) {
+            const name = attribute(group, 'name');
+            if (name) {
+                groups.set(name, group);
+            }
+        }
     }
 
-    return Array.from(elements.values()).flatMap((element) => {
+    return Array.from(elements.values()).flatMap(({ element, source }) => {
         const metadata = record(appInfo(element)?.['longlink:docs']);
         if (metadata === undefined) {
             return [];
         }
 
         const component = parseElement(element, types, runtimeAttributes);
-        const nestedNames = companionNames(component, elements);
-        const type = types.get(attribute(element, 'type'));
+        const type = firstNode(element, 'xsd:complexType') ?? types.get(attribute(element, 'type'));
+        const pending = Array.from(collectNestedElements(type, groups));
 
-        for (const nestedElement of collectNestedElements(type)) {
-            const name = attribute(nestedElement, 'name');
-            if (name && name !== component.name) {
-                nestedNames.add(name);
-                if (!elements.has(name)) {
-                    elements.set(name, nestedElement);
-                }
+        // Resolve related declarations within this component, never mutating the global catalog.
+        for (const name of companionNames(component, elements)) {
+            pending.push(elements.get(name).element);
+        }
+        const nested = new Map();
+        for (const declaration of pending) {
+            const reference = attribute(declaration, 'ref');
+            const name = reference || attribute(declaration, 'name');
+            if (!name || name === component.name || nested.has(name)) {
+                continue;
             }
+            const child = reference ? elements.get(reference)?.element : declaration;
+            if (child === undefined) {
+                throw new Error(`Unknown XSD element: ${reference}`);
+            }
+            nested.set(name, child);
+            const childType = firstNode(child, 'xsd:complexType') ?? types.get(attribute(child, 'type'));
+            pending.push(...collectNestedElements(childType, groups));
         }
 
         return [
@@ -231,12 +260,9 @@ async function componentDocumentation() {
                 ...component,
                 category: attribute(metadata, 'category'),
                 lastUpdated: attribute(metadata, 'lastUpdated'),
-                nested: Array.from(nestedNames).flatMap((name) => {
-                    const nested = elements.get(name);
-                    return nested === undefined ? [] : [parseElement(nested, types, runtimeAttributes)];
-                }),
+                nested: Array.from(nested.values()).map((child) => parseElement(child, types, runtimeAttributes)),
                 slug: attribute(metadata, 'slug'),
-                source: attribute(metadata, 'source'),
+                source,
             },
         ];
     });
@@ -255,7 +281,7 @@ components.push(
         name: attribute(topic, 'name'),
         nested: [],
         slug: attribute(topic, 'slug'),
-        source: attribute(topic, 'source'),
+        source: path.basename(schemaPath),
     }))
 );
 

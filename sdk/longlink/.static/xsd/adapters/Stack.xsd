@@ -40,7 +40,7 @@
     <xsd:annotation>
       <xsd:documentation>Stack arranges items in a row or column with consistent spacing. Use StackItem when an individual child needs to fill available space, scroll, or override cross-axis alignment.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="stack" category="Layouts" lastUpdated="2026-09-16" source="adapters/Stack.xsd"/>
+        <longlink:docs slug="stack" category="Layouts" lastUpdated="2026-09-16"/>
         <longlink:example>&lt;Stack direction="horizontal" align="center"&gt;
   $order.number
   &lt;StackItem size="fill"&gt;Order details&lt;/StackItem&gt;

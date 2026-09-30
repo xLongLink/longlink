@@ -54,7 +54,7 @@
     <xsd:annotation>
       <xsd:documentation>Renders hash-selected Solution sections in the shared menu layout.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="menu" category="Layouts" lastUpdated="2026-08-19" source="adapters/Menu.xsd"/>
+        <longlink:docs slug="menu" category="Layouts" lastUpdated="2026-08-19"/>
         <longlink:example>&lt;Menu&gt;
   &lt;MenuSection title="Settings"&gt;
     &lt;MenuItem label="General" icon="viewColumns"&gt;

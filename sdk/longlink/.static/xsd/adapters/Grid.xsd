@@ -35,7 +35,7 @@
     <xsd:annotation>
       <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="grid" category="Layouts" lastUpdated="2026-09-01" source="adapters/Grid.xsd"/>
+        <longlink:docs slug="grid" category="Layouts" lastUpdated="2026-09-01"/>
         <longlink:example>&lt;Grid minColumnWidth="240" maxColumns="3" repeat="fit"&gt;
   &lt;Card&gt;First&lt;/Card&gt;
   &lt;Card&gt;Second&lt;/Card&gt;

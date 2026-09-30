@@ -666,6 +666,25 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "description": "",
                 "example": "",
                 "name": "MenuItem"
+            },
+            {
+                "attributes": [
+                    {
+                        "description": "Accessible label.",
+                        "name": "label"
+                    },
+                    {
+                        "description": "",
+                        "name": "icon"
+                    },
+                    {
+                        "description": "Conditional rendering expression.",
+                        "name": "if"
+                    }
+                ],
+                "description": "",
+                "example": "",
+                "name": "MenuSubSection"
             }
         ],
         "slug": "menu",
@@ -1115,7 +1134,47 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "name": "Stepper",
         "category": "Layouts",
         "lastUpdated": "2026-09-22",
-        "nested": [],
+        "nested": [
+            {
+                "attributes": [
+                    {
+                        "description": "Zero-based position in the Stepper.",
+                        "name": "step"
+                    },
+                    {
+                        "description": "Short visible step label.",
+                        "name": "label"
+                    },
+                    {
+                        "description": "Supporting explanation for the step.",
+                        "name": "description"
+                    },
+                    {
+                        "description": "",
+                        "name": "indicator"
+                    },
+                    {
+                        "description": "",
+                        "name": "status"
+                    },
+                    {
+                        "description": "",
+                        "name": "isDisabled"
+                    },
+                    {
+                        "description": "",
+                        "name": "isOptional"
+                    },
+                    {
+                        "description": "Conditional rendering expression.",
+                        "name": "if"
+                    }
+                ],
+                "description": "Step identifies one logical point in a Stepper and may render its active content.",
+                "example": "<Step step=\"0\" label=\"Details\" description=\"Enter the required information.\" />",
+                "name": "Step"
+            }
+        ],
         "slug": "stepper",
         "source": "adapters/Stepper.xsd"
     },

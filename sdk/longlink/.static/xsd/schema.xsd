@@ -7,12 +7,12 @@
       <longlink:category name="Content"/>
       <longlink:category name="Form"/>
       <longlink:category name="Layouts"/>
-      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-09-30" source="schema.xsd">
+      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-09-30">
         <longlink:description>Evaluates a safe JavaScript expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings.</longlink:description>
         <longlink:example>&lt;Text if="${order.total &gt; 0}"&gt;Total: ${order.total}&lt;/Text&gt;
 &lt;Link to="/orders/${order.id}"&gt;Open order&lt;/Link&gt;</longlink:example>
       </longlink:topic>
-      <longlink:topic name="Bindings" slug="bindings" category="Runtime" lastUpdated="2026-09-30" source="schema.xsd">
+      <longlink:topic name="Bindings" slug="bindings" category="Runtime" lastUpdated="2026-09-30">
         <longlink:description>Connects writable control values to State objects declared in the XML runtime. A $state.property binding reads the current property and writes user changes back to it.</longlink:description>
         <longlink:example>&lt;State id="form" name="" active="true" /&gt;
 
