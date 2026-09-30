@@ -40,10 +40,17 @@ export function Footer() {
     return (
         <Stack as="footer" className="relative z-10" padding={4} paddingBlock={6}>
             <Center axis="horizontal">
-                <Card maxWidth={720} padding={4} width="100%">
+                <Card className="max-sm:text-center" maxWidth={720} padding={4} width="100%">
                     <Stack gap={3}>
-                        <Stack direction="horizontal" gap={4} hAlign="between" vAlign="center" wrap="wrap">
-                            <Stack direction="horizontal" gap={4} vAlign="center">
+                        <Stack
+                            className="max-sm:flex-col max-sm:justify-center"
+                            direction="horizontal"
+                            gap={4}
+                            hAlign="between"
+                            vAlign="center"
+                            wrap="wrap"
+                        >
+                            <Stack className="max-sm:flex-col" direction="horizontal" gap={4} vAlign="center">
                                 <Link href="/" label="LongLink home" color="inherit">
                                     <Wordmark />
                                 </Link>
@@ -84,7 +91,14 @@ export function Footer() {
                                 </Stack>
                             </Stack>
 
-                            <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
+                            <Stack
+                                as="nav"
+                                direction="horizontal"
+                                gap={4}
+                                hAlign="center"
+                                wrap="wrap"
+                                aria-label="Footer navigation"
+                            >
                                 <Link href="/" color="secondary" type="supporting" weight="medium">
                                     Home
                                 </Link>
@@ -99,8 +113,17 @@ export function Footer() {
 
                         <Divider />
 
-                        <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                            <Text type="supporting">LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</Text>
+                        <Stack
+                            className="max-sm:flex-col max-sm:justify-center"
+                            direction="horizontal"
+                            gap={3}
+                            hAlign="between"
+                            vAlign="center"
+                            wrap="wrap"
+                        >
+                            <Text className="max-sm:order-last" type="supporting">
+                                LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
+                            </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
                                 <Link href="/impressum/" color="secondary" type="supporting" weight="medium">
                                     Impressum
