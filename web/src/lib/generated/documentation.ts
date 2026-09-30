@@ -1393,11 +1393,11 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
-                "description": "Timestamp string or numeric epoch milliseconds.",
+                "description": "ISO 8601 timestamp string or numeric Unix timestamp in seconds or milliseconds.",
                 "name": "value"
             },
             {
-                "description": "Display precision in the viewer's locale.",
+                "description": "Astryx display format. Defaults to auto: relative for recent timestamps and date_time for older ones. Use date for a readable date such as Sep 30, 2026.",
                 "name": "format"
             },
             {
@@ -1405,8 +1405,8 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "if"
             }
         ],
-        "description": "Displays a timestamp in the viewer's locale at the requested precision.",
-        "example": "<Timestamp value=\"$item.created_at\" format=\"second\" />",
+        "description": "Displays a timestamp using Astryx's locale-aware date, time, and relative formats. Use Text for surrounding typography.",
+        "example": "<Timestamp value=\"$item.created_at\" format=\"date\" />",
         "name": "Timestamp",
         "category": "Display",
         "lastUpdated": "2026-09-30",

@@ -2,36 +2,33 @@ import { z } from 'zod';
 import type { Props } from '../types';
 import { useXmlRuntime } from '../core/context';
 import { resolveXmlProps } from '../core/props';
+import * as AstryxTimestamp from '@astryxdesign/core/Timestamp';
 
 const timestampPropsSchema = z.object({
     value: z.union([z.string().min(1), z.number().finite()]),
-    format: z.enum(['year', 'month', 'date', 'minute', 'second']).default('second'),
+    format: z
+        .enum([
+            'relative',
+            'relative_short',
+            'auto',
+            'date',
+            'date_long',
+            'date_weekday',
+            'date_time',
+            'time',
+            'system_date',
+            'system_date_time',
+            'system_time',
+            'unix_seconds',
+        ])
+        .default('auto'),
 });
 
-const formatOptions = {
-    year: { year: 'numeric' },
-    month: { year: 'numeric', month: 'numeric' },
-    date: { year: 'numeric', month: 'numeric', day: 'numeric' },
-    minute: { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' },
-    second: {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-    },
-} satisfies Record<z.output<typeof timestampPropsSchema>['format'], Intl.DateTimeFormatOptions>;
-
-/** Displays a timestamp in the viewer's locale at the requested precision. */
+/** Displays a timestamp using Astryx's locale-aware formats. */
 export function Timestamp({ props }: Props) {
     const { scope: ctx } = useXmlRuntime();
     const { value, format } = resolveXmlProps(props, ctx, timestampPropsSchema, ['value']);
 
-    // Preserve the full instant in markup while displaying the requested precision.
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return null;
-    const iso = date.toISOString();
-
-    return <time dateTime={iso}>{new Intl.DateTimeFormat(undefined, formatOptions[format]).format(date)}</time>;
+    // Delegate parsing, formatting, and semantic markup to the shared component.
+    return <AstryxTimestamp.Timestamp value={value} format={format} type="inherit" color="inherit" />;
 }

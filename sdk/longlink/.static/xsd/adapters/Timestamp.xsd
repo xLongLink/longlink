@@ -3,20 +3,27 @@
   <xsd:complexType name="TimestampType">
     <xsd:attribute name="value" type="xsd:string" use="required">
       <xsd:annotation>
-        <xsd:documentation>Timestamp string or numeric epoch milliseconds.</xsd:documentation>
+        <xsd:documentation>ISO 8601 timestamp string or numeric Unix timestamp in seconds or milliseconds.</xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="format" default="second">
+    <xsd:attribute name="format" default="auto">
       <xsd:annotation>
-        <xsd:documentation>Display precision in the viewer's locale.</xsd:documentation>
+        <xsd:documentation>Astryx display format. Defaults to auto: relative for recent timestamps and date_time for older ones. Use date for a readable date such as Sep 30, 2026.</xsd:documentation>
       </xsd:annotation>
       <xsd:simpleType>
         <xsd:restriction base="xsd:string">
-          <xsd:enumeration value="year"/>
-          <xsd:enumeration value="month"/>
+          <xsd:enumeration value="relative"/>
+          <xsd:enumeration value="relative_short"/>
+          <xsd:enumeration value="auto"/>
           <xsd:enumeration value="date"/>
-          <xsd:enumeration value="minute"/>
-          <xsd:enumeration value="second"/>
+          <xsd:enumeration value="date_long"/>
+          <xsd:enumeration value="date_weekday"/>
+          <xsd:enumeration value="date_time"/>
+          <xsd:enumeration value="time"/>
+          <xsd:enumeration value="system_date"/>
+          <xsd:enumeration value="system_date_time"/>
+          <xsd:enumeration value="system_time"/>
+          <xsd:enumeration value="unix_seconds"/>
         </xsd:restriction>
       </xsd:simpleType>
     </xsd:attribute>
@@ -24,10 +31,10 @@
   </xsd:complexType>
   <xsd:element name="Timestamp" type="TimestampType">
     <xsd:annotation>
-      <xsd:documentation>Displays a timestamp in the viewer's locale at the requested precision.</xsd:documentation>
+      <xsd:documentation>Displays a timestamp using Astryx's locale-aware date, time, and relative formats. Use Text for surrounding typography.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="timestamp" category="Display" lastUpdated="2026-09-30"/>
-        <longlink:example>&lt;Timestamp value="$item.created_at" format="second" /&gt;</longlink:example>
+        <longlink:example>&lt;Timestamp value="$item.created_at" format="date" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>
