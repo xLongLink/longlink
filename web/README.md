@@ -2,9 +2,14 @@
 
 <img src="../banner.png" alt="LongLink banner" />
 
+</div>
+
+<br />
+
+# Frontend
+
 Frontend runtime, docs, and platform UI for LongLink.
 
-</div>
 
 <br/>
 

@@ -10,28 +10,32 @@
 
 </div>
 
+> [!WARNING]
+> LongLink is under active development. APIs may change before 1.0.
+
+
 <br/>
 
 ## Getting started
 
 ```bash
-mkdir my-solution && cd my-solution
-uvx --from longlink longlink init
+uvx --from longlink longlink init --folder .
+uv sync --group dev
+uv run longlink dev
 ```
-
-`init` prompts for a folder; press Enter to use the current directory. Use `--folder my-solution` to create a new directory, or `--folder .` to target the current one without a prompt. Existing files are preserved; initialization stops if a scaffold file would conflict.
 
 > See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink Solution.
 
-Inspect the XML component catalog and individual component references from the CLI:
+<br />
+
+## Documentation
+
+Check [LongLink Documentation](https://www.longlink.dev/docs/sdk/) or use the `cli` (designed for agents):
 
 ```bash
-longlink docs ui
-longlink docs ui --category Actions
-longlink docs ui --component Button
+longlink docs --help
 ```
 
-The web and CLI references read the bundled XSD documentation metadata. Category order is declared in `longlink/.static/xsd/schema.xsd`: Runtime, Actions, Content, Form, and Layouts. Each documented component declares its category in `<longlink:docs>`, and runtime concepts use `<longlink:topic>`. The Views page groups preview cards by category, with each card linking to its reference page.
 
 <br/>
 
@@ -40,10 +44,6 @@ The web and CLI references read the bundled XSD documentation metadata. Category
 ```bash
 make sdk
 ```
-
-This builds the SDK web bundle, initializes `sdk/dev` when absent, links the project
-to the local SDK source, and starts its development service. Existing local edits are
-preserved.
 
 > Requirements: Python 3.12 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
 
@@ -56,9 +56,6 @@ uv sync --group dev
 uv run pytest --cov --cov-report=term-missing
 ```
 
-## Database TLS
-
-Production PostgreSQL connections require `LONGLINK_DATABASE_CERTIFICATE` containing a PEM CA certificate. The SDK verifies both the server certificate chain and hostname. Development and testing continue to use SQLite and ignore PostgreSQL settings.
 
 <br/>
 <br/>

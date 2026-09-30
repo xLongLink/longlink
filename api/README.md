@@ -4,6 +4,11 @@
 
 </div>
 
+> [!WARNING]
+> LongLink is under active development. APIs may change before 1.0.
+
+<br />
+
 ## LongLink Platform API
 
 LongLink provides the shared foundation for running Solutions.
@@ -17,16 +22,10 @@ deployments, and supporting infrastructure.
 The API is published as a Linux AMD64 container image on GitHub Container
 Registry.
 
-| Name   | Image                        | Tag                               | Published                            |
-| ------ | ---------------------------- | --------------------------------- | ------------------------------------ |
-| Stable | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>`        | When the matching Git tag is pushed. |
-| Beta   | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>-beta.N` | When the matching Git tag is pushed. |
-
-Beta tags also publish a matching OCI Compute chart and create a GitHub
-pre-release. Neither publishing path deploys the image; deployments are pinned
-and reviewed in [LinkLong](https://github.com/xLongLink/linklong).
-The former mutable `nightly` tag is no longer published; existing GHCR images
-and the sample repository's old nightly branch are not deleted by this change.
+| Name   | Image                        | Tag                               |
+| ------ | ---------------------------- | --------------------------------- |
+| Stable | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>`        |
+| Beta   | `ghcr.io/xlonglink/longlink` | `v<major>.<minor>.<patch>-beta.N` |
 
 <br />
 

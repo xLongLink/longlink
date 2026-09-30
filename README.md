@@ -19,6 +19,7 @@ Build your Solution as a standard FastAPI application, using SQLModel for data a
 
 The result is software you can develop, test, version, review, and change using normal engineering tools.
 
+
 > [!WARNING]
 > LongLink is under active development. APIs may change before 1.0.
 
@@ -62,9 +63,7 @@ longlink dev
 
 ## How it works
 
-
-
-A Solution keeps the application-specific parts of your software explicit and together:
+A Solution keeps the application-specific code explicit and together:
 
 ```
 src/
@@ -76,14 +75,17 @@ src/
 main.py           # Application entry point
 ```
 
-`LongLink()` is a FastAPI application with the common runtime services already installed. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database session, and storage without requiring each Solution to configure those services independently.
+`LongLink()` is a FastAPI application with the common runtime already configured. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database, and storage.
 
-The same application code runs across testing, development, and production. Local services are used while developing and testing, while the corresponding managed services are provided when running on the LongLink Platform.
+The same code runs in development, testing, and production. When deployed, LongLink packages the Solution as a standard container image.
 
-When a Solution is ready to deploy, LongLink packages it with its locked dependencies, configuration requirements, and metadata into a standard container image.
+![Invoice approvals in the sample Solution](sample.png)
+
 
 > [!NOTE]
-> LongLink introduces as little new surface area as possible. It brings established tools and standards together into a consistent environment, reducing the setup and integration work normally required for each application.
+> LongLink adds as little new surface area as possible, bringing established tools together into a consistent environment.
+
+
 
 <br />
 
@@ -123,7 +125,7 @@ On Linux, install the development requirements with:
 make apt   # Ubuntu, Debian, ...
 ```
 
-Work on the LongLink Platform:
+Work on the LongLink Platform, the default admin credentials are `admin@admin.com` and `admin`:
 
 ```bash
 make up     # Create local infrastructure
@@ -135,7 +137,7 @@ make web    # In another terminal
 Work on the LongLink SDK runtime:
 
 ```bash
-make sdk
+make sdk    # Run a standalone demo application locally
 ```
 
 Clean up:
