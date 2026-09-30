@@ -23,24 +23,35 @@ export function Navbar() {
                         }
                         label="Main navigation"
                         centerContent={
-                            <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
-                                <Link href="/docs/" color="secondary" isStandalone weight="medium">
-                                    Documentation
-                                </Link>
-                                <Link href="/pricing/" color="secondary" isStandalone weight="medium">
-                                    Pricing
-                                </Link>
+                            <>
                                 <Link
-                                    as="a"
+                                    className="sm:hidden"
+                                    href="/docs/"
                                     color="secondary"
-                                    href="https://github.com/xLongLink/longlink"
-                                    isExternalLink
                                     isStandalone
                                     weight="medium"
                                 >
-                                    GitHub
+                                    Docs
                                 </Link>
-                            </Stack>
+                                <Stack className="hidden sm:flex" direction="horizontal" gap={4} vAlign="center">
+                                    <Link href="/docs/" color="secondary" isStandalone weight="medium">
+                                        Documentation
+                                    </Link>
+                                    <Link href="/pricing/" color="secondary" isStandalone weight="medium">
+                                        Pricing
+                                    </Link>
+                                    <Link
+                                        as="a"
+                                        color="secondary"
+                                        href="https://github.com/xLongLink/longlink"
+                                        isExternalLink
+                                        isStandalone
+                                        weight="medium"
+                                    >
+                                        GitHub
+                                    </Link>
+                                </Stack>
+                            </>
                         }
                     />
                 </Card>

@@ -84,7 +84,7 @@ export default function Home() {
                                 color="secondary"
                                 display="block"
                             >
-                                <Text display="block" type="inherit">
+                                <Text className="max-sm:hidden" display="block" type="inherit">
                                     The narrative has changed, but you are still buying the old story
                                 </Text>
                                 <Text className="tracking-[-0.012em]" display="block" type="inherit">
@@ -114,7 +114,13 @@ export default function Home() {
             <Section className="relative z-20 bg-body" padding={6} paddingBlock={6} variant="transparent">
                 <Stack className="mx-auto text-center" gap={6} hAlign="center" maxWidth={1000} width="100%">
                     <Stack gap={2} hAlign="center">
-                        <Heading justify="center" level={2} textWrap="balance" type="display-2">
+                        <Heading
+                            className="max-sm:hidden"
+                            justify="center"
+                            level={2}
+                            textWrap="balance"
+                            type="display-2"
+                        >
                             Design
                             <ArrowRight
                                 aria-hidden="true"
@@ -132,7 +138,12 @@ export default function Home() {
                             />
                             Improve
                         </Heading>
-                        <Text as="p" className="pt-1 text-lg sm:text-xl" color="secondary" textWrap="pretty">
+                        <Text
+                            as="p"
+                            className="pt-1 text-2xl max-sm:text-left max-sm:text-primary sm:text-xl"
+                            color="secondary"
+                            textWrap="pretty"
+                        >
                             <Text display="block" type="inherit">
                                 The complete business process lifecycle, defined as code
                             </Text>
