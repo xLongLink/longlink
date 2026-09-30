@@ -21,10 +21,6 @@ export default [
                 ]),
             ]),
             ...prefix('api', [index('./routes/docs/api/Index.tsx')]),
-            ...prefix('self-hosted', [
-                route('release', './routes/docs/self-hosted/Release.tsx'),
-                route('compute', './routes/docs/self-hosted/Compute.tsx'),
-            ]),
             route('*', '../components/layouts/NotFound.tsx', { id: 'docs-not-found' }),
         ]),
     ]),

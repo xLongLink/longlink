@@ -1,6 +1,5 @@
 import { componentDocumentation, documentationCategories } from '../lib/generated/documentation';
 import {
-    Cpu,
     Database,
     FileCode2,
     FlaskConical,
@@ -41,13 +40,6 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
     {
         title: 'Platform',
         pages: [{ path: '/docs/api', label: 'Overview', icon: ShieldCheck }],
-    },
-    {
-        title: 'Self-hosted',
-        pages: [
-            { path: '/docs/self-hosted/release', label: 'Release', icon: Rocket },
-            { path: '/docs/self-hosted/compute', label: 'Compute', icon: Cpu },
-        ],
     },
 ];
 

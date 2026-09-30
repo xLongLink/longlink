@@ -3,6 +3,7 @@ import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Section } from '@astryxdesign/core/Section';
 import { Building2, UserRound, UsersRound } from 'lucide-react';
@@ -52,9 +53,7 @@ export default function Pricing() {
                                         hAlign="center"
                                         width="100%"
                                     >
-                                        <Text hasCapsize type="display-3" weight="semibold">
-                                            Try it now
-                                        </Text>
+                                        <Button href="/user/organizations" label="Try it now" variant="primary" />
                                     </Stack>
                                 </Stack>
                             </Card>
