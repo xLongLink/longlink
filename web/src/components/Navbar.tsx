@@ -27,9 +27,6 @@ export function Navbar() {
                                 <Link href="/docs/" color="secondary" isStandalone weight="medium">
                                     Documentation
                                 </Link>
-                                <Link href="/blog/" color="secondary" isStandalone weight="medium">
-                                    Blog
-                                </Link>
                                 <Link href="/pricing/" color="secondary" isStandalone weight="medium">
                                     Pricing
                                 </Link>

@@ -9,7 +9,7 @@ const article = {
     description: 'Configure environments for local development and deployed LongLink services.',
     toc: [
         { id: 'environments', label: 'Environments', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'example', label: 'Example', level: 2 },
     ],
     lastUpdated: '2026-09-26',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Environments.tsx',
@@ -43,8 +43,8 @@ export default function DocsArticleRoute() {
                         validation catches missing or invalid values before the application starts running.
                     </Text>
                 </Stack>
-                <Heading id="usage" level={2}>
-                    Usage
+                <Heading id="example" level={2}>
+                    Example
                 </Heading>
                 <CodeBlock
                     code={`from pydantic import Field

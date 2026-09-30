@@ -64,9 +64,8 @@ export default function DocsArticleRoute() {
                     <Link href="https://docs.pydantic.dev/latest/" hasUnderline isExternalLink type="inherit">
                         Pydantic
                     </Link>{' '}
-                    for validation. Define your processes, rules, and workflows in Python.
-                    <br />
-                    Focus on the core logic while LongLink handles the infrastructure.
+                    for validation. Define your processes, rules, and workflows in Python. Focus on the core logic while
+                    LongLink handles the infrastructure.
                 </Text>
                 <Heading id="create-a-solution" level={2}>
                     Create a Solution

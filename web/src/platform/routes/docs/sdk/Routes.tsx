@@ -10,7 +10,7 @@ const article = {
     description: 'Define API routes in a LongLink project.',
     toc: [
         { id: 'routes', label: 'Routes', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'example', label: 'Example', level: 2 },
     ],
     lastUpdated: '2026-09-28',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Routes.tsx',
@@ -41,8 +41,8 @@ export default function DocsArticleRoute() {
                         agents.
                     </Text>
                 </Stack>
-                <Heading id="usage" level={2}>
-                    Usage
+                <Heading id="example" level={2}>
+                    Example
                 </Heading>
                 <CodeBlock
                     code={`from longlink import Context, LongLink

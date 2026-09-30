@@ -10,7 +10,7 @@ const article = {
     description: 'Use database services in a LongLink project.',
     toc: [
         { id: 'database', label: 'Database', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'example', label: 'Example', level: 2 },
         { id: 'users-management', label: 'Users management', level: 2 },
         { id: 'migrations', label: 'Migrations', level: 2 },
     ],
@@ -42,8 +42,8 @@ export default function DocsArticleRoute() {
                         organization&apos;s database when deployed on the LongLink platform.
                     </Text>
                 </Stack>
-                <Heading id="usage" level={2}>
-                    Usage
+                <Heading id="example" level={2}>
+                    Example
                 </Heading>
                 <CodeBlock
                     code={`from uuid import UUID, uuid4
