@@ -198,12 +198,6 @@ export default function Home() {
                     <Stack className="flex-wrap" direction="horizontal" gap={3} hAlign="center" vAlign="center">
                         <Button
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="/blog/introducing-longlink/"
-                            label="Introducing LongLink"
-                            variant="secondary"
-                        />
-                        <Button
-                            endContent={<ArrowRight aria-hidden="true" size={16} />}
                             href="https://github.com/xLongLink/longlink"
                             label="Leave a star on GitHub"
                             rel="noopener noreferrer"

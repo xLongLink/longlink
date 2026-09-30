@@ -2,14 +2,7 @@ import { adminPages } from './navigation';
 import { index, layout, prefix, route, type RouteConfig } from '@react-router/dev/routes';
 
 export default [
-    layout('./layouts/Page.tsx', [
-        index('./routes/Index.tsx'),
-        route('pricing', './routes/Pricing.tsx'),
-        ...prefix('blog', [
-            index('./routes/blog/Index.tsx'),
-            route('introducing-longlink', './routes/blog/IntroducingLongLink.tsx'),
-        ]),
-    ]),
+    layout('./layouts/Page.tsx', [index('./routes/Index.tsx'), route('pricing', './routes/Pricing.tsx')]),
     ...prefix('docs', [
         layout('./layouts/Documentation.tsx', [
             index('./routes/docs/Index.tsx'),

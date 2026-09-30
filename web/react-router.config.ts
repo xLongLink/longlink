@@ -12,24 +12,12 @@ if (requestedMode === 'api' || requestedMode === 'sdk') {
 }
 
 const isSolution = process.env.LONGLINK_WEB_TARGET === 'sdk';
-const prerenderPaths = [
-    '/',
-    '/blog',
-    '/blog/introducing-longlink',
-    '/login',
-    '/pricing',
-    '/terms',
-    '/impressum',
-    '/privacy',
-    ...documentationPaths,
-];
+const prerenderPaths = ['/', '/login', '/pricing', '/terms', '/impressum', '/privacy', ...documentationPaths];
 const publicPagePaths = prerenderPaths.filter((pagePath) => pagePath !== '/login');
 
 /** Sitemap priorities signal the important pages to search engines. */
 const publicPagePriorities: Record<string, number> = {
     '/': 1.0,
-    '/blog/introducing-longlink': 0.9,
-    '/blog': 0.8,
     '/docs': 0.8,
     '/pricing': 0.6,
 };
