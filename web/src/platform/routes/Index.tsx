@@ -217,10 +217,8 @@ export default function Home() {
                         <Button
                             className="w-full"
                             endContent={<ArrowRight aria-hidden="true" size={16} />}
-                            href="https://github.com/xLongLink/longlink"
+                            href="/user/organizations"
                             label="Get Started"
-                            rel="noopener noreferrer"
-                            target="_blank"
                             variant="primary"
                         />
                     </Grid>
