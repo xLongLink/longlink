@@ -30,8 +30,8 @@ You are working on a LongLink Solution project:
 ## XML views
 
 - A View uses XML, not HTML.
-- Run `longlink docs` to discover the supported XML components.
-- Run `longlink docs --component <component>` before using a component to inspect its attributes, children, and examples.
+- Run `longlink docs ui` to discover the supported XML components and runtime concepts by category.
+- Run `longlink docs ui --component <component>` before using a component to inspect its attributes, children, and examples.
 - Do not invent XML elements or attributes that are absent from the component documentation.
 
 ## Python Guidelines

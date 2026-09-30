@@ -20,7 +20,7 @@ def _schemas() -> tuple[etree._Element, ...]:
     parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
     root = ROOT / ".static" / "xsd"
     schema = etree.parse(str(root / "schema.xsd"), parser).getroot()
-    return tuple(
+    return (schema,) + tuple(
         etree.parse(str(root / include.attrib["schemaLocation"]), parser).getroot() for include in schema.iterfind(f"{XSD}include")
     )
 
@@ -50,7 +50,9 @@ def _element_lines(element: etree._Element, schemas: tuple[etree._Element, ...])
 
     # Resolve descriptions and inherited runtime attributes.
     type_node = _complex_type(element, schemas)
-    description = _text(element, f"{XSD}annotation/{XSD}documentation")
+    description = (
+        _text(element, f"{DOCS}description") if element.tag == f"{DOCS}topic" else _text(element, f"{XSD}annotation/{XSD}documentation")
+    )
     attributes = type_node.findall(f"{XSD}attribute") if type_node is not None else []
     if type_node is not None and type_node.find(f"{XSD}attributeGroup") is not None:
         groups = (group for schema in schemas for group in schema.iterfind(f"{XSD}attributeGroup"))
@@ -123,7 +125,7 @@ def _helpers(
     return list(helpers.values())
 
 
-def docs_command(component: str | None = None) -> None:
+def docs_command(component: str | None = None, category: str | None = None) -> None:
     """List XML components or show documentation for one component."""
 
     # Build the catalog from top-level elements carrying docs metadata.
@@ -132,21 +134,41 @@ def docs_command(component: str | None = None) -> None:
     metadata_path = f"{XSD}annotation/{XSD}appinfo/{DOCS}docs"
     documented = [(element, metadata) for element in elements.values() if (metadata := element.find(metadata_path)) is not None]
 
+    # Read runtime topics and category order from the same XML metadata as the web generator.
+    info_path = f"{XSD}annotation/{XSD}appinfo"
+    topics = [topic for schema in schemas for topic in schema.iterfind(f"{info_path}/{DOCS}topic")]
+    documented.extend((topic, topic) for topic in topics)
+    categories = [entry.get("name", "") for schema in schemas for entry in schema.iterfind(f"{info_path}/{DOCS}category")]
+    for element, metadata in documented:
+        if metadata.get("category") not in categories:
+            raise CliError(f"Unknown documentation category for {element.get('name')}: {metadata.get('category')}")
+
+    # Validate an optional category at the CLI boundary.
+    if category is not None:
+        match_category = next((name for name in categories if name.casefold() == category.casefold()), None)
+        if match_category is None:
+            raise CliError(f"Unknown category: {category}. Available categories: {', '.join(categories)}.")
+        documented = [(element, metadata) for element, metadata in documented if metadata.get("category") == match_category]
+
     # A missing component prints the grouped discovery catalog.
     if component is None:
         lines = ["LongLink XML components"]
         documented.sort(key=lambda entry: entry[0].get("name", ""))
-        categories: dict[str, list[etree._Element]] = {}
-        for element, metadata in documented:
-            categories.setdefault(metadata.get("category", ""), []).append(element)
-        for category in sorted(categories):
+        for category_name in categories:
+            entries = [element for element, metadata in documented if metadata.get("category") == category_name]
+            if not entries:
+                continue
             lines.append("")
-            lines.append(category)
-            for element in categories[category]:
-                description = _text(element, f"{XSD}annotation/{XSD}documentation")
+            lines.append(category_name)
+            for element in entries:
+                description = (
+                    _text(element, f"{DOCS}description")
+                    if element.tag == f"{DOCS}topic"
+                    else _text(element, f"{XSD}annotation/{XSD}documentation")
+                )
                 lines.append(f"- {element.get('name')} - {description}")
         lines.append("")
-        lines.append("Run `longlink docs --component <component>` for attributes and examples.")
+        lines.append("Run `longlink docs ui --component <component>` for attributes and examples.")
         typer.echo("\n".join(lines))
         return
 
@@ -165,7 +187,9 @@ def docs_command(component: str | None = None) -> None:
 
     # Render the component, its helper elements, and its authored example.
     element, metadata = match
-    example = _text(element, f"{XSD}annotation/{XSD}appinfo/{DOCS}example")
+    example = (
+        _text(element, f"{DOCS}example") if element.tag == f"{DOCS}topic" else _text(element, f"{XSD}annotation/{XSD}appinfo/{DOCS}example")
+    )
     lines = _element_lines(element, schemas)
     lines[0] = f"{lines[0]} [{metadata.get('category', '')}]"
     helpers = _helpers(element, example, elements, schemas)
