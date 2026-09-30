@@ -37,6 +37,7 @@ export default function DocsArticleRoute() {
             { id: 'introduction', label: 'Introduction', level: 1 },
             { id: 'example', label: 'Example', level: 2 },
             ...component.nested.map((nested) => ({ id: nested.name.toLowerCase(), label: nested.name, level: 2 })),
+            { id: 'cli', label: 'Cli', level: 2 },
         ],
         editUrl: `https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/${component.source}`,
         title: `${component.name} | LongLink Documentation`,
@@ -64,6 +65,15 @@ export default function DocsArticleRoute() {
                         {nested.example ? <CodeBlock code={nested.example} language="xml" /> : null}
                     </Stack>
                 ))}
+                <Heading id="cli" level={2}>
+                    Cli
+                </Heading>
+                <CodeBlock
+                    code={`longlink docs ui --component ${component.name}`}
+                    language="bash"
+                    hasLanguageLabel={false}
+                    isWrapped
+                />
             </Stack>
         </Article>
     );

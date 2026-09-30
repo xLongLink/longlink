@@ -1061,50 +1061,6 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [
             {
-                "description": "Zero-based position in the Stepper.",
-                "name": "step"
-            },
-            {
-                "description": "Short visible step label.",
-                "name": "label"
-            },
-            {
-                "description": "Supporting explanation for the step.",
-                "name": "description"
-            },
-            {
-                "description": "",
-                "name": "indicator"
-            },
-            {
-                "description": "",
-                "name": "status"
-            },
-            {
-                "description": "",
-                "name": "isDisabled"
-            },
-            {
-                "description": "",
-                "name": "isOptional"
-            },
-            {
-                "description": "Conditional rendering expression.",
-                "name": "if"
-            }
-        ],
-        "description": "Step identifies one logical point in a Stepper and may render its active content.",
-        "example": "<Step step=\"0\" label=\"Details\" description=\"Enter the required information.\" />",
-        "name": "Step",
-        "category": "Layouts",
-        "lastUpdated": "2026-09-22",
-        "nested": [],
-        "slug": "step",
-        "source": "adapters/Stepper.xsd"
-    },
-    {
-        "attributes": [
-            {
                 "description": "Zero-based active step index.",
                 "name": "activeStep"
             },
