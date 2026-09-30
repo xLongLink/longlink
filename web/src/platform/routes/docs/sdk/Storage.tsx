@@ -10,7 +10,7 @@ const article = {
     description: 'Store and manage files in a LongLink project.',
     toc: [
         { id: 'storage', label: 'Storage', level: 1 },
-        { id: 'usage', label: 'Usage', level: 2 },
+        { id: 'example', label: 'Example', level: 2 },
         { id: 'assets', label: 'Assets', level: 2 },
     ],
     lastUpdated: '2026-09-24',
@@ -41,8 +41,8 @@ export default function DocsArticleRoute() {
                         LongLink platform.
                     </Text>
                 </Stack>
-                <Heading id="usage" level={2}>
-                    Usage
+                <Heading id="example" level={2}>
+                    Example
                 </Heading>
                 <CodeBlock
                     code={`from longlink import Context

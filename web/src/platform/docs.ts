@@ -5,6 +5,7 @@ import {
     FileCode2,
     FlaskConical,
     Globe,
+    BookOpen,
     HardDrive,
     Package,
     Rocket,
@@ -20,6 +21,10 @@ type DocumentationPage = {
 };
 
 export const documentationSections: Array<{ title: string; pages: Array<DocumentationPage> }> = [
+    {
+        title: 'Introduction',
+        pages: [{ path: '/docs/introduction', label: 'Why LongLink', icon: BookOpen }],
+    },
     {
         title: 'Solutions',
         pages: [

@@ -35,7 +35,7 @@ export default function DocsArticleRoute() {
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
-            { id: 'usage', label: 'Usage', level: 2 },
+            { id: 'example', label: 'Example', level: 2 },
             ...component.nested.map((nested) => ({ id: nested.name.toLowerCase(), label: nested.name, level: 2 })),
         ],
         editUrl: `https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/${component.source}`,
@@ -50,8 +50,8 @@ export default function DocsArticleRoute() {
                 </Heading>
                 <Text as="p">{component.description}</Text>
                 {component.attributes.length > 0 ? <AttributeTable attributes={component.attributes} /> : null}
-                <Heading id="usage" level={2}>
-                    Usage
+                <Heading id="example" level={2}>
+                    Example
                 </Heading>
                 <CodeBlock code={component.example} language="xml" />
                 {component.nested.map((nested) => (
