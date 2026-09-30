@@ -1,6 +1,4 @@
-import { Info } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Menu } from '@/components/ui/Menu';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -9,6 +7,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Table } from '@astryxdesign/core/Table';
+import { Ellipsis, Info, X } from 'lucide-react';
 import { Link as RouterLink } from 'react-router';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -18,16 +18,20 @@ import { Switch } from '@astryxdesign/core/Switch';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Article } from '@/components/layouts/Article';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Timestamp } from '@astryxdesign/core/Timestamp';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { proportional, Table } from '@astryxdesign/core/Table';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { componentDocumentation, documentationCategories } from '@/lib/generated/documentation';
 
 /** Leaves inert, controlled previews unchanged. */
@@ -45,15 +49,47 @@ const previews: Record<string, ReactNode> = {
         </Stack>
     ),
     Link: <Link hasUnderline>Docs</Link>,
+    MoreMenu: (
+        <MoreMenu
+            icon={<Ellipsis aria-hidden="true" size={20} />}
+            items={[
+                { label: 'Edit', onClick: noop },
+                { label: 'Delete', variant: 'destructive', onClick: noop },
+            ]}
+        />
+    ),
     Avatar: <Avatar name="Ada Lovelace" size="lg" />,
-    Heading: <Heading level={3}>Orders</Heading>,
+    Heading: (
+        <Heading className="mt-0" level={3}>
+            Orders
+        </Heading>
+    ),
     Text: (
         <Text>
             Normal <b>bold</b> and <i>italic</i> text.
         </Text>
     ),
+    CodeBlock: (
+        <CodeBlock
+            code={'<Text>\n  Hello world\n</Text>'}
+            language="xml"
+            size="sm"
+            width="100%"
+            hasCopyButton={false}
+            hasLanguageLabel={false}
+            isWrapped
+        />
+    ),
     Icon: <Info aria-hidden="true" className="text-accent" size={20} />,
     Badge: <Badge label="Open" variant="info" />,
+    StatusBadge: (
+        <Stack direction="horizontal" align="center" gap={2} wrap="wrap">
+            <Badge label="Creating" variant="info" />
+            <Badge label="Failed" variant="error" />
+        </Stack>
+    ),
+    Timestamp: <Timestamp value="2026-09-30T12:00:00Z" format="date" color="primary" />,
+    ProgressBar: <ProgressBar className="w-full" label="Progress" value={60} hasValueLabel />,
     Divider: <Divider label="Or" />,
     FileViewer: (
         <Stack gap={2} align="center" width="100%">
@@ -64,9 +100,28 @@ const previews: Record<string, ReactNode> = {
     ),
     CheckboxInput: <CheckboxInput label="Approved" size="sm" value onChange={noop} />,
     FileInput: (
-        <FileInput accept=".pdf" isLabelHidden label="Attachment" placeholder="File" value={null} onChange={noop} />
+        <FileInput
+            accept=".pdf"
+            isLabelHidden
+            label="Attachment"
+            placeholder="File"
+            value={null}
+            width="100%"
+            onChange={noop}
+        />
     ),
-    NumberInput: <NumberInput isLabelHidden label="Quantity" min={1} size="sm" units="qty" value={3} onChange={noop} />,
+    NumberInput: (
+        <NumberInput
+            isLabelHidden
+            label="Quantity"
+            min={1}
+            size="sm"
+            units="qty"
+            value={3}
+            width="100%"
+            onChange={noop}
+        />
+    ),
     RadioList: (
         <RadioList label="Plan" orientation="horizontal" size="sm" value="team" onChange={noop} isLabelHidden>
             <RadioListItem label="Solo" value="solo" />
@@ -82,14 +137,15 @@ const previews: Record<string, ReactNode> = {
             ]}
             size="sm"
             value="open"
+            width="100%"
             onChange={noop}
             isLabelHidden
         />
     ),
-    Slider: <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />,
+    Slider: <Slider label="Progress" value={60} valueDisplay="none" width="100%" onChange={noop} isLabelHidden />,
     Switch: <Switch label="Enabled" size="sm" value onChange={noop} />,
     TextArea: <TextArea isLabelHidden label="Notes" rows={2} size="sm" value="Review complete" onChange={noop} />,
-    TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" onChange={noop} />,
+    TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" width="100%" onChange={noop} />,
     Card: <Card elevation="low">Lorem ipsum dolor sit amet.</Card>,
     Grid: (
         <Grid columns={2} gap={2}>
@@ -100,17 +156,12 @@ const previews: Record<string, ReactNode> = {
         </Grid>
     ),
     Menu: (
-        <Menu
-            sections={[
-                {
-                    title: 'Settings',
-                    entries: [
-                        { kind: 'item', id: 'general', label: 'General' },
-                        { kind: 'item', id: 'workflow', label: 'Workflow' },
-                    ],
-                },
-            ]}
-        />
+        <SideNav className="w-full">
+            <SideNavSection title="Settings">
+                <SideNavItem label="General" isSelected />
+                <SideNavItem label="Workflow" />
+            </SideNavSection>
+        </SideNav>
     ),
     Stack: (
         <Stack align="center" gap={2}>
@@ -125,10 +176,30 @@ const previews: Record<string, ReactNode> = {
             <Tab label="Activity" value="activity" />
         </TabList>
     ),
+    Stepper: (
+        <Stepper activeStep={1} density="compact" orientation="vertical">
+            <Step step={0} label="Details" />
+            <Step step={1} label="Review" />
+            <Step step={2} label="Complete" />
+        </Stepper>
+    ),
     Dialog: (
-        <Dialog aria-label="Dialog preview" isInline isOpen width="100%" onOpenChange={noop}>
-            <Stack gap={3}>
-                <Heading level={4}>Edit order</Heading>
+        <Dialog
+            aria-label="Dialog preview"
+            isInline
+            isOpen
+            maxHeight="100%"
+            padding={2}
+            width="100%"
+            onOpenChange={noop}
+        >
+            <Stack gap={2}>
+                <Stack direction="horizontal" align="center" justify="between" gap={2}>
+                    <Heading className="mt-0" level={4}>
+                        Edit order
+                    </Heading>
+                    <X aria-hidden="true" className="shrink-0 text-secondary" size={16} />
+                </Stack>
                 <Text>Content</Text>
                 <Button label="Close" size="sm" variant="ghost" onClick={noop} />
             </Stack>
@@ -139,8 +210,8 @@ const previews: Record<string, ReactNode> = {
             data={[{ item: 'Order', status: 'Open' }]}
             density="compact"
             columns={[
-                { key: 'item', header: 'Item', width: proportional(1) },
-                { key: 'status', header: 'Status', width: proportional(1) },
+                { key: 'item', header: 'Item' },
+                { key: 'status', header: 'Status' },
             ]}
         />
     ),
@@ -193,7 +264,7 @@ export default function DocsArticleRoute() {
                                 .map((component) => (
                                     <Stack key={component.slug} className="relative" gap={2}>
                                         <Card aria-hidden="true" inert padding={3} variant="muted">
-                                            <Center className="min-h-40 scale-90" width="100%">
+                                            <Center className="h-40 scale-90" width="100%">
                                                 {previews[component.name] ?? <Code>{`<${component.name} />`}</Code>}
                                             </Center>
                                         </Card>
