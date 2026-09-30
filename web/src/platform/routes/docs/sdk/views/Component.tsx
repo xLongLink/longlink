@@ -31,7 +31,7 @@ export default function DocsArticleRoute() {
     }
 
     const article = {
-        description: `Reference documentation for the ${component.name} XML component in LongLink Views.`,
+        description: component.description,
         lastUpdated: component.lastUpdated,
         toc: [
             { id: 'introduction', label: 'Introduction', level: 1 },
@@ -39,7 +39,7 @@ export default function DocsArticleRoute() {
             ...component.nested.map((nested) => ({ id: nested.name.toLowerCase(), label: nested.name, level: 2 })),
         ],
         editUrl: `https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/${component.source}`,
-        title: `${component.name} XML Component | LongLink Documentation`,
+        title: `${component.name} | LongLink Documentation`,
     };
 
     return (
@@ -49,7 +49,7 @@ export default function DocsArticleRoute() {
                     {component.name}
                 </Heading>
                 <Text as="p">{component.description}</Text>
-                <AttributeTable attributes={component.attributes} />
+                {component.attributes.length > 0 ? <AttributeTable attributes={component.attributes} /> : null}
                 <Heading id="usage" level={2}>
                     Usage
                 </Heading>

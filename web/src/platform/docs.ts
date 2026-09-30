@@ -1,4 +1,4 @@
-import { componentDocumentation } from '../lib/generated/documentation';
+import { componentDocumentation, documentationCategories } from '../lib/generated/documentation';
 import {
     Cpu,
     Database,
@@ -49,10 +49,12 @@ export const documentationSections: Array<{ title: string; pages: Array<Document
 // Keep static tutorials and generated component references in their published reading order.
 const viewDocumentationPaths = [
     '/docs/sdk/views',
-    '/docs/sdk/views/bindings',
-    '/docs/sdk/views/expressions',
-    ...componentDocumentation.map(({ slug }) => `/docs/sdk/views/${slug}`),
-].sort();
+    ...documentationCategories.flatMap((category) =>
+        componentDocumentation
+            .filter((component) => component.category === category.name)
+            .map(({ slug }) => `/docs/sdk/views/${slug}`)
+    ),
+];
 
 export const documentationPaths = documentationSections.flatMap(({ pages }) =>
     pages.flatMap(({ path }) => (path === '/docs/sdk/views' ? viewDocumentationPaths : path))

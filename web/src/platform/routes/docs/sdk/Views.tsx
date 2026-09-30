@@ -1,5 +1,5 @@
 import { Info } from 'lucide-react';
-import { Icon } from '@/components/ui/Icon';
+import type { ReactNode } from 'react';
 import { Menu } from '@/components/ui/Menu';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
@@ -9,7 +9,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Table } from '@astryxdesign/core/Table';
 import { Link as RouterLink } from 'react-router';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -26,67 +25,139 @@ import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { proportional, Table } from '@astryxdesign/core/Table';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { componentDocumentation } from '@/lib/generated/documentation';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
+import { componentDocumentation, documentationCategories } from '@/lib/generated/documentation';
 
+/** Leaves inert, controlled previews unchanged. */
 const noop = () => {};
 
-function SummaryCard({
-    children,
-    name,
-    padding = 0,
-    path,
-}: {
-    children: React.ReactNode;
-    name: string;
-    padding?: 0 | 3;
-    path?: string;
-}) {
-    const component = componentDocumentation.find((candidate) => candidate.name === name);
-    const destination = component ? `/docs/sdk/views/${component.slug}` : path;
-
-    if (destination === undefined) {
-        throw new Error(`Missing documentation route for ${name}`);
-    }
-
-    return (
-        <Stack className="relative" gap={2}>
-            <Card aria-hidden="true" inert padding={padding} variant="muted">
-                <Center
-                    className="scale-90"
-                    axis={padding === 3 ? 'vertical' : undefined}
-                    minHeight={padding === 3 ? 166 : 190}
-                >
-                    {children}
-                </Center>
-            </Card>
-            <Text type="supporting">{name}</Text>
-            <RouterLink
-                aria-label={`Open ${name} documentation`}
-                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                to={destination}
-            />
+// Preview artwork is presentation-only; XML determines catalog membership and categories.
+const previews: Record<string, ReactNode> = {
+    Expressions: <Code>{'${order.total > 0}'}</Code>,
+    Bindings: <Code>{'value="$form.name"'}</Code>,
+    Button: (
+        <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+            <Button label="Save" size="sm" variant="primary" />
+            <Button label="Edit" size="sm" />
+            <Button label="View" size="sm" variant="ghost" />
         </Stack>
-    );
-}
+    ),
+    Link: <Link hasUnderline>Docs</Link>,
+    Avatar: <Avatar name="Ada Lovelace" size="lg" />,
+    Heading: <Heading level={3}>Orders</Heading>,
+    Text: (
+        <Text>
+            Normal <b>bold</b> and <i>italic</i> text.
+        </Text>
+    ),
+    Icon: <Info aria-hidden="true" className="text-accent" size={20} />,
+    Badge: <Badge label="Open" variant="info" />,
+    Divider: <Divider label="Or" />,
+    FileViewer: (
+        <Stack gap={2} align="center" width="100%">
+            <Stack aria-hidden="true" className="h-20 w-full rounded-lg bg-neutral" />
+            <Stack aria-hidden="true" className="h-3 w-3/4 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-3 w-1/2 rounded-full bg-neutral" />
+        </Stack>
+    ),
+    CheckboxInput: <CheckboxInput label="Approved" size="sm" value onChange={noop} />,
+    FileInput: (
+        <FileInput accept=".pdf" isLabelHidden label="Attachment" placeholder="File" value={null} onChange={noop} />
+    ),
+    NumberInput: <NumberInput isLabelHidden label="Quantity" min={1} size="sm" units="qty" value={3} onChange={noop} />,
+    RadioList: (
+        <RadioList label="Plan" orientation="horizontal" size="sm" value="team" onChange={noop} isLabelHidden>
+            <RadioListItem label="Solo" value="solo" />
+            <RadioListItem label="Team" value="team" />
+        </RadioList>
+    ),
+    Selector: (
+        <Selector
+            label="Status"
+            options={[
+                { value: 'open', label: 'Open' },
+                { value: 'closed', label: 'Closed' },
+            ]}
+            size="sm"
+            value="open"
+            onChange={noop}
+            isLabelHidden
+        />
+    ),
+    Slider: <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />,
+    Switch: <Switch label="Enabled" size="sm" value onChange={noop} />,
+    TextArea: <TextArea isLabelHidden label="Notes" rows={2} size="sm" value="Review complete" onChange={noop} />,
+    TextInput: <TextInput isLabelHidden label="Name" size="sm" value="New order" onChange={noop} />,
+    Card: <Card elevation="low">Lorem ipsum dolor sit amet.</Card>,
+    Grid: (
+        <Grid columns={2} gap={2}>
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+        </Grid>
+    ),
+    Menu: (
+        <Menu
+            sections={[
+                {
+                    title: 'Settings',
+                    entries: [
+                        { kind: 'item', id: 'general', label: 'General' },
+                        { kind: 'item', id: 'workflow', label: 'Workflow' },
+                    ],
+                },
+            ]}
+        />
+    ),
+    Stack: (
+        <Stack align="center" gap={2}>
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+            <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
+        </Stack>
+    ),
+    Tabs: (
+        <TabList onChange={noop} value="overview">
+            <Tab label="Overview" value="overview" />
+            <Tab label="Activity" value="activity" />
+        </TabList>
+    ),
+    Dialog: (
+        <Dialog aria-label="Dialog preview" isInline isOpen width="100%" onOpenChange={noop}>
+            <Stack gap={3}>
+                <Heading level={4}>Edit order</Heading>
+                <Text>Content</Text>
+                <Button label="Close" size="sm" variant="ghost" onClick={noop} />
+            </Stack>
+        </Dialog>
+    ),
+    Table: (
+        <Table
+            data={[{ item: 'Order', status: 'Open' }]}
+            density="compact"
+            columns={[
+                { key: 'item', header: 'Item', width: proportional(1) },
+                { key: 'status', header: 'Status', width: proportional(1) },
+            ]}
+        />
+    ),
+};
 
 const article = {
     description: 'Build interfaces with LongLink Views and components.',
     toc: [
         { id: 'views', label: 'Views', level: 1 },
-        { id: 'longlink-runtime-concepts', label: 'Runtime', level: 2 },
-        { id: 'action', label: 'Actions', level: 2 },
-        { id: 'content', label: 'Content', level: 2 },
-        { id: 'form', label: 'Form', level: 2 },
-        { id: 'layout', label: 'Layout', level: 2 },
+        ...documentationCategories.map(({ name }) => ({ id: name.toLowerCase(), label: name, level: 2 })),
     ],
-    lastUpdated: '2026-09-24',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/routes/docs/sdk/Views.tsx',
+    lastUpdated: '2026-09-30',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/sdk/longlink/.static/xsd/schema.xsd',
     title: 'Views | LongLink Documentation',
 };
 
+/** Renders the UI catalog using categories from the XML schema. */
 export default function DocsArticleRoute() {
     return (
         <Article page={article}>
@@ -111,265 +182,32 @@ export default function DocsArticleRoute() {
                     language="xml"
                     title="welcome.xml"
                 />
-                <Stack gap={3}>
-                    <Heading id="longlink-runtime-concepts" level={2}>
-                        Runtime
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Expressions" path="/docs/sdk/views/expressions">
-                            <Code>{'${order.total > 0}'}</Code>
-                        </SummaryCard>
-                        <SummaryCard name="Bindings" path="/docs/sdk/views/bindings">
-                            <Code>{'value="$form.name"'}</Code>
-                        </SummaryCard>
-                        <SummaryCard name="State">
-                            <Code>{'<State />'}</Code>
-                        </SummaryCard>
-                        <SummaryCard name="Query">
-                            <Code>{'<Query />'}</Code>
-                        </SummaryCard>
-                        <SummaryCard name="Button effects" path="/docs/sdk/views/button">
-                            <Code>{'<Button label="Save"><Request ... /></Button>'}</Code>
-                        </SummaryCard>
-                        <SummaryCard name="For">
-                            <Code>{'<For />'}</Code>
-                        </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="action" level={2}>
-                        Actions
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Button">
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Button label="Save" size="sm" variant="primary" />
-                                <Button label="Edit" size="sm" />
-                                <Button label="View" size="sm" variant="ghost" />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Link">
-                            <Link href="/docs/sdk/views/link/" type="inherit" hasUnderline>
-                                Docs
-                            </Link>
-                        </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="content" level={2}>
-                        Content
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Avatar">
-                            <Avatar name="Ada Lovelace" size="lg" />
-                        </SummaryCard>
-                        <SummaryCard name="Heading">
-                            <Heading level={3}>Orders</Heading>
-                        </SummaryCard>
-                        <SummaryCard name="Text">
-                            <Text>
-                                Normal <b>bold</b> and <i>italic</i> text.
-                            </Text>
-                        </SummaryCard>
-                        <SummaryCard name="Icon">
-                            <Info aria-hidden="true" className="text-accent" size={20} />
-                        </SummaryCard>
-                        <SummaryCard name="Badge">
-                            <Badge label="Open" variant="info" />
-                        </SummaryCard>
-                        <SummaryCard name="Divider">
-                            <Stack justify="center" minHeight={150} width="100%">
-                                <Divider label="Or" />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="FileViewer">
-                            <Stack gap={2} align="center" width="100%">
-                                <Stack aria-hidden="true" className="h-20 w-full rounded-lg bg-neutral" />
-                                <Stack aria-hidden="true" className="h-3 w-3/4 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-3 w-1/2 rounded-full bg-neutral" />
-                            </Stack>
-                        </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="form" level={2}>
-                        Form
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="CheckboxInput">
-                            <CheckboxInput label="Approved" size="sm" value onChange={noop} />
-                        </SummaryCard>
-                        <SummaryCard name="FileInput">
-                            <Stack width={140}>
-                                <FileInput
-                                    accept=".pdf"
-                                    isLabelHidden
-                                    label="Attachment"
-                                    placeholder="File"
-                                    value={null}
-                                    onChange={noop}
-                                />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="NumberInput">
-                            <NumberInput
-                                isLabelHidden
-                                label="Quantity"
-                                min={1}
-                                size="sm"
-                                units="qty"
-                                value={3}
-                                width={130}
-                                onChange={noop}
-                            />
-                        </SummaryCard>
-                        <SummaryCard name="RadioList">
-                            <Stack width={170}>
-                                <RadioList
-                                    label="Plan"
-                                    orientation="horizontal"
-                                    size="sm"
-                                    value="team"
-                                    onChange={noop}
-                                    isLabelHidden
-                                >
-                                    <RadioListItem label="Solo" value="solo" />
-                                    <RadioListItem label="Team" value="team" />
-                                </RadioList>
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Selector">
-                            <Selector
-                                label="Status"
-                                options={[
-                                    { value: 'open', label: 'Open' },
-                                    { value: 'closed', label: 'Closed' },
-                                ]}
-                                size="sm"
-                                value="open"
-                                width={120}
-                                onChange={noop}
-                                isLabelHidden
-                            />
-                        </SummaryCard>
-                        <SummaryCard name="Slider">
-                            <Stack width={150}>
-                                <Slider label="Progress" value={60} valueDisplay="none" onChange={noop} isLabelHidden />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Switch">
-                            <Switch label="Enabled" size="sm" value onChange={noop} />
-                        </SummaryCard>
-                        <SummaryCard name="TextArea">
-                            <Stack width={150}>
-                                <TextArea
-                                    isLabelHidden
-                                    label="Notes"
-                                    rows={2}
-                                    size="sm"
-                                    value="Review complete"
-                                    onChange={noop}
-                                />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="TextInput">
-                            <TextInput
-                                isLabelHidden
-                                label="Name"
-                                size="sm"
-                                value="New order"
-                                width={140}
-                                onChange={noop}
-                            />
-                        </SummaryCard>
-                    </Grid>
-                </Stack>
-                <Stack gap={3}>
-                    <Heading id="layout" level={2}>
-                        Layout
-                    </Heading>
-                    <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
-                        <SummaryCard name="Card">
-                            <Card elevation="low">Lorem ipsum dolor sit amet.</Card>
-                        </SummaryCard>
-                        <SummaryCard name="Grid">
-                            <Grid columns={2} gap={2} justify="center">
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                            </Grid>
-                        </SummaryCard>
-                        <SummaryCard name="Menu" padding={3}>
-                            <Menu
-                                sections={[
-                                    {
-                                        title: 'Settings',
-                                        entries: [
-                                            { kind: 'item', id: 'general', label: 'General' },
-                                            { kind: 'item', id: 'workflow', label: 'Workflow' },
-                                        ],
-                                    },
-                                ]}
-                            />
-                        </SummaryCard>
-                        <SummaryCard name="Stack">
-                            <Stack align="center" gap={2} width="100%">
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                                <Stack aria-hidden="true" className="h-5 w-16 rounded-full bg-neutral" />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Tabs">
-                            <Stack gap={3}>
-                                <TabList onChange={noop} value="overview">
-                                    <Tab label="Overview" value="overview" />
-                                    <Tab label="Activity" value="activity" />
-                                </TabList>
-                                <Stack gap={3} />
-                            </Stack>
-                        </SummaryCard>
-                        <SummaryCard name="Dialog">
-                            <Dialog aria-label="Dialog preview" isInline isOpen width={160} onOpenChange={noop}>
-                                <Layout
-                                    className="relative"
-                                    header={
-                                        <LayoutHeader className="absolute right-1 top-1 z-10" padding={0}>
-                                            <Stack direction="horizontal" justify="end">
-                                                <Button
-                                                    icon={<Icon icon="close" size="sm" />}
-                                                    isIconOnly
-                                                    label="Close dialog"
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={noop}
-                                                />
-                                            </Stack>
-                                        </LayoutHeader>
-                                    }
-                                >
-                                    <LayoutContent padding={3}>
-                                        <Center minHeight={64} width="100%">
-                                            <Text>Content</Text>
-                                        </Center>
-                                    </LayoutContent>
-                                </Layout>
-                            </Dialog>
-                        </SummaryCard>
-                        <SummaryCard name="Table">
-                            <Stack width={170}>
-                                <Table
-                                    data={[{ item: 'Order', status: 'Open' }]}
-                                    density="compact"
-                                    columns={[
-                                        { key: 'item', header: 'Item' },
-                                        { key: 'status', header: 'Status' },
-                                    ]}
-                                />
-                            </Stack>
-                        </SummaryCard>
-                    </Grid>
-                </Stack>
+                {documentationCategories.map((category) => (
+                    <Stack key={category.name} gap={3}>
+                        <Heading id={category.name.toLowerCase()} level={2}>
+                            {category.name}
+                        </Heading>
+                        <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                            {componentDocumentation
+                                .filter((component) => component.category === category.name)
+                                .map((component) => (
+                                    <Stack key={component.slug} className="relative" gap={2}>
+                                        <Card aria-hidden="true" inert padding={3} variant="muted">
+                                            <Center className="min-h-40 scale-90" width="100%">
+                                                {previews[component.name] ?? <Code>{`<${component.name} />`}</Code>}
+                                            </Center>
+                                        </Card>
+                                        <Text type="supporting">{component.name}</Text>
+                                        <RouterLink
+                                            aria-label={`Open ${component.name} documentation`}
+                                            className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                                            to={`/docs/sdk/views/${component.slug}/`}
+                                        />
+                                    </Stack>
+                                ))}
+                        </Grid>
+                    </Stack>
+                ))}
             </Stack>
         </Article>
     );

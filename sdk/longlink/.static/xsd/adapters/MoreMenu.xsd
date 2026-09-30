@@ -15,7 +15,7 @@
     <xsd:annotation>
       <xsd:documentation>An overflow menu for secondary actions.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="more-menu" category="Action" lastUpdated="2026-09-14" source="adapters/MoreMenu.xsd"/>
+        <longlink:docs slug="more-menu" category="Actions" lastUpdated="2026-09-14" source="adapters/MoreMenu.xsd"/>
         <longlink:example>&lt;MoreMenu value="$metadata"&gt;
   &lt;Option value="${{ item: row, open: true }}" label="Metadata" icon="info" /&gt;
 &lt;/MoreMenu&gt;</longlink:example>

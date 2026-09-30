@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="StatusBadgeType">
     <xsd:attribute name="status" type="xsd:string" use="required">
       <xsd:annotation><xsd:documentation>Lifecycle status expression.</xsd:documentation></xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
-  <xsd:element name="StatusBadge" type="StatusBadgeType"/>
+  <xsd:element name="StatusBadge" type="StatusBadgeType">
+    <xsd:annotation>
+      <xsd:documentation>Displays a lifecycle status using the runtime's status presentation.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xsd-docs">
+        <longlink:docs slug="status-badge" category="Content" lastUpdated="2026-09-30" source="adapters/StatusBadge.xsd"/>
+        <longlink:example>&lt;StatusBadge status="${order.status}" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
 </xsd:schema>

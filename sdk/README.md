@@ -26,9 +26,12 @@ uvx --from longlink longlink init
 Inspect the XML component catalog and individual component references from the CLI:
 
 ```bash
-longlink docs
-longlink docs --component Button
+longlink docs ui
+longlink docs ui --category Actions
+longlink docs ui --component Button
 ```
+
+The web and CLI references read the bundled XSD documentation metadata. Category order is declared in `longlink/.static/xsd/schema.xsd`: Runtime, Actions, Content, Form, and Layouts. Each documented component declares its category in `<longlink:docs>`, and runtime concepts use `<longlink:topic>`. The Views page groups preview cards by category, with each card linking to its reference page.
 
 <br/>
 

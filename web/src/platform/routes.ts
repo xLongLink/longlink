@@ -23,8 +23,6 @@ export default [
                 route('testing', './routes/docs/sdk/Testing.tsx'),
                 ...prefix('views', [
                     index('./routes/docs/sdk/Views.tsx'),
-                    route('bindings', './routes/docs/sdk/views/Bindings.tsx'),
-                    route('expressions', './routes/docs/sdk/views/Expressions.tsx'),
                     route(':component', './routes/docs/sdk/views/Component.tsx'),
                 ]),
             ]),

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:longlink="urn:longlink:xsd-docs">
   <xsd:complexType name="CodeBlockType">
     <xsd:attribute name="value" type="xsd:string" use="required">
       <xsd:annotation><xsd:documentation>Text or array expression displayed as code.</xsd:documentation></xsd:annotation>
@@ -9,5 +9,13 @@
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
   </xsd:complexType>
-  <xsd:element name="CodeBlock" type="CodeBlockType"/>
+  <xsd:element name="CodeBlock" type="CodeBlockType">
+    <xsd:annotation>
+      <xsd:documentation>Displays text or an array value as a code block, optionally with line numbers.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xsd-docs">
+        <longlink:docs slug="code-block" category="Content" lastUpdated="2026-09-30" source="adapters/CodeBlock.xsd"/>
+        <longlink:example>&lt;CodeBlock value="${['Order created', 'Order saved']}" hasLineNumbers="true" /&gt;</longlink:example>
+      </xsd:appinfo>
+    </xsd:annotation>
+  </xsd:element>
 </xsd:schema>

@@ -13,6 +13,12 @@
   <xsd:element name="longlink" type="LonglinkType">
     <xsd:annotation>
       <xsd:documentation>Defines a LongLink XML View.</xsd:documentation>
+      <xsd:appinfo source="urn:longlink:xsd-docs">
+        <longlink:docs slug="longlink" category="Runtime" lastUpdated="2026-09-30" source="adapters/Longlink.xsd"/>
+        <longlink:example>&lt;longlink name="Welcome" icon="layout-dashboard"&gt;
+  &lt;Text&gt;Welcome&lt;/Text&gt;
+&lt;/longlink&gt;</longlink:example>
+      </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>
 </xsd:schema>

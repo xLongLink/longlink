@@ -6,12 +6,14 @@ def test_docs_command_lists_documented_component_categories() -> None:
     """Expose the XML component catalog through the public CLI."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs"])
+    result = CliRunner().invoke(main, ["docs", "ui"])
 
     # Assert
     assert result.exit_code == 0
     assert "LongLink XML components" in result.output
-    assert "Action" in result.output
+    assert all(category in result.output for category in ("Runtime", "Actions", "Content", "Form", "Layouts"))
+    assert "- Bindings - Connects writable control values" in result.output
+    assert "- Expressions - Evaluates a safe JavaScript expression subset" in result.output
     assert "- Button - Button runs child effects in order when clicked" in result.output
 
 
@@ -19,11 +21,11 @@ def test_docs_command_resolves_a_component_name_case_insensitively() -> None:
     """Show component documentation from a lower-case component name."""
 
     # Act
-    result = CliRunner().invoke(main, ["docs", "--component", "button"])
+    result = CliRunner().invoke(main, ["docs", "ui", "--component", "button"])
 
     # Assert
     assert result.exit_code == 0
-    assert "Button [Action]" in result.output
+    assert "Button [Actions]" in result.output
     assert "Attributes" in result.output
     assert "- variant: ButtonVariantType" in result.output
     assert "Example" in result.output
