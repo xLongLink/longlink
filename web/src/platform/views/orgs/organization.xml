@@ -94,7 +94,7 @@
                         <Button label="Use sample Image" variant="ghost">
                             <Patch
                                 state="createSolution"
-                                value="${{ image: 'ghcr.io/xlonglink/sample:v2026.9.22' }}"
+                                value="${{ image: 'ghcr.io/xlonglink/sample:latest' }}"
                             />
                         </Button>
                         <Stack direction="horizontal" gap="2">
