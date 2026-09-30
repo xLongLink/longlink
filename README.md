@@ -68,9 +68,11 @@ src/
 main.py           # Application entry point
 ```
 
-`LongLink()` is a FastAPI application with the common runtime already configured. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database, and storage.
+`LongLink()` is a headless FastAPI application with the common runtime already configured. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database, and storage.
 
 The same code runs in development, testing, and production. When deployed, LongLink packages the Solution as a standard container image.
+
+Each View is defined in a single file that describes its layout, elements, and actions.
 
 ![Invoice approvals in the sample Solution](sample.png)
 
@@ -97,23 +99,20 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ### Standards and governance
 
-LongLink is designed around clear processes, accountability, traceability, and explicit separation between automated tasks and human decisions.
-
-These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organisations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 31000](https://www.iso.org/standard/65694.html), [ISO 37301](https://www.iso.org/standard/75080.html), and [ISO 37000](https://www.iso.org/standard/65036.html).
+These principles align with [UN Sustainable Development Goal 9](https://sdgs.un.org/goals/goal9) and can support organisations implementing management systems and governance practices related to standards such as [ISO 9001](https://www.iso.org/standard/62085.html), [ISO 22301](https://www.iso.org/standard/75106.html), [ISO 37301](https://www.iso.org/standard/75080.html).
 
 <br />
 
 ## Developing LongLink
 
-The repository contains the LongLink SDK and runtime in `sdk/`, the Platform API in `api/`, and the shared Platform and Solution frontend in `web/`.
-
+The repository contains the LongLink SDK in `sdk/`, the Platform API in `api/`, and the frontend in `web/`.
 On Linux, install the development requirements with:
 
 ```bash
 make apt   # Ubuntu, Debian, ...
 ```
 
-Work on the LongLink Platform, the default admin credentials are `admin@admin.com` and `admin`:
+Work on the LongLink Platform, the default development credentials are `admin@admin.com` and `admin`:
 
 ```bash
 make up     # Create local infrastructure
