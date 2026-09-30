@@ -7,32 +7,23 @@ from src.environments import env
 pytestmark = pytest.mark.no_db
 
 
-def test_set_browser_cookie_marks_secure_only_on_https(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(("public_url", "expected_secure"), [("https://app.example.com", True), ("http://localhost:5173", False)])
+def test_set_browser_cookie_marks_secure_only_on_https(monkeypatch: pytest.MonkeyPatch, public_url: str, expected_secure: bool) -> None:
     """Protect browser credentials and set Secure only for HTTPS origins."""
 
     # Arrange
-    monkeypatch.setattr(env, "PUBLIC_URL", "https://app.example.com")
+    monkeypatch.setattr(env, "PUBLIC_URL", public_url)
 
     # Act
-    secure_response = Response()
-    cookies.set_browser_cookie(secure_response, cookies.AUTH_COOKIE, "value", "/", 60)
-    secure_header = secure_response.headers["set-cookie"]
+    response = Response()
+    cookies.set_browser_cookie(response, cookies.AUTH_COOKIE, "value", "/", 60)
+    header = response.headers["set-cookie"]
 
     # Assert
-    assert "Secure" in secure_header
-    assert "HttpOnly" in secure_header
-    assert "SameSite=lax" in secure_header
-    assert secure_response.headers["cache-control"] == "no-store"
-
-    # Arrange a plaintext loopback origin for the insecure case.
-    monkeypatch.setattr(env, "PUBLIC_URL", "http://localhost:5173")
-
-    # Act
-    plain_response = Response()
-    cookies.set_browser_cookie(plain_response, cookies.AUTH_COOKIE, "value", "/", 60)
-
-    # Assert
-    assert "Secure" not in plain_response.headers["set-cookie"]
+    assert ("Secure" in header) is expected_secure
+    assert "HttpOnly" in header
+    assert "SameSite=lax" in header
+    assert response.headers["cache-control"] == "no-store"
 
 
 def test_delete_browser_cookie_mirrors_registration_path(monkeypatch: pytest.MonkeyPatch) -> None:

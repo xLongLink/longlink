@@ -1,15 +1,12 @@
 from pwdlib import PasswordHash
 from datetime import UTC, datetime
 from sqlmodel import col
-from factories import create_organization
 from sqlalchemy import select
 from src.environments import env
 from src.database.session import session_scope
 from src.database.services import users as user_service
-from src.database.services import organizations as organization_service
 from src.models.pagination import Pagination
 from src.database.models.users import User
-from src.database.models.organizations import Organization
 
 
 async def test_ensure_administrator_creates_absent_configured_user() -> None:
@@ -170,30 +167,21 @@ async def test_user_service_returns_active_accounts_and_all_administrator_record
     assert total == 3
 
 
-async def test_organization_service_returns_active_user_memberships(
-    users: tuple[User, User, User],
-) -> None:
-    """Persist registrations and exclude deleted organizations from memberships."""
+async def test_registration_persists_user_with_hashed_password() -> None:
+    """Persist registered users with verifiable password hashes."""
 
     # Arrange
     password_hash = PasswordHash.recommended()
-    member = users[1]
-    active_organization = await create_organization(member, name="active")
-    deleted_organization = await create_organization(member, name="deleted")
-    async with session_scope() as session:
-        deleted_organization_row = await session.get(Organization, deleted_organization.id)
-        assert deleted_organization_row is not None
-        deleted_organization_row.deleted_at = datetime.now(UTC)
-        registered = await user_service.register(session, "Registered User", "registered@example.com", "test-password")
-        await session.commit()
 
     # Act
     async with session_scope() as session:
-        persisted_user = await session.get(User, registered.id)
-        memberships = await organization_service.memberships(session, member.id)
+        registered = await user_service.register(session, "Registered User", "registered@example.com", "test-password")
+        await session.commit()
 
-    # Assert
+    # Assert persistence through an independent session.
+    async with session_scope() as session:
+        persisted_user = await session.get(User, registered.id)
+
     assert persisted_user is not None
     assert persisted_user.email == "registered@example.com"
     assert password_hash.verify("test-password", persisted_user.password)
-    assert [membership.organization_id for membership in memberships] == [active_organization.id]

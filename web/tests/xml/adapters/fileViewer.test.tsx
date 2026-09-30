@@ -1,12 +1,10 @@
 // @vitest-environment happy-dom
 import { act } from 'react';
-import type { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createContext, parseFragment, cleanupMountedRoot, mountXml, renderXmlToMarkup } from '../helpers';
 
 describe('FileViewer', () => {
-    let root: ReturnType<typeof createRoot> | undefined;
-    let mountedContainer: HTMLElement | undefined;
+    let mounted: Awaited<ReturnType<typeof mountXml>> | undefined;
 
     beforeEach(() => {
         // Force the immediate loading path unless a test provides its own observer.
@@ -16,19 +14,16 @@ describe('FileViewer', () => {
     });
 
     afterEach(async () => {
-        await cleanupMountedRoot(root);
-        root = undefined;
-        mountedContainer?.remove();
-        mountedContainer = undefined;
+        await cleanupMountedRoot(mounted?.root);
+        mounted?.container.remove();
+        mounted = undefined;
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
     });
 
     async function renderViewer(xml: string, ctx = createContext({ requestBaseUrl: '/api/v1/solutions/demo/proxy' })) {
         // Mount through the shared helper so ACT and root lifetime stay in one owner.
-        const mounted = await mountXml(xml, ctx, undefined, true);
-        root = mounted.root;
-        mountedContainer = mounted.container;
+        mounted = await mountXml(xml, ctx, true);
 
         return mounted.container;
     }
@@ -61,8 +56,10 @@ describe('FileViewer', () => {
         expect(frame?.getAttribute('title')).toBe('Contract');
         expect(URL.revokeObjectURL).not.toHaveBeenCalled();
 
-        await act(async () => root?.unmount());
-        root = undefined;
+        // Dispose the whole mount before clearing its owner so teardown cannot unmount it twice.
+        await cleanupMountedRoot(mounted?.root);
+        mounted?.container.remove();
+        mounted = undefined;
         expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview');
         expect(URL.revokeObjectURL).toHaveBeenCalledOnce();
     });
@@ -153,20 +150,17 @@ describe('FileViewer', () => {
     it('resolves per-row sources inside table dialogs', async () => {
         // Arrange
         let requestUrl = '';
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async (input: RequestInfo | URL) => {
-                const url = (input as Request).url;
+        vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+            const url = (input as Request).url;
 
-                if (url.endsWith('/attachments')) {
-                    return Response.json([{ id: 'a-report.pdf', name: 'Report' }]);
-                }
+            if (url.endsWith('/attachments')) {
+                return Response.json([{ id: 'a-report.pdf', name: 'Report' }]);
+            }
 
-                requestUrl = url;
+            requestUrl = url;
 
-                return pdfResponse();
-            })
-        );
+            return pdfResponse();
+        });
         const ctx = createContext({ params: { item: '1' }, requestBaseUrl: '/api/v1/solutions/demo/proxy' });
 
         // Act

@@ -1,4 +1,5 @@
 import pytest
+import contextlib
 from uuid import uuid4
 from src.utils import s3
 from src.utils.rustfs import Error, RustFS
@@ -61,7 +62,7 @@ def test_policy_restricts_list_bucket_to_owned_prefixes() -> None:
     assert listing["Condition"] == {"StringLike": {"s3:prefix": ["shared/*", f"solutions/{solution.hex}/*"]}}
 
 
-async def test_service_account_replaces_abandoned_credentials() -> None:
+async def test_service_account_replaces_abandoned_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     """Retry account creation after revoking a conflicting abandoned account."""
 
     # Arrange
@@ -77,13 +78,7 @@ async def test_service_account_replaces_abandoned_credentials() -> None:
             raise Error(409, "access key is already in use")
         return {}
 
-    async def fake_revoke(target: object) -> None:
-        """Record credential revocation."""
-
-        calls.append("revoke")
-
-    storage._request = fake_request  # type: ignore[method-assign]
-    storage.revoke = fake_revoke  # type: ignore[method-assign]
+    monkeypatch.setattr(storage, "_request", fake_request)
 
     # Act
     credentials = await storage.service_account("org-bucket", solution)
@@ -92,71 +87,67 @@ async def test_service_account_replaces_abandoned_credentials() -> None:
     assert credentials.access_key == f"solution-{solution.hex}"
     assert calls == [
         "PUT /rustfs/admin/v3/add-service-account",
-        "revoke",
+        f"DELETE /rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}",
         "PUT /rustfs/admin/v3/add-service-account",
     ]
 
 
-async def test_service_account_reraises_unexpected_error() -> None:
+async def test_service_account_reraises_unexpected_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """Surface administrative failures instead of revoking unrelated credentials."""
 
     # Arrange
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
+    error = Error(500, "internal error")
 
     async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
         """Simulate an administrative outage."""
 
-        raise Error(500, "internal error")
+        raise error
 
     async def unexpected_revoke(target: object) -> None:
         """Fail when cleanup revokes credentials after an unrelated error."""
 
         raise AssertionError("revoke must not run")
 
-    storage._request = failing_request  # type: ignore[method-assign]
-    storage.revoke = unexpected_revoke  # type: ignore[method-assign]
+    monkeypatch.setattr(storage, "_request", failing_request)
+    monkeypatch.setattr(storage, "revoke", unexpected_revoke)
 
-    # Act and assert
-    with pytest.raises(Error):
+    # Act
+    with pytest.raises(Error) as captured:
         await storage.service_account("org-bucket", uuid4())
 
+    # Assert
+    assert captured.value is error
 
-async def test_revoke_ignores_missing_account() -> None:
-    """Treat cleanup of an already removed account as success."""
+
+REVOKE_ERROR_CASES = [
+    pytest.param(404, "service account not exist", True, id="missing-account"),
+    pytest.param(500, "internal error", False, id="unexpected-error"),
+]
+
+
+@pytest.mark.parametrize(("status_code", "message", "ignored"), REVOKE_ERROR_CASES)
+async def test_revoke_handles_administrative_errors(monkeypatch: pytest.MonkeyPatch, status_code: int, message: str, ignored: bool) -> None:
+    """Tolerate missing accounts while preserving unexpected revocation errors."""
 
     # Arrange
     storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
     solution = uuid4()
     requests: list[tuple[str, str]] = []
+    error = Error(status_code, message)
 
-    async def missing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
-        """Simulate a concurrently deleted account."""
+    async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
+        """Record the revocation request and return the configured error."""
 
         requests.append((method, path))
-        raise Error(404, "service account not exist")
+        raise error
 
-    storage._request = missing_request  # type: ignore[method-assign]
+    monkeypatch.setattr(storage, "_request", failing_request)
 
     # Act
-    await storage.revoke(solution)
+    expectation = contextlib.nullcontext() if ignored else pytest.raises(Error, check=lambda exception: exception is error)
+    with expectation:
+        await storage.revoke(solution)
 
     # Assert
     assert requests == [("DELETE", f"/rustfs/admin/v3/delete-service-account?accessKey=solution-{solution.hex}")]
-
-
-async def test_revoke_reraises_unexpected_error() -> None:
-    """Surface revocation failures instead of masking them as success."""
-
-    # Arrange
-    storage = RustFS("https://storage.example.com", s3.Credentials("owner", "secret"))
-
-    async def failing_request(method: str, path: str, payload: dict[str, object] | None = None) -> dict[str, object]:
-        """Simulate an administrative outage."""
-
-        raise Error(500, "internal error")
-
-    storage._request = failing_request  # type: ignore[method-assign]
-
-    # Act and assert
-    with pytest.raises(Error):
-        await storage.revoke(uuid4())

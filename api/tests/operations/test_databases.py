@@ -1,3 +1,4 @@
+import pytest
 from uuid import uuid4
 from datetime import UTC, datetime, timedelta
 from factories import create_organization
@@ -17,34 +18,27 @@ async def persist_activity(organization_id: object, expires_at: datetime) -> Org
         return activity
 
 
-async def test_owned_accepts_matching_unexpired_row(users: tuple[User, User, User]) -> None:
-    """Confirm ownership when the persisted expiry matches this worker."""
+LEASE_OWNERSHIP_CASES = [
+    pytest.param(180, 0, True, id="matching-unexpired-row"),
+    pytest.param(300, -120, False, id="replacement-expiry"),
+    pytest.param(-1, 0, False, id="expired-row"),
+]
+
+
+@pytest.mark.parametrize(("expiry_seconds", "lease_offset_seconds", "expected"), LEASE_OWNERSHIP_CASES)
+async def test_owned_requires_matching_unexpired_row(
+    users: tuple[User, User, User], expiry_seconds: int, lease_offset_seconds: int, expected: bool
+) -> None:
+    """Require a matching, unexpired persisted lease before accepting ownership."""
 
     # Arrange
-    organization = await create_organization(users[0], name="owned-accept")
-    expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=180)
-    activity = await persist_activity(organization.id, expires_at)
-    lease = databases.Lease(id=activity.id, organization_id=organization.id, expires_at=activity.expires_at)
-
-    # Act
-    async with session_scope() as session:
-        result = await lease.owned(session)
-
-    # Assert
-    assert result is True
-
-
-async def test_owned_rejects_replacement_expiry(users: tuple[User, User, User]) -> None:
-    """Deny ownership after a replacement worker renews the same activity."""
-
-    # Arrange
-    organization = await create_organization(users[0], name="owned-replacement")
-    persisted_expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=300)
+    organization = await create_organization(users[0], name="owned")
+    persisted_expires_at = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=expiry_seconds)
     activity = await persist_activity(organization.id, persisted_expires_at)
     lease = databases.Lease(
         id=activity.id,
         organization_id=organization.id,
-        expires_at=persisted_expires_at - timedelta(seconds=120),
+        expires_at=activity.expires_at + timedelta(seconds=lease_offset_seconds),
     )
 
     # Act
@@ -52,7 +46,7 @@ async def test_owned_rejects_replacement_expiry(users: tuple[User, User, User]) 
         result = await lease.owned(session)
 
     # Assert
-    assert result is False
+    assert result is expected
 
 
 async def test_owned_rejects_missing_row() -> None:
@@ -64,23 +58,6 @@ async def test_owned_rejects_missing_row() -> None:
         organization_id=uuid4(),
         expires_at=datetime.now(UTC) + timedelta(seconds=180),
     )
-
-    # Act
-    async with session_scope() as session:
-        result = await lease.owned(session)
-
-    # Assert
-    assert result is False
-
-
-async def test_owned_rejects_expired_row(users: tuple[User, User, User]) -> None:
-    """Deny ownership when the persisted lease has already expired."""
-
-    # Arrange
-    organization = await create_organization(users[0], name="owned-expired")
-    expired = datetime.now(UTC).replace(microsecond=0) - timedelta(seconds=1)
-    activity = await persist_activity(organization.id, expired)
-    lease = databases.Lease(id=activity.id, organization_id=organization.id, expires_at=activity.expires_at)
 
     # Act
     async with session_scope() as session:

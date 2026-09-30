@@ -266,12 +266,21 @@ async def test_create_app_validates_payload_before_checking_organization_access(
 async def test_create_app_rejects_non_member_without_creating_state(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject solution creation before image inspection for non-members."""
 
     # Arrange
     organization = await create_organization(users[0])
     previous_operations = await fetch_operations()
+
+    # Prevent unauthorized requests from reaching the external registry boundary.
+    async def unexpected_metadata(_image: Image) -> LongLinkMetadata:
+        """Fail if denied creation reaches remote image inspection."""
+
+        raise AssertionError("denied solution creation must not inspect image metadata")
+
+    monkeypatch.setattr("src.routes.v1.solutions.images.metadata", unexpected_metadata)
 
     # Act
     response = await clients[1].post(
@@ -420,23 +429,44 @@ async def test_create_app_allows_maintainer(
     # Assert
     assert response.status_code == 204
 
+    # Verify committed creation and deployment work belong to the authenticated maintainer.
+    async with session_scope() as session:
+        persisted = await session.scalar(select(Solution).where(col(Solution.organization_id) == organization.id))
+        assert persisted is not None
+        assert (persisted.created_id, persisted.updated_id) == (maintainer.id, maintainer.id)
+        assert persisted.desired_revision_id is not None
+        assert persisted.desired_revision is not None
+        assert persisted.desired_revision.solution_id == persisted.id
+        assert (persisted.desired_revision.created_id, persisted.desired_revision.updated_id) == (maintainer.id, maintainer.id)
+        operation = await session.scalar(
+            select(Operation).where(
+                col(Operation.kind) == OperationKind.solution_deploy,
+                col(Operation.target_id) == persisted.desired_revision_id,
+            )
+        )
+        assert operation is not None
+        assert (operation.created_id, operation.updated_id) == (maintainer.id, maintainer.id)
 
+
+@pytest.mark.parametrize("client_index", [pytest.param(0, id="owner"), pytest.param(1, id="maintain-member")])
 async def test_get_app_logs_returns_pod_logs(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    client_index: int,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Return recent pod logs through the Organization's compute cluster."""
+    """Return recent pod logs to owners and maintain members through their compute cluster."""
 
     # Arrange
     user = users[0]
     organization = await create_organization(user)
     app = await create_solution(organization)
+    await add_member(user=users[1], organization=organization, role=OrganizationRoles.maintain)
     captured: dict[str, UUID | str] = {}
     monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1", "line 2"], captured))
 
     # Act
-    response = await clients[0].get(f"/api/v1/solutions/{app.id}/logs")
+    response = await clients[client_index].get(f"/api/v1/solutions/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -482,28 +512,6 @@ async def test_app_logs_reject_non_maintainers_before_constructing_kubernetes(
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": expected_detail}
-
-
-async def test_app_logs_return_pod_logs_for_maintain_member(
-    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Return recent pod logs to a maintain member at the runtime permission boundary."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    organization = await create_organization(owner)
-    app = await create_solution(organization)
-    await add_member(user=member, organization=organization, role=OrganizationRoles.maintain)
-    monkeypatch.setattr("src.routes.v1.solutions.Kubernetes", lambda _kubeconfig: FakeCompute(["line 1"], {}))
-
-    # Act
-    response = await clients[1].get(f"/api/v1/solutions/{app.id}/logs")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == ["line 1"]
 
 
 async def test_app_logs_return_unavailable_when_backend_fails(

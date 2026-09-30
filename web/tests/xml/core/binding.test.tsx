@@ -39,7 +39,6 @@ describe('useBindableValue', () => {
         mounted = await mountXml(
             '<State id="form" value="first" /><TextInput label="Name" value="$form.value" />',
             ctx,
-            undefined,
             true
         );
 
@@ -73,10 +72,10 @@ describe('useBindableValue', () => {
     });
 
     it('shows failed asynchronous Query setup errors without rendering children', async () => {
-        const fetchImpl = vi.fn(
+        vi.stubGlobal(
+            'fetch',
             async () => new Response(JSON.stringify({ detail: 'Records unavailable' }), { status: 503 })
         );
-        vi.stubGlobal('fetch', fetchImpl);
 
         mounted = await mountXml('<Query id="records" path="/records" /><Text>Loaded child</Text>');
 

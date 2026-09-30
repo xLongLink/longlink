@@ -4,11 +4,12 @@ import alembic
 import importlib
 import importlib.util
 import pytest_asyncio
+from io import StringIO
 from uuid import UUID
 from types import SimpleNamespace
 from typing import cast
+from alembic import command
 from pathlib import Path
-from contextlib import nullcontext
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from collections.abc import AsyncIterator
@@ -210,38 +211,25 @@ async def test_shared_user_sync_updates_one_postgresql_row(
     }
 
 
-def test_shared_migration_environment_configures_offline_schema_bootstrap(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_shared_migration_environment_emits_offline_schema_bootstrap() -> None:
     """Emit shared-schema bootstrap SQL before offline migration output."""
 
     # Arrange
-    calls: list[object] = []
-    context = SimpleNamespace(
-        config=SimpleNamespace(get_main_option=lambda _option: "postgresql+asyncpg://db/organization"),
-        is_offline_mode=lambda: True,
-        configure=lambda **kwargs: calls.append(("configure", kwargs)),
-        begin_transaction=nullcontext,
-        execute=lambda statement: calls.append(("execute", statement)),
-        run_migrations=lambda: calls.append(("run_migrations",)),
-    )
+    output = StringIO()
+    config = migration_config("postgresql+asyncpg://db/organization")
+    config.output_buffer = output
 
     # Act
-    load_shared_migration_environment(monkeypatch, context)
+    command.upgrade(config, "head", sql=True)
 
     # Assert
-    assert calls == [
-        (
-            "configure",
-            {
-                "url": "postgresql+asyncpg://db/organization",
-                "literal_binds": True,
-                "dialect_opts": {"paramstyle": "named"},
-                "version_table_schema": "shared",
-            },
-        ),
-        ("execute", "CREATE SCHEMA IF NOT EXISTS shared"),
-        ("execute", "SET search_path TO shared"),
-        ("run_migrations",),
-    ]
+    sql = output.getvalue()
+    assert (
+        sql.index("CREATE SCHEMA IF NOT EXISTS shared")
+        < sql.index("SET search_path TO shared")
+        < sql.index("CREATE TABLE shared.alembic_version")
+        < sql.index("CREATE TABLE audit")
+    )
 
 
 def test_shared_migration_environment_rejects_missing_online_url(monkeypatch: pytest.MonkeyPatch) -> None:

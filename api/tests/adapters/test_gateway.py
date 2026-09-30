@@ -153,19 +153,22 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
     captured_client_kwargs: dict[str, object] = {}
     client_type = httpx2.AsyncClient
 
-    class Response:
-        status_code = 200
-        headers = {"content-type": "text/plain"}
+    class Response(httpx2.Response):
+        """Record cleanup of the intercepted gateway response."""
+
+        def __init__(self) -> None:
+            """Supply the successful gateway response contract."""
+
+            super().__init__(200, headers={"content-type": "text/plain"})
 
         async def aclose(self) -> None:
             """Record response cleanup."""
 
             request_scope.closed.append("response")
+            await super().aclose()
 
-    class Client(GatewayClient):
+    class Client(client_type):
         """Capture the gateway client configuration."""
-
-        closed = request_scope.closed
 
         def __init__(self, *, verify: proxy.ssl.SSLContext, trust_env: bool, timeout: float, follow_redirects: bool) -> None:
             """Capture the gateway client configuration."""
@@ -177,14 +180,9 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
                 "timeout": timeout,
                 "follow_redirects": follow_redirects,
             }
-            self.client = client_type(verify=verify, trust_env=trust_env, timeout=timeout, follow_redirects=follow_redirects)
+            super().__init__(verify=verify, trust_env=trust_env, timeout=timeout, follow_redirects=follow_redirects)
 
-        def build_request(self, method: str, url: str, *, content: AsyncIterator[bytes], headers: dict[str, str]) -> httpx2.Request:
-            """Build the actual outgoing HTTP request."""
-
-            return self.client.build_request(method, url, content=content, headers=headers)
-
-        async def send(self, request: httpx2.Request, stream: bool) -> Response:
+        async def send(self, request: httpx2.Request, *, stream: bool = False, **_kwargs: object) -> httpx2.Response:
             """Capture the actual outbound request without closing its response."""
 
             nonlocal captured_request
@@ -193,10 +191,10 @@ async def test_gateway_request_forwards_identity_and_defers_cleanup(
             return Response()
 
         async def aclose(self) -> None:
-            """Record client cleanup before closing the wrapped HTTP client."""
+            """Record client cleanup before closing the HTTP client."""
 
+            request_scope.closed.append("client")
             await super().aclose()
-            await self.client.aclose()
 
     tls = proxy.ssl.create_default_context()
     request_scope.registry.gateway_certificate = "gateway-ca"

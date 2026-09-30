@@ -7,10 +7,9 @@ from httpx2 import Cookies, Response, AsyncClient, ASGITransport
 from pwdlib import PasswordHash
 from typing import TYPE_CHECKING, Self, cast
 from pathlib import Path
-from contextlib import AsyncExitStack, contextmanager, asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from kr8s.asyncio import Api
-from collections.abc import Iterator, Sequence, AsyncIterator
-from sqlalchemy.engine import URL
+from collections.abc import Sequence, AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 TEST_PASSWORD = "longlink-test-password"
@@ -178,12 +177,6 @@ class DatabasePostgres:
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         """Accept the private Organization connection settings."""
-
-    @contextmanager
-    def url(self, database: str, search_path: str | None = None) -> Iterator[URL]:
-        """Build the structured connection target passed to shared projection."""
-
-        yield URL.create("postgresql+psycopg", host="database.example", database=database)
 
     @asynccontextmanager
     async def connection(self, database: str, *, search_path: str | None = None) -> AsyncIterator["DatabasePostgres"]:

@@ -17,24 +17,21 @@ function stubJsonFetch(payload: unknown, status: number): void {
     );
 }
 
-/** Capture a rejected API promise as a value for assertions. */
-async function captureFailure(promise: Promise<unknown>): Promise<unknown> {
-    return promise.catch((error: unknown) => error);
-}
-
 describe('api error mapping', () => {
     it('returns the server detail message with status and url', async () => {
         // Arrange
         stubJsonFetch({ detail: 'Name too short' }, 422);
 
         // Act
-        const failure = await captureFailure(api.get('https://api.example/organizations'));
+        const request = api.get('https://api.example/organizations');
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe('Name too short');
-        expect((failure as ApiError).status).toBe(422);
-        expect((failure as ApiError).url).toBe('https://api.example/organizations');
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({
+            message: 'Name too short',
+            status: 422,
+            url: 'https://api.example/organizations',
+        });
     });
 
     it.each([
@@ -46,12 +43,11 @@ describe('api error mapping', () => {
         stubJsonFetch(payload, status);
 
         // Act
-        const failure = await captureFailure(api.get('https://api.example/organizations'));
+        const request = api.get('https://api.example/organizations');
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
-        expect((failure as ApiError).status).toBe(status);
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({ message: FALLBACK_MESSAGE, status });
     });
 
     it('passes network failures through without mapping', async () => {
@@ -65,10 +61,10 @@ describe('api error mapping', () => {
         );
 
         // Act
-        const failure = await captureFailure(api.get('https://api.example/organizations'));
+        const request = api.get('https://api.example/organizations');
 
         // Assert
-        expect(failure).toBe(networkError);
+        await expect(request).rejects.toBe(networkError);
     });
 
     it('falls back when a failure body is not JSON', async () => {
@@ -79,11 +75,10 @@ describe('api error mapping', () => {
         );
 
         // Act
-        const failure = await captureFailure(api.get('https://api.example/organizations'));
+        const request = api.get('https://api.example/organizations');
 
         // Assert
-        expect(failure).toBeInstanceOf(ApiError);
-        expect((failure as ApiError).message).toBe(FALLBACK_MESSAGE);
-        expect((failure as ApiError).status).toBe(500);
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({ message: FALLBACK_MESSAGE, status: 500 });
     });
 });

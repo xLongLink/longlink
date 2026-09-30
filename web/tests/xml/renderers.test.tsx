@@ -11,6 +11,7 @@ describe('renderNode', () => {
     afterEach(async () => {
         await cleanupMountedRoot(root);
         root = undefined;
+        vi.unstubAllGlobals();
         vi.restoreAllMocks();
     });
 
@@ -43,11 +44,11 @@ describe('renderNode', () => {
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
         // Act
-        try {
-            await act(async () => root?.render(<RenderXML ast={invalidAst} ctx={context} />));
-        } catch {
-            // React test rendering reports the intentionally captured error to the caller.
-        }
+        await expect(act(async () => root?.render(<RenderXML ast={invalidAst} ctx={context} />))).rejects.toThrow(
+            'Unknown component "Unknown"'
+        );
+
+        // Render a new document after confirming the previous document failed.
         await act(async () => root?.render(<RenderXML ast={validAst} ctx={context} />));
 
         // Assert

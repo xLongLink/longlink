@@ -1,12 +1,13 @@
+import ssl
 import pytest
 import asyncio
 from typing import ClassVar
 from sqlmodel import Field, SQLModel
 from contextlib import nullcontext
+from sqlalchemy import text
 from longlink.database import base as database_base
 from longlink.database import urls as database_urls
 from sqlalchemy.engine import URL, make_url
-from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.utils.settings import Envs
 
 PRODUCTION_SETTINGS = {
@@ -169,34 +170,26 @@ def test_connect_args_returns_driver_specific_settings(database_url: str, schema
     assert result == expected
 
 
-def test_connect_args_uses_ca_certificate(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_connect_args_uses_ca_certificate(ca_certificate: str) -> None:
     """Use a verified CA context for PostgreSQL connections."""
 
     # Arrange
-    certificate_context = object()
-    certificate_pems: list[str] = []
-
-    def create_default_context(*, cadata: str) -> object:
-        """Capture the CA certificate used to construct the SSL context."""
-
-        certificate_pems.append(cadata)
-        return certificate_context
-
-    monkeypatch.setattr(database_urls.ssl, "create_default_context", create_default_context)
+    certificate_der = ssl.PEM_cert_to_DER_cert(ca_certificate)
 
     # Act
     result = database_urls.connect_args(
         "postgresql+asyncpg://solution:secret@db/longlink",
         schema="solution",
-        certificate="database-ca-pem",
+        certificate=ca_certificate,
     )
 
     # Assert
-    assert certificate_pems == ["database-ca-pem"]
-    assert result == {
-        "server_settings": {"timezone": "UTC", "search_path": '"solution", shared'},
-        "ssl": certificate_context,
-    }
+    assert result["server_settings"] == {"timezone": "UTC", "search_path": '"solution", shared'}
+    certificate_context = result["ssl"]
+    assert isinstance(certificate_context, ssl.SSLContext)
+    assert certificate_context.verify_mode == ssl.CERT_REQUIRED
+    assert certificate_context.check_hostname is True
+    assert certificate_der in certificate_context.get_ca_certs(binary_form=True)
 
 
 @pytest.mark.parametrize(
@@ -270,12 +263,13 @@ async def test_concurrent_sessions_initialize_one_engine(
 
     # Arrange
     create_count = 0
+    create_engine = database_base.create_engine
 
-    def counted_create_engine(_env: Envs):
+    def counted_create_engine(env: Envs):
         """Create an isolated engine while recording initialization attempts."""
         nonlocal create_count
         create_count += 1
-        return create_async_engine("sqlite+aiosqlite:///:memory:")
+        return create_engine(env)
 
     monkeypatch.setattr(database_base, "create_engine", counted_create_engine)
     database = database_base.Database(Envs(ENV="testing"))
@@ -322,7 +316,7 @@ async def test_session_retries_initialization_after_database_connection_failure(
     # Retry initialization using the restored SDK engine factory.
     try:
         async with database.session() as database_session:
-            assert database_session is not None
+            assert await database_session.scalar(text("SELECT 1")) == 1
     finally:
         await database.dispose()
 

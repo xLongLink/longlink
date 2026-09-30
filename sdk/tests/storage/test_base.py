@@ -36,26 +36,6 @@ def configure_production_environment(monkeypatch: pytest.MonkeyPatch, bucket: st
     monkeypatch.setenv("LONGLINK_STORAGE_PREFIX", prefix)
 
 
-@pytest.fixture
-def production_storage(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
-    """Configure production storage with a capturing remote filesystem double."""
-
-    # Configure the shared production scope before replacing remote I/O.
-    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
-    captured: dict[str, object] = {"filesystem": LocalFileSystem()}
-
-    def fake_filesystem_factory(_protocol: str, **kwargs: object) -> LocalFileSystem:
-        """Capture the remote filesystem configuration without contacting remote storage."""
-
-        captured["kwargs"] = kwargs
-        filesystem = captured["filesystem"]
-        assert isinstance(filesystem, LocalFileSystem)
-        return filesystem
-
-    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
-    return captured
-
-
 @pytest.mark.parametrize(
     ("bucket", "prefix", "message"),
     [
@@ -100,32 +80,30 @@ def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch
     assert isinstance(scoped_filesystem.fs, S3FileSystem)
 
 
-def test_production_storage_passes_configured_ca_to_s3_client(
-    monkeypatch: pytest.MonkeyPatch, production_storage: dict[str, object]
-) -> None:
+def test_production_storage_passes_configured_ca_to_s3_client(monkeypatch: pytest.MonkeyPatch) -> None:
     """Use the Platform storage CA to verify the remote S3 endpoint."""
 
+    # Arrange
+    configure_production_environment(monkeypatch, "acme", "solutions/dashboard")
     @contextmanager
     def certificate_file(pem: str):
-        """Capture the configured PEM and yield its temporary filename."""
+        """Verify the configured PEM and yield its temporary filename."""
 
-        production_storage["pem"] = pem
+        # Assert the configured CA reaches the certificate boundary.
+        assert pem == "storage-ca-pem"
         yield "/tmp/storage-ca.crt"
 
-    # Arrange
+    # Replace only the certificate boundary; S3 construction does not contact storage.
     monkeypatch.setattr(storage_base.tls, "certificate_file", certificate_file)
     monkeypatch.setenv("LONGLINK_STORAGE_CERTIFICATE", "storage-ca-pem")
 
     # Act
-    storage_base.create_fs(Envs())
+    filesystem = storage_base.create_fs(Envs())
 
     # Assert
-    assert production_storage["pem"] == "storage-ca-pem"
-    kwargs = production_storage["kwargs"]
-    assert isinstance(kwargs, dict)
-    client_kwargs = kwargs["client_kwargs"]
-    assert isinstance(client_kwargs, dict)
-    assert client_kwargs["verify"] == "/tmp/storage-ca.crt"
+    assert isinstance(filesystem, DirFileSystem)
+    assert isinstance(filesystem.fs, S3FileSystem)
+    assert filesystem.fs.client_kwargs["verify"] == "/tmp/storage-ca.crt"
 
 
 def test_storage_rejects_prefix_without_bucket(monkeypatch: pytest.MonkeyPatch) -> None:

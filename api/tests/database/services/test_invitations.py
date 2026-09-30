@@ -26,7 +26,7 @@ async def test_create_stores_canonical_invitation_email(
     # Act
     async with session_scope() as session:
         await organizations.create_invitation(
-            session, organization.id, OrganizationInvitationCreate(email="invited@example.com", role=OrganizationRoles.write), owner.id
+            session, organization.id, OrganizationInvitationCreate(email="Invited@EXAMPLE.COM", role=OrganizationRoles.write), owner.id
         )
         await session.commit()
 

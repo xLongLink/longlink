@@ -116,6 +116,19 @@ def test_read_pyproject_rejects_invalid_toml(tmp_path: Path) -> None:
             ],
             id="positional-defaults",
         ),
+        pytest.param(
+            "src/envs.py",
+            '[tool.longlink]\nenvironments = "src.envs:Env"\n',
+            "from pydantic import BaseModel, Field\n"
+            "\n"
+            "ALIAS = 'DYNAMIC_TOKEN'\n"
+            "DESCRIPTION = 'Dynamic description'\n"
+            "\n"
+            "class Env(BaseModel):\n"
+            "    TOKEN: str = Field(..., validation_alias=ALIAS, description=DESCRIPTION)\n",
+            [{"name": "DYNAMIC_TOKEN", "required": True, "description": "Dynamic description"}],
+            id="resolved-field-metadata",
+        ),
     ],
 )
 def test_read_env_spec_emits_supported_environment_metadata(
@@ -138,34 +151,6 @@ def test_read_env_spec_emits_supported_environment_metadata(
 
     # Assert
     assert env_spec == expected_spec
-
-
-def test_read_env_spec_uses_resolved_field_metadata(tmp_path: Path) -> None:
-    """Read aliases and descriptions resolved by the configured Pydantic model."""
-
-    # Arrange
-    envs_path = tmp_path / "src" / "envs.py"
-    envs_path.parent.mkdir()
-    envs_path.write_text(
-        "from pydantic import BaseModel, Field\n"
-        "\n"
-        "ALIAS = 'DYNAMIC_TOKEN'\n"
-        "DESCRIPTION = 'Dynamic description'\n"
-        "\n"
-        "class Env(BaseModel):\n"
-        "    TOKEN: str = Field(..., validation_alias=ALIAS, description=DESCRIPTION)\n",
-        encoding="utf-8",
-    )
-    (tmp_path / "pyproject.toml").write_text(
-        '[tool.longlink]\nenvironments = "src.envs:Env"\n',
-        encoding="utf-8",
-    )
-
-    # Act
-    env_spec = build.read_env_spec(tmp_path, build.read_pyproject(tmp_path))
-
-    # Assert
-    assert env_spec == [{"name": "DYNAMIC_TOKEN", "required": True, "description": "Dynamic description"}]
 
 
 @pytest.mark.parametrize(
@@ -569,6 +554,7 @@ def test_build_command_reports_built_image(
     ]
     assert "- Built image: localhost:15000/demo:dev" in result.output
     assert ("- Pushed image: localhost:15000/demo:dev" in result.output) is bool(expected_commands)
+    assert not temporary_context.exists()
 
 
 @pytest.mark.parametrize(
@@ -611,3 +597,4 @@ def test_build_command_reports_docker_failure(
     assert result.exit_code == 1
     assert f"Docker command failed with exit code {exit_code}" in result.output
     assert [command[1] for command in commands] == expected_commands
+    assert not Path(commands[0][-1]).exists()

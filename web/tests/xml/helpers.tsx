@@ -1,7 +1,6 @@
 import { act } from 'react';
 import { vi } from 'vitest';
 import * as xml from '@/xml';
-import type { ReactNode } from 'react';
 import { ApiProvider } from '@/providers';
 import * as context from '@/xml/core/context';
 import { createRoot } from 'react-dom/client';
@@ -51,12 +50,7 @@ export function renderXmlToMarkup(ast: ASTNode[], ctx: XmlRuntime = createContex
 }
 
 /** Mounts an XML fragment through the real runtime and returns its container and root. */
-export async function mountXml(
-    fragment: string,
-    ctx: XmlRuntime = createContext(),
-    wrap?: (node: ReactNode) => ReactNode,
-    attach = false
-) {
+export async function mountXml(fragment: string, ctx: XmlRuntime = createContext(), attach = false) {
     // Keep attached versus detached DOM identical to each suite's previous behavior.
     const container = document.createElement('div');
 
@@ -71,7 +65,7 @@ export async function mountXml(
     await act(async () => {
         const node = <RenderXML ast={xml.parseXML(`<longlink>${fragment}</longlink>`)} ctx={ctx} />;
 
-        root.render(wrap ? wrap(node) : node);
+        root.render(node);
     });
 
     return { container, root };

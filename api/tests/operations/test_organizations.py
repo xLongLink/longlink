@@ -91,9 +91,6 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("database")
 
     class Storage(StorageKubernetes):
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
         async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Record bucket creation."""
 
@@ -149,9 +146,6 @@ async def test_reconcile_rolls_back_publication_when_storage_fails(
     organization = await create_organization(users[0])
 
     class Storage(StorageKubernetes):
-        def __init__(self, *args: object) -> None:
-            """Accept registry connection settings."""
-
         async def apply(self, organization: UUID, *, quota_bytes: int) -> None:
             """Fail bucket creation."""
 
