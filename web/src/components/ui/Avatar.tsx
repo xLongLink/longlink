@@ -1,5 +1,9 @@
+import * as dicebear from '@dicebear/core';
 import type { ComponentProps } from 'react';
+import glyphs from '@dicebear/styles/glyphs.json' with { type: 'json' };
 import { Avatar as AstryxAvatar, type AvatarShape } from '@astryxdesign/core/Avatar';
+
+const glyphsStyle = new dicebear.Style(glyphs);
 
 type AstryxAvatarProps = Omit<ComponentProps<typeof AstryxAvatar>, 'shape' | 'src'>;
 
@@ -9,7 +13,18 @@ interface AvatarProps extends AstryxAvatarProps {
     src?: string | null;
 }
 
-/** Renders an Astryx avatar with an explicit shape, normalizing null sources to undefined. */
-export function Avatar({ shape = 'circle', src, ...props }: AvatarProps) {
-    return <AstryxAvatar {...props} shape={shape} src={src ?? undefined} />;
+/** Renders profile images with a deterministic, locally generated Glyphs fallback. */
+export function Avatar({ shape = 'circle', src, name, fallbackSrc, ...props }: AvatarProps) {
+    // Generate a stable fallback without sending names to an external avatar service.
+    const avatar = new dicebear.Avatar(glyphsStyle, { seed: name?.trim() || 'avatar' });
+
+    return (
+        <AstryxAvatar
+            {...props}
+            name={name}
+            shape={shape}
+            src={src?.trim() || undefined}
+            fallbackSrc={fallbackSrc ?? avatar.toDataUri()}
+        />
+    );
 }

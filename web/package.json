@@ -28,6 +28,8 @@
     },
     "dependencies": {
         "@astryxdesign/core": "0.6.1",
+        "@dicebear/core": "^10.7.0",
+        "@dicebear/styles": "^10.6.0",
         "@fontsource/kalam": "^5.3.0",
         "@hookform/resolvers": "^5.9.1",
         "@tailwindcss/vite": "^4.3.3",
