@@ -10,7 +10,7 @@ class _UserRelationship:
 
 
 def UserRelationship() -> User:  # noqa: N802
-    """Declare a required shared user relationship and its matching foreign key."""
+    """Declare a shared user relationship; a User | None annotation makes it optional."""
 
     return cast(User, _UserRelationship())
 
@@ -31,14 +31,20 @@ class _ModelMetaclass(SQLModelMetaclass):
 
         # Each relationship owns a distinct foreign key to the shared user table.
         for relation in relations:
-            if annotations.get(relation) not in (User, "User", "longlink.shared.models.User"):
+            annotation = annotations.get(relation)
+            optional = annotation in (User | None, "User | None", "longlink.shared.models.User | None")
+            if not optional and annotation not in (User, "User", "longlink.shared.models.User"):
                 raise TypeError(f"{relation} must be annotated as User")
             column = f"{relation}_id"
             if column in namespace or column in annotations:
                 raise ValueError(f"{column} is managed by UserRelationship()")
 
-            annotations[column] = UUID
-            namespace[column] = Field(foreign_key="audit.id")
+            if optional:
+                annotations[column] = UUID | None
+                namespace[column] = Field(default=None, foreign_key="audit.id")
+            else:
+                annotations[column] = UUID
+                namespace[column] = Field(foreign_key="audit.id")
             namespace[relation] = Relationship(sa_relationship_kwargs={"foreign_keys": f"[{name}.{column}]", "lazy": "selectin"})
 
         namespace["__annotations__"] = annotations

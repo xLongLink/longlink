@@ -1,40 +1,64 @@
 import mimetypes
 from uuid import uuid4
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import Query, APIRouter, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Context
 from sqlmodel import select
+from sqlalchemy import func
 from urllib.parse import quote
 from collections.abc import Iterator, Sequence
-from src.models.items import Item
+from src.models.items import Item, ItemStatus
 from fastapi.responses import StreamingResponse
-from src.schemas.items import ItemRead, ItemCreate, ItemAttachmentRead
+from src.schemas.items import (
+    ItemPage,
+    ItemRead,
+    ItemCreate,
+    ItemStatusUpdate,
+    ItemAttachmentRead,
+)
 
 router = APIRouter(prefix="/api")
 
 
-@router.get("/items", response_model=list[ItemRead])
-async def items_get_endpoint(ctx: Context) -> Sequence[Item]:
-    """Return catalog items."""
+@router.get("/items", response_model=ItemPage)
+async def items_get_endpoint(
+    ctx: Context,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=100),
+):
+    """Return a bounded page of invoices and its total count."""
 
     # Query items for display.
-    statement = select(Item).order_by("id")
+    statement = (
+        select(Item).order_by("id").offset((page - 1) * page_size).limit(page_size)
+    )
     result = await ctx.database.exec(statement)
-    return result.all()
+    items = result.all()
+
+    # Count invoices separately so navigation reflects the full dataset.
+    count_result = await ctx.database.exec(select(func.count()).select_from(Item))
+    return {"items": items, "total": count_result.one()}
 
 
-@router.post("/items", response_model=Item)
+@router.post("/items", response_model=ItemRead)
 async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
     """Create a catalog item."""
 
     # Persist the item so it includes its generated id.
-    item = Item(name=payload.name, price=payload.price, status=payload.status)
+    item = Item(
+        name=payload.name,
+        price=payload.price,
+        status=payload.status,
+    )
+    if payload.status == ItemStatus.approved:
+        item.approved_by = ctx.user
     ctx.database.add(item)
     await ctx.database.commit()
+    await ctx.database.refresh(item)
     return item
 
 
-@router.get("/items/{item_id}", response_model=Item)
+@router.get("/items/{item_id}", response_model=ItemRead)
 async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
     """Return one catalog item for a dynamic XML View."""
 
@@ -43,6 +67,29 @@ async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    return item
+
+
+@router.patch("/items/{item_id}/status", response_model=ItemRead)
+async def item_status_patch_endpoint(
+    item_id: int, payload: ItemStatusUpdate, ctx: Context
+) -> Item:
+    """Change invoice status while recording or clearing approval attribution."""
+
+    # Resolve the invoice and preserve attribution when approval is repeated.
+    item = await ctx.database.get(Item, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if item.status == payload.status and (
+        payload.status != ItemStatus.approved or item.approved_by is not None
+    ):
+        return item
+
+    # Keep approval attribution consistent with the selected state and current Platform user.
+    item.status = payload.status
+    item.approved_by = ctx.user if payload.status == ItemStatus.approved else None
+    await ctx.database.commit()
+    await ctx.database.refresh(item)
     return item
 
 

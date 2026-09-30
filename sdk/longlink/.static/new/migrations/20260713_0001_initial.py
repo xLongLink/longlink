@@ -20,6 +20,7 @@ def upgrade() -> None:
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
+        sa.Column("approved_by_id", sa.Uuid(), nullable=True),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("price", sa.Float(), nullable=False),
@@ -34,6 +35,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["created_id"], ["audit.id"]),
         sa.ForeignKeyConstraint(["updated_id"], ["audit.id"]),
         sa.ForeignKeyConstraint(["deleted_id"], ["audit.id"]),
+        sa.ForeignKeyConstraint(
+            ["approved_by_id"], ["audit.id"], name="item_approved_by_id_fkey"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
 

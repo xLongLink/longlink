@@ -14,6 +14,13 @@ class ItemCreate(BaseModel):
     status: ItemStatus = ItemStatus.draft
 
 
+class ItemStatusUpdate(BaseModel):
+    """Validate a requested invoice approval state."""
+
+    # Approval state
+    status: ItemStatus
+
+
 class ItemRead(BaseModel):
     """Catalog item response including its Platform creator."""
 
@@ -37,6 +44,15 @@ class ItemRead(BaseModel):
 
     # Creator details
     created_by: User | None
+    approved_by: User | None
+
+
+class ItemPage(BaseModel):
+    """One page of invoices and the total number available."""
+
+    # Pagination fields
+    items: list[ItemRead]
+    total: int
 
 
 class ItemAttachmentRead(BaseModel):

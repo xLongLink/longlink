@@ -1,6 +1,7 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Invoices" icon="banknote">
-    <Query id="items" path="/api/items" />
+    <State id="pages" value="${1}" />
+    <Query id="items" path="/api/items?page=${pages.value}&amp;page_size=8" />
     <State id="draft" status="draft" />
     <State id="createDialog" open="${false}" />
 
@@ -11,9 +12,9 @@
                 <TextInput label="Invoice number" value="$draft.name" />
                 <NumberInput label="Amount (CHF)" value="$draft.price" min="0" />
                 <Selector label="Status" value="$draft.status">
-                    <Option value="draft" label="Draft" />
-                    <Option value="pending" label="Pending approval" />
-                    <Option value="approved" label="Approved" />
+                    <Option value="draft" label="Draft" icon="logs" />
+                    <Option value="pending" label="Pending" icon="clock" />
+                    <Option value="approved" label="Approved" icon="check" />
                 </Selector>
                 <Button label="Create Invoice" variant="primary">
                     <Request
@@ -27,36 +28,62 @@
             </Dialog>
         </Stack>
 
-        <Table data="$items" idKey="id">
-            <TableColumn field="name" header="Invoice">
-                <Stack gap="1">
-                    <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
-                        <Link to="/items/${row.id}">$row.name</Link>
-                        <Badge variant="neutral" if="${row.status === 'draft'}">Draft</Badge>
-                        <Badge variant="warning" if="${row.status === 'pending'}">Pending approval</Badge>
-                        <Badge variant="success" if="${row.status === 'approved'}">Approved</Badge>
+        <Stack gap="1">
+            <Table data="$items.items" idKey="id">
+                <TableColumn field="name" header="Invoice">
+                    <Stack gap="1">
+                        <Stack direction="horizontal" align="center" gap="2" wrap="wrap">
+                            <Link to="/items/${row.id}">$row.name</Link>
+                            <Badge variant="neutral" if="${row.status === 'draft'}">Draft</Badge>
+                            <Badge variant="warning" if="${row.status === 'pending'}">Pending</Badge>
+                            <Badge variant="success" if="${row.status === 'approved'}">Approved</Badge>
+                        </Stack>
+                        <Stack direction="horizontal" align="center" gap="1">
+                            <Text color="secondary" if="$row.created_at">
+                                <Timestamp value="$row.created_at" format="date" />
+                            </Text>
+                            <Text color="secondary" if="$row.created_at">-</Text>
+                            <Text color="secondary">
+                                <Currency value="$row.price" currency="CHF" locale="de-CH" />
+                            </Text>
+                        </Stack>
                     </Stack>
-                    <Stack direction="horizontal" align="center" gap="1">
-                        <Text color="secondary" if="$row.created_at">
-                            <Timestamp value="$row.created_at" format="date" />
-                        </Text>
-                        <Text color="secondary" if="$row.created_at">-</Text>
-                        <Text color="secondary">
-                            <Currency value="$row.price" currency="CHF" locale="de-CH" />
-                        </Text>
+                </TableColumn>
+                <TableColumn field="created_by.name" header="Created by">
+                    <Stack direction="horizontal" align="center" gap="3" if="$row.created_by">
+                        <Avatar src="$row.created_by.avatar" name="$row.created_by.name" alt="$row.created_by.name" />
+                        <Stack gap="0">
+                            <Text value="$row.created_by.name" />
+                            <Text color="secondary" value="$row.created_by.email" />
+                        </Stack>
                     </Stack>
-                </Stack>
-            </TableColumn>
-            <TableColumn field="created_by.name" header="Created by">
-                <Stack direction="horizontal" align="center" gap="3" if="$row.created_by">
-                    <Avatar src="$row.created_by.avatar" name="$row.created_by.name" alt="$row.created_by.name" />
-                    <Stack gap="0">
-                        <Text value="$row.created_by.name" />
-                        <Text color="secondary" value="$row.created_by.email" />
+                    <Text color="secondary" if="${!row.created_by}">Unknown</Text>
+                </TableColumn>
+                <TableColumn field="approved_by.name" header="Approved by">
+                    <Stack direction="horizontal" align="center" gap="3" if="$row.approved_by">
+                        <Avatar
+                            src="$row.approved_by.avatar"
+                            name="$row.approved_by.name"
+                            alt="$row.approved_by.name"
+                        />
+                        <Stack gap="0">
+                            <Text value="$row.approved_by.name" />
+                            <Text color="secondary" value="$row.approved_by.email" />
+                        </Stack>
                     </Stack>
-                </Stack>
-                <Text color="secondary" if="${!row.created_by}">Unknown</Text>
-            </TableColumn>
-        </Table>
+                    <Text color="secondary" if="${!row.approved_by}">—</Text>
+                </TableColumn>
+            </Table>
+            <Stack direction="horizontal" gap="2" justify="between">
+                <Button label="Previous" disabled="${pages.value === 1}">
+                    <Patch state="pages" value="${{ value: pages.value - 1 }}" />
+                    <Patch state="items" invalidate="true" />
+                </Button>
+                <Button label="Next" disabled="${items.total &lt;= pages.value * 8}">
+                    <Patch state="pages" value="${{ value: pages.value + 1 }}" />
+                    <Patch state="items" invalidate="true" />
+                </Button>
+            </Stack>
+        </Stack>
     </Stack>
 </longlink>
