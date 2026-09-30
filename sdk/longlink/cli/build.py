@@ -453,6 +453,7 @@ def build_command(
         typer.Option(help="Registry prefix: ghcr.io/<owner> for releases or localhost:15000 for development."),
     ] = None,
     push: Annotated[bool, typer.Option(help="Push the built image tag after building.")] = False,
+    latest: Annotated[bool, typer.Option(help="Also tag the built image as latest.")] = False,
 ) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
@@ -460,6 +461,15 @@ def build_command(
     pyproject_data = read_pyproject(Path.cwd())
     solution_name, project_version, _ = read_project_metadata(pyproject_data)
     image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
+    image_tags = [image_tag]
+
+    # Add the latest alias only when it differs from the requested image tag.
+    if latest:
+        latest_tag = resolve_image_tag(solution_name, "latest", registry)
+        if latest_tag != image_tag:
+            image_tags.append(latest_tag)
+
+    # Require Docker before preparing the build context.
     docker_command = shutil.which("docker")
     if docker_command is None:
         raise CliError("Docker is required to build images")
@@ -471,29 +481,24 @@ def build_command(
 
         # Run the Docker build and optional push.
         try:
-            subprocess.run(  # noqa: S603
-                [
-                    docker_command,
-                    "build",
-                    "--platform",
-                    "linux/amd64",
-                    "-f",
-                    str(build_context / "Dockerfile"),
-                    "-t",
-                    image_tag,
-                    str(build_context),
-                ],
-                check=True,
-            )
+            docker_build_command = [docker_command, "build", "--platform", "linux/amd64", "-f", str(build_context / "Dockerfile")]
+            for image_tag in image_tags:
+                docker_build_command.extend(["-t", image_tag])
+            docker_build_command.append(str(build_context))
+            subprocess.run(docker_build_command, check=True)  # noqa: S603
 
-            # Push the tag only when requested.
+            # Push each built tag only when requested.
             if push:
-                subprocess.run([docker_command, "push", image_tag], check=True)  # noqa: S603
+                for image_tag in image_tags:
+                    subprocess.run([docker_command, "push", image_tag], check=True)  # noqa: S603
         except subprocess.CalledProcessError as error:
             raise CliError(f"Docker command failed with exit code {error.returncode}") from error
 
-    typer.echo(f"- Built image: {image_tag}")
+    # Report every tag attached to the built image.
+    for image_tag in image_tags:
+        typer.echo(f"- Built image: {image_tag}")
 
     # Report pushed images only when requested.
     if push:
-        typer.echo(f"- Pushed image: {image_tag}")
+        for image_tag in image_tags:
+            typer.echo(f"- Pushed image: {image_tag}")
