@@ -27,10 +27,16 @@
 
         <Table data="$items" idKey="id">
             <TableColumn field="name" header="Invoice">
-                <Link to="/items/${row.id}">$row.name</Link>
-            </TableColumn>
-            <TableColumn field="price" header="Amount" align="end">
-                <Text>${`CHF ${row.price}`}</Text>
+                <Stack gap="1">
+                    <Link to="/items/${row.id}">$row.name</Link>
+                    <Stack direction="horizontal" align="center" gap="1">
+                        <Text color="secondary" if="$row.created_at">
+                            <Timestamp value="$row.created_at" format="date" />
+                        </Text>
+                        <Text color="secondary" if="$row.created_at">-</Text>
+                        <Text color="secondary">${`CHF ${row.price}`}</Text>
+                    </Stack>
+                </Stack>
             </TableColumn>
             <TableColumn field="created_by.name" header="Created by">
                 <Stack direction="horizontal" align="center" gap="3" if="$row.created_by">

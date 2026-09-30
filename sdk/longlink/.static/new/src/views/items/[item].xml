@@ -10,7 +10,13 @@
         <Stack direction="horizontal" justify="between" align="center" wrap="wrap">
             <Stack gap="1">
                 <Heading level="3">${`Invoice ${item.name}`}</Heading>
-                ${`CHF ${item.price}`}
+                <Stack direction="horizontal" align="center" gap="1">
+                    <Text color="secondary" if="$item.created_at">
+                        <Timestamp value="$item.created_at" format="date" />
+                    </Text>
+                    <Text color="secondary" if="$item.created_at">-</Text>
+                    <Text color="secondary">${`CHF ${item.price}`}</Text>
+                </Stack>
             </Stack>
             <Dialog title="Upload Invoice Document" triggerLabel="Upload document" isOpen="$uploadDialog.open" purpose="form">
                 <FileInput label="Invoice document" value="$attachment.file" />
