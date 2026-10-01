@@ -37,6 +37,7 @@
         "acorn": "^8.17.0",
         "es-toolkit": "^1.52.0",
         "fast-xml-parser": "^5.11.1",
+        "htmlparser2": "^12.0.0",
         "isbot": "^5",
         "ky": "^2.1.0",
         "lucide-react": "^1.48.0",
@@ -51,7 +52,6 @@
     "devDependencies": {
         "@astryxdesign/cli": "0.6.3",
         "@hey-api/openapi-ts": "0.99.0",
-        "@prettier/plugin-xml": "^3.4.2",
         "@react-router/dev": "8.4.0",
         "@testing-library/user-event": "14.6.7",
         "@types/node": "^26.6.3",

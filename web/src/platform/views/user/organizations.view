@@ -1,4 +1,3 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Organizations" icon="building2">
     <Query id="memberships" path="/api/v1/me/organizations" />
     <State id="draft" name="" />

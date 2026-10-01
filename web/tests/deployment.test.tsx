@@ -7,7 +7,7 @@ import { cleanupMountedRoot } from './xml/helpers';
 import { PlatformView } from '@/components/PlatformView';
 import { LayerProvider } from '@astryxdesign/core/Layer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import settingsSource from '@/platform/views/orgs/settings.xml?raw';
+import settingsSource from '@/platform/views/orgs/settings.view?raw';
 
 const organizationId = '00000000-0000-4000-8000-000000000003';
 const solutionId = '00000000-0000-4000-8000-000000000002';

@@ -68,7 +68,7 @@ def _element_lines(
     if not attributes:
         lines.append("- none")
 
-    # Render only authoring constraints useful in ordinary component XML.
+    # Render only authoring constraints useful in ordinary component markup.
     for attribute in attributes:
         type_name = attribute.get("type", "string").rsplit(":", 1)[-1]
         simple_type = attribute.find(f"{XSD}simpleType")
@@ -140,7 +140,7 @@ def _helpers(
 
 
 def docs_command(component: str | None = None, category: str | None = None) -> None:
-    """List XML components or show documentation for one component."""
+    """List View components or show documentation for one component."""
 
     # Build the catalog from top-level elements carrying docs metadata.
     schemas = _schemas()
@@ -166,7 +166,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
 
     # A missing component prints the grouped discovery catalog.
     if component is None:
-        lines = ["LongLink XML components"]
+        lines = ["LongLink View components"]
         documented.sort(key=lambda entry: entry[0].get("name", ""))
         for category_name in categories:
             entries = [element for element, metadata in documented if metadata.get("category") == category_name]
@@ -186,7 +186,7 @@ def docs_command(component: str | None = None, category: str | None = None) -> N
         typer.echo("\n".join(lines))
         return
 
-    # Resolve either the XML element name or documentation slug.
+    # Resolve either the component name or documentation slug.
     normalized = component.casefold()
     match = next(
         (

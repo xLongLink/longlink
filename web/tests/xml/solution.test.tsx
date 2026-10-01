@@ -81,7 +81,7 @@ describe('SolutionRuntime', () => {
             const url = input instanceof Request ? input.url : String(input);
 
             if (url.endsWith('/views.json'))
-                return Response.json([view('home', '/home', 'https://example.com/view.xml')]);
+                return Response.json([view('home', '/home', 'https://example.com/view.view')]);
             throw new Error('View fetch must not occur');
         });
         vi.stubGlobal('fetch', fetchRequest);
@@ -108,7 +108,7 @@ describe('SolutionRuntime', () => {
         await act(async () => vi.waitFor(() => expect(output.textContent).toContain('42')));
     });
 
-    it('keeps a custom manifest URL and fetches XML beside it', async () => {
+    it('keeps a custom manifest URL and fetches View markup beside it', async () => {
         // Arrange
         const requests: Request[] = [];
         vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
@@ -134,8 +134,8 @@ describe('SolutionRuntime', () => {
         expect(`${manifestUrl.pathname}${manifestUrl.search}${manifestUrl.hash}`).toBe(
             '/proxy/views.json?version=1#manifest'
         );
-        expect(viewUrl.pathname).toBe('/proxy/home.xml');
-        expect(viewRequest.headers.get('accept')).toBe('application/xml');
+        expect(viewUrl.pathname).toBe('/proxy/home.view');
+        expect(viewRequest.headers.get('accept')).toBe('text/plain');
     });
 
     it('rejects unmatched routes', async () => {
@@ -233,7 +233,7 @@ function Location({ tabs }: { tabs: string }) {
 }
 
 /** Creates a minimal manifest view. */
-function view(name: string, route: string, path = `${name}.xml`) {
+function view(name: string, route: string, path = `${name}.view`) {
     return { name, path, route };
 }
 
@@ -248,5 +248,5 @@ function stubFetch(response: (url: string) => Response): void {
 
 /** Creates an XML fetch response. */
 function xmlResponse(body: string): Response {
-    return new Response(body, { headers: { 'Content-Type': 'application/xml' } });
+    return new Response(body, { headers: { 'Content-Type': 'text/plain' } });
 }

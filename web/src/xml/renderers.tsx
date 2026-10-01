@@ -36,7 +36,7 @@ class XmlErrorBoundary extends Component<{ ast: ASTNode; children: ReactNode }, 
     render() {
         // Render the captured XML error instead of children.
         if (this.state.error) {
-            return <Banner status="error" title={this.state.error.message || 'XML rendering failed'} />;
+            return <Banner status="error" title={this.state.error.message || 'View rendering failed'} />;
         }
 
         return this.props.children;
@@ -54,7 +54,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
         try {
             return { error: null, nodes: getSetupNodes(ast.children) };
         } catch (error: unknown) {
-            return { error: error instanceof Error ? error : new Error('XML setup validation failed'), nodes: [] };
+            return { error: error instanceof Error ? error : new Error('View setup validation failed'), nodes: [] };
         }
     }, [ast]);
     const [initializedAst, setInitializedAst] = useState<ASTNode | null>(null);
@@ -83,7 +83,7 @@ export function RenderXML({ ast, ctx }: { ast: ASTNode; ctx: XmlRuntime }) {
 
         void setupContext(setup.nodes, ctx, {
             isActive: () => !controller.signal.aborted,
-            onError: (error) => reportSetupError(error instanceof Error ? error : new Error('XML refresh failed')),
+            onError: (error) => reportSetupError(error instanceof Error ? error : new Error('View refresh failed')),
             signal: controller.signal,
         })
             .then(() => {

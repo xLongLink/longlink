@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.view": "html"
+    },
+    "[html]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false,
+        "editor.formatOnType": false
+    }
+}

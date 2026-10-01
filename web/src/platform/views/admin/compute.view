@@ -1,4 +1,3 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Compute" icon="wrench">
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
@@ -13,7 +12,7 @@
     />
     <Query
         id="computes"
-        path="/api/v1/computes?page=${pages.value}&amp;page_size=25"
+        path="/api/v1/computes?page=${pages.value}&page_size=25"
     />
 
     <Stack gap="8">
@@ -60,7 +59,7 @@
                 </Button>
                 <Button
                     label="Next"
-                    disabled="${computes.total &lt;= pages.value * 25}"
+                    disabled="${computes.total <= pages.value * 25}"
                 >
                     <Patch
                         state="pages"
@@ -87,13 +86,13 @@
                 <TextInput
                     label="Gateway URL"
                     value="$registration.gateway_url"
-                    placeholder="https://&lt;nightly_gateway_floating_ip&gt;"
+                    placeholder="https://<nightly_gateway_floating_ip>"
                     isRequired="true"
                 />
                 <TextInput
                     label="Storage endpoint"
                     value="$registration.storage_endpoint"
-                    placeholder="https://&lt;nightly_storage_floating_ip&gt;"
+                    placeholder="https://<nightly_storage_floating_ip>"
                     isRequired="true"
                 />
                 <TextArea

@@ -1,9 +1,8 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Users" icon="users">
     <State id="pages" value="${1}" />
     <Query
         id="users"
-        path="/api/v1/users?page=${pages.value}&amp;page_size=25"
+        path="/api/v1/users?page=${pages.value}&page_size=25"
     />
 
     <Stack gap="8">
@@ -48,7 +47,7 @@
                 </Button>
                 <Button
                     label="Next"
-                    disabled="${users.total &lt;= pages.value * 25}"
+                    disabled="${users.total <= pages.value * 25}"
                 >
                     <Patch
                         state="pages"

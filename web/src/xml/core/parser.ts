@@ -1,119 +1,141 @@
+import { Parser } from 'htmlparser2';
 import type { ASTNode, ASTProps } from '../types';
 import { compileAttribute } from '../expressions/compile';
-import { XMLParser, XMLValidator } from 'fast-xml-parser';
 
-const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
+/** Parses case-sensitive View markup without HTML tree repair or XML escaping requirements. */
+export function parseView(source: string): ASTNode {
+    const nodes: ASTNode[] = [];
+    const stack: ASTNode[] = [];
+    let params: ASTProps = {};
+    let text = '';
+    let cursor = 0;
+    let selfClosingName: string | undefined;
 
-const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributesGroupName: ':@',
-    attributeNamePrefix: '@_',
-    parseTagValue: false,
-    parseAttributeValue: false,
-    trimValues: false,
-    preserveOrder: true,
-});
+    /** Reports malformed markup with its source position. */
+    function invalid(message: string): never {
+        // Locate the current parser event within the original source.
+        const prefix = source.slice(0, parser.startIndex);
+        const line = prefix.split('\n').length;
+        const column = prefix.length - prefix.lastIndexOf('\n');
 
-/** Parses one XML document with a single longlink root. */
-export function parseXML(xml: string): ASTNode {
-    // Reject XML constructs outside the supported subset.
-    if (UNSUPPORTED_XML_MARKUP_PATTERN.test(xml)) {
-        throw new Error('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
+        throw new Error(`View is invalid at line ${line}, column ${column}: ${message}`);
     }
 
-    // Validate first because the preserve-order parser can otherwise recover from malformed tags.
-    const validationResult = XMLValidator.validate(xml);
-
-    // Surface parser validation errors with location details.
-    if (validationResult !== true) {
-        const validationError = validationResult.err;
-        const location =
-            validationError?.line != null && validationError?.col != null
-                ? ` at line ${validationError.line}, column ${validationError.col}`
-                : '';
-        throw new Error(`XML is invalid${location}: ${validationError?.msg ?? 'Malformed XML'}`);
+    /** Ensures the permissive parser has not discarded unmatched or incomplete markup. */
+    function advance(): void {
+        // Require contiguous source events so ignored markup cannot disappear.
+        if (parser.startIndex !== cursor) invalid('Unexpected markup');
+        cursor = parser.endIndex + 1;
     }
 
-    // Compile all nodes before validating the document root to preserve attribute error precedence.
-    const ast = toNodes(parser.parse(xml));
-    const [root] = ast;
+    /** Compiles adjacent text callbacks together, including decoded character references. */
+    function flushText(): void {
+        const value = text.trim();
 
-    if (ast.length !== 1 || root?.name !== 'longlink') {
-        throw new Error('XML views must contain exactly one longlink root');
+        // Attach visible text to the current element or document root.
+        if (value) {
+            const children = stack.at(-1)?.children ?? nodes;
+            children.push({ name: '$text', params: { value: compileAttribute(value) }, children: [] });
+        }
+
+        text = '';
+    }
+
+    // XML tokenization preserves casing and self-closing tags; it does not enforce XML entity escaping.
+    const parser = new Parser(
+        {
+            onopentagname(name) {
+                flushText();
+
+                // Require component identifiers and reset attributes for each element.
+                if (!/^[A-Za-z_][\w.-]*$/.test(name)) invalid('Invalid component name');
+                params = {};
+            },
+            onattribute(name, value, quote) {
+                const lowerName = name.toLowerCase();
+
+                // Keep styling and executable callbacks under adapter control.
+                if (['classname', 'style', 'xstyle'].includes(lowerName)) {
+                    throw new Error(`${name} is not supported in Views`);
+                }
+                if (lowerName.startsWith('on')) {
+                    throw new Error(`Event handler attribute "${name}" is not supported in Views`);
+                }
+
+                // Require unambiguous quoted attributes and reject duplicate names.
+                if (!/^[A-Za-z_][\w.-]*$/.test(name)) invalid('Invalid attribute name');
+                if (!/\s/.test(source[parser.startIndex - 1] ?? ''))
+                    invalid('Attributes must be separated by whitespace');
+                if (!quote) invalid(`Attribute "${name}" must have a quoted value`);
+                if (Object.hasOwn(params, name)) invalid(`Duplicate attribute "${name}"`);
+                params[name] = compileAttribute(value);
+            },
+            onopentag(name) {
+                advance();
+                selfClosingName = source.slice(parser.startIndex, cursor).endsWith('/>') ? name : undefined;
+
+                // Preserve component nesting without browser HTML semantics.
+                const node: ASTNode = { name, params, children: [] };
+                const children = stack.at(-1)?.children ?? nodes;
+                children.push(node);
+                stack.push(node);
+            },
+            onclosetag(name, implied) {
+                flushText();
+
+                // Only self-closing syntax may trigger an implied closing callback.
+                if (implied) {
+                    if (selfClosingName !== name) {
+                        invalid(`Missing closing tag for ${name}`);
+                    }
+                    selfClosingName = undefined;
+                } else {
+                    advance();
+                    if (!/^<\/[A-Za-z_][\w.-]*\s*>$/.test(source.slice(parser.startIndex, cursor))) {
+                        invalid('Invalid closing tag');
+                    }
+                }
+
+                // Require exact, case-sensitive closing tags.
+                if (stack.at(-1)?.name !== name) invalid(`Unexpected closing tag for ${name}`);
+                stack.pop();
+            },
+            ontext(value) {
+                advance();
+
+                // Keep literal text escaping explicit; raw operators belong in quoted attributes.
+                if (source.slice(parser.startIndex, cursor).includes('<')) invalid('Incomplete markup');
+                text += value;
+            },
+            oncomment() {
+                flushText();
+                advance();
+
+                // Reject unterminated comments instead of accepting parser recovery.
+                if (!source.slice(parser.startIndex, cursor).endsWith('-->')) invalid('Unclosed comment');
+            },
+            onprocessinginstruction() {
+                invalid('Declarations and processing instructions are not supported');
+            },
+            oncdatastart() {
+                invalid('CDATA is not supported');
+            },
+            onend() {
+                flushText();
+
+                // Reject incomplete tags or ignored closing tags at the end of the document.
+                if (cursor !== source.length || stack.length) invalid('Incomplete markup');
+            },
+        },
+        { xmlMode: true, decodeEntities: true }
+    );
+
+    // Parse one document, then require its public View root.
+    parser.end(source);
+    const [root] = nodes;
+    if (nodes.length !== 1 || root?.name !== 'longlink') {
+        throw new Error('Views must contain exactly one longlink root');
     }
 
     return root;
-}
-
-/** Converts parser output into XML AST nodes. */
-function toNodes(input: unknown): ASTNode[] {
-    // Flatten preserve-order arrays into sibling nodes.
-    if (Array.isArray(input)) {
-        return input.flatMap(toNodes);
-    }
-
-    // Compile visible text into private AST nodes so XML elements can use natural text children.
-    if (typeof input === 'string') {
-        const value = input.trim();
-
-        return value ? [{ name: '$text', params: { value: compileAttribute(value) }, children: [] }] : [];
-    }
-
-    // Treat empty or unsupported parser output as no nodes.
-    if (!input || typeof input !== 'object') return [];
-
-    const record = input as Record<string, unknown>;
-    const params = collectParams(record[':@']);
-
-    // Preserve sibling order while stripping parser metadata.
-    return Object.entries(record).flatMap(([key, value]) => {
-        // Skip attributes and parser metadata.
-        if (key === ':@' || key.startsWith('?')) {
-            return [];
-        }
-
-        // Reprocess text wrappers through the same rules.
-        if (key === '#text') {
-            return toNodes(value);
-        }
-
-        return [
-            {
-                name: key,
-                params,
-                children: toNodes(value),
-            },
-        ];
-    });
-}
-
-/** Validates parser attribute names and compiles them into XML params. */
-function collectParams(input: unknown): ASTProps {
-    // Ignore malformed attribute containers.
-    if (!input || typeof input !== 'object') {
-        return {};
-    }
-
-    const record = input as Record<string, string>;
-
-    const params: ASTProps = {};
-
-    // Reject unsupported names before compiling attributes without parser prefixes.
-    for (const [key, entry] of Object.entries(record)) {
-        const name = key.slice(2);
-        const lowerName = name.toLowerCase();
-
-        if (lowerName === 'classname' || lowerName === 'style' || lowerName === 'xstyle') {
-            throw new Error(`${name} is not supported in XML`);
-        }
-
-        if (lowerName.startsWith('on')) {
-            throw new Error(`Event handler attribute "${name}" is not supported in XML`);
-        }
-
-        // Compile string attributes without resolving runtime values.
-        params[name] = compileAttribute(entry);
-    }
-
-    return params;
 }

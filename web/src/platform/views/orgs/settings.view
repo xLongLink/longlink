@@ -1,4 +1,3 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Organization Settings" icon="settings2">
     <Query
         id="membership"
@@ -46,7 +45,7 @@
     />
     <Query
         id="createSolutionMetadata"
-        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
+        if="${createSolution.open && createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
     />
     <Query
@@ -303,7 +302,7 @@
                             >
                                 <MoreMenu value="$solutionMenu">
                                     <Option
-                                        if="${row.desired_revision_id &amp;&amp; !row.deployment_pending &amp;&amp; row.status !== 'creating'}"
+                                        if="${row.desired_revision_id && !row.deployment_pending && row.status !== 'creating'}"
                                         value="${{ envs: {}, item: row, logsOpen: false, deleteOpen: false, open: false, removed: {}, reviewing: true }}"
                                         label="Update"
                                         icon="refresh"
@@ -546,11 +545,11 @@
                         property="$environment.name"
                         isDisabled="${solutionMenu.removed[environment.name] === true}"
                         isOptional="${!environment.required}"
-                        isRequired="${environment.required &amp;&amp; (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) || solutionMenu.removed[environment.name] === true)}"
+                        isRequired="${environment.required && (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) || solutionMenu.removed[environment.name] === true)}"
                         placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) ? 'Configured: preserve existing value' : environment.description || 'Enter value'}"
                     />
                     <CheckboxInput
-                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) &amp;&amp; !environment.required}"
+                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) && !environment.required}"
                         label="Remove ${environment.name}"
                         value="$solutionMenu.removed"
                         property="$environment.name"

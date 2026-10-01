@@ -1,6 +1,6 @@
 # Contributing
 
-The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and Platform rendering path.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, View runtime, docs, and Platform rendering path.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ vp fmt --write     # Formats the code
 ## Guidelines
 
 - Use Astryx components and providers for UI, overlays, links, and notifications.
-- XML adapters import components directly from `@astryxdesign/core/<Component>`.
+- View adapters import components directly from `@astryxdesign/core/<Component>`.
 
 ## Theme
 
@@ -53,20 +53,24 @@ Theme preferences are defined in `src/theme.ts` and applied through the root pro
 
 Runtime tags are `<longlink>`, `<State>`, `<Query>`, and `<For>`. Buttons and Links with a `label` can contain ordered `Validate`, `Request`, and `Patch` effects.
 
-## XML
+## Views
 
-- Views are parsed by `src/xml/core/parser.ts` into an AST.
+- Case-sensitive `.view` files are parsed by `htmlparser2` in `src/xml/core/parser.ts` into an AST. XML-mode tokenization preserves component names and self-closing tags without requiring XML entity escaping in quoted attributes.
+- Raw `&&`, `<`, and `>` work inside quoted attributes. XML declarations, schema hints, DOCTYPE, ENTITY, and CDATA are not supported.
+- Parsing rejects duplicate or unquoted attributes, unmatched tags, and implicit tag repair. SDK validation applies shared component constraints to the parsed tree rather than parsing the source as XML.
+- Preserve View formatting manually for now: standard XML formatters reject raw operators, and standard HTML formatters can misinterpret case-sensitive components such as `Link`.
+- VS Code workspace settings associate `.view` files with built-in HTML highlighting and disable automatic HTML formatting. Newly generated Solutions include the same settings; this is syntax coloring, not View-specific validation.
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
 - Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
-- Child content is rendered recursively, so nested XML components stay under the same runtime context.
+- Child content is rendered recursively, so nested View components stay under the same runtime context.
 - Text-bearing components use Astryx `label`, `title`, or `value` attributes. Use expressions in `value` for dynamic copy.
-- XML rejects `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
+- Views reject `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
 
 ## Keep changes aligned
 
 - Keep platform concerns in the API mode path.
 - Use direct Astryx imports for reusable UI.
-- Keep XML runtime and compiler changes inside `src/xml/`.
+- Keep View runtime and compiler changes inside `src/xml/`.
 - Prefer `src/lib/api.ts` helpers over raw `fetch`.
 - Remove obsolete flows when replacing them end to end.
 - Favor the current MVP model over backward compatibility.
@@ -79,4 +83,4 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, and `<For>`. Buttons and Li
 4. Register the tag in `src/xml/core/registry.tsx`.
 5. Update parser, context, or helper code only when the component needs new runtime behavior.
 6. Add focused tests under `web/tests/xml/`.
-7. Update docs/examples so the new XML shape is discoverable.
+7. Update docs/examples so the new View shape is discoverable.

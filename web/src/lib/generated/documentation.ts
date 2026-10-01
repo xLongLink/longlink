@@ -88,7 +88,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [],
         "category": "Runtime",
-        "description": "Connects writable control values to State objects declared in the XML runtime. A $state.property binding reads the current property and writes user changes back to it.",
+        "description": "Connects writable control values to State objects declared in the View runtime. A $state.property binding reads the current property and writes user changes back to it.",
         "example": "<State id=\"form\" name=\"\" active=\"true\" />\n\n<TextInput label=\"Name\" value=\"$form.name\" />\n<Switch label=\"Active\" value=\"$form.active\" />",
         "lastUpdated": "2026-09-30",
         "name": "Bindings",
@@ -349,9 +349,9 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [],
         "category": "Runtime",
-        "description": "Evaluates a safe JavaScript expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings.",
-        "example": "<Text if=\"${order.total > 0}\">Total: ${order.total}</Text>\n<Link to=\"/orders/${order.id}\">Open order</Link>",
-        "lastUpdated": "2026-09-30",
+        "description": "Evaluates a safe JavaScript expression subset against the View runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings. View files support raw logical and comparison operators inside quoted attributes, including &&, ||, <, and >. Keep literal text character references outside attributes when needed; XML declarations and schema hints are not supported.",
+        "example": "<Text if=\"${order.ready && order.total < 100}\">Total: ${order.total}</Text>\n<Link to=\"/orders/${order.id}\">Open order</Link>",
+        "lastUpdated": "2026-10-01",
         "name": "Expressions",
         "nested": [],
         "slug": "expressions",
@@ -634,7 +634,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "icon"
             }
         ],
-        "description": "Defines a LongLink XML View.",
+        "description": "Defines a LongLink View.",
         "example": "<longlink name=\"Welcome\" icon=\"layout-dashboard\">\n  <Text>Welcome</Text>\n</longlink>",
         "name": "longlink",
         "category": "Runtime",

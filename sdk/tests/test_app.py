@@ -176,26 +176,26 @@ def test_production_startup_installs_one_access_filter(monkeypatch: pytest.Monke
     ("relative_path", "content", "expected_metadata"),
     [
         pytest.param(
-            "dashboard.xml",
+            "dashboard.view",
             '<longlink name="Dashboard" icon="layout-dashboard">Dashboard</longlink>',
             {"route": "/dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
             id="root",
         ),
         pytest.param(
-            "issues/[issue].xml",
+            "issues/[issue].view",
             '<longlink name="Issue">Issue</longlink>',
             {"route": "/issues/:issue", "name": "Issue"},
             id="dynamic",
         ),
     ],
 )
-def test_xml_views_are_registered_from_default_views_directory(
+def test_views_are_registered_from_default_views_directory(
     solution_source: Path,
     relative_path: str,
     content: str,
     expected_metadata: dict[str, str],
 ) -> None:
-    """Expose root, nested, and dynamic XML views with derived metadata."""
+    """Expose root, nested, and dynamic Views with derived metadata."""
 
     # Build the default view tree.
     view_path = solution_source / "views" / relative_path
@@ -204,21 +204,21 @@ def test_xml_views_are_registered_from_default_views_directory(
 
     # Start LongLink and request the registered view and view catalog.
     client = create_runtime_client()
-    response = client.get(f"/views/{relative_path.removesuffix('.xml')}")
+    response = client.get(f"/views/{relative_path.removesuffix('.view')}")
     views_response = client.get("/views.json")
 
     # Verify content and metadata came from the default view tree.
     assert response.status_code == 200
-    assert "application/xml" in response.headers["content-type"]
+    assert "text/plain" in response.headers["content-type"]
     assert response.text == content
-    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.xml')}", **expected_metadata}]
+    assert views_response.json() == [{"path": f"views/{relative_path.removesuffix('.view')}", **expected_metadata}]
 
 
-def test_xml_view_catalog_omits_blank_display_metadata(solution_source: Path) -> None:
-    """Normalize whitespace-only XML view metadata out of the public catalog."""
+def test_view_catalog_omits_blank_display_metadata(solution_source: Path) -> None:
+    """Normalize whitespace-only View metadata out of the public catalog."""
 
     # Arrange
-    (solution_source / "views" / "dashboard.xml").write_text(
+    (solution_source / "views" / "dashboard.view").write_text(
         '<longlink name="  " icon="\t">Dashboard</longlink>',
         encoding="utf-8",
     )
@@ -232,14 +232,14 @@ def test_xml_view_catalog_omits_blank_display_metadata(solution_source: Path) ->
     assert response.json() == [{"path": "views/dashboard", "route": "/dashboard"}]
 
 
-def test_xml_view_catalog_uses_deterministic_path_order(solution_source: Path) -> None:
+def test_view_catalog_uses_deterministic_path_order(solution_source: Path) -> None:
     """Use lexical view paths for catalog output."""
 
     # Arrange
     nested_directory = solution_source / "views" / "admin"
     nested_directory.mkdir()
-    (nested_directory / "alpha.xml").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
-    (solution_source / "views" / "zebra.xml").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
+    (nested_directory / "alpha.view").write_text("<longlink>Alpha</longlink>", encoding="utf-8")
+    (solution_source / "views" / "zebra.view").write_text("<longlink>Zebra</longlink>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -262,8 +262,8 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
     # Arrange
     issues_directory = solution_source / "views" / "issues"
     issues_directory.mkdir()
-    (issues_directory / "[issue].xml").write_text("<longlink>Issue</longlink>", encoding="utf-8")
-    (solution_source / "views" / "overview.xml").write_text("<longlink>Overview</longlink>", encoding="utf-8")
+    (issues_directory / "[issue].view").write_text("<longlink>Issue</longlink>", encoding="utf-8")
+    (solution_source / "views" / "overview.view").write_text("<longlink>Overview</longlink>", encoding="utf-8")
     client = create_runtime_client()
 
     # Act
@@ -274,15 +274,15 @@ def test_root_redirect_skips_dynamic_views(solution_source: Path) -> None:
     assert response.headers["location"] == "/overview"
 
 
-def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> None:
-    """Validate SDK XML views against the bundled schema before registering routes."""
+def test_invalid_view_fails_during_registration(solution_source: Path) -> None:
+    """Validate SDK Views against component constraints before registering routes."""
 
     # Arrange: Discover the valid view before the invalid catalog entry.
-    (solution_source / "views" / "valid.xml").write_text("<longlink>Valid</longlink>", encoding="utf-8")
-    (solution_source / "views" / "z-broken.xml").write_text("<unknown />", encoding="utf-8")
+    (solution_source / "views" / "valid.view").write_text("<longlink>Valid</longlink>", encoding="utf-8")
+    (solution_source / "views" / "z-broken.view").write_text("<unknown />", encoding="utf-8")
 
     # Act and assert
-    with pytest.raises(ValueError, match="XML is invalid"):
+    with pytest.raises(ValueError, match="View is invalid"):
         LongLink()
 
 
@@ -290,12 +290,12 @@ def test_invalid_xml_view_fails_during_registration(solution_source: Path) -> No
     ("first_view", "second_view", "message"),
     [
         pytest.param(
-            "issues/[id].xml",
-            "issues/[issue_id].xml",
+            "issues/[id].view",
+            "issues/[issue_id].view",
             "Browser route '/issues/:issue_id' is already registered",
             id="dynamic",
         ),
-        pytest.param("index.xml", "index/index.xml", "Browser route '/' is already registered", id="static"),
+        pytest.param("index.view", "index/index.view", "Browser route '/' is already registered", id="static"),
     ],
 )
 def test_duplicate_browser_routes_are_rejected(

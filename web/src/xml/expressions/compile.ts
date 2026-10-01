@@ -2,7 +2,7 @@ import type { Expression } from 'acorn';
 import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute } from '../types';
 
-/** Compiles an XML attribute without evaluating it against runtime state. */
+/** Compiles a View attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string): ASTAttribute {
     const input = value.trim();
 
@@ -67,5 +67,5 @@ function readInterpolationSegment(input: string, start: number) {
         if (input[end] === '}') return { end, node };
     } catch {}
 
-    throw new Error('Unclosed XML expression interpolation');
+    throw new Error('Unclosed View expression interpolation');
 }

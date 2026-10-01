@@ -1,9 +1,9 @@
 import { useParams } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { PlatformView } from '@/components/PlatformView';
-import source from '@/platform/views/orgs/organization.xml?raw';
+import source from '@/platform/views/orgs/organization.view?raw';
 
-/** Renders the XML-backed organization solutions page. */
+/** Renders the View-backed organization solutions page. */
 export default function Organization() {
     const { organization = '' } = useParams();
 

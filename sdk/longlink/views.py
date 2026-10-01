@@ -6,7 +6,7 @@ STATIC_ROUTE_SEGMENT_PATTERN = re.compile(r"[A-Za-z0-9._~-]+")
 
 @dataclass(slots=True)
 class ViewDefinition:
-    """Describe a registered XML view."""
+    """Describe a registered View."""
 
     path: str
     route: str

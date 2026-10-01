@@ -3,7 +3,7 @@ import { compileAttribute } from '@/xml/expressions/compile';
 
 describe('compileAttribute', () => {
     it('rejects unclosed expression interpolation', () => {
-        expect(() => compileAttribute('${name')).toThrow('Unclosed XML expression interpolation');
+        expect(() => compileAttribute('${name')).toThrow('Unclosed View expression interpolation');
     });
 
     it('classifies a dollar-prefixed dotted path as a writable binding', () => {

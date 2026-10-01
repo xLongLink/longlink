@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { parseXML } from '@/xml';
+import { parseView } from '@/xml';
 import type { ReactNode } from 'react';
 import { viewsSchema } from '@/xml/views';
 import { startCase } from 'es-toolkit/compat';
@@ -132,12 +132,12 @@ export function SolutionRuntime({ children, navigationBaseUrl = '/', viewsUrl = 
 
             const viewUrl = resolveRequestUrl(requestBaseUrl, activeView.path);
             const content = await api(viewUrl, {
-                headers: { Accept: 'application/xml' },
+                headers: { Accept: 'text/plain' },
                 signal,
                 timeout: SOLUTION_REQUEST_TIMEOUT_MS,
             }).text();
 
-            return parseXML(content);
+            return parseView(content);
         },
         retry: false,
     });

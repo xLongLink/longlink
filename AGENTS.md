@@ -9,7 +9,7 @@
 
 - Platform: Platform for building and operating process-specific business applications, managing organizations, access, infrastructure, and deployment.
 - Solution: Simplest possible representation of a business process expressed as code.
-- Views: XML interface definition rendered by the shared Web runtime.
+- Views: Declarative `.view` interface definition rendered by the shared Web runtime.
 
 ## Python Guidelines
 

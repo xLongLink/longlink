@@ -10,7 +10,7 @@ def test_docs_command_lists_documented_component_categories() -> None:
 
     # Assert
     assert result.exit_code == 0
-    assert "LongLink XML components" in result.output
+    assert "LongLink View components" in result.output
     assert all(category in result.output for category in ("Runtime", "Actions", "Content", "Form", "Layouts"))
     assert "- Bindings - Connects writable control values" in result.output
     assert "- Expressions - Evaluates a safe JavaScript expression subset" in result.output
