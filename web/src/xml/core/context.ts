@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { api } from '@/lib/api';
 import { proxy, ref } from 'valtio';
 import { resolveRequestUrl } from './url';
+import { api, ApiError } from '@/lib/api';
 import { evaluate } from '../expressions/evaluate';
 import { isSafePropertyName } from '../expressions/resolve';
 import type { ASTAttribute, ASTNode, ASTProps, RuntimeServices, XmlComponentRegistry, XmlRuntime } from '../types';
@@ -140,7 +140,7 @@ export async function setupContext(
         // Ignore invalidations after the rendering scope releases ownership.
         if (options.isActive && !options.isActive()) return false;
 
-        // Setups publish only successful results, so failed refreshes leave current data intact.
+        // Failed refreshes retain current data unless the query declares an access fallback.
         const setup = Object.hasOwn(services.setups, id) ? services.setups[id] : undefined;
         if (!setup) return false;
 
@@ -197,9 +197,18 @@ export async function setupContext(
 
                 const url = resolveRequestUrl(services.requestBaseUrl, String(path));
 
-                scope.bindings[id] = await api(url, {
-                    signal: options.signal,
-                }).json();
+                // Explicit access fallbacks replace forbidden data without hiding other failures.
+                try {
+                    scope.bindings[id] = await api(url, {
+                        signal: options.signal,
+                    }).json();
+                } catch (error: unknown) {
+                    if (node.params.fallback == null || !(error instanceof ApiError) || error.status !== 403) {
+                        throw error;
+                    }
+
+                    scope.bindings[id] = evaluate(node.params.fallback, scope);
+                }
             };
             services.setups[id] = setup;
             await setup();

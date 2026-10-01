@@ -145,8 +145,8 @@ async def test_get_organization_by_slug_hides_cross_tenant_organization(
     response = await clients[1].get(f"/api/v1/organizations/slug/{organization.slug}")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_get_organization_by_slug_hides_deleted_organization(
@@ -164,8 +164,8 @@ async def test_get_organization_by_slug_hides_deleted_organization(
     response = await clients[0].get(f"/api/v1/organizations/slug/{organization.slug}")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_get_organization_returns_member_payload(

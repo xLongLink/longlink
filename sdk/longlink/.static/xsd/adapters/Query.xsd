@@ -12,12 +12,17 @@
       </xsd:annotation>
     </xsd:attribute>
     <xsd:attributeGroup ref="XmlRuntimeAttributes"/>
+    <xsd:attribute name="fallback" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>Value or expression published instead of data when the endpoint returns 403 (access denied), including on refresh. Other failures still stop setup or report a refresh error. Use fallback="${null}" with conditional dependent queries and content to display an access fallback.</xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
   </xsd:complexType>
   <xsd:element name="Query" type="QueryType">
     <xsd:annotation>
       <xsd:documentation>Use Query to bring the information a View needs into scope, such as a list of orders or customer details.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:docs slug="query" category="Runtime" lastUpdated="2026-07-21"/>
+        <longlink:docs slug="query" category="Runtime" lastUpdated="2026-10-01"/>
         <longlink:example>&lt;Query id="orders" path="/api/orders" /&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>

@@ -3,9 +3,11 @@
     <Query
         id="membership"
         path="/api/v1/organizations/slug/${params.organization}"
+        fallback="${null}"
     />
     <Query
         id="solutions"
+        if="${membership !== null}"
         path="/api/v1/organizations/${membership.organization.id}/solutions"
     />
     <State
@@ -20,11 +22,28 @@
     />
     <Query
         id="createSolutionMetadata"
-        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
+        if="${membership !== null &amp;&amp; createSolution.open &amp;&amp; createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
     />
 
-    <Stack gap="8">
+    <Stack
+        if="${membership === null}"
+        align="center"
+        justify="center"
+        gap="6"
+        height="60dvh"
+    >
+        <Stack align="center" gap="2">
+            <Heading level="4" accessibilityLevel="1">
+                Organization unavailable
+            </Heading>
+            <Text color="secondary">
+                It may not exist, or you may not have access.
+            </Text>
+        </Stack>
+        <Button label="Back to organizations" to="/user/organizations" />
+    </Stack>
+    <Stack if="${membership !== null}" gap="8">
         <Stack
             direction="horizontal"
             justify="between"
@@ -62,6 +81,7 @@
         </Table>
     </Stack>
     <Dialog
+        if="${membership !== null}"
         title="Create solution"
         isOpen="$createSolution.open"
         purpose="form"
