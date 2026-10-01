@@ -62,6 +62,7 @@ async def test_operations_endpoint_paginates_history(
     assert [item["id"] for item in first_payload["items"]] == [str(newer_operation.id)]
     assert [item["id"] for item in second_payload["items"]] == [str(older_operation.id)]
     assert all(item["failed"] is None for item in [*first_payload["items"], *second_payload["items"]])
+    assert all(item["resource_name"] is None for item in [*first_payload["items"], *second_payload["items"]])
 
 
 async def test_operations_endpoint_serializes_failed_organization_operation(

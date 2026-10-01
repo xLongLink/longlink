@@ -16,7 +16,7 @@ def build_project(tmp_path: Path) -> Path:
     root = tmp_path / "solution"
     root.mkdir()
     root.joinpath("pyproject.toml").write_text(
-        '[project]\nname = "demo"\nversion = "0.1.0"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
+        '[project]\nname = "demo"\nversion = "0.1.0"\ndescription = "Demo Solution"\n\n[tool.longlink]\nenvironments = "src.envs:Env"\n',
         encoding="utf-8",
     )
     envs_path = root / "src" / "envs.py"
@@ -218,8 +218,12 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
     chdir_project.joinpath("tests", "test_app.py").write_text("def test_app():\n    pass\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
+    # Prepare validated metadata at the build boundary.
+    pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
+
     # Act
-    build.build_solution(build_context)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
@@ -247,8 +251,9 @@ def test_build_solution_generates_docker_artifacts_from_project_metadata(chdir_p
         ),
     ],
 )
-def test_build_solution_rejects_invalid_project_metadata_before_generating_artifacts(
+def test_build_rejects_invalid_project_metadata_before_generating_artifacts(
     chdir_project: Path,
+    monkeypatch: pytest.MonkeyPatch,
     project_data: str,
     message: str,
 ) -> None:
@@ -256,13 +261,18 @@ def test_build_solution_rejects_invalid_project_metadata_before_generating_artif
 
     # Arrange
     chdir_project.joinpath("pyproject.toml").write_text(project_data, encoding="utf-8")
-    build_context = chdir_project.parent / "context"
+    runner = CliRunner()
+    monkeypatch.setattr(build.shutil, "which", lambda _command: pytest.fail("Project validation must precede Docker discovery"))
+    monkeypatch.setattr(
+        build.tempfile, "TemporaryDirectory", lambda **_kwargs: pytest.fail("Invalid project metadata must not create build artifacts")
+    )
 
-    # Act and assert
-    with pytest.raises(build.CliError) as error:
-        build.build_solution(build_context)
-    assert str(error.value) == message
-    assert not build_context.exists()
+    # Act
+    result = runner.invoke(main, ["build"])
+
+    # Assert
+    assert result.exit_code == 1
+    assert message in result.output
 
 
 def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
@@ -281,8 +291,12 @@ def test_build_solution_uses_fallback_sdk_version_when_package_is_not_installed(
 
     monkeypatch.setattr(build, "package_version", missing_package_version)
 
+    # Prepare validated metadata at the build boundary.
+    pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
+
     # Act
-    build.build_solution(build_context)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     dockerfile = build_context.joinpath("Dockerfile").read_text(encoding="utf-8")
@@ -308,8 +322,12 @@ def test_build_solution_filters_symlinks_by_resolved_target(chdir_project: Path)
     chdir_project.joinpath("linked-database").symlink_to("dev.db")
     build_context = chdir_project.parent / "context"
 
+    # Prepare validated metadata at the build boundary.
+    pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
+
     # Act
-    build.build_solution(build_context)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     assert build_context.joinpath("linked-envs.py").is_symlink()
@@ -403,8 +421,12 @@ def test_build_solution_filters_expanded_context(chdir_project: Path) -> None:
     chdir_project.joinpath("nested", "source.py").write_text("VALUE = 1\n", encoding="utf-8")
     build_context = chdir_project.parent / "context"
 
+    # Prepare validated metadata at the build boundary.
+    pyproject_data = build.read_pyproject(chdir_project)
+    _, _, project_description = build.read_project_metadata(pyproject_data)
+
     # Act
-    build.build_solution(build_context)
+    build.build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
     # Assert
     assert not build_context.joinpath("solution", ".env").exists()
@@ -527,7 +549,8 @@ def test_build_command_reports_built_image(
         assert check is True
         commands.append(command)
         if command[1] != "push":
-            assert Path(command[-1], "Dockerfile").is_file()
+            dockerfile = Path(command[-1], "Dockerfile").read_text(encoding="utf-8")
+            assert 'LABEL org.opencontainers.image.description="Demo Solution"' in dockerfile
 
     # Replace Docker boundaries with deterministic local fakes.
     monkeypatch.setattr(build.subprocess, "run", run_docker)

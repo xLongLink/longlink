@@ -227,13 +227,13 @@ async def test_operations_service_failed_creation_updates_targets_and_resolves_r
     assert solution_row.status == Status.failed
     assert total == 2
 
-    items_by_kind = {item.kind: item for item in items}
+    items_by_kind = {item["kind"]: item for item in items}
     organization_item = items_by_kind[OperationKind.organization_create]
     solution_item = items_by_kind[OperationKind.solution_deploy]
-    assert organization_item.resource_name == organization.name
-    assert organization_item.status == OperationStatus.failed
-    assert solution_item.resource_name == solution.name
-    assert solution_item.status == OperationStatus.failed
+    assert organization_item["resource_name"] == organization.name
+    assert organization_item["status"] == OperationStatus.failed
+    assert solution_item["resource_name"] == solution.name
+    assert solution_item["status"] == OperationStatus.failed
 
 
 async def test_operations_service_coalesces_claimed_work() -> None:
