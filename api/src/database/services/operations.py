@@ -5,7 +5,7 @@ from sqlalchemy import Update, or_, case, func, select, update
 from sqlalchemy.orm import load_only
 from collections.abc import Sequence
 from src.models.statuses import Status
-from src.models.operations import OperationKind, OperationResponse
+from src.models.operations import OperationKind
 from src.models.pagination import Pagination
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.solutions import Revision, Solution
@@ -13,7 +13,7 @@ from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[OperationResponse], int]:
+async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Sequence[dict[str, object]], int]:
     """Return one newest-first page of platform operations."""
 
     # Load only fields needed by the operation response and its derived status.
@@ -71,18 +71,18 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
         for revision_id, name in result:
             resource_names[(OperationKind.solution_deploy, revision_id)] = name
 
-    # Assemble response models with their resolved target resource name.
-    items = [
-        OperationResponse(
-            id=operation.id,
-            kind=operation.kind,
-            target_id=operation.target_id,
-            resource_name=resource_names.get((operation.kind, operation.target_id)),
-            status=operation.status,
-            failed=operation.failed,
-            created_at=operation.created_at,
-            finished_at=operation.finished_at,
-        )
+    # Enrich operation data while leaving response validation to the route.
+    items: list[dict[str, object]] = [
+        {
+            "id": operation.id,
+            "kind": operation.kind,
+            "target_id": operation.target_id,
+            "resource_name": resource_names.get((operation.kind, operation.target_id)),
+            "status": operation.status,
+            "failed": operation.failed,
+            "created_at": operation.created_at,
+            "finished_at": operation.finished_at,
+        }
         for operation in operations
     ]
 

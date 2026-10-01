@@ -8,9 +8,10 @@
       <longlink:category name="Display"/>
       <longlink:category name="Form"/>
       <longlink:category name="Layouts"/>
-      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-09-30">
-        <longlink:description>Evaluates a safe JavaScript expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings.</longlink:description>
-        <longlink:example>&lt;Text if="${order.total &gt; 0}"&gt;Total: ${order.total}&lt;/Text&gt;
+      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-10-01">
+        <longlink:description>Evaluates a safe expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings. Use and / or for short-circuit logical operators and fallback values. The and operator binds more tightly than or; parentheses override precedence.</longlink:description>
+        <longlink:example>&lt;Text if="${order.total &gt; 0 and order.ready}"&gt;Total: ${order.total}&lt;/Text&gt;
+&lt;Text&gt;${order.name or 'Untitled'}&lt;/Text&gt;
 &lt;Link to="/orders/${order.id}"&gt;Open order&lt;/Link&gt;</longlink:example>
       </longlink:topic>
       <longlink:topic name="Bindings" slug="bindings" category="Runtime" lastUpdated="2026-09-30">

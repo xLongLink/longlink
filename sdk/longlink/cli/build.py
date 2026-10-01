@@ -301,15 +301,12 @@ def resolve_docker_paths(root: Path, pyproject_data: Mapping[str, object]) -> tu
     return common_root, workdir, sorted(seen_paths - {root})
 
 
-def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object] | None = None) -> None:
-    """Create Docker build artifacts for the current Solution."""
+def build_solution(build_context: Path, *, pyproject_data: Mapping[str, object], project_description: str | None) -> None:
+    """Create Docker build artifacts from validated Solution metadata."""
 
-    # Resolve build paths and collect project metadata for the image.
+    # Resolve build paths using the project metadata prepared by the command.
     root = Path.cwd().resolve()
-    if pyproject_data is None:
-        pyproject_data = read_pyproject(root)
     source_root, workdir, local_source_paths = resolve_docker_paths(root, pyproject_data)
-    _, _, project_description = read_project_metadata(pyproject_data)
 
     # Use the installed package version when available, falling back for editable source trees.
     try:
@@ -459,7 +456,7 @@ def build_command(
 
     # Validate the project and Docker prerequisites before copying source files.
     pyproject_data = read_pyproject(Path.cwd())
-    solution_name, project_version, _ = read_project_metadata(pyproject_data)
+    solution_name, project_version, project_description = read_project_metadata(pyproject_data)
     image_tag = resolve_image_tag(solution_name, tag or project_version, registry)
     image_tags = [image_tag]
 
@@ -477,7 +474,7 @@ def build_command(
     # Build inside a temporary context.
     with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
         build_context = Path(temp_dir)
-        build_solution(build_context, pyproject_data=pyproject_data)
+        build_solution(build_context, pyproject_data=pyproject_data, project_description=project_description)
 
         # Run the Docker build and optional push.
         try:

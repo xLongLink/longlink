@@ -349,9 +349,9 @@ export const componentDocumentation: ComponentDocumentation[] = [
     {
         "attributes": [],
         "category": "Runtime",
-        "description": "Evaluates a safe JavaScript expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings.",
-        "example": "<Text if=\"${order.total > 0}\">Total: ${order.total}</Text>\n<Link to=\"/orders/${order.id}\">Open order</Link>",
-        "lastUpdated": "2026-09-30",
+        "description": "Evaluates a safe expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings. Use and / or for short-circuit logical operators and fallback values. The and operator binds more tightly than or; parentheses override precedence.",
+        "example": "<Text if=\"${order.total > 0 and order.ready}\">Total: ${order.total}</Text>\n<Text>${order.name or 'Untitled'}</Text>\n<Link to=\"/orders/${order.id}\">Open order</Link>",
+        "lastUpdated": "2026-10-01",
         "name": "Expressions",
         "nested": [],
         "slug": "expressions",

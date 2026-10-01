@@ -79,8 +79,8 @@ describe('evaluate', () => {
     });
 
     it.each([
-        ['${false && unknown()}', false],
-        ['${true || unknown()}', true],
+        ['${false and unknown()}', false],
+        ['${true or unknown()}', true],
         ['${"value" ?? unknown()}', 'value'],
     ])('short-circuits unsafe right operands: %s', (value, expected) => {
         expect(evaluate(compileAttribute(value), { bindings: {} })).toBe(expected);

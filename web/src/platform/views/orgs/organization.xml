@@ -20,7 +20,7 @@
     />
     <Query
         id="createSolutionMetadata"
-        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
+        if="${createSolution.open and createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
     />
 
@@ -34,7 +34,7 @@
             <Heading level="1">Solutions</Heading>
             <Button
                 label="New Solution"
-                if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
+                if="${membership.role === 'maintain' or membership.role === 'admin' or membership.role === 'owner'}"
             >
                 <Patch
                     state="createSolution"
@@ -119,7 +119,7 @@
                                 />
                                 <Patch
                                     state="createSolution"
-                                    value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}"
+                                    value="${{ description: createSolutionMetadata.description or '', envs: {}, inspecting: false, step: 1 }}"
                                 />
                             </Button>
                         </Stack>
@@ -220,7 +220,7 @@
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
-                                    json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
+                                    json="${{ description: createSolution.description or null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
                                 />
                                 <Patch state="solutions" invalidate="true" />
                                 <Patch
