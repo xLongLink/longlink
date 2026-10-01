@@ -3,21 +3,10 @@ import httpx2
 import asyncio
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
-from src.kubernetes import tls
 from kr8s.asyncio.objects import ConfigMap, Deployment
 
 if TYPE_CHECKING:
     from src.kubernetes.client import Kubernetes
-
-
-TLS_SECRET_NAMESPACE = "knative-serving"  # noqa: S105
-TLS_SECRET_NAME = "longlink-gateway-tls"  # noqa: S105
-
-
-async def certificate(client: "Kubernetes") -> str:
-    """Read the chart-managed gateway TLS certificate."""
-
-    return await tls.certificate(client, TLS_SECRET_NAMESPACE, TLS_SECRET_NAME)
 
 
 def _deployment_is_ready(deployment: Deployment) -> bool:

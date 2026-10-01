@@ -16,14 +16,42 @@ import { PageError, PageLoading } from '@/components/Utils';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
 import { skipToken, useQuery } from '@tanstack/react-query';
 import { PageBreadcrumb } from '@/components/breadcrumb/Page';
-import { useOrganizationRoute } from '@/lib/hooks/use-organization';
-import { zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse } from '@/lib/generated/platform-api-v1/zod.gen';
+import { useOrganizationMembership } from '@/lib/hooks/use-organization';
+import {
+    zGetSolutionLogsApiV1SolutionsSolutionIdLogsGetResponse,
+    zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse,
+} from '@/lib/generated/platform-api-v1/zod.gen';
 
 /** Renders one proxy-backed organization solution after route authentication. */
 export default function OrganizationSolution() {
     const { organization = '', solution = '' } = useParams();
     const user = useAuthenticatedUser();
-    const { solutions, isLoading, error } = useOrganizationRoute(organization);
+    const membershipQuery = useOrganizationMembership(organization);
+
+    // Fetch accessible solutions after membership resolves and poll pending deployments.
+    const organizationId = membershipQuery.data?.organization.id;
+    const solutionsKey = ['api', organizationId ? `/api/v1/organizations/${organizationId}/solutions` : null] as const;
+    const solutionsPath = solutionsKey[1];
+    const solutionsQuery = useQuery({
+        queryKey: solutionsKey,
+        queryFn: solutionsPath
+            ? async ({ signal }) =>
+                  zGetOrganizationSolutionsApiV1OrganizationsOrganizationIdSolutionsGetResponse.parse(
+                      await api(solutionsPath, { signal }).json()
+                  )
+            : skipToken,
+        refetchInterval: (query) =>
+            query.state.data?.some((solution) => solution.status === 'creating' || solution.deployment_pending)
+                ? 5000
+                : false,
+        meta: { polling: true },
+        retry: false,
+    });
+
+    // Retain cached access during refresh failures and prefer solution-query errors.
+    const solutions = solutionsQuery.data ?? [];
+    const isLoading = membershipQuery.isLoading || solutionsQuery.isLoading;
+    const error: (Error & { status?: number }) | null = solutionsQuery.error ?? membershipQuery.error;
 
     const solutionAccess = solutions.find((item) => item.slug === solution);
 

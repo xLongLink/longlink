@@ -78,12 +78,6 @@ async def proxy_solution_request(
     if not identity_secret:
         raise HTTPException(status_code=503, detail="Solution gateway is not ready")
 
-    async def request_content() -> AsyncIterator[bytes]:
-        """Stream one request body to the solution gateway."""
-
-        async for chunk in request.stream():
-            yield chunk
-
     # Proxy authenticated API requests through the trusted HTTPS compute gateway boundary.
     try:
         async with asyncio.timeout(PROXY_REQUEST_TIMEOUT_SECONDS):
@@ -105,7 +99,7 @@ async def proxy_solution_request(
                 upstream_request = client.build_request(
                     request.method,
                     f"{registry.gateway_url.rstrip('/')}/{path}{'?' + query if query else ''}",
-                    content=request_content(),
+                    content=request.stream(),
                     headers=headers,
                 )
                 upstream = await client.send(upstream_request, stream=True)

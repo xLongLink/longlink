@@ -5,7 +5,7 @@ from fastapi import Depends, APIRouter
 from src.auth import authadmin, get_session
 from src.errors import InvalidError, UnavailableError
 from src.logger import logger
-from src.kubernetes import gateway, storageclasses
+from src.kubernetes import tls, gateway, storageclasses
 from collections.abc import Sequence
 from src.models.computes import ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
@@ -31,8 +31,8 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
                 try:
                     database_storage_class = await storageclasses.resolve(cluster)
                     credentials = await Storage.controller_credentials(cluster)
-                    gateway_certificate = await gateway.certificate(cluster)
-                    storage_certificate = await Storage.certificate(cluster)
+                    gateway_certificate = await tls.certificate(cluster, "knative-serving", "longlink-gateway-tls")
+                    storage_certificate = await tls.certificate(cluster, "rustfs", "longlink-storage-tls")
                 except ValueError as exc:
                     raise InvalidError(str(exc)) from exc
                 except (NotFoundError, ServerError, TimeoutError, OSError) as exc:

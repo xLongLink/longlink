@@ -80,12 +80,6 @@ class StorageKubernetes:
 
         return Credentials("controller", "controller-secret")
 
-    @staticmethod
-    async def certificate(cluster: object) -> str:
-        """Return the chart-managed storage TLS certificate without cluster I/O."""
-
-        return "storage-certificate"
-
     async def verify(self) -> None:
         """Accept read-only shared storage verification."""
 
@@ -344,10 +338,14 @@ async def verify_compute_gateway(_cluster: object, _url: str, _certificate: str 
     """Accept inline Compute verification without external Kubernetes I/O."""
 
 
-async def gateway_certificate(_cluster: object) -> str:
-    """Return the chart-managed gateway TLS certificate without cluster I/O."""
+async def tls_certificate(_cluster: object, namespace: str, name: str) -> str:
+    """Return the requested chart-managed TLS certificate without cluster I/O."""
 
-    return "gateway-certificate"
+    # Match the registered Secret coordinates for each infrastructure endpoint.
+    return {
+        ("knative-serving", "longlink-gateway-tls"): "gateway-certificate",
+        ("rustfs", "longlink-storage-tls"): "storage-certificate",
+    }[namespace, name]
 
 
 async def database_storage_class(_cluster: object) -> str:
@@ -389,7 +387,7 @@ async def reset_db(
 
     engine = create_async_engine(db_url)
     monkeypatch.setattr("src.routes.v1.computes.Kubernetes", RegistryKubernetes)
-    monkeypatch.setattr("src.routes.v1.computes.gateway.certificate", gateway_certificate)
+    monkeypatch.setattr("src.routes.v1.computes.tls.certificate", tls_certificate)
     monkeypatch.setattr("src.routes.v1.computes.gateway.verify", verify_compute_gateway)
     monkeypatch.setattr("src.routes.v1.computes.storageclasses.resolve", database_storage_class)
     monkeypatch.setattr("src.routes.v1.computes.Storage", StorageKubernetes)
