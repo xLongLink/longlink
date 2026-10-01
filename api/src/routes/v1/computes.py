@@ -72,9 +72,9 @@ async def create_compute_registry(payload: ComputeRegistryCreate, session: Async
         raise UnavailableError("Compute infrastructure is unavailable; verify endpoints, credentials, and certificates") from exc
 
     # Persist the verified connection as immediately assignable.
-    registry = await compute.create(session, candidate)
+    await compute.create(session, candidate)
     await session.commit()
-    return registry
+    return candidate
 
 
 @router.get("/computes", response_model=Page[ComputeRegistryResponse], dependencies=[Depends(authadmin)])

@@ -162,7 +162,7 @@ async def deploy(
     metadata: LongLinkMetadata,
     envs: Mapping[str, str | None],
     *,
-    source: Image | None = None,
+    source: Image,
     min_scale: MinScale | None = None,
     idle_seconds: int | None = None,
 ) -> None:
@@ -193,8 +193,6 @@ async def deploy(
         validate_idle_seconds(idle_seconds)
     except ValueError as exc:
         raise InvalidError(str(exc)) from exc
-    if source is None:
-        source = metadata.image
     if (
         current is not None
         and not current.failed

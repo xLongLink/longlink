@@ -37,7 +37,7 @@ async def fetch_page(session: AsyncSession, pagination: Pagination) -> tuple[Seq
     return result.all(), count_result.scalar_one()
 
 
-async def create(session: AsyncSession, registry: ComputeRegistry) -> ComputeRegistry:
+async def create(session: AsyncSession, registry: ComputeRegistry) -> None:
     """Register one verified compute target as immediately assignable."""
 
     # Persist the inline-verified target; duplicates translate to one stable API conflict.
@@ -48,8 +48,6 @@ async def create(session: AsyncSession, registry: ComputeRegistry) -> ComputeReg
         await session.flush()
     except IntegrityError as exc:
         raise ConflictError("Compute registry already exists") from exc
-
-    return registry
 
 
 async def delete(session: AsyncSession, registry_id: UUID) -> None:

@@ -375,7 +375,7 @@ async def test_release_inspection_revalidates_concurrent_desired_changes(
         nonlocal replacement_id
         async with session_scope() as session:
             current = await solutions.access(session, solution.id, users[0].id)
-            await solutions.deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"})
+            await solutions.deploy(session, current, users[0].id, metadata, {"OTHER": "concurrent-secret"}, source=metadata.image)
             replacement_id = current.desired_revision_id
             await session.commit()
         return metadata
