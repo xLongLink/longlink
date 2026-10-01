@@ -123,7 +123,7 @@ class _ViewParser(HTMLParser):
         # Only whitespace may appear outside the single View root.
         if not self.stack:
             if value.strip():
-                self._invalid("Views must contain exactly one longlink root")
+                self._invalid("Views must contain exactly one view root")
             return
         element = self.stack[-1]
 
@@ -205,8 +205,8 @@ def validate_view(content: str) -> etree._Element:
     parser.close()
     if parser.stack:
         raise ValueError("View syntax is invalid: Missing closing tag")
-    if len(parser.roots) != 1 or parser.roots[0].tag != "longlink":
-        raise ValueError("View is invalid: Views must contain exactly one longlink root")
+    if len(parser.roots) != 1 or parser.roots[0].tag != "view":
+        raise ValueError("View is invalid: Views must contain exactly one view root")
     root = parser.roots[0]
 
     # Reuse component constraints on the parsed tree, not on the non-XML source document.

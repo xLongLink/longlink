@@ -14,9 +14,11 @@
       <xsd:documentation>Use State for information that changes while someone uses a View, such as form entries or selected options.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="state" category="Runtime" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;State id="form" name="" active="true" /&gt;
+        <longlink:example>&lt;view&gt;
+  &lt;State id="form" name="" active="true" /&gt;
 
-&lt;TextInput label="Name" value="$form.name" /&gt;</longlink:example>
+  &lt;TextInput label="Name" value="$form.name" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

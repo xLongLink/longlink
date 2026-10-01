@@ -24,11 +24,14 @@
       <xsd:documentation>A styled navigation link. With label and child effects, it runs them in order before navigating and behaves like a link-styled button.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="link" category="Actions" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;Link to="/orders/${order.id}"&gt;Open order&lt;/Link&gt;
+        <longlink:example>&lt;view&gt;
+  &lt;State id="order" number="ORD-001" /&gt;
+  &lt;Link to="/orders/${order.number}"&gt;Open order&lt;/Link&gt;
 
-&lt;Link label="Create and open order" to="/orders/${order.id}"&gt;
-  &lt;Request method="POST" url="/api/orders" json="${order}" /&gt;
-&lt;/Link&gt;</longlink:example>
+  &lt;Link label="Create and open order" to="/orders/${order.number}"&gt;
+    &lt;Request method="POST" url="/api/orders" json="${order}" /&gt;
+  &lt;/Link&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

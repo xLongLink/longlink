@@ -35,7 +35,7 @@ describe('SolutionRuntime', () => {
         stubFetch((url) =>
             url.endsWith('/views.json')
                 ? Response.json([view('index', '/'), view('home', '/home')])
-                : xmlResponse('<longlink><Text>Home</Text></longlink>')
+                : xmlResponse('<view><Text>Home</Text></view>')
         );
 
         // Act
@@ -98,7 +98,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('issue', '/issues/:issueId')]);
-            return xmlResponse('<longlink><Text>${params.issueId}</Text></longlink>');
+            return xmlResponse('<view><Text>${params.issueId}</Text></view>');
         });
 
         // Act
@@ -119,7 +119,7 @@ describe('SolutionRuntime', () => {
                 return Response.json([view('home', '/home')]);
             }
 
-            return xmlResponse('<longlink><Text>Welcome</Text></longlink>');
+            return xmlResponse('<view><Text>Welcome</Text></view>');
         });
 
         // Act
@@ -158,7 +158,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
-            return xmlResponse('<longlink><Button to="/next">Continue</Button></longlink>');
+            return xmlResponse('<view><Button to="/next">Continue</Button></view>');
         });
         const output = await renderRuntime('/home');
 
@@ -177,7 +177,7 @@ describe('SolutionRuntime', () => {
         // Arrange
         stubFetch((url) => {
             if (url.endsWith('/views.json')) return Response.json([view('home', '/home')]);
-            return xmlResponse('<longlink><Link href="https://example.com/next">Continue</Link></longlink>');
+            return xmlResponse('<view><Link href="https://example.com/next">Continue</Link></view>');
         });
         const output = await renderRuntime('/home');
 

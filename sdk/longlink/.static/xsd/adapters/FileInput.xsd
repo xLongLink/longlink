@@ -23,7 +23,10 @@
       <xsd:documentation>FileInput provides single-file upload.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="file-input" category="Form" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="form" file="${null}" /&gt;
+  &lt;FileInput label="Attachment" value="$form.file" accept=".pdf" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

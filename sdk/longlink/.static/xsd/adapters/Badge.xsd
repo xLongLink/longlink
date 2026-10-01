@@ -16,7 +16,10 @@
       <xsd:documentation>Badge highlights a status or category at a glance. Use it sparingly: only when a value represents a distinct state (Active, Failed) or a grouping tag (Engineering, Design). Most metadata (dates, durations, counts, descriptions) should be plain description text, not badges.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="badge" category="Content" lastUpdated="2026-07-21"/>
-        <longlink:example>&lt;Badge&gt;$order.status&lt;/Badge&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="order" status="Open" /&gt;
+  &lt;Badge&gt;$order.status&lt;/Badge&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

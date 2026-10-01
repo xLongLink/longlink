@@ -31,7 +31,9 @@
       <xsd:documentation>Renders normal body text with standard bold and italic inline elements.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="text" category="Content" lastUpdated="2026-08-25"/>
-        <longlink:example>&lt;Text color="secondary"&gt;Supporting &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/Text&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;Text color="secondary"&gt;Supporting &lt;b&gt;bold&lt;/b&gt; and &lt;i&gt;italic&lt;/i&gt; text.&lt;/Text&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

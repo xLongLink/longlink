@@ -29,10 +29,12 @@
       <xsd:documentation>Button runs child effects in order when clicked, then navigates to its to destination after they succeed. Use label for buttons with effects.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="button" category="Actions" lastUpdated="2026-09-30"/>
-        <longlink:example>&lt;Button label="Save" variant="primary"&gt;
-  &lt;Request url="/api/orders" method="POST" /&gt;
-&lt;/Button&gt;
-&lt;Button to="/orders"&gt;View orders&lt;/Button&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;Button label="Save" variant="primary"&gt;
+    &lt;Request url="/api/orders" method="POST" /&gt;
+  &lt;/Button&gt;
+  &lt;Button to="/orders"&gt;View orders&lt;/Button&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

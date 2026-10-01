@@ -1,4 +1,4 @@
-<longlink name="Organizations" icon="building2">
+<view name="Organizations" icon="building2">
     <State id="pages" value="${1}" />
     <State id="metadata" item="${null}" open="${false}" />
     <State id="deletion" item="${null}" open="${false}" />
@@ -110,4 +110,4 @@
             </Stack>
         </Stack>
     </Dialog>
-</longlink>
+</view>

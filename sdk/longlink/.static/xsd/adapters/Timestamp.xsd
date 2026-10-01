@@ -34,7 +34,10 @@
       <xsd:documentation>Displays a timestamp using Astryx's locale-aware date, time, and relative formats. Use Text for surrounding typography.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="timestamp" category="Display" lastUpdated="2026-09-30"/>
-        <longlink:example>&lt;Timestamp value="$item.created_at" format="date" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="item" created_at="2026-10-01T12:00:00Z" /&gt;
+  &lt;Timestamp value="$item.created_at" format="date" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

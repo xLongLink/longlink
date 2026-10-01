@@ -18,7 +18,10 @@
       <xsd:documentation>CheckboxInput toggles a single on/off value. Use it for settings like "Enable notifications", terms acceptance, or opt-in choices. Compose multiple CheckboxInput elements in a Stack when several choices are needed.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="checkbox-input" category="Form" lastUpdated="2026-09-01"/>
-        <longlink:example>&lt;CheckboxInput label="Active" value="$form.active" /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="form" active="true" /&gt;
+  &lt;CheckboxInput label="Active" value="$form.active" /&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

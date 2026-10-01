@@ -23,9 +23,12 @@
       <xsd:documentation>Displays a numeric amount with its currency code, locale-specific grouping, and standard currency fraction digits. Use locale="de-CH" for Swiss formatting such as CHF 1’275.50. Keep the underlying amount numeric and use Text for surrounding typography.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="currency" category="Display" lastUpdated="2026-09-30"/>
-        <longlink:example>&lt;Text color="secondary"&gt;
-  &lt;Currency value="$item.price" currency="CHF" locale="de-CH" /&gt;
-&lt;/Text&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="item" price="1275.50" /&gt;
+  &lt;Text color="secondary"&gt;
+    &lt;Currency value="$item.price" currency="CHF" locale="de-CH" /&gt;
+  &lt;/Text&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

@@ -41,7 +41,7 @@ describe('Link', () => {
         // Act
         const output = renderToStaticMarkup(
             <LinkProvider component={RouterStub}>
-                <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={context} />
+                <RenderXML ast={{ name: 'view', params: {}, children: ast }} ctx={context} />
             </LinkProvider>
         );
 
@@ -57,7 +57,7 @@ describe('Link', () => {
         // Act
         const output = renderToStaticMarkup(
             <LinkProvider component={RouterStub}>
-                <RenderXML ast={{ name: 'longlink', params: {}, children: ast }} ctx={context} />
+                <RenderXML ast={{ name: 'view', params: {}, children: ast }} ctx={context} />
             </LinkProvider>
         );
 

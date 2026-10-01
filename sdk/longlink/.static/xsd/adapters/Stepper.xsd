@@ -88,11 +88,14 @@
       <xsd:documentation>Stepper displays progress through a short sequence of related workflow steps.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
         <longlink:docs slug="stepper" category="Layouts" lastUpdated="2026-09-22" />
-        <longlink:example>&lt;Stepper activeStep="$form.step" orientation="vertical"&gt;
-  &lt;Step step="0" label="Details" /&gt;
-  &lt;Step step="1" label="Review" /&gt;
-  &lt;Step step="2" label="Complete" /&gt;
-&lt;/Stepper&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;State id="form" step="0" /&gt;
+  &lt;Stepper activeStep="$form.step" orientation="vertical"&gt;
+    &lt;Step step="0" label="Details" /&gt;
+    &lt;Step step="1" label="Review" /&gt;
+    &lt;Step step="2" label="Complete" /&gt;
+  &lt;/Stepper&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>
@@ -100,7 +103,11 @@
     <xsd:annotation>
       <xsd:documentation>Step identifies one logical point in a Stepper and may render its active content.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:example>&lt;Step step="0" label="Details" description="Enter the required information." /&gt;</longlink:example>
+        <longlink:example>&lt;view&gt;
+  &lt;Stepper activeStep="0"&gt;
+    &lt;Step step="0" label="Details" description="Enter the required information." /&gt;
+  &lt;/Stepper&gt;
+&lt;/view&gt;</longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

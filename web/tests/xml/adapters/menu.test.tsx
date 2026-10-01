@@ -24,7 +24,7 @@ describe('Menu', () => {
         );
         const output = renderToStaticMarkup(
             <MemoryRouter>
-                <RenderXML ast={{ name: 'longlink', params: {}, children }} ctx={createContext()} />
+                <RenderXML ast={{ name: 'view', params: {}, children }} ctx={createContext()} />
             </MemoryRouter>
         );
 

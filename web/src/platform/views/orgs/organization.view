@@ -1,4 +1,4 @@
-<longlink name="Organization Solutions" icon="boxes">
+<view name="Organization Solutions" icon="boxes">
     <Query
         id="membership"
         path="/api/v1/organizations/slug/${params.organization}"
@@ -233,4 +233,4 @@
             </Step>
         </Stepper>
     </Dialog>
-</longlink>
+</view>

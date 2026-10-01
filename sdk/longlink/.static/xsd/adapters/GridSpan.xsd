@@ -20,15 +20,17 @@
     <xsd:annotation>
       <xsd:documentation>A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Use GridSpan to make a direct child span columns or rows.</xsd:documentation>
       <xsd:appinfo source="urn:longlink:xml-example">
-        <longlink:example><![CDATA[<Grid minColumnWidth="240" maxColumns="3" repeat="fit">
-  <Card>First</Card>
-  <Card>Second</Card>
-</Grid>
+        <longlink:example><![CDATA[<view>
+  <Grid minColumnWidth="240" maxColumns="3" repeat="fit">
+    <Card>First</Card>
+    <Card>Second</Card>
+  </Grid>
 
-<Grid columns="3">
-  <GridSpan columns="2"><Card>Featured</Card></GridSpan>
-  <Card>Standard</Card>
-</Grid>]]></longlink:example>
+  <Grid columns="3">
+    <GridSpan columns="2"><Card>Featured</Card></GridSpan>
+    <Card>Standard</Card>
+  </Grid>
+</view>]]></longlink:example>
       </xsd:appinfo>
     </xsd:annotation>
   </xsd:element>

@@ -63,7 +63,7 @@ def test_solution_add_api_route_rejects_view_endpoint_overlap(solution_source: P
     """Reject a direct Solution route that would overlap a registered View endpoint."""
 
     # Arrange
-    (solution_source / "views" / "dashboard.view").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    (solution_source / "views" / "dashboard.view").write_text("<view>Dashboard</view>", encoding="utf-8")
     app = LongLink()
     original_routes = app.router.routes.copy()
 
@@ -84,7 +84,7 @@ def test_solution_router_include_rolls_back_routes_before_a_view_collision(solut
     """Leave no routes registered when a later included route overlaps a View."""
 
     # Arrange
-    (solution_source / "views" / "dashboard.view").write_text("<longlink>Dashboard</longlink>", encoding="utf-8")
+    (solution_source / "views" / "dashboard.view").write_text("<view>Dashboard</view>", encoding="utf-8")
     router = APIRouter()
 
     @router.get("/safe")

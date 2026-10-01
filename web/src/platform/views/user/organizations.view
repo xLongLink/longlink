@@ -1,4 +1,4 @@
-<longlink name="Organizations" icon="building2">
+<view name="Organizations" icon="building2">
     <Query id="memberships" path="/api/v1/me/organizations" />
     <State id="draft" name="" />
     <State id="createDialog" open="${false}" />
@@ -58,4 +58,4 @@
             </TableColumn>
         </Table>
     </Stack>
-</longlink>
+</view>
