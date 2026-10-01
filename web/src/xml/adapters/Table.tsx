@@ -6,7 +6,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useXmlRuntime, XmlContext } from '../core/context';
 import { isSafePropertyName, readSafeProperty } from '../expressions/resolve';
 import { readXmlProp, isVisibleXmlNode, resolveXmlProps } from '../core/props';
-import { Table as AstryxTable, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
+import { Table as AstryxTable, proportional, type TableColumn as AstryxTableColumn } from '@astryxdesign/core/Table';
 
 const tablePropsSchema = z.object({
     data: z.array(z.record(z.string(), z.unknown())),
@@ -16,6 +16,7 @@ const tablePropsSchema = z.object({
 const tableColumnPropsSchema = z.object({
     align: z.enum(TABLE_COLUMN_ALIGNS).optional(),
     header: z.string().optional(),
+    width: z.number().positive().optional(),
 });
 
 export function Table({ props, nodes }: Props) {
@@ -55,13 +56,14 @@ export function Table({ props, nodes }: Props) {
             throw new Error('TableColumn requires a usable field path');
         }
         const field = fieldParts.join('.');
-        const { align, header: headerValue } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
+        const { align, header: headerValue, width } = resolveXmlProps(columnProps, ctx, tableColumnPropsSchema);
         const header = headerValue ?? field;
 
         return {
             align,
             header,
             key: field,
+            width: width === undefined ? undefined : proportional(width, { minWidth: 0 }),
             renderCell: (row) => {
                 const value = fieldParts.reduce(readSafeProperty, row);
 

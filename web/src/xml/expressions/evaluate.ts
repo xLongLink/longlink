@@ -70,6 +70,12 @@ const SAFE_IDENTIFIER_CALLS: Record<string, SafeExpressionCall> = {
             Object.entries(removed).some(([name, value]) => isSafePropertyName(name) && value === true)
         );
     },
+    imageReference: (image) => {
+        // Preserve the image path and abbreviate long digests for table cells.
+        if (typeof image !== 'string') return '';
+
+        return image.replace(/@sha256:[a-f0-9]{5,}([a-f0-9]{4})$/, '@sha25...$1');
+    },
     imageDigest: (image) => {
         // Keep release comparison concise while retaining tag-only references unchanged.
         if (typeof image !== 'string') return '';

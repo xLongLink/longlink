@@ -11,7 +11,7 @@
         <Heading level="1">Solutions</Heading>
         <Stack gap="1">
             <Table data="$solutions.items" idKey="id" hasHover="true">
-                <TableColumn field="name" header="Solution">
+                <TableColumn field="name" header="Solution" width="${1}">
                     <Stack align="start">
                         <Stack direction="horizontal" gap="1" align="center">
                             <Link
@@ -26,15 +26,37 @@
                         </Text>
                     </Stack>
                 </TableColumn>
-                <TableColumn field="organization.name" header="Organization">
+                <TableColumn
+                    field="organization.name"
+                    header="Organization"
+                    width="${1}"
+                >
                     <Stack direction="horizontal" gap="3" align="center">
                         <Avatar shape="rounded" name="$row.organization.name" />
-                        <Link to="/orgs/${row.organization.slug}">
-                            $row.organization.name
-                        </Link>
+                        <Stack align="start">
+                            <Link to="/orgs/${row.organization.slug}">
+                                $row.organization.name
+                            </Link>
+                            <Text type="supporting">Organization</Text>
+                        </Stack>
                     </Stack>
                 </TableColumn>
-                <TableColumn field="id" header="Actions" align="end">
+                <TableColumn field="image_desired" header="Image" width="${2}">
+                    <Stack align="start">
+                        <Text>
+                            ${imageReference(row.image_desired)}
+                        </Text>
+                        <Text type="supporting">
+                            Revision: ${row.desired_revision_id ?? 'Not selected'}
+                        </Text>
+                    </Stack>
+                </TableColumn>
+                <TableColumn
+                    field="id"
+                    header="Actions"
+                    align="end"
+                    width="${0.5}"
+                >
                     <MoreMenu value="$metadata">
                         <Option
                             value="${{ item: row, open: true }}"
