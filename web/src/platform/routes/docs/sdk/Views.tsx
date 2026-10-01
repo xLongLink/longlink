@@ -238,21 +238,18 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    Create each interface as a single .view file using case-sensitive LongLink markup, not standard XML
-                    or browser HTML. Use components, state, queries, and actions to define what the user sees, how data
-                    is displayed, and what happens when they interact with it.
+                    Create each interface as a single .view file. Use components, state, queries, and actions to define
+                    what the user sees, how data is displayed, and what happens when they interact with it.
                 </Text>
                 <Text as="p">
-                    Use one &lt;view&gt; root and explicit closing or self-closing component tags. Quoted attributes
-                    support raw operators such as &amp;&amp;, &lt;, and &gt;; do not add XML declarations or schema
-                    hints.
+                    They are intentionally simple and consistent, closer to writing HTML than building a traditional
+                    frontend.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
                     <Text weight="semibold">Why?</Text>
                     <Text as="p">
-                        One file represents one interface, making the frontend easier to understand, generate, and
-                        maintain. The runtime handles rendering and common UI behavior, so the View can stay focused on
-                        the interface and how it works.
+                        Keeping the interface separate from the application logic makes each part easier to understand
+                        and maintain.
                     </Text>
                 </Stack>
                 <CodeBlock
