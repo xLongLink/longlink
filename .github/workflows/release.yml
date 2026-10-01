@@ -105,9 +105,6 @@ jobs:
         runs-on: ubuntu-24.04
         timeout-minutes: 30
 
-        outputs:
-            image: ghcr.io/xlonglink/longlink@${{ steps.image.outputs.digest }}
-
         environment:
             name: release
 
@@ -132,12 +129,12 @@ jobs:
                   version="${GITHUB_REF_NAME#v}"
                   archive="longlink-${version}.tgz"
                   helm package k8s/chart --version "$version" --destination .
-                  sha256sum "$archive" > "${archive}.sha256"
+                  checksum="$(sha256sum "$archive" | cut -d ' ' -f 1)"
 
                   {
                       echo "version=$version"
                       echo "archive=$archive"
-                      echo "sha256=$(cut -d ' ' -f 1 "${archive}.sha256")"
+                      echo "sha256=$checksum"
                   } >> "$GITHUB_OUTPUT"
 
             - name: Setup Docker Buildx
@@ -151,7 +148,6 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build and push API image
-              id: image
               uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
               with:
                   context: .

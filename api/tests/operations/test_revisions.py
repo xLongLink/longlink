@@ -97,7 +97,7 @@ async def test_failed_update_recovery(users: tuple[User, User, User], monkeypatc
     metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:new"))
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
-        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"}, min_scale=1)
+        await solutions.deploy(session, current, owner.id, metadata, {"KEY": "new"}, source=metadata.image, min_scale=1)
         await session.commit()
         desired_id = current.desired_revision_id
     failing = True
@@ -239,14 +239,14 @@ async def test_queued_deployments_keep_exact_targets(users: tuple[User, User, Us
                 # A newer request during an active rollout must not change its captured target.
                 async with session_scope() as session:
                     current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"})
+                    await solutions.deploy(session, current, users[0].id, second, {"KEY": "second"}, source=second.image)
                     await session.commit()
                     second_id = current.desired_revision_id
             elif third_id is None:
                 # The second rollout still uses its snapshot while a third revision becomes desired.
                 async with session_scope() as session:
                     current = await solutions.access(session, solution.id, users[0].id)
-                    await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"})
+                    await solutions.deploy(session, current, users[0].id, third, {"KEY": "third"}, source=third.image)
                     await session.commit()
                     third_id = current.desired_revision_id
 

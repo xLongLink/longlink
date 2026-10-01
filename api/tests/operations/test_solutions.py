@@ -243,7 +243,7 @@ async def test_solution_creation_applies_user_and_managed_environment_values(
     async with session_scope() as session:
         current = await solutions.access(session, solution.id, owner.id)
         metadata = LongLinkMetadata(image=Image("ghcr.io/longlink/dashboard@sha256:updated"))
-        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"})
+        await solutions.deploy(session, current, owner.id, metadata, {"API_KEY": "replacement"}, source=metadata.image)
         await session.commit()
         revision_id = current.desired_revision_id
     await solution_operations.deploy(revision_id)
