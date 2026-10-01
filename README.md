@@ -10,6 +10,10 @@
 
 <br />
 
+> [!WARNING]
+> LongLink is under active development. APIs may change before 1.0.
+
+
 ## Introduction
 
 LongLink is a code-first platform for building and operating process-specific business software with Python.
@@ -18,8 +22,6 @@ Build your Solution as a standard FastAPI application, using SQLModel for data a
 
 The result is software you can develop, test, version, review, and change using normal engineering tools.
 
-> [!WARNING]
-> LongLink is under active development. APIs may change before 1.0.
 
 <br />
 
@@ -56,18 +58,6 @@ longlink dev
 
 ## How it works
 
-A Solution keeps the application-specific code explicit and together:
-
-```
-src/
-├── models/       # SQLModel data models
-├── routes/       # FastAPI application logic
-├── schemas/      # Pydantic schemas
-├── views/        # User interfaces
-└── envs.py       # Environment configuration
-main.py           # Application entry point
-```
-
 `LongLink()` is a headless FastAPI application with the common runtime already configured. Your routes remain standard FastAPI routes, while `Context` provides access to the current user, database, and storage.
 
 The same code runs in development, testing, and production. When deployed, LongLink packages the Solution as a standard container image.
@@ -76,8 +66,6 @@ Each View is defined in a single file that describes its layout, elements, and a
 
 ![Invoice approvals in the sample Solution](sample.png)
 
-> [!NOTE]
-> LongLink adds as little new surface area as possible, bringing established tools together into a consistent environment.
 
 <br />
 
