@@ -127,10 +127,7 @@ async def infrastructure(session: AsyncSession, organization_id: UUID) -> tuple[
     # Load only the Organization lifecycle fields and provider connections consumed by reconciliation.
     statement = _infrastructure_query().where(col(Organization.id) == organization_id)
     result = await session.execute(statement)
-    row = result.tuples().one_or_none()
-    if row is None:
-        return None
-    return row
+    return result.tuples().one_or_none()
 
 
 async def solution_infrastructure(session: AsyncSession, solution_id: UUID) -> tuple[Solution, Organization, ComputeRegistry] | None:

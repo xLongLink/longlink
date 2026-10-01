@@ -62,13 +62,12 @@ export function FileViewer({ props, nodes }: Props) {
 
         const controller = new AbortController();
         let previewUrl: string | null = null;
-        let cancelled = false;
 
         void (async () => {
             try {
                 const blob = await api(url, { headers: { Accept: '*/*' }, signal: controller.signal }).blob();
 
-                if (cancelled) return;
+                if (controller.signal.aborted) return;
 
                 // Media elements never execute embedded scripts, so images, video, and audio
                 // preview directly while every other non-PDF type falls back to a download link.
@@ -92,14 +91,13 @@ export function FileViewer({ props, nodes }: Props) {
 
                 setPreview({ status: 'ready', media: mediaType, objectUrl: previewUrl });
             } catch {
-                if (!cancelled) {
+                if (!controller.signal.aborted) {
                     setPreview({ status: 'error' });
                 }
             }
         })();
 
         return () => {
-            cancelled = true;
             controller.abort();
 
             if (previewUrl) {

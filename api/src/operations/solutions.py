@@ -55,21 +55,22 @@ async def deploy(revision_id: UUID) -> None:
             database_username = await database.solution_schema(organization.id, solution.id, database_password)
 
             # Build and commit the complete runtime contract before creating the workload.
-            runtime_secrets = {
-                **runtime_secrets,
-                "LONGLINK_ENV": "production",
-                "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
-                "LONGLINK_DATABASE_NAME": organization.id.hex,
-                "LONGLINK_DATABASE_PASSWORD": database_password,
-                "LONGLINK_DATABASE_PORT": "5432",
-                "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
-                "LONGLINK_DATABASE_USERNAME": database_username,
-                "LONGLINK_STORAGE_BUCKET": bucket_name,
-                "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
-                "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
-                "LONGLINK_STORAGE_REGION": "us-east-1",
-                "LONGLINK_STORAGE_USERNAME": credentials.access_key,
-            }
+            runtime_secrets.update(
+                {
+                    "LONGLINK_ENV": "production",
+                    "LONGLINK_DATABASE_HOST": namespace.database_hostname(organization.id),
+                    "LONGLINK_DATABASE_NAME": organization.id.hex,
+                    "LONGLINK_DATABASE_PASSWORD": database_password,
+                    "LONGLINK_DATABASE_PORT": "5432",
+                    "LONGLINK_DATABASE_SCHEMA": solution.id.hex,
+                    "LONGLINK_DATABASE_USERNAME": database_username,
+                    "LONGLINK_STORAGE_BUCKET": bucket_name,
+                    "LONGLINK_STORAGE_PASSWORD": credentials.secret_key,
+                    "LONGLINK_STORAGE_PREFIX": f"solutions/{solution.id.hex}/",
+                    "LONGLINK_STORAGE_REGION": "us-east-1",
+                    "LONGLINK_STORAGE_USERNAME": credentials.access_key,
+                }
+            )
 
         # Issue a solution-specific key so only Platform-originated requests can assert an audit identity.
         if "LONGLINK_IDENTITY_SECRET" not in runtime_secrets:
@@ -77,14 +78,15 @@ async def deploy(revision_id: UUID) -> None:
             runtime_secrets["LONGLINK_IDENTITY_SECRET"] = secrets.token_urlsafe(32)
 
         # Define every LONGLINK_* variable next to the persisted runtime contract.
-        runtime_secrets = {
-            **runtime_secrets,
-            # Workloads always reach object storage through the cluster-local TLS proxy.
-            "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
-            # Fetch the current CA once for workload rendering on every path.
-            "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
-            **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
-        }
+        runtime_secrets.update(
+            {
+                # Workloads always reach object storage through the cluster-local TLS proxy.
+                "LONGLINK_STORAGE_ENDPOINT_URL": "https://longlink-storage.rustfs.svc:443",
+                # Fetch the current CA once for workload rendering on every path.
+                "LONGLINK_DATABASE_CERTIFICATE": await cluster.databases.certificate(organization.id),
+                **({"LONGLINK_STORAGE_CERTIFICATE": compute.storage_certificate} if compute.storage_certificate else {}),
+            }
+        )
 
         # Persist generated credentials when the runtime contract changed.
         if runtime_secrets != solution.secrets:
