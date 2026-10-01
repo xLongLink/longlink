@@ -13,8 +13,8 @@ from longlink.context import install_context_middleware
 from fastapi.responses import Response, RedirectResponse
 from starlette.routing import Match, BaseRoute
 from longlink.constants import ROOT
-from longlink.utils.xml import validate_xml
 from longlink.middleware import FrontendMiddleware
+from longlink.utils.view import validate_view
 from longlink.storage.base import create_fs
 from longlink.database.base import LOCAL_USER_ID, Database
 from longlink.utils.settings import Envs
@@ -29,13 +29,13 @@ class RuntimeState:
 
 
 def _view_handler(content: str) -> Callable[[], Response]:
-    """Capture static XML without exposing its content as a request parameter."""
+    """Capture static View markup without exposing it as a request parameter."""
 
     # Bind each document in its own closure before FastAPI inspects the endpoint signature.
     def view() -> Response:
-        """Return the validated XML captured during application startup."""
+        """Return the validated View captured during application startup."""
 
-        return Response(content, media_type="application/xml")
+        return Response(content, media_type="text/plain")
 
     return view
 
@@ -57,7 +57,7 @@ class LongLink(FastAPI):
         if not frontend_index.is_file():
             raise RuntimeError(f"LongLink embedded frontend is required: {frontend_index}")
 
-        # Solutions provide XML views in the generated source layout.
+        # Solutions provide .view files in the generated source layout.
         views_directory = Path.cwd() / "src" / "views"
         if not views_directory.is_dir():
             raise ValueError(f"Solution source directory is required: {views_directory}")
@@ -181,19 +181,19 @@ class LongLink(FastAPI):
 
     @staticmethod
     def _discover_views(views_directory: Path) -> list[tuple[ViewDefinition, str]]:
-        """Discover and validate all XML views before registering any route."""
+        """Discover and validate all Views before registering any route."""
 
         registered_route_keys: set[str] = set()
         discovered_views: list[tuple[ViewDefinition, str]] = []
 
-        # Discover XML view files in deterministic order.
-        for view_file in sorted(views_directory.rglob("*.xml")):
-            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".xml")
+        # Discover .view files in deterministic order.
+        for view_file in sorted(views_directory.rglob("*.view")):
+            path_without_suffix = view_file.relative_to(views_directory).as_posix().removesuffix(".view")
 
             view_path = f"views/{path_without_suffix}"
-            # Validate XML views and extract optional display metadata.
+            # Validate component markup and extract optional display metadata.
             content = view_file.read_text(encoding="utf-8")
-            view_root = validate_xml(content)
+            view_root = validate_view(content)
             view_name = view_root.get("name", "").strip() or None
             view_icon = view_root.get("icon", "").strip() or None
 

@@ -1,4 +1,3 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Account Settings" icon="settings2">
     <State id="profile" name="$params.userName" />
     <Query id="memberships" path="/api/v1/me/organizations" />

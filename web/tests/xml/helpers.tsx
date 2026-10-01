@@ -21,7 +21,7 @@ export function createContext(options: Partial<context.CreateContextOptions> = {
 
 /** Parses fragment fixtures through the document parser and returns their children. */
 export function parseFragment(fragment: string): ASTNode[] {
-    return xml.parseXML(`<longlink>${fragment}</longlink>`).children;
+    return xml.parseView(`<longlink>${fragment}</longlink>`).children;
 }
 
 /** Unmounts a test root created with createRoot. */
@@ -63,7 +63,7 @@ export async function mountXml(fragment: string, ctx: XmlRuntime = createContext
 
     // Render through the real XML runtime with application-owned error reporting.
     await act(async () => {
-        const node = <RenderXML ast={xml.parseXML(`<longlink>${fragment}</longlink>`)} ctx={ctx} />;
+        const node = <RenderXML ast={xml.parseView(`<longlink>${fragment}</longlink>`)} ctx={ctx} />;
 
         root.render(node);
     });

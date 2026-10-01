@@ -1,12 +1,12 @@
 import { useMatches } from 'react-router';
 import { NoIndex } from '@/components/Seo';
 import { PlatformView } from '@/components/PlatformView';
-import users from '@/platform/views/admin/users.xml?raw';
-import compute from '@/platform/views/admin/compute.xml?raw';
-import solutions from '@/platform/views/admin/solutions.xml?raw';
-import operations from '@/platform/views/admin/operations.xml?raw';
+import users from '@/platform/views/admin/users.view?raw';
+import compute from '@/platform/views/admin/compute.view?raw';
+import solutions from '@/platform/views/admin/solutions.view?raw';
+import operations from '@/platform/views/admin/operations.view?raw';
 import { adminPages, type AdminPageId } from '@/platform/navigation';
-import organizations from '@/platform/views/admin/organizations.xml?raw';
+import organizations from '@/platform/views/admin/organizations.view?raw';
 
 const pageSources: Record<AdminPageId, string> = {
     'admin-users': users,

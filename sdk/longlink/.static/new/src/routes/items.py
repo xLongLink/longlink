@@ -60,7 +60,7 @@ async def items_post_endpoint(payload: ItemCreate, ctx: Context) -> Item:
 
 @router.get("/items/{item_id}", response_model=ItemRead)
 async def item_get_endpoint(item_id: int, ctx: Context) -> Item:
-    """Return one catalog item for a dynamic XML View."""
+    """Return one catalog item for a dynamic View."""
 
     # Retrieve the item and translate a missing record into an API error.
     item = await ctx.database.get(Item, item_id)

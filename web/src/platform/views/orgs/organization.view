@@ -1,4 +1,3 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Organization Solutions" icon="boxes">
     <Query
         id="membership"
@@ -20,7 +19,7 @@
     />
     <Query
         id="createSolutionMetadata"
-        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
+        if="${createSolution.open && createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
     />
 

@@ -27,12 +27,14 @@ You are working on a LongLink Solution project:
 - Type route parameters as `ctx: Context` for the request database session, storage filesystem, and signed-in user.
 - Store one item's files under its own `{item_id}/` storage prefix.
 
-## XML views
+## Views
 
-- A View uses XML, not HTML.
-- Run `longlink docs ui` to discover the supported XML components and runtime concepts by category.
+- A View uses case-sensitive LongLink markup in a `.view` file, not standard XML or browser HTML.
+- Keep attribute values quoted. Raw `&&`, `<`, and `>` are supported inside quoted expressions.
+- Use one `<longlink>` root and explicit closing or self-closing component tags; do not add XML declarations or schema hints.
+- Run `longlink docs ui` to discover the supported components and runtime concepts by category.
 - Run `longlink docs ui --component <component>` before using a component to inspect its attributes, children, and examples.
-- Do not invent XML elements or attributes that are absent from the component documentation.
+- Do not invent elements or attributes that are absent from the component documentation.
 
 ## Python Guidelines
 

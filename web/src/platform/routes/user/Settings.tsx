@@ -2,9 +2,9 @@ import { NoIndex } from '@/components/Seo';
 import { PlatformView } from '@/components/PlatformView';
 import { PageContainer } from '@/components/PageContainer';
 import { useAuthenticatedUser } from '@/lib/hooks/use-user';
-import source from '@/platform/views/user/settings.xml?raw';
+import source from '@/platform/views/user/settings.view?raw';
 
-/** Renders the XML-backed account settings page. */
+/** Renders the View-backed account settings page. */
 export default function Settings() {
     const user = useAuthenticatedUser();
 

@@ -238,7 +238,7 @@ export default function DocsArticleRoute() {
                     Views
                 </Heading>
                 <Text as="p">
-                    Create each interface as a single View file. Use components, state, queries, and actions to define
+                    Create each interface as a single .view file. Use components, state, queries, and actions to define
                     what the user sees, how data is displayed, and what happens when they interact with it.
                 </Text>
                 <Stack as="aside" className="border-s border-accent ps-4" gap={0}>
@@ -252,7 +252,7 @@ export default function DocsArticleRoute() {
                 <CodeBlock
                     code={'<longlink name="Welcome" icon="layout-dashboard">\n  <Text>Welcome</Text>\n</longlink>'}
                     language="xml"
-                    title="welcome.xml"
+                    title="welcome.view"
                 />
                 {documentationCategories.map((category) => (
                     <Stack key={category.name} gap={3}>

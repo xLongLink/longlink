@@ -1,7 +1,6 @@
-<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Invoices" icon="banknote">
     <State id="pages" value="${1}" />
-    <Query id="items" path="/api/items?page=${pages.value}&amp;page_size=8" />
+    <Query id="items" path="/api/items?page=${pages.value}&page_size=8" />
     <State id="draft" status="draft" />
     <State id="createDialog" open="${false}" />
 
@@ -79,7 +78,7 @@
                     <Patch state="pages" value="${{ value: pages.value - 1 }}" />
                     <Patch state="items" invalidate="true" />
                 </Button>
-                <Button label="Next" disabled="${items.total &lt;= pages.value * 8}">
+                <Button label="Next" disabled="${items.total <= pages.value * 8}">
                     <Patch state="pages" value="${{ value: pages.value + 1 }}" />
                     <Patch state="items" invalidate="true" />
                 </Button>

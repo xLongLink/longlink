@@ -79,7 +79,7 @@ include-package-data = true
 include = ["longlink*"]
 
 [tool.setuptools.package-data]
-longlink = [".static/**"]
+longlink = [".static/**", ".static/new/.vscode/*.json"]
 "longlink.shared" = ["alembic/*.py", "alembic/versions/*.py"]
 
 [tool.setuptools.exclude-package-data]

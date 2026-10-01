@@ -8,13 +8,13 @@
       <longlink:category name="Display"/>
       <longlink:category name="Form"/>
       <longlink:category name="Layouts"/>
-      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-09-30">
-        <longlink:description>Evaluates a safe JavaScript expression subset against the XML runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings.</longlink:description>
-        <longlink:example>&lt;Text if="${order.total &gt; 0}"&gt;Total: ${order.total}&lt;/Text&gt;
+      <longlink:topic name="Expressions" slug="expressions" category="Runtime" lastUpdated="2026-10-01">
+        <longlink:description>Evaluates a safe JavaScript expression subset against the View runtime scope. Use ${...} for computed values and interpolation; use $state.property for writable bindings. View files support raw logical and comparison operators inside quoted attributes, including &amp;&amp;, ||, &lt;, and &gt;. Keep literal text character references outside attributes when needed; XML declarations and schema hints are not supported.</longlink:description>
+        <longlink:example>&lt;Text if="${order.ready &amp;&amp; order.total &lt; 100}"&gt;Total: ${order.total}&lt;/Text&gt;
 &lt;Link to="/orders/${order.id}"&gt;Open order&lt;/Link&gt;</longlink:example>
       </longlink:topic>
       <longlink:topic name="Bindings" slug="bindings" category="Runtime" lastUpdated="2026-09-30">
-        <longlink:description>Connects writable control values to State objects declared in the XML runtime. A $state.property binding reads the current property and writes user changes back to it.</longlink:description>
+        <longlink:description>Connects writable control values to State objects declared in the View runtime. A $state.property binding reads the current property and writes user changes back to it.</longlink:description>
         <longlink:example>&lt;State id="form" name="" active="true" /&gt;
 
 &lt;TextInput label="Name" value="$form.name" /&gt;
