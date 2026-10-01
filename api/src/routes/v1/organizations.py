@@ -51,7 +51,7 @@ async def get_organization_by_slug(
     # Resolve the route slug within the authenticated user's active memberships.
     membership = await organizations.membership_by_slug(session, user.id, organization_slug)
     if membership is None:
-        raise HTTPException(status_code=404, detail="Organization not found")
+        raise HTTPException(status_code=403, detail="Access required")
     return membership
 
 

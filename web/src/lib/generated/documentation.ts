@@ -840,6 +840,10 @@ export const componentDocumentation: ComponentDocumentation[] = [
                 "name": "path"
             },
             {
+                "description": "Value or expression published instead of data when the endpoint returns 403 (access denied), including on refresh. Other failures still stop setup or report a refresh error. Use fallback=\"${null}\" with conditional dependent queries and content to display an access fallback.",
+                "name": "fallback"
+            },
+            {
                 "description": "Conditional rendering expression.",
                 "name": "if"
             }
@@ -848,7 +852,7 @@ export const componentDocumentation: ComponentDocumentation[] = [
         "example": "<Query id=\"orders\" path=\"/api/orders\" />",
         "name": "Query",
         "category": "Runtime",
-        "lastUpdated": "2026-07-21",
+        "lastUpdated": "2026-10-01",
         "nested": [],
         "slug": "query",
         "source": "adapters/Query.xsd"
