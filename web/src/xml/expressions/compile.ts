@@ -1,6 +1,6 @@
 import type { Expression } from 'acorn';
+import { parseExpressionAt } from 'acorn';
 import type { ASTAttribute } from '../types';
-import { parseExpressionAt, tokenizer } from 'acorn';
 
 /** Compiles an XML attribute without evaluating it against runtime state. */
 export function compileAttribute(value: string): ASTAttribute {
@@ -51,12 +51,9 @@ export function compileAttribute(value: string): ASTAttribute {
 
 /** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
 function readInterpolationSegment(input: string, start: number) {
-    // Normalize word operators without changing source offsets or literal contents.
-    const source = input.slice(0, start + 2) + normalizeOperators(input.slice(start + 2));
-
     // Parse the interpolation body to find its boundary.
     try {
-        const node = parseExpressionAt(source, start + 2, {
+        const node = parseExpressionAt(input, start + 2, {
             ecmaVersion: 'latest',
         });
         let end = node.end;
@@ -71,43 +68,4 @@ function readInterpolationSegment(input: string, start: number) {
     } catch {}
 
     throw new Error('Unclosed XML expression interpolation');
-}
-
-/** Converts infix word operators to Acorn tokens within one interpolation. */
-function normalizeOperators(input: string): string {
-    const tokens = tokenizer(input, { ecmaVersion: 'latest' });
-    let source = input;
-    let depth = 0;
-    let previous = '';
-
-    // Tokenize only the current interpolation, leaving strings and comments intact.
-    for (const token of tokens) {
-        const label = token.type.label;
-        const word = input.slice(token.start, token.end);
-
-        // Stop at the interpolation boundary rather than scanning subsequent text.
-        if (label === '}' && depth === 0) return source.slice(0, token.start + 1);
-        if (label === '{' || label === '${') depth += 1;
-        if (label === '}') depth -= 1;
-
-        // Require word operators instead of legacy JavaScript conjunctions.
-        if (label === '&&' || label === '||') {
-            throw new Error('Use "and" and "or" instead of "&&" and "||" in XML expressions');
-        }
-
-        // Replace only infix identifiers, preserving names such as form.and and object keys.
-        if (
-            label === 'name' &&
-            (word === 'and' || word === 'or') &&
-            ['name', 'num', 'string', 'regexp', 'true', 'false', 'null', ')', ']', '}'].includes(previous)
-        ) {
-            const operator = word === 'and' ? '&& ' : '||';
-            source = source.slice(0, token.start) + operator + source.slice(token.end);
-            previous = operator.trim();
-        } else {
-            previous = label;
-        }
-    }
-
-    return source;
 }

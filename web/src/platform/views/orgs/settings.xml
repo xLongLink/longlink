@@ -46,7 +46,7 @@
     />
     <Query
         id="createSolutionMetadata"
-        if="${createSolution.open and createSolution.inspecting}"
+        if="${createSolution.open &amp;&amp; createSolution.inspecting}"
         path="/api/v1/image?image=${createSolution.image}"
     />
     <Query
@@ -130,7 +130,7 @@
                                     </Stack>
                                 </TableColumn>
                                 <TableColumn
-                                    if="${membership.role === 'admin' or membership.role === 'owner'}"
+                                    if="${membership.role === 'admin' || membership.role === 'owner'}"
                                     field="user.id"
                                     header="Actions"
                                     align="end"
@@ -177,7 +177,7 @@
                                     </Text>
                                 </Stack>
                                 <Dialog
-                                    if="${membership.role === 'maintain' or membership.role === 'admin' or membership.role === 'owner'}"
+                                    if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     title="Invite user"
                                     subtitle="Send an invitation to join this organization."
                                     triggerLabel="Invite"
@@ -236,7 +236,7 @@
                                     <Badge>$row.role</Badge>
                                 </TableColumn>
                                 <TableColumn
-                                    if="${membership.role === 'maintain' or membership.role === 'admin' or membership.role === 'owner'}"
+                                    if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                     field="id"
                                     header="Actions"
                                     align="end"
@@ -270,7 +270,7 @@
                             <Heading level="1">Solutions</Heading>
                             <Button
                                 label="New Solution"
-                                if="${membership.role === 'maintain' or membership.role === 'admin' or membership.role === 'owner'}"
+                                if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                             >
                                 <Patch
                                     state="createSolution"
@@ -296,14 +296,14 @@
                                 </Stack>
                             </TableColumn>
                             <TableColumn
-                                if="${membership.role === 'maintain' or membership.role === 'admin' or membership.role === 'owner'}"
+                                if="${membership.role === 'maintain' || membership.role === 'admin' || membership.role === 'owner'}"
                                 field="id"
                                 header="Actions"
                                 align="end"
                             >
                                 <MoreMenu value="$solutionMenu">
                                     <Option
-                                        if="${row.desired_revision_id and !row.deployment_pending and row.status !== 'creating'}"
+                                        if="${row.desired_revision_id &amp;&amp; !row.deployment_pending &amp;&amp; row.status !== 'creating'}"
                                         value="${{ envs: {}, item: row, logsOpen: false, deleteOpen: false, open: false, removed: {}, reviewing: true }}"
                                         label="Update"
                                         icon="refresh"
@@ -406,7 +406,7 @@
                                 />
                                 <Patch
                                     state="createSolution"
-                                    value="${{ description: createSolutionMetadata.description or '', envs: {}, inspecting: false, step: 1 }}"
+                                    value="${{ description: createSolutionMetadata.description || '', envs: {}, inspecting: false, step: 1 }}"
                                 />
                             </Button>
                         </Stack>
@@ -507,7 +507,7 @@
                                 <Request
                                     url="/api/v1/organizations/${membership.organization.id}/solutions"
                                     method="POST"
-                                    json="${{ description: createSolution.description or null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
+                                    json="${{ description: createSolution.description || null, envs: nonEmpty(createSolution.envs), image: createSolution.image, name: createSolution.name }}"
                                 />
                                 <Patch state="solutions" invalidate="true" />
                                 <Patch
@@ -546,11 +546,11 @@
                         property="$environment.name"
                         isDisabled="${solutionMenu.removed[environment.name] === true}"
                         isOptional="${!environment.required}"
-                        isRequired="${environment.required and (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) or solutionMenu.removed[environment.name] === true)}"
-                        placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) ? 'Configured: preserve existing value' : environment.description or 'Enter value'}"
+                        isRequired="${environment.required &amp;&amp; (!hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) || solutionMenu.removed[environment.name] === true)}"
+                        placeholder="${solutionMenu.removed[environment.name] === true ? 'Will be removed' : hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) ? 'Configured: preserve existing value' : environment.description || 'Enter value'}"
                     />
                     <CheckboxInput
-                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) and !environment.required}"
+                        if="${hasConfiguredEnvironment(updateCandidate.configured_envs, environment.name) &amp;&amp; !environment.required}"
                         label="Remove ${environment.name}"
                         value="$solutionMenu.removed"
                         property="$environment.name"
@@ -564,7 +564,7 @@
                 <Button
                     label="Update solution"
                     variant="primary"
-                    disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) or !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}"
+                    disabled="${hasMissingRequiredUpdateValues(updateCandidate.metadata.environments, updateCandidate.configured_envs, solutionMenu.envs, solutionMenu.removed) || !hasSolutionUpdateChanges(updateCandidate, solutionMenu.envs, solutionMenu.removed)}"
                 >
                     <Request
                         url="/api/v1/solutions/${solutionMenu.item.id}/update"
