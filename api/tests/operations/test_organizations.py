@@ -48,17 +48,14 @@ def install_recording_delete(
             assert list(solutions) == list(solution_ids)
             calls.append("bucket")
 
-    class Organizations:
-        """Record Organization boundary deletion."""
+    async def delete(client: object, target_organization_id: UUID) -> None:
+        """Record namespace deletion or fail it when requested."""
 
-        async def delete(self, target_organization_id: UUID) -> None:
-            """Record namespace deletion or fail it when requested."""
+        if fail_namespace:
+            raise RuntimeError("namespace deletion failed")
 
-            if fail_namespace:
-                raise RuntimeError("namespace deletion failed")
-
-            assert target_organization_id == organization_id
-            calls.append("namespace")
+        assert target_organization_id == organization_id
+        calls.append("namespace")
 
     class Kubernetes(OperationKubernetes):
         """Expose the recording Organization delete operations."""
@@ -68,10 +65,10 @@ def install_recording_delete(
 
             super().__init__(*args)
             self.databases = Database()
-            self.organizations = Organizations()
 
     monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
+    monkeypatch.setattr(organization_operations.organizations, "delete", delete)
     return calls
 
 
@@ -97,23 +94,11 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
             calls.append("storage")
             await super().apply(organization, quota_bytes=quota_bytes)
 
-    class Organizations:
-        """Record Organization boundary reconciliation."""
+    async def apply(client: object, organization_id: UUID) -> None:
+        """Record namespace reconciliation."""
 
-        async def apply(self, organization_id: UUID) -> None:
-            """Record namespace reconciliation."""
-
-            assert organization_id == organization.id
-            calls.append("namespace")
-
-    class Kubernetes(OperationKubernetes):
-        """Expose Organization Kubernetes operations."""
-
-        def __init__(self, *args: object) -> None:
-            """Expose the recording Organization boundary."""
-
-            super().__init__(*args)
-            self.organizations = Organizations()
+        assert organization_id == organization.id
+        calls.append("namespace")
 
     async def sync_users(*args: object, **kwargs: object) -> None:
         """Record user projection after publication."""
@@ -121,9 +106,10 @@ async def test_reconcile_prepares_providers_namespace_and_publishes_organization
         calls.append("users")
 
     monkeypatch.setattr(organization_operations.databases.postgres, "Postgres", Database)
-    monkeypatch.setattr(organization_operations, "Kubernetes", Kubernetes)
+    monkeypatch.setattr(organization_operations, "Kubernetes", OperationKubernetes)
     monkeypatch.setattr(organization_operations, "Storage", Storage)
-    monkeypatch.setattr(organization_operations.organizations.shared_audit, "sync", sync_users)
+    monkeypatch.setattr(organization_operations.organizations, "apply", apply)
+    monkeypatch.setattr("src.database.services.organizations.shared_audit.sync", sync_users)
 
     # Reconcile and inspect the published state.
     await organization_operations.reconcile(organization.id)

@@ -1,13 +1,14 @@
+import src.database.services.organizations
 from uuid import UUID
 from sqlmodel import col
 from sqlalchemy import delete as sql_delete
 from sqlalchemy import select, update
 from src.errors import ForbiddenError
 from src.logger import logger
+from src.kubernetes import organizations
 from src.operations import databases
 from src.models.statuses import Status
 from src.database.session import session_scope
-from src.database.services import organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.storage import Storage
 from src.database.models.solutions import Solution
@@ -22,7 +23,7 @@ async def reconcile(organization_id: UUID) -> None:
         return
     # Skip removed Organizations.
     async with session_scope() as session:
-        target = await organizations.infrastructure(session, organization_id)
+        target = await src.database.services.organizations.infrastructure(session, organization_id)
     if target is None:
         logger.info("Organization %s is unavailable for reconciliation; skipping", organization_id)
         return
@@ -40,7 +41,7 @@ async def reconcile(organization_id: UUID) -> None:
     async with cluster:
         storage = Storage(compute, cluster)
         await storage.apply(organization.id, quota_bytes=organization.storage_quota_bytes)
-        await cluster.organizations.apply(organization.id)
+        await organizations.apply(cluster, organization.id)
 
     # Publish the Organization after its provider and Kubernetes boundaries are ready.
     logger.info("Publishing Organization %s", organization.id)
@@ -75,7 +76,7 @@ async def delete(organization_id: UUID) -> None:
     async with databases.deleting(organization_id):
         # An absent tombstone means a previous execution completed cleanup.
         async with session_scope() as session:
-            target = await organizations.infrastructure(session, organization_id)
+            target = await src.database.services.organizations.infrastructure(session, organization_id)
         if target is None:
             logger.info("Organization %s no longer exists; skipping deletion", organization_id)
             return
@@ -92,7 +93,7 @@ async def delete(organization_id: UUID) -> None:
         # Namespace deletion cascades every Solution Kubernetes resource and waits for all Pods to terminate.
         logger.info("Deleting Kubernetes boundary for Organization %s", organization.id)
         async with cluster:
-            await cluster.organizations.delete(organization.id)
+            await organizations.delete(cluster, organization.id)
             # Delete the dedicated CNPG boundary only after compute Pods have terminated.
             await cluster.databases.delete(organization.id)
             logger.info("Deleting object storage for Organization %s", organization.id)
